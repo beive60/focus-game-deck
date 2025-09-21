@@ -5,7 +5,7 @@
 $scriptDir = $PSScriptRoot
 $rootDir = Split-Path $scriptDir -Parent
 $configPath = Join-Path $rootDir "config.json"
-$coreScriptPath = Join-Path $rootDir "src\GameLauncherAndWatcher.ps1"
+$coreScriptPath = Join-Path $rootDir "src\Invoke-FocusGameDeck.ps1"
 
 # Check if config.json exists
 if (-not (Test-Path $configPath)) {

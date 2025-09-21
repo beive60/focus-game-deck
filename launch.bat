@@ -3,7 +3,7 @@ setlocal
 
 :: --- Configuration ---
 :: Set the path to the main PowerShell script
-set "SCRIPT_PATH=src\GameLauncherAndWatcher.ps1"
+set "SCRIPT_PATH=src\Invoke-FocusGameDeck.ps1"
 :: -------------------
 
 echo Select the game to launch:

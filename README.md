@@ -1,4 +1,4 @@
-# **Game Launcher & Environment Watcher 🚀**
+# **Focus Game Deck 🚀**
 
 [日本語](./README.JP.md) | **English**
 
@@ -120,10 +120,10 @@ To use this script, you will need the following software installed:
 Open a PowerShell terminal, navigate to the script's directory, and run the following command:
 
 \# Example: To launch Apex Legends  
-.\\GameLauncherAndWatcher.ps1 \-GameId apex
+.\\Invoke-FocusGameDeck.ps1 \-GameId apex
 
 \# Example: To launch Dead by Daylight  
-.\\GameLauncherAndWatcher.ps1 \-GameId dbd
+.\\Invoke-FocusGameDeck.ps1 \-GameId dbd
 
 * Specify the GameId you configured in config.json (e.g., "apex", "dbd") for the \-GameId parameter.  
 * The script will automatically apply your configured settings and launch the game via Steam.  

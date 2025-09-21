@@ -1,4 +1,4 @@
-# **Game Launcher & Environment Watcher 🚀**
+# **Focus Game Deck 🚀**
 
 **日本語** | [English](./README.md)
 
@@ -120,10 +120,10 @@
 PowerShellターミナルを開き、スクリプトのディレクトリに移動して、以下のコマンドを実行します：
 
 \# 例: Apex Legends を起動する場合
-.\\GameLauncherAndWatcher.ps1 \-GameId apex
+.\\Invoke-FocusGameDeck.ps1 \-GameId apex
 
 \# 例: Dead by Daylight を起動する場合
-.\\GameLauncherAndWatcher.ps1 \-GameId dbd
+.\\Invoke-FocusGameDeck.ps1 \-GameId dbd
 
 * config.json で設定した GameId（例："apex"、"dbd"）を -GameId パラメータに指定します。
 * スクリプトは自動的に設定を適用し、Steam経由でゲームを起動します。
