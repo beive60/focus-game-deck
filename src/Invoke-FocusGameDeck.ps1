@@ -199,7 +199,8 @@ function Invoke-GameCleanup {
         if ($appId -eq "obs") {
             # Special handling for OBS replay buffer
             if ($config.obs.replayBuffer) {
-                $ws = Connect-OBSWebSocket -HostName $config.obs.websocket.host -Port $config.obs.websocket.port -Password $config.obs.websocket.password
+                $securePassword = ConvertTo-SecureString -String ($config.obs.websocket.password -as [string]) -AsPlainText -Force
+                $ws = Connect-OBSWebSocket -HostName $config.obs.websocket.host -Port $config.obs.websocket.port -Password $securePassword
                 if ($ws) {
                     Stop-OBSReplayBuffer -WebSocket $ws
                     $ws.Dispose()
@@ -266,7 +267,8 @@ foreach ($appId in $gameConfig.appsToManage) {
         
         # Control replay buffer (if configured)
         if ($config.obs.replayBuffer) {
-            $ws = Connect-OBSWebSocket -HostName $config.obs.websocket.host -Port $config.obs.websocket.port -Password $config.obs.websocket.password
+            $securePassword = ConvertTo-SecureString -String ($config.obs.websocket.password -as [string]) -AsPlainText -Force
+            $ws = Connect-OBSWebSocket -HostName $config.obs.websocket.host -Port $config.obs.websocket.port -Password $securePassword
             if ($ws) {
                 Start-OBSReplayBuffer -WebSocket $ws
                 $ws.Dispose()
@@ -335,7 +337,7 @@ function Connect-OBSWebSocket {
     param (
         [string]$HostName = "localhost",
         [int]$Port = 4455,
-        [string]$Password = ""
+        [System.Security.SecureString]$Password
     )
     
     try {
@@ -376,9 +378,17 @@ function Connect-OBSWebSocket {
             $challenge = $hello.d.authentication.challenge
 
             $sha256 = [System.Security.Cryptography.SHA256]::Create()
+
+            # Convert SecureString to plain text for hashing
+            $plainTextPassword = ''
+            if ($Password -and $Password.Length -gt 0) {
+                $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password)
+                $plainTextPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
+                [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+            }
             
             # secret = base64(sha256(password + salt))
-            $secretBytes = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($Password + $salt))
+            $secretBytes = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($plainTextPassword + $salt))
             $secret = [System.Convert]::ToBase64String($secretBytes)
             
             # authResponse = base64(sha256(secret + challenge))
@@ -390,7 +400,8 @@ function Connect-OBSWebSocket {
 
         $identifyJson = $identifyPayload | ConvertTo-Json -Depth 5
         $identifyBuffer = [System.Text.Encoding]::UTF8.GetBytes($identifyJson)
-        $ws.SendAsync($identifyBuffer, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
+        $sendSegment = New-Object ArraySegment[byte](, $identifyBuffer)
+        $ws.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
 
         # Wait for Identified message (Op 2) from server
         $identified = Receive-OBSWebSocketResponse -WebSocket $ws
@@ -424,7 +435,8 @@ function Start-OBSReplayBuffer {
         } | ConvertTo-Json -Depth 3
         
         $buffer = [System.Text.Encoding]::UTF8.GetBytes($command)
-        $WebSocket.SendAsync($buffer, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
+        $sendSegment = New-Object ArraySegment[byte](, $buffer)
+        $WebSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
         
         Write-Host "Sent OBS replay buffer start request"
     }
@@ -448,7 +460,8 @@ function Stop-OBSReplayBuffer {
         } | ConvertTo-Json -Depth 3
 
         $buffer = [System.Text.Encoding]::UTF8.GetBytes($command)
-        $WebSocket.SendAsync($buffer, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
+        $sendSegment = New-Object ArraySegment[byte](, $buffer)
+        $WebSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
         
         Write-Host "Sent OBS replay buffer stop request"
     }
