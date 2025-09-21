@@ -1,0 +1,17 @@
+# User-specific configuration file
+config.json
+
+# PowerShell history file
+*.history
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# generated launch batch files
+launch_*.bat
+
+# VSCode user settings
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json

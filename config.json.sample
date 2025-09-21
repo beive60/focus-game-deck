@@ -1,0 +1,45 @@
+{
+    "obs": {
+        "websocket": {
+            "host": "localhost",
+            "port": 4455,
+            "password": ""
+        },
+        "replayBuffer": true
+    },
+    "games": {
+        "apex": {
+            "name": "Apex Legends",
+            "steamAppId": "1172470",
+            "processName": "r5apex*",
+            "features": {
+                "manageWinKey": true,
+                "manageAutoHotkey": true,
+                "manageLuna": true,
+                "manageObs": true,
+                "manageCliborHotkey": true,
+                "manageObsReplayBuffer": true
+            }
+        },
+        "dbd": {
+            "name": "Dead by Daylight",
+            "steamAppId": "381210",
+            "processName": "DeadByDaylight-Win64-Shipping*",
+            "features": {
+                "manageWinKey": false,
+                "manageAutoHotkey": false,
+                "manageLuna": false,
+                "manageObs": true,
+                "manageCliborHotkey": true,
+                "manageObsReplayBuffer": true
+            }
+        }
+    },
+    "paths": {
+        "steam": "C:\\Program Files (x86)\\Steam\\steam.exe",
+        "clibor": "C:\\Apps\\clibor\\Clibor.exe",
+        "noWinKey": "C:\\Apps\\NoWinKey\\NoWinKey.exe",
+        "autoHotkey": "",
+        "obs": "C:\\Program Files\\obs-studio\\bin\\64bit\\obs64.exe"
+    }
+}

@@ -1,0 +1,330 @@
+﻿param(
+    [Parameter(Mandatory = $true)]
+    [string]$GameId
+)
+
+# 設定ファイルの読み込み
+$scriptDir = $PSScriptRoot
+$configPath = Join-Path $scriptDir "..\config.json"
+$config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
+
+# ゲーム設定の取得
+$gameConfig = $config.games.$GameId
+if (-not $gameConfig) {
+    Write-Host "エラー: 指定されたゲームID '$GameId' は設定ファイルに存在しません。"
+    Write-Host "利用可能なゲームID: $($config.games.PSObject.Properties.Name -join ', ')"
+    exit 1
+}
+
+# Cliborのホットキーを切り替える関数
+function Switch-CliborHotkey {
+    param(
+        [string]$Action = "toggle"  # "enable" または "disable" または "toggle"
+    )
+    
+    Start-Process -FilePath $config.paths.clibor -ArgumentList "/hs"
+    
+    $actionText = switch ($Action) {
+        "enable" { "有効化" }
+        "disable" { "無効化" }
+        default { "切り替え" }
+    }
+    Write-Host "Cliborのホットキーを${actionText}しました"
+}
+
+# ゲーム終了時の共通処理
+function Invoke-GameCleanup {
+    param(
+        [bool]$IsInterrupted = $false
+    )
+    
+    if ($IsInterrupted) {
+        Write-Host "`nスクリプトが中断されました。ロールバックを実行します..."
+    }
+    
+    # Cliborのホットキーの管理（設定されている場合）
+    if ($gameConfig.features.manageCliborHotkey) {
+        Switch-CliborHotkey -Action "enable"
+        Write-Host "Cliborのホットキーを有効化しました"
+    }
+    
+    # ゲーム固有の終了処理
+    if ($gameConfig.features.manageWinKey) {
+        $noWinKeyProcessName = (Get-Item -Path $config.paths.noWinKey).BaseName
+        if (Get-Process -Name $noWinKeyProcessName -ErrorAction SilentlyContinue) {
+            Stop-Process -Name $noWinKeyProcessName -Force
+            Write-Host "NoWinKeyを終了しました"
+        }
+    }
+    
+    if ($gameConfig.features.manageAutoHotkey) {
+        & $config.paths.autoHotkey
+        Write-Host "AutoHotkeyスクリプトを起動しました"
+    }
+    
+    # OBSのリプレイバッファの停止（設定されている場合）
+    if ($gameConfig.features.manageObsReplayBuffer -and $config.obs.replayBuffer) {
+        $ws = Connect-OBSWebSocket -Host $config.obs.websocket.host -Port $config.obs.websocket.port -Password $config.obs.websocket.password
+        if ($ws) {
+            Stop-OBSReplayBuffer -WebSocket $ws
+            $ws.Dispose()
+        }
+    }
+}
+
+# Ctrl+C が押された時の処理
+trap [System.Management.Automation.PipelineStoppedException] {
+    Invoke-GameCleanup -IsInterrupted $true
+    exit
+}
+
+# AutoHotkeyの管理（設定されている場合）
+if ($gameConfig.features.manageAutoHotkey) {
+    $autoHotkeyProcesses = @("AutoHotkeyU64", "AutoHotkey", "AutoHotkey64")
+    foreach ($processName in $autoHotkeyProcesses) {
+        try {
+            Stop-Process -Name $processName -Force -ErrorAction Stop
+            Write-Host "AutoHotkey: プロセス '$processName' を停止しました。"
+        }
+        catch {
+            Write-Host "AutoHotkey: プロセス '$processName' は起動していません。"
+        }
+    }
+}
+
+if ($gameConfig.features.manageLuna) {
+    try {
+        Stop-Process -Name "Luna" -Force -ErrorAction Stop
+        Write-Host "Luna: プロセスを停止しました。"
+    }
+    catch {
+        Write-Host "Luna: プロセスは起動していません。"
+    }
+}
+
+# Cliborのホットキーの管理（設定されている場合）
+if ($gameConfig.features.manageCliborHotkey) {
+    Switch-CliborHotkey -Action "disable"
+    Write-Host "Cliborのホットキーを無効化しました"
+}
+
+# WebSocketのヘルパー関数
+function Receive-OBSWebSocketResponse {
+    param (
+        [System.Net.WebSockets.ClientWebSocket]$WebSocket,
+        [int]$TimeoutSeconds = 5
+    )
+    $cts = New-Object System.Threading.CancellationTokenSource
+    $cts.CancelAfter($TimeoutSeconds * 1000)
+    $buffer = New-Object byte[] 8192 # 8KB buffer
+    $segment = New-Object ArraySegment[byte](, $buffer)
+    $resultText = ""
+    
+    try {
+        while ($WebSocket.State -eq "Open") {
+            $receiveTask = $WebSocket.ReceiveAsync($segment, $cts.Token)
+            $receiveTask.Wait()
+            $result = $receiveTask.Result
+            
+            $resultText += [System.Text.Encoding]::UTF8.GetString($buffer, 0, $result.Count)
+            
+            if ($result.EndOfMessage) {
+                break
+            }
+        }
+        return $resultText | ConvertFrom-Json
+    }
+    catch {
+        Write-Host "OBS WebSocketからの受信エラー、またはタイムアウト: $_"
+        return $null
+    }
+}
+
+# OBS WebSocket関連の関数
+function Connect-OBSWebSocket {
+    param (
+        [string]$Host = "localhost",
+        [int]$Port = 4455,
+        [string]$Password = ""
+    )
+    
+    try {
+        $ws = New-Object System.Net.WebSockets.ClientWebSocket
+        $cts = New-Object System.Threading.CancellationTokenSource
+        $cts.CancelAfter(5000) # 5秒でタイムアウト
+        
+        $uri = "ws://${Host}:${Port}"
+        $ws.ConnectAsync($uri, $cts.Token).Wait()
+        
+        if ($ws.State -ne [System.Net.WebSockets.WebSocketState]::Open) {
+            Write-Host "OBS WebSocketへの接続に失敗しました"
+            return $null
+        }
+
+        Write-Host "OBS WebSocketに接続しました。ハンドシェイクを開始します..."
+
+        # サーバーからのHelloメッセージ(Op 0)を待機
+        $hello = Receive-OBSWebSocketResponse -WebSocket $ws
+        if (-not $hello -or $hello.op -ne 0) {
+            Write-Host "エラー: サーバーから有効なHelloメッセージを受信できませんでした。"
+            $ws.Dispose()
+            return $null
+        }
+
+        # Identifyメッセージ(Op 1)を送信
+        $identifyPayload = @{
+            op = 1
+            d = @{
+                rpcVersion = 1
+            }
+        }
+
+        # 認証が必要な場合
+        if ($hello.d.authentication) {
+            Write-Host "認証が必要です。認証情報を生成します..."
+            $salt = $hello.d.authentication.salt
+            $challenge = $hello.d.authentication.challenge
+
+            $sha256 = [System.Security.Cryptography.SHA256]::Create()
+            
+            # secret = base64(sha256(password + salt))
+            $secretBytes = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($Password + $salt))
+            $secret = [System.Convert]::ToBase64String($secretBytes)
+            
+            # authResponse = base64(sha256(secret + challenge))
+            $authResponseBytes = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($secret + $challenge))
+            $authResponse = [System.Convert]::ToBase64String($authResponseBytes)
+            
+            $identifyPayload.d.authentication = $authResponse
+        }
+
+        $identifyJson = $identifyPayload | ConvertTo-Json -Depth 5
+        $identifyBuffer = [System.Text.Encoding]::UTF8.GetBytes($identifyJson)
+        $ws.SendAsync($identifyBuffer, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
+
+        # サーバーからのIdentifiedメッセージ(Op 2)を待機
+        $identified = Receive-OBSWebSocketResponse -WebSocket $ws
+        if (-not $identified -or $identified.op -ne 2) {
+            Write-Host "エラー: WebSocketの認証に失敗しました。"
+            $ws.Dispose()
+            return $null
+        }
+
+        Write-Host "OBS WebSocketの認証に成功しました。"
+        return $ws
+    }
+    catch {
+        Write-Host "OBS WebSocket接続/認証エラー: $_"
+        return $null
+    }
+}
+
+function Start-OBSReplayBuffer {
+    param (
+        [System.Net.WebSockets.ClientWebSocket]$WebSocket
+    )
+    try {
+        $requestId = [System.Guid]::NewGuid().ToString()
+        $command = @{
+            op = 6 # Request
+            d = @{
+                requestType = "StartReplayBuffer"
+                requestId = $requestId
+            }
+        } | ConvertTo-Json -Depth 3
+        
+        $buffer = [System.Text.Encoding]::UTF8.GetBytes($command)
+        $WebSocket.SendAsync($buffer, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
+        
+        Write-Host "OBSリプレイバッファの開始リクエストを送信しました"
+    }
+    catch {
+        Write-Host "リプレイバッファ開始リクエストエラー: $_"
+    }
+}
+
+function Stop-OBSReplayBuffer {
+    param (
+        [System.Net.WebSockets.ClientWebSocket]$WebSocket
+    )
+    try {
+        $requestId = [System.Guid]::NewGuid().ToString()
+        $command = @{
+            op = 6 # Request
+            d = @{
+                requestType = "StopReplayBuffer"
+                requestId = $requestId
+            }
+        } | ConvertTo-Json -Depth 3
+
+        $buffer = [System.Text.Encoding]::UTF8.GetBytes($command)
+        $WebSocket.SendAsync($buffer, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
+        
+        Write-Host "OBSリプレイバッファの停止リクエストを送信しました"
+    }
+    catch {
+        Write-Host "リプレイバッファ停止リクエストエラー: $_"
+    }
+}
+
+# OBS Studioの起動と設定（設定されている場合）
+if ($gameConfig.features.manageObs) {
+    $obsProcessName = "obs64"
+    if (!(Get-Process -Name $obsProcessName -ErrorAction SilentlyContinue)) {
+        Start-Process -FilePath $config.paths.obs
+        Write-Host "OBS Studioを起動しています..."
+        
+        # OBSの起動完了を待機
+        $retryCount = 0
+        $maxRetries = 10
+        while (!(Get-Process -Name $obsProcessName -ErrorAction SilentlyContinue) -and ($retryCount -lt $maxRetries)) {
+            Start-Sleep -Seconds 2
+            $retryCount++
+        }
+        
+        if (Get-Process -Name $obsProcessName -ErrorAction SilentlyContinue) {
+            Write-Host "OBS Studioの起動が完了しました"
+            Start-Sleep -Seconds 5  # OBS WebSocketサーバーの起動を待機
+        }
+        else {
+            Write-Host "警告: OBS Studioの起動を確認できませんでした"
+        }
+    }
+    else {
+        Write-Host "OBS Studioは既に起動しています"
+    }
+    
+    # リプレイバッファの制御（設定されている場合）
+    if ($gameConfig.features.manageObsReplayBuffer -and $config.obs.replayBuffer) {
+        $ws = Connect-OBSWebSocket -Host $config.obs.websocket.host -Port $config.obs.websocket.port -Password $config.obs.websocket.password
+        if ($ws) {
+            Start-OBSReplayBuffer -WebSocket $ws
+            $ws.Dispose()
+        }
+    }
+}
+
+# WinKeyの無効化（設定されている場合）
+if ($gameConfig.features.manageWinKey) {
+    Start-Process -FilePath $config.paths.noWinKey
+    Write-Host "WinKeyを無効化しました"
+}
+
+# ゲームを起動
+Start-Process $config.paths.steam -ArgumentList "-applaunch $($gameConfig.steamAppId)"
+Write-Host "$($gameConfig.name)を起動しています..."
+
+# ゲームプロセスが起動するまで待機
+while (!(Get-Process $gameConfig.processName -ErrorAction SilentlyContinue)) {
+    Start-Sleep -Seconds 30
+}
+Write-Host "$($gameConfig.name)のプロセスを監視しています"
+
+# ゲームプロセスが終了するまで待機
+while (Get-Process $gameConfig.processName -ErrorAction SilentlyContinue) {
+    Start-Sleep -Seconds 10
+}
+Write-Host "$($gameConfig.name)が終了しました..."
+
+# ゲーム終了時の処理を実行
+Invoke-GameCleanup
