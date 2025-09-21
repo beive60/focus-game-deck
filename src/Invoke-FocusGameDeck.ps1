@@ -5,14 +5,44 @@
 
 # Load configuration file
 $scriptDir = $PSScriptRoot
-$configPath = Join-Path $scriptDir "..\config.json"
+$configPath = Join-Path $scriptDir "..\config\config.json"
 $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
+
+# Initialize internationalization (i18n)
+$messagesPath = Join-Path $scriptDir "..\config\messages.json"
+$messages = Get-Content -Path $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
+
+# Determine language based on priority: config.json > OS language > English fallback
+$langCode = "en"  # Default fallback
+
+# 1. Check if language is explicitly set in config.json
+if ($config.PSObject.Properties.Name -contains "language" -and $config.language -and $config.language.Trim() -ne "") {
+    $configLang = $config.language.Trim().ToLower()
+    if ($messages.PSObject.Properties.Name -contains $configLang) {
+        $langCode = $configLang
+    }
+}
+else {
+    # 2. Auto-detect OS language if not explicitly set
+    try {
+        $osLang = (Get-Culture).TwoLetterISOLanguageName.ToLower()
+        if ($messages.PSObject.Properties.Name -contains $osLang) {
+            $langCode = $osLang
+        }
+    }
+    catch {
+        # If OS language detection fails, keep default English
+    }
+}
+
+# Load the appropriate message set
+$msg = $messages.$langCode
 
 # Get game configuration
 $gameConfig = $config.games.$GameId
 if (-not $gameConfig) {
-    Write-Host "Error: The specified game ID '$GameId' does not exist in the configuration file."
-    Write-Host "Available game IDs: $($config.games.PSObject.Properties.Name -join ', ')"
+    Write-Host ($msg.error_game_id_not_found -f $GameId)
+    Write-Host ($msg.available_game_ids -f ($config.games.PSObject.Properties.Name -join ', '))
     exit 1
 }
 
@@ -85,14 +115,14 @@ function Test-ConfigStructure {
 # Validate configuration
 $configErrors = Test-ConfigStructure
 if ($configErrors.Count -gt 0) {
-    Write-Host "Configuration validation failed:" -ForegroundColor Red
+    Write-Host $msg.config_validation_failed -ForegroundColor Red
     foreach ($errorMsg in $configErrors) {
         Write-Host "  - $errorMsg" -ForegroundColor Red
     }
     exit 1
 }
 
-Write-Host "Configuration validation passed" -ForegroundColor Green
+Write-Host $msg.config_validation_passed -ForegroundColor Green
 
 # Function to manage generic applications
 function Invoke-AppAction {
@@ -103,7 +133,7 @@ function Invoke-AppAction {
     
     # Validate app exists in managedApps
     if (-not $config.managedApps.$AppId) {
-        Write-Host "Warning: Application '$AppId' is not defined in managedApps configuration. Skipping."
+        Write-Host ($msg.warning_app_not_defined -f $AppId)
         return
     }
     
@@ -117,9 +147,9 @@ function Invoke-AppAction {
             } else {
                 Start-Process -FilePath $appConfig.path
             }
-            Write-Host "$AppId has been started"
+            Write-Host ($msg.app_started -f $AppId)
         } else {
-            Write-Host "Warning: No path specified for $AppId, cannot start application"
+            Write-Host ($msg.warning_no_path_specified -f $AppId)
         }
     }
     elseif ($Action -eq "stop") {
@@ -134,7 +164,7 @@ function Invoke-AppAction {
                     $processes = Get-Process -Name $processName -ErrorAction Stop
                     if ($processes) {
                         Stop-Process -Name $processName -Force
-                        Write-Host "${AppId}: Process '$processName' has been stopped"
+                        Write-Host ($msg.app_process_stopped -f $AppId, $processName)
                         $processFound = $true
                     }
                 }
@@ -144,10 +174,10 @@ function Invoke-AppAction {
             }
             
             if (-not $processFound) {
-                Write-Host "${AppId}: Process is not running"
+                Write-Host ($msg.app_process_not_running -f $AppId)
             }
         } else {
-            Write-Host "Warning: No process name specified for $AppId, cannot stop process"
+            Write-Host ($msg.warning_no_process_name -f $AppId)
         }
     }
 }
@@ -159,7 +189,7 @@ function Switch-CliborHotkey {
     )
     
     if (-not $config.managedApps.clibor) {
-        Write-Host "Warning: Clibor is not defined in managedApps configuration"
+        Write-Host $msg.warning_clibor_not_defined
         return
     }
     
@@ -169,13 +199,13 @@ function Switch-CliborHotkey {
         Start-Process -FilePath $cliborConfig.path -ArgumentList $arguments
         
         $actionText = switch ($Action) {
-            "enable" { "enabled" }
-            "disable" { "disabled" }
-            default { "toggled" }
+            "enable" { $msg.clibor_action_enable }
+            "disable" { $msg.clibor_action_disable }
+            default { $msg.clibor_action_toggled }
         }
-        Write-Host "Clibor hotkey has been ${actionText}"
+        Write-Host ($msg.clibor_hotkey_switched -f $actionText)
     } else {
-        Write-Host "Warning: No path specified for Clibor, cannot toggle hotkey"
+        Write-Host $msg.warning_no_clibor_path
     }
 }
 
@@ -186,7 +216,7 @@ function Invoke-GameCleanup {
     )
     
     if ($IsInterrupted) {
-        Write-Host "`nScript was interrupted. Executing rollback..."
+        Write-Host $msg.cleanup_initiated_interrupted
     }
     
     # Handle Clibor hotkey (special case)
@@ -243,7 +273,7 @@ foreach ($appId in $gameConfig.appsToManage) {
         $obsProcessName = "obs64"
         if (!(Get-Process -Name $obsProcessName -ErrorAction SilentlyContinue)) {
             Start-Process -FilePath $config.paths.obs
-            Write-Host "Starting OBS Studio..."
+            Write-Host $msg.starting_obs
             
             # Wait for OBS startup completion
             $retryCount = 0
@@ -254,15 +284,15 @@ foreach ($appId in $gameConfig.appsToManage) {
             }
             
             if (Get-Process -Name $obsProcessName -ErrorAction SilentlyContinue) {
-                Write-Host "OBS Studio startup completed"
+                Write-Host $msg.obs_startup_complete
                 Start-Sleep -Seconds 5  # Wait for OBS WebSocket server startup
             }
             else {
-                Write-Host "Warning: Could not confirm OBS Studio startup"
+                Write-Host $msg.obs_startup_failed
             }
         }
         else {
-            Write-Host "OBS Studio is already running"
+            Write-Host $msg.obs_already_running
         }
         
         # Control replay buffer (if configured)
@@ -296,7 +326,7 @@ foreach ($appId in $gameConfig.appsToManage) {
         }
         # If action is "none", do nothing
     } else {
-        Write-Host "Warning: Application '$appId' is not defined in managedApps configuration. Skipping."
+        Write-Host ($msg.warning_app_not_defined -f $appId)
     }
 }
 
@@ -327,7 +357,7 @@ function Receive-OBSWebSocketResponse {
         return $resultText | ConvertFrom-Json
     }
     catch {
-        Write-Host "Error receiving from OBS WebSocket or timeout: $_"
+        Write-Host ($msg.error_receive_websocket -f $_)
         return $null
     }
 }
@@ -349,16 +379,16 @@ function Connect-OBSWebSocket {
         $ws.ConnectAsync($uri, $cts.Token).Wait()
         
         if ($ws.State -ne [System.Net.WebSockets.WebSocketState]::Open) {
-            Write-Host "Failed to connect to OBS WebSocket"
+            Write-Host $msg.failed_connect_obs
             return $null
         }
 
-        Write-Host "Connected to OBS WebSocket. Starting handshake..."
+        Write-Host $msg.connected_obs_websocket
 
         # Wait for Hello message (Op 0) from server
         $hello = Receive-OBSWebSocketResponse -WebSocket $ws
         if (-not $hello -or $hello.op -ne 0) {
-            Write-Host "Error: Could not receive valid Hello message from server."
+            Write-Host $msg.error_receive_hello
             $ws.Dispose()
             return $null
         }
@@ -373,7 +403,7 @@ function Connect-OBSWebSocket {
 
         # If authentication is required
         if ($hello.d.authentication) {
-            Write-Host "Authentication required. Generating authentication information..."
+            Write-Host $msg.auth_required
             $salt = $hello.d.authentication.salt
             $challenge = $hello.d.authentication.challenge
 
@@ -406,16 +436,16 @@ function Connect-OBSWebSocket {
         # Wait for Identified message (Op 2) from server
         $identified = Receive-OBSWebSocketResponse -WebSocket $ws
         if (-not $identified -or $identified.op -ne 2) {
-            Write-Host "Error: WebSocket authentication failed."
+            Write-Host $msg.obs_auth_failed
             $ws.Dispose()
             return $null
         }
 
-        Write-Host "OBS WebSocket authentication successful."
+        Write-Host $msg.obs_auth_successful
         return $ws
     }
     catch {
-        Write-Host "OBS WebSocket connection/authentication error: $_"
+        Write-Host ($msg.obs_connection_error -f $_)
         return $null
     }
 }
@@ -438,10 +468,10 @@ function Start-OBSReplayBuffer {
         $sendSegment = New-Object ArraySegment[byte](, $buffer)
         $WebSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
         
-        Write-Host "Sent OBS replay buffer start request"
+        Write-Host $msg.obs_replay_buffer_started
     }
     catch {
-        Write-Host "Replay buffer start request error: $_"
+        Write-Host ($msg.replay_buffer_start_error -f $_)
     }
 }
 
@@ -463,28 +493,28 @@ function Stop-OBSReplayBuffer {
         $sendSegment = New-Object ArraySegment[byte](, $buffer)
         $WebSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
         
-        Write-Host "Sent OBS replay buffer stop request"
+        Write-Host $msg.obs_replay_buffer_stopped
     }
     catch {
-        Write-Host "Replay buffer stop request error: $_"
+        Write-Host ($msg.replay_buffer_stop_error -f $_)
     }
 }
 
 # Launch game
 Start-Process $config.paths.steam -ArgumentList "-applaunch $($gameConfig.steamAppId)"
-Write-Host "Starting $($gameConfig.name)..."
+Write-Host ($msg.starting_game -f $gameConfig.name)
 
 # Wait for game process to start
 while (!(Get-Process $gameConfig.processName -ErrorAction SilentlyContinue)) {
     Start-Sleep -Seconds 30
 }
-Write-Host "Monitoring $($gameConfig.name) process"
+Write-Host ($msg.monitoring_process -f $gameConfig.name)
 
 # Wait for game process to end
 while (Get-Process $gameConfig.processName -ErrorAction SilentlyContinue) {
     Start-Sleep -Seconds 10
 }
-Write-Host "$($gameConfig.name) has exited..."
+Write-Host ($msg.game_exited -f $gameConfig.name)
 
 # Execute cleanup processing when game exits
 Invoke-GameCleanup

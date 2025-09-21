@@ -11,7 +11,7 @@ echo.
 
 :: Read game IDs from config.json.sample and create a menu
 :: NOTE: This is a simple parser. It works if the format is consistent.
-set "CONFIG_FILE=config.json.sample"
+set "CONFIG_FILE=config\config.json.sample"
 set /a count=0
 for /f "tokens=2 delims=:," %%a in ('findstr /r /c:"\"name\":" %CONFIG_FILE%') do (
     set /a count+=1

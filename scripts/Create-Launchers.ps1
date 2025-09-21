@@ -4,13 +4,13 @@
 # Get the directory where the script is located
 $scriptDir = $PSScriptRoot
 $rootDir = Split-Path $scriptDir -Parent
-$configPath = Join-Path $rootDir "config.json"
+$configPath = Join-Path $rootDir "config\config.json"
 $coreScriptPath = Join-Path $rootDir "src\Invoke-FocusGameDeck.ps1"
 
 # Check if config.json exists
 if (-not (Test-Path $configPath)) {
-    Write-Host "Error: config.json not found."
-    Write-Host "Please copy config.json.sample to config.json and configure it."
+    Write-Host "Error: config\config.json not found."
+    Write-Host "Please copy config\config.json.sample to config\config.json and configure it."
     pause
     exit 1
 }
