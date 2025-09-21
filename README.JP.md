@@ -9,13 +9,14 @@
 ## **✨ 機能**
 
 * **🎮 ゲーム固有の自動環境設定**: 設定に基づいて、各ゲーム用のカスタム環境を自動的にセットアップし、終了時に復元します。
-* **🔧 ツール統合**: 以下のツールと機能を自動制御：
+* **🔧 汎用アプリケーション管理**: 設定可能な起動・終了アクションで任意のアプリケーションを柔軟に制御。
+* **🔄 簡単な拡張性**: 設定ファイルを編集するだけで新しいアプリケーションを管理対象に追加可能 - コード変更は一切不要。
+* **🛡️ 堅牢な設計**: 包括的な設定検証機能と、スクリプトが中断された場合（Ctrl+Cなど）でも環境を正常に復元するクリーンアップ処理を含みます。
+* **⚙️ 特別な統合機能**: 以下への組み込みサポート：
   * **Clibor**: ホットキーのオン/オフ切り替え。
   * **NoWinKey**: Windowsキーを無効化して誤操作を防止。
-  * **AutoHotkey**: 実行中のスクリプトを一時停止し、ゲーム終了後に再開。
+  * **AutoHotkey**: 実行中のスクリプトを停止し、ゲーム終了後に再開。
   * **OBS Studio**: OBSを起動し、ゲーム開始/終了時にリプレイバッファを自動開始/停止。
-* **⚙️ 簡単な設定**: config.jsonファイルを編集するだけで、新しいゲームの追加や機能のオン/オフが可能。
-* **🛡️ 堅牢な設計**: スクリプトが中断された場合（Ctrl+Cなど）でも、環境を正常に復元するクリーンアップ処理を含みます。
 
 ## **🛠️ 必要要件**
 
@@ -48,38 +49,71 @@
            },
            "replayBuffer": true
        },
+       "managedApps": {
+           "noWinKey": {
+               "path": "C:\\\\Apps\\\\NoWinKey\\\\NoWinKey.exe",
+               "processName": "NoWinKey",
+               "startupAction": "start",
+               "shutdownAction": "stop",
+               "arguments": ""
+           },
+           "autoHotkey": {
+               "path": "",
+               "processName": "AutoHotkeyU64|AutoHotkey|AutoHotkey64",
+               "startupAction": "stop",
+               "shutdownAction": "start",
+               "arguments": ""
+           },
+           "clibor": {
+               "path": "C:\\\\Apps\\\\clibor\\\\Clibor.exe",
+               "processName": "Clibor",
+               "startupAction": "none",
+               "shutdownAction": "none",
+               "arguments": "/hs"
+           },
+           "luna": {
+               "path": "",
+               "processName": "Luna",
+               "startupAction": "stop",
+               "shutdownAction": "none",
+               "arguments": ""
+           }
+       },
        "games": {
            "apex": { // ← "apex" が GameId
                "name": "Apex Legends",
                "steamAppId": "1172470", // Steam ストアページのURLで確認
                "processName": "r5apex\\*", // タスクマネージャーで確認（ワイルドカード \\* をサポート）
-               "features": {
-                   "manageWinKey": true,
-                   "manageAutoHotkey": true,
-                   "manageLuna": true,
-                   "manageObs": true,
-                   "manageCliborHotkey": true,
-                   "manageObsReplayBuffer": true
-               }
+               "appsToManage": ["noWinKey", "autoHotkey", "luna", "obs", "clibor"]
+           },
+           "dbd": {
+               "name": "Dead by Daylight",
+               "steamAppId": "381210",
+               "processName": "DeadByDaylight-Win64-Shipping\\*",
+               "appsToManage": ["obs", "clibor"]
            }
            // ... 他のゲームをここに追加 ...
        },
        "paths": {
            // ↓↓↓ これらをPCの正しい実行ファイルパスに変更してください ↓↓↓
            "steam": "C:\\\\Program Files (x86)\\\\Steam\\\\steam.exe",
-           "clibor": "C:\\\\Apps\\\\clibor\\\\Clibor.exe",
-           "noWinKey": "C:\\\\Apps\\\\NoWinKey\\\\NoWinKey.exe",
-           "autoHotkey": "", // ゲーム終了後に実行したいAutoHotkeyスクリプトのパス
            "obs": "C:\\\\Program Files\\\\obs-studio\\\\bin\\\\64bit\\\\obs64.exe"
        }
    }
    ```
 
-   * **games**:
-     * 管理したいゲームのエントリを追加します。キー（例："apex"、"dbd"）は後で -GameId パラメータとして使用されます。
-     * features の boolean 値を true または false に設定して、各ゲームの特定の自動化を有効または無効にします。
-   * **paths**:
-     * 各アプリケーションの **実行ファイルへの絶対パス** を正しく設定してください。
+   * **managedApps**:  
+     * 管理したいすべてのアプリケーションを定義します。各アプリには以下が含まれます：
+       * `path`: 実行ファイルのフルパス（プロセス管理のみの場合は空でも可）
+       * `processName`: 停止用のプロセス名（|でワイルドカードをサポート）
+       * `startupAction`: ゲーム開始時のアクション（"start", "stop", "none"）
+       * `shutdownAction`: ゲーム終了時のアクション（"start", "stop", "none"）
+       * `arguments`: オプションのコマンドライン引数
+   * **games**:  
+     * 管理したいゲームのエントリを追加します。キー（例："apex"、"dbd"）は後で -GameId パラメータとして使用されます。  
+     * `appsToManage` 配列で、各ゲームで管理するアプリケーションを指定します。  
+   * **paths**:  
+     * SteamとOBSのパスを設定します。その他のアプリケーションパスは `managedApps` で定義されます。
 
 ## **🎬 使用方法**
 
@@ -94,6 +128,63 @@ PowerShellターミナルを開き、スクリプトのディレクトリに移�
 * config.json で設定した GameId（例："apex"、"dbd"）を -GameId パラメータに指定します。
 * スクリプトは自動的に設定を適用し、Steam経由でゲームを起動します。
 * ゲームを終了すると、スクリプトはプロセスの終了を検知し、自動的に環境を元の状態に復元します。
+
+## **🔧 トラブルシューティング**
+
+1. **スクリプトの実行が失敗する場合:**
+   * PowerShellの実行ポリシーを確認してください
+   * 管理者権限で実行してみてください
+
+2. **プロセスの停止/開始が失敗する場合:**
+   * `managedApps` のパス設定が正しいことを確認してください
+   * アプリケーションが正しくインストールされていることを確認してください
+   * プロセス名が正しいことを確認してください（タスクマネージャーで確認）
+
+3. **ゲームが起動しない場合:**
+   * Steam AppIDが正しいことを確認してください
+   * Steamが実行されていることを確認してください
+
+4. **OBSリプレイバッファが開始しない場合:**
+   * OBS WebSocketサーバーが有効になっていることを確認してください
+   * WebSocket設定（ホスト、ポート、パスワード）が正しいことを確認してください
+   * OBSでリプレイバッファが設定されていることを確認してください
+
+5. **設定検証エラーが発生する場合:**
+   * `appsToManage` で参照されているすべてのアプリケーションが `managedApps` に存在することを確認してください
+   * 必要なプロパティ（path, processName, startupAction, shutdownAction）が存在することを確認してください
+   * アクション値が次のいずれかであることを確認してください: "start", "stop", "none"
+
+## **➕ 新しいアプリケーションの追加**
+
+新しいアーキテクチャにより、管理対象のアプリケーションを非常に簡単に追加できます。`managedApps` セクションに追加するだけです：
+
+```json
+{
+  "managedApps": {
+    "discord": {
+      "path": "C:\\Users\\Username\\AppData\\Local\\Discord\\app-1.0.9012\\Discord.exe",
+      "processName": "Discord",
+      "startupAction": "stop",
+      "shutdownAction": "start",
+      "arguments": ""
+    },
+    "spotify": {
+      "path": "C:\\Users\\Username\\AppData\\Roaming\\Spotify\\Spotify.exe",
+      "processName": "Spotify",
+      "startupAction": "stop",
+      "shutdownAction": "none",
+      "arguments": ""
+    }
+  },
+  "games": {
+    "apex": {
+      "appsToManage": ["noWinKey", "autoHotkey", "discord", "spotify", "obs", "clibor"]
+    }
+  }
+}
+```
+
+**以上です！** PowerShellスクリプトの変更は一切不要です。システムは `managedApps` で定義された任意のアプリケーションを自動的に処理します。
 
 ## **📜 ライセンス**
 

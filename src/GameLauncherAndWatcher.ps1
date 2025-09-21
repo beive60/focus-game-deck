@@ -16,20 +16,167 @@ if (-not $gameConfig) {
     exit 1
 }
 
-# Function to toggle Clibor hotkey
+# Validate configuration structure
+function Test-ConfigStructure {
+    $errors = @()
+    
+    # Check if managedApps section exists
+    if (-not $config.managedApps) {
+        $errors += "Missing 'managedApps' section in configuration"
+    }
+    
+    # Check if appsToManage exists for this game
+    if (-not $gameConfig.appsToManage) {
+        $errors += "Missing 'appsToManage' array for game '$GameId'"
+    } else {
+        # Validate each app in appsToManage
+        foreach ($appId in $gameConfig.appsToManage) {
+            if ($appId -eq "obs" -or $appId -eq "clibor") {
+                # Special cases - skip validation
+                continue
+            }
+            
+            if (-not $config.managedApps.$appId) {
+                $errors += "Application '$appId' is referenced in game '$GameId' but not defined in managedApps"
+            } else {
+                $appConfig = $config.managedApps.$appId
+                
+                # Validate required properties
+                if (-not $appConfig.PSObject.Properties.Name -contains "processName") {
+                    $errors += "Application '$appId' is missing 'processName' property"
+                }
+                if (-not $appConfig.PSObject.Properties.Name -contains "startupAction") {
+                    $errors += "Application '$appId' is missing 'startupAction' property"
+                }
+                if (-not $appConfig.PSObject.Properties.Name -contains "shutdownAction") {
+                    $errors += "Application '$appId' is missing 'shutdownAction' property"
+                }
+                
+                # Validate action values
+                $validActions = @("start", "stop", "none")
+                if ($appConfig.startupAction -and $appConfig.startupAction -notin $validActions) {
+                    $errors += "Application '$appId' has invalid startupAction: '$($appConfig.startupAction)'. Valid values: $($validActions -join ', ')"
+                }
+                if ($appConfig.shutdownAction -and $appConfig.shutdownAction -notin $validActions) {
+                    $errors += "Application '$appId' has invalid shutdownAction: '$($appConfig.shutdownAction)'. Valid values: $($validActions -join ', ')"
+                }
+            }
+        }
+    }
+    
+    # Check required paths
+    if (-not $config.paths.steam) {
+        $errors += "Missing 'paths.steam' in configuration"
+    }
+    
+    # Check OBS-specific configuration if OBS is managed
+    if ("obs" -in $gameConfig.appsToManage) {
+        if (-not $config.paths.obs) {
+            $errors += "OBS is managed but 'paths.obs' is not defined"
+        }
+        if (-not $config.obs) {
+            $errors += "OBS is managed but 'obs' configuration section is missing"
+        }
+    }
+    
+    return $errors
+}
+
+# Validate configuration
+$configErrors = Test-ConfigStructure
+if ($configErrors.Count -gt 0) {
+    Write-Host "Configuration validation failed:" -ForegroundColor Red
+    foreach ($errorMsg in $configErrors) {
+        Write-Host "  - $errorMsg" -ForegroundColor Red
+    }
+    exit 1
+}
+
+Write-Host "Configuration validation passed" -ForegroundColor Green
+
+# Function to manage generic applications
+function Invoke-AppAction {
+    param(
+        [string]$AppId,
+        [string]$Action  # "start" or "stop"
+    )
+    
+    # Validate app exists in managedApps
+    if (-not $config.managedApps.$AppId) {
+        Write-Host "Warning: Application '$AppId' is not defined in managedApps configuration. Skipping."
+        return
+    }
+    
+    $appConfig = $config.managedApps.$AppId
+    
+    if ($Action -eq "start") {
+        if ($appConfig.path -and $appConfig.path -ne "") {
+            $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") { $appConfig.arguments } else { $null }
+            if ($arguments) {
+                Start-Process -FilePath $appConfig.path -ArgumentList $arguments
+            } else {
+                Start-Process -FilePath $appConfig.path
+            }
+            Write-Host "$AppId has been started"
+        } else {
+            Write-Host "Warning: No path specified for $AppId, cannot start application"
+        }
+    }
+    elseif ($Action -eq "stop") {
+        if ($appConfig.processName -and $appConfig.processName -ne "") {
+            # Handle multiple process names separated by |
+            $processNames = $appConfig.processName -split '\|'
+            $processFound = $false
+            
+            foreach ($processName in $processNames) {
+                $processName = $processName.Trim()
+                try {
+                    $processes = Get-Process -Name $processName -ErrorAction Stop
+                    if ($processes) {
+                        Stop-Process -Name $processName -Force
+                        Write-Host "${AppId}: Process '$processName' has been stopped"
+                        $processFound = $true
+                    }
+                }
+                catch {
+                    # Process not found, continue to next
+                }
+            }
+            
+            if (-not $processFound) {
+                Write-Host "${AppId}: Process is not running"
+            }
+        } else {
+            Write-Host "Warning: No process name specified for $AppId, cannot stop process"
+        }
+    }
+}
+
+# Function to handle Clibor hotkey toggle (special case)
 function Switch-CliborHotkey {
     param(
         [string]$Action = "toggle"  # "enable" or "disable" or "toggle"
     )
     
-    Start-Process -FilePath $config.paths.clibor -ArgumentList "/hs"
-    
-    $actionText = switch ($Action) {
-        "enable" { "enabled" }
-        "disable" { "disabled" }
-        default { "toggled" }
+    if (-not $config.managedApps.clibor) {
+        Write-Host "Warning: Clibor is not defined in managedApps configuration"
+        return
     }
-    Write-Host "Clibor hotkey has been ${actionText}"
+    
+    $cliborConfig = $config.managedApps.clibor
+    if ($cliborConfig.path -and $cliborConfig.path -ne "") {
+        $arguments = if ($cliborConfig.arguments -and $cliborConfig.arguments -ne "") { $cliborConfig.arguments } else { "/hs" }
+        Start-Process -FilePath $cliborConfig.path -ArgumentList $arguments
+        
+        $actionText = switch ($Action) {
+            "enable" { "enabled" }
+            "disable" { "disabled" }
+            default { "toggled" }
+        }
+        Write-Host "Clibor hotkey has been ${actionText}"
+    } else {
+        Write-Host "Warning: No path specified for Clibor, cannot toggle hotkey"
+    }
 }
 
 # Common cleanup process for game exit
@@ -42,32 +189,42 @@ function Invoke-GameCleanup {
         Write-Host "`nScript was interrupted. Executing rollback..."
     }
     
-    # Manage Clibor hotkey (if configured)
-    if ($gameConfig.features.manageCliborHotkey) {
+    # Handle Clibor hotkey (special case)
+    if ("clibor" -in $gameConfig.appsToManage) {
         Switch-CliborHotkey -Action "enable"
-        Write-Host "Clibor hotkey has been enabled"
     }
     
-    # Game-specific exit processing
-    if ($gameConfig.features.manageWinKey) {
-        $noWinKeyProcessName = (Get-Item -Path $config.paths.noWinKey).BaseName
-        if (Get-Process -Name $noWinKeyProcessName -ErrorAction SilentlyContinue) {
-            Stop-Process -Name $noWinKeyProcessName -Force
-            Write-Host "NoWinKey has been terminated"
+    # Process all managed apps for shutdown
+    foreach ($appId in $gameConfig.appsToManage) {
+        if ($appId -eq "obs") {
+            # Special handling for OBS replay buffer
+            if ($config.obs.replayBuffer) {
+                $ws = Connect-OBSWebSocket -HostName $config.obs.websocket.host -Port $config.obs.websocket.port -Password $config.obs.websocket.password
+                if ($ws) {
+                    Stop-OBSReplayBuffer -WebSocket $ws
+                    $ws.Dispose()
+                }
+            }
+            continue
         }
-    }
-    
-    if ($gameConfig.features.manageAutoHotkey) {
-        & $config.paths.autoHotkey
-        Write-Host "AutoHotkey script has been launched"
-    }
-    
-    # Stop OBS replay buffer (if configured)
-    if ($gameConfig.features.manageObsReplayBuffer -and $config.obs.replayBuffer) {
-        $ws = Connect-OBSWebSocket -HostName $config.obs.websocket.host -Port $config.obs.websocket.port -Password $config.obs.websocket.password
-        if ($ws) {
-            Stop-OBSReplayBuffer -WebSocket $ws
-            $ws.Dispose()
+        
+        if ($appId -eq "clibor") {
+            # Already handled above as special case
+            continue
+        }
+        
+        # Get app configuration
+        if ($config.managedApps.$appId) {
+            $appConfig = $config.managedApps.$appId
+            $action = $appConfig.shutdownAction
+            
+            if ($action -eq "start") {
+                Invoke-AppAction -AppId $appId -Action "start"
+            }
+            elseif ($action -eq "stop") {
+                Invoke-AppAction -AppId $appId -Action "stop"
+            }
+            # If action is "none", do nothing
         }
     }
 }
@@ -78,34 +235,67 @@ trap [System.Management.Automation.PipelineStoppedException] {
     exit
 }
 
-# AutoHotkey management (if configured)
-if ($gameConfig.features.manageAutoHotkey) {
-    $autoHotkeyProcesses = @("AutoHotkeyU64", "AutoHotkey", "AutoHotkey64")
-    foreach ($processName in $autoHotkeyProcesses) {
-        try {
-            Stop-Process -Name $processName -Force -ErrorAction Stop
-            Write-Host "AutoHotkey: Process '$processName' has been stopped."
+# Process all managed apps for startup
+foreach ($appId in $gameConfig.appsToManage) {
+    if ($appId -eq "obs") {
+        # Special handling for OBS
+        $obsProcessName = "obs64"
+        if (!(Get-Process -Name $obsProcessName -ErrorAction SilentlyContinue)) {
+            Start-Process -FilePath $config.paths.obs
+            Write-Host "Starting OBS Studio..."
+            
+            # Wait for OBS startup completion
+            $retryCount = 0
+            $maxRetries = 10
+            while (!(Get-Process -Name $obsProcessName -ErrorAction SilentlyContinue) -and ($retryCount -lt $maxRetries)) {
+                Start-Sleep -Seconds 2
+                $retryCount++
+            }
+            
+            if (Get-Process -Name $obsProcessName -ErrorAction SilentlyContinue) {
+                Write-Host "OBS Studio startup completed"
+                Start-Sleep -Seconds 5  # Wait for OBS WebSocket server startup
+            }
+            else {
+                Write-Host "Warning: Could not confirm OBS Studio startup"
+            }
         }
-        catch {
-            Write-Host "AutoHotkey: Process '$processName' is not running."
+        else {
+            Write-Host "OBS Studio is already running"
         }
+        
+        # Control replay buffer (if configured)
+        if ($config.obs.replayBuffer) {
+            $ws = Connect-OBSWebSocket -HostName $config.obs.websocket.host -Port $config.obs.websocket.port -Password $config.obs.websocket.password
+            if ($ws) {
+                Start-OBSReplayBuffer -WebSocket $ws
+                $ws.Dispose()
+            }
+        }
+        continue
     }
-}
-
-if ($gameConfig.features.manageLuna) {
-    try {
-        Stop-Process -Name "Luna" -Force -ErrorAction Stop
-        Write-Host "Luna: Process has been stopped."
+    
+    if ($appId -eq "clibor") {
+        # Special handling for Clibor hotkey
+        Switch-CliborHotkey -Action "disable"
+        continue
     }
-    catch {
-        Write-Host "Luna: Process is not running."
+    
+    # Get app configuration
+    if ($config.managedApps.$appId) {
+        $appConfig = $config.managedApps.$appId
+        $action = $appConfig.startupAction
+        
+        if ($action -eq "start") {
+            Invoke-AppAction -AppId $appId -Action "start"
+        }
+        elseif ($action -eq "stop") {
+            Invoke-AppAction -AppId $appId -Action "stop"
+        }
+        # If action is "none", do nothing
+    } else {
+        Write-Host "Warning: Application '$appId' is not defined in managedApps configuration. Skipping."
     }
-}
-
-# Clibor hotkey management (if configured)
-if ($gameConfig.features.manageCliborHotkey) {
-    Switch-CliborHotkey -Action "disable"
-    Write-Host "Clibor hotkey has been disabled"
 }
 
 # WebSocket helper functions
@@ -265,49 +455,6 @@ function Stop-OBSReplayBuffer {
     catch {
         Write-Host "Replay buffer stop request error: $_"
     }
-}
-
-# Start and configure OBS Studio (if configured)
-if ($gameConfig.features.manageObs) {
-    $obsProcessName = "obs64"
-    if (!(Get-Process -Name $obsProcessName -ErrorAction SilentlyContinue)) {
-        Start-Process -FilePath $config.paths.obs
-        Write-Host "Starting OBS Studio..."
-        
-        # Wait for OBS startup completion
-        $retryCount = 0
-        $maxRetries = 10
-        while (!(Get-Process -Name $obsProcessName -ErrorAction SilentlyContinue) -and ($retryCount -lt $maxRetries)) {
-            Start-Sleep -Seconds 2
-            $retryCount++
-        }
-        
-        if (Get-Process -Name $obsProcessName -ErrorAction SilentlyContinue) {
-            Write-Host "OBS Studio startup completed"
-            Start-Sleep -Seconds 5  # Wait for OBS WebSocket server startup
-        }
-        else {
-            Write-Host "Warning: Could not confirm OBS Studio startup"
-        }
-    }
-    else {
-        Write-Host "OBS Studio is already running"
-    }
-    
-    # Control replay buffer (if configured)
-    if ($gameConfig.features.manageObsReplayBuffer -and $config.obs.replayBuffer) {
-        $ws = Connect-OBSWebSocket -HostName $config.obs.websocket.host -Port $config.obs.websocket.port -Password $config.obs.websocket.password
-        if ($ws) {
-            Start-OBSReplayBuffer -WebSocket $ws
-            $ws.Dispose()
-        }
-    }
-}
-
-# Disable WinKey (if configured)
-if ($gameConfig.features.manageWinKey) {
-    Start-Process -FilePath $config.paths.noWinKey
-    Write-Host "WinKey has been disabled"
 }
 
 # Launch game

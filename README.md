@@ -9,13 +9,14 @@ This script handles the tedious environment setup before you start playing (disa
 ## **✨ Features**
 
 * **🎮 Automated Game-Specific Environments**: Automatically sets up and tears down a custom environment for each game based on your configuration.  
-* **🔧 Tool Integration**: Automatically controls the following tools and features:  
+* **🔧 Generic Application Management**: Flexibly control any application with configurable startup and shutdown actions.
+* **🔄 Easy Extensibility**: Add new applications to manage by simply editing the configuration file - no code changes required.
+* **🛡️ Robust Design**: Includes comprehensive configuration validation and a cleanup process that ensures your environment is restored to normal even if the script is interrupted (e.g., with Ctrl+C).
+* **⚙️ Special Integrations**: Built-in support for:  
   * **Clibor**: Toggles hotkeys on/off.  
   * **NoWinKey**: Disables the Windows key to prevent accidental presses.  
-  * **AutoHotkey**: Pauses running scripts and resumes them after the game closes.  
-  * **OBS Studio**: Launches OBS and automatically starts/stops the replay buffer when your game starts/ends.  
-* **⚙️ Easy Configuration**: Simply edit the config.json file to add new games or toggle features on and off.  
-* **🛡️ Robust Design**: Includes a cleanup process that ensures your environment is restored to normal even if the script is interrupted (e.g., with Ctrl+C).
+  * **AutoHotkey**: Stops running scripts and resumes them after the game closes.  
+  * **OBS Studio**: Launches OBS and automatically starts/stops the replay buffer when your game starts/ends.
 
 ## **🛠️ Prerequisites**
 
@@ -48,38 +49,71 @@ To use this script, you will need the following software installed:
              },  
              "replayBuffer": true  
          },  
+         "managedApps": {
+             "noWinKey": {
+                 "path": "C:\\\\Apps\\\\NoWinKey\\\\NoWinKey.exe",
+                 "processName": "NoWinKey",
+                 "startupAction": "start",
+                 "shutdownAction": "stop",
+                 "arguments": ""
+             },
+             "autoHotkey": {
+                 "path": "",
+                 "processName": "AutoHotkeyU64|AutoHotkey|AutoHotkey64",
+                 "startupAction": "stop",
+                 "shutdownAction": "start",
+                 "arguments": ""
+             },
+             "clibor": {
+                 "path": "C:\\\\Apps\\\\clibor\\\\Clibor.exe",
+                 "processName": "Clibor",
+                 "startupAction": "none",
+                 "shutdownAction": "none",
+                 "arguments": "/hs"
+             },
+             "luna": {
+                 "path": "",
+                 "processName": "Luna",
+                 "startupAction": "stop",
+                 "shutdownAction": "none",
+                 "arguments": ""
+             }
+         },
          "games": {  
              "apex": { // ← "apex" is the GameId  
                  "name": "Apex Legends",  
                  "steamAppId": "1172470", // Find this in the Steam store page URL  
                  "processName": "r5apex\*", // Check this in Task Manager (wildcard \* is supported)  
-                 "features": {  
-                     "manageWinKey": true,  
-                     "manageAutoHotkey": true,  
-                     "manageLuna": true,  
-                     "manageObs": true,  
-                     "manageCliborHotkey": true,  
-                     "manageObsReplayBuffer": true  
-                 }  
-             }  
+                 "appsToManage": ["noWinKey", "autoHotkey", "luna", "obs", "clibor"]
+             },
+             "dbd": {
+                 "name": "Dead by Daylight",
+                 "steamAppId": "381210",
+                 "processName": "DeadByDaylight-Win64-Shipping\*",
+                 "appsToManage": ["obs", "clibor"]
+             }
              // ... Add other games here ...  
          },  
          "paths": {  
              // ↓↓↓ Change these to the correct executable paths on your PC ↓↓↓  
              "steam": "C:\\\\Program Files (x86)\\\\Steam\\\\steam.exe",  
-             "clibor": "C:\\\\Apps\\\\clibor\\\\Clibor.exe",  
-             "noWinKey": "C:\\\\Apps\\\\NoWinKey\\\\NoWinKey.exe",  
-             "autoHotkey": "", // Path to an AutoHotkey script you want to run after the game closes  
              "obs": "C:\\\\Program Files\\\\obs-studio\\\\bin\\\\64bit\\\\obs64.exe"  
          }  
      }
    ```
 
+   * **managedApps**:  
+     * Define all applications you want to manage. Each app has:
+       * `path`: Full path to the executable (can be empty if only process management is needed)
+       * `processName`: Process name for stopping (supports wildcards with |)
+       * `startupAction`: Action when game starts ("start", "stop", or "none")
+       * `shutdownAction`: Action when game ends ("start", "stop", or "none")
+       * `arguments`: Optional command line arguments
    * **games**:  
      * Add entries for the games you want to manage. The key (e.g., "apex", "dbd") will be used as the \-GameId parameter later.  
-     * Set the boolean values in features to true or false to enable or disable specific automations for each game.  
+     * Set the `appsToManage` array to specify which applications should be managed for each game.  
    * **paths**:  
-     * Ensure you set the correct **absolute path to the .exe file** for each application.
+     * Set paths for Steam and OBS. Other application paths are now defined in `managedApps`.
 
 ## **🎬 How to Use**
 
@@ -95,6 +129,38 @@ Open a PowerShell terminal, navigate to the script's directory, and run the foll
 * The script will automatically apply your configured settings and launch the game via Steam.  
 * Once you exit the game, the script will detect the process has ended and automatically restore your environment to its original state.
 
+## **➕ Adding New Applications**
+
+The new architecture makes it extremely easy to add new applications to manage. Simply add them to the `managedApps` section:
+
+```json
+{
+  "managedApps": {
+    "discord": {
+      "path": "C:\\Users\\Username\\AppData\\Local\\Discord\\app-1.0.9012\\Discord.exe",
+      "processName": "Discord",
+      "startupAction": "stop",
+      "shutdownAction": "start",
+      "arguments": ""
+    },
+    "spotify": {
+      "path": "C:\\Users\\Username\\AppData\\Roaming\\Spotify\\Spotify.exe",
+      "processName": "Spotify",
+      "startupAction": "stop",
+      "shutdownAction": "none",
+      "arguments": ""
+    }
+  },
+  "games": {
+    "apex": {
+      "appsToManage": ["noWinKey", "autoHotkey", "discord", "spotify", "obs", "clibor"]
+    }
+  }
+}
+```
+
+**That's it!** No PowerShell script changes required. The system automatically handles any application defined in `managedApps`.
+
 ## **🔧 Troubleshooting**
 
 1. **If the script fails to execute:**
@@ -102,8 +168,9 @@ Open a PowerShell terminal, navigate to the script's directory, and run the foll
    * Try running with administrator privileges
 
 2. **If processes fail to stop/start:**
-   * Verify path settings are correct
+   * Verify path settings are correct in `managedApps`
    * Ensure applications are properly installed
+   * Check that process names are correct (use Task Manager to verify)
 
 3. **If the game doesn't launch:**
    * Verify the Steam AppID is correct
@@ -113,6 +180,11 @@ Open a PowerShell terminal, navigate to the script's directory, and run the foll
    * Verify OBS WebSocket server is enabled
    * Check WebSocket settings (host, port, password) are correct
    * Ensure replay buffer is configured in OBS
+
+5. **Configuration validation errors:**
+   * Check that all referenced applications in `appsToManage` exist in `managedApps`
+   * Ensure required properties (path, processName, startupAction, shutdownAction) are present
+   * Verify action values are one of: "start", "stop", "none"
 
 ## **📜 License**
 
