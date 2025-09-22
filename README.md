@@ -31,6 +31,24 @@ To use this script, you will need the following software installed:
 * **\[Optional\] AutoHotkey**: A scripting language for automation.  
 * **\[Optional\] Luna**: (Or any other background application you wish to manage).
 
+## **🏗️ Architecture & Design**
+
+Focus Game Deck is built with a **lightweight, maintainable, and extensible** design philosophy:
+
+### **Core Principles**
+* **🪶 Lightweight**: Uses Windows native PowerShell + WPF, no additional runtime required
+* **🔧 Configuration-Driven**: All behavior controlled through `config.json` - no code changes needed for customization
+* **🌐 Internationalization-Ready**: JSON external resource pattern for proper Japanese character support
+* **📦 Single-File Distribution**: Can be compiled to a single executable using ps2exe
+
+### **Technical Stack**
+* **Core Engine**: PowerShell scripts with comprehensive error handling
+* **GUI Module**: PowerShell + WPF with JSON-based internationalization
+* **Configuration**: JSON-based settings with validation and sample templates
+* **Integration**: Native Windows APIs and application-specific protocols
+
+For detailed architectural information, see [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+
 ## **🚀 Setup & Configuration**
 
 1. **Download the Repository**: Clone or download this repository as a ZIP file.  
