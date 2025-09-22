@@ -61,8 +61,8 @@ function Test-ConfigStructure {
     } else {
         # Validate each app in appsToManage
         foreach ($appId in $gameConfig.appsToManage) {
-            if ($appId -eq "obs" -or $appId -eq "clibor") {
-                # Special cases - skip validation
+            if ($appId -eq "obs") {
+                # Special case for OBS - skip validation
                 continue
             }
             
@@ -128,7 +128,8 @@ Write-Host $msg.config_validation_passed -ForegroundColor Green
 function Invoke-AppAction {
     param(
         [string]$AppId,
-        [string]$Action  # "start" or "stop"
+        [string]$Action,  # "start", "stop", "enable", "disable", "toggle"
+        [string]$SpecialMode = $null  # For special handling like Clibor hotkey
     )
     
     # Validate app exists in managedApps
@@ -138,6 +139,24 @@ function Invoke-AppAction {
     }
     
     $appConfig = $config.managedApps.$AppId
+    
+    # Handle Clibor special case (hotkey toggle)
+    if ($AppId -eq "clibor" -and $Action -in @("enable", "disable", "toggle")) {
+        if ($appConfig.path -and $appConfig.path -ne "") {
+            $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") { $appConfig.arguments } else { "/hs" }
+            Start-Process -FilePath $appConfig.path -ArgumentList $arguments
+            
+            $actionText = switch ($Action) {
+                "enable" { $msg.clibor_action_enable }
+                "disable" { $msg.clibor_action_disable }
+                default { $msg.clibor_action_toggled }
+            }
+            Write-Host ($msg.app_hotkey_toggled -f $AppId, $actionText)
+        } else {
+            Write-Host ($msg.warning_no_path_specified -f $AppId)
+        }
+        return
+    }
     
     if ($Action -eq "start") {
         if ($appConfig.path -and $appConfig.path -ne "") {
@@ -182,33 +201,6 @@ function Invoke-AppAction {
     }
 }
 
-# Function to handle Clibor hotkey toggle (special case)
-function Switch-CliborHotkey {
-    param(
-        [string]$Action = "toggle"  # "enable" or "disable" or "toggle"
-    )
-    
-    if (-not $config.managedApps.clibor) {
-        Write-Host $msg.warning_clibor_not_defined
-        return
-    }
-    
-    $cliborConfig = $config.managedApps.clibor
-    if ($cliborConfig.path -and $cliborConfig.path -ne "") {
-        $arguments = if ($cliborConfig.arguments -and $cliborConfig.arguments -ne "") { $cliborConfig.arguments } else { "/hs" }
-        Start-Process -FilePath $cliborConfig.path -ArgumentList $arguments
-        
-        $actionText = switch ($Action) {
-            "enable" { $msg.clibor_action_enable }
-            "disable" { $msg.clibor_action_disable }
-            default { $msg.clibor_action_toggled }
-        }
-        Write-Host ($msg.clibor_hotkey_switched -f $actionText)
-    } else {
-        Write-Host $msg.warning_no_clibor_path
-    }
-}
-
 # Common cleanup process for game exit
 function Invoke-GameCleanup {
     param(
@@ -219,9 +211,9 @@ function Invoke-GameCleanup {
         Write-Host $msg.cleanup_initiated_interrupted
     }
     
-    # Handle Clibor hotkey (special case)
+    # Handle Clibor hotkey (using unified app action)
     if ("clibor" -in $gameConfig.appsToManage) {
-        Switch-CliborHotkey -Action "enable"
+        Invoke-AppAction -AppId "clibor" -Action "enable"
     }
     
     # Process all managed apps for shutdown
@@ -308,8 +300,8 @@ foreach ($appId in $gameConfig.appsToManage) {
     }
     
     if ($appId -eq "clibor") {
-        # Special handling for Clibor hotkey
-        Switch-CliborHotkey -Action "disable"
+        # Use unified app action for Clibor hotkey
+        Invoke-AppAction -AppId "clibor" -Action "disable"
         continue
     }
     
