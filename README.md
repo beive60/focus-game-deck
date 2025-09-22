@@ -201,3 +201,7 @@ If you enjoy using it, I would be incredibly grateful if you could share that yo
 When you do, feel free to use the hashtag **`#GameLauncherWatcher`**. It would be a great joy for me to see your post!
 
 Knowing that the tool is helping people is the single biggest motivation to keep improving it.
+
+## **🗺️ Project Roadmap**
+
+Want to see what's coming next? Check out our [detailed roadmap](./doc/ROADMAP.md) to see planned features, timeline, and the strategic vision for Focus Game Deck's future development.
