@@ -123,6 +123,78 @@ body {
     width: 100%;
 }
 
+/* 言語切り替えメニュー */
+.language-selector {
+    position: relative;
+}
+
+.language-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.language-toggle:hover {
+    background: rgba(0, 255, 136, 0.1);
+    color: var(--primary-color);
+}
+
+.language-arrow {
+    transition: var(--transition);
+    margin-left: 0.25rem;
+}
+
+.language-toggle:hover .language-arrow {
+    transform: rotate(180deg);
+}
+
+.language-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.5rem 0;
+    list-style: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: var(--transition);
+    z-index: 1000;
+    min-width: 140px;
+    box-shadow: var(--shadow-lg);
+}
+
+.language-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.language-option {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: var(--transition);
+    font-size: 0.9rem;
+}
+
+.language-option:hover {
+    background: rgba(0, 255, 136, 0.1);
+    color: var(--primary-color);
+}
+
+.language-option.active {
+    color: var(--primary-color);
+    background: rgba(0, 255, 136, 0.05);
+}
+
 .hamburger {
     display: none;
     flex-direction: column;
@@ -989,6 +1061,29 @@ body {
         width: 100%;
         max-width: 300px;
         justify-content: center;
+    }
+
+    /* レスポンシブ言語切り替え */
+    .language-selector {
+        order: -1;
+        margin-bottom: 1rem;
+    }
+
+    .language-menu {
+        position: static;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        box-shadow: none;
+        border: none;
+        background: transparent;
+        padding: 0;
+    }
+
+    .language-option {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        margin-bottom: 0.25rem;
     }
 }
 

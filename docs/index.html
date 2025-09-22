@@ -20,16 +20,28 @@
             </div>
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="#features" class="nav-link">機能</a>
+                    <a href="#features" class="nav-link" id="nav-features">機能</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#benefits" class="nav-link">メリット</a>
+                    <a href="#benefits" class="nav-link" id="nav-benefits">メリット</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#download" class="nav-link">ダウンロード</a>
+                    <a href="#download" class="nav-link" id="nav-download">ダウンロード</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#faq" class="nav-link">FAQ</a>
+                    <a href="#faq" class="nav-link" id="nav-faq">FAQ</a>
+                </li>
+                <li class="nav-item language-selector">
+                    <a href="#" class="nav-link language-toggle" id="language-toggle">
+                        🇯🇵 <span id="nav-language">言語</span>
+                        <svg class="language-arrow" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"></path>
+                        </svg>
+                    </a>
+                    <ul class="language-menu" id="language-menu">
+                        <li><a href="#" class="language-option active" data-lang="ja">🇯🇵 日本語</a></li>
+                        <li><a href="#" class="language-option" data-lang="en">🇺🇸 English</a></li>
+                    </ul>
                 </li>
             </ul>
             <div class="hamburger">
@@ -45,23 +57,25 @@
         <div class="hero-container">
             <div class="hero-content">
                 <h1 class="hero-title">
-                    <span class="gradient-text">勝利のための集中</span><br>
-                    <span class="subtitle">ワンクリックで実現</span>
+                    <span class="gradient-text">
+                        <span id="hero-title-focus">FOCUS</span><br>
+                        <span id="hero-title-game">GAME</span><br>
+                        <span id="hero-title-deck">DECK</span>
+                    </span><br>
+                    <span class="subtitle" id="hero-subtitle">ゲーミング集中力向上ツール</span>
                 </h1>
-                <p class="hero-description">
-                    競技PCゲーマーが真に必要なのは、ゲーム以外の煩わしさから完全に解放された環境です。<br>
-                    Focus Game Deckは、アンチチートシステムとの競合回避からWinキー無効化まで、<br>
-                    最高のパフォーマンスを発揮するための準備を自動化します。
+                <p class="hero-description" id="hero-description">
+                    プロゲーマーレベルの集中力を手に入れよう。Focus Game Deckは、ゲーミング中の集中力とパフォーマンスを最大化するために設計されたPowerShellベースの軽量ツールです。
                 </p>
                 <div class="hero-buttons">
                     <a href="#download" class="btn btn-primary">
-                        <span>無料ダウンロード</span>
+                        <span id="hero-btn-download">ダウンロード</span>
                         <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
                             <path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </a>
                     <a href="#features" class="btn btn-secondary">
-                        <span>機能を見る</span>
+                        <span id="hero-btn-learn-more">詳細を見る</span>
                         <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
                             <path d="M7 17l9.2-9.2M17 17V7H7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
@@ -86,7 +100,7 @@
             </div>
         </div>
         <div class="scroll-indicator">
-            <div class="scroll-text">Scroll to explore</div>
+            <div class="scroll-text" id="scroll-text">スクロールして詳細を見る</div>
             <div class="scroll-arrow"></div>
         </div>
     </section>
