@@ -39,91 +39,93 @@ To use this script, you will need the following software installed:
 3. **Edit config.json**:  
    * Open config.json in a text editor and update the paths and settings to match your system.
 
-   ```json
-   {  
-         "obs": {  
-             "websocket": {  
-                 "host": "localhost",  
-                 "port": 4455,  
-                 "password": "" // Set your OBS WebSocket server password here  
-             },  
-             "replayBuffer": true  
-         },  
-         "managedApps": {
-             "noWinKey": {
-                 "path": "C:\\\\Apps\\\\NoWinKey\\\\NoWinKey.exe",
-                 "processName": "NoWinKey",
-                 "startupAction": "start",
-                 "shutdownAction": "stop",
-                 "arguments": ""
-             },
-             "autoHotkey": {
-                 "path": "",
-                 "processName": "AutoHotkeyU64|AutoHotkey|AutoHotkey64",
-                 "startupAction": "stop",
-                 "shutdownAction": "start",
-                 "arguments": ""
-             },
-             "clibor": {
-                 "path": "C:\\\\Apps\\\\clibor\\\\Clibor.exe",
-                 "processName": "Clibor",
-                 "startupAction": "none",
-                 "shutdownAction": "none",
-                 "arguments": "/hs"
-             },
-             "luna": {
-                 "path": "",
-                 "processName": "Luna",
-                 "startupAction": "stop",
-                 "shutdownAction": "none",
-                 "arguments": ""
-             }
-         },
-         "games": {  
-             "apex": { // ← "apex" is the GameId  
-                 "name": "Apex Legends",  
-                 "steamAppId": "1172470", // Find this in the Steam store page URL  
-                 "processName": "r5apex\*", // Check this in Task Manager (wildcard \* is supported)  
-                 "appsToManage": ["noWinKey", "autoHotkey", "luna", "obs", "clibor"]
-             },
-             "dbd": {
-                 "name": "Dead by Daylight",
-                 "steamAppId": "381210",
-                 "processName": "DeadByDaylight-Win64-Shipping\*",
-                 "appsToManage": ["obs", "clibor"]
-             }
-             // ... Add other games here ...  
-         },  
-         "paths": {  
-             // ↓↓↓ Change these to the correct executable paths on your PC ↓↓↓  
-             "steam": "C:\\\\Program Files (x86)\\\\Steam\\\\steam.exe",  
-             "obs": "C:\\\\Program Files\\\\obs-studio\\\\bin\\\\64bit\\\\obs64.exe"  
-         }  
-     }
-   ```
+```json
+{  
+      "obs": {  
+          "websocket": {  
+              "host": "localhost",  
+              "port": 4455,  
+              "password": "" // Set your OBS WebSocket server password here  
+          },  
+          "replayBuffer": true  
+      },  
+      "managedApps": {
+          "noWinKey": {
+              "path": "C:\\\\Apps\\\\NoWinKey\\\\NoWinKey.exe",
+              "processName": "NoWinKey",
+              "startupAction": "start",
+              "shutdownAction": "stop",
+              "arguments": ""
+          },
+          "autoHotkey": {
+              "path": "",
+              "processName": "AutoHotkeyU64|AutoHotkey|AutoHotkey64",
+              "startupAction": "stop",
+              "shutdownAction": "start",
+              "arguments": ""
+          },
+          "clibor": {
+              "path": "C:\\\\Apps\\\\clibor\\\\Clibor.exe",
+              "processName": "Clibor",
+              "startupAction": "none",
+              "shutdownAction": "none",
+              "arguments": "/hs"
+          },
+          "luna": {
+              "path": "",
+              "processName": "Luna",
+              "startupAction": "stop",
+              "shutdownAction": "none",
+              "arguments": ""
+          }
+      },
+      "games": {  
+          "apex": { // ← "apex" is the GameId  
+              "name": "Apex Legends",  
+              "steamAppId": "1172470", // Find this in the Steam store page URL  
+              "processName": "r5apex\*", // Check this in Task Manager (wildcard \* is supported)  
+              "appsToManage": ["noWinKey", "autoHotkey", "luna", "obs", "clibor"]
+          },
+          "dbd": {
+              "name": "Dead by Daylight",
+              "steamAppId": "381210",
+              "processName": "DeadByDaylight-Win64-Shipping\*",
+              "appsToManage": ["obs", "clibor"]
+          }
+          // ... Add other games here ...  
+      },  
+      "paths": {  
+          // ↓↓↓ Change these to the correct executable paths on your PC ↓↓↓  
+          "steam": "C:\\\\Program Files (x86)\\\\Steam\\\\steam.exe",  
+          "obs": "C:\\\\Program Files\\\\obs-studio\\\\bin\\\\64bit\\\\obs64.exe"  
+      }  
+  }
+```
 
-   * **managedApps**:  
-     * Define all applications you want to manage. Each app has:
-       * `path`: Full path to the executable (can be empty if only process management is needed)
-       * `processName`: Process name for stopping (supports wildcards with |)
-       * `startupAction`: Action when game starts ("start", "stop", or "none")
-       * `shutdownAction`: Action when game ends ("start", "stop", or "none")
-       * `arguments`: Optional command line arguments
-   * **games**:  
-     * Add entries for the games you want to manage. The key (e.g., "apex", "dbd") will be used as the \-GameId parameter later.  
-     * Set the `appsToManage` array to specify which applications should be managed for each game.  
-   * **paths**:  
-     * Set paths for Steam and OBS. Other application paths are now defined in `managedApps`.
+* **managedApps**:  
+* Define all applications you want to manage. Each app has:
+  * `path`: Full path to the executable (can be empty if only process management is needed)
+  * `processName`: Process name for stopping (supports wildcards with |)
+  * `startupAction`: Action when game starts ("start", "stop", or "none")
+  * `shutdownAction`: Action when game ends ("start", "stop", or "none")
+  * `arguments`: Optional command line arguments
+* **games**:  
+* Add entries for the games you want to manage. The key (e.g., "apex", "dbd") will be used as the \-GameId parameter later.  
+* Set the `appsToManage` array to specify which applications should be managed for each game.  
+* **paths**:  
+* Set paths for Steam and OBS. Other application paths are now defined in `managedApps`.
 
 ## **🎬 How to Use**
 
 Open a PowerShell terminal, navigate to the script's directory, and run the following command:
 
+```powershell
 \# Example: To launch Apex Legends  
 .\\Invoke-FocusGameDeck.ps1 \-GameId apex
 
 \# Example: To launch Dead by Daylight  
 .\\Invoke-FocusGameDeck.ps1 \-GameId dbd
+```
 
 * Specify the GameId you configured in config.json (e.g., "apex", "dbd") for the \-GameId parameter.  
 * The script will automatically apply your configured settings and launch the game via Steam.  

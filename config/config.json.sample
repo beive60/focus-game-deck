@@ -12,29 +12,29 @@
         "noWinKey": {
             "path": "C:\\Apps\\NoWinKey\\NoWinKey.exe",
             "processName": "NoWinKey",
-            "startupAction": "start",
-            "shutdownAction": "stop",
+            "gameStartAction": "start-process",
+            "gameEndAction": "stop-process",
             "arguments": ""
         },
         "autoHotkey": {
             "path": "",
             "processName": "AutoHotkeyU64|AutoHotkey|AutoHotkey64",
-            "startupAction": "stop",
-            "shutdownAction": "start",
+            "gameStartAction": "stop-process",
+            "gameEndAction": "none",
             "arguments": ""
         },
         "clibor": {
             "path": "C:\\Apps\\clibor\\Clibor.exe",
             "processName": "Clibor",
-            "startupAction": "none",
-            "shutdownAction": "none",
+            "gameStartAction": "toggle-hotkeys",
+            "gameEndAction": "toggle-hotkeys",
             "arguments": "/hs"
         },
         "luna": {
             "path": "",
             "processName": "Luna",
-            "startupAction": "stop",
-            "shutdownAction": "none",
+            "gameStartAction": "stop-process",
+            "gameEndAction": "none",
             "arguments": ""
         }
     },

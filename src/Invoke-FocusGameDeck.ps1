@@ -277,20 +277,20 @@ function Test-ConfigStructure {
                 if (-not $appConfig.PSObject.Properties.Name -contains "processName") {
                     $errors += "Application '$appId' is missing 'processName' property"
                 }
-                if (-not $appConfig.PSObject.Properties.Name -contains "startupAction") {
-                    $errors += "Application '$appId' is missing 'startupAction' property"
+                if (-not $appConfig.PSObject.Properties.Name -contains "gameStartAction") {
+                    $errors += "Application '$appId' is missing 'gameStartAction' property"
                 }
-                if (-not $appConfig.PSObject.Properties.Name -contains "shutdownAction") {
-                    $errors += "Application '$appId' is missing 'shutdownAction' property"
+                if (-not $appConfig.PSObject.Properties.Name -contains "gameEndAction") {
+                    $errors += "Application '$appId' is missing 'gameEndAction' property"
                 }
                 
                 # Validate action values
-                $validActions = @("start", "stop", "none")
-                if ($appConfig.startupAction -and $appConfig.startupAction -notin $validActions) {
-                    $errors += "Application '$appId' has invalid startupAction: '$($appConfig.startupAction)'. Valid values: $($validActions -join ', ')"
+                $validActions = @("start-process", "stop-process", "toggle-hotkeys", "none")
+                if ($appConfig.gameStartAction -and $appConfig.gameStartAction -notin $validActions) {
+                    $errors += "Application '$appId' has invalid gameStartAction: '$($appConfig.gameStartAction)'. Valid values: $($validActions -join ', ')"
                 }
-                if ($appConfig.shutdownAction -and $appConfig.shutdownAction -notin $validActions) {
-                    $errors += "Application '$appId' has invalid shutdownAction: '$($appConfig.shutdownAction)'. Valid values: $($validActions -join ', ')"
+                if ($appConfig.gameEndAction -and $appConfig.gameEndAction -notin $validActions) {
+                    $errors += "Application '$appId' has invalid gameEndAction: '$($appConfig.gameEndAction)'. Valid values: $($validActions -join ', ')"
                 }
             }
         }
@@ -330,8 +330,8 @@ Write-Host $msg.config_validation_passed -ForegroundColor Green
 function Invoke-AppAction {
     param(
         [string]$AppId,
-        [string]$Action,  # "start", "stop", "enable", "disable", "toggle"
-        [string]$SpecialMode = $null  # For special handling like Clibor hotkey
+        [string]$Action,  # "start-process", "stop-process", "toggle-hotkeys", "none"
+        [string]$SpecialMode = $null  # For backward compatibility
     )
     
     # Validate app exists in managedApps
@@ -342,63 +342,65 @@ function Invoke-AppAction {
     
     $appConfig = $config.managedApps.$AppId
     
-    # Handle Clibor special case (hotkey toggle)
-    if ($AppId -eq "clibor" -and $Action -in @("enable", "disable", "toggle")) {
-        if ($appConfig.path -and $appConfig.path -ne "") {
-            $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") { $appConfig.arguments } else { "/hs" }
-            Start-Process -FilePath $appConfig.path -ArgumentList $arguments
-            
-            $actionText = switch ($Action) {
-                "enable" { $msg.clibor_action_enable }
-                "disable" { $msg.clibor_action_disable }
-                default { $msg.clibor_action_toggled }
-            }
-            Write-Host ($msg.app_hotkey_toggled -f $AppId, $actionText)
-        } else {
-            Write-Host ($msg.warning_no_path_specified -f $AppId)
-        }
-        return
-    }
-    
-    if ($Action -eq "start") {
-        if ($appConfig.path -and $appConfig.path -ne "") {
-            $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") { $appConfig.arguments } else { $null }
-            if ($arguments) {
-                Start-Process -FilePath $appConfig.path -ArgumentList $arguments
+    # Handle different action types
+    switch ($Action) {
+        "start-process" {
+            if ($appConfig.path -and $appConfig.path -ne "") {
+                $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") { $appConfig.arguments } else { $null }
+                if ($arguments) {
+                    Start-Process -FilePath $appConfig.path -ArgumentList $arguments
+                } else {
+                    Start-Process -FilePath $appConfig.path
+                }
+                Write-Host ($msg.app_started -f $AppId)
             } else {
-                Start-Process -FilePath $appConfig.path
+                Write-Host ($msg.warning_no_path_specified -f $AppId)
             }
-            Write-Host ($msg.app_started -f $AppId)
-        } else {
-            Write-Host ($msg.warning_no_path_specified -f $AppId)
         }
-    }
-    elseif ($Action -eq "stop") {
-        if ($appConfig.processName -and $appConfig.processName -ne "") {
-            # Handle multiple process names separated by |
-            $processNames = $appConfig.processName -split '\|'
-            $processFound = $false
-            
-            foreach ($processName in $processNames) {
-                $processName = $processName.Trim()
-                try {
-                    $processes = Get-Process -Name $processName -ErrorAction Stop
-                    if ($processes) {
-                        Stop-Process -Name $processName -Force
-                        Write-Host ($msg.app_process_stopped -f $AppId, $processName)
-                        $processFound = $true
+        "stop-process" {
+            if ($appConfig.processName -and $appConfig.processName -ne "") {
+                # Handle multiple process names separated by |
+                $processNames = $appConfig.processName -split '\|'
+                $processFound = $false
+                
+                foreach ($processName in $processNames) {
+                    $processName = $processName.Trim()
+                    try {
+                        $processes = Get-Process -Name $processName -ErrorAction Stop
+                        if ($processes) {
+                            Stop-Process -Name $processName -Force
+                            Write-Host ($msg.app_process_stopped -f $AppId, $processName)
+                            $processFound = $true
+                        }
+                    }
+                    catch {
+                        # Process not found, continue to next
                     }
                 }
-                catch {
-                    # Process not found, continue to next
+                
+                if (-not $processFound) {
+                    Write-Host ($msg.app_process_not_running -f $AppId)
                 }
+            } else {
+                Write-Host ($msg.warning_no_process_name -f $AppId)
             }
-            
-            if (-not $processFound) {
-                Write-Host ($msg.app_process_not_running -f $AppId)
+        }
+        "toggle-hotkeys" {
+            # Special handling for applications that need hotkey toggling (like Clibor)
+            if ($appConfig.path -and $appConfig.path -ne "") {
+                $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") { $appConfig.arguments } else { "/hs" }
+                Start-Process -FilePath $appConfig.path -ArgumentList $arguments
+                
+                Write-Host ($msg.app_hotkey_toggled -f $AppId, $msg.clibor_action_toggled)
+            } else {
+                Write-Host ($msg.warning_no_path_specified -f $AppId)
             }
-        } else {
-            Write-Host ($msg.warning_no_process_name -f $AppId)
+        }
+        "none" {
+            # Do nothing
+        }
+        default {
+            Write-Host "Unknown action: $Action for app: $AppId"
         }
     }
 }
@@ -415,7 +417,7 @@ function Invoke-GameCleanup {
     
     # Handle Clibor hotkey (using unified app action)
     if ("clibor" -in $gameConfig.appsToManage) {
-        Invoke-AppAction -AppId "clibor" -Action "enable"
+        Invoke-AppAction -AppId "clibor" -Action "toggle-hotkeys"
     }
     
     # Process all managed apps for shutdown
@@ -441,15 +443,9 @@ function Invoke-GameCleanup {
         # Get app configuration
         if ($config.managedApps.$appId) {
             $appConfig = $config.managedApps.$appId
-            $action = $appConfig.shutdownAction
+            $action = $appConfig.gameEndAction
             
-            if ($action -eq "start") {
-                Invoke-AppAction -AppId $appId -Action "start"
-            }
-            elseif ($action -eq "stop") {
-                Invoke-AppAction -AppId $appId -Action "stop"
-            }
-            # If action is "none", do nothing
+            Invoke-AppAction -AppId $appId -Action $action
         }
     }
 }
@@ -503,22 +499,16 @@ foreach ($appId in $gameConfig.appsToManage) {
     
     if ($appId -eq "clibor") {
         # Use unified app action for Clibor hotkey
-        Invoke-AppAction -AppId "clibor" -Action "disable"
+        Invoke-AppAction -AppId "clibor" -Action "toggle-hotkeys"
         continue
     }
     
     # Get app configuration
     if ($config.managedApps.$appId) {
         $appConfig = $config.managedApps.$appId
-        $action = $appConfig.startupAction
+        $action = $appConfig.gameStartAction
         
-        if ($action -eq "start") {
-            Invoke-AppAction -AppId $appId -Action "start"
-        }
-        elseif ($action -eq "stop") {
-            Invoke-AppAction -AppId $appId -Action "stop"
-        }
-        # If action is "none", do nothing
+        Invoke-AppAction -AppId $appId -Action $action
     } else {
         Write-Host ($msg.warning_app_not_defined -f $appId)
     }
