@@ -3,6 +3,208 @@
     [string]$GameId
 )
 
+# Import required modules if not already loaded
+if (-not (Get-Module -Name Microsoft.PowerShell.Security)) {
+    try {
+        Import-Module Microsoft.PowerShell.Security -ErrorAction SilentlyContinue
+    }
+    catch {
+        # Module loading failed, but we'll try to continue
+        Write-Warning "Failed to load Microsoft.PowerShell.Security module: $_"
+    }
+}
+
+# Helper function for secure string conversion
+function ConvertTo-SecureStringSafe {
+    param(
+        [string]$PlainText
+    )
+    
+    try {
+        return ConvertTo-SecureString -String $PlainText -AsPlainText -Force
+    }
+    catch {
+        Write-Warning "ConvertTo-SecureString failed, attempting alternative method: $_"
+        # Alternative: create SecureString manually
+        $secureString = New-Object System.Security.SecureString
+        foreach ($char in $PlainText.ToCharArray()) {
+            $secureString.AppendChar($char)
+        }
+        $secureString.MakeReadOnly()
+        return $secureString
+    }
+}
+
+# WebSocket helper functions
+function Receive-OBSWebSocketResponse {
+    param (
+        [System.Net.WebSockets.ClientWebSocket]$WebSocket,
+        [int]$TimeoutSeconds = 5
+    )
+    $cts = New-Object System.Threading.CancellationTokenSource
+    $cts.CancelAfter($TimeoutSeconds * 1000)
+    $buffer = New-Object byte[] 8192 # 8KB buffer
+    $segment = New-Object ArraySegment[byte](, $buffer)
+    $resultText = ""
+    
+    try {
+        while ($WebSocket.State -eq "Open") {
+            $receiveTask = $WebSocket.ReceiveAsync($segment, $cts.Token)
+            $receiveTask.Wait()
+            $result = $receiveTask.Result
+            
+            $resultText += [System.Text.Encoding]::UTF8.GetString($buffer, 0, $result.Count)
+            
+            if ($result.EndOfMessage) {
+                break
+            }
+        }
+        return $resultText | ConvertFrom-Json
+    }
+    catch {
+        Write-Host ($msg.error_receive_websocket -f $_)
+        return $null
+    }
+}
+
+# OBS WebSocket related functions
+function Connect-OBSWebSocket {
+    param (
+        [string]$HostName = "localhost",
+        [int]$Port = 4455,
+        [System.Security.SecureString]$Password
+    )
+    
+    try {
+        $ws = New-Object System.Net.WebSockets.ClientWebSocket
+        $cts = New-Object System.Threading.CancellationTokenSource
+        $cts.CancelAfter(5000) # 5 second timeout
+        
+        $uri = "ws://${HostName}:${Port}"
+        $ws.ConnectAsync($uri, $cts.Token).Wait()
+        
+        if ($ws.State -ne [System.Net.WebSockets.WebSocketState]::Open) {
+            Write-Host $msg.failed_connect_obs
+            return $null
+        }
+
+        Write-Host $msg.connected_obs_websocket
+
+        # Wait for Hello message (Op 0) from server
+        $hello = Receive-OBSWebSocketResponse -WebSocket $ws
+        if (-not $hello -or $hello.op -ne 0) {
+            Write-Host $msg.error_receive_hello
+            $ws.Dispose()
+            return $null
+        }
+
+        # Send Identify message (Op 1)
+        $identifyPayload = @{
+            op = 1
+            d = @{
+                rpcVersion = 1
+            }
+        }
+
+        # If authentication is required
+        if ($hello.d.authentication) {
+            Write-Host $msg.auth_required
+            $salt = $hello.d.authentication.salt
+            $challenge = $hello.d.authentication.challenge
+
+            $sha256 = [System.Security.Cryptography.SHA256]::Create()
+
+            # Convert SecureString to plain text for hashing
+            $plainTextPassword = ''
+            if ($Password -and $Password.Length -gt 0) {
+                $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password)
+                $plainTextPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
+                [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+            }
+            
+            # secret = base64(sha256(password + salt))
+            $secretBytes = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($plainTextPassword + $salt))
+            $secret = [System.Convert]::ToBase64String($secretBytes)
+            
+            # authResponse = base64(sha256(secret + challenge))
+            $authResponseBytes = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($secret + $challenge))
+            $authResponse = [System.Convert]::ToBase64String($authResponseBytes)
+            
+            $identifyPayload.d.authentication = $authResponse
+        }
+
+        $identifyJson = $identifyPayload | ConvertTo-Json -Depth 5
+        $identifyBuffer = [System.Text.Encoding]::UTF8.GetBytes($identifyJson)
+        $sendSegment = New-Object ArraySegment[byte](, $identifyBuffer)
+        $ws.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
+
+        # Wait for Identified message (Op 2) from server
+        $identified = Receive-OBSWebSocketResponse -WebSocket $ws
+        if (-not $identified -or $identified.op -ne 2) {
+            Write-Host $msg.obs_auth_failed
+            $ws.Dispose()
+            return $null
+        }
+
+        Write-Host $msg.obs_auth_successful
+        return $ws
+    }
+    catch {
+        Write-Host ($msg.obs_connection_error -f $_)
+        return $null
+    }
+}
+
+function Start-OBSReplayBuffer {
+    param (
+        [System.Net.WebSockets.ClientWebSocket]$WebSocket
+    )
+    try {
+        $requestId = [System.Guid]::NewGuid().ToString()
+        $command = @{
+            op = 6 # Request
+            d = @{
+                requestType = "StartReplayBuffer"
+                requestId = $requestId
+            }
+        } | ConvertTo-Json -Depth 3
+        
+        $buffer = [System.Text.Encoding]::UTF8.GetBytes($command)
+        $sendSegment = New-Object ArraySegment[byte](, $buffer)
+        $WebSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
+        
+        Write-Host $msg.obs_replay_buffer_started
+    }
+    catch {
+        Write-Host ($msg.replay_buffer_start_error -f $_)
+    }
+}
+
+function Stop-OBSReplayBuffer {
+    param (
+        [System.Net.WebSockets.ClientWebSocket]$WebSocket
+    )
+    try {
+        $requestId = [System.Guid]::NewGuid().ToString()
+        $command = @{
+            op = 6 # Request
+            d = @{
+                requestType = "StopReplayBuffer"
+                requestId = $requestId
+            }
+        } | ConvertTo-Json -Depth 3
+
+        $buffer = [System.Text.Encoding]::UTF8.GetBytes($command)
+        $sendSegment = New-Object ArraySegment[byte](, $buffer)
+        $WebSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
+        
+        Write-Host $msg.obs_replay_buffer_stopped
+    }
+    catch {
+        Write-Host ($msg.replay_buffer_stop_error -f $_)
+    }
+}
+
 # Load configuration file
 $scriptDir = $PSScriptRoot
 $configPath = Join-Path $scriptDir "..\config\config.json"
@@ -221,7 +423,7 @@ function Invoke-GameCleanup {
         if ($appId -eq "obs") {
             # Special handling for OBS replay buffer
             if ($config.obs.replayBuffer) {
-                $securePassword = ConvertTo-SecureString -String ($config.obs.websocket.password -as [string]) -AsPlainText -Force
+                $securePassword = ConvertTo-SecureStringSafe -PlainText ($config.obs.websocket.password -as [string])
                 $ws = Connect-OBSWebSocket -HostName $config.obs.websocket.host -Port $config.obs.websocket.port -Password $securePassword
                 if ($ws) {
                     Stop-OBSReplayBuffer -WebSocket $ws
@@ -289,7 +491,7 @@ foreach ($appId in $gameConfig.appsToManage) {
         
         # Control replay buffer (if configured)
         if ($config.obs.replayBuffer) {
-            $securePassword = ConvertTo-SecureString -String ($config.obs.websocket.password -as [string]) -AsPlainText -Force
+            $securePassword = ConvertTo-SecureStringSafe -PlainText ($config.obs.websocket.password -as [string])
             $ws = Connect-OBSWebSocket -HostName $config.obs.websocket.host -Port $config.obs.websocket.port -Password $securePassword
             if ($ws) {
                 Start-OBSReplayBuffer -WebSocket $ws
@@ -319,176 +521,6 @@ foreach ($appId in $gameConfig.appsToManage) {
         # If action is "none", do nothing
     } else {
         Write-Host ($msg.warning_app_not_defined -f $appId)
-    }
-}
-
-# WebSocket helper functions
-function Receive-OBSWebSocketResponse {
-    param (
-        [System.Net.WebSockets.ClientWebSocket]$WebSocket,
-        [int]$TimeoutSeconds = 5
-    )
-    $cts = New-Object System.Threading.CancellationTokenSource
-    $cts.CancelAfter($TimeoutSeconds * 1000)
-    $buffer = New-Object byte[] 8192 # 8KB buffer
-    $segment = New-Object ArraySegment[byte](, $buffer)
-    $resultText = ""
-    
-    try {
-        while ($WebSocket.State -eq "Open") {
-            $receiveTask = $WebSocket.ReceiveAsync($segment, $cts.Token)
-            $receiveTask.Wait()
-            $result = $receiveTask.Result
-            
-            $resultText += [System.Text.Encoding]::UTF8.GetString($buffer, 0, $result.Count)
-            
-            if ($result.EndOfMessage) {
-                break
-            }
-        }
-        return $resultText | ConvertFrom-Json
-    }
-    catch {
-        Write-Host ($msg.error_receive_websocket -f $_)
-        return $null
-    }
-}
-
-# OBS WebSocket related functions
-function Connect-OBSWebSocket {
-    param (
-        [string]$HostName = "localhost",
-        [int]$Port = 4455,
-        [System.Security.SecureString]$Password
-    )
-    
-    try {
-        $ws = New-Object System.Net.WebSockets.ClientWebSocket
-        $cts = New-Object System.Threading.CancellationTokenSource
-        $cts.CancelAfter(5000) # 5 second timeout
-        
-        $uri = "ws://${HostName}:${Port}"
-        $ws.ConnectAsync($uri, $cts.Token).Wait()
-        
-        if ($ws.State -ne [System.Net.WebSockets.WebSocketState]::Open) {
-            Write-Host $msg.failed_connect_obs
-            return $null
-        }
-
-        Write-Host $msg.connected_obs_websocket
-
-        # Wait for Hello message (Op 0) from server
-        $hello = Receive-OBSWebSocketResponse -WebSocket $ws
-        if (-not $hello -or $hello.op -ne 0) {
-            Write-Host $msg.error_receive_hello
-            $ws.Dispose()
-            return $null
-        }
-
-        # Send Identify message (Op 1)
-        $identifyPayload = @{
-            op = 1
-            d = @{
-                rpcVersion = 1
-            }
-        }
-
-        # If authentication is required
-        if ($hello.d.authentication) {
-            Write-Host $msg.auth_required
-            $salt = $hello.d.authentication.salt
-            $challenge = $hello.d.authentication.challenge
-
-            $sha256 = [System.Security.Cryptography.SHA256]::Create()
-
-            # Convert SecureString to plain text for hashing
-            $plainTextPassword = ''
-            if ($Password -and $Password.Length -gt 0) {
-                $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password)
-                $plainTextPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
-                [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
-            }
-            
-            # secret = base64(sha256(password + salt))
-            $secretBytes = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($plainTextPassword + $salt))
-            $secret = [System.Convert]::ToBase64String($secretBytes)
-            
-            # authResponse = base64(sha256(secret + challenge))
-            $authResponseBytes = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($secret + $challenge))
-            $authResponse = [System.Convert]::ToBase64String($authResponseBytes)
-            
-            $identifyPayload.d.authentication = $authResponse
-        }
-
-        $identifyJson = $identifyPayload | ConvertTo-Json -Depth 5
-        $identifyBuffer = [System.Text.Encoding]::UTF8.GetBytes($identifyJson)
-        $sendSegment = New-Object ArraySegment[byte](, $identifyBuffer)
-        $ws.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
-
-        # Wait for Identified message (Op 2) from server
-        $identified = Receive-OBSWebSocketResponse -WebSocket $ws
-        if (-not $identified -or $identified.op -ne 2) {
-            Write-Host $msg.obs_auth_failed
-            $ws.Dispose()
-            return $null
-        }
-
-        Write-Host $msg.obs_auth_successful
-        return $ws
-    }
-    catch {
-        Write-Host ($msg.obs_connection_error -f $_)
-        return $null
-    }
-}
-
-function Start-OBSReplayBuffer {
-    param (
-        [System.Net.WebSockets.ClientWebSocket]$WebSocket
-    )
-    try {
-        $requestId = [System.Guid]::NewGuid().ToString()
-        $command = @{
-            op = 6 # Request
-            d = @{
-                requestType = "StartReplayBuffer"
-                requestId = $requestId
-            }
-        } | ConvertTo-Json -Depth 3
-        
-        $buffer = [System.Text.Encoding]::UTF8.GetBytes($command)
-        $sendSegment = New-Object ArraySegment[byte](, $buffer)
-        $WebSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
-        
-        Write-Host $msg.obs_replay_buffer_started
-    }
-    catch {
-        Write-Host ($msg.replay_buffer_start_error -f $_)
-    }
-}
-
-function Stop-OBSReplayBuffer {
-    param (
-        [System.Net.WebSockets.ClientWebSocket]$WebSocket
-    )
-    try {
-        $requestId = [System.Guid]::NewGuid().ToString()
-        $command = @{
-            op = 6 # Request
-            d = @{
-                requestType = "StopReplayBuffer"
-                requestId = $requestId
-            }
-        } | ConvertTo-Json -Depth 3
-
-        $buffer = [System.Text.Encoding]::UTF8.GetBytes($command)
-        $sendSegment = New-Object ArraySegment[byte](, $buffer)
-        $WebSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
-        
-        Write-Host $msg.obs_replay_buffer_stopped
-    }
-    catch {
-        Write-Host ($msg.replay_buffer_stop_error -f $_)
     }
 }
 
