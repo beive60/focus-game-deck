@@ -17,7 +17,15 @@ class OBSManager {
         $this.Port = $obsConfig.websocket.port
         
         if ($obsConfig.websocket.password) {
-            $this.Password = $this.ConvertToSecureStringSafe($obsConfig.websocket.password)
+            try {
+                # Try to convert from encrypted string (new format)
+                $this.Password = $obsConfig.websocket.password | ConvertTo-SecureString
+            }
+            catch {
+                # Fall back to plain text conversion (old format for backward compatibility)
+                $this.Password = $this.ConvertToSecureStringSafe($obsConfig.websocket.password)
+                Write-Warning "Plain text password detected in config - consider using the GUI to re-save with encryption"
+            }
         }
     }
 

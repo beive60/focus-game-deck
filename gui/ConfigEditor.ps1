@@ -483,7 +483,27 @@ function Load-GlobalSettings {
     # OBS Settings
     $script:Window.FindName("ObsHostTextBox").Text = $script:ConfigData.obs.websocket.host
     $script:Window.FindName("ObsPortTextBox").Text = $script:ConfigData.obs.websocket.port.ToString()
-    $script:Window.FindName("ObsPasswordBox").Password = $script:ConfigData.obs.websocket.password
+    
+    # Handle password loading - support both encrypted and plain text for backward compatibility
+    $passwordBox = $script:Window.FindName("ObsPasswordBox")
+    $configPassword = $script:ConfigData.obs.websocket.password
+    
+    if ($configPassword) {
+        try {
+            # Attempt to convert from encrypted string (new format)
+            $securePassword = $configPassword | ConvertTo-SecureString
+            $passwordBox.SecurePassword = $securePassword
+        }
+        catch {
+            # If conversion fails, treat as plain text (old format) and convert
+            $securePassword = ConvertTo-SecureString -String $configPassword -AsPlainText -Force
+            $passwordBox.SecurePassword = $securePassword
+            Write-Warning "Plain text password detected - it will be encrypted on next save"
+        }
+    } else {
+        $passwordBox.Password = ""
+    }
+    
     $script:Window.FindName("ReplayBufferCheckBox").IsChecked = $script:ConfigData.obs.replayBuffer
     
     # Path Settings (Multi-Platform)
@@ -855,7 +875,16 @@ function Save-GlobalSettingsData {
     # OBS Settings
     $script:ConfigData.obs.websocket.host = $script:Window.FindName("ObsHostTextBox").Text
     $script:ConfigData.obs.websocket.port = [int]$script:Window.FindName("ObsPortTextBox").Text
-    $script:ConfigData.obs.websocket.password = $script:Window.FindName("ObsPasswordBox").Password
+    
+    # Handle password encryption
+    $passwordBox = $script:Window.FindName("ObsPasswordBox")
+    if ($passwordBox.SecurePassword -and $passwordBox.SecurePassword.Length -gt 0) {
+        # Convert SecureString to encrypted string for storage
+        $script:ConfigData.obs.websocket.password = $passwordBox.SecurePassword | ConvertFrom-SecureString
+    } else {
+        $script:ConfigData.obs.websocket.password = ""
+    }
+    
     $script:ConfigData.obs.replayBuffer = $script:Window.FindName("ReplayBufferCheckBox").IsChecked
     
     # Path Settings (Multi-Platform)
