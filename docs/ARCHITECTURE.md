@@ -1,185 +1,210 @@
 # Focus Game Deck - Architecture & Design Philosophy
 
-## 概要
+## Overview
 
-Focus Game Deck は、ゲーミング環境の自動化とOBS配信管理を行うPowerShellベースのツールです。このドキュメントでは、プロジェクトの設計思想、技術選択の理由、および実装アーキテクチャについて説明します。
+Focus Game Deck is a PowerShell-based tool for gaming environment automation and OBS streaming management. This document explains the project's design philosophy, rationale for technical choices, and implementation architecture.
 
-## 設計思想
+## Design Philosophy
 
-### 1. 軽量性とシンプルさ
-- **PowerShell + WPF**: 追加のランタイムや重いフレームワークを避け、Windows標準機能を活用
-- **最小限の依存関係**: .NET Framework標準機能のみを使用
-- **単一実行ファイル**: ps2exeによる実行ファイル化で配布を簡素化
+### 1. Lightweight and Simple
 
-### 2. 保守性と拡張性
-- **設定駆動設計**: すべての動作を`config.json`で制御
-- **モジュラー構造**: GUI、コア機能、設定管理を分離
-- **国際化対応**: JSON外部リソースによる多言語サポート
+- **PowerShell + WPF**: Utilizes Windows standard features while avoiding additional runtimes or heavy frameworks
+- **Minimal Dependencies**: Uses only .NET Framework standard features
+- **Single Executable**: Simplified distribution through ps2exe compilation
 
-### 3. ユーザビリティ
-- **直感的なGUI**: 3タブ構造による機能分類（ゲーム設定、管理アプリ設定、グローバル設定）
-- **バッチファイル起動**: 技術知識を必要としない簡単起動
-- **エラーハンドリング**: 適切な日本語エラーメッセージ表示
+### 2. Maintainability and Extensibility
 
-## 技術アーキテクチャ
+- **Configuration-Driven Design**: All behavior controlled through `config.json`
+- **Modular Structure**: Separation of GUI, core functionality, and configuration management
+- **Internationalization Support**: Multi-language support through JSON external resources
 
-### システム構成
+### 3. Usability
 
-```
+- **Intuitive GUI**: Three-tab structure for feature categorization (Game Settings, Managed Apps Settings, Global Settings)
+- **Batch File Launch**: Simple startup without requiring technical knowledge
+- **Error Handling**: Appropriate error message display
+
+## Technical Architecture
+
+### System Structure
+
+```text
 Focus Game Deck
 ├── Core Engine (PowerShell)
-│   ├── src/Invoke-FocusGameDeck.ps1     # メインエンジン
-│   ├── scripts/Create-Launchers.ps1     # ランチャー生成
-│   └── launch_*.bat                     # ゲーム別起動スクリプト
+│   ├── src/Invoke-FocusGameDeck.ps1     # Main engine
+│   ├── scripts/Create-Launchers.ps1     # Launcher generation
+│   └── launch_*.bat                     # Game-specific launch scripts
 │
 ├── Configuration Management
-│   ├── config/config.json               # メイン設定ファイル
-│   ├── config/config.json.sample        # サンプル設定
-│   └── config/messages.json             # 国際化リソース（GUI用）
+│   ├── config/config.json               # Main configuration file
+│   ├── config/config.json.sample        # Sample configuration
+│   └── config/messages.json             # Internationalization resources (for GUI)
 │
 ├── GUI Module (PowerShell + WPF)
-│   ├── gui/MainWindow.xaml              # UIレイアウト定義
-│   ├── gui/ConfigEditor.ps1             # GUI制御ロジック
-│   ├── gui/messages.json                # GUI用メッセージリソース
-│   └── gui/Build-ConfigEditor.ps1       # ビルドスクリプト
+│   ├── gui/MainWindow.xaml              # UI layout definition
+│   ├── gui/ConfigEditor.ps1             # GUI control logic
+│   ├── gui/messages.json                # GUI message resources
+│   └── gui/Build-ConfigEditor.ps1       # Build script
 │
 └── Documentation & Testing
-    ├── docs/                            # 設計・仕様書
-    ├── test/                            # テストスクリプト
-    └── README.md                        # プロジェクト概要
+    ├── docs/                            # Design and specification documents
+    ├── test/                            # Test scripts
+    └── README.md                        # Project overview
 ```
 
-### 設計判断の記録
+### Design Decision Records
 
-#### 1. GUI技術選択: PowerShell + WPF
+#### 1. GUI Technology Choice: PowerShell + WPF
 
-**検討した選択肢:**
+**Options Considered:**
+
 - Windows Forms
-- Electron/Web技術
+- Electron/Web Technologies
 - .NET WinForms/WPF (C#)
 - PowerShell + WPF ✅
 
-**選択理由:**
-- **軽量性**: 追加ランタイム不要、Windows標準機能
-- **統一性**: メインエンジンと同じPowerShellで実装
-- **配布容易性**: ps2exeによる単一実行ファイル化
-- **開発効率**: 既存PowerShellスキルを活用
+**Selection Rationale:**
 
-#### 2. 国際化手法: JSON外部リソース
+- **Lightweight**: No additional runtime required, uses Windows standard features
+- **Consistency**: Implementation using the same PowerShell as the main engine
+- **Distribution Ease**: Single executable file creation through ps2exe
+- **Development Efficiency**: Leverages existing PowerShell skills
 
-**検討した選択肢:**
-- Unicodeコードポイント直接指定
-- PowerShell内埋め込み文字列
-- JSON外部リソースファイル ✅
+#### 2. Internationalization Method: JSON External Resources
 
-**選択理由:**
-- **文字化け解決**: PowerShell MessageBox の日本語文字化け問題を回避
-- **保守性**: 文字列とコードの分離
-- **拡張性**: 将来的な多言語対応への対応
-- **標準的手法**: 一般的な国際化パターン
+**Options Considered:**
 
-**技術的詳細:**
-- Unicodeエスケープシーケンス（`\u30XX`形式）使用
-- UTF-8エンコーディング強制設定
-- 実行時JSON読み込みによる動的メッセージ取得
+- Direct Unicode code point specification
+- PowerShell embedded strings
+- JSON external resource files ✅
 
-#### 3. 設定管理: JSON設定ファイル
+**Selection Rationale:**
 
-**選択理由:**
-- **可読性**: 人間が読みやすい形式
-- **PowerShell互換性**: ConvertFrom-Json/ConvertTo-Json標準対応
-- **階層構造**: 複雑な設定を構造化して管理
-- **バージョン管理**: Gitでの差分確認が容易
+- **Character Encoding Solution**: Avoids Japanese character garbling issues in PowerShell MessageBox
+- **Maintainability**: Separation of strings and code
+- **Extensibility**: Foundation for future multi-language support
+- **Standard Approach**: Follows common internationalization patterns
 
-## 実装ガイドライン
+**Technical Details:**
 
-### コーディング規約
+- Uses Unicode escape sequences (`\u30XX` format)
+- UTF-8 encoding enforcement
+- Dynamic message retrieval through runtime JSON loading
 
-1. **エンコーディング**: すべてのファイルはUTF-8で保存
-2. **エラーハンドリング**: Try-Catch-Finallyパターンを徹底
-3. **関数命名**: PowerShell動詞-名詞パターン（Verb-Noun）
-4. **コメント**: 日本語コメント許可（UTF-8保証）
+#### 3. Configuration Management: JSON Configuration File
 
-### GUI開発ガイドライン
+**Selection Rationale:**
 
-1. **XAML構造**: 
-   - x:Class属性は使用しない（PowerShell互換性のため）
-   - Name属性による要素参照
-   - TabControl による機能分類
+- **Readability**: Human-readable format
+- **PowerShell Compatibility**: Standard support for ConvertFrom-Json/ConvertTo-Json
+- **Hierarchical Structure**: Structured management of complex configurations
+- **Version Control**: Easy diff checking in Git
 
-2. **メッセージ表示**:
+## Implementation Guidelines
+
+### Coding Standards
+
+1. **Encoding**: All files saved in UTF-8
+2. **Error Handling**: Consistent use of Try-Catch-Finally patterns
+3. **Function Naming**: PowerShell Verb-Noun pattern
+4. **Comments**: Japanese comments allowed (UTF-8 guaranteed)
+
+### GUI Development Guidelines
+
+1. **XAML Structure**:
+   - Do not use x:Class attribute (for PowerShell compatibility)
+   - Element reference through Name attribute
+   - Feature categorization through TabControl
+
+2. **Message Display**:
+
    ```powershell
-   # 推奨: JSON外部リソース使用
+   # Recommended: Use JSON external resources
    Show-SafeMessage -MessageKey "configSaved" -TitleKey "info"
    
-   # 非推奨: 直接文字列指定
+   # Not recommended: Direct string specification
    [System.Windows.MessageBox]::Show("設定が保存されました")
    ```
 
-3. **設定管理**:
+3. **Configuration Management**:
+
    ```powershell
-   # 設定読み込み
+   # Configuration loading
    $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
    
-   # 設定保存
+   # Configuration saving
    $config | ConvertTo-Json -Depth 10 | Set-Content $configPath -Encoding UTF8
    ```
 
-## パフォーマンス考慮事項
+## Performance Considerations
 
-### 起動時間最適化
-- JSON読み込みの遅延実行
-- WPFアセンブリの事前読み込み
-- XAML解析の最適化
+### Startup Time Optimization
 
-### メモリ使用量
-- PowerShell ISE vs 通常PowerShell の差異を考慮
-- 大きなオブジェクトの適切な解放
-- イベントハンドラーのメモリリーク対策
+- Lazy loading of JSON
+- Pre-loading of WPF assemblies
+- XAML parsing optimization
 
-## セキュリティ考慮事項
+### Memory Usage
 
-### 実行ポリシー
-- `-ExecutionPolicy Bypass` による制限回避
-- スクリプト署名の将来的な検討
+- Account for differences between PowerShell ISE vs standard PowerShell
+- Proper disposal of large objects
+- Memory leak prevention in event handlers
 
-### 設定ファイル保護
-- パスワード平文保存の制限
-- 設定ファイルのアクセス権限制御
+## Security Considerations
 
-## 今後の拡張予定
+### Execution Policy
 
-### 短期（v1.1）
-- [ ] 英語メッセージリソースの追加
-- [ ] 設定バリデーション強化
-- [ ] エラーログ機能
+- Restriction bypass through `-ExecutionPolicy Bypass`
+- Future consideration of script signing
 
-### 中期（v1.2）
-- [ ] プラグインアーキテクチャ
-- [ ] テーマ機能
-- [ ] 設定インポート/エクスポート
+### Configuration File Protection
 
-### 長期（v2.0）
-- [ ] クラウド設定同期
-- [ ] Web UI オプション
-- [ ] マルチプラットフォーム対応
+- Restrictions on plain text password storage
+- Configuration file access permission control
 
-## 貢献ガイドライン
+## Future Extension Plans
 
-この設計思想を維持するために、以下の点を重視してください：
+### Short-term (v1.1)
 
-1. **軽量性の維持**: 新しい依存関係の追加は慎重に検討
-2. **PowerShell First**: 他の言語への移行よりもPowerShellでの解決を優先
-3. **設定駆動**: ハードコードではなく設定ファイルでの制御
-4. **国際化対応**: 新しいメッセージは必ずJSON外部リソース化
+- [ ] Addition of English message resources
+- [ ] Enhanced configuration validation
+- [ ] Error logging functionality
 
-## 変更履歴
+### Medium-term (v1.2)
 
-| バージョン | 日付 | 変更内容 |
-|-----------|------|----------|
-| 1.0.0 | 2025-09-23 | 初期アーキテクチャ設計、GUI実装完了 |
-| 1.0.1 | 2025-09-23 | JSON外部リソース国際化対応完了 |
+- [ ] Plugin architecture
+- [ ] Theme functionality
+- [ ] Configuration import/export
+
+### Long-term (v2.0)
+
+- [ ] Cloud configuration synchronization
+- [ ] Web UI option
+- [ ] Multi-platform support
+
+## Contribution Guidelines
+
+To maintain this design philosophy, please prioritize the following:
+
+1. **Maintain Lightweight Nature**: Carefully consider adding new dependencies
+2. **PowerShell First**: Prioritize PowerShell solutions over migration to other languages
+3. **Configuration-Driven**: Control through configuration files rather than hardcoding
+4. **Internationalization Support**: Always externalize new messages to JSON resources
+
+## Change History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0.0 | 2025-09-23 | Initial architecture design, GUI implementation completed |
+| 1.0.1 | 2025-09-23 | JSON external resource internationalization support completed |
+
+## Language Support
+
+This documentation is available in multiple languages:
+
+- **English** (Main): [docs/ARCHITECTURE.md](./ARCHITECTURE.md)
+- **日本語** (Japanese): [docs/ja/ARCHITECTURE.md](./ja/ARCHITECTURE.md)
 
 ---
 
-*このドキュメントは、Focus Game Deck プロジェクトの設計思想と技術選択を記録し、将来の開発者が一貫した方針で開発を継続できるようにすることを目的としています。*
+*This document records the design philosophy and technical choices of the Focus Game Deck project, enabling future developers to continue development with consistent principles.*

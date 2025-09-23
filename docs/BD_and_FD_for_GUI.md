@@ -1,184 +1,184 @@
-# **Focus Game Deck GUI設定エディタ 設計書**
+# **Focus Game Deck GUI Configuration Editor - Design Document**
 
-| ドキュメントID | FGD-GUI-001 |
+| Document ID | FGD-GUI-001 |
 | :---- | :---- |
-| **作成日** | 2025年9月23日 |
-| **作成者** | Gemini |
-| **バージョン** | 1.0 |
+| **Creation Date** | September 23, 2025 |
+| **Author** | Gemini |
+| **Version** | 1.0 |
 
 ---
 
-## **第1部 基本設計書 (BD / System Specification)**
+## **Part 1: Basic Design Document (BD / System Specification)**
 
-### **1\. 概要**
+### **1. Overview**
   
-本ドキュメントは、PowerShellスクリプト「Focus Game Deck」の設定ファイル (`config.json`) を、GUI（Graphical User Interface）を通じて直感的に編集するためのアプリケーション（以下、本アプリ）の基本設計を定義するものである。
+This document defines the basic design of an application (hereinafter referred to as "this app") that enables intuitive editing of the configuration file (`config.json`) for the PowerShell script "Focus Game Deck" through a Graphical User Interface (GUI).
 
-### **2\. 開発の背景と目的**
+### **2. Development Background and Purpose**
 
-`Focus Game Deck` の設定は、現在JSON形式のテキストファイルの手動編集に依存している。この方式は柔軟性が高い一方で、以下の課題を抱えている。
+The configuration of `Focus Game Deck` currently relies on manual editing of a JSON-formatted text file. While this approach offers high flexibility, it presents the following challenges:
 
-* **構文エラーのリスク:** JSONの知識がないユーザーが編集すると、カンマの抜けや括弧の不整合などでスクリプト全体が動作しなくなる可能性がある。  
-* **導入のハードル:** テキスト編集に不慣れなユーザーにとって、設定作業が心理的な障壁となっている。
+* **Syntax Error Risk**: Users without JSON knowledge may cause the entire script to malfunction due to missing commas or bracket mismatches.
+* **Adoption Barriers**: The configuration process becomes a psychological barrier for users unfamiliar with text editing.
 
-本アプリはこれらの課題を解決し、「PCに詳しくないゲーマーにも直感的に使える」 \[/doc/CONTRIBUTING.md\] というプロジェクトの指導原則を実現することを目的とする。`ROADMAP.md`においても、本機能は最重要課題として位置づけられている。
+This application aims to solve these issues and realize the project's guiding principle of being "intuitively usable even for gamers who aren't tech-savvy" [/doc/CONTRIBUTING.md]. This functionality is also positioned as the highest priority issue in `ROADMAP.md`.
 
-### **3\. システム構成**
+### **3. System Configuration**
 
-* **実行環境:** Windows 10 / 11  
-* **使用技術:**  
-  * **言語/フレームワーク:** PowerShell \+ WPF (Windows Presentation Foundation)  
-  * **理由:** プロジェクト本体との技術的親和性が高く、`CONTRIBUTING.md`の思想に沿った軽量なネイティブアプリケーションを構築できるため \[cite: beive60/focus-game-deck/focus-game-deck-07d61cd785d2b8a3803169874e213731807c0a07/CONTRIBUTING.md\]。
+* **Runtime Environment**: Windows 10 / 11
+* **Technologies Used**:
+  * **Language/Framework**: PowerShell + WPF (Windows Presentation Foundation)
+  * **Rationale**: High technical affinity with the main project, enabling the construction of lightweight native applications aligned with the philosophy in `CONTRIBUTING.md`.
 
-**ファイル構成:**  
-focus-game-deck/  
-└─ gui/  
-   ├─ ConfigEditor.ps1   (本アプリのメインロジック)  
-   └─ MainWindow.xaml    (本アプリのUI定義)
+**File Structure**:
+focus-game-deck/
+└─ gui/
+   ├─ ConfigEditor.ps1   (Main logic of this app)
+   └─ MainWindow.xaml    (UI definition of this app)
 
-* **配布形式:** `PS2EXE`等のツールを使用し、単一の実行可能ファイル (`.exe`) として配布する。
+* **Distribution Format**: Distributed as a single executable file (`.exe`) using tools like `PS2EXE`.
 
-### **4\. 機能要件**
+### **4. Functional Requirements**
 
-| ID | 機能名 | 概要 |
+| ID | Function Name | Overview |
 | :---- | :---- | :---- |
-| FR-01 | **設定ファイルの読み込み** | 起動時に`../config/config.json`を読み込み、内容を画面に表示する。存在しない場合は`../config/config.json.sample`を読み込む。 |
-| FR-02 | **ゲーム設定管理** | 管理対象ゲームの追加、編集、削除ができる。 |
-| FR-03 | **管理アプリ設定管理** | 制御対象アプリケーションの追加、編集、削除ができる。 |
-| FR-04 | **グローバル設定管理** | OBS連携、主要パス、表示言語などの全体設定を編集できる。 |
-| FR-05 | **設定ファイルの保存** | 画面上で行ったすべての変更を、構文的に正しいJSONとして`../config/config.json`に保存する。 |
-| FR-08 | **バリデーション** | 入力値の妥当性をチェックし、エラーがあれば保存を防止し、ユーザーにフィードバックを提供する。 |
+| FR-01 | **Configuration File Loading** | Load `../config/config.json` at startup and display contents on screen. If not found, load `../config/config.json.sample`. |
+| FR-02 | **Game Settings Management** | Add, edit, and delete managed games. |
+| FR-03 | **Managed Apps Settings Management** | Add, edit, and delete controlled applications. |
+| FR-04 | **Global Settings Management** | Edit overall settings such as OBS integration, main paths, and display language. |
+| FR-05 | **Configuration File Saving** | Save all changes made on screen as syntactically correct JSON to `../config/config.json`. |
+| FR-08 | **Validation** | Check input value validity, prevent saving if errors exist, and provide user feedback. |
 
-### **5\. 非機能要件**
+### **5. Non-Functional Requirements**
 
-| ID | 種別 | 内容 |
+| ID | Type | Content |
 | :---- | :---- | :---- |
-| NFR-01 | **パフォーマンス** | アプリケーションは軽量かつ高速に起動し、リソース消費を最小限に抑えること。 |
-| NFR-02 | **ユーザビリティ** | 直感的なUIを提供し、ファイル選択ダイアログやドロップダウンリストを活用することで、ユーザーの入力ミスを防止すること。 |
-| NFR-03 | **拡張性** | 将来的な設定項目（他プラットフォーム対応、プロファイル機能など）の追加を容易にするため、UIとロジックを分離した設計とすること。 |
-| NFR-04 | **多言語対応** | UIに表示される文字列は、将来的に外部ファイルから読み込める設計を考慮すること。 |
-| NFR-05 | **レスポンシブデザイン** | ウィンドウサイズの変更に応じて、UIレイアウトが適切に調整される。 |
+| NFR-01 | **Performance** | Application should be lightweight, start quickly, and minimize resource consumption. |
+| NFR-02 | **Usability** | Provide intuitive UI and prevent user input errors by utilizing file selection dialogs and dropdown lists. |
+| NFR-03 | **Extensibility** | Design with separated UI and logic to facilitate future additions of configuration items (other platform support, profile functionality, etc.). |
+| NFR-04 | **Multi-language Support** | Consider design where UI strings can be loaded from external files in the future. |
+| NFR-05 | **Responsive Design** | UI layout should adjust appropriately to window size changes. |
 
 ---
 
-## **第2部 機能設計書 (FD / Functional Design)**
+## **Part 2: Functional Design Document (FD / Functional Design)**
 
-### **1\. 画面設計**
+### **1. Screen Design**
 
-本アプリは単一のウィンドウで構成され、主要機能を3つのタブで切り替える。
+This application consists of a single window, with main functions switched through three tabs.
 
-* **ウィンドウタイトル:** `Focus Game Deck - 設定エディタ`  
-* **UI構成:**  
-  * **タブコントロール:**  
-    * `ゲーム設定` タブ  
-    * `管理アプリ設定` タブ  
-    * `グローバル設定` タブ  
-  * **フッター:**  
-    * `保存` ボタン  
-    * `閉じる` ボタン
+* **Window Title**: `Focus Game Deck - Configuration Editor`
+* **UI Structure**:
+  * **Tab Control**:
+    * `Game Settings` tab
+    * `Managed Apps Settings` tab
+    * `Global Settings` tab
+  * **Footer**:
+    * `Save` button
+    * `Close` button
 
-**(詳細はワイヤーフレームを参照)**
+**(See wireframes for details)**
 
-### **2\. 機能詳細**
+### **2. Functional Details**
 
-#### **2.1. 共通処理**
+#### **2.1. Common Processing**
 
-* **起動処理:**  
-  1. `ConfigEditor.ps1`が実行される。  
-  2. WPFアセンブリをロードする。  
-  3. `MainWindow.xaml`を読み込み、UIオブジェクトを生成する。  
-  4. `FR-01`に基づき設定ファイルを読み込み、UIコントロールに値を設定（データバインディング）する。  
-  5. 各UIコントロールのイベントハンドラを登録する。  
-  6. ウィンドウを表示する。
+* **Startup Process**:
+  1. `ConfigEditor.ps1` is executed.
+  2. Load WPF assemblies.
+  3. Read `MainWindow.xaml` and create UI objects.
+  4. Load configuration file according to `FR-01` and set values to UI controls (data binding).
+  5. Register event handlers for each UI control.
+  6. Display window.
 
-#### **2.2. 「ゲーム設定」タブ**
+#### **2.2. "Game Settings" Tab**
 
-* **画面構成:** 左側にゲームリストボックス、右側に選択したゲームの詳細設定パネルを配置。  
-* **データフロー:**  
-  * 起動時、`config.json`の`games`オブジェクトのキーを左のリストボックスに表示する。  
-  * ユーザーがリストボックスの項目を選択すると、`SelectionChanged`イベントが発火。  
-  * 選択されたゲームIDに対応する設定値（name, steamAppId等）を`config.json`データから取得し、右パネルの各コントロールに表示する。  
-  * `appsToManage`のチェックボックスリストは、「管理アプリ設定」タブで登録されている全アプリ名を元に動的に生成される。  
-* **イベント:**  
-  * `新規追加`ボタン: リストに「新しいゲーム」を追加し、右パネルを空にする。  
-  * `削除`ボタン: リストで選択中のゲームを削除する。
+* **Screen Layout**: Game list box on the left, detailed settings panel for selected game on the right.
+* **Data Flow**:
+  * At startup, display keys from `games` object in `config.json` in the left list box.
+  * When user selects a list box item, `SelectionChanged` event fires.
+  * Retrieve configuration values (name, steamAppId, etc.) corresponding to the selected game ID from `config.json` data and display in right panel controls.
+  * `appsToManage` checkbox list is dynamically generated based on all app names registered in the "Managed Apps Settings" tab.
+* **Events**:
+  * `Add New` button: Add "New Game" to list and clear right panel.
+  * `Delete` button: Delete the currently selected game from the list.
 
-#### **2.3. 「管理アプリ設定」タブ**
+#### **2.3. "Managed Apps Settings" Tab**
 
-* **画面構成:** 左側にアプリリストボックス、右側に選択したアプリの詳細設定パネルを配置。  
-* **データフロー:**  
-  * 起動時、`config.json`の`managedApps`オブジェクトのキーを左のリストボックスに表示する。  
-  * リストボックス選択時、対応するアプリの詳細を右パネルに表示する。  
-  * `gameStartAction`/`gameEndAction`は、固定値（"start-process", "stop-process", "toggle-hotkeys", "none"）を持つドロップダウンリストとする \[cite: beive60/focus-game-deck/focus-game-deck-07d61cd785d2b8a3803169874e213731807c0a07/config/config.json.sample\]。  
-* **イベント:**  
-  * `参照`ボタン: 実行ファイル選択ダイアログを開き、選択されたパスを`実行ファイルパス`テキストボックスに設定する。
+* **Screen Layout**: App list box on the left, detailed settings panel for selected app on the right.
+* **Data Flow**:
+  * At startup, display keys from `managedApps` object in `config.json` in the left list box.
+  * When list box is selected, display corresponding app details in right panel.
+  * `gameStartAction`/`gameEndAction` are dropdown lists with fixed values ("start-process", "stop-process", "toggle-hotkeys", "none").
+* **Events**:
+  * `Browse` button: Open executable file selection dialog and set selected path to `Executable Path` text box.
 
-#### **2.4. 「グローバル設定」タブ**
+#### **2.4. "Global Settings" Tab**
 
-* **画面構成:** `OBS連携設定`, `パス設定`, `全体設定`の3つのグループで構成。  
-* **データフロー:**  
-  1. 起動時、`config.json`の`obs`, `paths`, `language`の各値を対応するコントロールに表示する。  
-  2. `パスワード`テキストボックスは、入力値をマスキング表示する。
+* **Screen Layout**: Composed of three groups: `OBS Integration Settings`, `Path Settings`, and `Overall Settings`.
+* **Data Flow**:
+  1. At startup, display values from `obs`, `paths`, and `language` in `config.json` to corresponding controls.
+  2. `Password` text box masks input values.
 
-#### **2.5. フッター**
+#### **2.5. Footer**
 
-* **`保存`ボタン:**  
-  1. `Click`イベントが発火。  
-  2. 全タブのUIコントロールから現在の値を取得する。  
-  3. `config.json`と同じ階層構造を持つPowerShellオブジェクトを新規に作成し、取得した値を格納する。  
-  4. 作成したオブジェクトを`ConvertTo-Json`でJSON文字列に変換する。  
-  5. `FR-05`に基づき、`../config/config.json`にファイルとして上書き保存する。  
-  6. 「保存しました」という確認メッセージを表示する。  
-* **`閉じる`ボタン:**  
-  1. `Click`イベントが発火。  
-  2. ウィンドウを閉じる。変更が保存されていない場合の警告はv1.0では実装しない（将来的な改善項目）。
+* **`Save` Button**:
+  1. `Click` event fires.
+  2. Retrieve current values from UI controls of all tabs.
+  3. Create new PowerShell object with same hierarchical structure as `config.json` and store retrieved values.
+  4. Convert created object to JSON string using `ConvertTo-Json`.
+  5. According to `FR-05`, overwrite save to `../config/config.json` as a file.
+  6. Display "Saved" confirmation message.
+* **`Close` Button**:
+  1. `Click` event fires.
+  2. Close window. Warning for unsaved changes is not implemented in v1.0 (future improvement item).
 
-### **3\. データ構造（`config.json`とのマッピング）**
+### **3. Data Structure (Mapping with `config.json`)**
 
-本アプリが編集対象とする`config.json`のデータ構造は`config.json.sample`に準拠する。各UIコントロールは、このJSONファイルの各キーと1対1で対応する。(詳細は`.\config\config.json.sample`を参照)。
+The data structure of `config.json` that this application edits conforms to `config.json.sample`. Each UI control corresponds one-to-one with each key in this JSON file. (See `.\config\config.json.sample` for details).
 
-## 画面設計（ワイヤーフレーム）
+## Screen Design (Wireframes)
 
-ユーザーが直感的に操作できるよう、主要な設定項目をタブで分離したシンプルなデザインを提案します。
+We propose a simple design that separates main configuration items into tabs for intuitive user operation.
 
-### メインウィンドウ
+### Main Window
 
-アプリケーションの全体的な構造です。3つの主要なタブで設定項目を明確に分け、下部に操作ボタンを配置します。
+Overall structure of the application. Configuration items are clearly separated into three main tabs with operation buttons at the bottom.
 
 ```txt
 +-----------------------------------------------------------------+
-| Focus Game Deck - 設定エディタ                                  |
+| Focus Game Deck - Configuration Editor                         |
 +-----------------------------------------------------------------+
-| | ゲーム設定 | | 管理アプリ設定 | | グローバル設定 |            |
+| | Game Settings | | Managed Apps | | Global Settings |        |
 +-----------------------------------------------------------------+
 |                                                                 |
 |                                                                 |
-|         （ここに選択したタブの内容が表示される）                  |
+|         (Selected tab content displayed here)                  |
 |                                                                 |
 |                                                                 |
 |                                                                 |
 |                                                                 |
 |                                                                 |
 +-----------------------------------------------------------------+
-|                                               [ 保存 ] [ 閉じる ] |
+|                                               [ Save ] [ Close ] |
 +-----------------------------------------------------------------+
 ```
 
-* タブ1: ゲーム設定
-  * ユーザーが管理したいゲームを追加・編集・削除する画面です。左のリストでゲームを選び、右のパネルで詳細を設定します。
+* Tab 1: Game Settings
+  * Screen for adding, editing, and deleting games the user wants to manage. Select a game from the left list and configure details in the right panel.
 
-appsToManage の項目は、「管理アプリ設定」タブで登録されたアプリ名が自動的にチェックボックスリストとして表示されます。
+appsToManage items are automatically displayed as a checkbox list of app names registered in the "Managed Apps Settings" tab.
 
 ```txt
 +-----------------------------------------------------------------+
-| ゲームリスト              | 選択したゲームの詳細                |
+| Game List                | Selected Game Details               |
 | +-----------------------+ | ----------------------------------- |
 | | Apex Legends          | | GameID:     [apex____________]      |
-| | Dead by Daylight      | | 表示名:     [Apex Legends____]      |
+| | Dead by Daylight      | | Display Name:[Apex Legends____]     |
 | |                       | | Steam AppID:[1172470_________]      |
-| +-----------------------+ | プロセス名: [r5apex*_________]      |
-| [ 新規追加... ] [ 削除 ]  |                                     |
-|                           | 管理するアプリ:                     |
+| +-----------------------+ | Process Name:[r5apex*_________]     |
+| [ Add New... ] [ Delete ] |                                     |
+|                           | Managed Apps:                       |
 |                           | [x] noWinKey                        |
 |                           | [x] autoHotkey                      |
 |                           | [x] luna                            |
@@ -187,81 +187,85 @@ appsToManage の項目は、「管理アプリ設定」タブで登録された�
 +-----------------------------------------------------------------+
 ```
 
-* タブ2: 管理アプリ設定
-  * ゲームの起動・終了時に制御したいアプリケーションを登録する画面です。基本的な構造は「ゲーム設定」タブと似ています。
+* Tab 2: Managed Apps Settings
+  * Screen for registering applications to control when games start/end. Basic structure is similar to "Game Settings" tab.
 
-Action項目はドロップダウンリストから選択させることで、設定ミスを防ぎます。
+Action items use dropdown lists to prevent configuration errors.
 
 ```txt
 +-----------------------------------------------------------------+
-| アプリリスト              | 選択したアプリの詳細                |
+| App List                 | Selected App Details                |
 | +-----------------------+ | ----------------------------------- |
-| | noWinKey              | | アプリID:       [noWinKey________]    |
-| | autoHotkey            | | 実行ファイルパス: [C:\Apps\NWK..] [参照] |
-| | clibor                | | プロセス名:     [NoWinKey________]    |
+| | noWinKey              | | App ID:       [noWinKey________]    |
+| | autoHotkey            | | Executable Path:[C:\Apps\NWK..][Browse] |
+| | clibor                | | Process Name: [NoWinKey________]    |
 | | luna                  | |                                     |
-| +-----------------------+ | ゲーム開始時の動作:                   |
-| [ 新規追加... ] [ 削除 ]  |   [start-process          ^]          |
-|                           | ゲーム終了時の動作:                   |
-|                           |   [stop-process           ^]          |
-|                           | 起動引数:       [________________]    |
+| +-----------------------+ | Game Start Action:                  |
+| [ Add New... ] [ Delete ] |   [start-process          ^]       |
+|                           | Game End Action:                    |
+|                           |   [stop-process           ^]       |
+|                           | Launch Args:    [________________] |
 +-----------------------------------------------------------------+
 ```
 
-* タブ3: グローバル設定
-  * 特定のゲームやアプリに依存しない、全体的な設定項目を管理する画面です。
+* Tab 3: Global Settings
+  * Screen for managing overall configuration items not dependent on specific games or apps.
 
-パスワード入力欄は*でマスキング表示します。
+Password input field displays with * masking.
 
-言語はmessages.jsonに存在する言語キーを元にドロップダウンを自動生成します。
+Language dropdown is automatically generated based on language keys present in messages.json.
 
 ```txt
 +-----------------------------------------------------------------+
-| OBS連携設定                                                     |
-|   ホスト:     [localhost_______]  ポート: [4455__]                |
-|   パスワード: [****************]                                |
-|   [x] ゲーム中にリプレイバッファを有効にする                    |
+| OBS Integration Settings                                        |
+|   Host:       [localhost_______]  Port: [4455__]               |
+|   Password:   [****************]                               |
+|   [x] Enable replay buffer during games                        |
 | --------------------------------------------------------------- |
-| パス設定                                                        |
-|   Steam.exeのパス:  [C:\Program Files..] [参照]                 |
-|   obs64.exeのパス:  [C:\Program Files..] [参照]                 |
+| Path Settings                                                  |
+|   Steam.exe Path:   [C:\Program Files..] [Browse]              |
+|   obs64.exe Path:   [C:\Program Files..] [Browse]              |
 | --------------------------------------------------------------- |
-| 全体設定                                                        |
-|   表示言語: [日本語 (ja)            ^]                          |
+| Overall Settings                                               |
+|   Display Language: [English (en)         ^]                   |
 |                                                                 |
 +-----------------------------------------------------------------+
 ```
 
 ---
 
-## **補足: 実装設計思想**
+## **Supplement: Implementation Design Philosophy**
 
-### **技術選択の記録**
+### **Technical Choice Records**
 
-本GUI設定エディタの実装において、以下の設計判断を行った。これらの判断は将来の保守性と拡張性を考慮したものである。
+The following design decisions were made for implementing this GUI configuration editor. These decisions consider future maintainability and extensibility.
 
-#### **1. GUI技術: PowerShell + WPF**
+#### **1. GUI Technology: PowerShell + WPF**
 
-**選択理由:**
-- **統一性**: メインエンジンと同じPowerShell環境で実装
-- **軽量性**: 追加ランタイム不要、Windows標準機能を活用
-- **配布容易性**: ps2exeによる単一実行ファイル化が可能
+**Selection Rationale:**
 
-#### **2. 国際化手法: JSON外部リソース**
+- **Consistency**: Implementation in the same PowerShell environment as the main engine
+- **Lightweight**: No additional runtime required, utilizes Windows standard features
+- **Distribution Ease**: Single executable file creation possible through ps2exe
 
-**技術的背景:**
-PowerShell の `[System.Windows.MessageBox]` における日本語文字化け問題に対し、以下の手法を検証：
+#### **2. Internationalization Method: JSON External Resources**
 
-1. **Unicodeコードポイント直接指定** ✅
-2. **JSON外部リソースファイル** ✅ (採用)
-3. **PowerShell内埋め込み文字列** ❌
+**Technical Background:**
 
-**採用判断:**
-- **保守性**: 文字列とコードの分離により、翻訳やメッセージ変更が容易
-- **標準的手法**: 一般的な国際化パターンに従った実装
-- **拡張性**: 将来的な多言語対応への布石
+Regarding Japanese character garbling issues in PowerShell's `[System.Windows.MessageBox]`, the following methods were verified:
 
-**技術詳細:**
+1. **Direct Unicode Code Point Specification** ✅
+2. **JSON External Resource Files** ✅ (Adopted)
+3. **PowerShell Embedded Strings** ❌
+
+**Adoption Decision:**
+
+- **Maintainability**: Easy translation and message changes through separation of strings and code
+- **Standard Approach**: Implementation following common internationalization patterns
+- **Extensibility**: Foundation for future multi-language support
+
+**Technical Details:**
+
 ```json
 {
     "messages": {
@@ -270,45 +274,55 @@ PowerShell の `[System.Windows.MessageBox]` における日本語文字化け�
 }
 ```
 
-#### **3. アーキテクチャパターン**
+#### **3. Architecture Pattern**
 
-**ファイル構成:**
-```
+**File Structure:**
+
+```text
 gui/
-├── MainWindow.xaml          # UIレイアウト (x:Class属性なし)
-├── ConfigEditor.ps1         # メインロジック
-├── messages.json           # 国際化リソース
-└── Build-ConfigEditor.ps1  # ビルドスクリプト
+├── MainWindow.xaml          # UI Layout (no x:Class attribute)
+├── ConfigEditor.ps1         # Main Logic
+├── messages.json           # Internationalization Resources
+└── Build-ConfigEditor.ps1  # Build Script
 ```
 
-**設計パターン:**
-- **MVVMライク**: XAMLとPowerShellの分離
-- **イベント駆動**: ボタンクリック等のUI操作をハンドラーで処理
-- **設定駆動**: すべての動作を config.json で制御
+**Design Patterns:**
 
-#### **4. エラーハンドリング戦略**
+- **MVVM-like**: Separation of XAML and PowerShell
+- **Event-Driven**: Handle UI operations like button clicks with handlers
+- **Configuration-Driven**: All behavior controlled by config.json
 
-**メッセージ表示パターン:**
+#### **4. Error Handling Strategy**
+
+**Message Display Patterns:**
+
 ```powershell
-# 推奨パターン: JSON外部リソース使用
+# Recommended Pattern: Use JSON External Resources
 Show-SafeMessage -MessageKey "configSaved" -TitleKey "info"
 
-# 従来パターン: 直接指定（非推奨）
+# Traditional Pattern: Direct Specification (Not Recommended)
 [System.Windows.MessageBox]::Show("設定が保存されました")
 ```
 
-### **パフォーマンス最適化**
+### **Performance Optimization**
 
-1. **起動時間短縮**: JSON読み込みの遅延実行
-2. **メモリ効率**: PowerShell ISE vs 標準PowerShell の差異を考慮
-3. **UI応答性**: 重い処理の非同期実行検討
+1. **Startup Time Reduction**: Lazy loading of JSON
+2. **Memory Efficiency**: Consider differences between PowerShell ISE vs standard PowerShell
+3. **UI Responsiveness**: Consider asynchronous execution for heavy processing
 
-### **将来の拡張予定**
+### **Future Extension Plans**
 
-- **テーマ機能**: UI色設定のカスタマイズ
-- **プラグイン対応**: 外部スクリプトとの連携
-- **クラウド同期**: 設定の外部保存・共有機能
+- **Theme Functionality**: UI color setting customization
+- **Plugin Support**: Integration with external scripts
+- **Cloud Sync**: External storage and sharing of configurations
+
+## Language Support
+
+This documentation is available in multiple languages:
+
+- **English** (Main): [docs/BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md)
+- **日本語** (Japanese): [docs/ja/BD_and_FD_for_GUI.md](./ja/BD_and_FD_for_GUI.md)
 
 ---
 
-*本設計思想は、Focus Game Deck プロジェクトの技術的継続性を保証し、新しい開発者が一貫した方針で開発を継続できることを目的として記録されている。*
+*This design philosophy is recorded to ensure the technical continuity of the Focus Game Deck project and enable new developers to continue development with consistent policies.*

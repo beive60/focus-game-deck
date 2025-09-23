@@ -1,64 +1,76 @@
 # Focus Game Deck - Documentation Index
 
-## 📚 設計思想記録
+## 📚 Design Philosophy Record
 
-このプロジェクトの設計思想と技術選択は、以下のドキュメントに体系的に記録されています：
+The design philosophy and technical choices of this project are systematically documented in the following documents:
 
-### 🏗️ メイン設計ドキュメント
+### 🏗️ Main Design Documents
 
-| ドキュメント | 目的 | 対象読者 |
-|-------------|------|----------|
-| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | 技術アーキテクチャ・設計思想の詳細記録 | 開発者・保守担当者 |
-| **[BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md)** | GUI設計仕様と実装判断の記録 | UI開発者・設計者 |
-| **[ROADMAP.md](./ROADMAP.md)** | プロジェクト戦略と完了記録 | プロジェクト管理者 |
+| Document | Purpose | Target Audience |
+|----------|---------|-----------------|
+| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Technical architecture and detailed design philosophy | Developers and maintainers |
+| **[BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md)** | GUI design specifications and implementation decisions | UI developers and designers |
+| **[ROADMAP.md](./ROADMAP.md)** | Project strategy and completion record | Project managers |
 
-### 📋 概要ドキュメント
+### 📋 Overview Documents
 
-| ドキュメント | 目的 | 対象読者 |
-|-------------|------|----------|
-| **[README.md](../README.md)** | プロジェクト概要と設計原則の要約 | 一般ユーザー・新規開発者 |
-| **[README.JP.md](../README.JP.md)** | 日本語版プロジェクト概要 | 日本語ユーザー |
+| Document | Purpose | Target Audience |
+|----------|---------|-----------------|
+| **[README.md](../README.md)** | Project overview and design principles summary | General users and new developers |
+| **[README.JP.md](../README.JP.md)** | Japanese version of project overview | Japanese users |
 
-### 💻 実装ドキュメント
+### 💻 Implementation Documents
 
-| ファイル | 目的 | 記録内容 |
-|---------|------|----------|
-| **[gui/ConfigEditor.ps1](../gui/ConfigEditor.ps1)** | GUIメインコード | ヘッダーコメントに設計思想を記録 |
-| **[gui/messages.json](../gui/messages.json)** | 国際化リソース | JSON外部リソース方式の実装例 |
+| File | Purpose | Recorded Content |
+|------|---------|------------------|
+| **[gui/ConfigEditor.ps1](../gui/ConfigEditor.ps1)** | GUI main code | Design philosophy recorded in header comments |
+| **[gui/messages.json](../gui/messages.json)** | Internationalization resources | JSON external resource implementation example |
 
-## 🎯 重要な設計判断
+## 🎯 Key Design Decisions
 
-### 1. **GUI技術選択: PowerShell + WPF**
-- **場所**: [ARCHITECTURE.md](./ARCHITECTURE.md#gui技術選択-powershell--wpf)
-- **理由**: 軽量性、統一性、配布容易性
-- **代替案検討**: Windows Forms, Electron, C# WPF
+### 1. **GUI Technology Choice: PowerShell + WPF**
 
-### 2. **国際化手法: JSON外部リソース**
-- **場所**: [BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md#国際化手法-json外部リソース)
-- **理由**: 日本語文字化け解決、保守性、標準的手法
-- **技術詳細**: Unicodeエスケープシーケンス使用
+- **Location**: [ARCHITECTURE.md](./ARCHITECTURE.md#gui-technology-choice-powershell--wpf)
+- **Rationale**: Lightweight, consistency, ease of distribution
+- **Alternatives considered**: Windows Forms, Electron, C# WPF
 
-### 3. **アーキテクチャパターン: 設定駆動型**
-- **場所**: [ARCHITECTURE.md](./ARCHITECTURE.md#設定管理-json設定ファイル)
-- **理由**: 柔軟性、拡張性、コード変更不要のカスタマイズ
-- **実装**: config.json による動作制御
+### 2. **Internationalization Method: JSON External Resources**
 
-## 🔄 設計思想の継続性
+- **Location**: [BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md#internationalization-method-json-external-resources)
+- **Rationale**: Solves Japanese character encoding issues, maintainability, standard approach
+- **Technical details**: Uses Unicode escape sequences
 
-この記録により、以下を保証します：
+### 3. **Architecture Pattern: Configuration-Driven**
 
-1. **技術的継続性**: 新しい開発者が設計意図を理解できる
-2. **判断の透明性**: なぜその技術選択をしたかが明確
-3. **将来の拡張性**: 設計思想に沿った機能追加が可能
-4. **品質の維持**: 一貫したコーディング規約と実装パターン
+- **Location**: [ARCHITECTURE.md](./ARCHITECTURE.md#configuration-management-json-configuration-file)
+- **Rationale**: Flexibility, extensibility, customization without code changes
+- **Implementation**: Behavior control through config.json
 
-## 📅 更新履歴
+## 🔄 Design Philosophy Continuity
 
-| 日付 | バージョン | 更新内容 |
-|------|-----------|----------|
-| 2025-09-23 | v1.0.0 | 初期設計思想記録、GUI実装完了 |
-| 2025-09-23 | v1.0.1 | JSON外部リソース国際化対応完了 |
+This documentation ensures:
+
+1. **Technical Continuity**: New developers can understand the design intent
+2. **Decision Transparency**: Why specific technology choices were made is clear
+3. **Future Extensibility**: Feature additions can follow the design philosophy
+4. **Quality Maintenance**: Consistent coding standards and implementation patterns
+
+## 📅 Update History
+
+| Date | Version | Changes |
+|------|---------|---------|
+| 2025-09-23 | v1.0.0 | Initial design philosophy documentation, GUI implementation completed |
+| 2025-09-23 | v1.0.1 | JSON external resource internationalization support completed |
+
+## 🌐 Language Support
+
+This documentation is available in multiple languages:
+
+- **English** (Main): [docs/README.md](./README.md)
+- **日本語** (Japanese): [docs/ja/README.md](./ja/README.md)
+
+For Japanese-speaking contributors and users, please refer to the Japanese documentation in the `docs/ja/` directory.
 
 ---
 
-*この設計思想記録は、Focus Game Deck プロジェクトの技術的な意思決定を透明化し、長期的な開発の一貫性を保つことを目的としています。*
+*This design philosophy documentation aims to make the technical decisions of the Focus Game Deck project transparent and ensure long-term development consistency.*

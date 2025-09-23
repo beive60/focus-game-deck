@@ -1,87 +1,159 @@
-# **Focus Game Deck \- 戦略的ロードマップ (v1.0)**
+# **Focus Game Deck - Strategic Roadmap (v1.0)**
 
-## **実装完了記録**
+## **Implementation Completion Record**
 
-### **✅ v1.0.1 完了 (2025年9月23日)**
+### **✅ v1.0.1 Completed (September 23, 2025)**
 
-| 機能 | ステータス | 設計判断 |
+| Feature | Status | Design Decision |
 | :---- | :---- | :---- |
-| **GUI設定エディタ** | ✅ **完了** | PowerShell + WPF による軽量実装 |
-| **日本語文字化け解決** | ✅ **完了** | JSON外部リソース方式を採用 |
-| **アーキテクチャ設計** | ✅ **完了** | 設定駆動型、モジュラー構造 |
+| **GUI Configuration Editor** | ✅ **Completed** | Lightweight implementation using PowerShell + WPF |
+| **Japanese Character Encoding Resolution** | ✅ **Completed** | Adopted JSON external resource method |
+| **Architecture Design** | ✅ **Completed** | Configuration-driven, modular structure |
 
-**技術的マイルストーン:**
-- PowerShell + WPF による GUI フレームワーク確立
-- JSON外部リソースによる国際化パターン実装
-- 3タブ構造 (ゲーム設定/管理アプリ設定/グローバル設定) の完成
-- 文字エンコーディング問題の根本解決
+**Technical Milestones:**
 
-**設計思想文書:**
-- [docs/ARCHITECTURE.md](./ARCHITECTURE.md) - 詳細な技術アーキテクチャ
-- [docs/BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md) - GUI仕様と設計判断
+* Established GUI framework using PowerShell + WPF
+* Implemented internationalization pattern using JSON external resources
+* Completed 3-tab structure (Game Settings/Managed Apps Settings/Global Settings)
+* Fundamental resolution of character encoding issues
+
+**Design Philosophy Documents:**
+
+* [docs/ARCHITECTURE.md](./ARCHITECTURE.md) - Detailed technical architecture
+* [docs/BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md) - GUI specifications and design decisions
 
 ---
 
-## **プロジェクトのビジョン**
+## **Project Vision**
 
-「すべての競技PCゲーマーが、勝利のために100%集中できる環境を、ワンクリックで提供する」  
-このビジョンに基づき、本ロードマップは、Focus Game Deckを単なるツールから、多くのユーザーに愛される完成されたアプリケーションへと成長させるための道筋を定義する。
+"Provide an environment where all competitive PC gamers can focus 100% on victory with a single click"
 
-### **フェーズ0: 準備期 兼 βローンチ (Preparation & Beta Launch)**
+Based on this vision, this roadmap defines the path to evolve Focus Game Deck from a simple tool into a complete application beloved by many users.
 
-* **ターゲットリリース:** v0.5 (Public Beta)  
-* **目標時期:** **\~2025年10月中旬**  
-* **目標:** プロジェクトの「顔」と「心臓部」を整え、最初のユーザーからのフィードバックを得られる、実用的なバージョンをリリースする。
+### **Phase 0: Preparation & Beta Launch**
 
-| 主要なFeature | 優先度 | 備考 |
+* **Target Release**: v0.5 (Public Beta)
+* **Target Timeline**: **~Mid-October 2025**
+* **Goal**: Establish the project's "face" and "core" and release a practical version that can receive feedback from initial users.
+
+| Major Feature | Priority | Notes |
 | :---- | :---- | :---- |
-| **ランディングページの作成** | **最重要** | ツールの価値、導入方法、ダウンロードリンクを掲載した、分かりやすい紹介サイト。プロモーション活動の拠点となる。 |
-| **config.json作成のGUI** | **最重要** | ユーザーが構文エラーを恐れることなく、直感的に設定を行えるようにする。これがなければ一般層への普及は困難。 |
-| **Invoke-FocusGameDeck.ps1のリファクタリング** | **高** | config.jsonのデータ駆動型アーキテクチャへの移行。将来の機能拡張性のための技術的負債の解消。 |
+| **Landing Page Creation** | **Critical** | Clear introduction site with tool value, setup instructions, and download links. Serves as base for promotional activities. |
+| **GUI for config.json Creation** | **Critical** | Enable users to configure settings intuitively without fear of syntax errors. Without this, widespread adoption among general users is difficult. |
+| **Invoke-FocusGameDeck.ps1 Refactoring** | **High** | Transition to config.json data-driven architecture. Resolve technical debt for future feature extensibility. |
 
-### **フェーズ1: 基盤安定期 兼 v1.0公式リリース (Foundation & v1.0 Launch)**
+### **Phase 1: Foundation Stabilization & v1.0 Official Release**
 
-* **ターゲットリリース:** v1.0 (Official Release)  
-* **目標時期:** **\~2025年11月下旬**  
-* **目標:** β版のフィードバックを反映し、対応範囲を拡大。誰にでも自信を持って勧められる最初の公式バージョンを完成させる。
+* **Target Release**: v1.0 (Official Release)
+* **Target Timeline**: **~Late November 2025**
+* **Goal**: Reflect beta feedback, expand coverage scope. Complete the first official version that can be confidently recommended to anyone.
 
-| 主要なFeature | 優先度 | 備考 |
+| Major Feature | Priority | Notes |
 | :---- | :---- | :---- |
-| **Steam以外のプラットフォーム対応** | **最重要** | Epic Games, EA App, Riot Client等への対応。ユーザーベースを大幅に拡大するための必須機能。 |
-| **導入支援ウィザード** | **高** | 初回起動時に基本的な設定（Steamパス等）を対話形式で完了させる。導入のハードルを極限まで下げる。 |
-| **中国語/韓国語対応** | **中** | アジア圏の巨大なゲーマー市場へのリーチを拡大。コミュニティからの翻訳協力も視野に入れる。 |
+| **Non-Steam Platform Support** | **Critical** | Support for Epic Games, EA App, Riot Client, etc. Essential feature for significantly expanding user base. |
+| **Setup Wizard** | **High** | Complete basic configuration (Steam path, etc.) through interactive dialog on first startup. Minimize setup barriers to the extreme. |
+| **Chinese/Korean Language Support** | **Medium** | Expand reach to huge Asian gamer markets. Consider translation cooperation from community. |
 
-### **フェーズ2: 体験向上期 (User Experience Enhancement)**
+### **Phase 2: User Experience Enhancement**
 
-* **ターゲットリリース:** v1.x Major Updates  
-* **目標時期:** **2026年 Q1**  
-* **目標:** コアユーザーの満足度を最大化し、ツールへの愛着を深めるための高度な機能を追加する。
+* **Target Release**: v1.x Major Updates
+* **Target Timeline**: **Q1 2026**
+* **Goal**: Maximize core user satisfaction and deepen attachment to the tool by adding advanced features.
 
-| 主要なFeature | 優先度 | 備考 |
+| Major Feature | Priority | Notes |
 | :---- | :---- | :---- |
-| **プロファイル機能** | **高** | 同じゲームでも「ランク」「カジュアル」等で設定を切り替えられるようにする。ヘビーユーザー向けの強力な機能。 |
-| **StreamDeckへの設定支援ツール** | **中** | StreamDeckから各プロファイルを直接起動するための設定を、GUIから簡単に生成・エクスポートできるようにする。 |
-| **テーマとカスタマイズ機能** | **高** | GUIをモダンに変更し、チープなイメージを払拭し、多くのユーザーが使いたくなるようなアプリケーションにする。 |
-| **テーマとカスタマイズ機能** | **低** | GUIのテーマ（ダーク/ライトモード等）を変更可能にし、ユーザーの所有感を満たす。 |
+| **Profile Functionality** | **High** | Enable switching settings for the same game between "Ranked" and "Casual" modes. Powerful feature for heavy users. |
+| **StreamDeck Configuration Support Tool** | **Medium** | Enable easy generation and export of configurations for launching each profile directly from StreamDeck through GUI. |
+| **Theme and Customization Features** | **High** | Modernize GUI, eliminate cheap image, and create an application that many users want to use. |
 
-### **フェーズ3: エコシステム拡大期 (Ecosystem Expansion)**
+### **Phase 3: Ecosystem Expansion**
 
-* **ターゲットリリース:** v2.0  
-* **目標時期:** **2026年 Q2以降**  
-* **目標:** Focus Game DeckをPC環境全体と連携させ、単独のツールから「ゲーミング環境の中核」へと進化させる。
+* **Target Release**: v2.0
+* **Target Timeline**: **Q2 2026 and beyond**
+* **Goal**: Integrate Focus Game Deck with the entire PC environment, evolving from a standalone tool to the "core of gaming environment."
 
-| 主要なFeature | 優先度 | 備考 |
+| Major Feature | Priority | Notes |
 | :---- | :---- | :---- |
-| **Discord連携** | **高** | ゲーム起動時にDiscordステータスを自動変更。ツールの利用が自然な口コミを生む効果も期待できる。 |
-| **ハードウェアプロファイルの連携** | **中** | Logicool G Hub, Razer Synapse等のプロファイルを自動で切り替える。ソフトウェアとハードウェアの両面で環境を制御。 |
-| **ゲーム終了後アクションの拡張** | **中** | リプレイフォルダを開く、PCをスリープさせる等、ユーザー定義のカスタムアクションを実行。 |
+| **Discord Integration** | **High** | Automatically change Discord status when games launch. Expected side effect of natural word-of-mouth from tool usage. |
+| **Hardware Profile Integration** | **Medium** | Automatically switch profiles for Logicool G Hub, Razer Synapse, etc. Control environment from both software and hardware perspectives. |
+| **Expanded Post-Game Actions** | **Medium** | Execute user-defined custom actions like opening replay folder, putting PC to sleep, etc. |
 
-### **長期目標: 未来への飛躍 (The Future)**
+### **Long-term Goals: Leap to the Future**
 
-* **ターゲットリリース:** v3.0+  
-* **目標時期:** **長期的なビジョン**  
-* **目標:** プロジェクトを持続可能にし、コミュニティの力で無限に成長するプラットフォームへと進化させる。
+* **Target Release**: v3.0+
+* **Target Timeline**: **Long-term Vision**
+* **Goal**: Make the project sustainable and evolve into a platform that can grow infinitely through community power.
 
-| 主要なFeature | 優先度 | 備考 |
+| Major Feature | Priority | Notes |
 | :---- | :---- | :---- |
-| **プラグインシステム** | **\-** | コア機能と拡張機能を分離し、コミュニティが自由に「Spotifyプラグイン」等を |
+| **Plugin System** | **-** | Separate core and extension features, allowing community to freely create "Spotify plugins" etc. |
+| **Community Marketplace** | **-** | Platform where users can share and download custom profiles, themes, and plugins. |
+| **Cross-Platform Support** | **-** | Expand to Mac and Linux, making it the standard tool for gamers worldwide. |
+
+## **Success Metrics**
+
+### **Phase 0 Success Criteria**
+
+* 100+ downloads within first month
+* 5+ community feedback submissions
+* Basic functionality validation
+
+### **Phase 1 Success Criteria**
+
+* 1,000+ active users
+* Support for 10+ major gaming platforms
+* Community-driven translation contributions
+
+### **Phase 2 Success Criteria**
+
+* 10,000+ active users
+* 50+ community-created profiles
+* Integration with major gaming hardware
+
+### **Long-term Success Vision**
+
+* Industry recognition as standard gaming environment tool
+* Active contributor community
+* Sustainable development ecosystem
+
+## **Development Principles**
+
+Throughout all phases, maintain these core principles:
+
+1. **User-First Design**: Every feature must solve real user problems
+2. **Lightweight Philosophy**: Avoid bloat, maintain fast startup and low resource usage
+3. **Community-Driven**: Listen to user feedback and enable community contributions
+4. **Technical Excellence**: Maintain high code quality and comprehensive documentation
+5. **Accessibility**: Ensure the tool remains approachable for non-technical users
+
+## **Risk Management**
+
+### **Technical Risks**
+
+* **PowerShell Compatibility**: Monitor Windows PowerShell evolution and .NET Core migration
+* **Third-party Dependencies**: Maintain compatibility with gaming platforms and hardware APIs
+* **Performance Scaling**: Ensure tool remains responsive as feature set grows
+
+### **Market Risks**
+
+* **Competition**: Stay ahead of similar tools through unique features and superior UX
+* **Platform Changes**: Adapt to changes in gaming platforms and launcher ecosystems
+* **User Adoption**: Maintain focus on ease of use and clear value proposition
+
+## **Community Building Strategy**
+
+* **Documentation**: Maintain comprehensive, multi-language documentation
+* **Tutorials**: Create video and written guides for common use cases
+* **Support Channels**: Establish Discord, Reddit, and GitHub issue support
+* **Contributor Recognition**: Acknowledge and reward community contributions
+
+## Language Support
+
+This documentation is available in multiple languages:
+
+* **English** (Main): [docs/ROADMAP.md](./ROADMAP.md)
+* **日本語** (Japanese): [docs/ja/ROADMAP.md](./ja/ROADMAP.md)
+
+---
+
+*This roadmap serves as a living document that will evolve based on user feedback, technical discoveries, and market opportunities while maintaining our core vision of empowering gamers worldwide.*
