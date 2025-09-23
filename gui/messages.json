@@ -50,8 +50,13 @@
         "passwordLabel": "パスワード:",
         "replayBufferLabel": "ゲーム中にリプレイバッファを有効にする",
         "steamPathLabel": "Steam.exeのパス:",
+        "epicPathLabel": "Epic Games Launcherのパス:",
+        "riotPathLabel": "Riot Clientのパス:",
         "obsPathLabel": "obs64.exeのパス:",
-        "languageLabel": "表示言語:"
+        "languageLabel": "表示言語:",
+        "platformLabel": "プラットフォーム:",
+        "epicGameIdLabel": "Epic GameID:",
+        "riotGameIdLabel": "Riot GameID:"
     },
     "en": {
         "textLabel": "Text",
@@ -104,7 +109,12 @@
         "passwordLabel": "Password:",
         "replayBufferLabel": "Enable replay buffer during gameplay",
         "steamPathLabel": "Steam.exe Path:",
+        "epicPathLabel": "Epic Games Launcher Path:",
+        "riotPathLabel": "Riot Client Path:",
         "obsPathLabel": "obs64.exe Path:",
-        "languageLabel": "Display Language:"
+        "languageLabel": "Display Language:",
+        "platformLabel": "Platform:",
+        "epicGameIdLabel": "Epic GameID:",
+        "riotGameIdLabel": "Riot GameID:"
     }
 }

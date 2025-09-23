@@ -63,6 +63,9 @@
                                     <RowDefinition Height="30"/>
                                     <RowDefinition Height="30"/>
                                     <RowDefinition Height="30"/>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="30"/>
                                 </Grid.RowDefinitions>
                                 
                                 <Label Grid.Row="0" Grid.Column="0" Name="GameIdLabel" Content="Game ID:" VerticalAlignment="Center"/>
@@ -71,11 +74,24 @@
                                 <Label Grid.Row="1" Grid.Column="0" Name="GameNameLabel" Content="表示名:" VerticalAlignment="Center"/>
                                 <TextBox Grid.Row="1" Grid.Column="1" Name="GameNameTextBox" Margin="5"/>
                                 
-                                <Label Grid.Row="2" Grid.Column="0" Name="SteamAppIdLabel" Content="Steam AppID:" VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="2" Grid.Column="1" Name="SteamAppIdTextBox" Margin="5"/>
+                                <Label Grid.Row="2" Grid.Column="0" Name="PlatformLabel" Content="プラットフォーム:" VerticalAlignment="Center"/>
+                                <ComboBox Grid.Row="2" Grid.Column="1" Name="PlatformComboBox" Margin="5">
+                                    <ComboBoxItem Content="Steam" Tag="steam"/>
+                                    <ComboBoxItem Content="Epic Games" Tag="epic"/>
+                                    <ComboBoxItem Content="Riot Client" Tag="riot"/>
+                                </ComboBox>
                                 
-                                <Label Grid.Row="3" Grid.Column="0" Name="ProcessNameLabel" Content="プロセス名:" VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="3" Grid.Column="1" Name="ProcessNameTextBox" Margin="5"/>
+                                <Label Grid.Row="3" Grid.Column="0" Name="SteamAppIdLabel" Content="Steam AppID:" VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="3" Grid.Column="1" Name="SteamAppIdTextBox" Margin="5"/>
+                                
+                                <Label Grid.Row="4" Grid.Column="0" Name="EpicGameIdLabel" Content="Epic GameID:" VerticalAlignment="Center" Visibility="Collapsed"/>
+                                <TextBox Grid.Row="4" Grid.Column="1" Name="EpicGameIdTextBox" Margin="5" Visibility="Collapsed"/>
+                                
+                                <Label Grid.Row="5" Grid.Column="0" Name="RiotGameIdLabel" Content="Riot GameID:" VerticalAlignment="Center" Visibility="Collapsed"/>
+                                <TextBox Grid.Row="5" Grid.Column="1" Name="RiotGameIdTextBox" Margin="5" Visibility="Collapsed"/>
+                                
+                                <Label Grid.Row="6" Grid.Column="0" Name="ProcessNameLabel" Content="プロセス名:" VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="6" Grid.Column="1" Name="ProcessNameTextBox" Margin="5"/>
                             </Grid>
                             
                             <Label Grid.Row="2" Name="AppsToManageLabel" Content="管理するアプリ:" FontWeight="Bold" Margin="0,10,0,5"/>
@@ -197,11 +213,13 @@
                         <GroupBox Name="PathSettingsGroup" Header="パス設定" Margin="0,0,0,20">
                             <Grid Margin="10">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="180"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="80"/>
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
+                                    <RowDefinition Height="35"/>
+                                    <RowDefinition Height="35"/>
                                     <RowDefinition Height="35"/>
                                     <RowDefinition Height="35"/>
                                 </Grid.RowDefinitions>
@@ -210,9 +228,17 @@
                                 <TextBox Grid.Row="0" Grid.Column="1" Name="SteamPathTextBox" Margin="5"/>
                                 <Button Grid.Row="0" Grid.Column="2" Name="BrowseSteamPathButton" Content="参照" Width="70" Height="25"/>
                                 
-                                <Label Grid.Row="1" Grid.Column="0" Name="ObsPathLabel" Content="obs64.exeのパス:" VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="1" Grid.Column="1" Name="ObsPathTextBox" Margin="5"/>
-                                <Button Grid.Row="1" Grid.Column="2" Name="BrowseObsPathButton" Content="参照" Width="70" Height="25"/>
+                                <Label Grid.Row="1" Grid.Column="0" Name="EpicPathLabel" Content="Epic Games Launcherのパス:" VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" Name="EpicPathTextBox" Margin="5"/>
+                                <Button Grid.Row="1" Grid.Column="2" Name="BrowseEpicPathButton" Content="参照" Width="70" Height="25"/>
+                                
+                                <Label Grid.Row="2" Grid.Column="0" Name="RiotPathLabel" Content="Riot Clientのパス:" VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" Name="RiotPathTextBox" Margin="5"/>
+                                <Button Grid.Row="2" Grid.Column="2" Name="BrowseRiotPathButton" Content="参照" Width="70" Height="25"/>
+                                
+                                <Label Grid.Row="3" Grid.Column="0" Name="ObsPathLabel" Content="obs64.exeのパス:" VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="3" Grid.Column="1" Name="ObsPathTextBox" Margin="5"/>
+                                <Button Grid.Row="3" Grid.Column="2" Name="BrowseObsPathButton" Content="参照" Width="70" Height="25"/>
                             </Grid>
                         </GroupBox>
                         

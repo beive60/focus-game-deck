@@ -247,6 +247,10 @@ function Setup-EventHandlers {
     $deleteGameButton = $script:Window.FindName("DeleteGameButton")
     $deleteGameButton.add_Click({ Handle-DeleteGame })
     
+    # Platform selection event
+    $platformCombo = $script:Window.FindName("PlatformComboBox")
+    $platformCombo.add_SelectionChanged({ Handle-PlatformSelectionChanged })
+    
     # Managed Apps tab events
     $managedAppsList = $script:Window.FindName("ManagedAppsList")
     $managedAppsList.add_SelectionChanged({ Handle-AppSelectionChanged })
@@ -320,8 +324,17 @@ function Update-UITexts {
         $gameNameLabel = $script:Window.FindName("GameNameLabel")
         if ($gameNameLabel) { $gameNameLabel.Content = Get-LocalizedMessage -Key "gameNameLabel" }
         
+        $platformLabel = $script:Window.FindName("PlatformLabel")
+        if ($platformLabel) { $platformLabel.Content = Get-LocalizedMessage -Key "platformLabel" }
+        
         $steamAppIdLabel = $script:Window.FindName("SteamAppIdLabel")
         if ($steamAppIdLabel) { $steamAppIdLabel.Content = Get-LocalizedMessage -Key "steamAppIdLabel" }
+        
+        $epicGameIdLabel = $script:Window.FindName("EpicGameIdLabel")
+        if ($epicGameIdLabel) { $epicGameIdLabel.Content = Get-LocalizedMessage -Key "epicGameIdLabel" }
+        
+        $riotGameIdLabel = $script:Window.FindName("RiotGameIdLabel")
+        if ($riotGameIdLabel) { $riotGameIdLabel.Content = Get-LocalizedMessage -Key "riotGameIdLabel" }
         
         $processNameLabel = $script:Window.FindName("ProcessNameLabel")
         if ($processNameLabel) { $processNameLabel.Content = Get-LocalizedMessage -Key "processNameLabel" }
@@ -355,6 +368,12 @@ function Update-UITexts {
         $steamPathLabel = $script:Window.FindName("SteamPathLabel")
         if ($steamPathLabel) { $steamPathLabel.Content = Get-LocalizedMessage -Key "steamPathLabel" }
         
+        $epicPathLabel = $script:Window.FindName("EpicPathLabel")
+        if ($epicPathLabel) { $epicPathLabel.Content = Get-LocalizedMessage -Key "epicPathLabel" }
+        
+        $riotPathLabel = $script:Window.FindName("RiotPathLabel")
+        if ($riotPathLabel) { $riotPathLabel.Content = Get-LocalizedMessage -Key "riotPathLabel" }
+        
         $obsPathLabel = $script:Window.FindName("ObsPathLabel")
         if ($obsPathLabel) { $obsPathLabel.Content = Get-LocalizedMessage -Key "obsPathLabel" }
         
@@ -364,6 +383,12 @@ function Update-UITexts {
         # Update browse buttons
         $browseSteamPathButton = $script:Window.FindName("BrowseSteamPathButton")
         if ($browseSteamPathButton) { $browseSteamPathButton.Content = Get-LocalizedMessage -Key "browseButton" }
+        
+        $browseEpicPathButton = $script:Window.FindName("BrowseEpicPathButton")
+        if ($browseEpicPathButton) { $browseEpicPathButton.Content = Get-LocalizedMessage -Key "browseButton" }
+        
+        $browseRiotPathButton = $script:Window.FindName("BrowseRiotPathButton")
+        if ($browseRiotPathButton) { $browseRiotPathButton.Content = Get-LocalizedMessage -Key "browseButton" }
         
         $browseObsPathButton = $script:Window.FindName("BrowseObsPathButton")
         if ($browseObsPathButton) { $browseObsPathButton.Content = Get-LocalizedMessage -Key "browseButton" }
@@ -461,9 +486,11 @@ function Load-GlobalSettings {
     $script:Window.FindName("ObsPasswordBox").Password = $script:ConfigData.obs.websocket.password
     $script:Window.FindName("ReplayBufferCheckBox").IsChecked = $script:ConfigData.obs.replayBuffer
     
-    # Path Settings
-    $script:Window.FindName("SteamPathTextBox").Text = $script:ConfigData.paths.steam
-    $script:Window.FindName("ObsPathTextBox").Text = $script:ConfigData.paths.obs
+    # Path Settings (Multi-Platform)
+    $script:Window.FindName("SteamPathTextBox").Text = if ($script:ConfigData.paths.steam) { $script:ConfigData.paths.steam } else { "" }
+    $script:Window.FindName("EpicPathTextBox").Text = if ($script:ConfigData.paths.epic) { $script:ConfigData.paths.epic } else { "" }
+    $script:Window.FindName("RiotPathTextBox").Text = if ($script:ConfigData.paths.riot) { $script:ConfigData.paths.riot } else { "" }
+    $script:Window.FindName("ObsPathTextBox").Text = if ($script:ConfigData.paths.obs) { $script:ConfigData.paths.obs } else { "" }
     
     # Language Setting
     $languageCombo = $script:Window.FindName("LanguageCombo")
@@ -474,6 +501,46 @@ function Load-GlobalSettings {
         $languageCombo.SelectedIndex = 1  # Japanese
     } elseif ($currentLang -eq "en") {
         $languageCombo.SelectedIndex = 2  # English
+    }
+}
+
+# Update platform-specific field visibility
+function Update-PlatformFields {
+    param([string]$Platform)
+    
+    # Hide all platform-specific fields first
+    $script:Window.FindName("SteamAppIdLabel").Visibility = "Collapsed"
+    $script:Window.FindName("SteamAppIdTextBox").Visibility = "Collapsed"
+    $script:Window.FindName("EpicGameIdLabel").Visibility = "Collapsed"
+    $script:Window.FindName("EpicGameIdTextBox").Visibility = "Collapsed"
+    $script:Window.FindName("RiotGameIdLabel").Visibility = "Collapsed"
+    $script:Window.FindName("RiotGameIdTextBox").Visibility = "Collapsed"
+    
+    # Show platform-specific fields based on selection
+    switch ($Platform) {
+        "steam" {
+            $script:Window.FindName("SteamAppIdLabel").Visibility = "Visible"
+            $script:Window.FindName("SteamAppIdTextBox").Visibility = "Visible"
+        }
+        "epic" {
+            $script:Window.FindName("EpicGameIdLabel").Visibility = "Visible"
+            $script:Window.FindName("EpicGameIdTextBox").Visibility = "Visible"
+        }
+        "riot" {
+            $script:Window.FindName("RiotGameIdLabel").Visibility = "Visible"
+            $script:Window.FindName("RiotGameIdTextBox").Visibility = "Visible"
+        }
+    }
+}
+
+# Handle platform selection changed
+function Handle-PlatformSelectionChanged {
+    param()
+    
+    $platformCombo = $script:Window.FindName("PlatformComboBox")
+    if ($platformCombo.SelectedItem -and $platformCombo.SelectedItem.Tag) {
+        $selectedPlatform = $platformCombo.SelectedItem.Tag
+        Update-PlatformFields -Platform $selectedPlatform
     }
 }
 
@@ -491,8 +558,34 @@ function Handle-GameSelectionChanged {
         # Load game details
         $script:Window.FindName("GameIdTextBox").Text = $selectedGame
         $script:Window.FindName("GameNameTextBox").Text = $gameData.name
-        $script:Window.FindName("SteamAppIdTextBox").Text = $gameData.steamAppId
         $script:Window.FindName("ProcessNameTextBox").Text = $gameData.processName
+        
+        # Load platform-specific fields
+        if ($gameData.platform) {
+            $platformCombo = $script:Window.FindName("PlatformComboBox")
+            $found = $false
+            for ($i = 0; $i -lt $platformCombo.Items.Count; $i++) {
+                if ($platformCombo.Items[$i].Tag -eq $gameData.platform) {
+                    $platformCombo.SelectedIndex = $i
+                    $found = $true
+                    break
+                }
+            }
+            if (-not $found) {
+                $platformCombo.SelectedIndex = 0  # Steam as fallback
+            }
+            Update-PlatformFields -Platform $gameData.platform
+        } else {
+            # Default to Steam for backward compatibility
+            $platformCombo = $script:Window.FindName("PlatformComboBox")
+            $platformCombo.SelectedIndex = 0  # Steam
+            Update-PlatformFields -Platform "steam"
+        }
+        
+        # Load platform-specific IDs
+        $script:Window.FindName("SteamAppIdTextBox").Text = if ($gameData.steamAppId) { $gameData.steamAppId } else { "" }
+        $script:Window.FindName("EpicGameIdTextBox").Text = if ($gameData.epicGameId) { $gameData.epicGameId } else { "" }
+        $script:Window.FindName("RiotGameIdTextBox").Text = if ($gameData.riotGameId) { $gameData.riotGameId } else { "" }
         
         # Update apps to manage checkboxes
         $panel = $script:Window.FindName("AppsToManagePanel")
@@ -544,7 +637,10 @@ function Handle-AddGame {
     
     $script:ConfigData.games | Add-Member -MemberType NoteProperty -Name $newGameId -Value ([PSCustomObject]@{
         name = "New Game"
+        platform = "steam"  # Default to Steam
         steamAppId = ""
+        epicGameId = ""
+        riotGameId = ""
         processName = ""
         appsToManage = @()
     })
@@ -575,7 +671,14 @@ function Handle-DeleteGame {
             $script:Window.FindName("GameIdTextBox").Text = ""
             $script:Window.FindName("GameNameTextBox").Text = ""
             $script:Window.FindName("SteamAppIdTextBox").Text = ""
+            $script:Window.FindName("EpicGameIdTextBox").Text = ""
+            $script:Window.FindName("RiotGameIdTextBox").Text = ""
             $script:Window.FindName("ProcessNameTextBox").Text = ""
+            
+            # Reset platform selection
+            $platformCombo = $script:Window.FindName("PlatformComboBox")
+            $platformCombo.SelectedIndex = 0  # Steam
+            Update-PlatformFields -Platform "steam"
             
             Show-SafeMessage -MessageKey "gameRemoved" -TitleKey "info"
         }
@@ -677,8 +780,19 @@ function Save-CurrentGameData {
     
     $gameId = $script:Window.FindName("GameIdTextBox").Text
     $gameName = $script:Window.FindName("GameNameTextBox").Text
-    $steamAppId = $script:Window.FindName("SteamAppIdTextBox").Text
     $processName = $script:Window.FindName("ProcessNameTextBox").Text
+    
+    # Get platform selection
+    $platformCombo = $script:Window.FindName("PlatformComboBox")
+    $selectedPlatform = "steam"  # Default
+    if ($platformCombo.SelectedItem -and $platformCombo.SelectedItem.Tag) {
+        $selectedPlatform = $platformCombo.SelectedItem.Tag
+    }
+    
+    # Get platform-specific IDs
+    $steamAppId = $script:Window.FindName("SteamAppIdTextBox").Text
+    $epicGameId = $script:Window.FindName("EpicGameIdTextBox").Text
+    $riotGameId = $script:Window.FindName("RiotGameIdTextBox").Text
     
     # Get selected apps to manage
     $appsToManage = @()
@@ -698,9 +812,14 @@ function Save-CurrentGameData {
     }
     
     $script:ConfigData.games.$gameId.name = $gameName
-    $script:ConfigData.games.$gameId.steamAppId = $steamAppId
+    $script:ConfigData.games.$gameId.platform = $selectedPlatform
     $script:ConfigData.games.$gameId.processName = $processName
     $script:ConfigData.games.$gameId.appsToManage = $appsToManage
+    
+    # Update platform-specific IDs
+    $script:ConfigData.games.$gameId.steamAppId = $steamAppId
+    $script:ConfigData.games.$gameId.epicGameId = $epicGameId
+    $script:ConfigData.games.$gameId.riotGameId = $riotGameId
 }
 
 # Save current app data
@@ -739,8 +858,10 @@ function Save-GlobalSettingsData {
     $script:ConfigData.obs.websocket.password = $script:Window.FindName("ObsPasswordBox").Password
     $script:ConfigData.obs.replayBuffer = $script:Window.FindName("ReplayBufferCheckBox").IsChecked
     
-    # Path Settings
+    # Path Settings (Multi-Platform)
     $script:ConfigData.paths.steam = $script:Window.FindName("SteamPathTextBox").Text
+    $script:ConfigData.paths.epic = $script:Window.FindName("EpicPathTextBox").Text
+    $script:ConfigData.paths.riot = $script:Window.FindName("RiotPathTextBox").Text
     $script:ConfigData.paths.obs = $script:Window.FindName("ObsPathTextBox").Text
     
     # Language Setting
