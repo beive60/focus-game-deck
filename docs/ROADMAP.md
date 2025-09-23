@@ -1,4 +1,4 @@
-# **Focus Game Deck - Strategic Roadmap (v1.0)**
+# **Focus Game Deck - Strategic Roadmap (v1.1)**
 
 ## **Implementation Completion Record**
 
@@ -9,6 +9,9 @@
 | **GUI Configuration Editor** | ✅ **Completed** | Lightweight implementation using PowerShell + WPF |
 | **Japanese Character Encoding Resolution** | ✅ **Completed** | Adopted JSON external resource method |
 | **Architecture Design** | ✅ **Completed** | Configuration-driven, modular structure |
+| **Risk Management Policy Establishment** | ✅ **Completed** | Anti-cheat false positive prevention, security-first design |
+| **Alpha Test Plan** | ✅ **Completed** | 5-10 tester recruitment, multi-perspective feedback collection system |
+| **Distribution Strategy Establishment** | ✅ **Completed** | Digital signature reliability assurance, centralized official distribution channels |
 
 **Technical Milestones:**
 
@@ -16,11 +19,57 @@
 * Implemented internationalization pattern using JSON external resources
 * Completed 3-tab structure (Game Settings/Managed Apps Settings/Global Settings)
 * Fundamental resolution of character encoding issues
+* **Systematization of security risk management**
+* **Establishment of official distribution and reliability assurance strategy**
+
+**Strategic Milestones:**
+
+* Clarification of MIT License strategic value
+* Transparency assurance through open source
+* Advance dialogue strategy with anti-cheat developers
+
+## **Release Strategy and License Selection**
+
+### **MIT License Strategic Value**
+
+#### **Contribution to Community Formation**
+
+MIT License provides strategic value beyond just a legal framework for this project:
+
+* **Minimizing Participation Barriers**: Low restrictions allow other developers to easily propose bug fixes and feature additions
+* **Reliability Assurance**: Complete transparency through open source builds social trust, especially for tools affecting gaming environments
+* **Future Option Security**: Preserves developer's future freedom for commercial expansion or code reuse in other projects
+
+#### **Alignment with Project Philosophy**
+
+The guiding principle of "open and welcoming community" perfectly aligns with MIT License's high degree of freedom, forming the foundation for long-term project growth.
+
+### **Official Distribution and Reliability Assurance Strategy**
+
+Focus Game Deck, as a tool that particularly affects gaming environments, requires thorough reliability assurance.
+
+#### **Integrity Assurance through Digital Signatures**
+
+* **Implementation Strategy**: Comprehensive code signing for both .exe and .ps1 files
+* **Technical Requirements**: Extended Validation certificate with timestamped signatures
+* **Distribution Chain**: GitHub Releases → Signed Binaries → End User Execution
+
+#### **Transparency Assurance Mechanisms**
+
+* **Complete Source Code Disclosure**: All functionality implemented as open source
+* **Build Reproducibility**: Users can independently build and verify results
+* **Design Philosophy Documentation**: Complete documentation of risk management policies and design decisions
+
+#### **Security Verification Process**
+
+* **Static Analysis**: Comprehensive inspection using PowerShellScriptAnalyzer
+* **Anti-cheat Testing**: Demonstrating 0% false positive rate in major games
+* **Third-party Review**: Rigorous quality verification during alpha test period
 
 **Design Philosophy Documents:**
 
-* [docs/ARCHITECTURE.md](./ARCHITECTURE.md) - Detailed technical architecture
-* [docs/BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md) - GUI specifications and design decisions
+* [docs/ARCHITECTURE.md](./ARCHITECTURE.md) - Detailed technical architecture + Risk management policy
+* [docs/BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md) - GUI specifications and design decisions + Security requirements
 
 ---
 

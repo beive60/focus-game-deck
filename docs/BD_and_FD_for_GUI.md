@@ -133,6 +133,33 @@ This application consists of a single window, with main functions switched throu
   1. `Click` event fires.
   2. Close window. Warning for unsaved changes is not implemented in v1.0 (future improvement item).
 
+#### **2.6. Security and Risk Management Requirements**
+
+Security requirements specific to the GUI configuration editor are defined as follows:
+
+* **Configuration File Security**:
+  * Password Encryption: Sensitive information such as OBS WebSocket passwords is encrypted using Windows DPAPI (SecureString)
+  * Configuration Validation: Detect and prevent invalid values and dangerous path specifications
+  * File Path Verification: Validate the legitimacy of executable file paths and directory paths
+
+* **Input Validation**:
+  * File Path Existence Check: Verify that specified file paths actually exist
+  * Numeric Range Check: Validate that numeric items like port numbers are within appropriate ranges
+  * JSON Structure Integrity Check: Ensure configuration file structure is correct
+  * Required Field Check: Verify that necessary configuration items are entered
+
+* **Application Security**:
+  * Digital Signature: Official distribution versions must be signed with code signing certificates
+  * Transparency Assurance: Ensure code safety through open source
+
+#### **2.7. Alpha Test Support Features**
+
+To support alpha test implementation requirements, the following features are planned:
+
+* **Feedback Collection Support**: Features to easily export error information and configuration status
+* **Tester Support**: Introduction support through automatic generation of configuration examples and preset features
+* **Version Management**: Configuration file versioning and migration features
+
 ### **3. Data Structure (Mapping with `config.json`)**
 
 The data structure of `config.json` that this application edits conforms to `config.json.sample`. Each UI control corresponds one-to-one with each key in this JSON file. (See `.\config\config.json.sample` for details).

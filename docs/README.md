@@ -67,7 +67,7 @@ This documentation ensures:
 This documentation is available in multiple languages:
 
 - **English** (Main): [docs/README.md](./README.md)
-- **日本語** (Japanese): [docs/ja/README.md](./ja/README.md)
+- **日本語** (Japanese): [docs/ja/DOCUMENTATION-INDEX.md](./ja/DOCUMENTATION-INDEX.md)
 
 For Japanese-speaking contributors and users, please refer to the Japanese documentation in the `docs/ja/` directory.
 

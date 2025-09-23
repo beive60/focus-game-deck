@@ -2,7 +2,15 @@
 
 ## Overview
 
-Focus Game Deck is a PowerShell-based tool for gaming environment automation and OBS streaming management. This document explains the project's design philosophy, rationale for technical choices, and implementation architecture.
+Focus Game Deck is a PowerShell-based tool for gaming environment automation and OBS streaming management. This document explains th## Contribution Guidelines
+
+To maintain this design philosophy, please prioritize the following:
+
+1. **Security First**: Always consider anti-cheat false positive risks with non-invasive design
+2. **Maintain Lightweight Nature**: Carefully consider adding new dependencies
+3. **PowerShell First**: Prioritize PowerShell solutions over migration to other languages
+4. **Configuration-Driven**: Control through configuration files rather than hard-coding
+5. **Internationalization Support**: All new messages must be externalized to JSON resourcest's design philosophy, rationale for technical choices, and implementation architecture.
 
 ## Design Philosophy
 
@@ -49,7 +57,7 @@ Focus Game Deck
 └── Documentation & Testing
     ├── docs/                            # Design and specification documents
     ├── test/                            # Test scripts
-    └── README.md                        # Project overview
+    └── DOCUMENTATION-INDEX.md           # Documentation index
 ```
 
 ### Design Decision Records
@@ -150,19 +158,38 @@ Focus Game Deck
 - Proper disposal of large objects
 - Memory leak prevention in event handlers
 
-## Security Considerations
+## Security Considerations and Risk Management
 
-### Execution Policy
+### Highest Priority Risk: Anti-Cheat System False Positive Prevention
 
-- Restriction bypass through `-ExecutionPolicy Bypass`
-- Future consideration of script signing
+**Technical Approach (Thorough Non-Invasive Design)**:
 
-### Configuration File Protection
+- Completely avoid invasive operations such as game process memory reading/writing and code injection
+- Use only official OS standard features (Get-Process, Stop-Process, etc.) for process operations
+- Ensure transparency: Maintain all source code publicly on GitHub for anyone to audit code safety
 
-- Restrictions on plain text password storage
-- Configuration file access permission control
+**Proactive Communication**:
+
+- Notify major anti-cheat developers (Epic Games, BattlEye, etc.) in advance of this project's purpose and technical specifications, requesting whitelist registration
+
+### Execution Policy and Distribution Strategy
+
+- **Development**: Restriction bypass through `-ExecutionPolicy Bypass`
+- **Distribution**: **Digital signature with code signing certificate is mandatory**, distributing only officially signed executable files (.exe) by trusted Certificate Authority (CA)
+- Signed files ensure trust from Windows SmartScreen and security software
+
+### Configuration File Protection and Privacy
+
+- **Sensitive Information Encryption**: OBS WebSocket passwords etc. are encrypted using Windows Data Protection API (DPAPI) via SecureString, tied to user account
+- **Configuration File Access Control**: Appropriate file permission settings
 
 ## Future Extension Plans
+
+### Highest Priority (Alpha Test Period)
+
+- [ ] Implementation of alpha test plan (recruiting 5-10 testers)
+- [ ] Establishment of official distribution system with digital signatures
+- [ ] Security audit and advance notification to anti-cheat developers
 
 ### Short-term (v1.1)
 
@@ -197,6 +224,7 @@ To maintain this design philosophy, please prioritize the following:
 |---------|------|---------|
 | 1.0.0 | 2025-09-23 | Initial architecture design, GUI implementation completed |
 | 1.0.1 | 2025-09-23 | JSON external resource internationalization support completed |
+| 1.1.0 | 2025-09-23 | Integration of risk management policy and security design |
 
 ## Language Support
 
