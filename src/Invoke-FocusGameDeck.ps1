@@ -210,35 +210,23 @@ $scriptDir = $PSScriptRoot
 $configPath = Join-Path $scriptDir "..\config\config.json"
 $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
 
-# Initialize internationalization (i18n)
+# Import language helper functions
+$languageHelperPath = Join-Path $scriptDir "..\scripts\LanguageHelper.ps1"
+if (Test-Path $languageHelperPath) {
+    . $languageHelperPath
+} else {
+    Write-Warning "Language helper not found: $languageHelperPath"
+}
+
+# Detect language using centralized logic
+$langCode = Get-DetectedLanguage -ConfigData $config
+
+# Set appropriate culture for the detected language
+Set-CultureByLanguage -LanguageCode $langCode
+
+# Load localized messages
 $messagesPath = Join-Path $scriptDir "..\config\messages.json"
-$messages = Get-Content -Path $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
-
-# Determine language based on priority: config.json > OS language > English fallback
-$langCode = "en"  # Default fallback
-
-# 1. Check if language is explicitly set in config.json
-if ($config.PSObject.Properties.Name -contains "language" -and $config.language -and $config.language.Trim() -ne "") {
-    $configLang = $config.language.Trim().ToLower()
-    if ($messages.PSObject.Properties.Name -contains $configLang) {
-        $langCode = $configLang
-    }
-}
-else {
-    # 2. Auto-detect OS language if not explicitly set
-    try {
-        $osLang = (Get-Culture).TwoLetterISOLanguageName.ToLower()
-        if ($messages.PSObject.Properties.Name -contains $osLang) {
-            $langCode = $osLang
-        }
-    }
-    catch {
-        # If OS language detection fails, keep default English
-    }
-}
-
-# Load the appropriate message set
-$msg = $messages.$langCode
+$msg = Get-LocalizedMessages -MessagesPath $messagesPath -LanguageCode $langCode
 
 # Get game configuration
 $gameConfig = $config.games.$GameId

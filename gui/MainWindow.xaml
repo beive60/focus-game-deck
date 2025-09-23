@@ -31,7 +31,7 @@
                             <RowDefinition Height="40"/>
                         </Grid.RowDefinitions>
                         
-                        <Label Grid.Row="0" Content="ゲームリスト" FontWeight="Bold"/>
+                        <Label Grid.Row="0" Name="GamesListLabel" Content="ゲームリスト" FontWeight="Bold"/>
                         <ListBox Grid.Row="1" Name="GamesList" Margin="0,5,5,5"/>
                         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
                             <Button Name="AddGameButton" Content="新規追加..." Width="80" Height="25" Margin="5"/>
@@ -51,7 +51,7 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             
-                            <Label Grid.Row="0" Content="選択したゲームの詳細" FontWeight="Bold" FontSize="14"/>
+                            <Label Grid.Row="0" Name="GameDetailsLabel" Content="選択したゲームの詳細" FontWeight="Bold" FontSize="14"/>
                             
                             <Grid Grid.Row="1" Margin="0,10">
                                 <Grid.ColumnDefinitions>
@@ -65,20 +65,20 @@
                                     <RowDefinition Height="30"/>
                                 </Grid.RowDefinitions>
                                 
-                                <Label Grid.Row="0" Grid.Column="0" Content="Game ID:" VerticalAlignment="Center"/>
+                                <Label Grid.Row="0" Grid.Column="0" Name="GameIdLabel" Content="Game ID:" VerticalAlignment="Center"/>
                                 <TextBox Grid.Row="0" Grid.Column="1" Name="GameIdTextBox" Margin="5"/>
                                 
-                                <Label Grid.Row="1" Grid.Column="0" Content="表示名:" VerticalAlignment="Center"/>
+                                <Label Grid.Row="1" Grid.Column="0" Name="GameNameLabel" Content="表示名:" VerticalAlignment="Center"/>
                                 <TextBox Grid.Row="1" Grid.Column="1" Name="GameNameTextBox" Margin="5"/>
                                 
-                                <Label Grid.Row="2" Grid.Column="0" Content="Steam AppID:" VerticalAlignment="Center"/>
+                                <Label Grid.Row="2" Grid.Column="0" Name="SteamAppIdLabel" Content="Steam AppID:" VerticalAlignment="Center"/>
                                 <TextBox Grid.Row="2" Grid.Column="1" Name="SteamAppIdTextBox" Margin="5"/>
                                 
-                                <Label Grid.Row="3" Grid.Column="0" Content="プロセス名:" VerticalAlignment="Center"/>
+                                <Label Grid.Row="3" Grid.Column="0" Name="ProcessNameLabel" Content="プロセス名:" VerticalAlignment="Center"/>
                                 <TextBox Grid.Row="3" Grid.Column="1" Name="ProcessNameTextBox" Margin="5"/>
                             </Grid>
                             
-                            <Label Grid.Row="2" Content="管理するアプリ:" FontWeight="Bold" Margin="0,10,0,5"/>
+                            <Label Grid.Row="2" Name="AppsToManageLabel" Content="管理するアプリ:" FontWeight="Bold" Margin="0,10,0,5"/>
                             <StackPanel Grid.Row="3" Name="AppsToManagePanel" Margin="10,0"/>
                         </Grid>
                     </ScrollViewer>
@@ -101,7 +101,7 @@
                             <RowDefinition Height="40"/>
                         </Grid.RowDefinitions>
                         
-                        <Label Grid.Row="0" Content="アプリリスト" FontWeight="Bold"/>
+                        <Label Grid.Row="0" Name="AppsListLabel" Content="アプリリスト" FontWeight="Bold"/>
                         <ListBox Grid.Row="1" Name="ManagedAppsList" Margin="0,5,5,5"/>
                         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
                             <Button Name="AddAppButton" Content="新規追加..." Width="80" Height="25" Margin="5"/>
@@ -118,7 +118,7 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             
-                            <Label Grid.Row="0" Content="選択したアプリの詳細" FontWeight="Bold" FontSize="14"/>
+                            <Label Grid.Row="0" Name="AppDetailsLabel" Content="選択したアプリの詳細" FontWeight="Bold" FontSize="14"/>
                             
                             <Grid Grid.Row="1" Margin="0,10">
                                 <Grid.ColumnDefinitions>
@@ -135,23 +135,23 @@
                                     <RowDefinition Height="30"/>
                                 </Grid.RowDefinitions>
                                 
-                                <Label Grid.Row="0" Grid.Column="0" Content="アプリID:" VerticalAlignment="Center"/>
+                                <Label Grid.Row="0" Grid.Column="0" Name="AppIdLabel" Content="アプリID:" VerticalAlignment="Center"/>
                                 <TextBox Grid.Row="0" Grid.Column="1" Name="AppIdTextBox" Margin="5"/>
                                 
-                                <Label Grid.Row="1" Grid.Column="0" Content="実行ファイルパス:" VerticalAlignment="Center"/>
+                                <Label Grid.Row="1" Grid.Column="0" Name="AppPathLabel" Content="実行ファイルパス:" VerticalAlignment="Center"/>
                                 <TextBox Grid.Row="1" Grid.Column="1" Name="AppPathTextBox" Margin="5"/>
                                 <Button Grid.Row="1" Grid.Column="2" Name="BrowseAppPathButton" Content="参照" Width="70" Height="25"/>
                                 
-                                <Label Grid.Row="2" Grid.Column="0" Content="プロセス名:" VerticalAlignment="Center"/>
+                                <Label Grid.Row="2" Grid.Column="0" Name="AppProcessNameLabel" Content="プロセス名:" VerticalAlignment="Center"/>
                                 <TextBox Grid.Row="2" Grid.Column="1" Name="AppProcessNameTextBox" Margin="5"/>
                                 
-                                <Label Grid.Row="3" Grid.Column="0" Content="ゲーム開始時の動作:" VerticalAlignment="Center"/>
+                                <Label Grid.Row="3" Grid.Column="0" Name="GameStartActionLabel" Content="ゲーム開始時の動作:" VerticalAlignment="Center"/>
                                 <ComboBox Grid.Row="3" Grid.Column="1" Name="GameStartActionCombo" Margin="5"/>
                                 
-                                <Label Grid.Row="4" Grid.Column="0" Content="ゲーム終了時の動作:" VerticalAlignment="Center"/>
+                                <Label Grid.Row="4" Grid.Column="0" Name="GameEndActionLabel" Content="ゲーム終了時の動作:" VerticalAlignment="Center"/>
                                 <ComboBox Grid.Row="4" Grid.Column="1" Name="GameEndActionCombo" Margin="5"/>
                                 
-                                <Label Grid.Row="5" Grid.Column="0" Content="起動引数:" VerticalAlignment="Center"/>
+                                <Label Grid.Row="5" Grid.Column="0" Name="AppArgumentsLabel" Content="起動引数:" VerticalAlignment="Center"/>
                                 <TextBox Grid.Row="5" Grid.Column="1" Name="AppArgumentsTextBox" Margin="5"/>
                             </Grid>
                         </Grid>
@@ -165,7 +165,7 @@
                     <StackPanel Margin="20">
                         
                         <!-- OBS Settings Group -->
-                        <GroupBox Header="OBS連携設定" Margin="0,0,0,20">
+                        <GroupBox Name="ObsSettingsGroup" Header="OBS連携設定" Margin="0,0,0,20">
                             <Grid Margin="10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="150"/>
@@ -179,13 +179,13 @@
                                     <RowDefinition Height="35"/>
                                 </Grid.RowDefinitions>
                                 
-                                <Label Grid.Row="0" Grid.Column="0" Content="ホスト:" VerticalAlignment="Center"/>
+                                <Label Grid.Row="0" Grid.Column="0" Name="HostLabel" Content="ホスト:" VerticalAlignment="Center"/>
                                 <TextBox Grid.Row="0" Grid.Column="1" Name="ObsHostTextBox" Margin="5"/>
                                 
-                                <Label Grid.Row="0" Grid.Column="2" Content="ポート:" VerticalAlignment="Center"/>
+                                <Label Grid.Row="0" Grid.Column="2" Name="PortLabel" Content="ポート:" VerticalAlignment="Center"/>
                                 <TextBox Grid.Row="0" Grid.Column="3" Name="ObsPortTextBox" Margin="5"/>
                                 
-                                <Label Grid.Row="1" Grid.Column="0" Content="パスワード:" VerticalAlignment="Center"/>
+                                <Label Grid.Row="1" Grid.Column="0" Name="PasswordLabel" Content="パスワード:" VerticalAlignment="Center"/>
                                 <PasswordBox Grid.Row="1" Grid.Column="1" Name="ObsPasswordBox" Margin="5"/>
                                 
                                 <CheckBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" Name="ReplayBufferCheckBox" 
@@ -194,7 +194,7 @@
                         </GroupBox>
                         
                         <!-- Paths Settings Group -->
-                        <GroupBox Header="パス設定" Margin="0,0,0,20">
+                        <GroupBox Name="PathSettingsGroup" Header="パス設定" Margin="0,0,0,20">
                             <Grid Margin="10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="150"/>
@@ -206,25 +206,25 @@
                                     <RowDefinition Height="35"/>
                                 </Grid.RowDefinitions>
                                 
-                                <Label Grid.Row="0" Grid.Column="0" Content="Steam.exeのパス:" VerticalAlignment="Center"/>
+                                <Label Grid.Row="0" Grid.Column="0" Name="SteamPathLabel" Content="Steam.exeのパス:" VerticalAlignment="Center"/>
                                 <TextBox Grid.Row="0" Grid.Column="1" Name="SteamPathTextBox" Margin="5"/>
                                 <Button Grid.Row="0" Grid.Column="2" Name="BrowseSteamPathButton" Content="参照" Width="70" Height="25"/>
                                 
-                                <Label Grid.Row="1" Grid.Column="0" Content="obs64.exeのパス:" VerticalAlignment="Center"/>
+                                <Label Grid.Row="1" Grid.Column="0" Name="ObsPathLabel" Content="obs64.exeのパス:" VerticalAlignment="Center"/>
                                 <TextBox Grid.Row="1" Grid.Column="1" Name="ObsPathTextBox" Margin="5"/>
                                 <Button Grid.Row="1" Grid.Column="2" Name="BrowseObsPathButton" Content="参照" Width="70" Height="25"/>
                             </Grid>
                         </GroupBox>
                         
                         <!-- General Settings Group -->
-                        <GroupBox Header="全体設定">
+                        <GroupBox Name="GeneralSettingsGroup" Header="全体設定">
                             <Grid Margin="10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="150"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 
-                                <Label Grid.Row="0" Grid.Column="0" Content="表示言語:" VerticalAlignment="Center"/>
+                                <Label Grid.Row="0" Grid.Column="0" Name="LanguageLabel" Content="表示言語:" VerticalAlignment="Center"/>
                                 <ComboBox Grid.Row="0" Grid.Column="1" Name="LanguageCombo" Margin="5" Width="200" HorizontalAlignment="Left"/>
                             </Grid>
                         </GroupBox>

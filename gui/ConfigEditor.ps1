@@ -4,28 +4,33 @@
 # Design Philosophy:
 # 1. Lightweight & Simple - Uses Windows native WPF, no additional runtime required
 # 2. Maintainable & Extensible - Configuration-driven design with modular structure  
-# 3. User-Friendly - Intuitive 3-tab GUI with proper Japanese character support
+# 3. User-Friendly - Intuitive 3-tab GUI with proper internationalization support
 #
 # Technical Architecture:
 # - PowerShell + WPF: Windows-native GUI technology for lightweight implementation
-# - JSON External Resources: Internationalization approach to solve Japanese character encoding issues
+# - Dynamic Language Detection: Automatic language detection based on config.json and OS settings
 # - Configuration-Driven: All behavior controlled through config.json
 # - Event-Driven: UI operations handled through PowerShell event handlers
 #
-# Character Encoding Solution:
-# This implementation uses JSON external resource files to solve PowerShell MessageBox 
-# Japanese character corruption issues. Messages are stored in messages.json using 
-# Unicode escape sequences (\u30XX format) and loaded at runtime.
+# Language Support:
+# This implementation uses dynamic language detection following the priority:
+# 1. config.json language setting (if exists and valid)
+# 2. OS display language (if supported) 
+# 3. English fallback (default)
 #
 # Author: GitHub Copilot Assistant
-# Version: 1.0.1 - JSON External Resource Internationalization
+# Version: 1.1.0 - Dynamic Language Detection and English Support
 # Date: 2025-09-23
 
-# Set system-level encoding settings for proper Japanese character display
-[System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::InvariantCulture
-[System.Threading.Thread]::CurrentThread.CurrentUICulture = [System.Globalization.CultureInfo]::GetCultureInfo("ja-JP")
+# Import language helper functions
+$LanguageHelperPath = Join-Path (Split-Path $PSScriptRoot) "scripts\LanguageHelper.ps1"
+if (Test-Path $LanguageHelperPath) {
+    . $LanguageHelperPath
+} else {
+    Write-Warning "Language helper not found: $LanguageHelperPath"
+}
 
-# Force all encoding to UTF-8
+# Set system-level encoding settings for proper character display
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
@@ -44,26 +49,29 @@ $script:Window = $null
 $script:CurrentGameId = ""
 $script:CurrentAppId = ""
 $script:Messages = $null
+$script:CurrentLanguage = "en"  # Default language
 
-# Load messages from JSON file
+# Load messages from JSON file with language detection
 function Load-Messages {
     param()
     
     try {
+        # Detect language first
+        $script:CurrentLanguage = Get-DetectedLanguage -ConfigData $script:ConfigData
+        
+        # Set appropriate culture
+        Set-CultureByLanguage -LanguageCode $script:CurrentLanguage
+        
+        # Load messages
         $messagesPath = Join-Path $PSScriptRoot "messages.json"
-        if (Test-Path $messagesPath) {
-            $jsonContent = Get-Content $messagesPath -Raw -Encoding UTF8
-            $messagesData = $jsonContent | ConvertFrom-Json
-            $script:Messages = $messagesData.messages
-            Write-Host "Loaded messages from: $messagesPath"
-        } else {
-            Write-Warning "Messages file not found: $messagesPath"
-            # Create default empty messages object
-            $script:Messages = [PSCustomObject]@{}
-        }
+        $script:Messages = Get-LocalizedMessages -MessagesPath $messagesPath -LanguageCode $script:CurrentLanguage
+        
+        Write-Host "Loaded messages for language: $script:CurrentLanguage"
+        
     } catch {
         Write-Error "Failed to load messages: $($_.Exception.Message)"
         $script:Messages = [PSCustomObject]@{}
+        $script:CurrentLanguage = "en"
     }
 }
 
@@ -116,7 +124,13 @@ function Initialize-ConfigEditor {
     param()
     
     try {
-        # Load messages first
+        # Initialize config path first
+        $script:ConfigPath = Join-Path (Split-Path $PSScriptRoot) "config\config.json"
+        
+        # Load configuration first (needed for language detection)
+        Load-Configuration
+        
+        # Load messages with detected language
         Load-Messages
         
         # Load XAML
@@ -124,12 +138,6 @@ function Initialize-ConfigEditor {
         $xamlContent = Get-Content $xamlPath -Raw -Encoding UTF8
         $reader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
         $script:Window = [Windows.Markup.XamlReader]::Load($reader)
-        
-        # Initialize config path
-        $script:ConfigPath = Join-Path (Split-Path $PSScriptRoot) "config\config.json"
-        
-        # Load configuration
-        Load-Configuration
         
         # Setup UI controls
         Setup-UIControls
@@ -254,6 +262,9 @@ function Setup-EventHandlers {
 function Load-DataToUI {
     param()
     
+    # Update UI text with current language
+    Update-UITexts
+    
     # Load games list
     Update-GamesList
     
@@ -262,6 +273,133 @@ function Load-DataToUI {
     
     # Load global settings
     Load-GlobalSettings
+}
+
+# Update UI texts based on current language
+function Update-UITexts {
+    param()
+    
+    try {
+        # Update window title
+        $script:Window.Title = Get-LocalizedMessage -Key "windowTitle"
+        
+        # Update tab headers
+        $script:Window.FindName("GamesTab").Header = Get-LocalizedMessage -Key "gamesTabHeader"
+        $script:Window.FindName("ManagedAppsTab").Header = Get-LocalizedMessage -Key "managedAppsTabHeader"
+        $script:Window.FindName("GlobalSettingsTab").Header = Get-LocalizedMessage -Key "globalSettingsTabHeader"
+        
+        # Update buttons
+        $addGameButton = $script:Window.FindName("AddGameButton")
+        if ($addGameButton) { $addGameButton.Content = Get-LocalizedMessage -Key "addButton" }
+        
+        $deleteGameButton = $script:Window.FindName("DeleteGameButton")
+        if ($deleteGameButton) { $deleteGameButton.Content = Get-LocalizedMessage -Key "deleteButton" }
+        
+        $addAppButton = $script:Window.FindName("AddAppButton")
+        if ($addAppButton) { $addAppButton.Content = Get-LocalizedMessage -Key "addButton" }
+        
+        $deleteAppButton = $script:Window.FindName("DeleteAppButton")
+        if ($deleteAppButton) { $deleteAppButton.Content = Get-LocalizedMessage -Key "deleteButton" }
+        
+        $saveButton = $script:Window.FindName("SaveButton")
+        if ($saveButton) { $saveButton.Content = Get-LocalizedMessage -Key "saveButton" }
+        
+        $closeButton = $script:Window.FindName("CloseButton")
+        if ($closeButton) { $closeButton.Content = Get-LocalizedMessage -Key "closeButton" }
+        
+        # Update labels - Games tab
+        $gamesListLabel = $script:Window.FindName("GamesListLabel")
+        if ($gamesListLabel) { $gamesListLabel.Content = Get-LocalizedMessage -Key "gamesListLabel" }
+        
+        $gameDetailsLabel = $script:Window.FindName("GameDetailsLabel")
+        if ($gameDetailsLabel) { $gameDetailsLabel.Content = Get-LocalizedMessage -Key "gameDetailsLabel" }
+        
+        $gameIdLabel = $script:Window.FindName("GameIdLabel")
+        if ($gameIdLabel) { $gameIdLabel.Content = Get-LocalizedMessage -Key "gameIdLabel" }
+        
+        $gameNameLabel = $script:Window.FindName("GameNameLabel")
+        if ($gameNameLabel) { $gameNameLabel.Content = Get-LocalizedMessage -Key "gameNameLabel" }
+        
+        $steamAppIdLabel = $script:Window.FindName("SteamAppIdLabel")
+        if ($steamAppIdLabel) { $steamAppIdLabel.Content = Get-LocalizedMessage -Key "steamAppIdLabel" }
+        
+        $processNameLabel = $script:Window.FindName("ProcessNameLabel")
+        if ($processNameLabel) { $processNameLabel.Content = Get-LocalizedMessage -Key "processNameLabel" }
+        
+        $appsToManageLabel = $script:Window.FindName("AppsToManageLabel")
+        if ($appsToManageLabel) { $appsToManageLabel.Content = Get-LocalizedMessage -Key "appsToManageLabel" }
+        
+        # Update group boxes - Global Settings tab
+        $obsSettingsGroup = $script:Window.FindName("ObsSettingsGroup")
+        if ($obsSettingsGroup) { $obsSettingsGroup.Header = Get-LocalizedMessage -Key "obsSettingsGroup" }
+        
+        $pathSettingsGroup = $script:Window.FindName("PathSettingsGroup")
+        if ($pathSettingsGroup) { $pathSettingsGroup.Header = Get-LocalizedMessage -Key "pathSettingsGroup" }
+        
+        $generalSettingsGroup = $script:Window.FindName("GeneralSettingsGroup")
+        if ($generalSettingsGroup) { $generalSettingsGroup.Header = Get-LocalizedMessage -Key "generalSettingsGroup" }
+        
+        # Update labels - Global Settings tab
+        $hostLabel = $script:Window.FindName("HostLabel")
+        if ($hostLabel) { $hostLabel.Content = Get-LocalizedMessage -Key "hostLabel" }
+        
+        $portLabel = $script:Window.FindName("PortLabel")
+        if ($portLabel) { $portLabel.Content = Get-LocalizedMessage -Key "portLabel" }
+        
+        $passwordLabel = $script:Window.FindName("PasswordLabel")
+        if ($passwordLabel) { $passwordLabel.Content = Get-LocalizedMessage -Key "passwordLabel" }
+        
+        $replayBufferCheckBox = $script:Window.FindName("ReplayBufferCheckBox")
+        if ($replayBufferCheckBox) { $replayBufferCheckBox.Content = Get-LocalizedMessage -Key "replayBufferLabel" }
+        
+        $steamPathLabel = $script:Window.FindName("SteamPathLabel")
+        if ($steamPathLabel) { $steamPathLabel.Content = Get-LocalizedMessage -Key "steamPathLabel" }
+        
+        $obsPathLabel = $script:Window.FindName("ObsPathLabel")
+        if ($obsPathLabel) { $obsPathLabel.Content = Get-LocalizedMessage -Key "obsPathLabel" }
+        
+        $languageLabel = $script:Window.FindName("LanguageLabel")
+        if ($languageLabel) { $languageLabel.Content = Get-LocalizedMessage -Key "languageLabel" }
+        
+        # Update browse buttons
+        $browseSteamPathButton = $script:Window.FindName("BrowseSteamPathButton")
+        if ($browseSteamPathButton) { $browseSteamPathButton.Content = Get-LocalizedMessage -Key "browseButton" }
+        
+        $browseObsPathButton = $script:Window.FindName("BrowseObsPathButton")
+        if ($browseObsPathButton) { $browseObsPathButton.Content = Get-LocalizedMessage -Key "browseButton" }
+        
+        # Update labels - Managed Apps tab
+        $appsListLabel = $script:Window.FindName("AppsListLabel")
+        if ($appsListLabel) { $appsListLabel.Content = Get-LocalizedMessage -Key "appsListLabel" }
+        
+        $appDetailsLabel = $script:Window.FindName("AppDetailsLabel")
+        if ($appDetailsLabel) { $appDetailsLabel.Content = Get-LocalizedMessage -Key "appDetailsLabel" }
+        
+        $appIdLabel = $script:Window.FindName("AppIdLabel")
+        if ($appIdLabel) { $appIdLabel.Content = Get-LocalizedMessage -Key "appIdLabel" }
+        
+        $appPathLabel = $script:Window.FindName("AppPathLabel")
+        if ($appPathLabel) { $appPathLabel.Content = Get-LocalizedMessage -Key "appPathLabel" }
+        
+        $appProcessNameLabel = $script:Window.FindName("AppProcessNameLabel")
+        if ($appProcessNameLabel) { $appProcessNameLabel.Content = Get-LocalizedMessage -Key "processNameLabel" }
+        
+        $gameStartActionLabel = $script:Window.FindName("GameStartActionLabel")
+        if ($gameStartActionLabel) { $gameStartActionLabel.Content = Get-LocalizedMessage -Key "gameStartActionLabel" }
+        
+        $gameEndActionLabel = $script:Window.FindName("GameEndActionLabel")
+        if ($gameEndActionLabel) { $gameEndActionLabel.Content = Get-LocalizedMessage -Key "gameEndActionLabel" }
+        
+        $appArgumentsLabel = $script:Window.FindName("AppArgumentsLabel")
+        if ($appArgumentsLabel) { $appArgumentsLabel.Content = Get-LocalizedMessage -Key "argumentsLabel" }
+        
+        $browseAppPathButton = $script:Window.FindName("BrowseAppPathButton")
+        if ($browseAppPathButton) { $browseAppPathButton.Content = Get-LocalizedMessage -Key "browseButton" }
+        
+        Write-Verbose "UI texts updated for language: $script:CurrentLanguage"
+    } catch {
+        Write-Warning "Failed to update UI texts: $($_.Exception.Message)"
+    }
 }
 
 # Update games list
