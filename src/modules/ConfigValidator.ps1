@@ -139,7 +139,7 @@ class ConfigValidator {
         }
     }
 
-    # Validate specific game configuration
+    # Validate specific game configuration (Multi-Platform Support)
     [void] ValidateGameConfiguration([string] $gameId) {
         if (-not $this.Config.games.$gameId) {
             $this.Errors += "Game ID '$gameId' not found in configuration"
@@ -148,11 +148,44 @@ class ConfigValidator {
 
         $gameConfig = $this.Config.games.$gameId
 
-        # Validate required game properties
-        $requiredGameProperties = @("name", "steamAppId", "processName")
-        foreach ($prop in $requiredGameProperties) {
+        # Validate basic required properties
+        $basicRequiredProperties = @("name", "processName")
+        foreach ($prop in $basicRequiredProperties) {
             if (-not $gameConfig.PSObject.Properties.Name -contains $prop) {
                 $this.Errors += "Game '$gameId' is missing required property: '$prop'"
+            }
+        }
+
+        # Validate platform-specific requirements
+        $platform = if ($gameConfig.platform) { $gameConfig.platform } else { "steam" }  # Default to Steam
+        
+        switch ($platform) {
+            "steam" {
+                if (-not $gameConfig.steamAppId) {
+                    $this.Errors += "Game '$gameId' with Steam platform requires 'steamAppId' property"
+                }
+                if (-not $this.Config.paths.steam) {
+                    $this.Errors += "Steam platform requires 'paths.steam' configuration"
+                }
+            }
+            "epic" {
+                if (-not $gameConfig.epicGameId) {
+                    $this.Errors += "Game '$gameId' with Epic platform requires 'epicGameId' property"
+                }
+                if (-not $this.Config.paths.epic) {
+                    $this.Warnings += "Epic platform path not configured in 'paths.epic' - will attempt auto-detection"
+                }
+            }
+            "riot" {
+                if (-not $gameConfig.riotGameId) {
+                    $this.Errors += "Game '$gameId' with Riot platform requires 'riotGameId' property"
+                }
+                if (-not $this.Config.paths.riot) {
+                    $this.Warnings += "Riot platform path not configured in 'paths.riot' - will attempt auto-detection"
+                }
+            }
+            default {
+                $this.Errors += "Game '$gameId' has unsupported platform: '$platform'. Supported platforms: steam, epic, riot"
             }
         }
 

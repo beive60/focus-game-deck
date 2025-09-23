@@ -1,3 +1,6 @@
+# Invoke-FocusGameDeck-MultiPlatform.ps1
+# Updated version with multi-platform support
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$GameId
@@ -27,7 +30,7 @@ $modulePaths = @(
     (Join-Path $scriptDir "modules\ConfigValidator.ps1"),
     (Join-Path $scriptDir "modules\AppManager.ps1"),
     (Join-Path $scriptDir "modules\OBSManager.ps1"),
-    (Join-Path $scriptDir "modules\PlatformManager.ps1")
+    (Join-Path $scriptDir "modules\PlatformManager.ps1")  # New module
 )
 
 foreach ($modulePath in $modulePaths) {
@@ -66,7 +69,7 @@ catch {
 # Initialize logger
 try {
     $logger = Initialize-Logger -Config $config -Messages $msg
-    $logger.Info("Focus Game Deck started (Multi-Platform v1.0)", "MAIN")
+    $logger.Info("Focus Game Deck started (Multi-Platform)", "MAIN")
     $logger.Info("Game ID: $GameId", "MAIN")
 }
 catch {
@@ -76,21 +79,22 @@ catch {
 
 # Initialize platform manager
 try {
-    $platformManager = New-PlatformManager -Config $config -Messages $msg -Logger $logger
-    if ($logger) { $logger.Info("Platform manager initialized", "PLATFORM") }
+    $platformManager = New-PlatformManager -Config $config -Messages $msg
+    $logger.Info("Platform manager initialized", "PLATFORM")
     
     # Detect available platforms
     $detectedPlatforms = $platformManager.DetectAllPlatforms()
     $availablePlatforms = $detectedPlatforms.Keys | Where-Object { $detectedPlatforms[$_].Available }
-    if ($logger) { $logger.Info("Available platforms: $($availablePlatforms -join ', ')", "PLATFORM") }
+    $logger.Info("Available platforms: $($availablePlatforms -join ', ')", "PLATFORM")
     
-    # Auto-update paths if needed
+    # Auto-detect and update paths if needed
     foreach ($platformKey in $detectedPlatforms.Keys) {
         $platform = $detectedPlatforms[$platformKey]
-        if ($platform.Available -and $platform.Path -and 
-            (-not $config.paths.$platformKey -or $config.paths.$platformKey -ne $platform.Path)) {
-            $config.paths.$platformKey = $platform.Path
-            if ($logger) { $logger.Info("Auto-detected $($platform.Name) path: $($platform.Path)", "PLATFORM") }
+        if ($platform.Available -and $platform.Path) {
+            if (-not $config.paths.$platformKey -or $config.paths.$platformKey -ne $platform.Path) {
+                $config.paths.$platformKey = $platform.Path
+                $logger.Info("Auto-detected $($platform.Name) path: $($platform.Path)", "PLATFORM")
+            }
         }
     }
 }
@@ -122,11 +126,15 @@ if (-not $gameConfig) {
 }
 
 # Validate platform support
-$gamePlatform = if ($gameConfig.platform) { $gameConfig.platform } else { "steam" }  # Default to Steam for backward compatibility
+$gamePlatform = $gameConfig.platform
+if (-not $gamePlatform) {
+    $gamePlatform = "steam"  # Default to Steam for backward compatibility
+    $gameConfig | Add-Member -NotePropertyName "platform" -NotePropertyValue "steam" -Force
+}
+
 if (-not $platformManager.IsPlatformAvailable($gamePlatform)) {
     $errorMsg = "Platform '$gamePlatform' is not available or supported for game '$($gameConfig.name)'"
     Write-Host $errorMsg -ForegroundColor Red
-    Write-Host "Available platforms: $($availablePlatforms -join ', ')" -ForegroundColor Yellow
     if ($logger) { $logger.Error($errorMsg, "PLATFORM") }
     exit 1
 }
@@ -198,7 +206,7 @@ trap [System.Management.Automation.PipelineStoppedException] {
 
 # Main execution flow
 try {
-    if ($logger) { $logger.LogOperationStart("Game Launch Sequence", "MAIN") }
+    if ($logger) { $logger.LogOperationStart("Multi-Platform Game Launch Sequence", "MAIN") }
     $startTime = Get-Date
     
     # Filter out special apps for normal app manager processing
@@ -238,15 +246,14 @@ try {
     }
     
     # Launch game via appropriate platform
-    $platformDisplayName = $detectedPlatforms[$gamePlatform].Name
-    Write-Host "Launching game via $platformDisplayName..." -ForegroundColor Cyan
+    Write-Host "Launching game via $($detectedPlatforms[$gamePlatform].Name)..." -ForegroundColor Cyan
     try {
         $platformManager.LaunchGame($gamePlatform, $gameConfig)
         Write-Host ($msg.starting_game -f $gameConfig.name) -ForegroundColor Green
-        if ($logger) { $logger.Info("Game launch command sent to $platformDisplayName`: $($gameConfig.name)", "GAME") }
+        if ($logger) { $logger.Info("Game launch command sent to $($detectedPlatforms[$gamePlatform].Name): $($gameConfig.name)", "GAME") }
     }
     catch {
-        $errorMsg = "Failed to launch game via $platformDisplayName`: $_"
+        $errorMsg = "Failed to launch game via $($detectedPlatforms[$gamePlatform].Name): $_"
         Write-Error $errorMsg
         if ($logger) { $logger.Error($errorMsg, "GAME") }
         throw
@@ -283,7 +290,7 @@ try {
     Invoke-GameCleanup
     
     if ($logger) { 
-        $logger.LogOperationEnd("Game Launch Sequence", $startTime, "MAIN")
+        $logger.LogOperationEnd("Multi-Platform Game Launch Sequence", $startTime, "MAIN")
         $logger.Info("Focus Game Deck session completed successfully", "MAIN")
     }
     

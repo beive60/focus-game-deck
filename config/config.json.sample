@@ -41,19 +41,37 @@
     "games": {
         "apex": {
             "name": "Apex Legends",
+            "platform": "steam",
             "steamAppId": "1172470",
             "processName": "r5apex*",
             "appsToManage": ["noWinKey", "autoHotkey", "luna", "obs", "clibor"]
         },
         "dbd": {
             "name": "Dead by Daylight",
+            "platform": "steam",
             "steamAppId": "381210",
             "processName": "DeadByDaylight-Win64-Shipping*",
+            "appsToManage": ["obs", "clibor"]
+        },
+        "genshin": {
+            "name": "原神 (Genshin Impact)",
+            "platform": "epic",
+            "epicGameId": "ac2c3d6632504c6b9b0503d8b6c41227",
+            "processName": "YuanShen*",
+            "appsToManage": ["obs", "clibor"]
+        },
+        "valorant": {
+            "name": "VALORANT",
+            "platform": "riot", 
+            "riotGameId": "valorant",
+            "processName": "VALORANT-Win64-Shipping*",
             "appsToManage": ["obs", "clibor"]
         }
     },
     "paths": {
         "steam": "C:\\Program Files (x86)\\Steam\\steam.exe",
+        "epic": "C:\\Program Files (x86)\\Epic Games\\Launcher\\Portal\\Binaries\\Win32\\EpicGamesLauncher.exe",
+        "riot": "C:\\Riot Games\\Riot Client\\RiotClientServices.exe",
         "obs": "C:\\Program Files\\obs-studio\\bin\\64bit\\obs64.exe"
     }
 }
