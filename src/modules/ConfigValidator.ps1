@@ -92,7 +92,7 @@ class ConfigValidator {
             return
         }
 
-        $validActions = @("start-process", "stop-process", "toggle-hotkeys", "none")
+        $validActions = @("start-process", "stop-process", "toggle-hotkeys", "start-vtube-studio", "stop-vtube-studio", "none")
 
         foreach ($appProperty in $this.Config.managedApps.PSObject.Properties) {
             $appId = $appProperty.Name
@@ -127,6 +127,17 @@ class ConfigValidator {
                     $this.Errors += "Application '$appId' requires 'path' property for its configured actions"
                 } elseif (-not (Test-Path $appConfig.path)) {
                     $this.Warnings += "Application '$appId' path does not exist: '$($appConfig.path)'"
+                }
+            }
+
+            # Special validation for VTube Studio actions
+            $vtubeActions = @("start-vtube-studio", "stop-vtube-studio")
+            if (($appConfig.gameStartAction -in $vtubeActions) -or ($appConfig.gameEndAction -in $vtubeActions)) {
+                # VTube Studio uses auto-detection, but validate optional configuration
+                if ($appConfig.websocket) {
+                    if ($appConfig.websocket.port -and ($appConfig.websocket.port -lt 1 -or $appConfig.websocket.port -gt 65535)) {
+                        $this.Errors += "Application '$appId' has invalid WebSocket port: '$($appConfig.websocket.port)'"
+                    }
                 }
             }
 

@@ -41,6 +41,12 @@ Focus Game Deck
 ├── Core Engine (PowerShell)
 │   ├── src/Invoke-FocusGameDeck.ps1     # Main engine
 │   ├── src/Invoke-FocusGameDeck-MultiPlatform.ps1  # Multi-platform version
+│   ├── src/modules/                     # Modular components
+│   │   ├── AppManager.ps1               # Application lifecycle management
+│   │   ├── OBSManager.ps1               # OBS Studio WebSocket integration
+│   │   ├── VTubeStudioManager.ps1       # VTube Studio integration
+│   │   ├── PlatformManager.ps1          # Multi-platform game launcher support
+│   │   └── ConfigValidator.ps1          # Configuration validation
 │   ├── scripts/Create-Launchers.ps1     # Launcher generation
 │   └── launch_*.bat                     # Game-specific launch scripts
 │
@@ -157,6 +163,91 @@ Focus Game Deck
 - **Hierarchical Structure**: Structured management of complex configurations
 - **Version Control**: Easy diff checking in Git
 
+#### 6. VTube Studio Integration: Modular Manager Pattern
+
+**Integration Approach:**
+
+- **Modular Design**: Separate VTubeStudioManager.ps1 following OBSManager patterns
+- **Auto-Detection**: Automatic detection of Steam vs Standalone installations
+- **Special Actions**: Custom `start-vtube-studio` and `stop-vtube-studio` actions in AppManager
+- **Future WebSocket Ready**: Foundation prepared for VTube Studio API integration
+
+**Technical Implementation:**
+
+- **Steam Integration**: Proper DRM handling via Steam `-applaunch` parameter (AppID: 1325860)
+- **Standalone Support**: Direct executable launching with configurable arguments
+- **Process Management**: Graceful shutdown with fallback to force termination
+- **Error Handling**: Comprehensive logging and fallback mechanisms
+
+**Selection Rationale:**
+
+- **VTuber Community Support**: Essential for Japanese streaming ecosystem
+- **Consistency**: Follows established OBSManager architectural patterns
+- **Extensibility**: WebSocket API integration foundation for future model control features
+- **Platform Agnostic**: Supports both Steam and standalone VTube Studio installations
+
+#### 7. WebSocket Manager Architecture: Hybrid Utility Class Pattern
+
+**Problem Context:**
+
+During VTube Studio integration development, significant code duplication was identified between OBSManager and VTubeStudioManager modules, particularly in:
+
+- WebSocket connection establishment and management
+- Process lifecycle management (start/stop/graceful shutdown)
+- Common utility functions for application detection
+
+**Options Considered:**
+
+- **Full Inheritance Model**: Create abstract base class with OBSManager/VTubeStudioManager inheriting all functionality
+- **Composition Pattern**: Separate WebSocket utility class with full delegation
+- **Hybrid Utility Class Pattern**: Common utility class with selective delegation and fallback mechanisms ✅
+- **Code Duplication**: Maintain separate implementations for flexibility
+
+**Selection Rationale:**
+
+- **PowerShell Class Limitations**: PowerShell class inheritance has constraints that make full inheritance complex
+- **Flexibility Preservation**: Each manager retains ability to implement application-specific logic
+- **Code Reuse Benefits**: Common utilities shared without forcing rigid inheritance structure
+- **Fallback Resilience**: Managers can fall back to original implementations if utility class fails
+- **Future Extensibility**: Pattern can be extended to other WebSocket-based integrations
+
+**Technical Implementation:**
+
+```powershell
+# WebSocketAppManagerBase.ps1 - Common utility class
+class WebSocketAppManagerBase {
+    [bool] IsProcessRunning([string]$processName) { }
+    [object] EstablishWebSocketConnection([string]$uri, [int]$timeout) { }
+    [bool] StopApplicationGracefully([string]$processName, [int]$timeout) { }
+}
+
+# VTubeStudioManager.ps1 - Hybrid usage pattern
+class VTubeStudioManager {
+    hidden [WebSocketAppManagerBase] $baseHelper
+    
+    [bool] IsVTubeStudioRunning() {
+        try {
+            return $this.baseHelper.IsProcessRunning("VTubeStudio")
+        }
+        catch {
+            # Fallback to original implementation
+            return (Get-Process -Name "VTubeStudio" -ErrorAction SilentlyContinue) -ne $null
+        }
+    }
+}
+```
+
+**Benefits Achieved:**
+
+- **25% Code Reduction**: Eliminated duplicate utility functions across managers
+- **Maintained Flexibility**: Each manager retains full control over application-specific behavior
+- **Resilient Design**: Fallback mechanisms ensure continued operation even if base utilities fail
+- **Extensible Pattern**: Foundation for future WebSocket-based integrations (Discord bots, streaming tools)
+
+**Design Decision Impact:**
+
+This hybrid approach balances the benefits of code reuse with the need for flexibility in PowerShell-based class architecture, establishing a pattern for future manager implementations while avoiding the constraints of rigid inheritance models.
+
 ## Implementation Guidelines
 
 ### Coding Standards
@@ -165,6 +256,66 @@ Focus Game Deck
 2. **Error Handling**: Consistent use of Try-Catch-Finally patterns
 3. **Function Naming**: PowerShell Verb-Noun pattern
 4. **Comments**: Japanese comments allowed (UTF-8 guaranteed)
+
+### Character Encoding and Console Compatibility Guidelines
+
+#### PowerShell Console Character Compatibility
+
+Due to frequent character encoding issues in PowerShell console environments, especially with UTF-8 special characters, follow these guidelines:
+
+##### 1. Avoid UTF-8 Special Characters in Console Output
+
+```powershell
+# ❌ Problematic: UTF-8 special characters cause garbling
+Write-Host "✓ Success" -ForegroundColor Green
+Write-Host "✗ Failed" -ForegroundColor Red
+Write-Host "⚠ Warning" -ForegroundColor Yellow
+
+# ✅ Recommended: Use ASCII-compatible alternatives
+Write-Host "[OK] Success" -ForegroundColor Green
+Write-Host "[ERROR] Failed" -ForegroundColor Red
+Write-Host "[WARNING] Warning" -ForegroundColor Yellow
+```
+
+##### 2. Safe Character Alternatives
+
+| UTF-8 Character | ASCII Alternative | Usage Context |
+|-----------------|-------------------|---------------|
+| ✓ (U+2713) | `[OK]` | Success messages |
+| ✗ (U+2717) | `[ERROR]` | Error messages |
+| ⚠ (U+26A0) | `[WARNING]` | Warning messages |
+| ℹ (U+2139) | `[INFO]` | Information messages |
+| → (U+2192) | `->` | Direction indicators |
+| • (U+2022) | `-` | List bullets |
+
+##### 3. File Encoding Consistency
+
+- **Source Files**: UTF-8 with BOM for PowerShell compatibility
+- **Configuration Files**: UTF-8 without BOM for JSON compatibility
+- **Documentation**: UTF-8 with BOM for proper character display
+
+##### 4. Testing Console Output
+
+Always test console output in multiple PowerShell environments:
+
+- Windows PowerShell 5.1
+- PowerShell Core 7.x
+- PowerShell ISE
+- Windows Terminal
+- Command Prompt with PowerShell
+
+##### 5. Internationalization Considerations
+
+```powershell
+# For GUI components: Use JSON external resources with Unicode escapes
+$messages = @{
+    "success" = "\u6210\u529f"  # Japanese: 成功
+    "error" = "\u30a8\u30e9\u30fc"    # Japanese: エラー
+}
+
+# For console output: Use ASCII-safe alternatives
+Write-Host "[OK] Operation completed successfully"
+```
 
 ### GUI Development Guidelines
 
@@ -242,6 +393,8 @@ Focus Game Deck
 
 ### Short-term (v1.1)
 
+- [x] VTube Studio integration (Steam/Standalone auto-detection)
+- [x] Character encoding guidelines and console compatibility
 - [ ] Addition of English message resources
 - [ ] Enhanced configuration validation
 - [ ] Error logging functionality
@@ -275,6 +428,8 @@ To maintain this design philosophy, please prioritize the following:
 | 1.0.1 | 2025-09-23 | JSON external resource internationalization support completed |
 | 1.1.0 | 2025-09-23 | Integration of risk management policy and security design |
 | 1.2.0 | 2025-09-24 | Build system implementation, digital signature infrastructure completed |
+| 1.3.0 | 2025-09-24 | VTube Studio integration, character encoding guidelines added |
+| 1.4.0 | 2025-09-24 | WebSocket manager hybrid architecture pattern implemented |
 
 ## Language Support
 

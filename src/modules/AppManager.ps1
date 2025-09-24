@@ -49,6 +49,12 @@ class AppManager {
             "toggle-hotkeys" {
                 return $this.ToggleHotkeys($appId, $appConfig)
             }
+            "start-vtube-studio" {
+                return $this.StartVTubeStudio($appId, $appConfig)
+            }
+            "stop-vtube-studio" {
+                return $this.StopVTubeStudio($appId, $appConfig)
+            }
             "none" {
                 return $true
             }
@@ -148,6 +154,54 @@ class AppManager {
         }
         catch {
             Write-Host "Failed to toggle hotkeys for $appId : $_"
+            return $false
+        }
+    }
+
+    # Start VTube Studio (special action)
+    [bool] StartVTubeStudio([string] $appId, [object] $appConfig) {
+        try {
+            # Load VTubeStudioManager if not already loaded
+            $modulePath = Join-Path $PSScriptRoot "VTubeStudioManager.ps1"
+            if (Test-Path $modulePath) {
+                . $modulePath
+            } else {
+                Write-Host "VTubeStudioManager module not found at: $modulePath"
+                return $false
+            }
+            
+            # Create VTubeStudioManager instance
+            $vtubeManager = New-VTubeStudioManager -VTubeConfig $appConfig -Messages $this.Messages
+            
+            # Start VTube Studio
+            return $vtubeManager.StartVTubeStudio()
+        }
+        catch {
+            Write-Host "Failed to start VTube Studio: $_"
+            return $false
+        }
+    }
+
+    # Stop VTube Studio (special action)
+    [bool] StopVTubeStudio([string] $appId, [object] $appConfig) {
+        try {
+            # Load VTubeStudioManager if not already loaded
+            $modulePath = Join-Path $PSScriptRoot "VTubeStudioManager.ps1"
+            if (Test-Path $modulePath) {
+                . $modulePath
+            } else {
+                Write-Host "VTubeStudioManager module not found at: $modulePath"
+                return $false
+            }
+            
+            # Create VTubeStudioManager instance
+            $vtubeManager = New-VTubeStudioManager -VTubeConfig $appConfig -Messages $this.Messages
+            
+            # Stop VTube Studio
+            return $vtubeManager.StopVTubeStudio()
+        }
+        catch {
+            Write-Host "Failed to stop VTube Studio: $_"
             return $false
         }
     }
