@@ -55,6 +55,12 @@ class AppManager {
             "stop-vtube-studio" {
                 return $this.StopVTubeStudio($appId, $appConfig)
             }
+            "set-discord-gaming-mode" {
+                return $this.SetDiscordGamingMode($appId, $appConfig)
+            }
+            "restore-discord-normal" {
+                return $this.RestoreDiscordNormal($appId, $appConfig)
+            }
             "none" {
                 return $true
             }
@@ -202,6 +208,54 @@ class AppManager {
         }
         catch {
             Write-Host "Failed to stop VTube Studio: $_"
+            return $false
+        }
+    }
+
+    # Set Discord Gaming Mode (special action)
+    [bool] SetDiscordGamingMode([string] $appId, [object] $appConfig) {
+        try {
+            # Load DiscordManager if not already loaded
+            $modulePath = Join-Path $PSScriptRoot "DiscordManager.ps1"
+            if (Test-Path $modulePath) {
+                . $modulePath
+            } else {
+                Write-Host "DiscordManager module not found at: $modulePath"
+                return $false
+            }
+            
+            # Create DiscordManager instance
+            $discordManager = New-DiscordManager -DiscordConfig $appConfig -Messages $this.Messages
+            
+            # Set Gaming Mode
+            return $discordManager.SetGamingMode($this.gameConfig.name)
+        }
+        catch {
+            Write-Host "Failed to set Discord Gaming Mode: $_"
+            return $false
+        }
+    }
+
+    # Restore Discord Normal Mode (special action)
+    [bool] RestoreDiscordNormal([string] $appId, [object] $appConfig) {
+        try {
+            # Load DiscordManager if not already loaded
+            $modulePath = Join-Path $PSScriptRoot "DiscordManager.ps1"
+            if (Test-Path $modulePath) {
+                . $modulePath
+            } else {
+                Write-Host "DiscordManager module not found at: $modulePath"
+                return $false
+            }
+            
+            # Create DiscordManager instance
+            $discordManager = New-DiscordManager -DiscordConfig $appConfig -Messages $this.Messages
+            
+            # Restore Normal Mode
+            return $discordManager.RestoreNormalMode()
+        }
+        catch {
+            Write-Host "Failed to restore Discord Normal Mode: $_"
             return $false
         }
     }
