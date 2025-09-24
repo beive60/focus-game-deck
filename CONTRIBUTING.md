@@ -1,53 +1,59 @@
-# **Focus Game Deck \- プロジェクトマニフェスト 兼 貢献ガイドライン**
+# **Focus Game Deck - Project Manifesto & Contribution Guidelines**
 
-このプロジェクトに興味を持っていただき、心から感謝します。  
-このドキュメントは、Focus Game Deckが何を目指し、どのような思想に基づいて開発されているのかを共有するためのものです。もしあなたがこのプロジェクトへの貢献を考えているなら、まずはこちらをご一読ください。
+Thank you so much for your interest in this project.
+This document is intended to share what Focus Game Deck aims to achieve and the philosophy behind its development. If you are considering contributing to this project, please read this first.
 
-## **1\. 我々の使命 (Our Mission)**
+---
 
-我々の使命はただ一つ、\*\*「競技PCゲーマーが、勝利のために100%集中できる環境を、ワンクリックで提供すること」\*\*です。
+## **1. Our Mission**
 
-ゲームを起動する前の、あの面倒な準備（不要なアプリの終了、ホットキーの無効化、録画ソフトの起動…）と、ゲーム終了後の煩わしい後片付け。これらの「プレイ以外のノイズ」を完全に自動化し、プレイヤーを解放します。我々が提供するのは単なるツールではなく、**「最高の集中」へと没入するための、スムーズでストレスのない体験**そのものです。
+We have only one mission: **"To provide a one-click environment for competitive PC gamers to concentrate 100% on winning."**
 
-## **2\. 指導原則 (Guiding Principles)**
+We will completely automate the tedious preparations before launching a game (closing unnecessary apps, disabling hotkeys, starting recording software...) and the troublesome cleanup after finishing. We liberate players from this "noise outside of gameplay." What we offer is not just a tool, but a **smooth, stress-free experience to dive into "peak concentration."**
 
-すべての機能追加や設計判断は、以下の4つの原則に照らし合わせて決定されます。
+---
 
-### **① ユーザー体験を最優先する (User Experience First)**
+## **2. Guiding Principles**
 
-このツールは、パワーユーザーだけでなく、**PCに詳しくないゲーマーにも直感的に使えなければなりません。**
+All feature additions and design decisions are made based on the following four principles.
 
-* **ゼロコンフィグ:** ユーザーが何もしなくても、OSの言語を自動検出し、母国語で応答するなど、インテリジェントに振る舞うべきです。  
-* **エラーからの保護:** ユーザーがJSON構文エラーで悩むことがないよう、設定は可能な限りGUIを通じて行えるようにします。  
-* **分かりやすさ:** 専門用語を避け、誰が見ても役割が分かるファイル名、フォルダ構成、そしてドキュメントを維持します。
+### **2.1 User Experience First**
 
-### **② パフォーマンスは妥協しない (Uncompromising Performance)**
+This tool must be intuitive not only for power users but also for **gamers who are not tech-savvy.**
 
-我々のターゲットユーザーは、1フレームの遅延、1%のCPU使用率にも敏感な競技ゲーマーです。
+* **Zero-Config:** It should behave intelligently, such as automatically detecting the OS language and responding in the user's native language, without requiring any user setup.
+* **Protection from Errors:** Settings should be configurable through a GUI as much as possible, so users don't have to struggle with JSON syntax errors.
+* **Clarity:** We will avoid jargon and maintain file names, folder structures, and documentation that anyone can understand.
 
-* **軽量・高速:** ツール自体がゲームのパフォーマンスに影響を与えることは、決してあってはなりません。そのため、Electronのような重量級の技術よりも、WPFのようなWindowsネイティブで軽量な技術を優先して選択します。  
-* **省リソース:** バックグラウンドで動作する際のリソース消費は、最小限に抑えられるべきです。
+### **2.2 Uncompromising Performance**
 
-### **③ クリーンで拡張性の高い設計 (Clean and Scalable Architecture)**
+Our target users are competitive gamers who are sensitive to a single frame of delay or a 1% increase in CPU usage.
 
-このプロジェクトは、将来の成長とコミュニティによる改善を見据えて設計されます。
+* **Lightweight & Fast:** The tool itself must never impact game performance. Therefore, we prioritize lightweight, Windows-native technologies like WPF over heavyweight ones like Electron.
+* **Resource-Efficient:** Resource consumption when running in the background should be kept to an absolute minimum.
 
-* **関心の分離:** アプリケーションのコアロジック(src)、補助スクリプト(scripts)、国際化ファイル(messages.json)など、役割ごとにファイルを明確に分離します。  
-* **データ駆動:** ツールの振る舞いは、スクリプト内のロジックではなく、ユーザーが編集するconfig.jsonによって決定されるべきです。これにより、コードを触ることなくツールの機能を拡張できます。  
-* **国際化 (i18n):** ユーザーに表示されるすべての文字列は、ロジックから分離された言語ファイルで管理し、多言語対応を容易にします。
+### **2.3 Clean and Scalable Architecture**
 
-### **④ オープンで歓迎的なコミュニティ (Open and Welcoming Community)**
+This project is designed with future growth and community improvements in mind.
 
-このプロジェクトは、一人の作者のものではなく、それを必要とするコミュニティと共に成長していくべきです。
+* **Separation of Concerns:** Files are clearly separated by their roles, such as application core logic (src), utility scripts (scripts), and internationalization files (messages.json).
+* **Data-Driven:** The tool's behavior should be determined by the user-editable `config.json`, not by logic within the scripts. This allows for extending the tool's functionality without touching the code.
+* **Internationalization (i18n):** All user-facing strings are managed in separate language files, decoupled from the logic, to facilitate multilingual support.
 
-* **MITライセンス:** ソースコードの自由な利用、改変、再配布を許可し、最大限のコラボレーションを促進します。ただし、作者の功績（クレジット）は常に保護されます。  
-* **貢献の歓迎:** バグ報告、機能提案、ドキュメントの改善、翻訳の提供など、あらゆる形での貢献を歓迎します。
+### **2.4 Open and Welcoming Community**
 
-## **3\. ブランディング (Branding)**
+This project does not belong to a single author; it should grow with the community that needs it.
 
-プロジェクト名\*\*Focus Game Deck\*\*は、我々の思想を体現しています。
+* **MIT License:** We permit the free use, modification, and redistribution of the source code to encourage maximum collaboration. However, the author's credit must always be preserved.
+* **Contributions Welcome:** We welcome contributions in all forms, including bug reports, feature suggestions, documentation improvements, and translation submissions.
 
-* **Focus**: 我々が提供する最大の価値、「集中」を象徴します。  
-* **Deck**: ゲーマーに馴染み深い「Stream Deck」のように、複雑なアクションを一つに束ね、ワンクリックで実行できるというツールの性質を直感的に伝えます。
+---
 
-このマニフェストに共感し、競技ゲーマーの環境をより良くしたいという情熱を共有してくださる、あなたからのコントリビューションを
+## **3. Branding**
+
+The project name **Focus Game Deck** embodies our philosophy.
+
+* **Focus**: Symbolizes the greatest value we provide: "concentration."
+* **Deck**: Intuitively conveys the nature of the tool—bundling complex actions into a single, one-click execution, much like the "Stream Deck" familiar to gamers.
+
+We look forward to contributions from you who resonate with this manifesto and share a passion for improving the environment for competitive gamers.
