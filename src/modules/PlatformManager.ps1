@@ -26,7 +26,7 @@ class PlatformManager {
     }
     
     [void] InitializePlatforms() {
-        # Steam Platform (既存サポート継続)
+        # Steam Platform (existing support continued)
         $this.Platforms["steam"] = @{
             Name = "Steam"
             DetectPath = { $this.DetectSteamPath() }
@@ -43,14 +43,14 @@ class PlatformManager {
             Required = $true
         }
         
-        # Epic Games Platform (v1.0新規対応)
+        # Epic Games Platform (v1.0 new support)
         $this.Platforms["epic"] = @{
             Name = "Epic Games"
             DetectPath = { $this.DetectEpicPath() }
             LaunchCommand = { param($gamePath, $gameId)
-                # Epic Games Launcher起動方法を複数試行
+                # Try multiple Epic Games Launcher launch methods
                 try {
-                    # 方法1: 直接実行ファイル起動（推奨）
+                    # Method 1: Direct executable launch (recommended)
                     if ($gamePath -and (Test-Path $gamePath)) {
                         Start-Process -FilePath $gamePath -ArgumentList "-epicapp=$gameId"
                         if ($this.Logger) { $this.Logger.Info("Launched via Epic Games executable: GameID $gameId", "PLATFORM") }
@@ -58,7 +58,7 @@ class PlatformManager {
                         throw "Epic Games executable not found"
                     }
                 } catch {
-                    # 方法2: Epic Games URI（修正版）
+                    # Method 2: Epic Games URI (fixed version)
                     $epicUri = "com.epicgames.launcher://apps/$gameId`?action=launch`&silent=true"
                     $tempBat = "$env:TEMP\launch_epic_$gameId.bat"
                     "@echo off`nstart `"Epic Games`" `"$epicUri`"" | Out-File -FilePath $tempBat -Encoding ASCII
@@ -71,7 +71,7 @@ class PlatformManager {
             Required = $false
         }
         
-        # Riot Client Platform (v1.0新規対応)
+        # Riot Client Platform (v1.0 new support)
         $this.Platforms["riot"] = @{
             Name = "Riot Client"
             DetectPath = { $this.DetectRiotPath() }
@@ -84,7 +84,7 @@ class PlatformManager {
                         throw "Riot Client executable not found"
                     }
                 }
-                # Riot Client起動コマンド
+                # Riot Client launch command
                 Start-Process $riotPath -ArgumentList "--launch-product=$gameId --launch-patchline=live"
                 if ($this.Logger) { $this.Logger.Info("Launched via Riot Client: Product $gameId", "PLATFORM") }
             }
@@ -110,7 +110,7 @@ class PlatformManager {
     }
     
     [string] DetectEpicPath() {
-        # Epic Games Launcher検出ロジック
+        # Epic Games Launcher detection logic
         $epicPaths = @(
             "C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe",
             "C:\Program Files\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe"
@@ -143,7 +143,7 @@ class PlatformManager {
     }
     
     [string] DetectRiotPath() {
-        # Riot Client検出ロジック  
+        # Riot Client detection logic
         $riotPaths = @(
             "C:\Riot Games\Riot Client\RiotClientServices.exe",
             "$env:LOCALAPPDATA\Riot Games\Riot Client\RiotClientServices.exe"
@@ -200,7 +200,7 @@ class PlatformManager {
             throw "Unsupported platform: $platformKey"
         }
         
-        # PSCustomObjectをHashtableに変換
+        # Convert PSCustomObject to Hashtable
         if ($gameConfig -is [PSCustomObject]) {
             $configHash = @{}
             $gameConfig.PSObject.Properties | ForEach-Object {
