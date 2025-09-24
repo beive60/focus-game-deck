@@ -261,11 +261,27 @@
             
         </TabControl>
         
-        <!-- Footer Buttons -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
-            <Button Name="SaveButton" Content="保存" Width="80" Height="30" Margin="10,0"/>
-            <Button Name="CloseButton" Content="閉じる" Width="80" Height="30" Margin="10,0"/>
-        </StackPanel>
+        <!-- Footer -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Version and Update Info -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0">
+                <TextBlock Name="VersionLabel" Text="Version: " VerticalAlignment="Center" FontSize="11" Foreground="#666"/>
+                <TextBlock Name="VersionText" Text="1.0.1-alpha" VerticalAlignment="Center" FontSize="11" Foreground="#666" Margin="0,0,15,0"/>
+                <Button Name="CheckUpdateButton" Content="アップデート確認" Width="120" Height="25" FontSize="11"/>
+                <TextBlock Name="UpdateStatusText" Text="" VerticalAlignment="Center" FontSize="11" Margin="10,0,0,0"/>
+            </StackPanel>
+            
+            <!-- Action Buttons -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
+                <Button Name="SaveButton" Content="保存" Width="80" Height="30" Margin="10,0"/>
+                <Button Name="CloseButton" Content="閉じる" Width="80" Height="30" Margin="10,0"/>
+            </StackPanel>
+        </Grid>
         
     </Grid>
 </Window>

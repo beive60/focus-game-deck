@@ -30,6 +30,21 @@ if (Test-Path $LanguageHelperPath) {
     Write-Warning "Language helper not found: $LanguageHelperPath"
 }
 
+# Import version and update checker modules
+$VersionModulePath = Join-Path (Split-Path $PSScriptRoot -Parent) "Version.ps1"
+if (Test-Path $VersionModulePath) {
+    . $VersionModulePath
+} else {
+    Write-Warning "Version module not found: $VersionModulePath"
+}
+
+$UpdateCheckerPath = Join-Path (Split-Path $PSScriptRoot -Parent) "src\modules\UpdateChecker.ps1"
+if (Test-Path $UpdateCheckerPath) {
+    . $UpdateCheckerPath
+} else {
+    Write-Warning "Update checker module not found: $UpdateCheckerPath"
+}
+
 # Set system-level encoding settings for proper character display
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -125,7 +140,7 @@ function Initialize-ConfigEditor {
     
     try {
         # Initialize config path first
-        $script:ConfigPath = Join-Path (Split-Path $PSScriptRoot) "config\config.json"
+        $script:ConfigPath = Join-Path (Split-Path $PSScriptRoot -Parent) "config\config.json"
         
         # Load configuration first (needed for language detection)
         Load-Configuration
@@ -152,7 +167,16 @@ function Initialize-ConfigEditor {
         $script:Window.ShowDialog() | Out-Null
         
     } catch {
-        Show-SafeMessage -MessageKey "initError" -TitleKey "error" -Icon Error
+        Write-Host "Debug: Exception caught in Initialize-ConfigEditor" -ForegroundColor Red
+        Write-Host "Debug: Exception message: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Debug: Exception location: Line $($_.InvocationInfo.ScriptLineNumber)" -ForegroundColor Red
+        
+        try {
+            Show-SafeMessage -MessageKey "initError" -TitleKey "error" -Icon Error
+        } catch {
+            Write-Host "Debug: Failed to show error message: $($_.Exception.Message)" -ForegroundColor Red
+            [System.Windows.MessageBox]::Show("Initialization error occurred: $($_.Exception.Message)", "Error", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+        }
     }
 }
 
@@ -260,6 +284,10 @@ function Setup-EventHandlers {
     
     $deleteAppButton = $script:Window.FindName("DeleteAppButton")
     $deleteAppButton.add_Click({ Handle-DeleteApp })
+    
+    # Update check button event
+    $checkUpdateButton = $script:Window.FindName("CheckUpdateButton")
+    $checkUpdateButton.add_Click({ Handle-CheckUpdate })
 }
 
 # Load data into UI controls
@@ -277,6 +305,9 @@ function Load-DataToUI {
     
     # Load global settings
     Load-GlobalSettings
+    
+    # Initialize version display
+    Initialize-VersionDisplay
 }
 
 # Update UI texts based on current language
@@ -421,6 +452,13 @@ function Update-UITexts {
         $browseAppPathButton = $script:Window.FindName("BrowseAppPathButton")
         if ($browseAppPathButton) { $browseAppPathButton.Content = Get-LocalizedMessage -Key "browseButton" }
         
+        # Update version and update-related texts
+        $versionLabel = $script:Window.FindName("VersionLabel")
+        if ($versionLabel) { $versionLabel.Text = Get-LocalizedMessage -Key "versionLabel" }
+        
+        $checkUpdateButton = $script:Window.FindName("CheckUpdateButton")
+        if ($checkUpdateButton) { $checkUpdateButton.Content = Get-LocalizedMessage -Key "checkUpdateButton" }
+        
         Write-Verbose "UI texts updated for language: $script:CurrentLanguage"
     } catch {
         Write-Warning "Failed to update UI texts: $($_.Exception.Message)"
@@ -492,12 +530,12 @@ function Load-GlobalSettings {
         try {
             # Attempt to convert from encrypted string (new format)
             $securePassword = $configPassword | ConvertTo-SecureString
-            $passwordBox.SecurePassword = $securePassword
+            $plainPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword))
+            $passwordBox.Password = $plainPassword
         }
         catch {
-            # If conversion fails, treat as plain text (old format) and convert
-            $securePassword = ConvertTo-SecureString -String $configPassword -AsPlainText -Force
-            $passwordBox.SecurePassword = $securePassword
+            # If conversion fails, treat as plain text (old format)
+            $passwordBox.Password = $configPassword
             Write-Warning "Plain text password detected - it will be encrypted on next save"
         }
     } else {
@@ -878,9 +916,10 @@ function Save-GlobalSettingsData {
     
     # Handle password encryption
     $passwordBox = $script:Window.FindName("ObsPasswordBox")
-    if ($passwordBox.SecurePassword -and $passwordBox.SecurePassword.Length -gt 0) {
-        # Convert SecureString to encrypted string for storage
-        $script:ConfigData.obs.websocket.password = $passwordBox.SecurePassword | ConvertFrom-SecureString
+    if ($passwordBox.Password -and $passwordBox.Password.Length -gt 0) {
+        # Convert plain text password to encrypted string for storage
+        $securePassword = ConvertTo-SecureString -String $passwordBox.Password -AsPlainText -Force
+        $script:ConfigData.obs.websocket.password = $securePassword | ConvertFrom-SecureString
     } else {
         $script:ConfigData.obs.websocket.password = ""
     }
@@ -901,6 +940,111 @@ function Save-GlobalSettingsData {
         1 { $script:ConfigData.language = "ja" }    # Japanese
         2 { $script:ConfigData.language = "en" }    # English
         default { $script:ConfigData.language = "" }
+    }
+}
+
+# Initialize version display
+function Initialize-VersionDisplay {
+    param()
+    
+    try {
+        $versionInfo = Get-ProjectVersionInfo
+        $versionText = $script:Window.FindName("VersionText")
+        if ($versionText) {
+            $versionText.Text = $versionInfo.FullVersion
+        }
+        
+        Write-Verbose "Version display initialized: $($versionInfo.FullVersion)"
+    } catch {
+        Write-Warning "Failed to initialize version display: $($_.Exception.Message)"
+    }
+}
+
+# Handle check update button click
+function Handle-CheckUpdate {
+    param()
+    
+    try {
+        # Show checking status
+        $updateStatusText = $script:Window.FindName("UpdateStatusText")
+        $checkUpdateButton = $script:Window.FindName("CheckUpdateButton")
+        
+        if ($updateStatusText) {
+            $updateStatusText.Text = Get-LocalizedMessage -Key "checkingUpdate"
+            $updateStatusText.Foreground = "#0066CC"
+        }
+        
+        if ($checkUpdateButton) {
+            $checkUpdateButton.IsEnabled = $false
+        }
+        
+        # Refresh the UI immediately
+        $script:Window.Dispatcher.Invoke([System.Windows.Threading.DispatcherPriority]::Background, [action]{})
+        
+        # Check for updates (async-like operation)
+        $updateResult = Test-UpdateAvailable
+        
+        # Process results
+        if ($updateResult.UpdateAvailable) {
+            # Update available
+            $message = Get-LocalizedMessage -Key "updateAvailable" -Args @($updateResult.LatestVersion, $updateResult.CurrentVersion)
+            if ($updateStatusText) {
+                $updateStatusText.Text = $message
+                $updateStatusText.Foreground = "#FF6600"
+            }
+            
+            # Ask user if they want to open the releases page
+            $result = Show-SafeMessage -MessageKey "updateAvailableConfirm" -TitleKey "updateAvailableTitle" -Args @($updateResult.LatestVersion) -Button YesNo -Icon Question
+            if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
+                if (-not (Open-ReleasesPage)) {
+                    Show-SafeMessage -MessageKey "browserOpenError" -TitleKey "error" -Icon Warning
+                }
+            }
+            
+        } elseif ($updateResult.ContainsKey("ErrorMessage")) {
+            # Error occurred
+            $messageKey = switch ($updateResult.ErrorType) {
+                "NetworkError" { "networkError" }
+                "TimeoutError" { "timeoutError" }
+                default { "unknownError" }
+            }
+            
+            $message = Get-LocalizedMessage -Key $messageKey
+            if ($updateStatusText) {
+                $updateStatusText.Text = $message
+                $updateStatusText.Foreground = "#CC0000"
+            }
+            
+            Show-SafeMessage -MessageKey $messageKey -TitleKey "updateCheckError" -Icon Warning
+            
+        } else {
+            # Up to date
+            $message = Get-LocalizedMessage -Key "upToDate"
+            if ($updateStatusText) {
+                $updateStatusText.Text = $message
+                $updateStatusText.Foreground = "#009900"
+            }
+            
+            Show-SafeMessage -MessageKey "upToDate" -TitleKey "info"
+        }
+        
+    } catch {
+        Write-Warning "Update check failed: $($_.Exception.Message)"
+        
+        $updateStatusText = $script:Window.FindName("UpdateStatusText")
+        if ($updateStatusText) {
+            $updateStatusText.Text = Get-LocalizedMessage -Key "updateCheckFailed"
+            $updateStatusText.Foreground = "#CC0000"
+        }
+        
+        Show-SafeMessage -MessageKey "updateCheckFailed" -TitleKey "error" -Icon Error
+        
+    } finally {
+        # Re-enable the button
+        $checkUpdateButton = $script:Window.FindName("CheckUpdateButton")
+        if ($checkUpdateButton) {
+            $checkUpdateButton.IsEnabled = $true
+        }
     }
 }
 

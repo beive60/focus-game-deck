@@ -56,7 +56,20 @@
         "languageLabel": "表示言語:",
         "platformLabel": "プラットフォーム:",
         "epicGameIdLabel": "Epic GameID:",
-        "riotGameIdLabel": "Riot GameID:"
+        "riotGameIdLabel": "Riot GameID:",
+        "versionLabel": "バージョン: ",
+        "checkUpdateButton": "アップデート確認",
+        "checkingUpdate": "確認中...",
+        "updateAvailable": "新しいバージョン v{0} が利用可能です (現在: v{1})",
+        "upToDate": "最新バージョンを使用中です",
+        "updateAvailableTitle": "アップデート利用可能",
+        "updateAvailableConfirm": "新しいバージョン v{0} が利用可能です。GitHubのリリースページを開きますか？",
+        "updateCheckError": "アップデート確認エラー",
+        "networkError": "ネットワークエラー: アップデートを確認できません",
+        "timeoutError": "タイムアウトエラー: アップデート確認がタイムアウトしました",
+        "unknownError": "不明なエラーが発生しました",
+        "updateCheckFailed": "アップデート確認に失敗しました",
+        "browserOpenError": "ブラウザを開くことができませんでした"
     },
     "en": {
         "textLabel": "Text",
@@ -115,6 +128,19 @@
         "languageLabel": "Display Language:",
         "platformLabel": "Platform:",
         "epicGameIdLabel": "Epic GameID:",
-        "riotGameIdLabel": "Riot GameID:"
+        "riotGameIdLabel": "Riot GameID:",
+        "versionLabel": "Version: ",
+        "checkUpdateButton": "Check for Updates",
+        "checkingUpdate": "Checking...",
+        "updateAvailable": "New version v{0} is available (current: v{1})",
+        "upToDate": "You are using the latest version",
+        "updateAvailableTitle": "Update Available",
+        "updateAvailableConfirm": "New version v{0} is available. Open GitHub releases page?",
+        "updateCheckError": "Update Check Error",
+        "networkError": "Network error: Unable to check for updates",
+        "timeoutError": "Timeout error: Update check timed out",
+        "unknownError": "An unknown error occurred",
+        "updateCheckFailed": "Update check failed",
+        "browserOpenError": "Unable to open browser"
     }
 }
