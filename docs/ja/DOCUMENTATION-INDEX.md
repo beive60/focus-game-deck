@@ -21,6 +21,7 @@ Focus Game Deckは、競技PCゲーマーのための**ゲーミング環境自�
 |-------------|------|------|
 | **[ARCHITECTURE.md](./ARCHITECTURE.md)** | **技術アーキテクチャの詳細設計** | システム構成、設計判断、実装ガイドライン、セキュリティ設計 |
 | **[BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md)** | **GUI設定エディタの仕様書** | 画面設計、機能仕様、ワイヤーフレーム、UI実装詳細 |
+| **[BUILD-SYSTEM.md](./BUILD-SYSTEM.md)** | **ビルドシステムと配布インフラ** | 実行可能ファイル生成、デジタル署名、自動化ビルドワークフロー |
 
 ### 📋 戦略ドキュメント
 
@@ -35,6 +36,34 @@ Focus Game Deckは、競技PCゲーマーのための**ゲーミング環境自�
 | **[README.md](../README.md)** | プロジェクト概要（英語） | 国際的なユーザー・開発者 |
 | **[README.JP.md](../README.JP.md)** | プロジェクト概要（日本語） | 日本語ユーザー |
 | **[GUI-MANUAL.md](./GUI-MANUAL.md)** | GUI設定エディタ使用マニュアル | エンドユーザー・GUI利用者 |
+
+### 💻 実装ドキュメント
+
+| ファイル | 目的 | 記録内容 |
+|---------|------|----------|
+| **[gui/ConfigEditor.ps1](../gui/ConfigEditor.ps1)** | GUIメインコード | ヘッダーコメントに設計思想を記録 |
+| **[gui/messages.json](../gui/messages.json)** | 国際化リソース | JSON外部リソース実装例 |
+| **[DEVELOPER-RELEASE-GUIDE.md](./DEVELOPER-RELEASE-GUIDE.md)** | 開発者向けリリースワークフロー | 完全なビルド・リリースプロセス文書化 |
+
+## 🎯 主要な設計決定
+
+### 1. **GUI技術選択: PowerShell + WPF**
+
+- **場所**: [ARCHITECTURE.md](./ARCHITECTURE.md#gui-technology-choice-powershell--wpf)
+- **理由**: 軽量性、一貫性、配布の容易さ
+- **検討された代替案**: Windows Forms、Electron、C# WPF
+
+### 2. **国際化手法: JSON外部リソース**
+
+- **場所**: [BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md#internationalization-method-json-external-resources)
+- **理由**: 日本語文字エンコーディング問題の解決、保守性、標準的なアプローチ
+- **技術詳細**: Unicodeエスケープシーケンスを使用
+
+### 3. **アーキテクチャパターン: 設定駆動型**
+
+- **場所**: [ARCHITECTURE.md](./ARCHITECTURE.md#configuration-management-json-configuration-file)
+- **理由**: 柔軟性、拡張性、コード変更なしでのカスタマイズ
+- **実装**: config.jsonによる動作制御
 
 ## 🚀 クイックスタート
 
@@ -56,6 +85,31 @@ Focus Game Deckは、競技PCゲーマーのための**ゲーミング環境自�
 - **UI変更**: BD_and_FD_for_GUI.mdを更新
 - **戦略変更**: ROADMAP.mdを更新
 - **概要変更**: 本ドキュメント索引を更新
+
+## 🔄 設計思想の継続性
+
+このドキュメント群は以下を保証します：
+
+1. **技術的継続性**: 新規開発者が設計意図を理解できる
+2. **決定の透明性**: なぜ特定の技術選択がなされたかが明確
+3. **将来の拡張性**: 機能追加時に設計思想に従うことができる
+4. **品質の維持**: 一貫したコーディング標準と実装パターン
+
+## 📅 更新履歴
+
+| 日付 | バージョン | 変更内容 |
+|------|------------|----------|
+| 2025-09-23 | v1.0.0 | 初期設計思想文書化、GUI実装完了 |
+| 2025-09-23 | v1.0.1 | JSON外部リソース国際化対応完了 |
+
+## 🌐 言語サポート
+
+このドキュメントは複数の言語で利用できます：
+
+- **English** (メイン): [docs/DOCUMENTATION-INDEX.md](../DOCUMENTATION-INDEX.md)
+- **日本語** (Japanese): [docs/ja/DOCUMENTATION-INDEX.md](./DOCUMENTATION-INDEX.md)
+
+日本語を話す貢献者およびユーザーの方は、`docs/ja/`ディレクトリ内の日本語ドキュメントをご参照ください。
 
 ---
 
