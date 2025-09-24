@@ -36,6 +36,19 @@
             "gameStartAction": "stop-process",
             "gameEndAction": "none",
             "arguments": ""
+        },
+        "vtubeStudio": {
+            "path": "",
+            "processName": "VTube Studio",
+            "gameStartAction": "start-vtube-studio",
+            "gameEndAction": "stop-vtube-studio",
+            "arguments": "",
+            "steamPath": "",
+            "websocket": {
+                "host": "localhost",
+                "port": 8001,
+                "enabled": false
+            }
         }
     },
     "games": {
@@ -44,28 +57,28 @@
             "platform": "steam",
             "steamAppId": "1172470",
             "processName": "r5apex*",
-            "appsToManage": ["noWinKey", "autoHotkey", "luna", "obs", "clibor"]
+            "appsToManage": ["noWinKey", "autoHotkey", "luna", "obs", "clibor", "vtubeStudio"]
         },
         "dbd": {
             "name": "Dead by Daylight",
             "platform": "steam",
             "steamAppId": "381210",
             "processName": "DeadByDaylight-Win64-Shipping*",
-            "appsToManage": ["obs", "clibor"]
+            "appsToManage": ["obs", "clibor", "vtubeStudio"]
         },
         "genshin": {
             "name": "原神 (Genshin Impact)",
             "platform": "epic",
             "epicGameId": "ac2c3d6632504c6b9b0503d8b6c41227",
             "processName": "YuanShen*",
-            "appsToManage": ["obs", "clibor"]
+            "appsToManage": ["obs", "clibor", "vtubeStudio"]
         },
         "valorant": {
             "name": "VALORANT",
             "platform": "riot", 
             "riotGameId": "valorant",
             "processName": "VALORANT-Win64-Shipping*",
-            "appsToManage": ["obs", "clibor"]
+            "appsToManage": ["obs", "clibor", "vtubeStudio"]
         }
     },
     "paths": {
