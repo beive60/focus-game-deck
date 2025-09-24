@@ -31,23 +31,76 @@ To use this script, you will need the following software installed:
 * **\[Optional\] AutoHotkey**: A scripting language for automation.  
 * **\[Optional\] Luna**: (Or any other background application you wish to manage).
 
+## **💻 Installation Options**
+
+Focus Game Deck offers flexible installation methods to suit different user preferences:
+
+### **Option 1: Executable Distribution (Recommended)**
+
+Download pre-built, digitally signed executables from [GitHub Releases](https://github.com/beive60/focus-game-deck/releases):
+
+* **Focus-Game-Deck.exe** - Main application (single-file, no PowerShell required)
+* **Focus-Game-Deck-Config-Editor.exe** - GUI configuration editor
+* **Focus-Game-Deck-MultiPlatform.exe** - Extended platform support version
+
+**Benefits:**
+
+* ✅ No PowerShell execution policy issues
+* ✅ Digitally signed for security and trust
+* ✅ Single-file distribution
+* ✅ Works on systems with restricted PowerShell policies
+
+### **Option 2: PowerShell Script (Development/Advanced Users)**
+
+Clone or download the repository for direct PowerShell execution:
+
+```bash
+git clone https://github.com/beive60/focus-game-deck.git
+cd focus-game-deck
+```
+
+**Benefits:**
+
+* ✅ Full source code visibility
+* ✅ Easy customization and modification
+* ✅ Access to latest development features
+
 ## **🏗️ Architecture & Design**
 
 Focus Game Deck is built with a **lightweight, maintainable, and extensible** design philosophy:
 
 ### **Core Principles**
+
 * **🪶 Lightweight**: Uses Windows native PowerShell + WPF, no additional runtime required
 * **🔧 Configuration-Driven**: All behavior controlled through `config.json` - no code changes needed for customization
 * **🌐 Internationalization-Ready**: JSON external resource pattern for proper Japanese character support
 * **📦 Single-File Distribution**: Can be compiled to a single executable using ps2exe
 
 ### **Technical Stack**
+
 * **Core Engine**: PowerShell scripts with comprehensive error handling
 * **GUI Module**: PowerShell + WPF with JSON-based internationalization
 * **Configuration**: JSON-based settings with validation and sample templates
 * **Integration**: Native Windows APIs and application-specific protocols
 
 For detailed architectural information, see [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+
+### **Build System & Distribution**
+
+Focus Game Deck features a comprehensive three-tier build system:
+
+* **📦 Automated Executable Generation**: ps2exe-based compilation to standalone executables
+* **🔐 Digital Signature Infrastructure**: Extended Validation certificate support with automated signing
+* **🚀 Production-Ready Pipeline**: Complete development and production build workflows
+* **📋 Release Package Management**: Automated signed distribution package creation
+
+**Build Scripts:**
+
+* `Master-Build.ps1` - Complete build orchestration (development/production workflows)
+* `Build-FocusGameDeck.ps1` - Core executable generation and build management
+* `Sign-Executables.ps1` - Digital signature management and certificate operations
+
+For detailed build system documentation, see [docs/BUILD-SYSTEM.md](./docs/BUILD-SYSTEM.md).
 
 ## **🚀 Setup & Configuration**
 
@@ -135,19 +188,36 @@ For detailed architectural information, see [docs/ARCHITECTURE.md](./docs/ARCHIT
 
 ## **🎬 How to Use**
 
+### **Using Executable Version (Recommended)**
+
+Simply run the executable from command prompt or PowerShell:
+
+```cmd
+# Command Prompt
+Focus-Game-Deck.exe apex
+
+# PowerShell
+.\Focus-Game-Deck.exe apex
+```
+
+### **Using PowerShell Script Version**
+
 Open a PowerShell terminal, navigate to the script's directory, and run the following command:
 
 ```powershell
-\# Example: To launch Apex Legends  
-.\\Invoke-FocusGameDeck.ps1 \-GameId apex
+# Example: To launch Apex Legends  
+.\Invoke-FocusGameDeck.ps1 -GameId apex
 
-\# Example: To launch Dead by Daylight  
-.\\Invoke-FocusGameDeck.ps1 \-GameId dbd
+# Example: To launch Dead by Daylight  
+.\Invoke-FocusGameDeck.ps1 -GameId dbd
 ```
 
-* Specify the GameId you configured in config.json (e.g., "apex", "dbd") for the \-GameId parameter.  
-* The script will automatically apply your configured settings and launch the game via Steam.  
-* Once you exit the game, the script will detect the process has ended and automatically restore your environment to its original state.
+### **General Usage Notes**
+
+* Specify the GameId you configured in config.json (e.g., "apex", "dbd") as the parameter.  
+* The application will automatically apply your configured settings and launch the game via Steam.  
+* Once you exit the game, the application will detect the process has ended and automatically restore your environment to its original state.
+* **GUI Configuration**: Use `Focus-Game-Deck-Config-Editor.exe` for user-friendly configuration editing.
 
 ## **➕ Adding New Applications**
 
@@ -230,7 +300,7 @@ Focus Game Deck follows **[Semantic Versioning](https://semver.org/)** (SemVer) 
 
 ### Current Version
 
-**v1.0.1-alpha** - Alpha testing phase with core functionality
+**v1.2.0** - Build system and digital signature infrastructure completed
 
 ### Release Channels
 
@@ -248,6 +318,8 @@ If you're contributing to the project, check out our comprehensive documentation
 
 ### Download & Installation
 
-* **Latest Stable**: Available from [GitHub Releases](https://github.com/beive60/focus-game-deck/releases/latest)
-* **Beta/Alpha**: Pre-release versions available for testing
-* **Security**: All releases are digitally signed for authenticity
+* **Latest Release**: Available from [GitHub Releases](https://github.com/beive60/focus-game-deck/releases/latest)
+* **Executable Versions**: Pre-built, signed executables ready for immediate use
+* **Source Code**: Complete PowerShell source code for developers and advanced users
+* **Security**: All releases are digitally signed with Extended Validation certificates for maximum trust
+* **Build System**: Complete automated build and signing infrastructure implemented

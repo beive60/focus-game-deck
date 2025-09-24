@@ -13,7 +13,16 @@
 | **Alpha Test Plan** | ✅ **Completed** | 5-10 tester recruitment, multi-perspective feedback collection system |
 | **Distribution Strategy Establishment** | ✅ **Completed** | Digital signature reliability assurance, centralized official distribution channels |
 
-**Technical Milestones:**
+### **✅ v1.2.0 Completed (September 24, 2025)**
+
+| Feature | Status | Design Decision |
+| :---- | :---- | :---- |
+| **Executable Build System** | ✅ **Completed** | ps2exe-based single-file distribution system |
+| **Digital Signature Infrastructure** | ✅ **Completed** | Extended Validation certificate support with automated signing |
+| **Build Pipeline Automation** | ✅ **Completed** | Three-tier build system (individual → integrated → master orchestration) |
+| **Release Package Generation** | ✅ **Completed** | Automated signed distribution package creation |
+
+**Technical Milestones (v1.0.1):**
 
 * Established GUI framework using PowerShell + WPF
 * Implemented internationalization pattern using JSON external resources
@@ -22,11 +31,19 @@
 * **Systematization of security risk management**
 * **Establishment of official distribution and reliability assurance strategy**
 
+**Technical Milestones (v1.2.0):**
+
+* **Complete Build System Implementation**: ps2exe-based executable generation for all components
+* **Digital Signature Ready**: Extended Validation certificate infrastructure with automated signing workflow
+* **Production Distribution Pipeline**: Master-Build.ps1 orchestrating development and production builds
+* **Security-First Packaging**: Signed executable distribution with integrity verification
+
 **Strategic Milestones:**
 
 * Clarification of MIT License strategic value
 * Transparency assurance through open source
 * Advance dialogue strategy with anti-cheat developers
+* **Ready for Official Release Distribution**: Complete build and signature infrastructure established
 
 ## **Release Strategy and License Selection**
 
@@ -48,11 +65,13 @@ The guiding principle of "open and welcoming community" perfectly aligns with MI
 
 Focus Game Deck, as a tool that particularly affects gaming environments, requires thorough reliability assurance.
 
-#### **Integrity Assurance through Digital Signatures**
+#### **Integrity Assurance through Digital Signatures** ✅ **Infrastructure Completed**
 
-* **Implementation Strategy**: Comprehensive code signing for both .exe and .ps1 files
-* **Technical Requirements**: Extended Validation certificate with timestamped signatures
-* **Distribution Chain**: GitHub Releases → Signed Binaries → End User Execution
+* **Implementation Strategy**: ✅ Comprehensive code signing infrastructure for executable files implemented
+* **Technical Requirements**: ✅ Extended Validation certificate support with RFC 3161 timestamped signatures
+* **Distribution Chain**: ✅ GitHub Releases → Automated Build → Signed Binaries → End User Execution
+* **Build System**: ✅ Master-Build.ps1 provides complete development and production build workflows
+* **Certificate Management**: ✅ Automated certificate discovery, validation, and signing process
 
 #### **Transparency Assurance Mechanisms**
 

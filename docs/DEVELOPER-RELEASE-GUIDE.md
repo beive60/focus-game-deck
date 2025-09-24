@@ -167,16 +167,43 @@ code release-notes-1.0.2-alpha.md
 
 #### 2. ビルドとアセット準備
 
+##### 実行ファイル生成とデジタル署名
+
 ```powershell
-# アセットビルド（例: インストーラー作成）
-# ※ 実際のビルドプロセスは別途定義
-.\build\Create-Installer.ps1 -Version "1.0.2-alpha"
+# 開発版ビルド（署名なし）
+.\Master-Build.ps1 -Development
 
-# デジタル署名付与
-.\build\Sign-Assets.ps1 -Version "1.0.2-alpha"
+# 本番版ビルド（署名付き）※要証明書設定
+.\Master-Build.ps1 -Production
 
-# チェックサム生成
-.\build\Generate-Checksums.ps1 -Version "1.0.2-alpha"
+# 個別ビルド操作
+.\Build-FocusGameDeck.ps1 -Install    # ps2exe モジュールインストール
+.\Build-FocusGameDeck.ps1 -Build      # 実行ファイル生成
+.\Build-FocusGameDeck.ps1 -Sign       # 既存ビルドに署名適用
+.\Build-FocusGameDeck.ps1 -Clean      # ビルド成果物クリーンアップ
+
+# デジタル署名個別操作
+.\Sign-Executables.ps1 -ListCertificates    # 利用可能証明書一覧
+.\Sign-Executables.ps1 -TestCertificate     # 設定済み証明書テスト
+.\Sign-Executables.ps1 -SignAll             # 全実行ファイルに署名
+```
+
+**生成される実行ファイル**:
+
+- `Focus-Game-Deck.exe` - メインアプリケーション
+- `Focus-Game-Deck-MultiPlatform.exe` - マルチプラットフォーム版  
+- `Focus-Game-Deck-Config-Editor.exe` - GUI設定エディター
+
+**署名設定** (`config/signing-config.json`):
+
+```json
+{
+  "codeSigningSettings": {
+    "enabled": true,
+    "certificateThumbprint": "YOUR_CERTIFICATE_THUMBPRINT",
+    "timestampServer": "http://timestamp.digicert.com"
+  }
+}
 ```
 
 #### 3. GitHub Release作成手順
