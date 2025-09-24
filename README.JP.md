@@ -18,6 +18,7 @@
   * **AutoHotkey**: 実行中のスクリプトを停止し、ゲーム終了後に再開。
   * **OBS Studio**: OBSを起動し、ゲーム開始/終了時にリプレイバッファを自動開始/停止。
   * **VTube Studio**: Steam版・スタンドアロン版両対応、ゲーム用モード切り替えと配信復帰の自動化。
+  * **Discord**: ゲーミングモード自動切り替え、Rich Presence表示、オーバーレイ制御による集中環境の最適化。
 
 ## **🛠️ 必要要件**
 
@@ -30,6 +31,8 @@
 * **\[オプション\] Clibor**: クリップボードユーティリティ。
 * **\[オプション\] NoWinKey**: Windowsキーを無効化するツール。
 * **\[オプション\] AutoHotkey**: 自動化のためのスクリプト言語。
+* **\[オプション\] VTube Studio**: VTuber向けアバター管理ソフト。
+* **\[オプション\] Discord**: ゲーマー向けコミュニケーションプラットフォーム。
 * **\[オプション\] Luna**: （または管理したいその他のバックグラウンドアプリケーション）。
 
 ## **💻 インストール方法**
@@ -149,6 +152,26 @@ Focus Game Deckは包括的な3階層ビルドシステムを特徴としてい�
                "startupAction": "stop",
                "shutdownAction": "none",
                "arguments": ""
+           },
+           "discord": {
+               "path": "%LOCALAPPDATA%\\\\Discord\\\\app-*\\\\Discord.exe",
+               "processName": "Discord",
+               "startupAction": "set-discord-gaming-mode",
+               "shutdownAction": "restore-discord-normal",
+               "arguments": "",
+               "discord": {
+                   "statusOnGameStart": "dnd",
+                   "statusOnGameEnd": "online",
+                   "disableOverlay": true,
+                   "customPresence": {
+                       "enabled": true,
+                       "state": "Focus Gaming Mode"
+                   },
+                   "rpc": {
+                       "enabled": true,
+                       "applicationId": ""
+                   }
+               }
            }
        },
        "games": {
@@ -156,13 +179,13 @@ Focus Game Deckは包括的な3階層ビルドシステムを特徴としてい�
                "name": "Apex Legends",
                "steamAppId": "1172470", // Steam ストアページのURLで確認
                "processName": "r5apex\\*", // タスクマネージャーで確認（ワイルドカード \\* をサポート）
-               "appsToManage": ["noWinKey", "autoHotkey", "luna", "obs", "clibor"]
+               "appsToManage": ["noWinKey", "autoHotkey", "luna", "obs", "clibor", "discord"]
            },
            "dbd": {
                "name": "Dead by Daylight",
                "steamAppId": "381210",
                "processName": "DeadByDaylight-Win64-Shipping\\*",
-               "appsToManage": ["obs", "clibor"]
+               "appsToManage": ["obs", "clibor", "discord"]
            }
            // ... 他のゲームをここに追加 ...
        },
@@ -245,6 +268,12 @@ PowerShellターミナルを開き、スクリプトのディレクトリに移�
    * 必要なプロパティ（path, processName, startupAction, shutdownAction）が存在することを確認してください
    * アクション値が次のいずれかであることを確認してください: "start", "stop", "none"
 
+6. **Discord統合が動作しない場合:**
+   * Discordが正常にインストールされ、実行されていることを確認してください
+   * Discord RPC機能を使用する場合は、有効なDiscord Application IDが必要です
+   * Rich Presence機能には、Discordの設定で「ゲームアクティビティを表示する」が有効になっている必要があります
+   * オーバーレイ制御は手動設定が必要な場合があります
+
 ## **➕ 新しいアプリケーションの追加**
 
 新しいアーキテクチャにより、管理対象のアプリケーションを非常に簡単に追加できます。`managedApps` セクションに追加するだけです：
@@ -253,11 +282,24 @@ PowerShellターミナルを開き、スクリプトのディレクトリに移�
 {
   "managedApps": {
     "discord": {
-      "path": "C:\\Users\\Username\\AppData\\Local\\Discord\\app-1.0.9012\\Discord.exe",
+      "path": "%LOCALAPPDATA%\\Discord\\app-*\\Discord.exe",
       "processName": "Discord",
-      "startupAction": "stop",
-      "shutdownAction": "start",
-      "arguments": ""
+      "startupAction": "set-discord-gaming-mode",
+      "shutdownAction": "restore-discord-normal",
+      "arguments": "",
+      "discord": {
+        "statusOnGameStart": "dnd",
+        "statusOnGameEnd": "online",
+        "disableOverlay": true,
+        "customPresence": {
+          "enabled": true,
+          "state": "Gaming with Focus Game Deck"
+        },
+        "rpc": {
+          "enabled": true,
+          "applicationId": "YOUR_DISCORD_APP_ID_HERE"
+        }
+      }
     },
     "spotify": {
       "path": "C:\\Users\\Username\\AppData\\Roaming\\Spotify\\Spotify.exe",

@@ -92,7 +92,7 @@ class ConfigValidator {
             return
         }
 
-        $validActions = @("start-process", "stop-process", "toggle-hotkeys", "start-vtube-studio", "stop-vtube-studio", "none")
+        $validActions = @("start-process", "stop-process", "toggle-hotkeys", "start-vtube-studio", "stop-vtube-studio", "set-discord-gaming-mode", "restore-discord-normal", "none")
 
         foreach ($appProperty in $this.Config.managedApps.PSObject.Properties) {
             $appId = $appProperty.Name

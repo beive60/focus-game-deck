@@ -49,6 +49,26 @@
                 "port": 8001,
                 "enabled": false
             }
+        },
+        "discord": {
+            "path": "%LOCALAPPDATA%\\Discord\\app-*\\Discord.exe",
+            "processName": "Discord",
+            "gameStartAction": "set-discord-gaming-mode",
+            "gameEndAction": "restore-discord-normal",
+            "arguments": "",
+            "discord": {
+                "statusOnGameStart": "dnd",
+                "statusOnGameEnd": "online",
+                "disableOverlay": true,
+                "customPresence": {
+                    "enabled": false,
+                    "state": "Focus Gaming Mode"
+                },
+                "rpc": {
+                    "enabled": true,
+                    "applicationId": ""
+                }
+            }
         }
     },
     "games": {
@@ -57,14 +77,14 @@
             "platform": "steam",
             "steamAppId": "1172470",
             "processName": "r5apex*",
-            "appsToManage": ["noWinKey", "autoHotkey", "luna", "obs", "clibor", "vtubeStudio"]
+            "appsToManage": ["noWinKey", "autoHotkey", "luna", "obs", "clibor", "vtubeStudio", "discord"]
         },
         "dbd": {
             "name": "Dead by Daylight",
             "platform": "steam",
             "steamAppId": "381210",
             "processName": "DeadByDaylight-Win64-Shipping*",
-            "appsToManage": ["obs", "clibor", "vtubeStudio"]
+            "appsToManage": ["obs", "clibor", "vtubeStudio", "discord"]
         },
         "genshin": {
             "name": "原神 (Genshin Impact)",
@@ -78,7 +98,7 @@
             "platform": "riot", 
             "riotGameId": "valorant",
             "processName": "VALORANT-Win64-Shipping*",
-            "appsToManage": ["obs", "clibor", "vtubeStudio"]
+            "appsToManage": ["obs", "clibor", "vtubeStudio", "discord"]
         }
     },
     "paths": {
