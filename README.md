@@ -222,4 +222,32 @@ Knowing that the tool is helping people is the single biggest motivation to keep
 
 ## **🗺️ Project Roadmap**
 
-Want to see what's coming next? Check out our [detailed roadmap](./doc/ROADMAP.md) to see planned features, timeline, and the strategic vision for Focus Game Deck's future development.
+Want to see what's coming next? Check out our [detailed roadmap](./docs/ROADMAP.md) to see planned features, timeline, and the strategic vision for Focus Game Deck's future development.
+
+## **📦 Version Management & Releases**
+
+Focus Game Deck follows **[Semantic Versioning](https://semver.org/)** (SemVer) for consistent version management.
+
+### Current Version
+
+**v1.0.1-alpha** - Alpha testing phase with core functionality
+
+### Release Channels
+
+* **Alpha**: Limited testing releases for core functionality validation
+* **Beta**: Public beta testing for broader feedback
+* **Stable**: Production-ready releases for all users
+
+### For Developers
+
+If you're contributing to the project, check out our comprehensive documentation:
+
+* **[Version Management Specification](./docs/VERSION-MANAGEMENT.md)** - SemVer implementation details
+* **[GitHub Releases Guide](./docs/GITHUB-RELEASES-GUIDE.md)** - Release operation procedures  
+* **[Developer Release Guide](./docs/DEVELOPER-RELEASE-GUIDE.md)** - Step-by-step release process
+
+### Download & Installation
+
+* **Latest Stable**: Available from [GitHub Releases](https://github.com/beive60/focus-game-deck/releases/latest)
+* **Beta/Alpha**: Pre-release versions available for testing
+* **Security**: All releases are digitally signed for authenticity

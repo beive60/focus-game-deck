@@ -68,11 +68,11 @@ function Test-ReleaseValidation {
                 $warnings += "Uncommitted changes detected"
                 $gitStatus | ForEach-Object { Write-Host "  $_" -ForegroundColor Yellow }
             } else {
-                Write-Host "✓ Git repository is clean" -ForegroundColor Green
+                Write-Host "[OK] Git repository is clean" -ForegroundColor Green
             }
             
             $branch = git rev-parse --abbrev-ref HEAD 2>$null
-            Write-Host "✓ Current branch: $branch" -ForegroundColor Green
+            Write-Host "[OK] Current branch: $branch" -ForegroundColor Green
         } else {
             $errors += "Not a git repository"
         }
@@ -84,7 +84,7 @@ function Test-ReleaseValidation {
     # Check version file integrity
     try {
         $versionInfo = Get-ProjectVersionInfo
-        Write-Host "✓ Version file is valid" -ForegroundColor Green
+        Write-Host "[OK] Version file is valid" -ForegroundColor Green
         Write-Host "  Current version: $($versionInfo.FullVersion)" -ForegroundColor Gray
     }
     catch {
@@ -103,7 +103,7 @@ function Test-ReleaseValidation {
     foreach ($file in $requiredFiles) {
         $filePath = Join-Path $rootPath $file
         if (Test-Path $filePath) {
-            Write-Host "✓ Required file exists: $file" -ForegroundColor Green
+            Write-Host "[OK] Required file exists: $file" -ForegroundColor Green
         } else {
             $warnings += "Required file missing: $file"
         }
@@ -120,7 +120,7 @@ function Test-ReleaseValidation {
     foreach ($doc in $requiredDocs) {
         $docPath = Join-Path $docsPath $doc
         if (Test-Path $docPath) {
-            Write-Host "✓ Documentation exists: $doc" -ForegroundColor Green
+            Write-Host "[OK] Documentation exists: $doc" -ForegroundColor Green
         } else {
             $warnings += "Documentation missing: $doc"
         }
@@ -130,17 +130,17 @@ function Test-ReleaseValidation {
     Write-Host "`n=== Validation Summary ===" -ForegroundColor Cyan
     
     if ($errors.Count -eq 0 -and $warnings.Count -eq 0) {
-        Write-Host "✓ All validations passed! Ready for release." -ForegroundColor Green
+        Write-Host "[SUCCESS] All validations passed! Ready for release." -ForegroundColor Green
         return $true
     } else {
         if ($errors.Count -gt 0) {
-            Write-Host "❌ Errors found:" -ForegroundColor Red
-            $errors | ForEach-Object { Write-Host "  • $_" -ForegroundColor Red }
+            Write-Host "[ERROR] Errors found:" -ForegroundColor Red
+            $errors | ForEach-Object { Write-Host "  - $_" -ForegroundColor Red }
         }
         
         if ($warnings.Count -gt 0) {
-            Write-Host "⚠️  Warnings:" -ForegroundColor Yellow
-            $warnings | ForEach-Object { Write-Host "  • $_" -ForegroundColor Yellow }
+            Write-Host "[WARNING] Warnings:" -ForegroundColor Yellow
+            $warnings | ForEach-Object { Write-Host "  - $_" -ForegroundColor Yellow }
         }
         
         return $false
