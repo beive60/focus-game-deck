@@ -40,19 +40,29 @@ To maintain this design philosophy, please prioritize the following:
 Focus Game Deck
 ├── Core Engine (PowerShell)
 │   ├── src/Invoke-FocusGameDeck.ps1     # Main engine
+│   ├── src/Invoke-FocusGameDeck-MultiPlatform.ps1  # Multi-platform version
 │   ├── scripts/Create-Launchers.ps1     # Launcher generation
 │   └── launch_*.bat                     # Game-specific launch scripts
 │
 ├── Configuration Management
 │   ├── config/config.json               # Main configuration file
 │   ├── config/config.json.sample        # Sample configuration
-│   └── config/messages.json             # Internationalization resources (for GUI)
+│   ├── config/messages.json             # Internationalization resources (for GUI)
+│   └── config/signing-config.json       # Digital signature configuration
 │
 ├── GUI Module (PowerShell + WPF)
 │   ├── gui/MainWindow.xaml              # UI layout definition
 │   ├── gui/ConfigEditor.ps1             # GUI control logic
 │   ├── gui/messages.json                # GUI message resources
-│   └── gui/Build-ConfigEditor.ps1       # Build script
+│   └── gui/Build-ConfigEditor.ps1       # GUI build script
+│
+├── Build System & Distribution
+│   ├── Build-FocusGameDeck.ps1          # Main build script
+│   ├── Sign-Executables.ps1             # Digital signature script
+│   ├── Master-Build.ps1                 # Integrated build orchestration
+│   ├── build/                           # Build artifacts directory
+│   ├── signed/                          # Signed executables directory
+│   └── release/                         # Release package directory
 │
 └── Documentation & Testing
     ├── docs/                            # Design and specification documents
@@ -99,7 +109,46 @@ Focus Game Deck
 - UTF-8 encoding enforcement
 - Dynamic message retrieval through runtime JSON loading
 
-#### 3. Configuration Management: JSON Configuration File
+#### 3. Build System: PowerShell to Executable Conversion
+
+**Options Considered:**
+
+- Manual PowerShell script distribution
+- PowerShell ISE packaging
+- ps2exe module compilation ✅
+- Migration to compiled languages (C#/.NET)
+
+**Selection Rationale:**
+
+- **Single File Distribution**: ps2exe creates standalone executable files for easy distribution
+- **No Runtime Dependencies**: Generated executables run without requiring PowerShell installation
+- **Digital Signature Support**: Full support for Authenticode digital signatures
+- **Maintains PowerShell Benefits**: Preserves source code readability and maintainability
+- **Security Compliance**: Enables Extended Validation certificate signing for trust establishment
+
+**Technical Implementation:**
+
+- **Main Application**: `Focus-Game-Deck.exe` (console-based launcher)
+- **Multi-platform Version**: `Focus-Game-Deck-MultiPlatform.exe` (extended platform support)
+- **GUI Configuration**: `Focus-Game-Deck-Config-Editor.exe` (WPF-based, no console window)
+- **Automated Build Pipeline**: Three-tier build system (individual → integrated → master orchestration)
+
+#### 4. Digital Signature Strategy: Extended Validation Certificate
+
+**Security Requirements:**
+
+- **Trust Establishment**: Windows SmartScreen and antivirus compatibility
+- **Anti-cheat Compliance**: Proactive whitelisting with signed executables
+- **Timestamp Preservation**: RFC 3161 timestamping for long-term signature validity
+
+**Implementation Details:**
+
+- Certificate storage in Windows Certificate Store (CurrentUser\My)
+- Automated signature verification post-signing
+- Multiple timestamp server fallback support
+- Signature metadata tracking in release packages
+
+#### 5. Configuration Management: JSON Configuration File
 
 **Selection Rationale:**
 
@@ -225,6 +274,7 @@ To maintain this design philosophy, please prioritize the following:
 | 1.0.0 | 2025-09-23 | Initial architecture design, GUI implementation completed |
 | 1.0.1 | 2025-09-23 | JSON external resource internationalization support completed |
 | 1.1.0 | 2025-09-23 | Integration of risk management policy and security design |
+| 1.2.0 | 2025-09-24 | Build system implementation, digital signature infrastructure completed |
 
 ## Language Support
 

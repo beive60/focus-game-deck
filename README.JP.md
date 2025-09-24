@@ -31,6 +31,77 @@
 * **\[オプション\] AutoHotkey**: 自動化のためのスクリプト言語。
 * **\[オプション\] Luna**: （または管理したいその他のバックグラウンドアプリケーション）。
 
+## **💻 インストール方法**
+
+Focus Game Deckは、さまざまなユーザーの好みに合わせて柔軟なインストール方法を提供しています：
+
+### **方法1: 実行ファイル配布（推奨）**
+
+[GitHub Releases](https://github.com/beive60/focus-game-deck/releases)から事前ビルドされた、デジタル署名済みの実行ファイルをダウンロード：
+
+* **Focus-Game-Deck.exe** - メインアプリケーション（単一ファイル、PowerShell不要）
+* **Focus-Game-Deck-Config-Editor.exe** - GUI設定エディター
+* **Focus-Game-Deck-MultiPlatform.exe** - 拡張プラットフォーム対応版
+
+**利点:**
+
+* ✅ PowerShell実行ポリシーの問題なし
+* ✅ セキュリティと信頼性のためのデジタル署名
+* ✅ 単一ファイル配布
+* ✅ PowerShellが制限されたシステムでも動作
+
+### **方法2: PowerShellスクリプト（開発者/上級ユーザー向け）**
+
+直接PowerShell実行のためにリポジトリをクローンまたはダウンロード：
+
+```bash
+git clone https://github.com/beive60/focus-game-deck.git
+cd focus-game-deck
+```
+
+**利点:**
+
+* ✅ 完全なソースコードの可視性
+* ✅ 簡単なカスタマイズと変更
+* ✅ 最新の開発機能へのアクセス
+
+## **🏗️ アーキテクチャと設計**
+
+Focus Game Deckは**軽量、保守性、拡張性**を重視した設計思想で構築されています：
+
+### **コア原則**
+
+* **🪶 軽量性**: Windows標準のPowerShell + WPFを使用、追加ランタイム不要
+* **🔧 設定駆動型**: すべての動作をconfig.jsonで制御 - カスタマイズにコード変更不要
+* **🌐 国際化対応**: 適切な日本語文字サポートのためのJSON外部リソースパターン
+* **📦 単一ファイル配布**: ps2exeを使用して単一実行ファイルにコンパイル可能
+
+### **技術スタック**
+
+* **コアエンジン**: 包括的なエラーハンドリングを備えたPowerShellスクリプト
+* **GUIモジュール**: JSON ベース国際化を備えたPowerShell + WPF
+* **設定**: 検証とサンプルテンプレートを備えたJSONベース設定
+* **統合**: ネイティブWindows APIとアプリケーション固有プロトコル
+
+詳細なアーキテクチャ情報については、[docs/ja/ARCHITECTURE.md](./docs/ja/ARCHITECTURE.md)をご覧ください。
+
+### **ビルドシステムとディストリビューション**
+
+Focus Game Deckは包括的な3階層ビルドシステムを特徴としています：
+
+* **📦 自動実行ファイル生成**: ps2exeベースでスタンドアロン実行ファイルにコンパイル
+* **🔐 デジタル署名インフラ**: 拡張検証証明書対応と自動署名
+* **🚀 本番対応パイプライン**: 完全な開発・本番ビルドワークフロー
+* **📋 リリースパッケージ管理**: 署名済み配布パッケージの自動作成
+
+**ビルドスクリプト:**
+
+* `Master-Build.ps1` - 完全ビルド統制（開発・本番ワークフロー）
+* `Build-FocusGameDeck.ps1` - コア実行ファイル生成とビルド管理
+* `Sign-Executables.ps1` - デジタル署名管理と証明書操作
+
+詳細なビルドシステムドキュメントについては、[docs/BUILD-SYSTEM.md](./docs/BUILD-SYSTEM.md)をご覧ください。
+
 ## **🚀 セットアップと設定**
 
 1. **リポジトリのダウンロード**: このリポジトリをクローンするか、ZIPファイルとしてダウンロードします。
@@ -117,17 +188,36 @@
 
 ## **🎬 使用方法**
 
+### **実行ファイル版の使用（推奨）**
+
+コマンドプロンプトまたはPowerShellから実行ファイルを実行するだけです：
+
+```cmd
+# コマンドプロンプト
+Focus-Game-Deck.exe apex
+
+# PowerShell
+.\Focus-Game-Deck.exe apex
+```
+
+### **PowerShellスクリプト版の使用**
+
 PowerShellターミナルを開き、スクリプトのディレクトリに移動して、以下のコマンドを実行します：
 
-\# 例: Apex Legends を起動する場合
-.\\Invoke-FocusGameDeck.ps1 \-GameId apex
+```powershell
+# 例: Apex Legends を起動する場合
+.\Invoke-FocusGameDeck.ps1 -GameId apex
 
-\# 例: Dead by Daylight を起動する場合
-.\\Invoke-FocusGameDeck.ps1 \-GameId dbd
+# 例: Dead by Daylight を起動する場合
+.\Invoke-FocusGameDeck.ps1 -GameId dbd
+```
 
-* config.json で設定した GameId（例："apex"、"dbd"）を -GameId パラメータに指定します。
-* スクリプトは自動的に設定を適用し、Steam経由でゲームを起動します。
-* ゲームを終了すると、スクリプトはプロセスの終了を検知し、自動的に環境を元の状態に復元します。
+### **一般的な使用上の注意**
+
+* config.json で設定した GameId（例："apex"、"dbd"）をパラメータに指定します。
+* アプリケーションは自動的に設定を適用し、Steam経由でゲームを起動します。
+* ゲームを終了すると、アプリケーションはプロセスの終了を検知し、自動的に環境を元の状態に復元します。
+* **GUI設定**: ユーザーフレンドリーな設定編集には `Focus-Game-Deck-Config-Editor.exe` を使用してください。
 
 ## **🔧 トラブルシューティング**
 
@@ -210,7 +300,7 @@ Focus Game Deckは一貫したバージョン管理のために **[セマンテ�
 
 ### 現在のバージョン
 
-**v1.0.1-alpha** - コア機能を含むアルファテスト段階
+**v1.2.0** - ビルドシステムとデジタル署名インフラ完了
 
 ### リリースチャンネル
 
@@ -228,6 +318,8 @@ Focus Game Deckは一貫したバージョン管理のために **[セマンテ�
 
 ### ダウンロードとインストール
 
-* **最新安定版**: [GitHub Releases](https://github.com/beive60/focus-game-deck/releases/latest) から入手可能
-* **ベータ版/アルファ版**: テスト用のプレリリース版が利用可能
-* **セキュリティ**: すべてのリリースは信頼性確保のためデジタル署名されています
+* **最新リリース**: [GitHub Releases](https://github.com/beive60/focus-game-deck/releases/latest) から入手可能
+* **実行ファイル版**: 事前ビルドされた署名済み実行ファイルですぐに使用可能
+* **ソースコード**: 開発者と上級ユーザー向けの完全なPowerShellソースコード
+* **セキュリティ**: すべてのリリースは最大限の信頼性のために拡張検証証明書でデジタル署名されています
+* **ビルドシステム**: 完全な自動ビルドと署名インフラが実装されています

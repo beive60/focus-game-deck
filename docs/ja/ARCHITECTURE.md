@@ -32,19 +32,29 @@ Focus Game Deck は、ゲーミング環境の自動化とOBS配信管理を行�
 Focus Game Deck
 ├── Core Engine (PowerShell)
 │   ├── src/Invoke-FocusGameDeck.ps1     # メインエンジン
+│   ├── src/Invoke-FocusGameDeck-MultiPlatform.ps1  # マルチプラットフォーム版
 │   ├── scripts/Create-Launchers.ps1     # ランチャー生成
 │   └── launch_*.bat                     # ゲーム別起動スクリプト
 │
 ├── Configuration Management
 │   ├── config/config.json               # メイン設定ファイル
 │   ├── config/config.json.sample        # サンプル設定
-│   └── config/messages.json             # 国際化リソース（GUI用）
+│   ├── config/messages.json             # 国際化リソース（GUI用）
+│   └── config/signing-config.json       # デジタル署名設定
 │
 ├── GUI Module (PowerShell + WPF)
 │   ├── gui/MainWindow.xaml              # UIレイアウト定義
 │   ├── gui/ConfigEditor.ps1             # GUI制御ロジック
 │   ├── gui/messages.json                # GUI用メッセージリソース
-│   └── gui/Build-ConfigEditor.ps1       # ビルドスクリプト
+│   └── gui/Build-ConfigEditor.ps1       # GUIビルドスクリプト
+│
+├── Build System & Distribution
+│   ├── Build-FocusGameDeck.ps1          # メインビルドスクリプト
+│   ├── Sign-Executables.ps1             # デジタル署名スクリプト
+│   ├── Master-Build.ps1                 # 統合ビルド統制
+│   ├── build/                           # ビルド成果物ディレクトリ
+│   ├── signed/                          # 署名済み実行ファイルディレクトリ
+│   └── release/                         # リリースパッケージディレクトリ
 │
 └── Documentation & Testing
     ├── docs/                            # 設計・仕様書
@@ -91,7 +101,46 @@ Focus Game Deck
 - UTF-8エンコーディング強制設定
 - 実行時JSON読み込みによる動的メッセージ取得
 
-#### 3. 設定管理: JSON設定ファイル
+#### 3. ビルドシステム: PowerShell から実行ファイルへの変換
+
+**検討した選択肢:**
+
+- PowerShellスクリプトの手動配布
+- PowerShell ISE パッケージング
+- ps2exe モジュール コンパイル ✅
+- コンパイル言語（C#/.NET）への移行
+
+**選択理由:**
+
+- **単一ファイル配布**: ps2exe による独立実行ファイル作成で配布を簡素化
+- **ランタイム依存解消**: PowerShell インストール不要で実行可能
+- **デジタル署名対応**: Authenticode デジタル署名の完全サポート
+- **PowerShell利点維持**: ソースコードの可読性と保守性を保持
+- **セキュリティ準拠**: 拡張検証証明書署名による信頼確立
+
+**技術的実装:**
+
+- **メインアプリケーション**: `Focus-Game-Deck.exe`（コンソールベースランチャー）
+- **マルチプラットフォーム版**: `Focus-Game-Deck-MultiPlatform.exe`（拡張プラットフォーム対応）
+- **GUI設定エディタ**: `Focus-Game-Deck-Config-Editor.exe`（WPFベース、コンソールウィンドウなし）
+- **自動化ビルドパイプライン**: 3階層ビルドシステム（個別→統合→マスター統制）
+
+#### 4. デジタル署名戦略: 拡張検証証明書
+
+**セキュリティ要件:**
+
+- **信頼確立**: Windows SmartScreen とアンチウイルスソフト互換性
+- **アンチチート準拠**: 署名済み実行ファイルによる事前ホワイトリスト登録
+- **タイムスタンプ保存**: 長期署名有効性のための RFC 3161 タイムスタンプ
+
+**実装詳細:**
+
+- Windows 証明書ストア（CurrentUser\My）での証明書管理
+- 署名後の自動署名検証
+- 複数タイムスタンプサーバーのフォールバック対応
+- リリースパッケージでの署名メタデータ追跡
+
+#### 5. 設定管理: JSON設定ファイル
 
 **選択理由:**
 
@@ -218,6 +267,7 @@ Focus Game Deck
 | 1.0.0 | 2025-09-23 | 初期アーキテクチャ設計、GUI実装完了 |
 | 1.0.1 | 2025-09-23 | JSON外部リソース国際化対応完了 |
 | 1.1.0 | 2025-09-23 | リスク管理方針とセキュリティ設計の統合 |
+| 1.2.0 | 2025-09-24 | ビルドシステム実装、デジタル署名インフラ完了 |
 
 ---
 
