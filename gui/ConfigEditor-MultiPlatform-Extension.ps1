@@ -31,7 +31,7 @@
         <ColumnDefinition Width="Auto"/>
     </Grid.ColumnDefinitions>
     <TextBox Grid.Column="0" Name="ExecutablePathTextBox"/>
-    <Button Grid.Column="1" Name="BrowseExecutableButton" Content="参照" Width="50" Margin="5,0,0,0"/>
+    <Button Grid.Column="1" Name="BrowseExecutableButton" Content="Browse" Width="50" Margin="5,0,0,0"/>
 </Grid>
 
 # PowerShell event handlers to add:

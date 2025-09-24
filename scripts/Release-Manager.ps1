@@ -27,6 +27,10 @@ param(
     [switch]$GenerateReleaseNotes,
     
     [Parameter(Mandatory=$false)]
+    [ValidateSet("ja", "en", "both")]
+    [string]$Language = "ja",
+    
+    [Parameter(Mandatory=$false)]
     [string]$ReleaseMessage = ""
 )
 
@@ -240,43 +244,116 @@ function New-ReleaseNotes {
     param(
         [string]$Version,
         [string]$TagName,
-        [bool]$IsPreRelease
+        [bool]$IsPreRelease,
+        [ValidateSet("ja", "en", "both")]
+        [string]$Language = "ja"  # Default to Japanese as main target
     )
     
     if ($DryRun) {
-        Write-StatusMessage "DRY RUN: Would generate release notes for $Version" "INFO"
+        Write-StatusMessage "DRY RUN: Would generate release notes for $Version (Language: $Language)" "INFO"
         return
     }
     
-    $releaseType = if ($IsPreRelease) {
-        if ($Version -match "alpha") { "Alpha" }
-        elseif ($Version -match "beta") { "Beta" }
-        elseif ($Version -match "rc") { "Release Candidate" }
-        else { "Pre-release" }
-    } else { "Official Release" }
+    # Define release types in both languages
+    $releaseTypes = @{
+        ja = @{
+            alpha = "アルファ版"
+            beta = "ベータ版"
+            rc = "リリース候補版"
+            prerelease = "プレリリース版"
+            official = "正式リリース版"
+        }
+        en = @{
+            alpha = "Alpha"
+            beta = "Beta"
+            rc = "Release Candidate"
+            prerelease = "Pre-release"
+            official = "Official Release"
+        }
+    }
     
-    $template = @"
-## 🚀 Focus Game Deck $Version - $releaseType
+    function Get-ReleaseType($lang, $isPreRelease) {
+        if ($isPreRelease) {
+            if ($Version -match "alpha") { return $releaseTypes[$lang].alpha }
+            elseif ($Version -match "beta") { return $releaseTypes[$lang].beta }
+            elseif ($Version -match "rc") { return $releaseTypes[$lang].rc }
+            else { return $releaseTypes[$lang].prerelease }
+        } else { 
+            return $releaseTypes[$lang].official 
+        }
+    }
+    
+    # Generate templates based on language selection
+    $templates = @{}
+    
+    # Japanese template (main target)
+    $templates.ja = @"
+## 🚀 Focus Game Deck $Version - $(Get-ReleaseType "ja" $IsPreRelease)
 
-### ⚠️ $releaseType Notice
+### ⚠️ $(Get-ReleaseType "ja" $IsPreRelease) について
 $(if ($IsPreRelease) {
-"この版本は${releaseType}用です。本番環境での使用は推奨されません。`n" +
-"This is a $releaseType version for testing purposes only."
+"これは$(Get-ReleaseType "ja" $IsPreRelease)であり、テスト目的でのみ提供されています。本番環境での使用は推奨されません。"
 } else {
-"正式リリース版です。本番環境での使用を推奨します。`n" +
+"本番環境での使用を推奨する正式リリース版です。"
+})
+
+### 📋 新機能・変更点
+- ✅ [新機能や改善点を記載してください]
+- 🔧 [修正や改善点を記載してください]
+- 🐛 [修正されたバグを記載してください]
+
+### 🐛 既知の問題
+- [既知の問題があれば記載してください]
+
+### 💔 破壊的変更
+- [互換性に影響する変更があれば記載してください]
+
+### 🔧 システム要件
+- Windows 10/11 (64-bit)
+- .NET Framework 4.8以上
+- PowerShell 5.1以上
+
+### 📥 ダウンロード・インストール
+1. `FocusGameDeck-$Version-Setup.exe` をダウンロード
+2. SHA256ハッシュを確認: `[HASH_VALUE_TO_BE_FILLED]`
+3. 管理者権限で実行
+4. インストールウィザードに従ってください
+
+### 🔒 セキュリティ・信頼性
+- ✅ デジタル署名済み実行ファイル
+- ✅ マルウェアスキャン済み
+- ✅ オープンソース (MIT ライセンス)
+
+### 🤝 フィードバック・サポート
+問題や要望は [GitHub Issues](https://github.com/beive60/focus-game-deck/issues) にてお報告ください
+
+---
+**リリース日**: $(Get-Date -Format "yyyy年MM月dd日")  
+**ビルド**: [BUILD_NUMBER_TO_BE_FILLED]  
+**コミット**: [COMMIT_HASH_TO_BE_FILLED]
+"@
+
+    # English template (international support)
+    $templates.en = @"
+## 🚀 Focus Game Deck $Version - $(Get-ReleaseType "en" $IsPreRelease)
+
+### ⚠️ $(Get-ReleaseType "en" $IsPreRelease) Notice
+$(if ($IsPreRelease) {
+"This is a $(Get-ReleaseType "en" $IsPreRelease) version for testing purposes only. Not recommended for production use."
+} else {
 "Official release version recommended for production use."
 })
 
 ### 📋 What's New
-- ✅ [新機能・改善点を記載してください]
-- 🔧 [修正・改善点を記載してください]
-- 🐛 [修正されたバグを記載してください]
+- ✅ [Please describe new features and improvements]
+- 🔧 [Please describe fixes and improvements]
+- 🐛 [Please describe bugs that were fixed]
 
 ### 🐛 Known Issues
-- [既知の問題があれば記載してください]
+- [Please describe any known issues]
 
 ### 💔 Breaking Changes
-- [破壊的変更があれば記載してください]
+- [Please describe any breaking changes]
 
 ### 🔧 System Requirements
 - Windows 10/11 (64-bit)
@@ -303,13 +380,33 @@ Please report issues via [GitHub Issues](https://github.com/beive60/focus-game-d
 **Commit**: [COMMIT_HASH_TO_BE_FILLED]
 "@
 
-    $notesFile = Join-Path $PSScriptRoot "release-notes-$Version.md"
-    Set-Content -Path $notesFile -Value $template
+    # Generate files based on language selection
+    $generatedFiles = @()
     
-    Write-StatusMessage "Generated release notes: $notesFile" "SUCCESS"
-    Write-StatusMessage "Please edit the release notes file before creating the release" "INFO"
+    if ($Language -eq "both") {
+        # Generate both Japanese and English versions
+        $jaFile = Join-Path $PSScriptRoot "release-notes-$Version-ja.md"
+        $enFile = Join-Path $PSScriptRoot "release-notes-$Version-en.md"
+        
+        Set-Content -Path $jaFile -Value $templates.ja
+        Set-Content -Path $enFile -Value $templates.en
+        
+        $generatedFiles += $jaFile, $enFile
+        Write-StatusMessage "Generated Japanese release notes: $jaFile" "SUCCESS"
+        Write-StatusMessage "Generated English release notes: $enFile" "SUCCESS"
+    } else {
+        # Generate single language version
+        $suffix = if ($Language -eq "ja") { "" } else { "-$Language" }
+        $notesFile = Join-Path $PSScriptRoot "release-notes-$Version$suffix.md"
+        
+        Set-Content -Path $notesFile -Value $templates[$Language]
+        $generatedFiles += $notesFile
+        Write-StatusMessage "Generated release notes ($Language): $notesFile" "SUCCESS"
+    }
     
-    return $notesFile
+    Write-StatusMessage "Please edit the release notes file(s) before creating the release" "INFO"
+    
+    return $generatedFiles
 }
 
 function Invoke-ReleaseProcess {
@@ -346,9 +443,9 @@ function Invoke-ReleaseProcess {
     
     # Generate release notes if requested
     if ($GenerateReleaseNotes) {
-        Write-StatusMessage "Generating release notes..." "INFO"
+        Write-StatusMessage "Generating release notes (Language: $Language)..." "INFO"
         $isPreRelease = [bool]$nextVersion.PreRelease
-        $notesFile = New-ReleaseNotes -Version $nextVersion.VersionString -TagName "v$($nextVersion.VersionString)" -IsPreRelease $isPreRelease
+        $notesFiles = New-ReleaseNotes -Version $nextVersion.VersionString -TagName "v$($nextVersion.VersionString)" -IsPreRelease $isPreRelease -Language $Language
     }
     
     Write-StatusMessage "Release process completed successfully!" "SUCCESS"
@@ -359,7 +456,11 @@ function Invoke-ReleaseProcess {
     }
     
     if ($GenerateReleaseNotes -and -not $DryRun) {
-        Write-StatusMessage "Release notes generated: $notesFile" "SUCCESS"
+        if ($notesFiles -is [array]) {
+            $notesFiles | ForEach-Object { Write-StatusMessage "Release notes generated: $_" "SUCCESS" }
+        } else {
+            Write-StatusMessage "Release notes generated: $notesFiles" "SUCCESS"
+        }
         Write-StatusMessage "Please edit the release notes before publishing" "INFO"
     }
     
