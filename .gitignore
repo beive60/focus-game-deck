@@ -16,3 +16,4 @@ launch_*.bat
 .vscode/settings.json
 .vscode/launch.json
 .vscode/tasks.json
+.github/*
