@@ -39,9 +39,9 @@ $testLogFile = Join-Path $testLogDir "test-log-$(Get-Date -Format 'yyyyMMdd-HHmm
 
 # Test results tracking
 $testResults = @{
-    Total = 0
-    Passed = 0
-    Failed = 0
+    Total   = 0
+    Passed  = 0
+    Failed  = 0
     Skipped = 0
 }
 
@@ -200,12 +200,12 @@ function Test-LoggerInitialization {
         Write-TestResult "Logger module import" $true
 
         # Load messages
-        $messages = Get-Content -Path $messagesPath -Raw | ConvertFrom-Json
+        $messagesJson = Get-Content -Path $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
         Write-TestResult "Messages loading" $true
 
-        # Initialize Logger
-        $logger = [Logger]::new($Config, $messages)
-        Write-TestResult "Logger instance creation" $true
+        # Initialize Logger using the Initialize-Logger function with English messages
+        $logger = Initialize-Logger -Config $Config -Messages $messagesJson.en
+        Write-TestResult "Logger initialization" $true
 
         # Test Logger properties
         if ($logger.EnableNotarization) {
@@ -222,7 +222,7 @@ function Test-LoggerInitialization {
 }
 
 function Test-LogFileCreation {
-    param([Logger]$Logger)
+    param($Logger)
 
     Write-TestHeader "Testing Log File Creation"
 
@@ -265,7 +265,7 @@ function Test-LogFileCreation {
 }
 
 function Test-HashCalculation {
-    param([Logger]$Logger)
+    param($Logger)
 
     Write-TestHeader "Testing Hash Calculation"
 
@@ -294,27 +294,89 @@ function Test-HashCalculation {
     }
 }
 
-function Test-FirebaseIntegration {
-    param([Logger]$Logger)
+function Test-SelfAuthentication {
+    param($Logger)
 
-    Write-TestHeader "Testing Firebase Integration"
+    Write-TestHeader "Testing Self-Authentication Features"
+
+    try {
+        # Use reflection to access private properties for testing
+        $loggerType = $Logger.GetType()
+
+        # Test AppSignatureHash property
+        $appSignatureHashField = $loggerType.GetField("AppSignatureHash", [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Instance)
+        if ($appSignatureHashField) {
+            $appSignatureHash = $appSignatureHashField.GetValue($Logger)
+            if ($appSignatureHash) {
+                Write-TestResult "Application signature hash acquisition" $true "Hash: $($appSignatureHash.Substring(0, [Math]::Min(16, $appSignatureHash.Length)))..."
+            } else {
+                Write-TestResult "Application signature hash acquisition" $false "Hash is null or empty"
+            }
+        } else {
+            Write-TestResult "Application signature hash field access" $false "Cannot access AppSignatureHash field"
+        }
+
+        # Test AppVersion property
+        $appVersionField = $loggerType.GetField("AppVersion", [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Instance)
+        if ($appVersionField) {
+            $appVersion = $appVersionField.GetValue($Logger)
+            if ($appVersion) {
+                Write-TestResult "Application version acquisition" $true "Version: $appVersion"
+            } else {
+                Write-TestResult "Application version acquisition" $false "Version is null or empty"
+            }
+        } else {
+            Write-TestResult "Application version field access" $false "Cannot access AppVersion field"
+        }
+
+        # Test ExecutablePath property
+        $executablePathField = $loggerType.GetField("ExecutablePath", [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Instance)
+        if ($executablePathField) {
+            $executablePath = $executablePathField.GetValue($Logger)
+            if ($executablePath) {
+                Write-TestResult "Executable path detection" $true "Path: $executablePath"
+            } else {
+                Write-TestResult "Executable path detection" $false "Path is null or empty"
+            }
+        } else {
+            Write-TestResult "Executable path field access" $false "Cannot access ExecutablePath field"
+        }
+
+        return $true
+    } catch {
+        Write-TestResult "Self-authentication testing" $false $_.Exception.Message
+        return $false
+    }
+}
+
+function Test-FirebaseIntegration {
+    param($Logger)
+
+    Write-TestHeader "Testing Firebase Integration with Enhanced Data"
 
     try {
         # Test the full notarization process
-        Write-Host "Attempting to notarize log file..." -ForegroundColor Yellow
+        Write-Host "Attempting to notarize log file with self-authentication data..." -ForegroundColor Yellow
 
         $certificateId = $Logger.FinalizeAndNotarizeLogAsync()
 
         if ($certificateId) {
-            Write-TestResult "Firebase log notarization" $true "Certificate ID: $certificateId"
+            Write-TestResult "Firebase log notarization with authentication data" $true "Certificate ID: $certificateId"
             Write-Host "  You can verify this record in your Firebase Console" -ForegroundColor Gray
+            Write-Host "  The record should include:" -ForegroundColor Gray
+            Write-Host "    - logHash: SHA256 hash of the log file" -ForegroundColor Gray
+            Write-Host "    - appSignatureHash: Digital signature hash of the executable" -ForegroundColor Gray
+            Write-Host "    - appVersion: Application version from Version.ps1" -ForegroundColor Gray
+            Write-Host "    - executablePath: Path to the running executable" -ForegroundColor Gray
+            Write-Host "    - clientTimestamp: Client-side timestamp" -ForegroundColor Gray
+            Write-Host "    - serverTimestamp: Server-side timestamp" -ForegroundColor Gray
             return $certificateId
         } else {
-            Write-TestResult "Firebase log notarization" $false "No certificate ID returned"
+            Write-TestResult "Firebase log notarization with authentication data" $false "No certificate ID returned"
             return $null
         }
     } catch {
-        Write-TestResult "Firebase integration" $false $_.Exception.Message
+        Write-TestResult "Firebase integration with authentication" $false $_.Exception.Message
         return $null
     }
 }
@@ -407,11 +469,14 @@ try {
 
     $hash = Test-HashCalculation -Logger $logger
 
+    # Test self-authentication features
+    $selfAuthOk = Test-SelfAuthentication -Logger $logger
+
     # Only test Firebase if notarization is enabled and configured
     if ($logger.EnableNotarization) {
         $certificateId = Test-FirebaseIntegration -Logger $logger
     } else {
-        Write-TestSkipped "Firebase Integration Test" "Log notarization is disabled"
+        Write-TestSkipped "Firebase Integration Test with Enhanced Data" "Log notarization is disabled"
     }
 
     Test-Cleanup

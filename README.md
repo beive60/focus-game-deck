@@ -8,27 +8,27 @@ This script handles the tedious environment setup before you start playing (disa
 
 ## **✨ Features**
 
-* **🎮 Automated Game-Specific Environments**: Automatically sets up and tears down a custom environment for each game based on your configuration.  
+* **🎮 Automated Game-Specific Environments**: Automatically sets up and tears down a custom environment for each game based on your configuration.
 * **🔧 Generic Application Management**: Flexibly control any application with configurable startup and shutdown actions.
 * **🔄 Easy Extensibility**: Add new applications to manage by simply editing the configuration file - no code changes required.
 * **🛡️ Robust Design**: Includes comprehensive configuration validation and a cleanup process that ensures your environment is restored to normal even if the script is interrupted (e.g., with Ctrl+C).
-* **⚙️ Special Integrations**: Built-in support for:  
-  * **Clibor**: Toggles hotkeys on/off.  
-  * **NoWinKey**: Disables the Windows key to prevent accidental presses.  
-  * **AutoHotkey**: Stops running scripts and resumes them after the game closes.  
+* **⚙️ Special Integrations**: Built-in support for:
+  * **Clibor**: Toggles hotkeys on/off.
+  * **NoWinKey**: Disables the Windows key to prevent accidental presses.
+  * **AutoHotkey**: Stops running scripts and resumes them after the game closes.
   * **OBS Studio**: Launches OBS and automatically starts/stops the replay buffer when your game starts/ends.
 
 ## **🛠️ Prerequisites**
 
 To use this script, you will need the following software installed:
 
-* **PowerShell**: Comes standard with Windows.  
-* **Steam**  
-* **OBS Studio**: [Official Website](https://obsproject.com/)  
-  * **obs-websocket plugin**: Included by default in OBS v28 and later. Please ensure it is enabled in the settings.  
-* **\[Optional\] Clibor**: A clipboard utility.  
-* **\[Optional\] NoWinKey**: A tool to disable the Windows key.  
-* **\[Optional\] AutoHotkey**: A scripting language for automation.  
+* **PowerShell**: Comes standard with Windows.
+* **Steam**
+* **OBS Studio**: [Official Website](https://obsproject.com/)
+  * **obs-websocket plugin**: Included by default in OBS v28 and later. Please ensure it is enabled in the settings.
+* **\[Optional\] Clibor**: A clipboard utility.
+* **\[Optional\] NoWinKey**: A tool to disable the Windows key.
+* **\[Optional\] AutoHotkey**: A scripting language for automation.
 * **\[Optional\] Luna**: (Or any other background application you wish to manage).
 
 ## **💻 Installation Options**
@@ -104,22 +104,22 @@ For detailed build system documentation, see [docs/BUILD-SYSTEM.md](./docs/BUILD
 
 ## **🚀 Setup & Configuration**
 
-1. **Download the Repository**: Clone or download this repository as a ZIP file.  
-2. **Create Your Configuration File**:  
-   * Make a copy of config.json.sample and rename the copy to config.json in the same directory.  
-3. **Edit config.json**:  
+1. **Download the Repository**: Clone or download this repository as a ZIP file.
+2. **Create Your Configuration File**:
+   * Make a copy of config.json.sample and rename the copy to config.json in the same directory.
+3. **Edit config.json**:
    * Open config.json in a text editor and update the paths and settings to match your system.
 
 ```json
-{  
-      "obs": {  
-          "websocket": {  
-              "host": "localhost",  
-              "port": 4455,  
-              "password": "" // Set your OBS WebSocket server password here  
-          },  
-          "replayBuffer": true  
-      },  
+{
+      "obs": {
+          "websocket": {
+              "host": "localhost",
+              "port": 4455,
+              "password": "" // Set your OBS WebSocket server password here
+          },
+          "replayBuffer": true
+      },
       "managedApps": {
           "noWinKey": {
               "path": "C:\\\\Apps\\\\NoWinKey\\\\NoWinKey.exe",
@@ -150,11 +150,11 @@ For detailed build system documentation, see [docs/BUILD-SYSTEM.md](./docs/BUILD
               "arguments": ""
           }
       },
-      "games": {  
-          "apex": { // ← "apex" is the GameId  
-              "name": "Apex Legends",  
-              "steamAppId": "1172470", // Find this in the Steam store page URL  
-              "processName": "r5apex\*", // Check this in Task Manager (wildcard \* is supported)  
+      "games": {
+          "apex": { // ← "apex" is the GameId
+              "name": "Apex Legends",
+              "steamAppId": "1172470", // Find this in the Steam store page URL
+              "processName": "r5apex\*", // Check this in Task Manager (wildcard \* is supported)
               "appsToManage": ["noWinKey", "autoHotkey", "luna", "obs", "clibor"]
           },
           "dbd": {
@@ -163,27 +163,27 @@ For detailed build system documentation, see [docs/BUILD-SYSTEM.md](./docs/BUILD
               "processName": "DeadByDaylight-Win64-Shipping\*",
               "appsToManage": ["obs", "clibor"]
           }
-          // ... Add other games here ...  
-      },  
-      "paths": {  
-          // ↓↓↓ Change these to the correct executable paths on your PC ↓↓↓  
-          "steam": "C:\\\\Program Files (x86)\\\\Steam\\\\steam.exe",  
-          "obs": "C:\\\\Program Files\\\\obs-studio\\\\bin\\\\64bit\\\\obs64.exe"  
-      }  
+          // ... Add other games here ...
+      },
+      "paths": {
+          // ↓↓↓ Change these to the correct executable paths on your PC ↓↓↓
+          "steam": "C:\\\\Program Files (x86)\\\\Steam\\\\steam.exe",
+          "obs": "C:\\\\Program Files\\\\obs-studio\\\\bin\\\\64bit\\\\obs64.exe"
+      }
   }
 ```
 
-* **managedApps**:  
+* **managedApps**:
 * Define all applications you want to manage. Each app has:
   * `path`: Full path to the executable (can be empty if only process management is needed)
   * `processName`: Process name for stopping (supports wildcards with |)
   * `startupAction`: Action when game starts ("start", "stop", or "none")
   * `shutdownAction`: Action when game ends ("start", "stop", or "none")
   * `arguments`: Optional command line arguments
-* **games**:  
-* Add entries for the games you want to manage. The key (e.g., "apex", "dbd") will be used as the \-GameId parameter later.  
-* Set the `appsToManage` array to specify which applications should be managed for each game.  
-* **paths**:  
+* **games**:
+* Add entries for the games you want to manage. The key (e.g., "apex", "dbd") will be used as the \-GameId parameter later.
+* Set the `appsToManage` array to specify which applications should be managed for each game.
+* **paths**:
 * Set paths for Steam and OBS. Other application paths are now defined in `managedApps`.
 
 ## **🎬 How to Use**
@@ -205,17 +205,17 @@ Focus-Game-Deck.exe apex
 Open a PowerShell terminal, navigate to the script's directory, and run the following command:
 
 ```powershell
-# Example: To launch Apex Legends  
+# Example: To launch Apex Legends
 .\Invoke-FocusGameDeck.ps1 -GameId apex
 
-# Example: To launch Dead by Daylight  
+# Example: To launch Dead by Daylight
 .\Invoke-FocusGameDeck.ps1 -GameId dbd
 ```
 
 ### **General Usage Notes**
 
-* Specify the GameId you configured in config.json (e.g., "apex", "dbd") as the parameter.  
-* The application will automatically apply your configured settings and launch the game via Steam.  
+* Specify the GameId you configured in config.json (e.g., "apex", "dbd") as the parameter.
+* The application will automatically apply your configured settings and launch the game via Steam.
 * Once you exit the game, the application will detect the process has ended and automatically restore your environment to its original state.
 * **GUI Configuration**: Use `Focus-Game-Deck-Config-Editor.exe` for user-friendly configuration editing.
 
@@ -312,9 +312,12 @@ Focus Game Deck follows **[Semantic Versioning](https://semver.org/)** (SemVer) 
 
 If you're contributing to the project, check out our comprehensive documentation:
 
+* **[Architecture & Implementation Guidelines](./docs/ARCHITECTURE.md)** - **Character encoding best practices**, technical architecture, and development standards
 * **[Version Management Specification](./docs/VERSION-MANAGEMENT.md)** - SemVer implementation details
-* **[GitHub Releases Guide](./docs/GITHUB-RELEASES-GUIDE.md)** - Release operation procedures  
+* **[GitHub Releases Guide](./docs/GITHUB-RELEASES-GUIDE.md)** - Release operation procedures
 * **[Developer Release Guide](./docs/DEVELOPER-RELEASE-GUIDE.md)** - Step-by-step release process
+
+> **⚠️ Important for Contributors**: Character encoding issues have been a recurring challenge in this project. Please review the [Character Encoding Guidelines](./docs/ARCHITECTURE.md#character-encoding-and-console-compatibility-guidelines) before making code contributions.
 
 ### Download & Installation
 

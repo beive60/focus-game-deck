@@ -23,6 +23,11 @@ class Logger {
     hidden [string] $FirebaseApiKey
     hidden [string] $FirebaseDatabaseURL
 
+    # Self-authentication properties for log integrity verification
+    hidden [string] $AppSignatureHash
+    hidden [string] $AppVersion
+    hidden [string] $ExecutablePath
+
     # Constructor
     Logger([object] $config, [object] $messages) {
         $this.Messages = $messages
@@ -71,6 +76,9 @@ class Logger {
                 New-Item -ItemType Directory -Path $logDir -Force | Out-Null
             }
         }
+
+        # Initialize self-authentication properties for log integrity verification
+        $this.InitializeSelfAuthentication()
     }
 
     # Main logging method
@@ -168,6 +176,93 @@ class Logger {
         $this.Info("Completed operation: $operationName (Duration: $($duration.TotalMilliseconds)ms)", $component)
     }
 
+    # Initialize self-authentication properties by retrieving digital signature information
+    hidden [void] InitializeSelfAuthentication() {
+        try {
+            # Get the path of the currently executing script or executable
+            $currentPath = $null
+
+            # Try to get the executable path if running from an .exe
+            if ($PSCommandPath) {
+                $currentPath = $PSCommandPath
+            } else {
+                # Fallback: try to find the main executable in common locations
+                $possiblePaths = @(
+                    (Join-Path $PSScriptRoot "..\..\release\Focus-Game-Deck.exe"),
+                    (Join-Path $PSScriptRoot "..\..\build\Focus-Game-Deck.exe"),
+                    (Join-Path $PSScriptRoot "..\..\Focus-Game-Deck.exe")
+                )
+
+                foreach ($path in $possiblePaths) {
+                    if (Test-Path $path) {
+                        $currentPath = $path
+                        break
+                    }
+                }
+            }
+
+            $this.ExecutablePath = $currentPath
+
+            if ($currentPath -and (Test-Path $currentPath)) {
+                # Get digital signature information
+                $signature = Get-AuthenticodeSignature -FilePath $currentPath -ErrorAction SilentlyContinue
+
+                if ($signature -and $signature.Status -eq "Valid" -and $signature.SignerCertificate) {
+                    # Extract hash from the signature
+                    $this.AppSignatureHash = $signature.SignerCertificate.Thumbprint
+                    $this.Debug("Digital signature found - Hash: $($this.AppSignatureHash)", "AUTH")
+                } elseif ($signature -and $signature.Status -ne "NotSigned") {
+                    # Signature exists but may be invalid or untrusted
+                    $this.AppSignatureHash = "INVALID_SIGNATURE_$($signature.Status.ToString().ToUpper())"
+                    $this.Warning("Digital signature found but status is: $($signature.Status)", "AUTH")
+                } else {
+                    # No signature found - likely development build
+                    $this.AppSignatureHash = "UNSIGNED_DEVELOPMENT_BUILD"
+                    $this.Debug("No digital signature found - using development identifier", "AUTH")
+                }
+            } else {
+                # Could not determine executable path
+                $this.AppSignatureHash = "UNKNOWN_EXECUTABLE_PATH"
+                $this.Warning("Could not determine executable path for signature verification", "AUTH")
+            }
+
+            # Get application version from Version.ps1
+            $this.AppVersion = $this.GetApplicationVersion()
+            $this.Debug("Application version: $($this.AppVersion)", "AUTH")
+
+        } catch {
+            # Error during signature verification
+            $this.AppSignatureHash = "SIGNATURE_VERIFICATION_ERROR"
+            $this.AppVersion = "VERSION_UNKNOWN"
+            $this.Warning("Failed to initialize self-authentication: $($_.Exception.Message)", "AUTH")
+        }
+    }
+
+    # Get application version from Version.ps1
+    hidden [string] GetApplicationVersion() {
+        try {
+            $versionScriptPath = Join-Path $PSScriptRoot "..\..\Version.ps1"
+
+            if (Test-Path $versionScriptPath) {
+                # Execute Version.ps1 in isolated scope to get version information
+                $versionInfo = & {
+                    . $versionScriptPath
+                    Get-ProjectVersion -IncludePreRelease
+                }
+
+                if ($versionInfo) {
+                    return $versionInfo
+                } else {
+                    return "VERSION_SCRIPT_ERROR"
+                }
+            } else {
+                return "VERSION_SCRIPT_NOT_FOUND"
+            }
+        } catch {
+            return "VERSION_RETRIEVAL_ERROR"
+        }
+    }
+
     # Rotate log file if it gets too large
     [void] RotateLogFile([int] $maxSizeMB = 10) {
         if (-not $this.EnableFileLogging -or -not (Test-Path $this.LogFilePath)) {
@@ -200,7 +295,7 @@ class Logger {
         }
     }
 
-    # Send log hash to Firebase for notarization
+    # Send log hash to Firebase for notarization with self-authentication data
     hidden [object] SendHashToFirebase([string] $hash, [string] $clientTimestamp) {
         if (-not $this.FirebaseProjectId -or -not $this.FirebaseApiKey) {
             throw "Firebase configuration is not properly set"
@@ -218,6 +313,15 @@ class Logger {
                 }
                 serverTimestamp = @{
                     timestampValue = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                }
+                appSignatureHash = @{
+                    stringValue = $this.AppSignatureHash
+                }
+                appVersion = @{
+                    stringValue = $this.AppVersion
+                }
+                executablePath = @{
+                    stringValue = if ($this.ExecutablePath) { $this.ExecutablePath } else { "UNKNOWN" }
                 }
             }
         } | ConvertTo-Json -Depth 5

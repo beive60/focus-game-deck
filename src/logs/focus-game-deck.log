@@ -1,0 +1,48 @@
+﻿[2025-09-26 20:33:57.421] [INFO    ] [MAIN] Focus Game Deck started (Multi-Platform)
+[2025-09-26 20:33:57.448] [INFO    ] [MAIN] Game ID: apex
+[2025-09-26 20:33:57.479] [INFO    ] [PLATFORM] Platform manager initialized
+[2025-09-26 20:33:57.499] [INFO    ] [PLATFORM] Riot Client detected at: C:\Riot Games\Riot Client\RiotClientServices.exe
+[2025-09-26 20:33:57.529] [INFO    ] [PLATFORM] Epic Games Launcher detected at: C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe
+[2025-09-26 20:33:57.546] [INFO    ] [PLATFORM] Available platforms: epic, steam, riot
+[2025-09-26 20:33:57.613] [INFO    ] [CONFIG] Configuration validation passed
+[2025-09-26 20:33:57.622] [INFO    ] [MAIN] Game configuration loaded: Apex Legends (Platform: steam)
+[2025-09-26 20:33:57.659] [INFO    ] [OBS] OBS manager initialized
+[2025-09-26 20:33:57.662] [INFO    ] [MAIN] Starting operation: Multi-Platform Game Launch Sequence
+[2025-09-26 20:33:57.696] [INFO    ] [OBS] OBS started successfully
+[2025-09-26 20:33:57.971] [INFO    ] [OBS] OBS replay buffer started
+[2025-09-26 20:33:58.067] [INFO    ] [APP] Clibor hotkeys toggled for game start
+[2025-09-26 20:34:06.883] [INFO    ] [APP] Application startup sequence completed
+[2025-09-26 20:34:06.907] [INFO    ] [PLATFORM] Launching game via Steam: 1172470
+[2025-09-26 20:34:07.038] [INFO    ] [PLATFORM] Launched via Steam: AppID 1172470
+[2025-09-26 20:34:07.041] [INFO    ] [GAME] Game launch command sent to Steam: Apex Legends
+[2025-09-26 20:53:29.410] [INFO    ] [TEST] Test message for self-authentication verification
+[2025-09-26 21:29:25.137] [INFO    ] [TEST] Test message from Logger
+[2025-09-26 21:44:05.219] [INFO    ] [MAIN] Focus Game Deck started (Multi-Platform)
+[2025-09-26 21:44:05.231] [INFO    ] [MAIN] Game ID: apex
+[2025-09-26 21:44:05.247] [INFO    ] [PLATFORM] Platform manager initialized
+[2025-09-26 21:44:05.263] [INFO    ] [PLATFORM] Riot Client detected at: C:\Riot Games\Riot Client\RiotClientServices.exe
+[2025-09-26 21:44:05.273] [INFO    ] [PLATFORM] Epic Games Launcher detected at: C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe
+[2025-09-26 21:44:05.278] [INFO    ] [PLATFORM] Available platforms: epic, steam, riot
+[2025-09-26 21:44:05.329] [INFO    ] [CONFIG] Configuration validation passed
+[2025-09-26 21:44:05.337] [INFO    ] [MAIN] Game configuration loaded: Apex Legends (Platform: steam)
+[2025-09-26 21:44:05.355] [INFO    ] [OBS] OBS manager initialized
+[2025-09-26 21:44:05.358] [INFO    ] [MAIN] Starting operation: Multi-Platform Game Launch Sequence
+[2025-09-26 21:44:05.375] [INFO    ] [OBS] OBS started successfully
+[2025-09-26 21:44:05.459] [INFO    ] [OBS] OBS replay buffer started
+[2025-09-26 21:44:05.501] [INFO    ] [APP] Clibor hotkeys toggled for game start
+[2025-09-26 21:44:14.398] [INFO    ] [APP] Application startup sequence completed
+[2025-09-26 21:44:14.405] [INFO    ] [PLATFORM] Launching game via Steam: 1172470
+[2025-09-26 21:44:14.434] [INFO    ] [PLATFORM] Launched via Steam: AppID 1172470
+[2025-09-26 21:44:14.436] [INFO    ] [GAME] Game launch command sent to Steam: Apex Legends
+[2025-09-26 21:44:44.466] [INFO    ] [GAME] Game process detected and monitoring started: r5apex*
+[2025-09-26 21:45:04.488] [INFO    ] [GAME] Game process ended: Apex Legends
+[2025-09-26 21:45:04.491] [INFO    ] [CLEANUP] Starting game cleanup
+[2025-09-26 21:45:04.501] [INFO    ] [CLEANUP] Clibor hotkeys toggled
+[2025-09-26 21:45:04.591] [INFO    ] [CLEANUP] Application shutdown sequence completed
+[2025-09-26 21:45:04.599] [INFO    ] [CLEANUP] OBS replay buffer stopped
+[2025-09-26 21:45:04.601] [INFO    ] [CLEANUP] Game cleanup completed
+[2025-09-26 21:45:04.610] [INFO    ] [MAIN] Completed operation: Multi-Platform Game Launch Sequence (Duration: 59244.6505ms)
+[2025-09-26 21:45:04.611] [INFO    ] [MAIN] Focus Game Deck session completed successfully
+[2025-09-26 21:52:25.101] [INFO    ] [TEST] Character encoding test message
+[2025-09-26 21:53:03.462] [INFO    ] [TEST] Character encoding test message
+[2025-09-26 21:55:07.442] [INFO    ] [TEST] Character encoding test message
