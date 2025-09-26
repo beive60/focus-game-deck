@@ -66,6 +66,9 @@ try {
     $logger = Initialize-Logger -Config $config -Messages $msg
     $logger.Info("Focus Game Deck started (Multi-Platform)", "MAIN")
     $logger.Info("Game ID: $GameId", "MAIN")
+
+    # Log self-authentication information for audit purposes
+    $logger.Debug("Self-authentication initialized for log integrity verification", "AUTH")
 } catch {
     Write-Warning "Failed to initialize logger: $_"
     # Continue without logging

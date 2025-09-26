@@ -370,13 +370,54 @@ Write-Host "[WARNING] Warning" -ForegroundColor Yellow
 | → (U+2192) | `->` | Direction indicators |
 | • (U+2022) | `-` | List bullets |
 
-##### 3. File Encoding Consistency
+##### 3. File Encoding Consistency Rules
 
-- **Source Files**: UTF-8 with BOM for PowerShell compatibility
-- **Configuration Files**: UTF-8 without BOM for JSON compatibility
-- **Documentation**: UTF-8 with BOM for proper character display
+> **Critical**: Character encoding issues have been a recurring source of bugs in this project. Strict adherence to these rules is essential.
 
-##### 4. Testing Console Output
+- **PowerShell Source Files (.ps1)**: UTF-8 with BOM for maximum compatibility
+- **JSON Configuration Files (.json)**: UTF-8 without BOM to prevent JSON parsing errors
+- **Documentation Files (.md)**: UTF-8 with BOM for proper GitHub display
+- **Text Log Files (.log, .txt)**: UTF-8 without BOM for cross-platform compatibility
+
+##### 4. JSON File Handling Best Practices
+
+**Critical for avoiding parsing errors:**
+
+```powershell
+# ✅ Always specify encoding when reading JSON files
+$jsonContent = Get-Content -Path $jsonPath -Raw -Encoding UTF8
+$config = $jsonContent | ConvertFrom-Json
+
+# ✅ Always specify encoding when writing JSON files
+$jsonString = $config | ConvertTo-Json -Depth 10
+[System.IO.File]::WriteAllText($jsonPath, $jsonString, [System.Text.Encoding]::UTF8)
+
+# ❌ Never use default encoding (causes corruption)
+$config = Get-Content -Path $jsonPath | ConvertFrom-Json
+```
+
+##### 5. Multi-Language Content Validation
+
+**Verification process for messages.json integrity:**
+
+```powershell
+# Test JSON structure integrity
+try {
+    $messages = Get-Content -Path ".\config\messages.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+    $enCount = ($messages.en.PSObject.Properties | Measure-Object).Count
+    $jaCount = ($messages.ja.PSObject.Properties | Measure-Object).Count
+
+    if ($enCount -ne $jaCount) {
+        throw "Key count mismatch: EN=$enCount, JA=$jaCount"
+    }
+
+    Write-Host "[OK] Messages file validated: $enCount keys each language" -ForegroundColor Green
+} catch {
+    Write-Host "[ERROR] Messages file validation failed: $($_.Exception.Message)" -ForegroundColor Red
+}
+```
+
+##### 6. Testing Console Output
 
 Always test console output in multiple PowerShell environments:
 
@@ -386,17 +427,100 @@ Always test console output in multiple PowerShell environments:
 - Windows Terminal
 - Command Prompt with PowerShell
 
-##### 5. Internationalization Considerations
+##### 7. Internationalization Implementation
 
 ```powershell
-# For GUI components: Use JSON external resources with Unicode escapes
-$messages = @{
-    "success" = "\u6210\u529f"  # Japanese: 成功
-    "error" = "\u30a8\u30e9\u30fc"    # Japanese: エラー
+# For GUI components: Use JSON external resources
+# Store Japanese text using properly encoded JSON (not Unicode escapes)
+{
+    "en": {
+        "configSaved": "Configuration has been saved."
+    },
+    "ja": {
+        "configSaved": "設定が保存されました。"
+    }
 }
 
-# For console output: Use ASCII-safe alternatives
-Write-Host "[OK] Operation completed successfully"
+# For console output: Use ASCII-safe alternatives with optional localized logging
+function Write-SafeMessage {
+    param([string]$MessageKey, [string]$Severity = "Info")
+
+    # Console: ASCII-safe
+    Write-Host "[$Severity] Operation completed" -ForegroundColor Green
+
+    # Log: Full localized message (if logger available)
+    if ($global:Logger) {
+        $localizedMsg = Get-LocalizedMessage -Key $MessageKey
+        $global:Logger.Info($localizedMsg, "SYSTEM")
+    }
+}
+```
+
+##### 8. Character Encoding Troubleshooting
+
+**Common issues and solutions:**
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| JSON parsing fails with "Invalid character" | BOM in JSON file | Save as UTF-8 without BOM |
+| Japanese characters appear as "繧�繝�" | Wrong encoding assumption | Use `-Encoding UTF8` parameter |
+| Console shows question marks | UTF-8 special chars | Use ASCII alternatives |
+| Logger initialization fails | Malformed messages.json | Validate JSON structure and encoding |
+| Build process creates corrupted files | Mixed encoding in pipeline | Ensure consistent UTF-8 throughout |
+
+##### 9. Development Workflow for Character Safety
+
+1. **Before committing**: Validate all JSON files with encoding test
+2. **During development**: Use ASCII-safe console output for immediate feedback
+3. **For production**: Store full Unicode content in properly encoded JSON
+4. **Testing phase**: Verify functionality across different PowerShell environments
+
+##### 10. Practical Character Encoding Checklist
+
+**Pre-development Setup:**
+
+- [ ] Set PowerShell execution policy: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+- [ ] Configure editor to save PowerShell files as UTF-8 with BOM
+- [ ] Configure editor to save JSON files as UTF-8 without BOM
+- [ ] Test console environment with Japanese characters
+
+**During Development:**
+
+- [ ] Use `Get-Content -Raw -Encoding UTF8` for all JSON file reads
+- [ ] Use `[System.IO.File]::WriteAllText()` with UTF-8 encoding for JSON writes
+- [ ] Replace UTF-8 special characters in console output with ASCII alternatives
+- [ ] Test Logger initialization with actual messages.json before committing
+
+**Before Release:**
+
+- [ ] Run messages.json validation script across all language files
+- [ ] Test console output in both PowerShell 5.1 and PowerShell Core 7.x
+- [ ] Verify JSON file parsing in clean environment
+- [ ] Validate that all log files are properly encoded and readable
+
+**Emergency Recovery Procedures:**
+
+```powershell
+# If messages.json becomes corrupted:
+# 1. Backup the corrupted file
+Copy-Item ".\config\messages.json" ".\config\messages.json.corrupted"
+
+# 2. Restore from sample or rebuild
+if (Test-Path ".\config\messages.json.sample") {
+    Copy-Item ".\config\messages.json.sample" ".\config\messages.json"
+} else {
+    # Manually recreate with proper encoding
+    $messages = @{
+        en = @{}
+        ja = @{}
+    }
+    $jsonString = $messages | ConvertTo-Json -Depth 10
+    [System.IO.File]::WriteAllText(".\config\messages.json", $jsonString, [System.Text.Encoding]::UTF8)
+}
+
+# 3. Validate the restored file
+$test = Get-Content ".\config\messages.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+Write-Host "Messages file restored successfully" -ForegroundColor Green
 ```
 
 ### GUI Development Guidelines
@@ -513,6 +637,7 @@ To maintain this design philosophy, please prioritize the following:
 | 1.3.0 | 2025-09-24 | VTube Studio integration, character encoding guidelines added |
 | 1.4.0 | 2025-09-24 | WebSocket manager hybrid architecture pattern implemented |
 | 1.5.0 | 2025-09-26 | Enhanced launcher format implementation: Windows shortcuts over batch files for improved UX |
+| 1.6.0 | 2025-09-26 | **Comprehensive character encoding best practices**: Extended implementation guidelines with practical troubleshooting, validation procedures, and emergency recovery protocols |
 
 ## Language Support
 

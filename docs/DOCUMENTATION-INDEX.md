@@ -19,7 +19,7 @@ Each document has a clear role and complements each other:
 
 | Document | Purpose | Content |
 |----------|---------|---------|
-| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | **Detailed Technical Architecture Design** | System structure, design decisions, implementation guidelines, security design |
+| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | **Detailed Technical Architecture Design** | System structure, design decisions, implementation guidelines, security design, **character encoding best practices** |
 | **[BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md)** | **GUI Configuration Editor Specifications** | Screen design, functional specifications, wireframes, UI implementation details |
 | **[BUILD-SYSTEM.md](./BUILD-SYSTEM.md)** | **Build System and Distribution Infrastructure** | Executable generation, digital signatures, automated build workflows |
 

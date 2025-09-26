@@ -137,7 +137,121 @@ function Add-CodeSignatures {
         }
     }
 
-    return Invoke-BuildScript -ScriptPath $signingScript -Arguments @("-SignAll") -Description "Code signing process"
+    $signingResult = Invoke-BuildScript -ScriptPath $signingScript -Arguments @("-SignAll") -Description "Code signing process"
+
+    # If signing was successful, record signature hashes for log authentication
+    if ($signingResult) {
+        Record-SignatureHashes
+    }
+
+    return $signingResult
+}
+
+# Function to record signature hashes in official registry for log authentication
+function Record-SignatureHashes {
+    Write-BuildLog "Recording signature hashes for log authentication..." "INFO" "Yellow"
+
+    try {
+        # Load version information
+        $versionScript = Join-Path $PSScriptRoot "Version.ps1"
+        if (-not (Test-Path $versionScript)) {
+            Write-BuildLog "Version.ps1 not found, cannot record signature hashes" "ERROR" "Red"
+            return $false
+        }
+
+        # Get current version
+        $currentVersion = & {
+            . $versionScript
+            Get-ProjectVersion -IncludePreRelease
+        }
+
+        if (-not $currentVersion) {
+            Write-BuildLog "Failed to get version information" "ERROR" "Red"
+            return $false
+        }
+
+        # Define paths for signed executables
+        $releaseDir = Join-Path $PSScriptRoot "release"
+        $executables = @{
+            "Focus-Game-Deck.exe" = "Main application executable"
+            "Focus-Game-Deck-MultiPlatform.exe" = "Multi-platform version with extended game support"
+            "Focus-Game-Deck-Config-Editor.exe" = "GUI configuration editor"
+        }
+
+        # Load existing signature hash registry
+        $registryPath = Join-Path $PSScriptRoot "docs\official_signature_hashes.json"
+        if (-not (Test-Path $registryPath)) {
+            Write-BuildLog "Signature hash registry not found: $registryPath" "ERROR" "Red"
+            return $false
+        }
+
+        $registry = Get-Content $registryPath -Raw | ConvertFrom-Json
+
+        # Create new release entry if it doesn't exist
+        if (-not $registry.releases.$currentVersion) {
+            $registry.releases | Add-Member -MemberType NoteProperty -Name $currentVersion -Value @{
+                releaseDate = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                description = "Production release with log authentication capabilities"
+                executables = @{}
+            }
+        }
+
+        # Record signature hash for each executable
+        $allSuccessful = $true
+        foreach ($exeName in $executables.Keys) {
+            $exePath = Join-Path $releaseDir $exeName
+
+            if (Test-Path $exePath) {
+                try {
+                    # Get digital signature
+                    $signature = Get-AuthenticodeSignature -FilePath $exePath -ErrorAction Stop
+
+                    if ($signature.Status -eq "Valid" -and $signature.SignerCertificate) {
+                        $signatureHash = $signature.SignerCertificate.Thumbprint
+                        $fileInfo = Get-Item $exePath
+
+                        # Update registry entry
+                        $executableInfo = @{
+                            signatureHash = $signatureHash
+                            fileSize = $fileInfo.Length
+                            buildDate = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                            description = $executables[$exeName]
+                        }
+
+                        $registry.releases.$currentVersion.executables | Add-Member -MemberType NoteProperty -Name $exeName -Value $executableInfo -Force
+
+                        Write-BuildLog "Recorded signature for $exeName : $signatureHash" "SUCCESS" "Green"
+                    } else {
+                        Write-BuildLog "Invalid signature for $exeName (Status: $($signature.Status))" "ERROR" "Red"
+                        $allSuccessful = $false
+                    }
+                } catch {
+                    Write-BuildLog "Failed to get signature for $exeName : $($_.Exception.Message)" "ERROR" "Red"
+                    $allSuccessful = $false
+                }
+            } else {
+                Write-BuildLog "Executable not found: $exePath" "ERROR" "Red"
+                $allSuccessful = $false
+            }
+        }
+
+        if ($allSuccessful) {
+            # Update registry metadata
+            $registry.lastUpdated = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+
+            # Save updated registry
+            $registry | ConvertTo-Json -Depth 10 | Set-Content -Path $registryPath -Encoding UTF8
+            Write-BuildLog "Signature hash registry updated successfully for version $currentVersion" "SUCCESS" "Green"
+        } else {
+            Write-BuildLog "Some signature recordings failed, registry not updated" "ERROR" "Red"
+        }
+
+        return $allSuccessful
+
+    } catch {
+        Write-BuildLog "Failed to record signature hashes: $($_.Exception.Message)" "ERROR" "Red"
+        return $false
+    }
 }
 
 # Function to create release package
