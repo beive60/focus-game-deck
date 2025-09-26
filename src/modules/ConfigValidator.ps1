@@ -130,7 +130,39 @@ class ConfigValidator {
                 }
             }
 
-            # Special validation for VTube Studio actions
+            # Validate application-specific actions (Discord and VTube Studio exclusivity)
+            $discordSpecificActions = @("set-discord-gaming-mode", "restore-discord-normal")
+            $vtubeStudioSpecificActions = @("start-vtube-studio", "stop-vtube-studio")
+
+            # Check Discord-specific actions
+            if (($appConfig.gameStartAction -in $discordSpecificActions) -or ($appConfig.gameEndAction -in $discordSpecificActions)) {
+                if ($appId -ne "discord") {
+                    $invalidAction = if ($appConfig.gameStartAction -in $discordSpecificActions) { $appConfig.gameStartAction } else { $appConfig.gameEndAction }
+                    $this.Errors += "Application '$appId' cannot use Discord-specific action '$invalidAction'. This action is only available for 'discord' application."
+                } else {
+                    # Validate Discord-specific configuration when Discord actions are used
+                    if (-not $appConfig.discord) {
+                        $this.Warnings += "Application '$appId' uses Discord-specific actions but is missing 'discord' configuration section"
+                    } else {
+                        # Validate RPC configuration if enabled
+                        if ($appConfig.discord.rpc -and $appConfig.discord.rpc.enabled) {
+                            if (-not $appConfig.discord.rpc.applicationId -or $appConfig.discord.rpc.applicationId -eq "") {
+                                $this.Warnings += "Application '$appId' has RPC enabled but missing 'applicationId' in RPC configuration"
+                            }
+                        }
+                    }
+                }
+            }
+
+            # Check VTube Studio-specific actions
+            if (($appConfig.gameStartAction -in $vtubeStudioSpecificActions) -or ($appConfig.gameEndAction -in $vtubeStudioSpecificActions)) {
+                if ($appId -ne "vtubeStudio") {
+                    $invalidAction = if ($appConfig.gameStartAction -in $vtubeStudioSpecificActions) { $appConfig.gameStartAction } else { $appConfig.gameEndAction }
+                    $this.Errors += "Application '$appId' cannot use VTube Studio-specific action '$invalidAction'. This action is only available for 'vtubeStudio' application."
+                }
+            }
+
+            # Special validation for VTube Studio actions (existing validation enhanced)
             $vtubeActions = @("start-vtube-studio", "stop-vtube-studio")
             if (($appConfig.gameStartAction -in $vtubeActions) -or ($appConfig.gameEndAction -in $vtubeActions)) {
                 # VTube Studio uses auto-detection, but validate optional configuration
