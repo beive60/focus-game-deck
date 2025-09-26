@@ -93,7 +93,11 @@
         "enableLogNotarization": "ログ公証化を有効にする (Firebase を使用したログの整合性検証)",
         "launcherHelpText": "拡張ショートカットは最小化ウィンドウと馴染みのある .lnk ファイルでより良いユーザーエクスペリエンスを提供します。従来のバッチファイルは古いシステムと互換性があります。",
         "enhancedShortcuts": "拡張ショートカット (.lnk)",
-        "traditionalBatch": "従来のバッチファイル (.bat)"
+        "traditionalBatch": "従来のバッチファイル (.bat)",
+        "languageChanged": "言語設定が変更されました",
+        "languageChangeRestart": "言語設定の変更を完全に適用するには、設定エディタを再起動してください。\n\n※ 再起動時に現在の設定変更がすべて保存されます。\n\n今すぐ再起動しますか？",
+        "restartNow": "今すぐ再起動",
+        "restartLater": "後で再起動"
     },
     "en": {
         "textLabel": "Text",
@@ -189,6 +193,10 @@
         "enableLogNotarization": "Enable Log Notarization (Log integrity verification using Firebase)",
         "launcherHelpText": "Enhanced Shortcuts provide better user experience with minimized windows and familiar .lnk files. Traditional Batch Files are compatible with older systems.",
         "enhancedShortcuts": "Enhanced Shortcuts (.lnk)",
-        "traditionalBatch": "Traditional Batch Files (.bat)"
+        "traditionalBatch": "Traditional Batch Files (.bat)",
+        "languageChanged": "Language Setting Changed",
+        "languageChangeRestart": "To fully apply the language setting change, please restart the configuration editor.\n\n※ All current configuration changes will be saved when restarting.\n\nWould you like to restart now?",
+        "restartNow": "Restart Now",
+        "restartLater": "Restart Later"
     }
 }

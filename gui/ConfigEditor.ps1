@@ -440,6 +440,14 @@ function Setup-EventHandlers {
     # Generate launchers button event
     $generateLaunchersButton = $script:Window.FindName("GenerateLaunchersButton")
     $generateLaunchersButton.add_Click({ Handle-GenerateLaunchers })
+
+    # Language selection change event
+    $languageCombo = $script:Window.FindName("LanguageCombo")
+    if ($languageCombo) {
+        $languageCombo.add_SelectionChanged({ Handle-LanguageSelectionChanged })
+    } else {
+        Write-Warning "LanguageCombo not found during event handler setup"
+    }
 }
 
 # Load data into UI controls
@@ -1136,7 +1144,7 @@ function Save-GlobalSettingsData {
     $script:ConfigData.paths.riot = $script:Window.FindName("RiotPathTextBox").Text
     $script:ConfigData.paths.obs = $script:Window.FindName("ObsPathTextBox").Text
 
-    # Language Setting
+    # Language Setting (language change detection is handled in real-time by event handler)
     $languageCombo = $script:Window.FindName("LanguageCombo")
     $selectedIndex = $languageCombo.SelectedIndex
     switch ($selectedIndex) {
@@ -1278,6 +1286,132 @@ function Handle-CheckUpdate {
         if ($checkUpdateButton) {
             $checkUpdateButton.IsEnabled = $true
         }
+    }
+}
+
+# Handle language selection changed
+function Handle-LanguageSelectionChanged {
+    param()
+
+    try {
+        # Get current language selection
+        $languageCombo = $script:Window.FindName("LanguageCombo")
+        if (-not $languageCombo) {
+            Write-Warning "LanguageCombo not found in Handle-LanguageSelectionChanged"
+            return
+        }
+
+        if ($languageCombo.SelectedIndex -eq -1) {
+            return  # No selection made yet
+        }
+
+        # Determine new language based on selection
+        $selectedIndex = $languageCombo.SelectedIndex
+        $newLanguage = ""
+        switch ($selectedIndex) {
+            0 { $newLanguage = "" }      # Auto
+            1 { $newLanguage = "ja" }    # Japanese
+            2 { $newLanguage = "en" }    # English
+            default { $newLanguage = "" }
+        }
+
+        # Check if language has actually changed
+        $oldLanguage = $script:ConfigData.language
+        if ($oldLanguage -ne $newLanguage) {
+            Write-Verbose "Language changed from '$oldLanguage' to '$newLanguage'"
+
+            # Update config data temporarily
+            $script:ConfigData.language = $newLanguage
+
+            # Show restart message
+            Show-LanguageChangeRestartMessage -NewLanguage $newLanguage
+        }
+    } catch {
+        Write-Warning "Failed to handle language selection change: $($_.Exception.Message)"
+    }
+}
+
+# Show language change restart message
+function Show-LanguageChangeRestartMessage {
+    param([string]$NewLanguage)
+
+    try {
+        # Temporarily switch to the new language to show the message in the new language
+        $oldCurrentLanguage = $script:CurrentLanguage
+        $oldMessages = $script:Messages
+
+        # Detect and load messages for the new language
+        $tempConfigData = $script:ConfigData.PSObject.Copy()
+        $tempConfigData.language = $NewLanguage
+        $detectedLanguage = Get-DetectedLanguage -ConfigData $tempConfigData
+
+        # Load messages for the new language
+        $messagesPath = Join-Path $PSScriptRoot "messages.json"
+        $newLanguageMessages = Get-LocalizedMessages -MessagesPath $messagesPath -LanguageCode $detectedLanguage
+
+        # Show message in the new language
+        if ($newLanguageMessages -and $newLanguageMessages.PSObject.Properties["languageChangeRestart"]) {
+            $message = $newLanguageMessages.languageChangeRestart
+            $title = $newLanguageMessages.languageChanged
+            $restartNow = $newLanguageMessages.restartNow
+            $restartLater = $newLanguageMessages.restartLater
+        } else {
+            # Fallback to English
+            $message = "To fully apply the language setting change, please restart the configuration editor.`n`nWould you like to restart now?"
+            $title = "Language Setting Changed"
+        }
+
+        # Create custom message box with Yes/No buttons
+        $result = [System.Windows.MessageBox]::Show(
+            $message,
+            $title,
+            [System.Windows.MessageBoxButton]::YesNo,
+            [System.Windows.MessageBoxImage]::Question
+        )
+
+        # Handle user response
+        if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
+            # User wants to restart now
+            Restart-ConfigEditor
+        }
+        # If user selects No, continue without restart
+
+        # Restore original language settings
+        $script:CurrentLanguage = $oldCurrentLanguage
+        $script:Messages = $oldMessages
+
+    } catch {
+        Write-Warning "Failed to show language change message: $($_.Exception.Message)"
+    }
+}
+
+# Restart the configuration editor
+function Restart-ConfigEditor {
+    param()
+
+    try {
+        # Save current window position and size for better UX
+        $currentWindow = $script:Window
+
+        # Start new instance of the configuration editor
+        $configEditorPath = $PSCommandPath
+        Start-Process -FilePath "powershell.exe" -ArgumentList @(
+            "-ExecutionPolicy", "Bypass",
+            "-File", "`"$configEditorPath`""
+        )
+
+        # Close current window
+        $script:Window.Close()
+
+    } catch {
+        Write-Error "Failed to restart configuration editor: $($_.Exception.Message)"
+        # Show fallback message
+        [System.Windows.MessageBox]::Show(
+            "Please manually restart the configuration editor to apply language changes.",
+            "Manual Restart Required",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Information
+        )
     }
 }
 
