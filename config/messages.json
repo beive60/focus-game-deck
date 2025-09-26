@@ -110,6 +110,8 @@
         "generateLaunchers": "Generate Launchers",
         "generating": "Generating...",
         "success": "Success",
+        "terminationMethodLabel": "Termination Method:",
+        "gracefulTimeoutLabel": "Graceful Timeout (ms):",
         "warning": "Warning",
         "launchersCreatedEnhanced": "Successfully created {0} enhanced shortcut launchers",
         "launchersCreatedTraditional": "Successfully created {0} traditional batch file launchers",
@@ -117,7 +119,14 @@
         "launcherCreationError": "An error occurred during launcher generation",
         "launcherScriptNotFound": "Launcher generation script not found",
         "saveBeforeLaunchers": "Please save the configuration before generating launchers",
-        "uiElementNotFound": "UI element not found"
+        "uiElementNotFound": "UI element not found",
+        "graceful_failed_using_force": "Graceful shutdown failed for {0}, using forced termination as fallback",
+        "graceful_shutdown_initiated": "Initiating graceful shutdown for {0} (timeout: {1} seconds)",
+        "graceful_shutdown_success": "Graceful shutdown completed successfully for {0}",
+        "graceful_shutdown_timeout": "Graceful shutdown timeout ({1}s) reached for {0}",
+        "graceful_shutdown_failed": "Graceful shutdown failed for {0}: {1}",
+        "force_termination_success": "Forced termination completed for {0}",
+        "force_termination_failed": "Forced termination failed for {0}: {1}"
     },
     "ja": {
         "error_game_id_not_found": "エラー: 指定されたゲームID '{0}' は設定ファイルに存在しません。",
@@ -230,6 +239,8 @@
         "generateLaunchers": "ランチャー生成",
         "generating": "生成中...",
         "success": "成功",
+        "terminationMethodLabel": "終了方法:",
+        "gracefulTimeoutLabel": "正常終了タイムアウト (ms):",
         "warning": "警告",
         "launchersCreatedEnhanced": "拡張ショートカット形式のランチャーを{0}個作成しました",
         "launchersCreatedTraditional": "従来のバッチファイル形式のランチャーを{0}個作成しました",
@@ -237,6 +248,13 @@
         "launcherCreationError": "ランチャー生成中にエラーが発生しました",
         "launcherScriptNotFound": "ランチャー生成スクリプトが見つかりません",
         "saveBeforeLaunchers": "ランチャーを生成する前に設定を保存してください",
-        "uiElementNotFound": "UI要素が見つかりません"
+        "uiElementNotFound": "UI要素が見つかりません",
+        "graceful_failed_using_force": "{0}の正常終了に失敗しました。強制終了をフォールバックとして実行します",
+        "graceful_shutdown_initiated": "{0}の正常終了を開始します（タイムアウト: {1}秒）",
+        "graceful_shutdown_success": "{0}の正常終了が正常に完了しました",
+        "graceful_shutdown_timeout": "{0}の正常終了がタイムアウト（{1}秒）に達しました",
+        "graceful_shutdown_failed": "{0}の正常終了が失敗しました: {1}",
+        "force_termination_success": "{0}の強制終了が完了しました",
+        "force_termination_failed": "{0}の強制終了が失敗しました: {1}"
     }
 }

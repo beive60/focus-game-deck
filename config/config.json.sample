@@ -14,21 +14,29 @@
             "processName": "NoWinKey",
             "gameStartAction": "start-process",
             "gameEndAction": "stop-process",
-            "arguments": ""
+            "arguments": "",
+            "terminationMethod": "force",
+            "gracefulTimeoutMs": 1000,
+            "_comment_termination": "terminationMethod: 'graceful'=正常終了のみ(ダイアログ表示時はユーザー判断を待つ), 'force'=強制終了のみ, 'auto'=正常終了を試行後、失敗時のみ強制終了 (デフォルト)"
         },
         "autoHotkey": {
             "path": "",
             "processName": "AutoHotkeyU64|AutoHotkey|AutoHotkey64",
             "gameStartAction": "stop-process",
             "gameEndAction": "none",
-            "arguments": ""
+            "arguments": "",
+            "terminationMethod": "auto",
+            "gracefulTimeoutMs": 2000
         },
         "clibor": {
             "path": "C:\\Apps\\clibor\\Clibor.exe",
             "processName": "Clibor",
             "gameStartAction": "toggle-hotkeys",
             "gameEndAction": "toggle-hotkeys",
-            "arguments": "/hs"
+            "arguments": "/hs",
+            "terminationMethod": "graceful",
+            "gracefulTimeoutMs": 5000,
+            "_comment": "Cliborは設定保存ダイアログが表示される可能性があるため、gracefulモードを推奨"
         },
         "luna": {
             "path": "",
@@ -56,6 +64,9 @@
             "gameStartAction": "set-discord-gaming-mode",
             "gameEndAction": "restore-discord-normal",
             "arguments": "",
+            "terminationMethod": "graceful",
+            "gracefulTimeoutMs": 8000,
+            "_comment": "Discordは通話中や設定保存の可能性があるため、gracefulモードで長めのタイムアウトを設定",
             "discord": {
                 "statusOnGameStart": "dnd",
                 "statusOnGameEnd": "online",

@@ -257,6 +257,8 @@
                                     <RowDefinition Height="30"/>
                                     <RowDefinition Height="30"/>
                                     <RowDefinition Height="30"/>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="30"/>
                                 </Grid.RowDefinitions>
 
                                 <Label Grid.Row="0"
@@ -323,6 +325,26 @@
                                 <TextBox Grid.Row="5"
                                          Grid.Column="1"
                                          Name="AppArgumentsTextBox"
+                                         Margin="5"/>
+
+                                <Label Grid.Row="6"
+                                       Grid.Column="0"
+                                       Name="TerminationMethodLabel"
+                                       Content="Termination Method:"
+                                       VerticalAlignment="Center"/>
+                                <ComboBox Grid.Row="6"
+                                          Grid.Column="1"
+                                          Name="TerminationMethodCombo"
+                                          Margin="5"/>
+
+                                <Label Grid.Row="7"
+                                       Grid.Column="0"
+                                       Name="GracefulTimeoutLabel"
+                                       Content="Graceful Timeout (ms):"
+                                       VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="7"
+                                         Grid.Column="1"
+                                         Name="GracefulTimeoutTextBox"
                                          Margin="5"/>
                             </Grid>
                         </Grid>

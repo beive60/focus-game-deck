@@ -159,7 +159,7 @@ focus-game-deck/
 │   └── config/
 │       ├── config.json
 │       ├── messages.json
-│       └── config-multiplatform-example.json
+│       └── config.sample.json
 ├── signed/                          # Signed executables (production)
 │   ├── [same structure as build/]
 │   └── signature-info.json         # Signature metadata
@@ -311,6 +311,6 @@ This provides:
 
 ---
 
-**Last Updated**: September 24, 2025  
-**Version**: 1.2.0  
+**Last Updated**: September 24, 2025
+**Version**: 1.2.0
 **Maintainer**: Focus Game Deck Development Team
