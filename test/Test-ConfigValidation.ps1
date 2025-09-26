@@ -13,97 +13,57 @@
 
 # --- Start of Functions from Invoke-FocusGameDeck.ps1 ---
 
-# Validate configuration structure
+# Import updated ConfigValidator module
+$scriptDir = $PSScriptRoot
+$configValidatorPath = Join-Path $scriptDir "..\src\modules\ConfigValidator.ps1"
+if (Test-Path $configValidatorPath) {
+    . $configValidatorPath
+} else {
+    Write-Error "ConfigValidator module not found: $configValidatorPath"
+    exit 1
+}
+
+# Validate configuration structure using updated validator
 function Test-ConfigStructure {
     param(
         [object]$Config,
         [string]$GameId
     )
-    
+
     $errors = @()
     $gameConfig = $Config.games.$GameId
-    
+
     Write-Host "Validating configuration structure for game: $GameId" -ForegroundColor Cyan
-    
-    # Check if managedApps section exists
-    if (-not $Config.managedApps) {
-        $errors += "Missing 'managedApps' section in configuration"
+
+    # Use the updated ConfigValidator for validation
+    $messages = @{
+        config_validation_passed = "Configuration validation passed"
+        config_validation_failed = "Configuration validation failed"
     }
-    
-    # Check if appsToManage exists for this game
-    if (-not $gameConfig.appsToManage) {
-        $errors += "Missing 'appsToManage' array for game '$GameId'"
+
+    $validator = New-ConfigValidator -Config $Config -Messages $messages
+    $isValid = $validator.ValidateConfiguration($GameId)
+    $report = $validator.GetValidationReport()
+
+    # Show validation details
+    if ($report.Errors.Count -gt 0) {
+        Write-Host "Game '$GameId' has $($report.Errors.Count) error(s):" -ForegroundColor Red
+        foreach ($error in $report.Errors) {
+            Write-Host "  - $error" -ForegroundColor Red
+        }
     } else {
-        # Validate each app in appsToManage
-        foreach ($appId in $gameConfig.appsToManage) {
-            Write-Host "  Checking app: $appId" -ForegroundColor Gray
-            
-            if ($appId -eq "obs") {
-                # Special case for OBS - skip validation
-                Write-Host "    [INFO] OBS is a special app - skipping managedApps validation" -ForegroundColor Gray
-                continue
-            }
-            
-            if (-not $Config.managedApps.$appId) {
-                $errors += "Application '$appId' is referenced in game '$GameId' but not defined in managedApps"
-            } else {
-                $appConfig = $Config.managedApps.$appId
-                
-                # Validate required properties
-                if (-not $appConfig.PSObject.Properties.Name -contains "processName") {
-                    $errors += "Application '$appId' is missing 'processName' property"
-                }
-                if (-not $appConfig.PSObject.Properties.Name -contains "gameStartAction") {
-                    $errors += "Application '$appId' is missing 'gameStartAction' property"
-                }
-                if (-not $appConfig.PSObject.Properties.Name -contains "gameEndAction") {
-                    $errors += "Application '$appId' is missing 'gameEndAction' property"
-                }
-                
-                # Validate action values
-                $validActions = @("start-process", "stop-process", "toggle-hotkeys", "none")
-                if ($appConfig.gameStartAction -and $appConfig.gameStartAction -notin $validActions) {
-                    $errors += "Application '$appId' has invalid gameStartAction: '$($appConfig.gameStartAction)'. Valid values: $($validActions -join ', ')"
-                }
-                if ($appConfig.gameEndAction -and $appConfig.gameEndAction -notin $validActions) {
-                    $errors += "Application '$appId' has invalid gameEndAction: '$($appConfig.gameEndAction)'. Valid values: $($validActions -join ', ')"
-                }
-                
-                # Check logical consistency
-                if ($appConfig.gameStartAction -eq "start-process" -and (-not $appConfig.path -or $appConfig.path -eq "")) {
-                    $errors += "Application '$appId' has gameStartAction 'start-process' but no path specified"
-                }
-                if ($appConfig.gameEndAction -eq "start-process" -and (-not $appConfig.path -or $appConfig.path -eq "")) {
-                    $errors += "Application '$appId' has gameEndAction 'start-process' but no path specified"
-                }
-                if (($appConfig.gameStartAction -eq "stop-process" -or $appConfig.gameEndAction -eq "stop-process") -and (-not $appConfig.processName -or $appConfig.processName -eq "")) {
-                    $errors += "Application '$appId' has stop-process action but no processName specified"
-                }
-                if (($appConfig.gameStartAction -eq "toggle-hotkeys" -or $appConfig.gameEndAction -eq "toggle-hotkeys") -and (-not $appConfig.path -or $appConfig.path -eq "")) {
-                    $errors += "Application '$appId' has toggle-hotkeys action but no path specified"
-                }
-                
-                Write-Host "    [OK] App '$appId' configuration is valid" -ForegroundColor Green
-            }
+        Write-Host "  [OK] Game '$GameId' configuration is valid" -ForegroundColor Green
+    }
+
+    if ($report.Warnings.Count -gt 0) {
+        Write-Host "Game '$GameId' has $($report.Warnings.Count) warning(s):" -ForegroundColor Yellow
+        foreach ($warning in $report.Warnings) {
+            Write-Host "  - $warning" -ForegroundColor Yellow
         }
     }
-    
-    # Check required paths
-    if (-not $Config.paths.steam) {
-        $errors += "Missing 'paths.steam' in configuration"
-    }
-    
-    # Check OBS-specific configuration if OBS is managed
-    if ("obs" -in $gameConfig.appsToManage) {
-        if (-not $Config.paths.obs) {
-            $errors += "OBS is managed but 'paths.obs' is not defined"
-        }
-        if (-not $Config.obs) {
-            $errors += "OBS is managed but 'obs' configuration section is missing"
-        }
-    }
-    
-    return $errors
+
+    # Return the errors from the updated validator
+    return $report.Errors
 }
 
 # --- End of Functions ---

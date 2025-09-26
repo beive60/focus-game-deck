@@ -30,7 +30,7 @@ function Write-BuildLog {
         [string]$Level = "INFO",
         [string]$Color = "White"
     )
-    
+
     $timestamp = (Get-Date).ToString("HH:mm:ss")
     $prefix = "[$timestamp] [$Level]"
     Write-Host "$prefix $Message" -ForegroundColor $Color
@@ -43,21 +43,21 @@ function Invoke-BuildScript {
         [string[]]$Arguments = @(),
         [string]$Description
     )
-    
+
     Write-BuildLog "Starting: $Description" "INFO" "Yellow"
-    
+
     if (-not (Test-Path $ScriptPath)) {
         Write-BuildLog "Script not found: $ScriptPath" "ERROR" "Red"
         return $false
     }
-    
+
     try {
         $argumentString = $Arguments -join " "
         Write-BuildLog "Executing: $(Split-Path $ScriptPath -Leaf) $argumentString" "DEBUG" "Gray"
-        
+
         $allArguments = @("-ExecutionPolicy", "Bypass", "-File", $ScriptPath) + $Arguments
         $process = Start-Process -FilePath "powershell" -ArgumentList $allArguments -Wait -PassThru -NoNewWindow
-        
+
         if ($process.ExitCode -eq 0) {
             Write-BuildLog "Completed: $Description" "SUCCESS" "Green"
             return $true
@@ -74,13 +74,13 @@ function Invoke-BuildScript {
 # Function to clean all build artifacts
 function Clear-BuildArtifacts {
     Write-BuildLog "Cleaning build artifacts..." "INFO" "Yellow"
-    
+
     $pathsToClean = @(
         (Join-Path $PSScriptRoot "build"),
         (Join-Path $PSScriptRoot "signed"),
         (Join-Path $PSScriptRoot "gui\*.exe")
     )
-    
+
     foreach ($path in $pathsToClean) {
         if (Test-Path $path) {
             try {
@@ -101,7 +101,7 @@ function Clear-BuildArtifacts {
 # Function to setup development environment
 function Initialize-BuildEnvironment {
     Write-BuildLog "Setting up build environment..." "INFO" "Yellow"
-    
+
     # Install ps2exe module
     $buildScript = Join-Path $PSScriptRoot "Build-FocusGameDeck.ps1"
     return Invoke-BuildScript -ScriptPath $buildScript -Arguments @("-Install") -Description "Installing ps2exe module"
@@ -110,7 +110,7 @@ function Initialize-BuildEnvironment {
 # Function to build all executables
 function Build-AllExecutables {
     Write-BuildLog "Building all executables..." "INFO" "Yellow"
-    
+
     $buildScript = Join-Path $PSScriptRoot "Build-FocusGameDeck.ps1"
     return Invoke-BuildScript -ScriptPath $buildScript -Arguments @("-Build") -Description "Building all executables"
 }
@@ -118,9 +118,9 @@ function Build-AllExecutables {
 # Function to sign all executables
 function Add-CodeSignatures {
     Write-BuildLog "Signing all executables..." "INFO" "Yellow"
-    
+
     $signingScript = Join-Path $PSScriptRoot "Sign-Executables.ps1"
-    
+
     # Check if signing is configured
     $signingConfigPath = Join-Path $PSScriptRoot "config\signing-config.json"
     if (Test-Path $signingConfigPath) {
@@ -136,34 +136,34 @@ function Add-CodeSignatures {
             return $false
         }
     }
-    
+
     return Invoke-BuildScript -ScriptPath $signingScript -Arguments @("-SignAll") -Description "Code signing process"
 }
 
 # Function to create release package
 function New-ReleasePackage {
     param([bool]$IsSigned = $false)
-    
+
     Write-BuildLog "Creating release package..." "INFO" "Yellow"
-    
+
     $releaseDir = Join-Path $PSScriptRoot "release"
     $sourceDir = if ($IsSigned) { Join-Path $PSScriptRoot "signed" } else { Join-Path $PSScriptRoot "build" }
-    
+
     if (-not (Test-Path $sourceDir)) {
         Write-BuildLog "Source directory not found: $sourceDir" "ERROR" "Red"
         return $false
     }
-    
+
     try {
         # Clean and create release directory
         if (Test-Path $releaseDir) {
             Remove-Item $releaseDir -Recurse -Force
         }
         New-Item -ItemType Directory -Path $releaseDir -Force | Out-Null
-        
+
         # Copy built files
         Copy-Item -Path "$sourceDir\*" -Destination $releaseDir -Recurse -Force
-        
+
         # Create README for release
         $releaseReadme = @"
 # Focus Game Deck - Release Package
@@ -174,8 +174,7 @@ function New-ReleasePackage {
 
 ## Files Included
 
-- **Focus-Game-Deck.exe**: Main application
-- **Focus-Game-Deck-MultiPlatform.exe**: Multi-platform version
+- **Focus-Game-Deck.exe**: Main application (Multi-platform support included)
 - **Focus-Game-Deck-Config-Editor.exe**: GUI configuration editor
 - **config/**: Configuration files and templates
 - **launcher.bat**: Quick launcher script
@@ -195,30 +194,30 @@ https://github.com/beive60/focus-game-deck
 
 This software is released under the MIT License.
 "@
-        
+
         Set-Content -Path (Join-Path $releaseDir "README.txt") -Value $releaseReadme -Encoding UTF8
-        
+
         # Create version info
         $versionInfo = @{
-            Version = $script:Version
+            Version   = $script:Version
             BuildDate = $script:BuildDate
-            IsSigned = $IsSigned
-            Files = @()
+            IsSigned  = $IsSigned
+            Files     = @()
         }
-        
+
         Get-ChildItem $releaseDir -Recurse -File | ForEach-Object {
             $versionInfo.Files += @{
-                Path = $_.FullName.Replace($releaseDir, "").TrimStart('\')
-                Size = $_.Length
+                Path         = $_.FullName.Replace($releaseDir, "").TrimStart('\')
+                Size         = $_.Length
                 LastModified = $_.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
             }
         }
-        
+
         $versionInfo | ConvertTo-Json -Depth 4 | Set-Content -Path (Join-Path $releaseDir "version-info.json") -Encoding UTF8
-        
+
         Write-BuildLog "Release package created: $releaseDir" "SUCCESS" "Green"
         return $true
-        
+
     } catch {
         Write-BuildLog "Failed to create release package: $($_.Exception.Message)" "ERROR" "Red"
         return $false
@@ -228,25 +227,25 @@ This software is released under the MIT License.
 # Function to display build summary
 function Show-BuildSummary {
     param([bool]$Success, [bool]$IsSigned = $false)
-    
+
     $endTime = Get-Date
     $duration = $endTime - $script:StartTime
-    
+
     Write-Host "`n" + ("=" * 60) -ForegroundColor Cyan
     Write-Host "BUILD SUMMARY" -ForegroundColor Cyan
     Write-Host ("=" * 60) -ForegroundColor Cyan
-    
+
     Write-Host "Status: " -NoNewline
     if ($Success) {
         Write-Host "SUCCESS" -ForegroundColor Green
     } else {
         Write-Host "FAILED" -ForegroundColor Red
     }
-    
+
     Write-Host "Version: $script:Version" -ForegroundColor White
     Write-Host "Build Time: $($duration.ToString('mm\:ss'))" -ForegroundColor White
     Write-Host "Signed: $(if ($IsSigned) { 'Yes' } else { 'No' })" -ForegroundColor White
-    
+
     if ($Success) {
         Write-Host "`nBuilt executables:" -ForegroundColor Yellow
         $buildDir = Join-Path $PSScriptRoot "build"
@@ -255,13 +254,13 @@ function Show-BuildSummary {
                 Write-Host "  $($_.Name) ($([math]::Round($_.Length / 1KB, 1)) KB)" -ForegroundColor White
             }
         }
-        
+
         $releaseDir = Join-Path $PSScriptRoot "release"
         if (Test-Path $releaseDir) {
             Write-Host "`nRelease package created: $releaseDir" -ForegroundColor Green
         }
     }
-    
+
     Write-Host ("=" * 60) -ForegroundColor Cyan
 }
 
@@ -269,44 +268,44 @@ function Show-BuildSummary {
 try {
     $success = $true
     $isSigned = $false
-    
+
     # Clean if requested
     if ($Clean) {
         Clear-BuildArtifacts
         Write-BuildLog "Clean completed" "SUCCESS" "Green"
         exit 0
     }
-    
+
     # Setup environment
     if ($SetupOnly) {
         $success = Initialize-BuildEnvironment
         Show-BuildSummary -Success $success
         exit $(if ($success) { 0 } else { 1 })
     }
-    
+
     # Development build workflow
     if ($Development) {
         Write-BuildLog "Starting DEVELOPMENT build workflow" "INFO" "Cyan"
-        
+
         $success = Initialize-BuildEnvironment
         if ($success) {
             $success = Build-AllExecutables
         }
-        
+
         if ($success) {
             $success = New-ReleasePackage -IsSigned $false
         }
     }
-    
-    # Production build workflow  
+
+    # Production build workflow
     elseif ($Production) {
         Write-BuildLog "Starting PRODUCTION build workflow" "INFO" "Cyan"
-        
+
         $success = Initialize-BuildEnvironment
         if ($success) {
             $success = Build-AllExecutables
         }
-        
+
         if ($success) {
             $signingSuccess = Add-CodeSignatures
             if ($signingSuccess) {
@@ -316,12 +315,12 @@ try {
                 Write-BuildLog "Code signing failed, continuing with unsigned build" "WARNING" "Yellow"
             }
         }
-        
+
         if ($success) {
             $success = New-ReleasePackage -IsSigned $isSigned
         }
     }
-    
+
     # Show usage if no workflow specified
     else {
         Write-Host "`nUsage:" -ForegroundColor Yellow
@@ -342,10 +341,10 @@ try {
         Write-Host "  4. Create release package"
         exit 0
     }
-    
+
     Show-BuildSummary -Success $success -IsSigned $isSigned
     exit $(if ($success) { 0 } else { 1 })
-    
+
 } catch {
     Write-BuildLog "Unexpected error: $($_.Exception.Message)" "ERROR" "Red"
     Show-BuildSummary -Success $false
