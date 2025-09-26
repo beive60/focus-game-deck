@@ -304,4 +304,23 @@ try {
     }
 
     exit 1
+} finally {
+    # Finalize and notarize log file if logging is enabled
+    if ($logger) {
+        try {
+            Write-Host "Finalizing session log..." -ForegroundColor Cyan
+            $certificateId = $logger.FinalizeAndNotarizeLogAsync()
+
+            if ($certificateId) {
+                Write-Host "✓ " -NoNewline -ForegroundColor Green
+                Write-Host "Log successfully notarized. Certificate ID: " -NoNewline -ForegroundColor White
+                Write-Host $certificateId -ForegroundColor Yellow
+                Write-Host "  This certificate can be used to verify log integrity if needed." -ForegroundColor Gray
+            } else {
+                Write-Host "ℹ Log finalized (notarization disabled or failed)" -ForegroundColor Gray
+            }
+        } catch {
+            Write-Warning "Failed to notarize log: $_"
+        }
+    }
 }

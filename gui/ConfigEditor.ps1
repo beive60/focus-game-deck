@@ -564,6 +564,16 @@ function Load-GlobalSettings {
     } elseif ($currentLang -eq "en") {
         $languageCombo.SelectedIndex = 2  # English
     }
+
+    # Log Notarization Setting
+    $logNotarizationCheckBox = $script:Window.FindName("EnableLogNotarizationCheckBox")
+    if ($logNotarizationCheckBox) {
+        $logNotarizationCheckBox.IsChecked = if ($script:ConfigData.logging -and $script:ConfigData.logging.enableNotarization) {
+            $script:ConfigData.logging.enableNotarization
+        } else {
+            $false
+        }
+    }
 }
 
 # Update platform-specific field visibility
@@ -944,6 +954,17 @@ function Save-GlobalSettingsData {
         1 { $script:ConfigData.language = "ja" }    # Japanese
         2 { $script:ConfigData.language = "en" }    # English
         default { $script:ConfigData.language = "" }
+    }
+
+    # Log Notarization Setting
+    $logNotarizationCheckBox = $script:Window.FindName("EnableLogNotarizationCheckBox")
+    if ($logNotarizationCheckBox) {
+        # Initialize logging section if it doesn't exist
+        if (-not $script:ConfigData.logging) {
+            $script:ConfigData | Add-Member -MemberType NoteProperty -Name "logging" -Value @{}
+        }
+
+        $script:ConfigData.logging.enableNotarization = $logNotarizationCheckBox.IsChecked
     }
 }
 

@@ -95,7 +95,7 @@
         },
         "valorant": {
             "name": "VALORANT",
-            "platform": "riot", 
+            "platform": "riot",
             "riotGameId": "valorant",
             "processName": "VALORANT-Win64-Shipping*",
             "appsToManage": ["obs", "clibor", "vtubeStudio", "discord"]
@@ -106,5 +106,17 @@
         "epic": "C:\\Program Files (x86)\\Epic Games\\Launcher\\Portal\\Binaries\\Win32\\EpicGamesLauncher.exe",
         "riot": "C:\\Riot Games\\Riot Client\\RiotClientServices.exe",
         "obs": "C:\\Program Files\\obs-studio\\bin\\64bit\\obs64.exe"
+    },
+    "logging": {
+        "level": "Info",
+        "enableFileLogging": true,
+        "enableConsoleLogging": true,
+        "filePath": "",
+        "enableNotarization": false,
+        "firebase": {
+            "projectId": "",
+            "apiKey": "",
+            "databaseURL": ""
+        }
     }
 }
