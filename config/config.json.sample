@@ -112,6 +112,7 @@
         "enableFileLogging": true,
         "enableConsoleLogging": true,
         "filePath": "",
+        "logRetentionDays": 90,
         "enableNotarization": false,
         "firebase": {
             "projectId": "",
