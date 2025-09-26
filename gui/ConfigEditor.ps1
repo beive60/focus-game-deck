@@ -228,7 +228,7 @@ function Setup-UIControls {
     param()
 
     # Setup Action combo boxes
-    $actions = @("start-process", "stop-process", "toggle-hotkeys", "none")
+    $actions = @("start-process", "stop-process", "toggle-hotkeys", "start-vtube-studio", "stop-vtube-studio", "set-discord-gaming-mode", "restore-discord-normal", "pause-wallpaper", "play-wallpaper", "none")
     $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
     $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
 

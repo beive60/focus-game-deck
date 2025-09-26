@@ -21,13 +21,13 @@ class AppManager {
         }
 
         $appConfig = $this.ManagedApps.$appId
-        
+
         # Check required properties
         if (-not $appConfig.PSObject.Properties.Name -contains "processName") {
             Write-Host "Application '$appId' is missing 'processName' property"
             return $false
         }
-        
+
         return $true
     }
 
@@ -38,7 +38,7 @@ class AppManager {
         }
 
         $appConfig = $this.ManagedApps.$appId
-        
+
         switch ($action) {
             "start-process" {
                 return $this.StartProcess($appId, $appConfig)
@@ -61,6 +61,12 @@ class AppManager {
             "restore-discord-normal" {
                 return $this.RestoreDiscordNormal($appId, $appConfig)
             }
+            "pause-wallpaper" {
+                return $this.PauseWallpaper($appId, $appConfig)
+            }
+            "play-wallpaper" {
+                return $this.PlayWallpaper($appId, $appConfig)
+            }
             "none" {
                 return $true
             }
@@ -69,7 +75,7 @@ class AppManager {
                 return $false
             }
         }
-        
+
         return $false
     }
 
@@ -86,18 +92,18 @@ class AppManager {
         }
 
         try {
-            $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") { 
-                $appConfig.arguments 
-            } else { 
-                $null 
+            $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") {
+                $appConfig.arguments
+            } else {
+                $null
             }
-            
+
             if ($arguments) {
                 Start-Process -FilePath $appConfig.path -ArgumentList $arguments
             } else {
                 Start-Process -FilePath $appConfig.path
             }
-            
+
             Write-Host ($this.Messages.app_started -f $appId)
             return $true
         }
@@ -117,7 +123,7 @@ class AppManager {
         # Handle multiple process names separated by |
         $processNames = $appConfig.processName -split '\|'
         $processFound = $false
-        
+
         foreach ($processName in $processNames) {
             $processName = $processName.Trim()
             try {
@@ -132,11 +138,11 @@ class AppManager {
                 # Process not found, continue to next
             }
         }
-        
+
         if (-not $processFound) {
             Write-Host ($this.Messages.app_process_not_running -f $appId)
         }
-        
+
         return $true
     }
 
@@ -148,12 +154,12 @@ class AppManager {
         }
 
         try {
-            $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") { 
-                $appConfig.arguments 
-            } else { 
-                "/hs" 
+            $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") {
+                $appConfig.arguments
+            } else {
+                "/hs"
             }
-            
+
             Start-Process -FilePath $appConfig.path -ArgumentList $arguments
             Write-Host ($this.Messages.app_hotkey_toggled -f $appId, $this.Messages.clibor_action_toggled)
             return $true
@@ -175,10 +181,10 @@ class AppManager {
                 Write-Host "VTubeStudioManager module not found at: $modulePath"
                 return $false
             }
-            
+
             # Create VTubeStudioManager instance
             $vtubeManager = New-VTubeStudioManager -VTubeConfig $appConfig -Messages $this.Messages
-            
+
             # Start VTube Studio
             return $vtubeManager.StartVTubeStudio()
         }
@@ -199,10 +205,10 @@ class AppManager {
                 Write-Host "VTubeStudioManager module not found at: $modulePath"
                 return $false
             }
-            
+
             # Create VTubeStudioManager instance
             $vtubeManager = New-VTubeStudioManager -VTubeConfig $appConfig -Messages $this.Messages
-            
+
             # Stop VTube Studio
             return $vtubeManager.StopVTubeStudio()
         }
@@ -223,10 +229,10 @@ class AppManager {
                 Write-Host "DiscordManager module not found at: $modulePath"
                 return $false
             }
-            
+
             # Create DiscordManager instance
             $discordManager = New-DiscordManager -DiscordConfig $appConfig -Messages $this.Messages
-            
+
             # Set Gaming Mode
             return $discordManager.SetGamingMode($this.gameConfig.name)
         }
@@ -247,10 +253,10 @@ class AppManager {
                 Write-Host "DiscordManager module not found at: $modulePath"
                 return $false
             }
-            
+
             # Create DiscordManager instance
             $discordManager = New-DiscordManager -DiscordConfig $appConfig -Messages $this.Messages
-            
+
             # Restore Normal Mode
             return $discordManager.RestoreNormalMode()
         }
@@ -258,6 +264,59 @@ class AppManager {
             Write-Host "Failed to restore Discord Normal Mode: $_"
             return $false
         }
+    }
+
+    # Control Wallpaper Engine playback
+    [bool] ControlWallpaper([string] $appId, [object] $appConfig, [string] $command) {
+        if (-not $appConfig.path -or $appConfig.path -eq "") {
+            Write-Host "Wallpaper Engine path not specified for $appId"
+            return $false
+        }
+
+        # Check if the path exists
+        if (-not (Test-Path $appConfig.path)) {
+            Write-Host "Wallpaper Engine executable not found at: $($appConfig.path)"
+            return $false
+        }
+
+        try {
+            # Determine the correct executable based on system architecture
+            $executablePath = $appConfig.path
+            $executableName = [System.IO.Path]::GetFileNameWithoutExtension($executablePath)
+            $executableDir = [System.IO.Path]::GetDirectoryName($executablePath)
+
+            # Check if we need to auto-select between 32-bit and 64-bit versions
+            $is64Bit = [Environment]::Is64BitOperatingSystem
+            if ($executableName -eq "wallpaper32" -and $is64Bit) {
+                $wallpaper64Path = Join-Path $executableDir "wallpaper64.exe"
+                if (Test-Path $wallpaper64Path) {
+                    $executablePath = $wallpaper64Path
+                    Write-Host "Auto-selected 64-bit version: $executablePath"
+                }
+            }
+
+            # Execute the control command
+            $arguments = "-control", $command
+            Start-Process -FilePath $executablePath -ArgumentList $arguments -NoNewWindow -Wait
+
+            $actionDescription = if ($command -eq "pause") { "paused" } else { "resumed" }
+            Write-Host "Wallpaper Engine $actionDescription successfully"
+            return $true
+        }
+        catch {
+            Write-Host "Failed to control Wallpaper Engine ($command): $_"
+            return $false
+        }
+    }
+
+    # Pause Wallpaper Engine (special action)
+    [bool] PauseWallpaper([string] $appId, [object] $appConfig) {
+        return $this.ControlWallpaper($appId, $appConfig, "pause")
+    }
+
+    # Resume Wallpaper Engine playback (special action)
+    [bool] PlayWallpaper([string] $appId, [object] $appConfig) {
+        return $this.ControlWallpaper($appId, $appConfig, "play")
     }
 
     # Check if application process is running
@@ -284,7 +343,7 @@ class AppManager {
     # Process application startup sequence
     [bool] ProcessStartupSequence([array] $appIds) {
         $allSuccess = $true
-        
+
         foreach ($appId in $appIds) {
             $action = $this.GetStartupAction($appId)
             $success = $this.InvokeAction($appId, $action)
@@ -293,14 +352,14 @@ class AppManager {
                 Write-Warning "Failed to start $appId with action: $action"
             }
         }
-        
+
         return $allSuccess
     }
 
     # Process application shutdown sequence
     [bool] ProcessShutdownSequence([array] $appIds) {
         $allSuccess = $true
-        
+
         foreach ($appId in $appIds) {
             $action = $this.GetShutdownAction($appId)
             $success = $this.InvokeAction($appId, $action)
@@ -309,7 +368,7 @@ class AppManager {
                 Write-Warning "Failed to shutdown $appId with action: $action"
             }
         }
-        
+
         return $allSuccess
     }
 }
@@ -319,11 +378,11 @@ function New-AppManager {
     param(
         [Parameter(Mandatory = $true)]
         [object] $Config,
-        
+
         [Parameter(Mandatory = $true)]
         [object] $Messages
     )
-    
+
     return [AppManager]::new($Config, $Messages)
 }
 

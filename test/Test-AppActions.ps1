@@ -25,11 +25,10 @@ function ConvertTo-SecureStringSafe {
     param(
         [string]$PlainText
     )
-    
+
     try {
         return ConvertTo-SecureString -String $PlainText -AsPlainText -Force
-    }
-    catch {
+    } catch {
         Write-Warning "ConvertTo-SecureString failed, attempting alternative method: $_"
         # Alternative: create SecureString manually
         $secureString = New-Object System.Security.SecureString
@@ -48,17 +47,17 @@ function Invoke-AppAction {
         [string]$Action,  # "start-process", "stop-process", "toggle-hotkeys", "none"
         [string]$SpecialMode = $null  # For backward compatibility
     )
-    
+
     # Validate app exists in managedApps
     if (-not $config.managedApps.$AppId) {
         Write-Host "WARNING: Application '$AppId' is not defined in managedApps" -ForegroundColor Yellow
         return
     }
-    
+
     $appConfig = $config.managedApps.$AppId
-    
+
     Write-Host "  Testing action '$Action' for app '$AppId'..." -ForegroundColor Cyan
-    
+
     # Handle different action types
     switch ($Action) {
         "start-process" {
@@ -73,7 +72,7 @@ function Invoke-AppAction {
             if ($appConfig.processName -and $appConfig.processName -ne "") {
                 # Handle multiple process names separated by |
                 $processNames = $appConfig.processName -split '\|'
-                
+
                 foreach ($processName in $processNames) {
                     $processName = $processName.Trim()
                     try {
@@ -81,8 +80,7 @@ function Invoke-AppAction {
                         if ($processes) {
                             Write-Host "    [SIMULATE] Would stop process: $processName (Currently running with PID: $($processes[0].Id))" -ForegroundColor Green
                         }
-                    }
-                    catch {
+                    } catch {
                         Write-Host "    [INFO] Process '$processName' is not currently running" -ForegroundColor Gray
                     }
                 }
@@ -99,6 +97,60 @@ function Invoke-AppAction {
                 Write-Host "    [WARNING] No path specified for app '$AppId'" -ForegroundColor Yellow
             }
         }
+        "pause-wallpaper" {
+            # Wallpaper Engine pause functionality
+            if ($appConfig.path -and $appConfig.path -ne "") {
+                # Determine correct executable (32-bit vs 64-bit)
+                $executablePath = $appConfig.path
+                $is64Bit = [Environment]::Is64BitOperatingSystem
+                $executableName = [System.IO.Path]::GetFileNameWithoutExtension($executablePath)
+
+                if ($executableName -eq "wallpaper32" -and $is64Bit) {
+                    $wallpaper64Path = Join-Path ([System.IO.Path]::GetDirectoryName($executablePath)) "wallpaper64.exe"
+                    if (Test-Path $wallpaper64Path) {
+                        $executablePath = $wallpaper64Path
+                        Write-Host "    [INFO] Auto-selected 64-bit version: $executablePath" -ForegroundColor Cyan
+                    }
+                }
+
+                Write-Host "    [SIMULATE] Would pause Wallpaper Engine: $executablePath -control pause" -ForegroundColor Green
+            } else {
+                Write-Host "    [WARNING] No path specified for Wallpaper Engine app '$AppId'" -ForegroundColor Yellow
+            }
+        }
+        "play-wallpaper" {
+            # Wallpaper Engine resume functionality
+            if ($appConfig.path -and $appConfig.path -ne "") {
+                # Determine correct executable (32-bit vs 64-bit)
+                $executablePath = $appConfig.path
+                $is64Bit = [Environment]::Is64BitOperatingSystem
+                $executableName = [System.IO.Path]::GetFileNameWithoutExtension($executablePath)
+
+                if ($executableName -eq "wallpaper32" -and $is64Bit) {
+                    $wallpaper64Path = Join-Path ([System.IO.Path]::GetDirectoryName($executablePath)) "wallpaper64.exe"
+                    if (Test-Path $wallpaper64Path) {
+                        $executablePath = $wallpaper64Path
+                        Write-Host "    [INFO] Auto-selected 64-bit version: $executablePath" -ForegroundColor Cyan
+                    }
+                }
+
+                Write-Host "    [SIMULATE] Would resume Wallpaper Engine: $executablePath -control play" -ForegroundColor Green
+            } else {
+                Write-Host "    [WARNING] No path specified for Wallpaper Engine app '$AppId'" -ForegroundColor Yellow
+            }
+        }
+        "start-vtube-studio" {
+            Write-Host "    [SIMULATE] Would start VTube Studio integration" -ForegroundColor Green
+        }
+        "stop-vtube-studio" {
+            Write-Host "    [SIMULATE] Would stop VTube Studio integration" -ForegroundColor Green
+        }
+        "set-discord-gaming-mode" {
+            Write-Host "    [SIMULATE] Would set Discord to gaming mode" -ForegroundColor Green
+        }
+        "restore-discord-normal" {
+            Write-Host "    [SIMULATE] Would restore Discord to normal mode" -ForegroundColor Green
+        }
         "none" {
             Write-Host "    [INFO] No action specified - skipping" -ForegroundColor Gray
         }
@@ -113,9 +165,9 @@ function Test-OBSActions {
     param(
         [string]$Action  # "start" or "stop"
     )
-    
+
     Write-Host "  Testing OBS $Action..." -ForegroundColor Cyan
-    
+
     if ($Action -eq "start") {
         $obsProcessName = "obs64"
         $obsProcess = Get-Process -Name $obsProcessName -ErrorAction SilentlyContinue
@@ -124,7 +176,7 @@ function Test-OBSActions {
         } else {
             Write-Host "    [SIMULATE] Would start OBS: $($config.paths.obs)" -ForegroundColor Green
         }
-        
+
         if ($config.obs.replayBuffer) {
             Write-Host "    [SIMULATE] Would start OBS replay buffer via WebSocket" -ForegroundColor Green
         }
@@ -181,17 +233,17 @@ foreach ($appId in $gameConfig.appsToManage) {
         Test-OBSActions -Action "start"
         continue
     }
-    
+
     if ($appId -eq "clibor") {
         Invoke-AppAction -AppId "clibor" -Action "toggle-hotkeys"
         continue
     }
-    
+
     # Get app configuration
     if ($config.managedApps.$appId) {
         $appConfig = $config.managedApps.$appId
         $action = $appConfig.gameStartAction
-        
+
         Invoke-AppAction -AppId $appId -Action $action
     } else {
         Write-Host "  WARNING: App '$appId' not defined in managedApps" -ForegroundColor Yellow
@@ -213,17 +265,17 @@ foreach ($appId in $gameConfig.appsToManage) {
         Test-OBSActions -Action "stop"
         continue
     }
-    
+
     if ($appId -eq "clibor") {
         # Already handled above
         continue
     }
-    
+
     # Get app configuration
     if ($config.managedApps.$appId) {
         $appConfig = $config.managedApps.$appId
         $action = $appConfig.gameEndAction
-        
+
         Invoke-AppAction -AppId $appId -Action $action
     }
 }
