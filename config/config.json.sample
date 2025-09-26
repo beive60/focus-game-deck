@@ -80,6 +80,39 @@
         }
     },
     "games": {
+        "mock-notepad": {
+            "name": "テスト用ゲーム (Notepad)",
+            "platform": "standalone",
+            "executablePath": "C:\\Windows\\System32\\notepad.exe",
+            "processName": "notepad",
+            "appsToManage": ["clibor", "vtubeStudio", "discord"],
+            "_comment": "開発・テスト用の軽量モックゲーム。実際のゲームの代わりにNotepadを使用"
+        },
+        "mock-calc": {
+            "name": "テスト用ゲーム (Calculator)",
+            "platform": "standalone",
+            "executablePath": "%SystemRoot%\\System32\\calc.exe",
+            "processName": "Calculator|CalculatorApp",
+            "appsToManage": ["obs", "clibor", "discord"],
+            "_comment": "開発・テスト用の軽量モックゲーム。実際のゲームの代わりに計算機を使用"
+        },
+        "mock-mspaint": {
+            "name": "テスト用ゲーム (Paint)",
+            "platform": "standalone",
+            "executablePath": "%SystemRoot%\\System32\\mspaint.exe",
+            "processName": "mspaint",
+            "appsToManage": ["noWinKey", "autoHotkey", "obs", "discord"],
+            "_comment": "開発・テスト用の軽量モックゲーム。実際のゲームの代わりにPaintを使用"
+        },
+        "mock-powershell": {
+            "name": "テスト用ゲーム (PowerShell)",
+            "platform": "standalone",
+            "executablePath": "%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+            "processName": "powershell",
+            "arguments": "-NoExit -Command Write-Host 'Mock Game Running - Press any key to exit' -ForegroundColor Green; Read-Host",
+            "appsToManage": ["obs", "clibor", "wallpaperEngine"],
+            "_comment": "開発・テスト用の軽量モックゲーム。PowerShellコンソールを使用し、明確な終了方法を提供"
+        },
         "apex": {
             "name": "Apex Legends",
             "platform": "steam",
