@@ -120,6 +120,12 @@ class AppManager {
             return $false
         }
 
+        # Get termination method (default: auto for backward compatibility)
+        $terminationMethod = if ($appConfig.terminationMethod) { $appConfig.terminationMethod } else { "auto" }
+
+        # Get graceful shutdown timeout (default: 3 seconds)
+        $gracefulTimeoutMs = if ($appConfig.gracefulTimeoutMs) { $appConfig.gracefulTimeoutMs } else { 3000 }
+
         # Handle multiple process names separated by |
         $processNames = $appConfig.processName -split '\|'
         $processFound = $false
@@ -129,9 +135,11 @@ class AppManager {
             try {
                 $processes = Get-Process -Name $processName -ErrorAction Stop
                 if ($processes) {
-                    Stop-Process -Name $processName -Force
-                    Write-Host ($this.Messages.app_process_stopped -f $appId, $processName)
-                    $processFound = $true
+                    $success = $this.TerminateProcess($processName, $terminationMethod, $gracefulTimeoutMs, $appId)
+                    if ($success) {
+                        Write-Host ($this.Messages.app_process_stopped -f $appId, $processName)
+                        $processFound = $true
+                    }
                 }
             }
             catch {
@@ -144,6 +152,78 @@ class AppManager {
         }
 
         return $true
+    }
+
+    # Terminate process based on specified method
+    [bool] TerminateProcess([string] $processName, [string] $method, [int] $timeoutMs, [string] $appId) {
+        switch ($method.ToLower()) {
+            "graceful" {
+                return $this.GracefulTermination($processName, $timeoutMs, $appId)
+            }
+            "force" {
+                return $this.ForceTermination($processName, $appId)
+            }
+            "auto" {
+                # Try graceful first, then force if needed
+                $gracefulSuccess = $this.GracefulTermination($processName, $timeoutMs, $appId)
+                if (-not $gracefulSuccess) {
+                    Write-Host ($this.Messages.graceful_failed_using_force -f $processName) -ForegroundColor Yellow
+                    return $this.ForceTermination($processName, $appId)
+                }
+                return $true
+            }
+            default {
+                Write-Host "Unknown termination method '$method' for $appId. Using 'auto' as fallback." -ForegroundColor Yellow
+                return $this.TerminateProcess($processName, "auto", $timeoutMs, $appId)
+            }
+        }
+    }
+
+    # Graceful process termination (allows user dialogs)
+    [bool] GracefulTermination([string] $processName, [int] $timeoutMs, [string] $appId) {
+        try {
+            # Send graceful termination signal
+            Stop-Process -Name $processName -ErrorAction Stop
+
+            Write-Host ($this.Messages.graceful_shutdown_initiated -f $processName, ($timeoutMs / 1000))
+
+            # Wait for process to exit gracefully
+            $waitInterval = 100  # Check every 100ms
+            $elapsedMs = 0
+
+            while ($elapsedMs -lt $timeoutMs) {
+                Start-Sleep -Milliseconds $waitInterval
+                $elapsedMs += $waitInterval
+
+                # Check if process still exists
+                $remainingProcesses = Get-Process -Name $processName -ErrorAction SilentlyContinue
+                if (-not $remainingProcesses) {
+                    Write-Host ($this.Messages.graceful_shutdown_success -f $processName) -ForegroundColor Green
+                    return $true
+                }
+            }
+
+            # Timeout reached
+            Write-Host ($this.Messages.graceful_shutdown_timeout -f $processName, ($timeoutMs / 1000)) -ForegroundColor Yellow
+            return $false
+        }
+        catch {
+            Write-Host ($this.Messages.graceful_shutdown_failed -f $processName, $_) -ForegroundColor Red
+            return $false
+        }
+    }
+
+    # Force process termination (immediate)
+    [bool] ForceTermination([string] $processName, [string] $appId) {
+        try {
+            Stop-Process -Name $processName -Force -ErrorAction Stop
+            Write-Host ($this.Messages.force_termination_success -f $processName) -ForegroundColor Yellow
+            return $true
+        }
+        catch {
+            Write-Host ($this.Messages.force_termination_failed -f $processName, $_) -ForegroundColor Red
+            return $false
+        }
     }
 
     # Toggle hotkeys (special case for applications like Clibor)

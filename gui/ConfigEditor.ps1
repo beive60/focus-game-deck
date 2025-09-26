@@ -385,6 +385,17 @@ function Setup-UIControls {
         $gameEndActionCombo.Items.Add($action)
     }
 
+    # Setup Termination Method combo box
+    $terminationMethodCombo = $script:Window.FindName("TerminationMethodCombo")
+    $terminationMethods = @("auto", "graceful", "force")
+    foreach ($method in $terminationMethods) {
+        $terminationMethodCombo.Items.Add($method)
+    }
+    $terminationMethodCombo.SelectedItem = "auto"  # Default to auto
+
+    # Initialize termination settings visibility (initially disabled until stop-process action is selected)
+    Update-TerminationSettingsVisibility
+
     # Setup Language combo box
     $languageCombo = $script:Window.FindName("LanguageCombo")
     $languages = @(
@@ -396,6 +407,51 @@ function Setup-UIControls {
     foreach ($lang in $languages) {
         $languageCombo.Items.Add($lang)
     }
+}
+
+# Check if action requires process termination settings
+function Is-StopProcessAction {
+    param([string]$Action)
+
+    # Actions that involve stopping processes and may use termination settings
+    $stopProcessActions = @("stop-process")
+    return $Action -in $stopProcessActions
+}
+
+# Update termination settings visibility based on selected actions
+function Update-TerminationSettingsVisibility {
+    param()
+
+    $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
+    $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
+    $terminationMethodLabel = $script:Window.FindName("TerminationMethodLabel")
+    $terminationMethodCombo = $script:Window.FindName("TerminationMethodCombo")
+    $gracefulTimeoutLabel = $script:Window.FindName("GracefulTimeoutLabel")
+    $gracefulTimeoutTextBox = $script:Window.FindName("GracefulTimeoutTextBox")
+
+    # Check if either start or end action requires termination settings
+    $showTerminationSettings = $false
+
+    if ($gameStartActionCombo.SelectedItem) {
+        $showTerminationSettings = $showTerminationSettings -or (Is-StopProcessAction -Action $gameStartActionCombo.SelectedItem)
+    }
+
+    if ($gameEndActionCombo.SelectedItem) {
+        $showTerminationSettings = $showTerminationSettings -or (Is-StopProcessAction -Action $gameEndActionCombo.SelectedItem)
+    }
+
+    # Enable/disable termination settings controls
+    if ($terminationMethodLabel) { $terminationMethodLabel.IsEnabled = $showTerminationSettings }
+    if ($terminationMethodCombo) { $terminationMethodCombo.IsEnabled = $showTerminationSettings }
+    if ($gracefulTimeoutLabel) { $gracefulTimeoutLabel.IsEnabled = $showTerminationSettings }
+    if ($gracefulTimeoutTextBox) { $gracefulTimeoutTextBox.IsEnabled = $showTerminationSettings }
+
+    # Visual indication (grayed out when disabled)
+    $opacity = if ($showTerminationSettings) { 1.0 } else { 0.5 }
+    if ($terminationMethodLabel) { $terminationMethodLabel.Opacity = $opacity }
+    if ($terminationMethodCombo) { $terminationMethodCombo.Opacity = $opacity }
+    if ($gracefulTimeoutLabel) { $gracefulTimeoutLabel.Opacity = $opacity }
+    if ($gracefulTimeoutTextBox) { $gracefulTimeoutTextBox.Opacity = $opacity }
 }
 
 # Setup event handlers
@@ -440,6 +496,17 @@ function Setup-EventHandlers {
     # Generate launchers button event
     $generateLaunchersButton = $script:Window.FindName("GenerateLaunchersButton")
     $generateLaunchersButton.add_Click({ Handle-GenerateLaunchers })
+
+    # Action selection change events (for dynamic termination settings visibility)
+    $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
+    if ($gameStartActionCombo) {
+        $gameStartActionCombo.add_SelectionChanged({ Update-TerminationSettingsVisibility })
+    }
+
+    $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
+    if ($gameEndActionCombo) {
+        $gameEndActionCombo.add_SelectionChanged({ Update-TerminationSettingsVisibility })
+    }
 
     # Language selection change event
     $languageCombo = $script:Window.FindName("LanguageCombo")
@@ -608,6 +675,12 @@ function Update-UITexts {
 
         $appArgumentsLabel = $script:Window.FindName("AppArgumentsLabel")
         if ($appArgumentsLabel) { $appArgumentsLabel.Content = Get-LocalizedMessage -Key "argumentsLabel" }
+
+        $terminationMethodLabel = $script:Window.FindName("TerminationMethodLabel")
+        if ($terminationMethodLabel) { $terminationMethodLabel.Content = Get-LocalizedMessage -Key "terminationMethodLabel" }
+
+        $gracefulTimeoutLabel = $script:Window.FindName("GracefulTimeoutLabel")
+        if ($gracefulTimeoutLabel) { $gracefulTimeoutLabel.Content = Get-LocalizedMessage -Key "gracefulTimeoutLabel" }
 
         $browseAppPathButton = $script:Window.FindName("BrowseAppPathButton")
         if ($browseAppPathButton) { $browseAppPathButton.Content = Get-LocalizedMessage -Key "browseButton" }
@@ -879,6 +952,13 @@ function Handle-AppSelectionChanged {
         $script:Window.FindName("AppProcessNameTextBox").Text = $appData.processName
         $script:Window.FindName("AppArgumentsTextBox").Text = $appData.arguments
 
+        # Load termination settings
+        $terminationMethodCombo = $script:Window.FindName("TerminationMethodCombo")
+        $gracefulTimeoutTextBox = $script:Window.FindName("GracefulTimeoutTextBox")
+
+        $terminationMethodCombo.SelectedItem = if ($appData.terminationMethod) { $appData.terminationMethod } else { "auto" }
+        $gracefulTimeoutTextBox.Text = if ($appData.gracefulTimeoutMs) { $appData.gracefulTimeoutMs } else { "3000" }
+
         # Update action combo boxes dynamically based on selected app
         Update-ActionComboBoxes -AppId $selectedApp -ExecutablePath $appData.path
 
@@ -888,6 +968,9 @@ function Handle-AppSelectionChanged {
 
         $gameStartActionCombo.SelectedItem = $appData.gameStartAction
         $gameEndActionCombo.SelectedItem = $appData.gameEndAction
+
+        # Update termination settings visibility based on selected actions
+        Update-TerminationSettingsVisibility
     }
 }
 
@@ -1102,6 +1185,8 @@ function Save-CurrentAppData {
     $arguments = $script:Window.FindName("AppArgumentsTextBox").Text
     $gameStartAction = $script:Window.FindName("GameStartActionCombo").SelectedItem
     $gameEndAction = $script:Window.FindName("GameEndActionCombo").SelectedItem
+    $terminationMethod = $script:Window.FindName("TerminationMethodCombo").SelectedItem
+    $gracefulTimeout = $script:Window.FindName("GracefulTimeoutTextBox").Text
 
     # Update config data
     if ($appId -ne $script:CurrentAppId) {
@@ -1116,6 +1201,10 @@ function Save-CurrentAppData {
     $script:ConfigData.managedApps.$appId.arguments = $arguments
     $script:ConfigData.managedApps.$appId.gameStartAction = $gameStartAction
     $script:ConfigData.managedApps.$appId.gameEndAction = $gameEndAction
+
+    # Save termination settings
+    $script:ConfigData.managedApps.$appId | Add-Member -MemberType NoteProperty -Name "terminationMethod" -Value $terminationMethod -Force
+    $script:ConfigData.managedApps.$appId | Add-Member -MemberType NoteProperty -Name "gracefulTimeoutMs" -Value ([int]$gracefulTimeout) -Force
 }
 
 # Save global settings data
