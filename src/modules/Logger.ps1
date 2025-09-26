@@ -15,7 +15,13 @@ class Logger {
     [LogLevel] $MinimumLevel
     [bool] $EnableFileLogging
     [bool] $EnableConsoleLogging
+    [bool] $EnableNotarization
     [object] $Messages
+
+    # Firebase configuration for log notarization
+    hidden [string] $FirebaseProjectId
+    hidden [string] $FirebaseApiKey
+    hidden [string] $FirebaseDatabaseURL
 
     # Constructor
     Logger([object] $config, [object] $messages) {
@@ -23,24 +29,36 @@ class Logger {
         $this.MinimumLevel = [LogLevel]::Info
         $this.EnableConsoleLogging = $true
         $this.EnableFileLogging = $false
+        $this.EnableNotarization = $false
 
         if ($config.logging) {
             if ($config.logging.level) {
                 $this.MinimumLevel = [LogLevel]::$($config.logging.level)
             }
-            
+
             if ($config.logging.enableFileLogging) {
                 $this.EnableFileLogging = $config.logging.enableFileLogging
             }
-            
+
             if ($config.logging.enableConsoleLogging) {
                 $this.EnableConsoleLogging = $config.logging.enableConsoleLogging
             }
-            
+
+            if ($config.logging.enableNotarization) {
+                $this.EnableNotarization = $config.logging.enableNotarization
+            }
+
             if ($config.logging.filePath) {
                 $this.LogFilePath = $config.logging.filePath
             } else {
                 $this.LogFilePath = Join-Path $PSScriptRoot "..\logs\focus-game-deck.log"
+            }
+
+            # Initialize Firebase configuration for log notarization
+            if ($config.logging.firebase) {
+                $this.FirebaseProjectId = $config.logging.firebase.projectId
+                $this.FirebaseApiKey = $config.logging.firebase.apiKey
+                $this.FirebaseDatabaseURL = $config.logging.firebase.databaseURL
             }
         } else {
             $this.LogFilePath = Join-Path $PSScriptRoot "..\logs\focus-game-deck.log"
@@ -165,6 +183,107 @@ class Logger {
             $this.Info("Log file rotated. Backup created: $backupPath", "LOGGER")
         }
     }
+
+    # Calculate SHA256 hash of log file
+    hidden [string] GetLogFileHash() {
+        if (-not (Test-Path $this.LogFilePath)) {
+            return $null
+        }
+
+        try {
+            $hash = Get-FileHash -Path $this.LogFilePath -Algorithm SHA256
+            return $hash.Hash
+        }
+        catch {
+            $this.Error("Failed to calculate log file hash: $_", "NOTARY")
+            return $null
+        }
+    }
+
+    # Send log hash to Firebase for notarization
+    hidden [object] SendHashToFirebase([string] $hash, [string] $clientTimestamp) {
+        if (-not $this.FirebaseProjectId -or -not $this.FirebaseApiKey) {
+            throw "Firebase configuration is not properly set"
+        }
+
+        $firestoreUrl = "https://firestore.googleapis.com/v1/projects/$($this.FirebaseProjectId)/databases/(default)/documents/log_hashes"
+
+        $body = @{
+            fields = @{
+                logHash = @{
+                    stringValue = $hash
+                }
+                clientTimestamp = @{
+                    stringValue = $clientTimestamp
+                }
+                serverTimestamp = @{
+                    timestampValue = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                }
+            }
+        } | ConvertTo-Json -Depth 5
+
+        $headers = @{
+            'Content-Type' = 'application/json'
+            'Authorization' = "Bearer $($this.FirebaseApiKey)"
+        }
+
+        try {
+            $response = Invoke-RestMethod -Uri $firestoreUrl -Method POST -Body $body -Headers $headers -TimeoutSec 30
+            return $response
+        }
+        catch {
+            # Re-throw with more context
+            throw "Failed to send hash to Firebase: $($_.Exception.Message)"
+        }
+    }
+
+    # Finalize and notarize log file
+    [string] FinalizeAndNotarizeLogAsync() {
+        if (-not $this.EnableNotarization) {
+            $this.Debug("Log notarization is disabled", "NOTARY")
+            return $null
+        }
+
+        if (-not $this.EnableFileLogging -or -not (Test-Path $this.LogFilePath)) {
+            $this.Warning("No log file to notarize", "NOTARY")
+            return $null
+        }
+
+        try {
+            $this.Info("Starting log notarization process...", "NOTARY")
+
+            # Calculate log file hash
+            $hash = $this.GetLogFileHash()
+            if (-not $hash) {
+                throw "Failed to calculate log file hash"
+            }
+
+            $this.Debug("Log file hash calculated: $hash", "NOTARY")
+
+            # Generate client timestamp in ISO 8601 format
+            $clientTimestamp = Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ"
+
+            # Send hash to Firebase
+            $response = $this.SendHashToFirebase($hash, $clientTimestamp)
+
+            # Extract document ID from response
+            $documentId = $null
+            if ($response -and $response.name) {
+                $documentId = ($response.name -split '/')[-1]
+            }
+
+            if ($documentId) {
+                $this.Info("Log successfully notarized. Certificate ID: $documentId", "NOTARY")
+                return $documentId
+            } else {
+                throw "Failed to extract document ID from Firebase response"
+            }
+        }
+        catch {
+            $this.Error("Log notarization failed: $($_.Exception.Message)", "NOTARY")
+            return $null
+        }
+    }
 }
 
 # Global logger instance
@@ -175,11 +294,11 @@ function Initialize-Logger {
     param(
         [Parameter(Mandatory = $true)]
         [object] $Config,
-        
+
         [Parameter(Mandatory = $true)]
         [object] $Messages
     )
-    
+
     $Global:FocusGameDeckLogger = [Logger]::new($Config, $Messages)
     return $Global:FocusGameDeckLogger
 }
@@ -197,13 +316,13 @@ function Write-FGDLog {
     param(
         [Parameter(Mandatory = $true)]
         [LogLevel] $Level,
-        
+
         [Parameter(Mandatory = $true)]
         [string] $Message,
-        
+
         [string] $Component = "MAIN"
     )
-    
+
     $logger = Get-Logger
     $logger.Log($Level, $Message, $Component)
 }
@@ -212,10 +331,10 @@ function Write-FGDInfo {
     param(
         [Parameter(Mandatory = $true)]
         [string] $Message,
-        
+
         [string] $Component = "MAIN"
     )
-    
+
     Write-FGDLog -Level ([LogLevel]::Info) -Message $Message -Component $Component
 }
 
@@ -223,10 +342,10 @@ function Write-FGDWarning {
     param(
         [Parameter(Mandatory = $true)]
         [string] $Message,
-        
+
         [string] $Component = "MAIN"
     )
-    
+
     Write-FGDLog -Level ([LogLevel]::Warning) -Message $Message -Component $Component
 }
 
@@ -234,10 +353,10 @@ function Write-FGDError {
     param(
         [Parameter(Mandatory = $true)]
         [string] $Message,
-        
+
         [string] $Component = "MAIN"
     )
-    
+
     Write-FGDLog -Level ([LogLevel]::Error) -Message $Message -Component $Component
 }
 

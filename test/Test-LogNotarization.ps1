@@ -1,0 +1,432 @@
+#Requires -Version 5.1
+
+<#
+.SYNOPSIS
+    Tests the log notarization functionality with Firebase integration.
+
+.DESCRIPTION
+    This script creates a dummy log file, initializes the Logger with Firebase
+    configuration, and tests the FinalizeAndNotarizeLogAsync method to ensure
+    proper integration with Firebase Firestore.
+
+.NOTES
+    Author: Focus Game Deck Team
+    Version: 1.0.0
+    Created: 2025-09-26
+
+    Prerequisites:
+    - Firebase project must be set up with Firestore enabled
+    - Firebase API key and project ID must be configured in config.json
+    - Internet connection required for Firebase API calls
+#>
+
+param(
+    [switch]$Verbose,
+    [switch]$NoCleanup
+)
+
+# Set up error handling and verbose preference
+$ErrorActionPreference = "Stop"
+if ($Verbose) { $VerbosePreference = "Continue" }
+
+# Initialize script variables
+$scriptDir = $PSScriptRoot
+$configPath = Join-Path $scriptDir "..\config\config.json"
+$messagesPath = Join-Path $scriptDir "..\config\messages.json"
+$loggerModulePath = Join-Path $scriptDir "..\src\modules\Logger.ps1"
+$testLogDir = Join-Path $scriptDir "temp-logs"
+$testLogFile = Join-Path $testLogDir "test-log-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+
+# Test results tracking
+$testResults = @{
+    Total = 0
+    Passed = 0
+    Failed = 0
+    Skipped = 0
+}
+
+function Write-TestHeader {
+    param([string]$Title)
+
+    Write-Host ""
+    Write-Host "=" * 60 -ForegroundColor Cyan
+    Write-Host " $Title" -ForegroundColor Cyan
+    Write-Host "=" * 60 -ForegroundColor Cyan
+}
+
+function Write-TestResult {
+    param(
+        [string]$TestName,
+        [bool]$Passed,
+        [string]$Message = ""
+    )
+
+    $testResults.Total++
+
+    if ($Passed) {
+        $testResults.Passed++
+        Write-Host "✓ " -NoNewline -ForegroundColor Green
+        Write-Host "$TestName" -ForegroundColor White
+        if ($Message) {
+            Write-Host "  $Message" -ForegroundColor Gray
+        }
+    } else {
+        $testResults.Failed++
+        Write-Host "✗ " -NoNewline -ForegroundColor Red
+        Write-Host "$TestName" -ForegroundColor White
+        if ($Message) {
+            Write-Host "  Error: $Message" -ForegroundColor Red
+        }
+    }
+}
+
+function Write-TestSkipped {
+    param(
+        [string]$TestName,
+        [string]$Reason
+    )
+
+    $testResults.Total++
+    $testResults.Skipped++
+    Write-Host "- " -NoNewline -ForegroundColor Yellow
+    Write-Host "$TestName" -ForegroundColor White
+    Write-Host "  Skipped: $Reason" -ForegroundColor Yellow
+}
+
+function Test-Prerequisites {
+    Write-TestHeader "Testing Prerequisites"
+
+    # Test if Logger module exists
+    try {
+        if (Test-Path $loggerModulePath) {
+            Write-TestResult "Logger module file exists" $true
+        } else {
+            Write-TestResult "Logger module file exists" $false "File not found: $loggerModulePath"
+            return $false
+        }
+    } catch {
+        Write-TestResult "Logger module file exists" $false $_.Exception.Message
+        return $false
+    }
+
+    # Test if configuration file exists
+    try {
+        if (Test-Path $configPath) {
+            Write-TestResult "Configuration file exists" $true
+        } else {
+            Write-TestResult "Configuration file exists" $false "File not found: $configPath"
+            return $false
+        }
+    } catch {
+        Write-TestResult "Configuration file exists" $false $_.Exception.Message
+        return $false
+    }
+
+    # Test if messages file exists
+    try {
+        if (Test-Path $messagesPath) {
+            Write-TestResult "Messages file exists" $true
+        } else {
+            Write-TestResult "Messages file exists" $false "File not found: $messagesPath"
+            return $false
+        }
+    } catch {
+        Write-TestResult "Messages file exists" $false $_.Exception.Message
+        return $false
+    }
+
+    return $true
+}
+
+function Test-ConfigurationLoading {
+    Write-TestHeader "Testing Configuration Loading"
+
+    try {
+        # Load configuration
+        $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
+        Write-TestResult "Configuration JSON parsing" $true
+
+        # Check if logging section exists
+        if ($config.logging) {
+            Write-TestResult "Logging section exists" $true
+
+            # Check Firebase configuration
+            if ($config.logging.firebase) {
+                Write-TestResult "Firebase configuration section exists" $true
+
+                $hasRequiredFields = $true
+                $missingFields = @()
+
+                if (-not $config.logging.firebase.projectId -or $config.logging.firebase.projectId -eq "") {
+                    $hasRequiredFields = $false
+                    $missingFields += "projectId"
+                }
+
+                if (-not $config.logging.firebase.apiKey -or $config.logging.firebase.apiKey -eq "") {
+                    $hasRequiredFields = $false
+                    $missingFields += "apiKey"
+                }
+
+                if ($hasRequiredFields) {
+                    Write-TestResult "Firebase required fields present" $true
+                } else {
+                    Write-TestSkipped "Firebase required fields present" "Missing fields: $($missingFields -join ', '). Configure Firebase settings in config.json"
+                    return $false
+                }
+            } else {
+                Write-TestSkipped "Firebase configuration section exists" "Firebase section missing in config.json"
+                return $false
+            }
+        } else {
+            Write-TestSkipped "Logging section exists" "Logging section missing in config.json"
+            return $false
+        }
+
+        return $config
+    } catch {
+        Write-TestResult "Configuration loading" $false $_.Exception.Message
+        return $false
+    }
+}
+
+function Test-LoggerInitialization {
+    param([object]$Config)
+
+    Write-TestHeader "Testing Logger Initialization"
+
+    try {
+        # Load Logger module
+        . $loggerModulePath
+        Write-TestResult "Logger module import" $true
+
+        # Load messages
+        $messages = Get-Content -Path $messagesPath -Raw | ConvertFrom-Json
+        Write-TestResult "Messages loading" $true
+
+        # Initialize Logger
+        $logger = [Logger]::new($Config, $messages)
+        Write-TestResult "Logger instance creation" $true
+
+        # Test Logger properties
+        if ($logger.EnableNotarization) {
+            Write-TestResult "Log notarization enabled in Logger" $true
+        } else {
+            Write-TestSkipped "Log notarization enabled in Logger" "Notarization disabled in configuration"
+        }
+
+        return $logger
+    } catch {
+        Write-TestResult "Logger initialization" $false $_.Exception.Message
+        return $null
+    }
+}
+
+function Test-LogFileCreation {
+    param([Logger]$Logger)
+
+    Write-TestHeader "Testing Log File Creation"
+
+    try {
+        # Create test log directory
+        if (-not (Test-Path $testLogDir)) {
+            New-Item -ItemType Directory -Path $testLogDir -Force | Out-Null
+        }
+        Write-TestResult "Test log directory creation" $true
+
+        # Update logger to use test log file
+        $Logger.LogFilePath = $testLogFile
+        $Logger.EnableFileLogging = $true
+
+        # Write some test log entries
+        $Logger.Info("Test log entry 1 - Starting notarization test", "TEST")
+        $Logger.Info("Test log entry 2 - Simulating game session", "TEST")
+        $Logger.Warning("Test log entry 3 - Sample warning message", "TEST")
+        $Logger.Info("Test log entry 4 - Ending notarization test", "TEST")
+
+        # Verify log file was created and has content
+        if (Test-Path $testLogFile) {
+            $logContent = Get-Content $testLogFile
+            if ($logContent.Count -gt 0) {
+                Write-TestResult "Log file creation and content" $true "Created log with $($logContent.Count) lines"
+            } else {
+                Write-TestResult "Log file creation and content" $false "Log file is empty"
+                return $false
+            }
+        } else {
+            Write-TestResult "Log file creation and content" $false "Log file was not created"
+            return $false
+        }
+
+        return $true
+    } catch {
+        Write-TestResult "Log file creation" $false $_.Exception.Message
+        return $false
+    }
+}
+
+function Test-HashCalculation {
+    param([Logger]$Logger)
+
+    Write-TestHeader "Testing Hash Calculation"
+
+    try {
+        # Test hash calculation using reflection to access private method
+        $hashMethod = $Logger.GetType().GetMethod("GetLogFileHash", [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Instance)
+
+        if ($hashMethod) {
+            $hash = $hashMethod.Invoke($Logger, $null)
+
+            if ($hash -and $hash.Length -eq 64) {
+                Write-TestResult "SHA256 hash calculation" $true "Hash: $($hash.Substring(0, 16))..."
+            } else {
+                Write-TestResult "SHA256 hash calculation" $false "Invalid hash format or null result"
+                return $false
+            }
+        } else {
+            Write-TestResult "SHA256 hash calculation method access" $false "Could not access GetLogFileHash method"
+            return $false
+        }
+
+        return $hash
+    } catch {
+        Write-TestResult "Hash calculation" $false $_.Exception.Message
+        return $null
+    }
+}
+
+function Test-FirebaseIntegration {
+    param([Logger]$Logger)
+
+    Write-TestHeader "Testing Firebase Integration"
+
+    try {
+        # Test the full notarization process
+        Write-Host "Attempting to notarize log file..." -ForegroundColor Yellow
+
+        $certificateId = $Logger.FinalizeAndNotarizeLogAsync()
+
+        if ($certificateId) {
+            Write-TestResult "Firebase log notarization" $true "Certificate ID: $certificateId"
+            Write-Host "  You can verify this record in your Firebase Console" -ForegroundColor Gray
+            return $certificateId
+        } else {
+            Write-TestResult "Firebase log notarization" $false "No certificate ID returned"
+            return $null
+        }
+    } catch {
+        Write-TestResult "Firebase integration" $false $_.Exception.Message
+        return $null
+    }
+}
+
+function Test-Cleanup {
+    Write-TestHeader "Cleanup"
+
+    if (-not $NoCleanup) {
+        try {
+            if (Test-Path $testLogDir) {
+                Remove-Item -Path $testLogDir -Recurse -Force
+                Write-TestResult "Test files cleanup" $true
+            }
+        } catch {
+            Write-TestResult "Test files cleanup" $false $_.Exception.Message
+        }
+    } else {
+        Write-Host "Cleanup skipped due to -NoCleanup flag" -ForegroundColor Yellow
+        Write-Host "Test files location: $testLogDir" -ForegroundColor Gray
+    }
+}
+
+function Show-TestSummary {
+    Write-TestHeader "Test Summary"
+
+    Write-Host "Total Tests: " -NoNewline
+    Write-Host $testResults.Total -ForegroundColor White
+
+    Write-Host "Passed: " -NoNewline
+    Write-Host $testResults.Passed -ForegroundColor Green
+
+    Write-Host "Failed: " -NoNewline
+    Write-Host $testResults.Failed -ForegroundColor Red
+
+    Write-Host "Skipped: " -NoNewline
+    Write-Host $testResults.Skipped -ForegroundColor Yellow
+
+    $successRate = if ($testResults.Total -gt 0) {
+        [math]::Round(($testResults.Passed / $testResults.Total) * 100, 1)
+    } else {
+        0
+    }
+
+    Write-Host "Success Rate: " -NoNewline
+    Write-Host "$successRate%" -ForegroundColor $(if ($successRate -ge 80) { "Green" } elseif ($successRate -ge 60) { "Yellow" } else { "Red" })
+
+    if ($testResults.Failed -eq 0 -and $testResults.Passed -gt 0) {
+        Write-Host ""
+        Write-Host "🎉 All tests passed! Log notarization system is working correctly." -ForegroundColor Green
+    } elseif ($testResults.Failed -gt 0) {
+        Write-Host ""
+        Write-Host "❌ Some tests failed. Please check the configuration and Firebase setup." -ForegroundColor Red
+    }
+}
+
+# Main test execution
+try {
+    Write-Host "Focus Game Deck - Log Notarization Test" -ForegroundColor Cyan
+    Write-Host "Testing Firebase integration and log integrity verification" -ForegroundColor Gray
+    Write-Host "Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Gray
+
+    # Run test sequence
+    $prerequisitesOk = Test-Prerequisites
+    if (-not $prerequisitesOk) {
+        Write-Host "Prerequisites test failed. Aborting remaining tests." -ForegroundColor Red
+        Show-TestSummary
+        exit 1
+    }
+
+    $config = Test-ConfigurationLoading
+    if (-not $config) {
+        Write-Host "Configuration test failed. Aborting remaining tests." -ForegroundColor Red
+        Show-TestSummary
+        exit 1
+    }
+
+    $logger = Test-LoggerInitialization -Config $config
+    if (-not $logger) {
+        Write-Host "Logger initialization failed. Aborting remaining tests." -ForegroundColor Red
+        Show-TestSummary
+        exit 1
+    }
+
+    $logFileOk = Test-LogFileCreation -Logger $logger
+    if (-not $logFileOk) {
+        Write-Host "Log file creation failed. Aborting remaining tests." -ForegroundColor Red
+        Show-TestSummary
+        exit 1
+    }
+
+    $hash = Test-HashCalculation -Logger $logger
+
+    # Only test Firebase if notarization is enabled and configured
+    if ($logger.EnableNotarization) {
+        $certificateId = Test-FirebaseIntegration -Logger $logger
+    } else {
+        Write-TestSkipped "Firebase Integration Test" "Log notarization is disabled"
+    }
+
+    Test-Cleanup
+    Show-TestSummary
+
+    # Exit with appropriate code
+    exit $(if ($testResults.Failed -eq 0) { 0 } else { 1 })
+
+} catch {
+    Write-Host ""
+    Write-Host "Unexpected error during test execution:" -ForegroundColor Red
+    Write-Host $_.Exception.Message -ForegroundColor Red
+    Write-Host $_.ScriptStackTrace -ForegroundColor DarkRed
+
+    Test-Cleanup
+    Show-TestSummary
+    exit 1
+}
