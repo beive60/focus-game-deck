@@ -22,21 +22,21 @@ class ConfigValidator {
 
         # Validate basic structure
         $this.ValidateBasicStructure()
-        
+
         # Validate paths
         $this.ValidatePaths()
-        
+
         # Validate managed apps
         $this.ValidateManagedApps()
-        
+
         # Validate specific game if provided
         if ($gameId) {
             $this.ValidateGameConfiguration($gameId)
         }
-        
+
         # Validate OBS configuration if OBS is used
         $this.ValidateOBSConfiguration()
-        
+
         # Return true if no errors (warnings are acceptable)
         return $this.Errors.Count -eq 0
     }
@@ -45,7 +45,7 @@ class ConfigValidator {
     [void] ValidateBasicStructure() {
         # Check required top-level sections
         $requiredSections = @("games", "managedApps", "paths")
-        
+
         foreach ($section in $requiredSections) {
             if (-not $this.Config.$section) {
                 $this.Errors += "Missing required section: '$section'"
@@ -167,9 +167,9 @@ class ConfigValidator {
             }
         }
 
-        # Validate platform-specific requirements
+        # Validate platform-specific requirements (Multi-Platform Support)
         $platform = if ($gameConfig.platform) { $gameConfig.platform } else { "steam" }  # Default to Steam
-        
+
         switch ($platform) {
             "steam" {
                 if (-not $gameConfig.steamAppId) {
@@ -187,6 +187,14 @@ class ConfigValidator {
                     $this.Warnings += "Epic platform path not configured in 'paths.epic' - will attempt auto-detection"
                 }
             }
+            "ea" {
+                if (-not $gameConfig.eaGameId) {
+                    $this.Errors += "Game '$gameId' with EA platform requires 'eaGameId' property"
+                }
+                if (-not $this.Config.paths.ea) {
+                    $this.Warnings += "EA platform path not configured in 'paths.ea' - will attempt auto-detection"
+                }
+            }
             "riot" {
                 if (-not $gameConfig.riotGameId) {
                     $this.Errors += "Game '$gameId' with Riot platform requires 'riotGameId' property"
@@ -195,8 +203,15 @@ class ConfigValidator {
                     $this.Warnings += "Riot platform path not configured in 'paths.riot' - will attempt auto-detection"
                 }
             }
+            "direct" {
+                if (-not $gameConfig.executablePath) {
+                    $this.Errors += "Game '$gameId' with direct platform requires 'executablePath' property"
+                } elseif (-not (Test-Path $gameConfig.executablePath)) {
+                    $this.Errors += "Game '$gameId' executable path does not exist: '$($gameConfig.executablePath)'"
+                }
+            }
             default {
-                $this.Errors += "Game '$gameId' has unsupported platform: '$platform'. Supported platforms: steam, epic, riot"
+                $this.Errors += "Game '$gameId' has unsupported platform: '$platform'. Supported platforms: steam, epic, ea, riot, direct"
             }
         }
 
@@ -209,7 +224,7 @@ class ConfigValidator {
                     # OBS is handled specially, skip validation here
                     continue
                 }
-                
+
                 if (-not $this.Config.managedApps.$appId) {
                     $this.Errors += "Game '$gameId' references undefined application: '$appId'"
                 }
@@ -253,7 +268,7 @@ class ConfigValidator {
             if (-not $this.Config.obs.websocket.host) {
                 $this.Warnings += "OBS WebSocket host not specified, using default 'localhost'"
             }
-            
+
             if (-not $this.Config.obs.websocket.port) {
                 $this.Warnings += "OBS WebSocket port not specified, using default 4455"
             }
@@ -270,12 +285,92 @@ class ConfigValidator {
     # Get validation report
     [hashtable] GetValidationReport() {
         return @{
-            IsValid = ($this.Errors.Count -eq 0)
-            ErrorCount = $this.Errors.Count
+            IsValid      = ($this.Errors.Count -eq 0)
+            ErrorCount   = $this.Errors.Count
             WarningCount = $this.Warnings.Count
-            Errors = $this.Errors
-            Warnings = $this.Warnings
+            Errors       = $this.Errors
+            Warnings     = $this.Warnings
         }
+    }
+
+    # Platform detection validation method
+    [hashtable] ValidatePlatformAvailability() {
+        $platformResults = @{
+            Available   = @()
+            Unavailable = @()
+            Errors      = @()
+        }
+
+        # Platform detection paths
+        $platformChecks = @{
+            "steam" = @{
+                Paths         = @(
+                    "C:\Program Files (x86)\Steam\steam.exe",
+                    "C:\Program Files\Steam\steam.exe"
+                )
+                RegistryPath  = "HKCU:\Software\Valve\Steam"
+                RegistryValue = "SteamExe"
+            }
+            "epic"  = @{
+                Paths = @(
+                    "C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe",
+                    "C:\Program Files\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe"
+                )
+            }
+            "ea"    = @{
+                Paths = @(
+                    "C:\Program Files\Electronic Arts\EA Desktop\EA Desktop\EADesktop.exe",
+                    "C:\Program Files (x86)\Electronic Arts\EA Desktop\EA Desktop\EADesktop.exe"
+                )
+            }
+            "riot"  = @{
+                Paths = @(
+                    "C:\Riot Games\Riot Client\RiotClientServices.exe",
+                    "$env:LOCALAPPDATA\Riot Games\Riot Client\RiotClientServices.exe"
+                )
+            }
+        }
+
+        foreach ($platformKey in $platformChecks.Keys) {
+            $check = $platformChecks[$platformKey]
+            $found = $false
+
+            # Check standard paths
+            foreach ($path in $check.Paths) {
+                if ($path -and (Test-Path $path)) {
+                    $platformResults.Available += @{
+                        Platform = $platformKey
+                        Path     = $path
+                        Method   = "File System"
+                    }
+                    $found = $true
+                    break
+                }
+            }
+
+            # Check registry if available and not found yet
+            if (-not $found -and $check.RegistryPath) {
+                try {
+                    $regValue = Get-ItemProperty -Path $check.RegistryPath -Name $check.RegistryValue -ErrorAction SilentlyContinue
+                    if ($regValue -and $regValue.($check.RegistryValue) -and (Test-Path $regValue.($check.RegistryValue))) {
+                        $platformResults.Available += @{
+                            Platform = $platformKey
+                            Path     = $regValue.($check.RegistryValue)
+                            Method   = "Registry"
+                        }
+                        $found = $true
+                    }
+                } catch {
+                    # Registry check failed, but continue
+                }
+            }
+
+            if (-not $found) {
+                $platformResults.Unavailable += $platformKey
+            }
+        }
+
+        return $platformResults
     }
 
     # Display validation results
@@ -310,11 +405,11 @@ function New-ConfigValidator {
     param(
         [Parameter(Mandatory = $true)]
         [object] $Config,
-        
+
         [Parameter(Mandatory = $true)]
         [object] $Messages
     )
-    
+
     return [ConfigValidator]::new($Config, $Messages)
 }
 
@@ -323,17 +418,17 @@ function Test-FocusGameDeckConfig {
     param(
         [Parameter(Mandatory = $true)]
         [object] $Config,
-        
+
         [Parameter(Mandatory = $true)]
         [object] $Messages,
-        
+
         [string] $GameId = $null
     )
-    
+
     $validator = New-ConfigValidator -Config $Config -Messages $Messages
     $validator.ValidateConfiguration($GameId) | Out-Null
     $validator.DisplayResults()
-    
+
     return $validator.GetValidationReport()
 }
 

@@ -1,0 +1,47 @@
+[
+    // ビルド関連のキーボードショートカット
+    {
+        "key": "ctrl+shift+b",
+        "command": "workbench.action.tasks.runTask",
+        "args": "🏗️ ビルド - 開発版 (署名なし)"
+    },
+    {
+        "key": "ctrl+shift+alt+b",
+        "command": "workbench.action.tasks.runTask",
+        "args": "📦 ビルド - プロダクション版 (署名付き)"
+    },
+    // テスト関連のキーボードショートカット
+    {
+        "key": "ctrl+shift+t",
+        "command": "workbench.action.tasks.runTask",
+        "args": "🧪 テスト - 簡単チェック"
+    },
+    {
+        "key": "ctrl+shift+alt+t",
+        "command": "workbench.action.tasks.runTask",
+        "args": "🔍 開発者向けデバッグ - 全テスト実行"
+    },
+    // 実行関連のキーボードショートカット
+    {
+        "key": "f5",
+        "command": "workbench.action.tasks.runTask",
+        "args": "🎮 実行 - Focus Game Deck"
+    },
+    {
+        "key": "ctrl+f5",
+        "command": "workbench.action.tasks.runTask",
+        "args": "🚀 起動 - リリース版実行ファイル"
+    },
+    // クリーンアップ
+    {
+        "key": "ctrl+shift+del",
+        "command": "workbench.action.tasks.runTask",
+        "args": "🧹 クリーンアップ - ビルド成果物の削除"
+    },
+    // GUI設定エディタ
+    {
+        "key": "ctrl+shift+g",
+        "command": "workbench.action.tasks.runTask",
+        "args": "⚙️ GUI設定エディタ - ビルド"
+    }
+]
