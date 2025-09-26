@@ -69,6 +69,14 @@
                     "applicationId": ""
                 }
             }
+        },
+        "wallpaperEngine": {
+            "path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\wallpaper_engine\\wallpaper32.exe",
+            "processName": "wallpaper32|wallpaper64",
+            "gameStartAction": "pause-wallpaper",
+            "gameEndAction": "play-wallpaper",
+            "arguments": "",
+            "_comment": "Wallpaper Engine integration - Pauses wallpaper during gaming for better performance. Path should point to wallpaper32.exe or wallpaper64.exe depending on your system. Typical paths: Steam: C:\\Program Files (x86)\\Steam\\steamapps\\common\\wallpaper_engine\\ or Standalone: C:\\Program Files\\Wallpaper Engine\\"
         }
     },
     "games": {

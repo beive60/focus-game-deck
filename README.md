@@ -17,6 +17,9 @@ This script handles the tedious environment setup before you start playing (disa
   * **NoWinKey**: Disables the Windows key to prevent accidental presses.
   * **AutoHotkey**: Stops running scripts and resumes them after the game closes.
   * **OBS Studio**: Launches OBS and automatically starts/stops the replay buffer when your game starts/ends.
+  * **VTube Studio**: Steam and standalone version support, automated gaming mode switching and streaming restoration.
+  * **Discord**: Gaming mode auto-switching, Rich Presence display, and overlay control for optimized focus environment.
+  * **Wallpaper Engine**: Pauses wallpaper playback during gaming for improved performance using official command-line interface.
 
 ## **🛠️ Prerequisites**
 
@@ -29,6 +32,9 @@ To use this script, you will need the following software installed:
 * **\[Optional\] Clibor**: A clipboard utility.
 * **\[Optional\] NoWinKey**: A tool to disable the Windows key.
 * **\[Optional\] AutoHotkey**: A scripting language for automation.
+* **\[Optional\] VTube Studio**: VTuber avatar management software.
+* **\[Optional\] Discord**: Gamer communication platform.
+* **\[Optional\] Wallpaper Engine**: Dynamic wallpaper application. Improves game performance by pausing wallpaper playback during gaming.
 * **\[Optional\] Luna**: (Or any other background application you wish to manage).
 
 ## **💻 Installation Options**
