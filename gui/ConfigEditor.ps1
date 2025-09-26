@@ -134,6 +134,69 @@ function Show-SafeMessage {
     }
 }
 
+# Replace XAML placeholders with localized text
+function Replace-XamlPlaceholders {
+    param(
+        [string]$XamlContent
+    )
+
+    try {
+        # Define placeholder mappings
+        $placeholders = @{
+            "[WINDOW_TITLE]"               = Get-LocalizedMessage -Key "windowTitle"
+            "[GAMES_TAB_HEADER]"           = Get-LocalizedMessage -Key "gamesTabHeader"
+            "[MANAGED_APPS_TAB_HEADER]"    = Get-LocalizedMessage -Key "managedAppsTabHeader"
+            "[GLOBAL_SETTINGS_TAB_HEADER]" = Get-LocalizedMessage -Key "globalSettingsTabHeader"
+            "[STEAM_PLATFORM]"             = Get-LocalizedMessage -Key "steamPlatform"
+            "[EPIC_PLATFORM]"              = Get-LocalizedMessage -Key "epicPlatform"
+            "[RIOT_PLATFORM]"              = Get-LocalizedMessage -Key "riotPlatform"
+            "[BROWSE_BUTTON]"              = Get-LocalizedMessage -Key "browseButton"
+            "[OBS_SETTINGS_GROUP]"         = Get-LocalizedMessage -Key "obsSettingsGroup"
+            "[PATH_SETTINGS_GROUP]"        = Get-LocalizedMessage -Key "pathSettingsGroup"
+            "[GENERAL_SETTINGS_GROUP]"     = Get-LocalizedMessage -Key "generalSettingsGroup"
+            "[REPLAY_BUFFER_LABEL]"        = Get-LocalizedMessage -Key "replayBufferLabel"
+            "[LOG_RETENTION_LABEL]"        = Get-LocalizedMessage -Key "logRetentionLabel"
+            "[LOG_RETENTION_30]"           = Get-LocalizedMessage -Key "logRetention30"
+            "[LOG_RETENTION_90]"           = Get-LocalizedMessage -Key "logRetention90"
+            "[LOG_RETENTION_180]"          = Get-LocalizedMessage -Key "logRetention180"
+            "[LOG_RETENTION_UNLIMITED]"    = Get-LocalizedMessage -Key "logRetentionUnlimited"
+            "[ENABLE_LOG_NOTARIZATION]"    = Get-LocalizedMessage -Key "enableLogNotarization"
+            "[ENHANCED_SHORTCUTS]"         = Get-LocalizedMessage -Key "enhancedShortcuts"
+            "[TRADITIONAL_BATCH]"          = Get-LocalizedMessage -Key "traditionalBatch"
+            "[GENERATE_LAUNCHERS]"         = Get-LocalizedMessage -Key "generateLaunchers"
+            "[LAUNCHER_HELP_TEXT]"         = Get-LocalizedMessage -Key "launcherHelpText"
+            "[VERSION_LABEL]"              = Get-LocalizedMessage -Key "versionLabel"
+            "[CHECK_UPDATE_BUTTON]"        = Get-LocalizedMessage -Key "checkUpdateButton"
+            "[SAVE_BUTTON]"                = Get-LocalizedMessage -Key "saveButton"
+            "[CLOSE_BUTTON]"               = Get-LocalizedMessage -Key "closeButton"
+        }
+
+        # Replace all placeholders
+        foreach ($placeholder in $placeholders.GetEnumerator()) {
+            $oldValue = $placeholder.Key
+            $newValue = $placeholder.Value
+
+            # Escape XML special characters in the replacement value
+            $newValue = $newValue -replace "&", "&amp;"
+            $newValue = $newValue -replace "<", "&lt;"
+            $newValue = $newValue -replace ">", "&gt;"
+            $newValue = $newValue -replace '"', "&quot;"
+            $newValue = $newValue -replace "'", "&apos;"
+
+            # Also escape parentheses that might cause XML parsing issues
+            $newValue = $newValue -replace "\(", "&#40;"
+            $newValue = $newValue -replace "\)", "&#41;"
+
+            $XamlContent = $XamlContent -replace [regex]::Escape($oldValue), $newValue
+        }
+
+        return $XamlContent
+    } catch {
+        Write-Warning "Failed to replace XAML placeholders: $($_.Exception.Message)"
+        return $XamlContent
+    }
+}
+
 # Initialize the application
 function Initialize-ConfigEditor {
     param()
@@ -151,6 +214,10 @@ function Initialize-ConfigEditor {
         # Load XAML
         $xamlPath = Join-Path $PSScriptRoot "MainWindow.xaml"
         $xamlContent = Get-Content $xamlPath -Raw -Encoding UTF8
+
+        # Replace placeholders with localized text
+        $xamlContent = Replace-XamlPlaceholders -XamlContent $xamlContent
+
         $reader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
         $script:Window = [Windows.Markup.XamlReader]::Load($reader)
 
@@ -204,20 +271,20 @@ function Load-Configuration {
         Show-SafeMessage -MessageKey "configLoadError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
         # Create default config
         $script:ConfigData = [PSCustomObject]@{
-            language = ""
-            obs = [PSCustomObject]@{
-                websocket = [PSCustomObject]@{
-                    host = "localhost"
-                    port = 4455
+            language    = ""
+            obs         = [PSCustomObject]@{
+                websocket    = [PSCustomObject]@{
+                    host     = "localhost"
+                    port     = 4455
                     password = ""
                 }
                 replayBuffer = $true
             }
             managedApps = [PSCustomObject]@{}
-            games = [PSCustomObject]@{}
-            paths = [PSCustomObject]@{
+            games       = [PSCustomObject]@{}
+            paths       = [PSCustomObject]@{
                 steam = ""
-                obs = ""
+                obs   = ""
             }
         }
     }
@@ -463,6 +530,24 @@ function Update-UITexts {
         $checkUpdateButton = $script:Window.FindName("CheckUpdateButton")
         if ($checkUpdateButton) { $checkUpdateButton.Content = Get-LocalizedMessage -Key "checkUpdateButton" }
 
+        # Update launcher-related labels and buttons
+        $launcherTypeLabel = $script:Window.FindName("LauncherTypeLabel")
+        if ($launcherTypeLabel) { $launcherTypeLabel.Content = Get-LocalizedMessage -Key "launcherTypeLabel" }
+
+        $generateLaunchersButton = $script:Window.FindName("GenerateLaunchersButton")
+        if ($generateLaunchersButton) { $generateLaunchersButton.Content = Get-LocalizedMessage -Key "generateLaunchers" }
+
+        $launcherHelpText = $script:Window.FindName("LauncherHelpText")
+        if ($launcherHelpText) { $launcherHelpText.Text = Get-LocalizedMessage -Key "launcherHelpText" }
+
+        # Update log retention label
+        $logRetentionLabel = $script:Window.FindName("LogRetentionLabel")
+        if ($logRetentionLabel) { $logRetentionLabel.Content = Get-LocalizedMessage -Key "logRetentionLabel" }
+
+        # Update log notarization checkbox
+        $enableLogNotarizationCheckBox = $script:Window.FindName("EnableLogNotarizationCheckBox")
+        if ($enableLogNotarizationCheckBox) { $enableLogNotarizationCheckBox.Content = Get-LocalizedMessage -Key "enableLogNotarization" }
+
         Write-Verbose "UI texts updated for language: $script:CurrentLanguage"
     } catch {
         Write-Warning "Failed to update UI texts: $($_.Exception.Message)"
@@ -536,8 +621,7 @@ function Load-GlobalSettings {
             $securePassword = $configPassword | ConvertTo-SecureString
             $plainPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword))
             $passwordBox.Password = $plainPassword
-        }
-        catch {
+        } catch {
             # If conversion fails, treat as plain text (old format)
             $passwordBox.Password = $configPassword
             Write-Warning "Plain text password detected - it will be encrypted on next save"
@@ -727,14 +811,14 @@ function Handle-AddGame {
     }
 
     $script:ConfigData.games | Add-Member -MemberType NoteProperty -Name $newGameId -Value ([PSCustomObject]@{
-        name = "New Game"
-        platform = "steam"  # Default to Steam
-        steamAppId = ""
-        epicGameId = ""
-        riotGameId = ""
-        processName = ""
-        appsToManage = @()
-    })
+            name         = "New Game"
+            platform     = "steam"  # Default to Steam
+            steamAppId   = ""
+            epicGameId   = ""
+            riotGameId   = ""
+            processName  = ""
+            appsToManage = @()
+        })
 
     Update-GamesList
 
@@ -788,12 +872,12 @@ function Handle-AddApp {
     }
 
     $script:ConfigData.managedApps | Add-Member -MemberType NoteProperty -Name $newAppId -Value ([PSCustomObject]@{
-        path = ""
-        processName = ""
-        gameStartAction = "none"
-        gameEndAction = "none"
-        arguments = ""
-    })
+            path            = ""
+            processName     = ""
+            gameStartAction = "none"
+            gameEndAction   = "none"
+            arguments       = ""
+        })
 
     Update-ManagedAppsList
 
@@ -1041,7 +1125,7 @@ function Handle-CheckUpdate {
         }
 
         # Refresh the UI immediately
-        $script:Window.Dispatcher.Invoke([System.Windows.Threading.DispatcherPriority]::Background, [action]{})
+        $script:Window.Dispatcher.Invoke([System.Windows.Threading.DispatcherPriority]::Background, [action] {})
 
         # Check for updates (async-like operation)
         $updateResult = Test-UpdateAvailable
@@ -1191,12 +1275,10 @@ function Handle-GenerateLaunchers {
             Write-Warning "No launchers were created. Script output: $output"
         }
 
-    }
-    catch {
+    } catch {
         Write-Error "Launcher generation failed: $($_.Exception.Message)"
         Show-SafeMessage -MessageKey "launcherCreationError" -TitleKey "error" -Icon Error
-    }
-    finally {
+    } finally {
         # Re-enable button
         if ($generateButton) {
             $generateButton.IsEnabled = $true

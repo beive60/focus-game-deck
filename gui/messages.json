@@ -81,7 +81,19 @@
         "launcherCreationError": "ランチャー生成中にエラーが発生しました",
         "launcherScriptNotFound": "ランチャー生成スクリプトが見つかりません",
         "saveBeforeLaunchers": "ランチャーを生成する前に設定を保存してください",
-        "uiElementNotFound": "UI要素が見つかりません"
+        "uiElementNotFound": "UI要素が見つかりません",
+        "steamPlatform": "Steam",
+        "epicPlatform": "Epic Games",
+        "riotPlatform": "Riot Client",
+        "logRetention30": "30日",
+        "logRetention90": "90日 (推奨)",
+        "logRetention180": "180日",
+        "logRetentionUnlimited": "無期限 (自動削除しない)",
+        "logRetentionLabel": "ログ保持期間:",
+        "enableLogNotarization": "ログ公証化を有効にする (Firebase を使用したログの整合性検証)",
+        "launcherHelpText": "拡張ショートカットは最小化ウィンドウと馴染みのある .lnk ファイルでより良いユーザーエクスペリエンスを提供します。従来のバッチファイルは古いシステムと互換性があります。",
+        "enhancedShortcuts": "拡張ショートカット (.lnk)",
+        "traditionalBatch": "従来のバッチファイル (.bat)"
     },
     "en": {
         "textLabel": "Text",
@@ -165,6 +177,18 @@
         "launcherCreationError": "An error occurred during launcher generation",
         "launcherScriptNotFound": "Launcher generation script not found",
         "saveBeforeLaunchers": "Please save the configuration before generating launchers",
-        "uiElementNotFound": "UI element not found"
+        "uiElementNotFound": "UI element not found",
+        "steamPlatform": "Steam",
+        "epicPlatform": "Epic Games",
+        "riotPlatform": "Riot Client",
+        "logRetention30": "30 days",
+        "logRetention90": "90 days (Recommended)",
+        "logRetention180": "180 days",
+        "logRetentionUnlimited": "Unlimited (Never delete)",
+        "logRetentionLabel": "Log Retention Period:",
+        "enableLogNotarization": "Enable Log Notarization (Log integrity verification using Firebase)",
+        "launcherHelpText": "Enhanced Shortcuts provide better user experience with minimized windows and familiar .lnk files. Traditional Batch Files are compatible with older systems.",
+        "enhancedShortcuts": "Enhanced Shortcuts (.lnk)",
+        "traditionalBatch": "Traditional Batch Files (.bat)"
     }
 }
