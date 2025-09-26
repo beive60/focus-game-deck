@@ -488,6 +488,7 @@
                                     <RowDefinition Height="35"/>
                                     <RowDefinition Height="35"/>
                                     <RowDefinition Height="35"/>
+                                    <RowDefinition Height="35"/>
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
@@ -528,7 +529,29 @@
                                             Margin="10,0,0,0"/>
                                 </StackPanel>
 
-                                <CheckBox Grid.Row="2"
+                                <Label Grid.Row="2"
+                                       Grid.Column="0"
+                                       Name="LogRetentionLabel"
+                                       Content="Log Retention Period:"
+                                       VerticalAlignment="Center"/>
+                                <ComboBox Grid.Row="2"
+                                          Grid.Column="1"
+                                          Name="LogRetentionCombo"
+                                          Margin="5"
+                                          Width="200"
+                                          HorizontalAlignment="Left">
+                                    <ComboBoxItem Content="30日"
+                                                  Tag="30"/>
+                                    <ComboBoxItem Content="90日 (推奨)"
+                                                  Tag="90"
+                                                  IsSelected="True"/>
+                                    <ComboBoxItem Content="180日"
+                                                  Tag="180"/>
+                                    <ComboBoxItem Content="無期限 (自動削除しない)"
+                                                  Tag="-1"/>
+                                </ComboBox>
+
+                                <CheckBox Grid.Row="3"
                                           Grid.Column="0"
                                           Grid.ColumnSpan="2"
                                           Name="EnableLogNotarizationCheckBox"
@@ -536,7 +559,7 @@
                                           VerticalAlignment="Center"
                                           Margin="5"/>
 
-                                <TextBlock Grid.Row="3"
+                                <TextBlock Grid.Row="4"
                                            Grid.Column="1"
                                            Name="LauncherHelpText"
                                            Margin="5,5,0,0"

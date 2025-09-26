@@ -77,6 +77,11 @@ class Logger {
             }
         }
 
+        # Clean up old log files based on retention policy
+        if ($this.EnableFileLogging) {
+            $this.CleanupOldLogs($config)
+        }
+
         # Initialize self-authentication properties for log integrity verification
         $this.InitializeSelfAuthentication()
     }
@@ -174,6 +179,74 @@ class Logger {
     [void] LogOperationEnd([string] $operationName, [datetime] $startTime, [string] $component = "MAIN") {
         $duration = (Get-Date) - $startTime
         $this.Info("Completed operation: $operationName (Duration: $($duration.TotalMilliseconds)ms)", $component)
+    }
+
+    # Clean up old log files based on retention policy
+    hidden [void] CleanupOldLogs([object] $config) {
+        try {
+            # Get log retention days from config, default to 90 if not specified or invalid
+            $retentionDays = 90
+            if ($config.logging -and $config.logging.logRetentionDays) {
+                $configuredDays = $config.logging.logRetentionDays
+                if ($configuredDays -is [int] -and $configuredDays -gt 0) {
+                    $retentionDays = $configuredDays
+                } elseif ($configuredDays -eq -1) {
+                    # Special value -1 means unlimited retention (no cleanup)
+                    $this.Debug("Log retention set to unlimited - skipping cleanup", "CLEANUP")
+                    return
+                }
+            }
+
+            $this.Debug("Log retention period: $retentionDays days", "CLEANUP")
+
+            # Get log directory from log file path
+            $logDir = Split-Path $this.LogFilePath -Parent
+            if (-not (Test-Path $logDir)) {
+                $this.Debug("Log directory does not exist - skipping cleanup", "CLEANUP")
+                return
+            }
+
+            # Get all log files in the directory
+            $logFiles = Get-ChildItem -Path $logDir -Filter "*.log" -File -ErrorAction SilentlyContinue
+
+            if (-not $logFiles -or $logFiles.Count -eq 0) {
+                $this.Debug("No log files found - skipping cleanup", "CLEANUP")
+                return
+            }
+
+            # Calculate cutoff date
+            $cutoffDate = (Get-Date).AddDays(-$retentionDays)
+            $this.Debug("Cutoff date for log cleanup: $($cutoffDate.ToString('yyyy-MM-dd HH:mm:ss'))", "CLEANUP")
+
+            # Find and delete old log files
+            $deletedCount = 0
+            $totalSize = 0
+
+            foreach ($logFile in $logFiles) {
+                try {
+                    if ($logFile.LastWriteTime -lt $cutoffDate) {
+                        $fileSize = $logFile.Length
+                        $this.Debug("Deleting old log file: $($logFile.Name) (Last modified: $($logFile.LastWriteTime.ToString('yyyy-MM-dd HH:mm:ss')))", "CLEANUP")
+
+                        Remove-Item -Path $logFile.FullName -Force -ErrorAction Stop
+                        $deletedCount++
+                        $totalSize += $fileSize
+                    }
+                } catch {
+                    $this.Warning("Failed to delete log file '$($logFile.Name)': $($_.Exception.Message)", "CLEANUP")
+                }
+            }
+
+            if ($deletedCount -gt 0) {
+                $totalSizeMB = [math]::Round($totalSize / 1MB, 2)
+                $this.Info("Cleaned up $deletedCount old log file(s), freed $totalSizeMB MB of disk space", "CLEANUP")
+            } else {
+                $this.Debug("No old log files found for cleanup", "CLEANUP")
+            }
+
+        } catch {
+            $this.Warning("Error during log cleanup: $($_.Exception.Message)", "CLEANUP")
+        }
     }
 
     # Initialize self-authentication properties by retrieving digital signature information

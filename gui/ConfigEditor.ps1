@@ -565,6 +565,25 @@ function Load-GlobalSettings {
         $languageCombo.SelectedIndex = 2  # English
     }
 
+    # Log Retention Setting
+    $logRetentionCombo = $script:Window.FindName("LogRetentionCombo")
+    if ($logRetentionCombo) {
+        $retentionDays = if ($script:ConfigData.logging -and $script:ConfigData.logging.logRetentionDays) {
+            $script:ConfigData.logging.logRetentionDays
+        } else {
+            90  # Default value
+        }
+
+        # Select appropriate combo box item based on retention days
+        switch ($retentionDays) {
+            30 { $logRetentionCombo.SelectedIndex = 0 }
+            90 { $logRetentionCombo.SelectedIndex = 1 }
+            180 { $logRetentionCombo.SelectedIndex = 2 }
+            -1 { $logRetentionCombo.SelectedIndex = 3 }
+            default { $logRetentionCombo.SelectedIndex = 1 }  # Default to 90 days
+        }
+    }
+
     # Log Notarization Setting
     $logNotarizationCheckBox = $script:Window.FindName("EnableLogNotarizationCheckBox")
     if ($logNotarizationCheckBox) {
@@ -956,15 +975,33 @@ function Save-GlobalSettingsData {
         default { $script:ConfigData.language = "" }
     }
 
+    # Initialize logging section if it doesn't exist
+    if (-not $script:ConfigData.logging) {
+        $script:ConfigData | Add-Member -MemberType NoteProperty -Name "logging" -Value ([PSCustomObject]@{})
+    }
+
+    # Log Retention Setting
+    $logRetentionCombo = $script:Window.FindName("LogRetentionCombo")
+    if ($logRetentionCombo -and $logRetentionCombo.SelectedItem) {
+        $selectedTag = $logRetentionCombo.SelectedItem.Tag
+        $retentionDays = [int]$selectedTag
+
+        # Add or update the logRetentionDays property
+        if ($script:ConfigData.logging.PSObject.Properties["logRetentionDays"]) {
+            $script:ConfigData.logging.logRetentionDays = $retentionDays
+        } else {
+            $script:ConfigData.logging | Add-Member -MemberType NoteProperty -Name "logRetentionDays" -Value $retentionDays
+        }
+    }
+
     # Log Notarization Setting
     $logNotarizationCheckBox = $script:Window.FindName("EnableLogNotarizationCheckBox")
     if ($logNotarizationCheckBox) {
-        # Initialize logging section if it doesn't exist
-        if (-not $script:ConfigData.logging) {
-            $script:ConfigData | Add-Member -MemberType NoteProperty -Name "logging" -Value @{}
+        if ($script:ConfigData.logging.PSObject.Properties["enableNotarization"]) {
+            $script:ConfigData.logging.enableNotarization = $logNotarizationCheckBox.IsChecked
+        } else {
+            $script:ConfigData.logging | Add-Member -MemberType NoteProperty -Name "enableNotarization" -Value $logNotarizationCheckBox.IsChecked
         }
-
-        $script:ConfigData.logging.enableNotarization = $logNotarizationCheckBox.IsChecked
     }
 }
 
