@@ -290,16 +290,97 @@ function Load-Configuration {
     }
 }
 
+# Get available actions for specific app (Dynamic Action Selection)
+function Get-AvailableActionsForApp {
+    param(
+        [string]$AppId,
+        [string]$ExecutablePath = ""
+    )
+
+    # Base actions available to all applications
+    $baseActions = @("start-process", "stop-process", "none")
+
+    # Application-specific actions
+    $specificActions = @()
+
+    # Check by Application ID (primary method)
+    switch ($AppId) {
+        "discord" {
+            $specificActions += @("set-discord-gaming-mode", "restore-discord-normal")
+        }
+        "vtubeStudio" {
+            $specificActions += @("start-vtube-studio", "stop-vtube-studio")
+        }
+        "clibor" {
+            $specificActions += @("toggle-hotkeys")
+        }
+        "wallpaper-engine" {
+            $specificActions += @("pause-wallpaper", "play-wallpaper")
+        }
+        default {
+            # Check by executable path as fallback for future extensibility
+            if ($ExecutablePath -like "*Discord*") {
+                $specificActions += @("set-discord-gaming-mode", "restore-discord-normal")
+            } elseif ($ExecutablePath -like "*VTube Studio*") {
+                $specificActions += @("start-vtube-studio", "stop-vtube-studio")
+            } elseif ($ExecutablePath -like "*Clibor*" -or $ExecutablePath -like "*clibor*") {
+                $specificActions += @("toggle-hotkeys")
+            } elseif ($ExecutablePath -like "*wallpaper*engine*" -or $ExecutablePath -like "*WallpaperEngine*") {
+                $specificActions += @("pause-wallpaper", "play-wallpaper")
+            }
+            # Generic applications get no additional actions beyond base actions
+        }
+    }
+
+    return $baseActions + $specificActions
+}
+
+# Update action combo boxes based on selected app
+function Update-ActionComboBoxes {
+    param([string]$AppId, [string]$ExecutablePath = "")
+
+    $availableActions = Get-AvailableActionsForApp -AppId $AppId -ExecutablePath $ExecutablePath
+
+    $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
+    $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
+
+    # Preserve current selections if they are still valid
+    $currentStartAction = $gameStartActionCombo.SelectedItem
+    $currentEndAction = $gameEndActionCombo.SelectedItem
+
+    # Clear and repopulate combo boxes
+    $gameStartActionCombo.Items.Clear()
+    $gameEndActionCombo.Items.Clear()
+
+    foreach ($action in $availableActions) {
+        $gameStartActionCombo.Items.Add($action)
+        $gameEndActionCombo.Items.Add($action)
+    }
+
+    # Restore selections if they are still available
+    if ($currentStartAction -in $availableActions) {
+        $gameStartActionCombo.SelectedItem = $currentStartAction
+    } else {
+        $gameStartActionCombo.SelectedIndex = $availableActions.Count - 1  # Default to "none"
+    }
+
+    if ($currentEndAction -in $availableActions) {
+        $gameEndActionCombo.SelectedItem = $currentEndAction
+    } else {
+        $gameEndActionCombo.SelectedIndex = $availableActions.Count - 1  # Default to "none"
+    }
+}
+
 # Setup UI controls (dropdown lists, etc.)
 function Setup-UIControls {
     param()
 
-    # Setup Action combo boxes
-    $actions = @("start-process", "stop-process", "toggle-hotkeys", "start-vtube-studio", "stop-vtube-studio", "set-discord-gaming-mode", "restore-discord-normal", "pause-wallpaper", "play-wallpaper", "none")
+    # Setup Action combo boxes with default actions (will be updated dynamically)
+    $defaultActions = @("start-process", "stop-process", "none")
     $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
     $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
 
-    foreach ($action in $actions) {
+    foreach ($action in $defaultActions) {
         $gameStartActionCombo.Items.Add($action)
         $gameEndActionCombo.Items.Add($action)
     }
@@ -790,7 +871,10 @@ function Handle-AppSelectionChanged {
         $script:Window.FindName("AppProcessNameTextBox").Text = $appData.processName
         $script:Window.FindName("AppArgumentsTextBox").Text = $appData.arguments
 
-        # Set combo box selections
+        # Update action combo boxes dynamically based on selected app
+        Update-ActionComboBoxes -AppId $selectedApp -ExecutablePath $appData.path
+
+        # Set combo box selections (after dynamic update)
         $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
         $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
 
@@ -884,6 +968,9 @@ function Handle-AddApp {
     # Select the new app
     $managedAppsList = $script:Window.FindName("ManagedAppsList")
     $managedAppsList.SelectedItem = $newAppId
+
+    # Update action combo boxes for the new app (default to base actions)
+    Update-ActionComboBoxes -AppId $newAppId -ExecutablePath ""
 
     Show-SafeMessage -MessageKey "appAdded" -TitleKey "info"
 }
