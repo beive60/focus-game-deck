@@ -69,7 +69,19 @@
         "timeoutError": "タイムアウトエラー: アップデート確認がタイムアウトしました",
         "unknownError": "不明なエラーが発生しました",
         "updateCheckFailed": "アップデート確認に失敗しました",
-        "browserOpenError": "ブラウザを開くことができませんでした"
+        "browserOpenError": "ブラウザを開くことができませんでした",
+        "launcherTypeLabel": "ランチャー形式:",
+        "generateLaunchers": "ランチャー生成",
+        "generating": "生成中...",
+        "success": "成功",
+        "warning": "警告",
+        "launchersCreatedEnhanced": "拡張ショートカット形式のランチャーを{0}個作成しました",
+        "launchersCreatedTraditional": "従来のバッチファイル形式のランチャーを{0}個作成しました",
+        "launcherCreationFailed": "ランチャーの作成に失敗しました",
+        "launcherCreationError": "ランチャー生成中にエラーが発生しました",
+        "launcherScriptNotFound": "ランチャー生成スクリプトが見つかりません",
+        "saveBeforeLaunchers": "ランチャーを生成する前に設定を保存してください",
+        "uiElementNotFound": "UI要素が見つかりません"
     },
     "en": {
         "textLabel": "Text",
@@ -141,6 +153,18 @@
         "timeoutError": "Timeout error: Update check timed out",
         "unknownError": "An unknown error occurred",
         "updateCheckFailed": "Update check failed",
-        "browserOpenError": "Unable to open browser"
+        "browserOpenError": "Unable to open browser",
+        "launcherTypeLabel": "Launcher Type:",
+        "generateLaunchers": "Generate Launchers",
+        "generating": "Generating...",
+        "success": "Success",
+        "warning": "Warning",
+        "launchersCreatedEnhanced": "Successfully created {0} enhanced shortcut launchers",
+        "launchersCreatedTraditional": "Successfully created {0} traditional batch file launchers",
+        "launcherCreationFailed": "Failed to create launchers",
+        "launcherCreationError": "An error occurred during launcher generation",
+        "launcherScriptNotFound": "Launcher generation script not found",
+        "saveBeforeLaunchers": "Please save the configuration before generating launchers",
+        "uiElementNotFound": "UI element not found"
     }
 }

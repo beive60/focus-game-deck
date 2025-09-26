@@ -9,8 +9,19 @@ config/config.json.backup-*
 .DS_Store
 Thumbs.db
 
-# generated launch batch files
+# Generated launcher files
 launch_*.bat
+launch_*.lnk
+
+# Test-related temporary files
+test/test-launchers/
+test/test-config.json
+test/*_test.txt
+test/*.tmp
+
+# Enhanced launcher debug files
+*.lnk.log
+launcher-debug.txt
 
 # VSCode user settings
 .vscode/settings.json

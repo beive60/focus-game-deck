@@ -224,7 +224,7 @@ class WebSocketAppManagerBase {
 # VTubeStudioManager.ps1 - Hybrid usage pattern
 class VTubeStudioManager {
     hidden [WebSocketAppManagerBase] $baseHelper
-    
+
     [bool] IsVTubeStudioRunning() {
         try {
             return $this.baseHelper.IsProcessRunning("VTubeStudio")
@@ -247,6 +247,88 @@ class VTubeStudioManager {
 **Design Decision Impact:**
 
 This hybrid approach balances the benefits of code reuse with the need for flexibility in PowerShell-based class architecture, establishing a pattern for future manager implementations while avoiding the constraints of rigid inheritance models.
+
+#### 8. Launcher Format Enhancement: Windows Shortcuts over Batch Files
+
+**Problem Context:**
+
+The original `Create-Launchers.ps1` generated `.bat` files for game launching, which presented usability challenges for the project's target audience of "gamers who are not tech-savvy":
+
+- Visual intimidation: `.bat` extensions appear technical and suspicious to non-technical users
+- Disruptive UX: Command prompt windows flash briefly when executed
+- Poor file identification: Uniform batch file icons make game identification difficult
+- User anxiety: Black command prompt windows create uncertainty about what's executing
+
+**Options Considered:**
+
+- **Maintain Batch Files (.bat)**: Keep existing implementation for consistency ❌
+- **PowerShell Scripts (.ps1)**: Direct PowerShell execution with better control ⚠️
+- **Windows Shortcuts (.lnk)**: Native Windows shortcut files with enhanced UX ✅
+- **Desktop Applications**: Create native executables for each game ❌
+
+**Selection Rationale:**
+
+- **User-Friendly Design**: `.lnk` files are familiar and trusted by general users
+- **Enhanced UX**: Minimized window execution (`WindowStyle = 7`) eliminates disruptive command prompt flashing
+- **Visual Appeal**: Support for custom icons and proper tooltips/descriptions
+- **Platform Integration**: Native Windows shortcuts integrate seamlessly with desktop and file explorer
+- **Maintained Functionality**: All existing features preserved while improving presentation
+- **Project Alignment**: Directly supports the core principle "intuitive for non-technical gamers"
+
+**Technical Implementation:**
+
+```powershell
+# Enhanced launcher creation using WScript.Shell COM object
+function New-GameShortcut {
+    param(
+        [string]$ShortcutPath,
+        [string]$TargetPath = "powershell.exe",
+        [string]$Arguments,
+        [string]$Description,
+        [int]$WindowStyle = 7  # Minimized execution
+    )
+
+    $WshShell = New-Object -ComObject WScript.Shell
+    $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+    $Shortcut.TargetPath = $TargetPath
+    $Shortcut.Arguments = $Arguments
+    $Shortcut.Description = $Description
+    $Shortcut.WindowStyle = $WindowStyle
+    $Shortcut.Save()
+}
+```
+
+**Implementation Strategy:**
+
+- **Phase 1**: Parallel deployment with existing batch file system
+- **Phase 2**: GUI integration allowing user choice between formats
+- **Phase 3**: Default transition to enhanced shortcuts with fallback support
+
+**Benefits Achieved:**
+
+| Aspect | Batch Files (.bat) | Enhanced Shortcuts (.lnk) | Improvement |
+|--------|-------------------|---------------------------|-------------|
+| User Perception | ❌ Technical/Suspicious | ✅ Familiar/Trusted | 🔼 Reduced barrier to entry |
+| Execution Experience | ❌ Visible CMD window | ✅ Minimized/Silent | 🔼 Professional UX |
+| File Identification | ❌ Generic icons | ✅ Custom icons supported | 🔼 Better usability |
+| Tooltips/Description | ❌ Limited | ✅ Rich metadata | 🔼 User guidance |
+| Desktop Integration | △ Functional | ✅ Native | 🔼 Windows consistency |
+
+**Risk Mitigation:**
+
+- **COM Object Dependency**: Implemented robust error handling and fallback to batch file generation
+- **Compatibility Concerns**: Comprehensive testing across Windows 10/11 and PowerShell versions
+- **User Choice**: GUI integration allows users to select preferred launcher format
+
+**Future Considerations:**
+
+- Custom icon support for game-specific visual identification
+- Integration with Windows Start Menu and taskbar pinning
+- Potential extension to create desktop shortcuts automatically
+
+**Design Decision Impact:**
+
+This enhancement directly addresses the project's core value of accessibility for non-technical users while maintaining all existing functionality. The implementation demonstrates the project's commitment to user-first design principles and establishes a pattern for future UX improvements throughout the application.
 
 ## Implementation Guidelines
 
@@ -329,7 +411,7 @@ Write-Host "[OK] Operation completed successfully"
    ```powershell
    # Recommended: Use JSON external resources
    Show-SafeMessage -MessageKey "configSaved" -TitleKey "info"
-   
+
    # Not recommended: Direct string specification
    [System.Windows.MessageBox]::Show("設定が保存されました")
    ```
@@ -339,7 +421,7 @@ Write-Host "[OK] Operation completed successfully"
    ```powershell
    # Configuration loading
    $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-   
+
    # Configuration saving
    $config | ConvertTo-Json -Depth 10 | Set-Content $configPath -Encoding UTF8
    ```
@@ -430,6 +512,7 @@ To maintain this design philosophy, please prioritize the following:
 | 1.2.0 | 2025-09-24 | Build system implementation, digital signature infrastructure completed |
 | 1.3.0 | 2025-09-24 | VTube Studio integration, character encoding guidelines added |
 | 1.4.0 | 2025-09-24 | WebSocket manager hybrid architecture pattern implemented |
+| 1.5.0 | 2025-09-26 | Enhanced launcher format implementation: Windows shortcuts over batch files for improved UX |
 
 ## Language Support
 
