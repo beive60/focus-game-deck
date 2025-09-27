@@ -49,7 +49,9 @@ Focus Game Deck
 │   └── gui/Build-ConfigEditor.ps1       # GUIビルドスクリプト
 │
 ├── Build System & Distribution
-│   ├── Build-FocusGameDeck.ps1          # メインビルドスクリプト
+│   ├── build-tools/                     # ビルド専用ツール
+│   │   ├── Build-FocusGameDeck.ps1      # メインビルドスクリプト
+│   │   └── Sign-Executables.ps1         # デジタル署名スクリプト
 │   ├── Sign-Executables.ps1             # デジタル署名スクリプト
 │   ├── Master-Build.ps1                 # 統合ビルド統制
 │   ├── build/                           # ビルド成果物ディレクトリ
@@ -160,7 +162,7 @@ Focus Game Deck
 
 ### GUI開発ガイドライン
 
-1. **XAML構造**: 
+1. **XAML構造**:
    - x:Class属性は使用しない（PowerShell互換性のため）
    - Name属性による要素参照
    - TabControl による機能分類
@@ -170,7 +172,7 @@ Focus Game Deck
    ```powershell
    # 推奨: JSON外部リソース使用
    Show-SafeMessage -MessageKey "configSaved" -TitleKey "info"
-   
+
    # 非推奨: 直接文字列指定
    [System.Windows.MessageBox]::Show("設定が保存されました")
    ```
@@ -180,7 +182,7 @@ Focus Game Deck
    ```powershell
    # 設定読み込み
    $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-   
+
    # 設定保存
    $config | ConvertTo-Json -Depth 10 | Set-Content $configPath -Encoding UTF8
    ```

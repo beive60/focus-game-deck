@@ -103,7 +103,7 @@ Focus Game Deck features a comprehensive three-tier build system:
 **Build Scripts:**
 
 * `Master-Build.ps1` - Complete build orchestration (development/production workflows)
-* `Build-FocusGameDeck.ps1` - Core executable generation and build management
+* `build-tools/Build-FocusGameDeck.ps1` - Core executable generation and build management
 * `Sign-Executables.ps1` - Digital signature management and certificate operations
 
 For detailed build system documentation, see [docs/BUILD-SYSTEM.md](./docs/BUILD-SYSTEM.md).

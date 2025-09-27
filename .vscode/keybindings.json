@@ -1,47 +1,47 @@
 [
-    // ビルド関連のキーボードショートカット
+    // Build-related keyboard short        "args": "🧩 Cleanup - Delete Build Artifacts"uts
     {
         "key": "ctrl+shift+b",
         "command": "workbench.action.tasks.runTask",
-        "args": "🏗️ ビルド - 開発版 (署名なし)"
+        "args": "🏗️ Build - Development (unsigned)"
     },
     {
         "key": "ctrl+shift+alt+b",
         "command": "workbench.action.tasks.runTask",
-        "args": "📦 ビルド - プロダクション版 (署名付き)"
+        "args": "📦 Build - Production (signed)"
     },
-    // テスト関連のキーボードショートカット
+    // Test-related keyboard shortcuts
     {
         "key": "ctrl+shift+t",
         "command": "workbench.action.tasks.runTask",
-        "args": "🧪 テスト - 簡単チェック"
+        "args": "🧪 Test - Simple Check"
     },
     {
         "key": "ctrl+shift+alt+t",
         "command": "workbench.action.tasks.runTask",
-        "args": "🔍 開発者向けデバッグ - 全テスト実行"
+        "args": "🔍 Developer Debug - Run All Tests"
     },
-    // 実行関連のキーボードショートカット
+    // Execution-related keyboard shortcuts
     {
         "key": "f5",
         "command": "workbench.action.tasks.runTask",
-        "args": "🎮 実行 - Focus Game Deck"
+        "args": "🎮 Run - Focus Game Deck"
     },
     {
         "key": "ctrl+f5",
         "command": "workbench.action.tasks.runTask",
-        "args": "🚀 起動 - リリース版実行ファイル"
+        "args": "🚀 Launch - Release Version Executable"
     },
-    // クリーンアップ
+    // Cleanup
     {
         "key": "ctrl+shift+del",
         "command": "workbench.action.tasks.runTask",
-        "args": "🧹 クリーンアップ - ビルド成果物の削除"
+        "args": "🧹 Cleanup - Delete Build Artifacts"
     },
-    // GUI設定エディタ
+    // GUI Config Editor
     {
         "key": "ctrl+shift+g",
         "command": "workbench.action.tasks.runTask",
-        "args": "⚙️ GUI設定エディタ - ビルド"
+        "args": "⚙️ GUI Config Editor - Build"
     }
 ]

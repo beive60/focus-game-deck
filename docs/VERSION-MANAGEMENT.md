@@ -1,155 +1,155 @@
-# Focus Game Deck - バージョン管理仕様書
+# Focus Game Deck - Version Management Specification
 
-## 概要
+## Overview
 
-Focus Game Deckプロジェクトでは、**セマンティックバージョニング (SemVer 2.0.0)** を採用し、一貫性のあるバージョン管理を実施します。
+The Focus Game Deck project adopts **Semantic Versioning (SemVer 2.0.0)** to implement consistent version management.
 
-## バージョニング体系
+## Versioning System
 
-### 基本形式
+### Basic Format
 
 ```text
 MAJOR.MINOR.PATCH[-PRERELEASE][+BUILD]
 ```
 
-### 各要素の定義
+### Element Definitions
 
-| 要素 | 説明 | 更新条件 |
-|------|------|----------|
-| **MAJOR** | メジャーバージョン | 後方互換性のない変更を含む場合 |
-| **MINOR** | マイナーバージョン | 後方互換性を保った機能追加 |
-| **PATCH** | パッチバージョン | 後方互換性を保ったバグ修正 |
-| **PRERELEASE** | プレリリース識別子 | アルファ・ベータ・RC版の識別 |
-| **BUILD** | ビルドメタデータ | ビルド固有の情報（通常は省略） |
+| Element | Description | Update Condition |
+|---------|-------------|------------------|
+| **MAJOR** | Major version | When introducing breaking changes |
+| **MINOR** | Minor version | When adding features with backward compatibility |
+| **PATCH** | Patch version | When fixing bugs with backward compatibility |
+| **PRERELEASE** | Pre-release identifier | Identification for alpha/beta/RC versions |
+| **BUILD** | Build metadata | Build-specific information (usually omitted) |
 
-### プレリリース版命名規則
+### Pre-release Version Naming Conventions
 
-#### アルファ版（Alpha）
+#### Alpha Version
 
-- **形式**: `X.Y.Z-alpha[.N]`
-- **例**: `1.0.0-alpha`, `1.0.0-alpha.1`, `1.0.0-alpha.2`
-- **用途**: 内部テスト、限定的なアルファテスト期
-- **安定性**: 不安定、機能未完成、破壊的変更あり
+- **Format**: `X.Y.Z-alpha[.N]`
+- **Examples**: `1.0.0-alpha`, `1.0.0-alpha.1`, `1.0.0-alpha.2`
+- **Purpose**: Internal testing, limited alpha testing period
+- **Stability**: Unstable, incomplete features, breaking changes allowed
 
-#### ベータ版（Beta）
+#### Beta Version
 
-- **形式**: `X.Y.Z-beta[.N]`
-- **例**: `1.0.0-beta`, `1.0.0-beta.1`, `1.0.0-beta.2`
-- **用途**: パブリックベータテスト、フィードバック収集
-- **安定性**: 機能凍結、バグ修正のみ
+- **Format**: `X.Y.Z-beta[.N]`
+- **Examples**: `1.0.0-beta`, `1.0.0-beta.1`, `1.0.0-beta.2`
+- **Purpose**: Public beta testing, feedback collection
+- **Stability**: Feature freeze, bug fixes only
 
-#### リリース候補版（RC: Release Candidate）
+#### Release Candidate (RC)
 
-- **形式**: `X.Y.Z-rc[.N]`
-- **例**: `1.0.0-rc.1`, `1.0.0-rc.2`
-- **用途**: 最終リリース前の確認版
-- **安定性**: リリース品質、重大な問題のみ修正
+- **Format**: `X.Y.Z-rc[.N]`
+- **Examples**: `1.0.0-rc.1`, `1.0.0-rc.2`
+- **Purpose**: Final confirmation version before release
+- **Stability**: Release quality, only critical issues fixed
 
-## リリースサイクル
+## Release Cycle
 
-### アルファテスト期（2025年10月）
+### Alpha Testing Period (October 2025)
 
 ```text
 1.0.0-alpha.1 → 1.0.0-alpha.2 → ... → 1.0.0-beta.1
 ```
 
-### ベータテスト期（2025年10月下旬～11月初旬）
+### Beta Testing Period (Late October - Early November 2025)
 
 ```text
 1.0.0-beta.1 → 1.0.0-beta.2 → ... → 1.0.0-rc.1
 ```
 
-### 公式リリース（2025年11月下旬～12月）
+### Official Release (Late November - December 2025)
 
 ```text
 1.0.0-rc.1 → 1.0.0-rc.2 → ... → 1.0.0
 ```
 
-## バージョン更新基準
+## Version Update Criteria
 
-### MAJOR バージョン更新
+### MAJOR Version Update
 
-- 設定ファイル形式の大幅変更
-- 既存APIの削除・大幅変更
-- システム要件の大幅変更
-- アーキテクチャの根本的変更
+- Major changes to configuration file format
+- Deletion or major changes to existing APIs
+- Major changes to system requirements
+- Fundamental architectural changes
 
-### MINOR バージョン更新
+### MINOR Version Update
 
-- 新しいゲームプラットフォーム対応
-- 新機能の追加（プロファイル機能、Discord連携等）
-- 新しい言語サポート
-- 設定項目の追加（既存の互換性を保つ）
+- Support for new game platforms
+- Addition of new features (profile functionality, Discord integration, etc.)
+- New language support
+- Addition of configuration options (maintaining existing compatibility)
 
-### PATCH バージョン更新
+### PATCH Version Update
 
-- バグ修正
-- セキュリティパッチ
-- パフォーマンス改善
-- UI/UXの軽微な改善
-- 既存機能の安定性向上
+- Bug fixes
+- Security patches
+- Performance improvements
+- Minor UI/UX improvements
+- Stability improvements for existing features
 
-## タグ命名規則
+## Tag Naming Conventions
 
-### リリースタグ
-
-```text
-v1.0.0          # 正式リリース
-v1.0.0-alpha.1  # アルファ版
-v1.0.0-beta.1   # ベータ版  
-v1.0.0-rc.1     # リリース候補
-```
-
-### 特殊タグ
+### Release Tags
 
 ```text
-release/alpha-test    # アルファテスト期の最新
-release/beta-test     # ベータテスト期の最新
-release/stable        # 安定版の最新
+v1.0.0          # Official release
+v1.0.0-alpha.1  # Alpha version
+v1.0.0-beta.1   # Beta version
+v1.0.0-rc.1     # Release candidate
 ```
 
-## GitHub Releases アセット命名規則
+### Special Tags
 
-### 実行ファイル
+```text
+release/alpha-test    # Latest in alpha testing period
+release/beta-test     # Latest in beta testing period
+release/stable        # Latest stable version
+```
+
+## GitHub Releases Asset Naming Conventions
+
+### Executable Files
 
 ```text
 FocusGameDeck-v{VERSION}-Setup.exe
-例: FocusGameDeck-v1.0.0-alpha.1-Setup.exe
-例: FocusGameDeck-v1.0.0-Setup.exe
+Examples: FocusGameDeck-v1.0.0-alpha.1-Setup.exe
+Examples: FocusGameDeck-v1.0.0-Setup.exe
 ```
 
-### アーカイブファイル
+### Archive Files
 
 ```text
 FocusGameDeck-v{VERSION}-Portable.zip
-例: FocusGameDeck-v1.0.0-alpha.1-Portable.zip
-例: FocusGameDeck-v1.0.0-Portable.zip
+Examples: FocusGameDeck-v1.0.0-alpha.1-Portable.zip
+Examples: FocusGameDeck-v1.0.0-Portable.zip
 ```
 
-### ソースコード
+### Source Code
 
 ```text
 focus-game-deck-{VERSION}.zip
 focus-game-deck-{VERSION}.tar.gz
-例: focus-game-deck-1.0.0-alpha.1.zip
-例: focus-game-deck-1.0.0.tar.gz
+Examples: focus-game-deck-1.0.0-alpha.1.zip
+Examples: focus-game-deck-1.0.0.tar.gz
 ```
 
-## Version.ps1 での実装
+## Implementation in Version.ps1
 
-### 現在のバージョン設定
+### Current Version Settings
 
 ```powershell
 $script:ProjectVersion = @{
     Major = 1
-    Minor = 0  
+    Minor = 0
     Patch = 1
     PreRelease = "alpha"  # "", "alpha", "beta", "rc.1", etc.
-    Build = ""           # ビルドメタデータ（通常は空）
+    Build = ""           # Build metadata (usually empty)
 }
 ```
 
-### バージョン文字列の取得
+### Version String Retrieval
 
 ```powershell
 Get-ProjectVersion                    # "1.0.1"
@@ -157,70 +157,70 @@ Get-ProjectVersion -IncludePreRelease # "1.0.1-alpha"
 Get-ProjectVersion -IncludePreRelease -IncludeBuild # "1.0.1-alpha+20251024"
 ```
 
-## バージョン履歴
+## Version History
 
-### v1.0.1-alpha (現在)
+### v1.0.1-alpha (Current)
 
-- GUI設定エディタ完成
-- 日本語文字化け解決
-- 基本的なバージョン管理システム実装
+- GUI configuration editor completed
+- Japanese character encoding issues resolved
+- Basic version management system implemented
 
-### 予定されるリリース
+### Planned Releases
 
-#### v1.0.0-alpha.1 (2025年10月初旬)
+#### v1.0.0-alpha.1 (Early October 2025)
 
-- アルファテスト開始版
-- デジタル署名付きビルド
-- 基本機能の完成
+- Alpha testing start version
+- Digitally signed build
+- Basic functionality completed
 
-#### v1.0.0-beta.1 (2025年10月下旬)
+#### v1.0.0-beta.1 (Late October 2025)
 
-- パブリックベータ開始
-- ランディングページ公開
-- アルファテストフィードバック反映
+- Public beta start
+- Landing page publication
+- Alpha testing feedback incorporated
 
-#### v1.0.0 (2025年11月下旬～12月)
+#### v1.0.0 (Late November - December 2025)
 
-- 正式リリース
-- Steam以外のプラットフォーム対応
-- 導入支援ウィザード
+- Official release
+- Support for platforms other than Steam
+- Setup wizard implementation
 
-## 運用指針
+## Operation Guidelines
 
-### 開発者向けガイドライン
+### Developer Guidelines
 
-1. **バージョン更新のタイミング**
-   - 機能追加・変更のコミット前に`Version.ps1`を更新
-   - プルリクエストのタイトルにバージョン情報を含める
+1. **Version Update Timing**
+   - Update `Version.ps1` before committing feature additions/changes
+   - Include version information in pull request titles
 
-2. **コミットメッセージ規約**
+2. **Commit Message Conventions**
 
    ```text
-   feat: 新機能追加時 (MINOR++)
-   fix: バグ修正時 (PATCH++)
-   BREAKING CHANGE: 破壊的変更時 (MAJOR++)
+   feat: When adding new features (MINOR++)
+   fix: When fixing bugs (PATCH++)
+   BREAKING CHANGE: When introducing breaking changes (MAJOR++)
    ```
 
-3. **リリース作成手順**
-   - バージョン更新 → コミット → タグ作成 → GitHub Release作成
-   - リリースノートはChangelog形式で記述
-   - デジタル署名済みアセットのみ公開
+3. **Release Creation Process**
+   - Version update → Commit → Tag creation → GitHub Release creation
+   - Write release notes in Changelog format
+   - Publish only digitally signed assets
 
-### セキュリティとコンプライアンス
+### Security and Compliance
 
-- すべてのリリースにデジタル署名を付与
-- SHA256ハッシュ値をリリースノートに記載
-- 脆弱性発見時は緊急パッチリリース（PATCH++）
-- セキュリティアップデートは優先的にリリース
+- Apply digital signatures to all releases
+- Include SHA256 hash values in release notes
+- Issue emergency patch releases (PATCH++) when vulnerabilities are found
+- Prioritize security updates for release
 
-## 関連ドキュメント
+## Related Documentation
 
-- [ROADMAP.md](./ja/ROADMAP.md) - プロジェクトロードマップ
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - 技術アーキテクチャ
-- リリースプロセスガイド - 詳細なリリース手順（今後作成）
+- [ROADMAP.md](./ROADMAP.md) - Project roadmap
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - Technical architecture
+- [DEVELOPER-RELEASE-GUIDE.md](./DEVELOPER-RELEASE-GUIDE.md) - Detailed release procedures
 
 ---
 
-**最終更新**: 2025-09-24  
-**バージョン**: 1.0.0  
-**作成者**: GitHub Copilot Assistant
+**Last Updated**: September 27, 2025
+**Version**: 1.0.0
+**Created by**: GitHub Copilot Assistant

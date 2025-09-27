@@ -16,14 +16,15 @@ The build system consists of three tiers, each with specific responsibilities:
 
 ```text
 Master-Build.ps1 (Tier 3: Orchestration)
-├── Build-FocusGameDeck.ps1 (Tier 2: Integration)
-│   ├── ps2exe compilation for main applications
-│   ├── Configuration file management
-│   └── Build artifact organization
-├── Sign-Executables.ps1 (Tier 2: Security)
-│   ├── Certificate validation and management
-│   ├── Automated code signing
-│   └── Signature verification
+├── build-tools/
+│   ├── Build-FocusGameDeck.ps1 (Tier 2: Integration)
+│   │   ├── ps2exe compilation for main applications
+│   │   ├── Configuration file management
+│   │   └── Build artifact organization
+│   └── Sign-Executables.ps1 (Tier 2: Security)
+│       ├── Certificate validation and management
+│       ├── Automated code signing
+│       └── Signature verification
 └── Release package generation
     ├── Distribution directory creation
     ├── Documentation generation
@@ -68,19 +69,19 @@ Master-Build.ps1 (Tier 3: Orchestration)
 **Usage**:
 ```powershell
 # Install ps2exe module
-.\Build-FocusGameDeck.ps1 -Install
+.\build-tools\Build-FocusGameDeck.ps1 -Install
 
 # Build all executables
-.\Build-FocusGameDeck.ps1 -Build
+.\build-tools\Build-FocusGameDeck.ps1 -Build
 
 # Sign existing build
-.\Build-FocusGameDeck.ps1 -Sign
+.\build-tools\Build-FocusGameDeck.ps1 -Sign
 
 # Clean build artifacts
-.\Build-FocusGameDeck.ps1 -Clean
+.\build-tools\Build-FocusGameDeck.ps1 -Clean
 
 # Complete workflow (install, build, sign)
-.\Build-FocusGameDeck.ps1 -All
+.\build-tools\Build-FocusGameDeck.ps1 -All
 ```
 
 **Generated Executables**:

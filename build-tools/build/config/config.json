@@ -1,0 +1,195 @@
+﻿{
+    "language": "zh-CN",
+    "obs": {
+        "websocket": {
+            "host": "localhost",
+            "port": 4455,
+            "password": "01000000d08c9ddf0115d1118c7a00c04fc297eb01000000f69ef82f8569dc479c01697b8706079400000000020000000000106600000001000020000000bdc443ba4d5bc8223654a15379f357f8d6bf2188b941f2a9d18c8cbccd301312000000000e80000000020000200000002a877c4d8490288eab0f0fd5bbd961356aafdf1a4744f13022f0251b7524758f300000004d28f1bc8e03bb48aa6c9b50c3437c928bcc33bb7b6598df1b512f8daeb4423183ee1f11613a45fcc34d321945f5e54b400000006378dd243536b5f372e3298c8e1ce3f278da6635672561672ec096cd95fb393d03c6a73cbad24300c31fc640c5f97f15fb6feffe1de70cf40ba3d3948d6c62aa"
+        },
+        "replayBuffer": true
+    },
+    "managedApps": {
+        "noWinKey": {
+            "path": "C:\\Apps\\NoWinKey\\NoWinKey.exe",
+            "processName": "NoWinKey",
+            "gameStartAction": "start-process",
+            "gameEndAction": "stop-process",
+            "arguments": ""
+        },
+        "autoHotkey": {
+            "path": "C:\\Users\\mnaoy\\dev\\my-autohotkey\\my-autohotkey.ahk",
+            "processName": "AutoHotkeyU64|AutoHotkey|AutoHotkey64",
+            "gameStartAction": "stop-process",
+            "gameEndAction": "start-process",
+            "arguments": ""
+        },
+        "clibor": {
+            "path": "C:\\Apps\\clibor\\Clibor.exe",
+            "processName": "Clibor",
+            "gameStartAction": "toggle-hotkeys",
+            "gameEndAction": "toggle-hotkeys",
+            "arguments": "/hs"
+        },
+        "luna": {
+            "path": "",
+            "processName": "Luna",
+            "gameStartAction": "set-discord-gaming-mode",
+            "gameEndAction": "none",
+            "arguments": ""
+        },
+        "vtubeStudio": {
+            "path": "",
+            "processName": "VTube Studio",
+            "gameStartAction": "start-vtube-studio",
+            "gameEndAction": "stop-vtube-studio",
+            "arguments": "",
+            "steamPath": "",
+            "websocket": {
+                "host": "localhost",
+                "port": 8001,
+                "enabled": false
+            }
+        },
+        "discord": {
+            "path": "%LOCALAPPDATA%\\Discord\\app-*\\Discord.exe",
+            "processName": "Discord",
+            "gameStartAction": "set-discord-gaming-mode",
+            "gameEndAction": "restore-discord-normal",
+            "arguments": "",
+            "discord": {
+                "statusOnGameStart": "dnd",
+                "statusOnGameEnd": "online",
+                "disableOverlay": true,
+                "customPresence": {
+                    "enabled": false,
+                    "state": "Focus Gaming Mode"
+                },
+                "rpc": {
+                    "enabled": true,
+                    "applicationId": ""
+                }
+            }
+        }
+    },
+    "games": {
+        "mock-notepad": {
+            "name": "テスト用ゲーム (Notepad)",
+            "platform": "standalone",
+            "executablePath": "C:\\Windows\\System32\\notepad.exe",
+            "processName": "notepad",
+            "appsToManage": [
+                "clibor",
+                "vtubeStudio",
+                "discord"
+            ],
+            "_comment": "開発・テスト用の軽量モックゲーム。実際のゲームの代わりにNotepadを使用"
+        },
+        "mock-calc": {
+            "name": "テスト用ゲーム (Calculator)",
+            "platform": "standalone",
+            "executablePath": "%SystemRoot%\\System32\\calc.exe",
+            "processName": "Calculator|CalculatorApp",
+            "appsToManage": [
+                "obs",
+                "clibor",
+                "discord"
+            ],
+            "_comment": "開発・テスト用の軽量モックゲーム。実際のゲームの代わりに計算機を使用"
+        },
+        "mock-mspaint": {
+            "name": "テスト用ゲーム (Paint)",
+            "platform": "standalone",
+            "executablePath": "%SystemRoot%\\System32\\mspaint.exe",
+            "processName": "mspaint",
+            "appsToManage": [
+                "noWinKey",
+                "autoHotkey",
+                "obs",
+                "discord"
+            ],
+            "_comment": "開発・テスト用の軽量モックゲーム。実際のゲームの代わりにPaintを使用"
+        },
+        "mock-powershell": {
+            "name": "テスト用ゲーム (PowerShell)",
+            "platform": "standalone",
+            "executablePath": "%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+            "processName": "powershell",
+            "arguments": "-NoExit -Command Write-Host \u0027Mock Game Running - Press any key to exit\u0027 -ForegroundColor Green; Read-Host",
+            "appsToManage": [
+                "obs",
+                "clibor"
+            ],
+            "_comment": "開発・テスト用の軽量モックゲーム。PowerShellコンソールを使用し、明確な終了方法を提供"
+        },
+        "apex": {
+            "name": "Apex Legends",
+            "platform": "steam",
+            "steamAppId": "1172470",
+            "processName": "r5apex*",
+            "appsToManage": [
+                "noWinKey",
+                "autoHotkey",
+                "luna",
+                "obs",
+                "clibor",
+                "discord"
+            ]
+        },
+        "dbd": {
+            "name": "Dead by Daylight",
+            "platform": "steam",
+            "steamAppId": "381210",
+            "processName": "DeadByDaylight-Win64-Shipping*",
+            "appsToManage": [
+                "obs",
+                "clibor",
+                "discord"
+            ]
+        },
+        "genshin": {
+            "name": "原神 (Genshin Impact)",
+            "platform": "epic",
+            "epicGameId": "ac2c3d6632504c6b9b0503d8b6c41227",
+            "processName": "YuanShen*",
+            "appsToManage": [
+                "obs",
+                "clibor",
+                "discord"
+            ]
+        },
+        "valorant": {
+            "name": "VALORANT",
+            "platform": "riot",
+            "riotGameId": "valorant",
+            "processName": "VALORANT-Win64-Shipping*",
+            "appsToManage": [
+                "noWinKey",
+                "autoHotkey",
+                "obs",
+                "clibor",
+                "vtubeStudio",
+                "discord"
+            ]
+        }
+    },
+    "paths": {
+        "steam": "C:\\Program Files (x86)\\Steam\\steam.exe",
+        "epic": "C:\\Program Files (x86)\\Epic Games\\Launcher\\Portal\\Binaries\\Win32\\EpicGamesLauncher.exe",
+        "ea": "C:\\Program Files\\Electronic Arts\\EA Desktop\\EA Desktop\\EADesktop.exe",
+        "riot": "C:\\Riot Games\\Riot Client\\RiotClientServices.exe",
+        "obs": "C:\\Program Files\\obs-studio\\bin\\64bit\\obs64.exe"
+    },
+    "logging": {
+        "level": "Info",
+        "enableFileLogging": true,
+        "enableConsoleLogging": true,
+        "enableNotarization": false,
+        "filePath": "",
+        "firebase": {
+            "projectId": "test-project-id",
+            "apiKey": "test-api-key",
+            "databaseURL": ""
+        },
+        "logRetentionDays": 90
+    }
+}
