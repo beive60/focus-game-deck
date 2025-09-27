@@ -13,7 +13,7 @@
     1. config.json language setting (if exists and valid)
     2. OS display language (if supported)
     3. English fallback (default)
-    
+
     Supported languages: ja (Japanese), en (English)
 
 .NOTES
@@ -45,36 +45,37 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 function Get-DetectedLanguage {
     param(
         [PSCustomObject]$ConfigData = $null,
-        [string[]]$SupportedLanguages = @("en", "ja")
+        [string[]]$SupportedLanguages = @("en", "ja", "zh-CN")
     )
-    
+
     $defaultLang = "en"  # English as fallback
-    
+
     try {
         # Priority 1: Check explicit config.json language setting
-        if ($ConfigData -and 
-            $ConfigData.PSObject.Properties.Name -contains "language" -and 
-            $ConfigData.language -and 
+        if ($ConfigData -and
+            $ConfigData.PSObject.Properties.Name -contains "language" -and
+            $ConfigData.language -and
             $ConfigData.language.Trim() -ne "") {
-            
+
             $configLang = $ConfigData.language.Trim().ToLower()
             if ($configLang -in $SupportedLanguages) {
                 Write-Verbose "Language detected from config: $configLang"
                 return $configLang
             }
         }
-        
+
         # Priority 2: Auto-detect OS language if config is empty/auto
         $osLang = Get-OSLanguage
-        if ($osLang -in $SupportedLanguages) {
-            Write-Verbose "Language detected from OS: $osLang"
-            return $osLang
+        $matchedOSLang = $SupportedLanguages | Where-Object { $_.ToLower() -eq $osLang.ToLower() } | Select-Object -First 1
+        if ($matchedOSLang) {
+            Write-Verbose "Language detected from OS: $matchedOSLang"
+            return $matchedOSLang
         }
-        
+
         # Priority 3: English fallback
         Write-Verbose "Using default language: $defaultLang"
         return $defaultLang
-        
+
     } catch {
         Write-Warning "Error in language detection: $($_.Exception.Message). Using default: $defaultLang"
         return $defaultLang
@@ -95,26 +96,48 @@ function Get-DetectedLanguage {
 function Get-OSLanguage {
     try {
         # Method 1: Get current UI culture (most reliable)
-        $uiCulture = [System.Globalization.CultureInfo]::CurrentUICulture.TwoLetterISOLanguageName.ToLower()
+        $uiCulture = [System.Globalization.CultureInfo]::CurrentUICulture
         if ($uiCulture) {
-            Write-Verbose "OS language detected via CurrentUICulture: $uiCulture"
-            return $uiCulture
+            $cultureName = $uiCulture.Name.ToLower()
+            Write-Verbose "OS culture detected via CurrentUICulture: $cultureName"
+
+            # Handle Chinese variants
+            if ($cultureName -eq "zh-CN" -or $cultureName -eq "zh-hans") {
+                return "zh-CN"
+            } elseif ($cultureName.StartsWith("zh-")) {
+                # Default other Chinese variants to zh-CN for now
+                return "zh-CN"
+            } else {
+                # Return two-letter ISO language name for other languages
+                return $uiCulture.TwoLetterISOLanguageName.ToLower()
+            }
         }
     } catch {
         Write-Verbose "CurrentUICulture detection failed: $($_.Exception.Message)"
     }
-    
+
     try {
         # Method 2: Get current culture
-        $culture = (Get-Culture).TwoLetterISOLanguageName.ToLower()
+        $culture = Get-Culture
         if ($culture) {
-            Write-Verbose "OS language detected via Get-Culture: $culture"
-            return $culture
+            $cultureName = $culture.Name.ToLower()
+            Write-Verbose "OS culture detected via Get-Culture: $cultureName"
+
+            # Handle Chinese variants
+            if ($cultureName -eq "zh-CN" -or $cultureName -eq "zh-hans") {
+                return "zh-CN"
+            } elseif ($cultureName.StartsWith("zh-")) {
+                # Default other Chinese variants to zh-CN for now
+                return "zh-CN"
+            } else {
+                # Return two-letter ISO language name for other languages
+                return $culture.TwoLetterISOLanguageName.ToLower()
+            }
         }
     } catch {
         Write-Verbose "Get-Culture detection failed: $($_.Exception.Message)"
     }
-    
+
     try {
         # Method 3: Registry-based detection (Windows-specific)
         $regLocale = Get-ItemProperty -Path "HKCU:\Control Panel\International" -Name "LocaleName" -ErrorAction SilentlyContinue
@@ -126,7 +149,7 @@ function Get-OSLanguage {
     } catch {
         Write-Verbose "Registry detection failed: $($_.Exception.Message)"
     }
-    
+
     # All methods failed
     Write-Verbose "All OS language detection methods failed"
     return "en"  # Default fallback
@@ -147,13 +170,18 @@ function Set-CultureByLanguage {
     param(
         [string]$LanguageCode
     )
-    
+
     try {
         switch ($LanguageCode.ToLower()) {
             "ja" {
                 [System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::GetCultureInfo("ja-JP")
                 [System.Threading.Thread]::CurrentThread.CurrentUICulture = [System.Globalization.CultureInfo]::GetCultureInfo("ja-JP")
                 Write-Verbose "Culture set to Japanese (ja-JP)"
+            }
+            "zh-CN" {
+                [System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::GetCultureInfo("zh-CN")
+                [System.Threading.Thread]::CurrentThread.CurrentUICulture = [System.Globalization.CultureInfo]::GetCultureInfo("zh-CN")
+                Write-Verbose "Culture set to Chinese Simplified (zh-CN)"
             }
             "en" {
                 [System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::GetCultureInfo("en-US")
@@ -178,7 +206,7 @@ function Set-CultureByLanguage {
     Path to the messages.json file
 
 .PARAMETER LanguageCode
-    Language code to load ("en", "ja")
+    Language code to load ("en", "ja", "zh-CN")
 
 .RETURNS
     PSCustomObject containing localized messages
@@ -191,28 +219,42 @@ function Get-LocalizedMessages {
         [string]$MessagesPath,
         [string]$LanguageCode = "en"
     )
-    
+
     try {
         if (-not (Test-Path $MessagesPath)) {
             Write-Warning "Messages file not found: $MessagesPath"
             return [PSCustomObject]@{}
         }
-        
+
         $messagesData = Get-Content -Path $MessagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
-        
+
         # Check if the file has language-specific structure
+        # Check for exact match first, then case-insensitive match for compatibility
         if ($messagesData.PSObject.Properties.Name -contains $LanguageCode) {
             Write-Verbose "Loading messages for language: $LanguageCode"
             return $messagesData.$LanguageCode
-        } elseif ($messagesData.PSObject.Properties.Name -contains "messages") {
-            # Legacy format - assume Japanese
-            Write-Verbose "Loading messages from legacy format"
-            return $messagesData.messages
         } else {
-            Write-Warning "No messages found for language: $LanguageCode"
-            return [PSCustomObject]@{}
+            # Try case-insensitive match for backwards compatibility
+            $matchingLanguage = $messagesData.PSObject.Properties.Name | Where-Object { $_.ToLower() -eq $LanguageCode.ToLower() } | Select-Object -First 1
+            if ($matchingLanguage) {
+                Write-Verbose "Loading messages for language (case-insensitive match): $matchingLanguage"
+                return $messagesData.$matchingLanguage
+            } elseif ($messagesData.PSObject.Properties.Name -contains "messages") {
+                # Legacy format - assume Japanese
+                Write-Verbose "Loading messages from legacy format"
+                return $messagesData.messages
+            } else {
+                # Fallback to English if the requested language is not found
+                if ($messagesData.PSObject.Properties.Name -contains "en") {
+                    Write-Warning "No messages found for language: $LanguageCode. Falling back to English."
+                    return $messagesData.en
+                } else {
+                    Write-Warning "No messages found for language: $LanguageCode and no English fallback available"
+                    return [PSCustomObject]@{}
+                }
+            }
         }
-        
+
     } catch {
         Write-Error "Failed to load messages: $($_.Exception.Message)"
         return [PSCustomObject]@{}

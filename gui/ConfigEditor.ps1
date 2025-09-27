@@ -400,6 +400,7 @@ function Setup-UIControls {
     $languageCombo = $script:Window.FindName("LanguageCombo")
     $languages = @(
         "Auto (System Language)",
+        "Chinese Simplified (zh-CN)",
         "Japanese (ja)",
         "English (en)"
     )
@@ -805,10 +806,12 @@ function Load-GlobalSettings {
     $currentLang = $script:ConfigData.language
     if ($currentLang -eq "" -or $currentLang -eq $null) {
         $languageCombo.SelectedIndex = 0  # Auto
+    } elseif ($currentLang -eq "zh-CN") {
+        $languageCombo.SelectedIndex = 1  # Chinese Simplified
     } elseif ($currentLang -eq "ja") {
-        $languageCombo.SelectedIndex = 1  # Japanese
+        $languageCombo.SelectedIndex = 2  # Japanese
     } elseif ($currentLang -eq "en") {
-        $languageCombo.SelectedIndex = 2  # English
+        $languageCombo.SelectedIndex = 3  # English
     }
 
     # Reload messages with the correct language from config and update UI texts
@@ -1254,9 +1257,10 @@ function Save-GlobalSettingsData {
     $languageCombo = $script:Window.FindName("LanguageCombo")
     $selectedIndex = $languageCombo.SelectedIndex
     switch ($selectedIndex) {
-        0 { $script:ConfigData.language = "" }      # Auto
-        1 { $script:ConfigData.language = "ja" }    # Japanese
-        2 { $script:ConfigData.language = "en" }    # English
+        0 { $script:ConfigData.language = "" }         # Auto
+        1 { $script:ConfigData.language = "zh-CN" }    # Chinese Simplified
+        2 { $script:ConfigData.language = "ja" }       # Japanese
+        3 { $script:ConfigData.language = "en" }       # English
         default { $script:ConfigData.language = "" }
     }
 
@@ -1415,9 +1419,10 @@ function Handle-LanguageSelectionChanged {
         $selectedIndex = $languageCombo.SelectedIndex
         $newLanguage = ""
         switch ($selectedIndex) {
-            0 { $newLanguage = "" }      # Auto
-            1 { $newLanguage = "ja" }    # Japanese
-            2 { $newLanguage = "en" }    # English
+            0 { $newLanguage = "" }         # Auto
+            1 { $newLanguage = "zh-CN" }    # Chinese Simplified
+            2 { $newLanguage = "ja" }       # Japanese
+            3 { $newLanguage = "en" }       # English
             default { $newLanguage = "" }
         }
 

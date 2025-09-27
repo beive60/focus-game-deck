@@ -1,21 +1,21 @@
 // Focus Game Deck - Landing Page Interactive Script
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // 多言語対応の初期化
     initializeI18n();
-    
+
     // ナビゲーションの初期化
     initializeNavigation();
-    
+
     // スムーズスクロールの初期化
     initializeSmoothScroll();
-    
+
     // FAQの初期化
     initializeFAQ();
-    
+
     // スクロールアニメーションの初期化
     initializeScrollAnimations();
-    
+
     // パーティクル効果の初期化（オプション）
     initializeParticleEffect();
 });
@@ -29,7 +29,7 @@ const translations = {
         nav_download: 'ダウンロード',
         nav_faq: 'FAQ',
         nav_language: '言語',
-        
+
         // ヒーローセクション
         hero_title_focus: 'FOCUS',
         hero_title_game: 'GAME',
@@ -39,7 +39,7 @@ const translations = {
         hero_btn_download: 'ダウンロード',
         hero_btn_learn_more: '詳細を見る',
         scroll_text: 'スクロールして詳細を見る',
-        
+
         // 機能セクション
         features_title: '強力な機能',
         features_subtitle: 'ゲーミングに特化した集中力向上機能',
@@ -55,7 +55,7 @@ const translations = {
         feature5_desc: 'CPU、GPU、メモリ使用率をリアルタイムで監視し、パフォーマンスの低下を事前に防ぎます。',
         feature6_title: 'ホットキー制御',
         feature6_desc: 'カスタマイズ可能なホットキーで、ゲーム中でも素早く設定を調整できます。',
-        
+
         // メリットセクション
         benefits_title: 'Focus Game Deckを選ぶ理由',
         benefits_subtitle: 'プロレベルのゲーミング環境を誰でも簡単に',
@@ -71,7 +71,7 @@ const translations = {
         stat2_label: '集中力UP',
         stat3_number: '30%',
         stat3_label: '反応速度向上',
-        
+
         // ダウンロードセクション
         download_title: 'Focus Game Deckをダウンロード',
         download_subtitle: '今すぐゲーミングパフォーマンスを向上させよう',
@@ -92,7 +92,7 @@ const translations = {
         download_pro_btn: 'Pro版を購入 ¥2,980',
         download_size: 'サイズ',
         download_platform: 'Windows 10/11',
-        
+
         // システム要件
         system_requirements: 'システム要件',
         req_os: 'OS: Windows 10 (1903以降) または Windows 11',
@@ -101,7 +101,7 @@ const translations = {
         req_storage: 'ストレージ: 50MB の空き容量',
         req_network: 'ネットワーク: アップデート用インターネット接続',
         req_optional: 'オプション: OBS Studio (OBS連携機能使用時)',
-        
+
         // FAQ
         faq_title: 'よくある質問',
         faq_subtitle: 'Focus Game Deckについての疑問にお答えします',
@@ -113,7 +113,7 @@ const translations = {
         faq3_a: 'OBSのWebSocketプラグインを通じて、ゲームの開始/終了に合わせて自動的にシーンを切り替えたり、アラートを表示したりできます。',
         faq4_q: 'アンインストールは簡単にできますか？',
         faq4_a: 'はい、PowerShellスクリプトベースのため、システムに深く統合されることなく、簡単にアンインストールできます。',
-        
+
         // フッター
         footer_title: 'Focus Game Deck',
         footer_desc: 'プロゲーマーレベルの集中力を手に入れるためのゲーミング特化ツール',
@@ -130,6 +130,114 @@ const translations = {
         footer_privacy: 'プライバシーポリシー',
         footer_terms: '利用規約'
     },
+    'zh-CN': {
+        // 导航
+        nav_features: '功能',
+        nav_benefits: '优势',
+        nav_download: '下载',
+        nav_faq: '常见问题',
+        nav_language: '语言',
+
+        // 英雄区域
+        hero_title_focus: 'FOCUS',
+        hero_title_game: 'GAME',
+        hero_title_deck: 'DECK',
+        hero_subtitle: '游戏专注力提升工具',
+        hero_description: '获得职业选手级别的专注力。Focus Game Deck 是一个基于PowerShell的轻量级工具，专为最大化游戏过程中的专注力和性能而设计。',
+        hero_btn_download: '下载',
+        hero_btn_learn_more: '了解更多',
+        scroll_text: '滚动查看更多信息',
+
+        // 功能区域
+        features_title: '强大功能',
+        features_subtitle: '专为游戏打造的专注力提升功能',
+        feature1_title: '干扰阻拦',
+        feature1_desc: '自动阻止游戏过程中的不必要通知和应用程序，创造100%专注于游戏的环境。',
+        feature2_title: '性能优化',
+        feature2_desc: '优化系统资源，稳定FPS并最小化延迟，提升游戏性能。',
+        feature3_title: 'OBS集成',
+        feature3_desc: '与OBS无缝集成，为主播提供自动场景切换和警报功能，提升直播质量。',
+        feature4_title: '自定义配置',
+        feature4_desc: '为不同游戏创建不同的设置配置文件，瞬间构建针对特定游戏优化的环境。',
+        feature5_title: '实时监控',
+        feature5_desc: '实时监控CPU、GPU、内存使用率，预防性能下降。',
+        feature6_title: '热键控制',
+        feature6_desc: '可自定义的热键，即使在游戏中也能快速调整设置。',
+
+        // 优势区域
+        benefits_title: '选择Focus Game Deck的理由',
+        benefits_subtitle: '人人都能轻松拥有专业级游戏环境',
+        benefit1_title: '专注力提升',
+        benefit1_desc: '完全消除不必要的通知和后台进程，构建只专注于游戏的环境。',
+        benefit2_title: '性能提升',
+        benefit2_desc: '通过系统资源优化，实现平均15-25%的FPS提升和延迟减少。',
+        benefit3_title: '简单设置',
+        benefit3_desc: '基于PowerShell的轻量级工具，无需复杂设置。一键构建最佳环境。',
+        stat1_number: '25%',
+        stat1_label: 'FPS提升',
+        stat2_number: '50%',
+        stat2_label: '专注力提升',
+        stat3_number: '30%',
+        stat3_label: '反应速度提升',
+
+        // 下载区域
+        download_title: '下载Focus Game Deck',
+        download_subtitle: '立即提升您的游戏性能',
+        download_free_title: '免费版',
+        download_pro_title: '专业版',
+        download_version: 'v1.2.0',
+        download_free_feature1: '基本干扰阻拦',
+        download_free_feature2: '性能监控',
+        download_free_feature3: '3个预设配置文件',
+        download_free_feature4: '社区支持',
+        download_pro_feature1: '所有免费版功能',
+        download_pro_feature2: 'OBS完整集成',
+        download_pro_feature3: '无限制自定义配置文件',
+        download_pro_feature4: 'AI优化',
+        download_pro_feature5: '优先支持',
+        download_pro_feature6: '自动更新',
+        download_free_btn: '免费下载',
+        download_pro_btn: '购买专业版 ¥298',
+        download_size: '大小',
+        download_platform: 'Windows 10/11',
+
+        // 系统要求
+        system_requirements: '系统要求',
+        req_os: '操作系统：Windows 10 (1903或更高版本) 或 Windows 11',
+        req_powershell: 'PowerShell：5.1或更高版本 (Windows PowerShell) 或 7.0或更高版本 (PowerShell Core)',
+        req_memory: '内存：4GB RAM或更多',
+        req_storage: '存储空间：50MB可用空间',
+        req_network: '网络：用于更新的互联网连接',
+        req_optional: '可选：OBS Studio（使用OBS集成功能时）',
+
+        // 常见问题
+        faq_title: '常见问题',
+        faq_subtitle: '关于Focus Game Deck的常见疑问解答',
+        faq1_q: 'Focus Game Deck可以免费使用吗？',
+        faq1_a: '是的，基本功能完全免费。如果您需要更高级的功能，可以考虑专业版。',
+        faq2_q: '支持哪些游戏？',
+        faq2_a: 'Focus Game Deck执行系统级优化，不依赖于特定游戏，因此对所有PC游戏都有效果。',
+        faq3_q: 'OBS集成功能如何工作？',
+        faq3_a: '通过OBS的WebSocket插件，可以根据游戏的开始/结束自动切换场景或显示警报。',
+        faq4_q: '可以轻松卸载吗？',
+        faq4_a: '是的，由于是基于PowerShell脚本的，不会深度集成到系统中，可以轻松卸载。',
+
+        // 页脚
+        footer_title: 'Focus Game Deck',
+        footer_desc: '获得职业选手级专注力的游戏专用工具',
+        footer_quick_links: '快速链接',
+        footer_features: '功能',
+        footer_download: '下载',
+        footer_support: '支持',
+        footer_documentation: '文档',
+        footer_community: '社区',
+        footer_github: 'GitHub',
+        footer_discord: 'Discord',
+        footer_social: '社交媒体',
+        footer_copyright: '© 2025 Focus Game Deck. 保留所有权利。',
+        footer_privacy: '隐私政策',
+        footer_terms: '服务条款'
+    },
     en: {
         // Navigation
         nav_features: 'Features',
@@ -137,7 +245,7 @@ const translations = {
         nav_download: 'Download',
         nav_faq: 'FAQ',
         nav_language: 'Language',
-        
+
         // Hero Section
         hero_title_focus: 'FOCUS',
         hero_title_game: 'GAME',
@@ -147,7 +255,7 @@ const translations = {
         hero_btn_download: 'Download',
         hero_btn_learn_more: 'Learn More',
         scroll_text: 'Scroll to learn more',
-        
+
         // Features Section
         features_title: 'Powerful Features',
         features_subtitle: 'Gaming-focused concentration enhancement features',
@@ -163,7 +271,7 @@ const translations = {
         feature5_desc: 'Monitor CPU, GPU, and memory usage in real-time to prevent performance degradation in advance.',
         feature6_title: 'Hotkey Control',
         feature6_desc: 'Quickly adjust settings during gameplay with customizable hotkeys.',
-        
+
         // Benefits Section
         benefits_title: 'Why Choose Focus Game Deck',
         benefits_subtitle: 'Pro-level gaming environment made simple for everyone',
@@ -179,7 +287,7 @@ const translations = {
         stat2_label: 'Focus UP',
         stat3_number: '30%',
         stat3_label: 'Reaction Speed',
-        
+
         // Download Section
         download_title: 'Download Focus Game Deck',
         download_subtitle: 'Enhance your gaming performance right now',
@@ -200,7 +308,7 @@ const translations = {
         download_pro_btn: 'Buy Pro $29.99',
         download_size: 'Size',
         download_platform: 'Windows 10/11',
-        
+
         // System Requirements
         system_requirements: 'System Requirements',
         req_os: 'OS: Windows 10 (1903 or later) or Windows 11',
@@ -209,7 +317,7 @@ const translations = {
         req_storage: 'Storage: 50MB free space',
         req_network: 'Network: Internet connection for updates',
         req_optional: 'Optional: OBS Studio (for OBS integration features)',
-        
+
         // FAQ
         faq_title: 'Frequently Asked Questions',
         faq_subtitle: 'Answers to your questions about Focus Game Deck',
@@ -221,7 +329,7 @@ const translations = {
         faq3_a: 'Through OBS WebSocket plugin, it can automatically switch scenes and display alerts based on game start/end events.',
         faq4_q: 'Is uninstallation easy?',
         faq4_a: 'Yes, being PowerShell script-based, it can be easily uninstalled without deep system integration.',
-        
+
         // Footer
         footer_title: 'Focus Game Deck',
         footer_desc: 'Gaming-focused tool for achieving pro-gamer level concentration',
@@ -244,22 +352,24 @@ const translations = {
 function initializeI18n() {
     // ブラウザの言語設定を取得
     const browserLang = navigator.language || navigator.userLanguage;
-    
+
     // ローカルストレージから保存された言語設定を取得
     const savedLang = localStorage.getItem('focusGameDeckLang');
-    
+
     // 言語を決定（優先順位: 保存された設定 > ブラウザ設定 > デフォルト英語）
     let currentLang = 'en'; // デフォルトは英語
-    
+
     if (savedLang && translations[savedLang]) {
         currentLang = savedLang;
+    } else if (browserLang.startsWith('zh')) {
+        currentLang = 'zh-CN';
     } else if (browserLang.startsWith('ja')) {
         currentLang = 'ja';
     }
-    
+
     // 言語を設定
     setLanguage(currentLang);
-    
+
     // 言語切り替えイベントリスナーを設定
     setupLanguageSwitcher();
 }
@@ -269,27 +379,27 @@ function setupLanguageSwitcher() {
     const languageToggle = document.getElementById('language-toggle');
     const languageMenu = document.getElementById('language-menu');
     const languageOptions = document.querySelectorAll('.language-option');
-    
+
     if (languageToggle && languageMenu) {
         // 言語メニューのトグル
-        languageToggle.addEventListener('click', function(e) {
+        languageToggle.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
             languageMenu.classList.toggle('active');
         });
-        
+
         // 言語オプションのクリック処理
         languageOptions.forEach(option => {
-            option.addEventListener('click', function(e) {
+            option.addEventListener('click', function (e) {
                 e.preventDefault();
                 const selectedLang = this.getAttribute('data-lang');
                 setLanguage(selectedLang);
                 languageMenu.classList.remove('active');
             });
         });
-        
+
         // メニュー外クリックで閉じる
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!languageToggle.contains(e.target) && !languageMenu.contains(e.target)) {
                 languageMenu.classList.remove('active');
             }
@@ -303,19 +413,19 @@ function setLanguage(lang) {
         console.warn(`Language ${lang} not found, falling back to English`);
         lang = 'en';
     }
-    
+
     const t = translations[lang];
-    
+
     // HTML言語属性を設定
     document.documentElement.lang = lang;
-    
+
     // 各要素のテキストを更新
     updateElementText('nav-features', t.nav_features);
     updateElementText('nav-benefits', t.nav_benefits);
     updateElementText('nav-download', t.nav_download);
     updateElementText('nav-faq', t.nav_faq);
     updateElementText('nav-language', t.nav_language);
-    
+
     // ヒーローセクション
     updateElementText('hero-title-focus', t.hero_title_focus);
     updateElementText('hero-title-game', t.hero_title_game);
@@ -325,7 +435,7 @@ function setLanguage(lang) {
     updateElementText('hero-btn-download', t.hero_btn_download);
     updateElementText('hero-btn-learn-more', t.hero_btn_learn_more);
     updateElementText('scroll-text', t.scroll_text);
-    
+
     // 機能セクション
     updateElementText('features-title', t.features_title);
     updateElementText('features-subtitle', t.features_subtitle);
@@ -341,7 +451,7 @@ function setLanguage(lang) {
     updateElementText('feature5-desc', t.feature5_desc);
     updateElementText('feature6-title', t.feature6_title);
     updateElementText('feature6-desc', t.feature6_desc);
-    
+
     // メリットセクション
     updateElementText('benefits-title', t.benefits_title);
     updateElementText('benefits-subtitle', t.benefits_subtitle);
@@ -357,7 +467,7 @@ function setLanguage(lang) {
     updateElementText('stat2-label', t.stat2_label);
     updateElementText('stat3-number', t.stat3_number);
     updateElementText('stat3-label', t.stat3_label);
-    
+
     // ダウンロードセクション
     updateElementText('download-title', t.download_title);
     updateElementText('download-subtitle', t.download_subtitle);
@@ -378,7 +488,7 @@ function setLanguage(lang) {
     updateElementText('download-pro-btn', t.download_pro_btn);
     updateElementText('download-size', t.download_size);
     updateElementText('download-platform', t.download_platform);
-    
+
     // システム要件
     updateElementText('system-requirements', t.system_requirements);
     updateElementText('req-os', t.req_os);
@@ -387,7 +497,7 @@ function setLanguage(lang) {
     updateElementText('req-storage', t.req_storage);
     updateElementText('req-network', t.req_network);
     updateElementText('req-optional', t.req_optional);
-    
+
     // FAQ
     updateElementText('faq-title', t.faq_title);
     updateElementText('faq-subtitle', t.faq_subtitle);
@@ -399,7 +509,7 @@ function setLanguage(lang) {
     updateElementText('faq3-a', t.faq3_a);
     updateElementText('faq4-q', t.faq4_q);
     updateElementText('faq4-a', t.faq4_a);
-    
+
     // フッター
     updateElementText('footer-title', t.footer_title);
     updateElementText('footer-desc', t.footer_desc);
@@ -415,10 +525,10 @@ function setLanguage(lang) {
     updateElementText('footer-copyright', t.footer_copyright);
     updateElementText('footer-privacy', t.footer_privacy);
     updateElementText('footer-terms', t.footer_terms);
-    
+
     // 現在の言語をローカルストレージに保存
     localStorage.setItem('focusGameDeckLang', lang);
-    
+
     // 言語切り替えボタンの表示を更新
     updateLanguageToggle(lang);
 }
@@ -435,13 +545,26 @@ function updateElementText(id, text) {
 function updateLanguageToggle(currentLang) {
     const languageToggle = document.getElementById('language-toggle');
     const languageOptions = document.querySelectorAll('.language-option');
-    
+
     if (languageToggle) {
-        const langDisplay = currentLang === 'ja' ? '日本語' : 'English';
-        const langFlag = currentLang === 'ja' ? '🇯🇵' : '🇺🇸';
+        let langDisplay, langFlag;
+        switch (currentLang) {
+            case 'zh-CN':
+                langDisplay = '简体中文';
+                langFlag = '🇨🇳';
+                break;
+            case 'ja':
+                langDisplay = '日本語';
+                langFlag = '🇯🇵';
+                break;
+            default:
+                langDisplay = 'English';
+                langFlag = '🇺🇸';
+                break;
+        }
         languageToggle.innerHTML = `${langFlag} ${langDisplay} <svg class="language-arrow" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"></path></svg>`;
     }
-    
+
     // 言語オプションの選択状態を更新
     languageOptions.forEach(option => {
         const optionLang = option.getAttribute('data-lang');
@@ -460,7 +583,7 @@ function initializeNavigation() {
     const navLinks = document.querySelectorAll('.nav-link');
 
     // ハンバーガーメニューのトグル
-    hamburger.addEventListener('click', function() {
+    hamburger.addEventListener('click', function () {
         hamburger.classList.toggle('active');
         navMenu.classList.toggle('active');
         document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
@@ -468,7 +591,7 @@ function initializeNavigation() {
 
     // ナビゲーションリンククリック時の処理
     navLinks.forEach(link => {
-        link.addEventListener('click', function() {
+        link.addEventListener('click', function () {
             hamburger.classList.remove('active');
             navMenu.classList.remove('active');
             document.body.style.overflow = '';
@@ -478,10 +601,10 @@ function initializeNavigation() {
     // スクロール時のナビゲーションバー表示制御
     let lastScrollTop = 0;
     const navbar = document.querySelector('.navbar');
-    
-    window.addEventListener('scroll', function() {
+
+    window.addEventListener('scroll', function () {
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        
+
         if (scrollTop > lastScrollTop && scrollTop > 100) {
             // 下にスクロール時は隠す
             navbar.style.transform = 'translateY(-100%)';
@@ -489,14 +612,14 @@ function initializeNavigation() {
             // 上にスクロール時は表示
             navbar.style.transform = 'translateY(0)';
         }
-        
+
         // 背景の透明度調整
         if (scrollTop > 50) {
             navbar.style.background = 'rgba(10, 10, 10, 0.98)';
         } else {
             navbar.style.background = 'rgba(10, 10, 10, 0.95)';
         }
-        
+
         lastScrollTop = scrollTop;
     });
 }
@@ -504,14 +627,14 @@ function initializeNavigation() {
 // スムーズスクロール
 function initializeSmoothScroll() {
     const links = document.querySelectorAll('a[href^="#"]');
-    
+
     links.forEach(link => {
-        link.addEventListener('click', function(e) {
+        link.addEventListener('click', function (e) {
             e.preventDefault();
-            
+
             const targetId = this.getAttribute('href');
             const targetElement = document.querySelector(targetId);
-            
+
             if (targetElement) {
                 const headerOffset = 80;
                 const elementPosition = targetElement.getBoundingClientRect().top;
@@ -529,20 +652,20 @@ function initializeSmoothScroll() {
 // FAQ の展開/収束機能
 function initializeFAQ() {
     const faqItems = document.querySelectorAll('.faq-item');
-    
+
     faqItems.forEach(item => {
         const question = item.querySelector('.faq-question');
-        
-        question.addEventListener('click', function() {
+
+        question.addEventListener('click', function () {
             const isActive = item.classList.contains('active');
-            
+
             // 他のすべてのFAQアイテムを閉じる
             faqItems.forEach(otherItem => {
                 if (otherItem !== item) {
                     otherItem.classList.remove('active');
                 }
             });
-            
+
             // クリックされたアイテムをトグル
             item.classList.toggle('active', !isActive);
         });
@@ -556,11 +679,11 @@ function initializeScrollAnimations() {
         rootMargin: '0px 0px -50px 0px'
     };
 
-    const observer = new IntersectionObserver(function(entries) {
+    const observer = new IntersectionObserver(function (entries) {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animate-in');
-                
+
                 // カウンターアニメーション
                 if (entry.target.classList.contains('stat-number')) {
                     animateCounter(entry.target);
@@ -573,7 +696,7 @@ function initializeScrollAnimations() {
     const animateElements = document.querySelectorAll(
         '.feature-card, .benefit-item, .stat-card, .download-card, .faq-item'
     );
-    
+
     animateElements.forEach(el => {
         observer.observe(el);
     });
@@ -593,20 +716,20 @@ function animateCounter(element) {
     function updateCounter(currentTime) {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        
+
         // イージング関数
         const easeOutCubic = 1 - Math.pow(1 - progress, 3);
         const currentNumber = Math.floor(number * easeOutCubic);
-        
+
         element.textContent = currentNumber + suffix;
-        
+
         if (progress < 1) {
             requestAnimationFrame(updateCounter);
         } else {
             element.textContent = text; // 最終値を設定
         }
     }
-    
+
     requestAnimationFrame(updateCounter);
 }
 
@@ -623,7 +746,7 @@ function addAnimationStyles() {
             transform: translateY(30px);
             transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .feature-card.animate-in,
         .benefit-item.animate-in,
         .stat-card.animate-in,
@@ -632,27 +755,27 @@ function addAnimationStyles() {
             opacity: 1;
             transform: translateY(0);
         }
-        
+
         .feature-card {
             transition-delay: 0.1s;
         }
-        
+
         .feature-card:nth-child(2) {
             transition-delay: 0.2s;
         }
-        
+
         .feature-card:nth-child(3) {
             transition-delay: 0.3s;
         }
-        
+
         .feature-card:nth-child(4) {
             transition-delay: 0.4s;
         }
-        
+
         .feature-card:nth-child(5) {
             transition-delay: 0.5s;
         }
-        
+
         .feature-card:nth-child(6) {
             transition-delay: 0.6s;
         }
@@ -664,7 +787,7 @@ function addAnimationStyles() {
 function initializeParticleEffect() {
     const hero = document.querySelector('.hero');
     const particleCount = 50;
-    
+
     // パーティクルコンテナ作成
     const particleContainer = document.createElement('div');
     particleContainer.style.cssText = `
@@ -677,9 +800,9 @@ function initializeParticleEffect() {
         overflow: hidden;
         z-index: 1;
     `;
-    
+
     hero.appendChild(particleContainer);
-    
+
     // パーティクル生成
     for (let i = 0; i < particleCount; i++) {
         createParticle(particleContainer);
@@ -692,7 +815,7 @@ function createParticle(container) {
     const x = Math.random() * 100;
     const animationDuration = Math.random() * 20 + 10;
     const delay = Math.random() * 20;
-    
+
     particle.style.cssText = `
         position: absolute;
         width: ${size}px;
@@ -704,9 +827,9 @@ function createParticle(container) {
         animation: float-up ${animationDuration}s linear ${delay}s infinite;
         pointer-events: none;
     `;
-    
+
     container.appendChild(particle);
-    
+
     // パーティクル用キーフレームを追加
     if (!document.querySelector('#particle-keyframes')) {
         const style = document.createElement('style');
@@ -736,15 +859,15 @@ function createParticle(container) {
 // ボタンクリック時のリップル効果
 function addRippleEffect() {
     const buttons = document.querySelectorAll('.btn');
-    
+
     buttons.forEach(button => {
-        button.addEventListener('click', function(e) {
+        button.addEventListener('click', function (e) {
             const ripple = document.createElement('span');
             const rect = this.getBoundingClientRect();
             const size = Math.max(rect.width, rect.height);
             const x = e.clientX - rect.left - size / 2;
             const y = e.clientY - rect.top - size / 2;
-            
+
             ripple.style.cssText = `
                 position: absolute;
                 width: ${size}px;
@@ -757,17 +880,17 @@ function addRippleEffect() {
                 animation: ripple 0.6s ease-out;
                 pointer-events: none;
             `;
-            
+
             this.style.position = 'relative';
             this.style.overflow = 'hidden';
             this.appendChild(ripple);
-            
+
             setTimeout(() => {
                 ripple.remove();
             }, 600);
         });
     });
-    
+
     // リップルアニメーション用キーフレームを追加
     if (!document.querySelector('#ripple-keyframes')) {
         const style = document.createElement('style');
@@ -789,19 +912,19 @@ function initializeMouseGradient() {
     const hero = document.querySelector('.hero');
     let mouseX = 0;
     let mouseY = 0;
-    
-    hero.addEventListener('mousemove', function(e) {
+
+    hero.addEventListener('mousemove', function (e) {
         const rect = hero.getBoundingClientRect();
         mouseX = ((e.clientX - rect.left) / rect.width) * 100;
         mouseY = ((e.clientY - rect.top) / rect.height) * 100;
-        
+
         hero.style.background = `
             radial-gradient(circle at ${mouseX}% ${mouseY}%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
             linear-gradient(135deg, var(--bg-darker), var(--bg-dark))
         `;
     });
-    
-    hero.addEventListener('mouseleave', function() {
+
+    hero.addEventListener('mouseleave', function () {
         hero.style.background = 'linear-gradient(135deg, var(--bg-darker), var(--bg-dark))';
     });
 }
@@ -809,11 +932,11 @@ function initializeMouseGradient() {
 // パフォーマンス監視
 function initializePerformanceMonitoring() {
     if ('performance' in window) {
-        window.addEventListener('load', function() {
-            setTimeout(function() {
+        window.addEventListener('load', function () {
+            setTimeout(function () {
                 const perfData = performance.getEntriesByType('navigation')[0];
                 const loadTime = perfData.loadEventEnd - perfData.loadEventStart;
-                
+
                 if (loadTime > 3000) {
                     console.warn('ページの読み込み時間が3秒を超えています:', loadTime + 'ms');
                 }
@@ -826,8 +949,8 @@ function initializePerformanceMonitoring() {
 function initializeDarkModeToggle() {
     // 現在はダークモードのみだが、将来的にライトモードも実装可能
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    prefersDark.addEventListener('change', function(e) {
+
+    prefersDark.addEventListener('change', function (e) {
         if (e.matches) {
             document.body.classList.add('dark-mode');
         } else {
@@ -837,24 +960,24 @@ function initializeDarkModeToggle() {
 }
 
 // エラーハンドリング
-window.addEventListener('error', function(e) {
+window.addEventListener('error', function (e) {
     console.error('JavaScript Error:', e.error);
     // 本番環境ではエラーレポートサービスに送信することを検討
 });
 
 // 初期化完了時の処理
-window.addEventListener('load', function() {
+window.addEventListener('load', function () {
     // リップル効果の追加
     addRippleEffect();
-    
+
     // マウス追従効果の初期化
     initializeMouseGradient();
-    
+
     // パフォーマンス監視の初期化
     initializePerformanceMonitoring();
-    
+
     // ダークモード対応の初期化
     initializeDarkModeToggle();
-    
+
     console.log('Focus Game Deck - Landing Page loaded successfully!');
 });

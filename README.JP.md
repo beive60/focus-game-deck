@@ -1,6 +1,6 @@
 # **Focus Game Deck 🚀**
 
-**日本語** | [English](./README.md)
+**日本語** | [English](./README.md) | **中文简体** *(zh-CN サポート利用可能)*
 
 **競技ゲーマー向けに設計された、ゲームセッションを開始から終了まで自動化するPowerShellスクリプト。**
 

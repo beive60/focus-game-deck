@@ -107,9 +107,10 @@ This documentation ensures:
 This documentation is available in multiple languages:
 
 - **English** (Main): [docs/DOCUMENTATION-INDEX.md](./DOCUMENTATION-INDEX.md)
+- **中文简体** (Chinese Simplified): Focus Game Deck now supports Chinese Simplified (zh-CN)
 - **日本語** (Japanese): [docs/ja/DOCUMENTATION-INDEX.md](./ja/DOCUMENTATION-INDEX.md)
 
-For Japanese-speaking contributors and users, please refer to the Japanese documentation in the `docs/ja/` directory.
+For Japanese-speaking contributors and users, please refer to the Japanese documentation in the `docs/ja/` directory. Chinese Simplified support has been added throughout the application interface and configuration editor.
 
 ---
 

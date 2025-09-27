@@ -1,6 +1,6 @@
 # **Focus Game Deck 🚀**
 
-[日本語](./README.JP.md) | **English**
+[日本語](./README.JP.md) | **English** | [**中文简体**](./README.zh-CN.md)
 
 **A PowerShell script that automates your gaming sessions from start to finish, designed for competitive PC gamers.**
 
