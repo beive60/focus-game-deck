@@ -20,87 +20,358 @@ document.addEventListener('DOMContentLoaded', async function () {
     initializeParticleEffect();
 });
 
-// Translation data for multilingual support (loaded from messages.json)
-let translations = {};
+// Translation data for multilingual support
+const translations = {
+    ja: {
+        // Navigation
+        nav_features: '機能',
+        nav_benefits: 'メリット',
+        nav_download: 'ダウンロード',
+        nav_faq: 'FAQ',
+        nav_language: '言語',
 
-/**
- * Load translation messages from external JSON file
- * @returns {Promise<Object>} Promise that resolves to the translations object
- */
-async function loadTranslations() {
-    try {
-        const response = await fetch('./messages.json');
-        if (!response.ok) {
-            throw new Error(`Failed to load translations: ${response.status}`);
-        }
-        translations = await response.json();
-        return translations;
-    } catch (error) {
-        console.error('Error loading translations:', error);
-        // Fallback to English if loading fails
-        translations = {
-            en: {
-                nav_features: 'Features',
-                nav_benefits: 'Benefits',
-                nav_download: 'Download',
-                nav_faq: 'FAQ',
-                nav_language: 'Language',
-                hero_title_focus: 'FOCUS',
-                hero_title_game: 'GAME',
-                hero_title_deck: 'DECK',
-                hero_subtitle: 'Gaming Focus Enhancement Tool',
-                hero_description: 'Achieve pro-gamer level focus.',
-                hero_btn_download: 'Download',
-                hero_btn_learn_more: 'Learn More',
-                scroll_text: 'Scroll to learn more',
-                features_title: 'Features',
-                benefits_title: 'Benefits',
-                download_title: 'Download',
-                faq_title: 'FAQ',
-                footer_title: 'Focus Game Deck'
-            }
-        };
-        return translations;
+        // Hero section
+        hero_title_focus: 'FOCUS',
+        hero_title_game: 'GAME',
+        hero_title_deck: 'DECK',
+        hero_subtitle: 'ゲーミング集中力向上ツール',
+        hero_description: 'プロゲーマーレベルの集中力を手に入れよう。Focus Game Deckは、ゲーミング中の集中力とパフォーマンスを最大化するために設計されたPowerShellベースの軽量ツールです。',
+        hero_btn_download: 'ダウンロード',
+        hero_btn_learn_more: '詳細を見る',
+        scroll_text: 'スクロールして詳細を見る',
+
+        // Features section
+        features_title: '強力な機能',
+        features_subtitle: 'ゲーミングに特化した集中力向上機能',
+        feature1_title: 'ディストラクション・ブロック',
+        feature1_desc: 'ゲーミング中の不要な通知やアプリケーションを自動的にブロックし、100%ゲームに集中できる環境を作ります。',
+        feature2_title: 'パフォーマンス最適化',
+        feature2_desc: 'システムリソースを最適化し、FPSの安定化とレイテンシの最小化でゲーミングパフォーマンスを向上させます。',
+        feature3_title: 'OBS連携',
+        feature3_desc: 'OBSとシームレスに連携し、配信者向けの自動シーン切り替えやアラート機能で配信をレベルアップ。',
+        feature4_title: 'カスタムプロファイル',
+        feature4_desc: 'ゲームごとに異なる設定プロファイルを作成し、タイトルに最適化された環境を瞬時に構築できます。',
+        feature5_title: 'リアルタイム監視',
+        feature5_desc: 'CPU、GPU、メモリ使用率をリアルタイムで監視し、パフォーマンスの低下を事前に防ぎます。',
+        feature6_title: 'ホットキー制御',
+        feature6_desc: 'カスタマイズ可能なホットキーで、ゲーム中でも素早く設定を調整できます。',
+
+        // Benefits section
+        benefits_title: 'Focus Game Deckを選ぶ理由',
+        benefits_subtitle: 'プロレベルのゲーミング環境を誰でも簡単に',
+        benefit1_title: '集中力向上',
+        benefit1_desc: '不要な通知とバックグラウンドプロセスを完全に排除し、ゲームだけに集中できる環境を構築します。',
+        benefit2_title: 'パフォーマンス向上',
+        benefit2_desc: 'システムリソースの最適化により、平均15-25%のFPS向上とレイテンシ削減を実現します。',
+        benefit3_title: '簡単セットアップ',
+        benefit3_desc: 'PowerShellベースの軽量ツールで、複雑な設定は不要。ワンクリックで最適な環境を構築できます。',
+        stat1_number: '25%',
+        stat1_label: 'FPS向上',
+        stat2_number: '50%',
+        stat2_label: '集中力UP',
+        stat3_number: '30%',
+        stat3_label: '反応速度向上',
+
+        // Download section
+        download_title: 'Focus Game Deckをダウンロード',
+        download_subtitle: '今すぐゲーミングパフォーマンスを向上させよう',
+        download_free_title: '無料版',
+        download_pro_title: 'Pro版',
+        download_version: 'v1.2.0',
+        download_free_feature1: '基本的なディストラクション・ブロック',
+        download_free_feature2: 'パフォーマンス監視',
+        download_free_feature3: '3つのプリセットプロファイル',
+        download_free_feature4: 'コミュニティサポート',
+        download_pro_feature1: 'すべての無料版機能',
+        download_pro_feature2: 'OBS完全連携',
+        download_pro_feature3: '無制限カスタムプロファイル',
+        download_pro_feature4: 'AIベース最適化',
+        download_pro_feature5: '優先サポート',
+        download_pro_feature6: '自動アップデート',
+        download_free_btn: '無料でダウンロード',
+        download_pro_btn: 'Pro版を購入 ¥2,980',
+        download_size: 'サイズ',
+        download_platform: 'Windows 10/11',
+
+        // System requirements
+        system_requirements: 'システム要件',
+        req_os: 'OS: Windows 10 (1903以降) または Windows 11',
+        req_powershell: 'PowerShell: 5.1以降 (Windows PowerShell) または 7.0以降 (PowerShell Core)',
+        req_memory: 'メモリ: 4GB RAM以上',
+        req_storage: 'ストレージ: 50MB の空き容量',
+        req_network: 'ネットワーク: アップデート用インターネット接続',
+        req_optional: 'オプション: OBS Studio (OBS連携機能使用時)',
+
+        // FAQ
+        faq_title: 'よくある質問',
+        faq_subtitle: 'Focus Game Deckについての疑問にお答えします',
+        faq1_q: 'Focus Game Deckは無料で使えますか？',
+        faq1_a: 'はい、基本機能は無料でご利用いただけます。より高度な機能をお求めの場合は、Pro版をご検討ください。',
+        faq2_q: '対応しているゲームはありますか？',
+        faq2_a: 'Focus Game Deckはゲームに依存しないシステムレベルの最適化を行うため、すべてのPCゲームで効果を発揮します。',
+        faq3_q: 'OBS連携機能はどのように動作しますか？',
+        faq3_a: 'OBSのWebSocketプラグインを通じて、ゲームの開始/終了に合わせて自動的にシーンを切り替えたり、アラートを表示したりできます。',
+        faq4_q: 'アンインストールは簡単にできますか？',
+        faq4_a: 'はい、PowerShellスクリプトベースのため、システムに深く統合されることなく、簡単にアンインストールできます。',
+
+        // Footer
+        footer_title: 'Focus Game Deck',
+        footer_desc: 'プロゲーマーレベルの集中力を手に入れるためのゲーミング特化ツール',
+        footer_quick_links: 'クイックリンク',
+        footer_features: '機能',
+        footer_download: 'ダウンロード',
+        footer_support: 'サポート',
+        footer_documentation: 'ドキュメント',
+        footer_community: 'コミュニティ',
+        footer_github: 'GitHub',
+        footer_discord: 'Discord',
+        footer_social: 'ソーシャル',
+        footer_copyright: '(c) 2025 Focus Game Deck. All rights reserved.',
+        footer_privacy: 'プライバシーポリシー',
+        footer_terms: '利用規約'
+    },
+    'zh-CN': {
+        // Navigation
+        nav_features: '功能',
+        nav_benefits: '优势',
+        nav_download: '下载',
+        nav_faq: '常见问题',
+        nav_language: '语言',
+
+        // Hero section
+        hero_title_focus: 'FOCUS',
+        hero_title_game: 'GAME',
+        hero_title_deck: 'DECK',
+        hero_subtitle: '游戏专注力提升工具',
+        hero_description: '获得职业选手级别的专注力。Focus Game Deck 是一个基于PowerShell的轻量级工具，专为最大化游戏过程中的专注力和性能而设计。',
+        hero_btn_download: '下载',
+        hero_btn_learn_more: '了解更多',
+        scroll_text: '滚动查看更多信息',
+
+        // Features section
+        features_title: '强大功能',
+        features_subtitle: '专为游戏打造的专注力提升功能',
+        feature1_title: '干扰阻拦',
+        feature1_desc: '自动阻止游戏过程中的不必要通知和应用程序，创造100%专注于游戏的环境。',
+        feature2_title: '性能优化',
+        feature2_desc: '优化系统资源，稳定FPS并最小化延迟，提升游戏性能。',
+        feature3_title: 'OBS集成',
+        feature3_desc: '与OBS无缝集成，为主播提供自动场景切换和警报功能，提升直播质量。',
+        feature4_title: '自定义配置',
+        feature4_desc: '为不同游戏创建不同的设置配置文件，瞬间构建针对特定游戏优化的环境。',
+        feature5_title: '实时监控',
+        feature5_desc: '实时监控CPU、GPU、内存使用率，预防性能下降。',
+        feature6_title: '热键控制',
+        feature6_desc: '可自定义的热键，即使在游戏中也能快速调整设置。',
+
+        // Benefits section
+        benefits_title: '选择Focus Game Deck的理由',
+        benefits_subtitle: '人人都能轻松拥有专业级游戏环境',
+        benefit1_title: '专注力提升',
+        benefit1_desc: '完全消除不必要的通知和后台进程，构建只专注于游戏的环境。',
+        benefit2_title: '性能提升',
+        benefit2_desc: '通过系统资源优化，实现平均15-25%的FPS提升和延迟减少。',
+        benefit3_title: '简单设置',
+        benefit3_desc: '基于PowerShell的轻量级工具，无需复杂设置。一键构建最佳环境。',
+        stat1_number: '25%',
+        stat1_label: 'FPS提升',
+        stat2_number: '50%',
+        stat2_label: '专注力提升',
+        stat3_number: '30%',
+        stat3_label: '反应速度提升',
+
+        // Download section
+        download_title: '下载Focus Game Deck',
+        download_subtitle: '立即提升您的游戏性能',
+        download_free_title: '免费版',
+        download_pro_title: '专业版',
+        download_version: 'v1.2.0',
+        download_free_feature1: '基本干扰阻拦',
+        download_free_feature2: '性能监控',
+        download_free_feature3: '3个预设配置文件',
+        download_free_feature4: '社区支持',
+        download_pro_feature1: '所有免费版功能',
+        download_pro_feature2: 'OBS完整集成',
+        download_pro_feature3: '无限制自定义配置文件',
+        download_pro_feature4: 'AI优化',
+        download_pro_feature5: '优先支持',
+        download_pro_feature6: '自动更新',
+        download_free_btn: '免费下载',
+        download_pro_btn: '购买专业版 ¥298',
+        download_size: '大小',
+        download_platform: 'Windows 10/11',
+
+        // System requirements
+        system_requirements: '系统要求',
+        req_os: '操作系统：Windows 10 (1903或更高版本) 或 Windows 11',
+        req_powershell: 'PowerShell：5.1或更高版本 (Windows PowerShell) 或 7.0或更高版本 (PowerShell Core)',
+        req_memory: '内存：4GB RAM或更多',
+        req_storage: '存储空间：50MB可用空间',
+        req_network: '网络：用于更新的互联网连接',
+        req_optional: '可选：OBS Studio（使用OBS集成功能时）',
+
+        // FAQ
+        faq_title: '常见问题',
+        faq_subtitle: '关于Focus Game Deck的常见疑问解答',
+        faq1_q: 'Focus Game Deck可以免费使用吗？',
+        faq1_a: '是的，基本功能完全免费。如果您需要更高级的功能，可以考虑专业版。',
+        faq2_q: '支持哪些游戏？',
+        faq2_a: 'Focus Game Deck执行系统级优化，不依赖于特定游戏，因此对所有PC游戏都有效果。',
+        faq3_q: 'OBS集成功能如何工作？',
+        faq3_a: '通过OBS的WebSocket插件，可以根据游戏的开始/结束自动切换场景或显示警报。',
+        faq4_q: '可以轻松卸载吗？',
+        faq4_a: '是的，由于是基于PowerShell脚本的，不会深度集成到系统中，可以轻松卸载。',
+
+        // Footer
+        footer_title: 'Focus Game Deck',
+        footer_desc: '获得职业选手级专注力的游戏专用工具',
+        footer_quick_links: '快速链接',
+        footer_features: '功能',
+        footer_download: '下载',
+        footer_support: '支持',
+        footer_documentation: '文档',
+        footer_community: '社区',
+        footer_github: 'GitHub',
+        footer_discord: 'Discord',
+        footer_social: '社交媒体',
+        footer_copyright: '(c) 2025 Focus Game Deck. 保留所有权利。',
+        footer_privacy: '隐私政策',
+        footer_terms: '服务条款'
+    },
+    en: {
+        // Navigation
+        nav_features: 'Features',
+        nav_benefits: 'Benefits',
+        nav_download: 'Download',
+        nav_faq: 'FAQ',
+        nav_language: 'Language',
+
+        // Hero Section
+        hero_title_focus: 'FOCUS',
+        hero_title_game: 'GAME',
+        hero_title_deck: 'DECK',
+        hero_subtitle: 'Gaming Focus Enhancement Tool',
+        hero_description: 'Achieve pro-gamer level focus. Focus Game Deck is a lightweight PowerShell-based tool designed to maximize focus and performance during gaming sessions.',
+        hero_btn_download: 'Download',
+        hero_btn_learn_more: 'Learn More',
+        scroll_text: 'Scroll to learn more',
+
+        // Features Section
+        features_title: 'Powerful Features',
+        features_subtitle: 'Gaming-focused concentration enhancement features',
+        feature1_title: 'Distraction Block',
+        feature1_desc: 'Automatically blocks unnecessary notifications and applications during gaming, creating a 100% game-focused environment.',
+        feature2_title: 'Performance Optimization',
+        feature2_desc: 'Optimizes system resources to stabilize FPS and minimize latency, enhancing gaming performance.',
+        feature3_title: 'OBS Integration',
+        feature3_desc: 'Seamlessly integrates with OBS for streamers with automatic scene switching and alert features to level up your streaming.',
+        feature4_title: 'Custom Profiles',
+        feature4_desc: 'Create different configuration profiles for each game and instantly build environments optimized for specific titles.',
+        feature5_title: 'Real-time Monitoring',
+        feature5_desc: 'Monitor CPU, GPU, and memory usage in real-time to prevent performance degradation in advance.',
+        feature6_title: 'Hotkey Control',
+        feature6_desc: 'Quickly adjust settings during gameplay with customizable hotkeys.',
+
+        // Benefits Section
+        benefits_title: 'Why Choose Focus Game Deck',
+        benefits_subtitle: 'Pro-level gaming environment made simple for everyone',
+        benefit1_title: 'Enhanced Focus',
+        benefit1_desc: 'Completely eliminates unnecessary notifications and background processes, creating an environment where you can focus solely on gaming.',
+        benefit2_title: 'Performance Boost',
+        benefit2_desc: 'System resource optimization achieves an average 15-25% FPS improvement and latency reduction.',
+        benefit3_title: 'Easy Setup',
+        benefit3_desc: 'Lightweight PowerShell-based tool with no complex configuration required. Build the optimal environment with one click.',
+        stat1_number: '25%',
+        stat1_label: 'FPS Boost',
+        stat2_number: '50%',
+        stat2_label: 'Focus UP',
+        stat3_number: '30%',
+        stat3_label: 'Reaction Speed',
+
+        // Download Section
+        download_title: 'Download Focus Game Deck',
+        download_subtitle: 'Enhance your gaming performance right now',
+        download_free_title: 'Free Version',
+        download_pro_title: 'Pro Version',
+        download_version: 'v1.2.0',
+        download_free_feature1: 'Basic distraction blocking',
+        download_free_feature2: 'Performance monitoring',
+        download_free_feature3: '3 preset profiles',
+        download_free_feature4: 'Community support',
+        download_pro_feature1: 'All free version features',
+        download_pro_feature2: 'Full OBS integration',
+        download_pro_feature3: 'Unlimited custom profiles',
+        download_pro_feature4: 'AI-based optimization',
+        download_pro_feature5: 'Priority support',
+        download_pro_feature6: 'Automatic updates',
+        download_free_btn: 'Download Free',
+        download_pro_btn: 'Buy Pro $29.99',
+        download_size: 'Size',
+        download_platform: 'Windows 10/11',
+
+        // System Requirements
+        system_requirements: 'System Requirements',
+        req_os: 'OS: Windows 10 (1903 or later) or Windows 11',
+        req_powershell: 'PowerShell: 5.1 or later (Windows PowerShell) or 7.0 or later (PowerShell Core)',
+        req_memory: 'Memory: 4GB RAM or higher',
+        req_storage: 'Storage: 50MB free space',
+        req_network: 'Network: Internet connection for updates',
+        req_optional: 'Optional: OBS Studio (for OBS integration features)',
+
+        // FAQ
+        faq_title: 'Frequently Asked Questions',
+        faq_subtitle: 'Answers to your questions about Focus Game Deck',
+        faq1_q: 'Is Focus Game Deck free to use?',
+        faq1_a: 'Yes, basic features are available for free. For more advanced features, please consider the Pro version.',
+        faq2_q: 'Are there supported games?',
+        faq2_a: 'Focus Game Deck performs game-independent system-level optimization, so it works effectively with all PC games.',
+        faq3_q: 'How does the OBS integration feature work?',
+        faq3_a: 'Through OBS WebSocket plugin, it can automatically switch scenes and display alerts based on game start/end events.',
+        faq4_q: 'Is uninstallation easy?',
+        faq4_a: 'Yes, being PowerShell script-based, it can be easily uninstalled without deep system integration.',
+
+        // Footer
+        footer_title: 'Focus Game Deck',
+        footer_desc: 'Gaming-focused tool for achieving pro-gamer level concentration',
+        footer_quick_links: 'Quick Links',
+        footer_features: 'Features',
+        footer_download: 'Download',
+        footer_support: 'Support',
+        footer_documentation: 'Documentation',
+        footer_community: 'Community',
+        footer_github: 'GitHub',
+        footer_discord: 'Discord',
+        footer_social: 'Social',
+        footer_copyright: '(c) 2025 Focus Game Deck. All rights reserved.',
+        footer_privacy: 'Privacy Policy',
+        footer_terms: 'Terms of Service'
     }
-}
+};
 
-/**
- * Initialize multilingual support with async translation loading
- * @returns {Promise<void>} Promise that resolves when initialization is complete
- */
-async function initializeI18n() {
-    try {
-        // Load translations first
-        await loadTranslations();
+// Initialize multilingual support
+function initializeI18n() {
+    // Get browser language settings
+    const browserLang = navigator.language || navigator.userLanguage;
 
-        // Get browser language settings
-        const browserLang = navigator.language || navigator.userLanguage;
+    // Get saved language settings from local storage
+    const savedLang = localStorage.getItem('focusGameDeckLang');
 
-        // Get saved language settings from local storage
-        const savedLang = localStorage.getItem('focusGameDeckLang');
+    // Determine language (priority: saved setting > browser setting > default English)
+    let currentLang = 'en'; // Default is English
 
-        // Determine language (priority: saved setting > browser setting > default English)
-        let currentLang = 'en'; // Default is English
-
-        if (savedLang && translations[savedLang]) {
-            currentLang = savedLang;
-        } else if (browserLang.startsWith('zh')) {
-            currentLang = 'zh-CN';
-        } else if (browserLang.startsWith('ja')) {
-            currentLang = 'ja';
-        }
-
-        // Set language
-        setLanguage(currentLang);
-
-        // Set up language switcher event listeners
-        setupLanguageSwitcher();
-    } catch (error) {
-        console.error('Failed to initialize i18n:', error);
-        // Fallback to English with minimal translations
-        setLanguage('en');
-        setupLanguageSwitcher();
+    if (savedLang && translations[savedLang]) {
+        currentLang = savedLang;
+    } else if (browserLang.startsWith('zh')) {
+        currentLang = 'zh-CN';
+    } else if (browserLang.startsWith('ja')) {
+        currentLang = 'ja';
     }
+
+    // Set language
+    setLanguage(currentLang);
+
+    // Set up language switcher event listeners
+    setupLanguageSwitcher();
 }
 
 // Set up language switcher functionality
@@ -136,10 +407,7 @@ function setupLanguageSwitcher() {
     }
 }
 
-/**
- * Set language and update UI text elements
- * @param {string} lang - Language code (e.g., 'en', 'ja', 'zh-CN')
- */
+// Set language
 function setLanguage(lang) {
     if (!translations[lang]) {
         console.warn(`Language ${lang} not found, falling back to English`);
@@ -265,11 +533,7 @@ function setLanguage(lang) {
     updateLanguageToggle(lang);
 }
 
-/**
- * Function to update element text
- * @param {string} id - Element ID
- * @param {string} text - Text content to set
- */
+// Function to update element text
 function updateElementText(id, text) {
     const element = document.getElementById(id);
     if (element) {
@@ -277,10 +541,7 @@ function updateElementText(id, text) {
     }
 }
 
-/**
- * Update language toggle button display
- * @param {string} currentLang - Current language code
- */
+// Update language toggle button display
 function updateLanguageToggle(currentLang) {
     const languageToggle = document.getElementById('language-toggle');
     const languageOptions = document.querySelectorAll('.language-option');

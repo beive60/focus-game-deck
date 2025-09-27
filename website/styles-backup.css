@@ -19,52 +19,9 @@ body {
 
 /* Header Styles */
 header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     border-bottom: 1px solid #ddd;
     margin-bottom: 40px;
     padding-bottom: 20px;
-}
-
-.header-content {
-    text-align: left;
-}
-
-.language-selector {
-    margin-left: auto;
-}
-
-.language-selector select {
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background: white;
-    font-size: 14px;
-    cursor: pointer;
-    font-family: system-ui, -apple-system, sans-serif;
-}
-
-.language-selector select:focus {
-    outline: none;
-    border-color: #007acc;
-    box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
-}
-
-@media (max-width: 768px) {
-    header {
-        flex-direction: column;
-        text-align: center;
-        gap: 15px;
-    }
-
-    .header-content {
-        text-align: center;
-    }
-
-    .language-selector {
-        margin-left: 0;
-    }
 }
 
 h1 {
@@ -256,21 +213,21 @@ footer {
     h1 {
         font-size: 1.8rem;
     }
-
+    
     .subtitle {
         font-size: 1rem;
     }
-
+    
     .download-section {
         padding: 20px;
     }
-
+    
     .req-item {
         flex-direction: column;
         align-items: flex-start;
         padding: 12px 0;
     }
-
+    
     .req-label {
         margin-bottom: 5px;
     }
