@@ -521,7 +521,10 @@ function Setup-EventHandlers {
 function Load-DataToUI {
     param()
 
-    # Update UI text with current language
+    # Load global settings first (this may update the current language)
+    Load-GlobalSettings
+
+    # Update UI text with current language (after global settings are loaded)
     Update-UITexts
 
     # Load games list
@@ -529,9 +532,6 @@ function Load-DataToUI {
 
     # Load managed apps list
     Update-ManagedAppsList
-
-    # Load global settings
-    Load-GlobalSettings
 
     # Initialize version display
     Initialize-VersionDisplay
@@ -809,6 +809,23 @@ function Load-GlobalSettings {
         $languageCombo.SelectedIndex = 1  # Japanese
     } elseif ($currentLang -eq "en") {
         $languageCombo.SelectedIndex = 2  # English
+    }
+
+    # Reload messages with the correct language from config and update UI texts
+    # This ensures that when the config editor restarts, it displays in the correct language
+    $detectedLang = Get-DetectedLanguage -ConfigData $script:ConfigData
+    if ($detectedLang -ne $script:CurrentLanguage) {
+        $script:CurrentLanguage = $detectedLang
+        Set-CultureByLanguage -LanguageCode $script:CurrentLanguage
+
+        # Reload messages for the detected language
+        $messagesPath = Join-Path $PSScriptRoot "messages.json"
+        $script:Messages = Get-LocalizedMessages -MessagesPath $messagesPath -LanguageCode $script:CurrentLanguage
+
+        Write-Verbose "Language updated during settings load: $script:CurrentLanguage"
+
+        # Update UI texts to reflect the correct language
+        # Note: This will be called after Load-GlobalSettings in Load-DataToUI
     }
 
     # Log Retention Setting
@@ -1479,6 +1496,31 @@ function Restart-ConfigEditor {
     param()
 
     try {
+        # Save current configuration to file before restarting
+        try {
+            # Save current UI data back to config object
+            Save-UIDataToConfig
+
+            # Convert to JSON and save
+            $jsonString = $script:ConfigData | ConvertTo-Json -Depth 10
+            Set-Content -Path $script:ConfigPath -Value $jsonString -Encoding UTF8
+
+            Write-Verbose "Configuration saved before restart"
+        } catch {
+            Write-Warning "Failed to save configuration before restart: $($_.Exception.Message)"
+            # Show error and ask if user still wants to restart
+            $continueRestart = [System.Windows.MessageBox]::Show(
+                "Failed to save configuration before restart. Continue with restart anyway?",
+                "Save Error",
+                [System.Windows.MessageBoxButton]::YesNo,
+                [System.Windows.MessageBoxImage]::Warning
+            )
+
+            if ($continueRestart -ne [System.Windows.MessageBoxResult]::Yes) {
+                return  # Cancel restart
+            }
+        }
+
         # Save current window position and size for better UX
         $currentWindow = $script:Window
 
