@@ -1,6 +1,6 @@
 ﻿{
     "IsSigned":  false,
-    "BuildDate":  "2025-09-24 19:37:39",
+    "BuildDate":  "2025-09-27 11:57:31",
     "Files":  [
                   {
                       "Path":  "Focus-Game-Deck-Config-Editor.exe",
@@ -24,8 +24,8 @@
                   },
                   {
                       "Path":  "README.txt",
-                      "Size":  795,
-                      "LastModified":  "2025-09-24 19:37:41"
+                      "Size":  764,
+                      "LastModified":  "2025-09-27 11:57:34"
                   },
                   {
                       "Path":  "config\\config-multiplatform-example.json",

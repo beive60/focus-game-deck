@@ -74,7 +74,7 @@ if ($Build) {
         }
 
         # Build main application
-        $mainScriptPath = Join-Path $PSScriptRoot "src\Invoke-FocusGameDeck.ps1"
+        $mainScriptPath = Join-Path (Split-Path $PSScriptRoot -Parent) "src\Invoke-FocusGameDeck.ps1"
         $mainOutputPath = Join-Path $buildDir "Focus-Game-Deck.exe"
 
         if (Test-Path $mainScriptPath) {
@@ -107,11 +107,11 @@ if ($Build) {
         # Main executable now includes multi-platform support
 
         # Build Config Editor if not already built
-        $configEditorPath = Join-Path $PSScriptRoot "gui\Focus-Game-Deck-Config-Editor.exe"
+        $configEditorPath = Join-Path (Split-Path $PSScriptRoot -Parent) "gui\Focus-Game-Deck-Config-Editor.exe"
         if (-not (Test-Path $configEditorPath)) {
             Write-Host "Building Config Editor..." -ForegroundColor Cyan
 
-            $configEditorScript = Join-Path $PSScriptRoot "gui\ConfigEditor.ps1"
+            $configEditorScript = Join-Path (Split-Path $PSScriptRoot -Parent) "gui\ConfigEditor.ps1"
             $configEditorOutput = Join-Path $buildDir "Focus-Game-Deck-Config-Editor.exe"
 
             if (Test-Path $configEditorScript) {
@@ -151,7 +151,7 @@ if ($Build) {
             New-Item -ItemType Directory -Path $configDir -Force | Out-Null
         }
 
-        $sourceConfigDir = Join-Path $PSScriptRoot "config"
+        $sourceConfigDir = Join-Path (Split-Path $PSScriptRoot -Parent) "config"
         if (Test-Path $sourceConfigDir) {
             Get-ChildItem $sourceConfigDir -Filter "*.json" | ForEach-Object {
                 Copy-Item $_.FullName $configDir -Force

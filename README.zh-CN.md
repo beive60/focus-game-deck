@@ -103,7 +103,7 @@ Focus Game Deck具有全面的三层构建系统：
 **构建脚本：**
 
 * `Master-Build.ps1` - 完整构建编排（开发/生产工作流程）
-* `Build-FocusGameDeck.ps1` - 核心可执行文件生成和构建管理
+* `build-tools/Build-FocusGameDeck.ps1` - 核心可执行文件生成和构建管理
 * `Sign-Executables.ps1` - 数字签名管理和证书操作
 
 详细构建系统文档请参见[docs/BUILD-SYSTEM.md](./docs/BUILD-SYSTEM.md)。

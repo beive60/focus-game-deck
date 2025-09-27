@@ -1,133 +1,133 @@
-# Focus Game Deck - VSCode開発環境設定
+# Focus Game Deck - VSCode Development Environment Configuration
 
-このディレクトリには、Focus Game DeckプロジェクトでのVSCodeを使った効率的な開発のための設定ファイルがまとめられています。
+This directory contains configuration files for efficient development of the Focus Game Deck project using VSCode.
 
-## 📁 設定ファイル一覧
+## 📁 Configuration Files Overview
 
-### `tasks.json` - タスク設定
-プロジェクトでよく使用するコマンドをVSCodeのタスクとして定義しています。
+### `tasks.json` - Task Configuration
+Defines frequently used project commands as VSCode tasks.
 
-**主要タスク:**
-- 🔧 **セットアップ** - ps2exeモジュールのインストール
-- 🏗️ **ビルド - 開発版** - 署名なしの開発用ビルド（デフォルト）
-- 📦 **ビルド - プロダクション版** - 署名付きプロダクションビルド
-- 🧹 **クリーンアップ** - ビルド成果物の削除
-- 🎮 **実行** - メインアプリケーションの直接実行
-- ⚙️ **GUI設定エディタ** - 設定エディタのビルドと起動
-- 🧪 **各種テスト** - 設定検証、Discord、OBS、VTube Studio連携テスト
-- 📊 **プロジェクト統計** - ファイル数、行数などの統計情報表示
+**Main Tasks:**
+- 🔧 **Setup** - Install ps2exe module
+- 🏗️ **Build - Development** - Unsigned development build (default)
+- 📦 **Build - Production** - Signed production build
+- 🧹 **Cleanup** - Delete build artifacts
+- 🎮 **Run** - Direct execution of main application
+- ⚙️ **GUI Config Editor** - Build and launch configuration editor
+- 🧪 **Various Tests** - Config validation, Discord, OBS, VTube Studio integration tests
+- 📊 **Project Statistics** - Display file count, line count, and other statistics
 
-### `settings.json` - ワークスペース設定
-PowerShell開発に最適化された設定:
-- PowerShellコード整形設定
-- 120文字ルーラー表示
-- UTF-8エンコーディング
-- JSON設定ファイルスキーマ検証
-- 不要ファイルの検索除外
+### `settings.json` - Workspace Settings
+Settings optimized for PowerShell development:
+- PowerShell code formatting settings
+- 120-character ruler display
+- UTF-8 encoding
+- JSON configuration file schema validation
+- Exclusion of unnecessary files from search
 
-### `keybindings.json` - キーボードショートカット
-効率的な開発のためのキーボードショートカット:
-- `Ctrl+Shift+B` - 開発版ビルド
-- `Ctrl+Shift+Alt+B` - プロダクション版ビルド
-- `Ctrl+Shift+T` - 簡単チェックテスト
-- `F5` - メインアプリケーション実行
-- `Ctrl+F5` - リリース版実行ファイル起動
-- `Ctrl+Shift+Del` - クリーンアップ
-- `Ctrl+Shift+G` - GUI設定エディタ
+### `keybindings.json` - Keyboard Shortcuts
+Keyboard shortcuts for efficient development:
+- `Ctrl+Shift+B` - Development build
+- `Ctrl+Shift+Alt+B` - Production build
+- `Ctrl+Shift+T` - Simple check test
+- `F5` - Main application execution
+- `Ctrl+F5` - Launch release version executable
+- `Ctrl+Shift+Del` - Cleanup
+- `Ctrl+Shift+G` - GUI config editor
 
-### `launch.json` - デバッグ設定
-PowerShellスクリプトのデバッグ実行設定:
-- メインアプリケーション
-- マルチプラットフォーム版
-- 設定エディタ
-- 現在開いているファイル
-- 各種テストスクリプト
+### `launch.json` - Debug Configuration
+Debug execution settings for PowerShell scripts:
+- Main application
+- Multi-platform version
+- Configuration editor
+- Currently open file
+- Various test scripts
 
-### `extensions.json` - 推奨拡張機能
-PowerShell開発に推奨される拡張機能:
+### `extensions.json` - Recommended Extensions
+Recommended extensions for PowerShell development:
 - PowerShell
 - JSON Language Features
 - YAML
 - Code Spell Checker
 - Hex Editor
-- その他便利ツール
+- Other useful tools
 
-## 🚀 使用方法
+## 🚀 Usage
 
-### タスクの実行
-1. **コマンドパレット**: `Ctrl+Shift+P` → `Tasks: Run Task`
-2. **キーボードショートカット**: 上記のショートカットキーを使用
-3. **ターミナルメニュー**: `Terminal` → `Run Task`
+### Running Tasks
+1. **Command Palette**: `Ctrl+Shift+P` → `Tasks: Run Task`
+2. **Keyboard Shortcuts**: Use the shortcuts listed above
+3. **Terminal Menu**: `Terminal` → `Run Task`
 
-### デバッグの開始
-1. **F5キー**またはデバッグパネルから実行
-2. PowerShellスクリプトにブレークポイントを設定可能
-3. 変数の監視、コールスタック表示等が利用可能
+### Starting Debug
+1. Press **F5** or run from debug panel
+2. Set breakpoints in PowerShell scripts
+3. Variable watching, call stack display, etc. are available
 
-### 効率的な開発フロー
-1. **セットアップ**: `🔧 セットアップ - ps2exe モジュールのインストール`
-2. **開発**: コード編集後、`Ctrl+Shift+B`で開発版ビルド
-3. **テスト**: `Ctrl+Shift+T`で簡単チェック、または各種テストタスク実行
-4. **デバッグ**: 問題がある場合はF5でデバッグ実行
-5. **クリーンアップ**: `Ctrl+Shift+Del`で不要ファイル削除
-6. **リリース**: `Ctrl+Shift+Alt+B`でプロダクション版ビルド
+### Efficient Development Workflow
+1. **Setup**: `🔧 Setup - Install ps2exe Module`
+2. **Development**: After code editing, use `Ctrl+Shift+B` for development build
+3. **Testing**: Use `Ctrl+Shift+T` for simple check, or run various test tasks
+4. **Debugging**: If issues arise, use F5 for debug execution
+5. **Cleanup**: Use `Ctrl+Shift+Del` to delete unnecessary files
+6. **Release**: Use `Ctrl+Shift+Alt+B` for production build
 
-## 🛠️ カスタマイズ
+## 🛠️ Customization
 
-### 新しいタスクの追加
-`tasks.json`に新しいタスクを追加する場合:
+### Adding New Tasks
+To add a new task to `tasks.json`:
 ```json
 {
-    "label": "新しいタスク名",
+    "label": "New Task Name",
     "type": "shell",
     "command": "powershell",
-    "args": ["-ExecutionPolicy", "Bypass", "-File", "スクリプトパス"],
+    "args": ["-ExecutionPolicy", "Bypass", "-File", "script-path"],
     "group": "build|test",
-    "detail": "タスクの説明"
+    "detail": "Task description"
 }
 ```
 
-### キーボードショートカットの変更
-`keybindings.json`でショートカットキーを変更・追加可能:
+### Changing Keyboard Shortcuts
+Modify or add shortcuts in `keybindings.json`:
 ```json
 {
     "key": "ctrl+alt+t",
     "command": "workbench.action.tasks.runTask",
-    "args": "タスク名"
+    "args": "Task Name"
 }
 ```
 
-## 📋 プロジェクト統計
+## 📋 Project Statistics
 
-現在のプロジェクト規模（統計タスクで確認可能）:
-- PowerShellファイル: 37個
-- 総行数: 8,208行
-- 設定ファイル: 4個
-- テストファイル: 10個
-- モジュール数: 11個
+Current project scale (verifiable with statistics task):
+- PowerShell Files: 37
+- Total Lines: 8,208
+- Configuration Files: 4
+- Test Files: 10
+- Modules: 11
 
-## 🔧 トラブルシューティング
+## 🔧 Troubleshooting
 
-### PowerShell実行ポリシーエラー
+### PowerShell Execution Policy Error
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-### ps2exeモジュールがない場合
-「🔧 セットアップ」タスクを実行してモジュールをインストール
+### Missing ps2exe Module
+Run the "🔧 Setup" task to install the module
 
-### タスクが見つからない場合
-- VSCodeを再起動
-- `.vscode`フォルダーがワークスペースルートにあることを確認
-- `tasks.json`の構文エラーをチェック
+### Task Not Found
+- Restart VSCode
+- Confirm `.vscode` folder is in workspace root
+- Check `tasks.json` for syntax errors
 
-## 📝 注意事項
+## 📝 Notes
 
-- PowerShell拡張機能のインストールが必要
-- 初回セットアップ時は「🔧 セットアップ」タスクを必ず実行
-- プロダクションビルドには署名設定が必要（`config/signing-config.json`）
-- デバッグ実行時はPowerShell統合コンソールが使用される
+- PowerShell extension installation required
+- Must run "🔧 Setup" task on first setup
+- Production build requires signing configuration (`config/signing-config.json`)
+- PowerShell integrated console is used during debug execution
 
 ---
 
-この設定により、Focus GameDeckの開発効率が大幅に向上し、一貫した開発体験が提供されます。
+These configurations significantly improve Focus Game Deck development efficiency and provide a consistent development experience.

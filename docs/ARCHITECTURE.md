@@ -63,9 +63,10 @@ Focus Game Deck
 │   └── gui/Build-ConfigEditor.ps1       # GUI build script
 │
 ├── Build System & Distribution
-│   ├── Build-FocusGameDeck.ps1          # Main build script
-│   ├── Sign-Executables.ps1             # Digital signature script
 │   ├── Master-Build.ps1                 # Integrated build orchestration
+│   ├── build-tools/                     # Build-specific tools
+│   │   ├── Build-FocusGameDeck.ps1      # Main build script
+│   │   └── Sign-Executables.ps1         # Digital signature script
 │   ├── build/                           # Build artifacts directory
 │   ├── signed/                          # Signed executables directory
 │   └── release/                         # Release package directory

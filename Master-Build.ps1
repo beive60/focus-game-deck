@@ -103,7 +103,7 @@ function Initialize-BuildEnvironment {
     Write-BuildLog "Setting up build environment..." "INFO" "Yellow"
 
     # Install ps2exe module
-    $buildScript = Join-Path $PSScriptRoot "Build-FocusGameDeck.ps1"
+    $buildScript = Join-Path $PSScriptRoot "build-tools\Build-FocusGameDeck.ps1"
     return Invoke-BuildScript -ScriptPath $buildScript -Arguments @("-Install") -Description "Installing ps2exe module"
 }
 
@@ -111,7 +111,7 @@ function Initialize-BuildEnvironment {
 function Build-AllExecutables {
     Write-BuildLog "Building all executables..." "INFO" "Yellow"
 
-    $buildScript = Join-Path $PSScriptRoot "Build-FocusGameDeck.ps1"
+    $buildScript = Join-Path $PSScriptRoot "build-tools\Build-FocusGameDeck.ps1"
     return Invoke-BuildScript -ScriptPath $buildScript -Arguments @("-Build") -Description "Building all executables"
 }
 
@@ -119,7 +119,7 @@ function Build-AllExecutables {
 function Add-CodeSignatures {
     Write-BuildLog "Signing all executables..." "INFO" "Yellow"
 
-    $signingScript = Join-Path $PSScriptRoot "Sign-Executables.ps1"
+    $signingScript = Join-Path $PSScriptRoot "build-tools\Sign-Executables.ps1"
 
     # Check if signing is configured
     $signingConfigPath = Join-Path $PSScriptRoot "config\signing-config.json"
@@ -173,7 +173,7 @@ function Record-SignatureHashes {
         # Define paths for signed executables
         $releaseDir = Join-Path $PSScriptRoot "release"
         $executables = @{
-            "Focus-Game-Deck.exe" = "Main application executable"
+            "Focus-Game-Deck.exe"               = "Main application executable"
             "Focus-Game-Deck-MultiPlatform.exe" = "Multi-platform version with extended game support"
             "Focus-Game-Deck-Config-Editor.exe" = "GUI configuration editor"
         }
@@ -213,9 +213,9 @@ function Record-SignatureHashes {
                         # Update registry entry
                         $executableInfo = @{
                             signatureHash = $signatureHash
-                            fileSize = $fileInfo.Length
-                            buildDate = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
-                            description = $executables[$exeName]
+                            fileSize      = $fileInfo.Length
+                            buildDate     = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                            description   = $executables[$exeName]
                         }
 
                         $registry.releases.$currentVersion.executables | Add-Member -MemberType NoteProperty -Name $exeName -Value $executableInfo -Force

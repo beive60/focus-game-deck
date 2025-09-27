@@ -107,7 +107,7 @@ Focus Game Deckは包括的な3階層ビルドシステムを特徴としてい�
 **ビルドスクリプト:**
 
 * `Master-Build.ps1` - 完全ビルド統制（開発・本番ワークフロー）
-* `Build-FocusGameDeck.ps1` - コア実行ファイル生成とビルド管理
+* `build-tools/Build-FocusGameDeck.ps1` - コア実行ファイル生成とビルド管理
 * `Sign-Executables.ps1` - デジタル署名管理と証明書操作
 
 詳細なビルドシステムドキュメントについては、[docs/BUILD-SYSTEM.md](./docs/BUILD-SYSTEM.md)をご覧ください。

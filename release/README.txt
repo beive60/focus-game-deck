@@ -1,13 +1,12 @@
 ﻿# Focus Game Deck - Release Package
 
 **Version:** 1.0.0
-**Build Date:** 2025-09-24 19:37:39
+**Build Date:** 2025-09-27 11:57:31
 **Signed:** No
 
 ## Files Included
 
-- **Focus-Game-Deck.exe**: Main application
-- **Focus-Game-Deck-MultiPlatform.exe**: Multi-platform version
+- **Focus-Game-Deck.exe**: Main application (Multi-platform support included)
 - **Focus-Game-Deck-Config-Editor.exe**: GUI configuration editor
 - **config/**: Configuration files and templates
 - **launcher.bat**: Quick launcher script

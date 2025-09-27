@@ -1,50 +1,50 @@
 # Focus Game Deck - Developer Release Process Guide
 
-## 概要
+## Overview
 
-このガイドは、Focus Game Deckプロジェクトの開発者がバージョン管理とリリースプロセスを実行するための実践的な手順書です。日常的な開発作業からリリース作成まで、すべての手順を詳細に説明します。
+This guide provides practical procedures for developers of the Focus Game Deck project to execute version management and release processes. It covers all steps in detail from daily development work to release creation.
 
-## 事前準備
+## Prerequisites
 
-### 必要なツール
+### Required Tools
 
-- **Git**: バージョン管理とタグ作成
-- **PowerShell 5.1+**: リリース管理スクリプト実行
-- **Visual Studio Code**: 推奨エディタ（省略可）
-- **コードサイニング証明書**: デジタル署名用（リリース時のみ）
+- **Git**: Version control and tag creation
+- **PowerShell 5.1+**: Release management script execution
+- **Visual Studio Code**: Recommended editor (optional)
+- **Code Signing Certificate**: For digital signatures (release only)
 
-### 環境設定確認
+### Environment Setup Verification
 
 ```powershell
-# PowerShellバージョン確認
+# Check PowerShell version
 $PSVersionTable.PSVersion
 
-# Git設定確認
+# Check Git configuration
 git config --global user.name
 git config --global user.email
 
-# リポジトリ状態確認
+# Check repository status
 .\scripts\Version-Helper.ps1 check
 ```
 
-## 日常的な開発ワークフロー
+## Daily Development Workflow
 
-### 1. 開発開始前の確認
+### 1. Pre-Development Checks
 
 ```powershell
-# 最新の状態に更新
+# Update to latest state
 git pull origin main
 
-# 現在のバージョン確認
+# Check current version
 .\scripts\Version-Helper.ps1 info
 
-# 作業ブランチ作成（必要に応じて）
+# Create working branch (if needed)
 git checkout -b feature/new-feature
 ```
 
-### 2. 開発中のコミット規約
+### 2. Commit Conventions During Development
 
-#### コミットメッセージ形式
+#### Commit Message Format
 
 ```text
 <type>: <description>
@@ -54,37 +54,37 @@ git checkout -b feature/new-feature
 [optional footer]
 ```
 
-#### コミットタイプ
+#### Commit Types
 
-| タイプ | 説明 | バージョン影響 |
-|--------|------|----------------|
-| `feat` | 新機能追加 | MINOR++ |
-| `fix` | バグ修正 | PATCH++ |
-| `docs` | ドキュメント変更のみ | なし |
-| `style` | コード整形（機能変更なし） | なし |
-| `refactor` | リファクタリング | PATCH++ |
-| `test` | テスト追加・修正 | なし |
-| `chore` | ビルド・設定変更 | なし |
-| `BREAKING CHANGE` | 破壊的変更 | MAJOR++ |
+| Type | Description | Version Impact |
+|------|-------------|----------------|
+| `feat` | New feature addition | MINOR++ |
+| `fix` | Bug fix | PATCH++ |
+| `docs` | Documentation changes only | None |
+| `style` | Code formatting (no functional changes) | None |
+| `refactor` | Refactoring | PATCH++ |
+| `test` | Test addition/modification | None |
+| `chore` | Build/configuration changes | None |
+| `BREAKING CHANGE` | Breaking changes | MAJOR++ |
 
-#### コミット例
+#### Commit Examples
 
 ```bash
-# 新機能追加
+# New feature addition
 git commit -m "feat: add Discord integration for game status updates
 
 - Implement Discord Rich Presence API integration
 - Add configuration options for Discord features
 - Update GUI to include Discord settings tab"
 
-# バグ修正
+# Bug fix
 git commit -m "fix: resolve config file encoding issue on Japanese Windows
 
 - Fix UTF-8 BOM handling in config parser
 - Add fallback encoding detection
 - Update error messages for better user experience"
 
-# 破壊的変更
+# Breaking change
 git commit -m "feat: redesign configuration file structure
 
 BREAKING CHANGE: Configuration file format has changed from JSON to YAML.
@@ -92,109 +92,109 @@ Users need to migrate their existing config.json files using the provided
 migration tool."
 ```
 
-## リリースプロセス
+## Release Process
 
-### フェーズ1: リリース準備
+### Phase 1: Release Preparation
 
-#### 1. リリース前チェックリスト
+#### 1. Pre-Release Checklist
 
 ```powershell
-# 包括的な検証を実行
+# Execute comprehensive validation
 .\scripts\Version-Helper.ps1 validate
 
-# 以下の項目を確認:
+# Verify the following items:
 # ✓ Git repository is clean (no uncommitted changes)
 # ✓ All tests passing
 # ✓ Documentation is up to date
 # ✓ Version.ps1 contains correct current version
 ```
 
-#### 2. 次のバージョン決定
+#### 2. Determine Next Version
 
 ```powershell
-# 次のバージョンオプションを確認
+# Check next version options
 .\scripts\Version-Helper.ps1 next
 
-# 出力例:
+# Sample output:
 # Current version: 1.0.1-alpha
-# 
+#
 # Release options:
 #   Major:  2.0.0
 #   Minor:  1.1.0
 #   Patch:  1.0.2
-# 
+#
 # Pre-release options:
 #   Alpha:  1.0.2-alpha
 #   Beta:   1.0.2-beta
 #   RC:     1.0.2-rc
 ```
 
-### フェーズ2: バージョン更新とタグ作成
+### Phase 2: Version Update and Tag Creation
 
-#### アルファ版リリース例
+#### Alpha Release Example
 
 ```powershell
-# DRY RUNで確認（実際の変更は行わない）
+# Check with DRY RUN (no actual changes)
 .\scripts\Release-Manager.ps1 -UpdateType prerelease -PreReleaseType alpha -DryRun
 
-# 実際のリリース作成（タグとリリースノート生成）
+# Create actual release (generate tag and release notes)
 .\scripts\Release-Manager.ps1 -UpdateType prerelease -PreReleaseType alpha -CreateTag -GenerateReleaseNotes -ReleaseMessage "Alpha release for testing core functionality"
 ```
 
-#### パッチリリース例
+#### Patch Release Example
 
 ```powershell
-# バグ修正版リリース
+# Bug fix release
 .\scripts\Release-Manager.ps1 -UpdateType patch -CreateTag -GenerateReleaseNotes -ReleaseMessage "Patch release with critical bug fixes"
 ```
 
-#### メジャーリリース例
+#### Major Release Example
 
 ```powershell
-# 正式版リリース
+# Official release
 .\scripts\Release-Manager.ps1 -UpdateType minor -CreateTag -GenerateReleaseNotes -ReleaseMessage "Official v1.1.0 release with new platform support"
 ```
 
-### フェーズ3: GitHub Release作成
+### Phase 3: GitHub Release Creation
 
-#### 1. リリースノート編集
+#### 1. Edit Release Notes
 
 ```powershell
-# 生成されたリリースノートファイルを編集
-# 例: release-notes-1.0.2-alpha.md
+# Edit the generated release notes file
+# Example: release-notes-1.0.2-alpha.md
 code release-notes-1.0.2-alpha.md
 ```
 
-#### 2. ビルドとアセット準備
+#### 2. Build and Asset Preparation
 
-##### 実行ファイル生成とデジタル署名
+##### Generate Executables and Digital Signing
 
 ```powershell
-# 開発版ビルド（署名なし）
+# Development build (unsigned)
 .\Master-Build.ps1 -Development
 
-# 本番版ビルド（署名付き）※要証明書設定
+# Production build (signed) *Requires certificate setup
 .\Master-Build.ps1 -Production
 
-# 個別ビルド操作
-.\Build-FocusGameDeck.ps1 -Install    # ps2exe モジュールインストール
-.\Build-FocusGameDeck.ps1 -Build      # 実行ファイル生成
-.\Build-FocusGameDeck.ps1 -Sign       # 既存ビルドに署名適用
-.\Build-FocusGameDeck.ps1 -Clean      # ビルド成果物クリーンアップ
+# Individual build operations
+.\build-tools\Build-FocusGameDeck.ps1 -Install    # Install ps2exe module
+.\build-tools\Build-FocusGameDeck.ps1 -Build      # Generate executables
+.\build-tools\Build-FocusGameDeck.ps1 -Sign       # Apply signatures to existing builds
+.\build-tools\Build-FocusGameDeck.ps1 -Clean      # Clean up build artifacts
 
-# デジタル署名個別操作
-.\Sign-Executables.ps1 -ListCertificates    # 利用可能証明書一覧
-.\Sign-Executables.ps1 -TestCertificate     # 設定済み証明書テスト
-.\Sign-Executables.ps1 -SignAll             # 全実行ファイルに署名
+# Individual digital signing operations
+.\Sign-Executables.ps1 -ListCertificates    # List available certificates
+.\Sign-Executables.ps1 -TestCertificate     # Test configured certificate
+.\Sign-Executables.ps1 -SignAll             # Sign all executables
 ```
 
-**生成される実行ファイル**:
+**Generated Executables**:
 
-- `Focus-Game-Deck.exe` - メインアプリケーション
-- `Focus-Game-Deck-MultiPlatform.exe` - マルチプラットフォーム版  
-- `Focus-Game-Deck-Config-Editor.exe` - GUI設定エディター
+- `Focus-Game-Deck.exe` - Main application
+- `Focus-Game-Deck-MultiPlatform.exe` - Multi-platform version
+- `Focus-Game-Deck-Config-Editor.exe` - GUI configuration editor
 
-**署名設定** (`config/signing-config.json`):
+**Signing Configuration** (`config/signing-config.json`):
 
 ```json
 {
@@ -206,123 +206,123 @@ code release-notes-1.0.2-alpha.md
 }
 ```
 
-#### 3. GitHub Release作成手順
+#### 3. GitHub Release Creation Steps
 
-1. **GitHub Releasesページにアクセス**
+1. **Access GitHub Releases page**
    - <https://github.com/beive60/focus-game-deck/releases>
 
-2. **"Create a new release"をクリック**
+2. **Click "Create a new release"**
 
-3. **リリース情報入力**
+3. **Enter Release Information**
 
    ```text
    Tag: v1.0.2-alpha.1
    Release title: Focus Game Deck v1.0.2-alpha.1 - Alpha Test Release
-   Description: [生成されたリリースノートの内容をコピー]
+   Description: [Copy content from generated release notes]
    ```
 
-4. **アセットアップロード**
+4. **Upload Assets**
    - `FocusGameDeck-v1.0.2-alpha.1-Setup.exe`
    - `FocusGameDeck-v1.0.2-alpha.1-Portable.zip`
    - `SHA256SUMS.txt`
 
-5. **リリース設定**
-   - Pre-release: ✓ (アルファ・ベータ・RC版の場合)
-   - Set as latest release: (正式版のみ)
+5. **Release Settings**
+   - Pre-release: ✓ (for alpha/beta/RC versions)
+   - Set as latest release: (official versions only)
 
-## 緊急時対応
+## Emergency Response
 
-### ホットフィックスリリース
+### Hotfix Release
 
 ```powershell
-# 緊急バグ修正版
+# Emergency bug fix release
 .\scripts\Release-Manager.ps1 -UpdateType patch -CreateTag -GenerateReleaseNotes -ReleaseMessage "Hotfix for critical security vulnerability"
 
-# 即座にGitHub Releaseを作成し、ユーザーに通知
+# Immediately create GitHub Release and notify users
 ```
 
-### リリースロールバック
+### Release Rollback
 
 ```powershell
-# 問題のあるリリースを取り下げ
-# 1. GitHub Releaseを"Draft"に変更
-# 2. 問題のあるアセットを削除
-# 3. 前バージョンへのダウングレード手順を公開
+# Withdraw problematic release
+# 1. Change GitHub Release to "Draft"
+# 2. Remove problematic assets
+# 3. Publish downgrade instructions to previous version
 ```
 
-## トラブルシューティング
+## Troubleshooting
 
-### よくある問題と解決方法
+### Common Issues and Solutions
 
-#### 1. Version.ps1の更新に失敗する
+#### 1. Version.ps1 Update Fails
 
 ```powershell
-# エラー: 'Access to the path is denied'
-# 解決: 管理者権限でPowerShellを実行
+# Error: 'Access to the path is denied'
+# Solution: Run PowerShell with administrator privileges
 
-# エラー: Version file validation failed
-# 解決: Version.ps1の構文エラーを確認
-PowerShell -File Version.ps1  # 構文チェック
+# Error: Version file validation failed
+# Solution: Check syntax errors in Version.ps1
+PowerShell -File Version.ps1  # Syntax check
 ```
 
-#### 2. Gitタグの作成に失敗する
+#### 2. Git Tag Creation Fails
 
 ```powershell
-# エラー: 'tag already exists'
-# 解決: 既存タグを削除または別名を使用
-git tag -d v1.0.2-alpha.1        # ローカルタグ削除
-git push origin :v1.0.2-alpha.1  # リモートタグ削除
+# Error: 'tag already exists'
+# Solution: Delete existing tag or use different name
+git tag -d v1.0.2-alpha.1        # Delete local tag
+git push origin :v1.0.2-alpha.1  # Delete remote tag
 
-# エラー: 'not a git repository'
-# 解決: プロジェクトルートディレクトリで実行
+# Error: 'not a git repository'
+# Solution: Execute in project root directory
 cd C:\path\to\focus-game-deck
 ```
 
-#### 3. リリースノート生成に失敗する
+#### 3. Release Notes Generation Fails
 
 ```powershell
-# 手動でリリースノートを作成
+# Manually create release notes
 $template = Get-Content "docs\RELEASE-NOTES-TEMPLATE.md"
 $template -replace "{VERSION}", "1.0.2-alpha.1" | Out-File "release-notes-1.0.2-alpha.1.md"
 ```
 
-## ベストプラクティス
+## Best Practices
 
-### 1. リリース前の品質保証
+### 1. Pre-Release Quality Assurance
 
-- [ ] 全自動テストの実行と合格確認
-- [ ] 手動テストケースの実行
-- [ ] ドキュメントの更新確認
-- [ ] セキュリティスキャンの実行
-- [ ] パフォーマンステストの実行
+- [ ] Execute and pass all automated tests
+- [ ] Execute manual test cases
+- [ ] Verify documentation updates
+- [ ] Run security scans
+- [ ] Execute performance tests
 
-### 2. 段階的リリース戦略
+### 2. Staged Release Strategy
 
 ```text
-開発版 → アルファ版 → ベータ版 → RC版 → 正式版
-    ↓      ↓       ↓      ↓      ↓
-   内部   限定    パブリック 最終   一般
-  テスト テスター  ベータ   確認  リリース
+Development → Alpha → Beta → RC → Official
+     ↓         ↓      ↓     ↓      ↓
+   Internal  Limited Public Final General
+   Testing   Testers Beta  Check Release
 ```
 
-### 3. コミュニケーション
+### 3. Communication
 
-- **アルファ版**: テスター限定の非公開チャンネル
-- **ベータ版**: GitHub Issues + ランディングページ
-- **正式版**: 公式アナウンス + ソーシャルメディア
+- **Alpha**: Tester-limited private channels
+- **Beta**: GitHub Issues + landing page
+- **Official**: Official announcements + social media
 
-### 4. セキュリティ重視
+### 4. Security Focus
 
-- すべてのリリースにデジタル署名必須
-- SHA256チェックサム公開必須
-- 脆弱性報告の迅速な対応体制
+- Digital signatures mandatory for all releases
+- SHA256 checksums publication mandatory
+- Rapid response system for vulnerability reports
 
-## 自動化の将来計画
+## Future Automation Plans
 
-### GitHub Actions統合（将来）
+### GitHub Actions Integration (Future)
 
 ```yaml
-# .github/workflows/release.yml（例）
+# .github/workflows/release.yml (example)
 name: Release
 on:
   push:
@@ -337,19 +337,19 @@ jobs:
         run: .\build\Create-All-Assets.ps1
       - name: Create Release
         uses: actions/create-release@v1
-        # ... 省略
+        # ... omitted
 ```
 
-## 参考資料
+## References
 
-### 関連ドキュメント
+### Related Documentation
 
-- [VERSION-MANAGEMENT.md](./VERSION-MANAGEMENT.md) - セマンティックバージョニング仕様
-- [GITHUB-RELEASES-GUIDE.md](./GITHUB-RELEASES-GUIDE.md) - GitHub Releases運用ルール
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - 技術アーキテクチャ
-- [ROADMAP.md](./ja/ROADMAP.md) - プロジェクトロードマップ
+- [VERSION-MANAGEMENT.md](./VERSION-MANAGEMENT.md) - Semantic versioning specification
+- [GITHUB-RELEASES-GUIDE.md](./GITHUB-RELEASES-GUIDE.md) - GitHub Releases operation rules
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - Technical architecture
+- [ROADMAP.md](./ROADMAP.md) - Project roadmap
 
-### 外部リソース
+### External Resources
 
 - [Semantic Versioning 2.0.0](https://semver.org/)
 - [Conventional Commits](https://www.conventionalcommits.org/)
@@ -357,6 +357,6 @@ jobs:
 
 ---
 
-**最終更新**: 2025-09-24  
-**バージョン**: 1.0.0  
-**作成者**: GitHub Copilot Assistant
+**Last Updated**: September 27, 2025
+**Version**: 1.0.0
+**Created by**: GitHub Copilot Assistant
