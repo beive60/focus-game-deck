@@ -107,9 +107,10 @@ Focus Game Deckは、競技PCゲーマーのための**ゲーミング環境自�
 このドキュメントは複数の言語で利用できます：
 
 - **English** (メイン): [docs/DOCUMENTATION-INDEX.md](../DOCUMENTATION-INDEX.md)
+- **中文简体** (中国語簡体字): Focus Game Deckは中国語簡体字（zh-CN）をサポートしています
 - **日本語** (Japanese): [docs/ja/DOCUMENTATION-INDEX.md](./DOCUMENTATION-INDEX.md)
 
-日本語を話す貢献者およびユーザーの方は、`docs/ja/`ディレクトリ内の日本語ドキュメントをご参照ください。
+日本語を話す貢献者およびユーザーの方は、`docs/ja/`ディレクトリ内の日本語ドキュメントをご参照ください。中国語簡体字サポートがアプリケーションインターフェースと設定エディター全体に追加されました。
 
 ---
 
