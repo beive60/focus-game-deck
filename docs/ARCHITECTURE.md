@@ -309,11 +309,11 @@ function New-GameShortcut {
 
 | Aspect | Batch Files (.bat) | Enhanced Shortcuts (.lnk) | Improvement |
 |--------|-------------------|---------------------------|-------------|
-| User Perception | ❌ Technical/Suspicious | ✅ Familiar/Trusted | 🔼 Reduced barrier to entry |
-| Execution Experience | ❌ Visible CMD window | ✅ Minimized/Silent | 🔼 Professional UX |
-| File Identification | ❌ Generic icons | ✅ Custom icons supported | 🔼 Better usability |
-| Tooltips/Description | ❌ Limited | ✅ Rich metadata | 🔼 User guidance |
-| Desktop Integration | △ Functional | ✅ Native | 🔼 Windows consistency |
+| User Perception | Technical/Suspicious | Familiar/Trusted | Reduced barrier to entry |
+| Execution Experience | Visible CMD window | Minimized/Silent | Professional UX |
+| File Identification | Generic icons | Custom icons supported | Better usability |
+| Tooltips/Description | Limited | Rich metadata | User guidance |
+| Desktop Integration | △ Functional | Native | Windows consistency |
 
 **Risk Mitigation:**
 
@@ -349,12 +349,12 @@ Due to frequent character encoding issues in PowerShell console environments, es
 ##### 1. Avoid UTF-8 Special Characters in Console Output
 
 ```powershell
-# ❌ Problematic: UTF-8 special characters cause garbling
+# Problematic: UTF-8 special characters cause garbling
 Write-Host "✓ Success" -ForegroundColor Green
 Write-Host "✗ Failed" -ForegroundColor Red
-Write-Host "⚠ Warning" -ForegroundColor Yellow
+Write-Host "Warning" -ForegroundColor Yellow
 
-# ✅ Recommended: Use ASCII-compatible alternatives
+# Recommended: Use ASCII-compatible alternatives
 Write-Host "[OK] Success" -ForegroundColor Green
 Write-Host "[ERROR] Failed" -ForegroundColor Red
 Write-Host "[WARNING] Warning" -ForegroundColor Yellow
@@ -366,8 +366,8 @@ Write-Host "[WARNING] Warning" -ForegroundColor Yellow
 |-----------------|-------------------|---------------|
 | ✓ (U+2713) | `[OK]` | Success messages |
 | ✗ (U+2717) | `[ERROR]` | Error messages |
-| ⚠ (U+26A0) | `[WARNING]` | Warning messages |
-| ℹ (U+2139) | `[INFO]` | Information messages |
+| (U+26A0) | `[WARNING]` | Warning messages |
+| (U+2139) | `[INFO]` | Information messages |
 | → (U+2192) | `->` | Direction indicators |
 | • (U+2022) | `-` | List bullets |
 
@@ -385,15 +385,15 @@ Write-Host "[WARNING] Warning" -ForegroundColor Yellow
 **Critical for avoiding parsing errors:**
 
 ```powershell
-# ✅ Always specify encoding when reading JSON files
+# Always specify encoding when reading JSON files
 $jsonContent = Get-Content -Path $jsonPath -Raw -Encoding UTF8
 $config = $jsonContent | ConvertFrom-Json
 
-# ✅ Always specify encoding when writing JSON files
+# Always specify encoding when writing JSON files
 $jsonString = $config | ConvertTo-Json -Depth 10
 [System.IO.File]::WriteAllText($jsonPath, $jsonString, [System.Text.Encoding]::UTF8)
 
-# ❌ Never use default encoding (causes corruption)
+# Never use default encoding (causes corruption)
 $config = Get-Content -Path $jsonPath | ConvertFrom-Json
 ```
 

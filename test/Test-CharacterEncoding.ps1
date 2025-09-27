@@ -120,10 +120,10 @@ Write-Host "Success Rate: $successRate%" -ForegroundColor $(if ($successRate -gt
 
 if ($results.Failed -eq 0) {
     Write-Host ""
-    Write-Host "🎉 All character encoding tests passed! Project follows ARCHITECTURE.md guidelines." -ForegroundColor Green
+    Write-Host "All character encoding tests passed! Project follows ARCHITECTURE.md guidelines." -ForegroundColor Green
 } else {
     Write-Host ""
-    Write-Host "⚠️ Some tests failed. Please review character encoding guidelines in ARCHITECTURE.md" -ForegroundColor Yellow
+    Write-Host "Some tests failed. Please review character encoding guidelines in ARCHITECTURE.md" -ForegroundColor Yellow
 }
 
 if ($results.Failed -gt 0) { exit 1 }

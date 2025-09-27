@@ -1,4 +1,4 @@
-# **Focus Game Deck 🚀**
+# **Focus Game Deck**
 
 [日本語](./README.JP.md) | **English** | [**中文简体**](./README.zh-CN.md)
 
@@ -6,13 +6,13 @@
 
 This script handles the tedious environment setup before you start playing (disabling hotkeys, closing background apps, etc.) and automatically restores everything after you're done. This lets you focus solely on your gameplay.
 
-## **✨ Features**
+## **Features**
 
-* **🎮 Automated Game-Specific Environments**: Automatically sets up and tears down a custom environment for each game based on your configuration.
-* **🔧 Generic Application Management**: Flexibly control any application with configurable startup and shutdown actions.
-* **🔄 Easy Extensibility**: Add new applications to manage by simply editing the configuration file - no code changes required.
-* **🛡️ Robust Design**: Includes comprehensive configuration validation and a cleanup process that ensures your environment is restored to normal even if the script is interrupted (e.g., with Ctrl+C).
-* **⚙️ Special Integrations**: Built-in support for:
+* **Automated Game-Specific Environments**: Automatically sets up and tears down a custom environment for each game based on your configuration.
+* **Generic Application Management**: Flexibly control any application with configurable startup and shutdown actions.
+* **Easy Extensibility**: Add new applications to manage by simply editing the configuration file - no code changes required.
+* **Robust Design**: Includes comprehensive configuration validation and a cleanup process that ensures your environment is restored to normal even if the script is interrupted (e.g., with Ctrl+C).
+* **Special Integrations**: Built-in support for:
   * **Clibor**: Toggles hotkeys on/off.
   * **NoWinKey**: Disables the Windows key to prevent accidental presses.
   * **AutoHotkey**: Stops running scripts and resumes them after the game closes.
@@ -21,7 +21,7 @@ This script handles the tedious environment setup before you start playing (disa
   * **Discord**: Gaming mode auto-switching, Rich Presence display, and overlay control for optimized focus environment.
   * **Wallpaper Engine**: Pauses wallpaper playback during gaming for improved performance using official command-line interface.
 
-## **🛠️ Prerequisites**
+## **Prerequisites**
 
 To use this script, you will need the following software installed:
 
@@ -37,7 +37,7 @@ To use this script, you will need the following software installed:
 * **\[Optional\] Wallpaper Engine**: Dynamic wallpaper application. Improves game performance by pausing wallpaper playback during gaming.
 * **\[Optional\] Luna**: (Or any other background application you wish to manage).
 
-## **💻 Installation Options**
+## **Installation Options**
 
 Focus Game Deck offers flexible installation methods to suit different user preferences:
 
@@ -51,10 +51,10 @@ Download pre-built, digitally signed executables from [GitHub Releases](https://
 
 **Benefits:**
 
-* ✅ No PowerShell execution policy issues
-* ✅ Digitally signed for security and trust
-* ✅ Single-file distribution
-* ✅ Works on systems with restricted PowerShell policies
+*  No PowerShell execution policy issues
+*  Digitally signed for security and trust
+*  Single-file distribution
+*  Works on systems with restricted PowerShell policies
 
 ### **Option 2: PowerShell Script (Development/Advanced Users)**
 
@@ -67,20 +67,20 @@ cd focus-game-deck
 
 **Benefits:**
 
-* ✅ Full source code visibility
-* ✅ Easy customization and modification
-* ✅ Access to latest development features
+* Full source code visibility
+* Easy customization and modification
+* Access to latest development features
 
-## **🏗️ Architecture & Design**
+## **Architecture & Design**
 
 Focus Game Deck is built with a **lightweight, maintainable, and extensible** design philosophy:
 
 ### **Core Principles**
 
-* **🪶 Lightweight**: Uses Windows native PowerShell + WPF, no additional runtime required
-* **🔧 Configuration-Driven**: All behavior controlled through `config.json` - no code changes needed for customization
-* **🌐 Internationalization-Ready**: JSON external resource pattern for proper Japanese character support
-* **📦 Single-File Distribution**: Can be compiled to a single executable using ps2exe
+* **Lightweight**: Uses Windows native PowerShell + WPF, no additional runtime required
+* **Configuration-Driven**: All behavior controlled through `config.json` - no code changes needed for customization
+* **Internationalization-Ready**: JSON external resource pattern for proper Japanese character support
+* **Single-File Distribution**: Can be compiled to a single executable using ps2exe
 
 ### **Technical Stack**
 
@@ -95,10 +95,10 @@ For detailed architectural information, see [docs/ARCHITECTURE.md](./docs/ARCHIT
 
 Focus Game Deck features a comprehensive three-tier build system:
 
-* **📦 Automated Executable Generation**: ps2exe-based compilation to standalone executables
-* **🔐 Digital Signature Infrastructure**: Extended Validation certificate support with automated signing
-* **🚀 Production-Ready Pipeline**: Complete development and production build workflows
-* **📋 Release Package Management**: Automated signed distribution package creation
+* **Automated Executable Generation**: ps2exe-based compilation to standalone executables
+* **Digital Signature Infrastructure**: Extended Validation certificate support with automated signing
+* **Production-Ready Pipeline**: Complete development and production build workflows
+* **Release Package Management**: Automated signed distribution package creation
 
 **Build Scripts:**
 
@@ -108,7 +108,7 @@ Focus Game Deck features a comprehensive three-tier build system:
 
 For detailed build system documentation, see [docs/BUILD-SYSTEM.md](./docs/BUILD-SYSTEM.md).
 
-## **🚀 Setup & Configuration**
+## **Setup & Configuration**
 
 1. **Download the Repository**: Clone or download this repository as a ZIP file.
 2. **Create Your Configuration File**:
@@ -192,7 +192,7 @@ For detailed build system documentation, see [docs/BUILD-SYSTEM.md](./docs/BUILD
 * **paths**:
 * Set paths for Steam and OBS. Other application paths are now defined in `managedApps`.
 
-## **🎬 How to Use**
+## **How to Use**
 
 ### **Using Executable Version (Recommended)**
 
@@ -225,7 +225,7 @@ Open a PowerShell terminal, navigate to the script's directory, and run the foll
 * Once you exit the game, the application will detect the process has ended and automatically restore your environment to its original state.
 * **GUI Configuration**: Use `Focus-Game-Deck-Config-Editor.exe` for user-friendly configuration editing.
 
-## **➕ Adding New Applications**
+## **Adding New Applications**
 
 The new architecture makes it extremely easy to add new applications to manage. Simply add them to the `managedApps` section:
 
@@ -257,7 +257,7 @@ The new architecture makes it extremely easy to add new applications to manage. 
 
 **That's it!** No PowerShell script changes required. The system automatically handles any application defined in `managedApps`.
 
-## **🔧 Troubleshooting**
+## **Troubleshooting**
 
 1. **If the script fails to execute:**
    * Check PowerShell execution policy
@@ -282,11 +282,11 @@ The new architecture makes it extremely easy to add new applications to manage. 
    * Ensure required properties (path, processName, startupAction, shutdownAction) are present
    * Verify action values are one of: "start", "stop", "none"
 
-## **📜 License**
+## **License**
 
 This project is licensed under the **MIT License**. See the LICENSE file for details.
 
-## ❤️ Show Your Support
+## Show Your Support
 
 My sincere hope is that this tool makes your competitive gaming experience more comfortable and focused.
 
@@ -296,11 +296,11 @@ When you do, feel free to use the hashtag **`#GameLauncherWatcher`**. It would b
 
 Knowing that the tool is helping people is the single biggest motivation to keep improving it.
 
-## **🗺️ Project Roadmap**
+## **Project Roadmap**
 
 Want to see what's coming next? Check out our [detailed roadmap](./docs/ROADMAP.md) to see planned features, timeline, and the strategic vision for Focus Game Deck's future development.
 
-## **📦 Version Management & Releases**
+## **Version Management & Releases**
 
 Focus Game Deck follows **[Semantic Versioning](https://semver.org/)** (SemVer) for consistent version management.
 
@@ -323,7 +323,7 @@ If you're contributing to the project, check out our comprehensive documentation
 * **[GitHub Releases Guide](./docs/GITHUB-RELEASES-GUIDE.md)** - Release operation procedures
 * **[Developer Release Guide](./docs/DEVELOPER-RELEASE-GUIDE.md)** - Step-by-step release process
 
-> **⚠️ Important for Contributors**: Character encoding issues have been a recurring challenge in this project. Please review the [Character Encoding Guidelines](./docs/ARCHITECTURE.md#character-encoding-and-console-compatibility-guidelines) before making code contributions.
+> **Important for Contributors**: Character encoding issues have been a recurring challenge in this project. Please review the [Character Encoding Guidelines](./docs/ARCHITECTURE.md#character-encoding-and-console-compatibility-guidelines) before making code contributions.
 
 ### Download & Installation
 

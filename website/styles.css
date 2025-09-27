@@ -20,22 +20,22 @@
     --text-secondary: #b3b3b3;
     --text-muted: #666666;
     --border-color: #333333;
-    
+
     /* グラデーション */
     --gradient-primary: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     --gradient-hero: linear-gradient(135deg, #00ff88, #0066ff, #ff3366);
     --gradient-card: linear-gradient(145deg, #111111, #1a1a1a);
-    
+
     /* シャドウ */
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
     --shadow-neon: 0 0 20px rgba(0, 255, 136, 0.3);
-    
+
     /* フォント */
     --font-primary: 'Orbitron', 'Noto Sans JP', sans-serif;
     --font-secondary: 'Noto Sans JP', sans-serif;
-    
+
     /* トランジション */
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -227,7 +227,7 @@ body {
     right: 0;
     bottom: 0;
     background: radial-gradient(circle at 30% 70%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 70% 30%, rgba(0, 102, 255, 0.1) 0%, transparent 50%);
+        radial-gradient(circle at 70% 30%, rgba(0, 102, 255, 0.1) 0%, transparent 50%);
     z-index: 1;
 }
 
@@ -699,7 +699,7 @@ body {
 }
 
 .download-features li::before {
-    content: '✓';
+    content: '[✓]';
     position: absolute;
     left: 0;
     color: var(--primary-color);
@@ -922,6 +922,7 @@ body {
         opacity: 0;
         transform: translateY(30px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -933,6 +934,7 @@ body {
         opacity: 0;
         transform: translateX(30px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -940,27 +942,36 @@ body {
 }
 
 @keyframes gradientShift {
-    0%, 100% {
+
+    0%,
+    100% {
         background-position: 0% 50%;
     }
+
     50% {
         background-position: 100% 50%;
     }
 }
 
 @keyframes float {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateX(-50%) translateY(0);
     }
+
     50% {
         transform: translateX(-50%) translateY(-10px);
     }
 }
 
 @keyframes bounce {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0) rotate(45deg);
     }
+
     50% {
         transform: translateY(-10px) rotate(45deg);
     }

@@ -42,11 +42,11 @@ function Write-TestResult {
     )
 
     if ($Passed) {
-        Write-Host "✅ PASS: $TestName" -ForegroundColor Green
+        Write-Host "PASS: $TestName" -ForegroundColor Green
         if ($Message) { Write-Host "   $Message" -ForegroundColor Gray }
         $script:TestsPassed++
     } else {
-        Write-Host "❌ FAIL: $TestName" -ForegroundColor Red
+        Write-Host "FAIL: $TestName" -ForegroundColor Red
         if ($Message) { Write-Host "   $Message" -ForegroundColor Yellow }
         $script:TestsFailed++
     }
@@ -116,12 +116,12 @@ function New-TestConfig {
 
     $config = @{
         logging = @{
-            level = "Debug"
-            enableFileLogging = $true
+            level                = "Debug"
+            enableFileLogging    = $true
             enableConsoleLogging = $false
-            filePath = Join-Path $TestLogDir "focus-game-deck.log"
-            logRetentionDays = $RetentionDays
-            enableNotarization = $false
+            filePath             = Join-Path $TestLogDir "focus-game-deck.log"
+            logRetentionDays     = $RetentionDays
+            enableNotarization   = $false
         }
     }
 
@@ -136,7 +136,7 @@ function Test-LogRetention {
     )
 
     try {
-        Write-Host "`n🧪 Testing: $TestDescription" -ForegroundColor Cyan
+        Write-Host "`Testing: $TestDescription" -ForegroundColor Cyan
 
         # Create fresh test environment
         Clear-TestEnvironment
@@ -203,7 +203,7 @@ function Test-LogRetention {
 function Invoke-LogRotationTests {
     param()
 
-    Write-Host "🚀 Starting Log Rotation Tests" -ForegroundColor Yellow
+    Write-Host "Starting Log Rotation Tests" -ForegroundColor Yellow
     Write-Host "=" * 50 -ForegroundColor Yellow
 
     # Test 1: 30-day retention
@@ -220,7 +220,7 @@ function Invoke-LogRotationTests {
 
     # Test 5: Invalid configuration (should default to 90 days)
     try {
-        Write-Host "`n🧪 Testing: Invalid configuration handling" -ForegroundColor Cyan
+        Write-Host "`Testing: Invalid configuration handling" -ForegroundColor Cyan
 
         Clear-TestEnvironment
         New-TestLogFiles -LogDirectory $TestLogDir
@@ -228,12 +228,12 @@ function Invoke-LogRotationTests {
         # Create config with invalid retention value
         $invalidConfig = @{
             logging = @{
-                level = "Debug"
-                enableFileLogging = $true
+                level                = "Debug"
+                enableFileLogging    = $true
                 enableConsoleLogging = $false
-                filePath = Join-Path $TestLogDir "focus-game-deck.log"
-                logRetentionDays = 0  # Invalid value
-                enableNotarization = $false
+                filePath             = Join-Path $TestLogDir "focus-game-deck.log"
+                logRetentionDays     = 0  # Invalid value
+                enableNotarization   = $false
             }
         }
 
@@ -256,7 +256,7 @@ function Invoke-LogRotationTests {
 
     # Test 6: Missing logging configuration
     try {
-        Write-Host "`n🧪 Testing: Missing logging configuration" -ForegroundColor Cyan
+        Write-Host "`Testing: Missing logging configuration" -ForegroundColor Cyan
 
         Clear-TestEnvironment
         New-TestLogFiles -LogDirectory $TestLogDir
@@ -292,21 +292,21 @@ try {
 
     # Summary
     Write-Host "`n" + "=" * 50 -ForegroundColor Yellow
-    Write-Host "📊 Test Summary:" -ForegroundColor Yellow
-    Write-Host "✅ Passed: $TestsPassed" -ForegroundColor Green
-    Write-Host "❌ Failed: $TestsFailed" -ForegroundColor Red
-    Write-Host "📈 Success Rate: $([math]::Round(($TestsPassed / ($TestsPassed + $TestsFailed)) * 100, 1))%" -ForegroundColor $(if ($TestsFailed -eq 0) { "Green" } else { "Yellow" })
+    Write-Host "Test Summary:" -ForegroundColor Yellow
+    Write-Host "Passed: $TestsPassed" -ForegroundColor Green
+    Write-Host "Failed: $TestsFailed" -ForegroundColor Red
+    Write-Host "Success Rate: $([math]::Round(($TestsPassed / ($TestsPassed + $TestsFailed)) * 100, 1))%" -ForegroundColor $(if ($TestsFailed -eq 0) { "Green" } else { "Yellow" })
 
     if ($TestsFailed -eq 0) {
-        Write-Host "`n🎉 All tests passed! Log rotation feature is working correctly." -ForegroundColor Green
+        Write-Host "`All tests passed! Log rotation feature is working correctly." -ForegroundColor Green
         exit 0
     } else {
-        Write-Host "`n⚠️  Some tests failed. Please review the implementation." -ForegroundColor Yellow
+        Write-Host "` Some tests failed. Please review the implementation." -ForegroundColor Yellow
         exit 1
     }
 
 } catch {
-    Write-Host "`n💥 Test execution failed: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "`Test execution failed: $($_.Exception.Message)" -ForegroundColor Red
     Clear-TestEnvironment
     exit 1
 }

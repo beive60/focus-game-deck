@@ -38,6 +38,7 @@ Master-Build.ps1 (Tier 3: Orchestration)
 **Purpose**: Complete build workflow orchestration for development and production releases.
 
 **Usage**:
+
 ```powershell
 # Development build (no signing)
 .\Master-Build.ps1 -Development
@@ -56,6 +57,7 @@ Master-Build.ps1 (Tier 3: Orchestration)
 ```
 
 **Features**:
+
 - Automated dependency installation (ps2exe module)
 - Complete build workflow management
 - Error handling and logging
@@ -67,6 +69,7 @@ Master-Build.ps1 (Tier 3: Orchestration)
 **Purpose**: Core executable generation and build artifact management.
 
 **Usage**:
+
 ```powershell
 # Install ps2exe module
 .\build-tools\Build-FocusGameDeck.ps1 -Install
@@ -85,6 +88,7 @@ Master-Build.ps1 (Tier 3: Orchestration)
 ```
 
 **Generated Executables**:
+
 - `Focus-Game-Deck.exe` - Main application (console-based, ~36KB)
 - `Focus-Game-Deck-MultiPlatform.exe` - Multi-platform version (~37KB)
 - `Focus-Game-Deck-Config-Editor.exe` - GUI configuration editor (~75KB)
@@ -94,6 +98,7 @@ Master-Build.ps1 (Tier 3: Orchestration)
 **Purpose**: Digital signature management and certificate operations.
 
 **Usage**:
+
 ```powershell
 # List available code signing certificates
 .\Sign-Executables.ps1 -ListCertificates
@@ -109,6 +114,7 @@ Master-Build.ps1 (Tier 3: Orchestration)
 ```
 
 **Configuration** (`config/signing-config.json`):
+
 ```json
 {
   "codeSigningSettings": {
@@ -144,6 +150,7 @@ Master-Build.ps1 (Tier 3: Orchestration)
 **Primary**: `http://timestamp.digicert.com`
 
 **Fallback Options**:
+
 - `http://timestamp.sectigo.com`
 - `http://timestamp.globalsign.com/?signature=sha2`
 - `http://timestamp.entrust.net/TSS/RFC3161sha2TS`
@@ -221,6 +228,7 @@ Get-AuthenticodeSignature "release\*.exe" | Format-Table Path, Status
 **Error**: "Access denied" or "Module not found"
 
 **Solution**:
+
 ```powershell
 # Run PowerShell as Administrator
 # Install manually:
@@ -232,6 +240,7 @@ Install-Module -Name ps2exe -Scope CurrentUser -Force
 **Error**: "Certificate not found with thumbprint"
 
 **Solution**:
+
 1. Run `.\Sign-Executables.ps1 -ListCertificates`
 2. Copy correct thumbprint to signing-config.json
 3. Verify certificate has private key access
@@ -241,6 +250,7 @@ Install-Module -Name ps2exe -Scope CurrentUser -Force
 **Error**: "Source directory not found" during release packaging
 
 **Solution**:
+
 ```powershell
 # Clean and rebuild:
 .\Master-Build.ps1 -Clean
@@ -256,6 +266,7 @@ Enable verbose logging for detailed troubleshooting:
 ```
 
 This provides:
+
 - Detailed step-by-step execution logging
 - Error stack traces
 - Build timing information

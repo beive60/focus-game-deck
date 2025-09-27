@@ -320,7 +320,7 @@ try {
                 Write-Host $certificateId -ForegroundColor Yellow
                 Write-Host "  This certificate can be used to verify log integrity if needed." -ForegroundColor Gray
             } else {
-                Write-Host "ℹ Log finalized (notarization disabled or failed)" -ForegroundColor Gray
+                Write-Host "Log finalized (notarization disabled or failed)" -ForegroundColor Gray
             }
         } catch {
             Write-Warning "Failed to notarize log: $_"

@@ -11,7 +11,7 @@
 ## **Part 1: Basic Design Document (BD / System Specification)**
 
 ### **1. Overview**
-  
+
 This document defines the basic design of an application (hereinafter referred to as "this app") that enables intuitive editing of the configuration file (`config.json`) for the PowerShell script "Focus Game Deck" through a Graphical User Interface (GUI).
 
 ### **2. Development Background and Purpose**
@@ -282,7 +282,7 @@ The following design decisions were made for implementing this GUI configuration
 Regarding Japanese character garbling issues in PowerShell's `[System.Windows.MessageBox]`, the following methods were verified:
 
 1. **Direct Unicode Code Point Specification** ✅
-2. **JSON External Resource Files** ✅ (Adopted)
+2. **JSON External Resource Files** (Adopted)
 3. **PowerShell Embedded Strings** ❌
 
 **Adoption Decision:**

@@ -85,46 +85,46 @@ git push origin v1.0.0-alpha.1
 Tag: v1.0.0-alpha.1
 Release Title: "Focus Game Deck v1.0.0-alpha.1 - Alpha Test Release"
 Description: |
-  ## 🚀 Focus Game Deck Alpha Release
-  
-  ### ⚠️ Alpha Version Notice
+  ## Focus Game Deck Alpha Release
+
+  ### Alpha Version Notice
   この版本はアルファテスト用です。本番環境での使用は推奨されません。
   This is an alpha version for testing purposes only.
-  
-  ### 📋 Major Changes
-  - ✅ Core game launching functionality
-  - ✅ GUI configuration editor
-  - ✅ Basic OBS integration
-  - ✅ Steam platform support
-  
-  ### 🐛 Known Issues
+
+  ### Major Changes
+  - Core game launching functionality
+  - GUI configuration editor
+  - Basic OBS integration
+  - Steam platform support
+
+  ### Known Issues
   - Performance optimization pending
   - Limited error handling
   - UI polish required
-  
-  ### 🔧 System Requirements
+
+  ### System Requirements
   - Windows 10/11 (64-bit)
   - .NET Framework 4.8+
   - PowerShell 5.1+
-  
-  ### 📥 Download & Installation
+
+  ### Download & Installation
   1. Download `FocusGameDeck-v1.0.0-alpha.1-Setup.exe`
   2. Verify SHA256: `[HASH_VALUE]`
   3. Run as Administrator
   4. Follow installation wizard
-  
-  ### 🔒 Security & Trust
-  - ✅ Digitally signed executable
-  - ✅ Scanned for malware
-  - ✅ Open source (MIT License)
-  
-  ### 🤝 Testing & Feedback
+
+  ### Security & Trust
+  - Digitally signed executable
+  - Scanned for malware
+  - Open source (MIT License)
+
+  ### Testing & Feedback
   Please report issues via [GitHub Issues](https://github.com/beive60/focus-game-deck/issues)
   Include your system info and detailed steps to reproduce.
-  
+
   ---
-  **Release Date**: 2025-10-XX  
-  **Build**: [BUILD_NUMBER]  
+  **Release Date**: 2025-10-XX
+  **Build**: [BUILD_NUMBER]
   **Commit**: [COMMIT_HASH]
 
 Pre-release: true (for alpha/beta/rc only)
@@ -153,7 +153,7 @@ Pre-release: true (for alpha/beta/rc only)
 ```text
 # SHA256 Checksums for Focus Game Deck v1.0.0-alpha.1
 # Generated on: 2025-10-XX XX:XX:XX UTC
-# 
+#
 # Verify integrity with: Get-FileHash -Algorithm SHA256 filename
 
 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef  FocusGameDeck-v1.0.0-alpha.1-Setup.exe
@@ -165,38 +165,38 @@ fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321  FocusGameDeck-
 ### アルファ/ベータ版テンプレート
 
 ```markdown
-## 🚀 Focus Game Deck v{VERSION} - {RELEASE_TYPE} Release
+## Focus Game Deck v{VERSION} - {RELEASE_TYPE} Release
 
-### ⚠️ {RELEASE_TYPE} Version Notice
+### {RELEASE_TYPE} Version Notice
 [適切な注意書きを記載]
 
-### 📋 What's New
-- ✅ [新機能1]
-- ✅ [新機能2]
-- 🔧 [改善点1]
-- 🐛 [修正されたバグ1]
+### What's New
+- [新機能1]
+- [新機能2]
+- [改善点1]
+- [修正されたバグ1]
 
-### 🐛 Known Issues
+### Known Issues
 - [既知の問題1]
 - [既知の問題2]
 
-### 💔 Breaking Changes
+### Breaking Changes
 - [破壊的変更があれば記載]
 
-### 🔧 System Requirements
+### System Requirements
 - Windows 10/11 (64-bit)
 - .NET Framework 4.8+
 - PowerShell 5.1+
 
-### 📥 Download & Installation
+### Download & Installation
 [ダウンロード・インストール手順]
 
-### 🔒 Security & Trust
-- ✅ Digitally signed executable
-- ✅ Scanned for malware
-- ✅ Open source (MIT License)
+### Security & Trust
+- Digitally signed executable
+- Scanned for malware
+- Open source (MIT License)
 
-### 🤝 Feedback & Support
+### Feedback & Support
 [フィードバック方法]
 
 ---
@@ -206,37 +206,37 @@ fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321  FocusGameDeck-
 ### 正式リリース版テンプレート
 
 ```markdown
-## 🎉 Focus Game Deck v{VERSION} - Official Release
+## Focus Game Deck v{VERSION} - Official Release
 
-### 🌟 Highlights
+### Highlights
 [主要な新機能・改善点を3-5個]
 
-### 📋 Complete Feature List
+### Complete Feature List
 #### New Features
-- ✅ [新機能リスト]
+- [新機能リスト]
 
 #### Improvements
-- 🔧 [改善点リスト]
+- [改善点リスト]
 
 #### Bug Fixes
-- 🐛 [修正されたバグリスト]
+- [修正されたバグリスト]
 
-### 🔧 System Requirements
+### System Requirements
 [詳細なシステム要件]
 
-### 📥 Download & Installation
+### Download & Installation
 [詳細なインストール手順]
 
-### 🔄 Upgrade Guide
+### Upgrade Guide
 [アップグレード手順・注意点]
 
-### 🔒 Security & Trust
+### Security & Trust
 [セキュリティ情報]
 
-### 📞 Support & Documentation
+### Support & Documentation
 [サポート情報・ドキュメントリンク]
 
-### 🙏 Acknowledgments
+### Acknowledgments
 [協力者・テスター・貢献者への謝辞]
 ```
 
@@ -339,6 +339,6 @@ fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321  FocusGameDeck-
 
 ---
 
-**最終更新**: 2025-09-24  
-**バージョン**: 1.0.0  
+**最終更新**: 2025-09-24
+**バージョン**: 1.0.0
 **作成者**: GitHub Copilot Assistant

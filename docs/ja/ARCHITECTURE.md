@@ -28,7 +28,7 @@ Focus Game Deck は、ゲーミング環境の自動化とOBS配信管理を行�
 
 ### システム構成
 
-```
+```text
 Focus Game Deck
 ├── Core Engine (PowerShell)
 │   ├── src/Invoke-FocusGameDeck.ps1     # メインエンジン

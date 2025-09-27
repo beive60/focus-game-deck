@@ -126,7 +126,7 @@ const translations = {
         footer_github: 'GitHub',
         footer_discord: 'Discord',
         footer_social: 'ソーシャル',
-        footer_copyright: '© 2025 Focus Game Deck. All rights reserved.',
+        footer_copyright: '(c) 2025 Focus Game Deck. All rights reserved.',
         footer_privacy: 'プライバシーポリシー',
         footer_terms: '利用規約'
     },
@@ -234,7 +234,7 @@ const translations = {
         footer_github: 'GitHub',
         footer_discord: 'Discord',
         footer_social: '社交媒体',
-        footer_copyright: '© 2025 Focus Game Deck. 保留所有权利。',
+        footer_copyright: '(c) 2025 Focus Game Deck. 保留所有权利。',
         footer_privacy: '隐私政策',
         footer_terms: '服务条款'
     },
@@ -342,7 +342,7 @@ const translations = {
         footer_github: 'GitHub',
         footer_discord: 'Discord',
         footer_social: 'Social',
-        footer_copyright: '© 2025 Focus Game Deck. All rights reserved.',
+        footer_copyright: '(c) 2025 Focus Game Deck. All rights reserved.',
         footer_privacy: 'Privacy Policy',
         footer_terms: 'Terms of Service'
     }
@@ -547,22 +547,22 @@ function updateLanguageToggle(currentLang) {
     const languageOptions = document.querySelectorAll('.language-option');
 
     if (languageToggle) {
-        let langDisplay, langFlag;
+        let langDisplay, langPrefix;
         switch (currentLang) {
             case 'zh-CN':
                 langDisplay = '简体中文';
-                langFlag = '🇨🇳';
+                langPrefix = '[CN]';
                 break;
             case 'ja':
                 langDisplay = '日本語';
-                langFlag = '🇯🇵';
+                langPrefix = '[JP]';
                 break;
             default:
                 langDisplay = 'English';
-                langFlag = '🇺🇸';
+                langPrefix = '[US]';
                 break;
         }
-        languageToggle.innerHTML = `${langFlag} ${langDisplay} <svg class="language-arrow" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"></path></svg>`;
+        languageToggle.innerHTML = `${langPrefix} <span id="nav-language">${langDisplay}</span> <svg class="language-arrow" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"></path></svg>`;
     }
 
     // 言語オプションの選択状態を更新

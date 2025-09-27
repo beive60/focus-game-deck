@@ -1,21 +1,21 @@
 # Focus Game Deck - Documentation Index
 
-## 📚 Project Overview
+## Project Overview
 
 Focus Game Deck is a **gaming environment automation tool** for competitive PC gamers. It automatically controls related applications when games start, instantly creating an environment for focused gameplay.
 
-### 🎯 Core Philosophy
+### Core Philosophy
 
 - Building an **open and welcoming community**
 - Maximum freedom through **MIT License**
 - **Security First**: Minimizing anti-cheat false positive risks
 - **Transparency Assurance**: Complete open source
 
-## 📖 Documentation Structure
+## Documentation Structure
 
 Each document has a clear role and complements each other:
 
-### 🏗️ Technical Documents
+### Technical Documents
 
 | Document | Purpose | Content |
 |----------|---------|---------|
@@ -23,7 +23,7 @@ Each document has a clear role and complements each other:
 | **[BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md)** | **GUI Configuration Editor Specifications** | Screen design, functional specifications, wireframes, UI implementation details |
 | **[BUILD-SYSTEM.md](./BUILD-SYSTEM.md)** | **Build System and Distribution Infrastructure** | Executable generation, digital signatures, automated build workflows |
 
-### 📋 Strategic Documents
+### Strategic Documents
 
 | Document | Purpose | Content |
 |----------|---------|---------|
@@ -37,7 +37,7 @@ Each document has a clear role and complements each other:
 | **[README.JP.md](../README.JP.md)** | Project overview (Japanese) | Japanese users |
 | **[GUI-MANUAL.md](./ja/GUI-MANUAL.md)** | GUI configuration editor user manual | End users and GUI users |
 
-### 💻 Implementation Documents
+### Implementation Documents
 
 | File | Purpose | Recorded Content |
 |------|---------|------------------|
@@ -45,7 +45,7 @@ Each document has a clear role and complements each other:
 | **[gui/messages.json](../gui/messages.json)** | Internationalization resources | JSON external resource implementation example |
 | **[DEVELOPER-RELEASE-GUIDE.md](./DEVELOPER-RELEASE-GUIDE.md)** | Developer release workflow | Complete build and release process documentation |
 
-## 🎯 Key Design Decisions
+## Key Design Decisions
 
 ### 1. **GUI Technology Choice: PowerShell + WPF**
 
@@ -79,14 +79,14 @@ Each document has a clear role and complements each other:
 2. Check GUI specifications in **[BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md)**
 3. Develop following coding standards
 
-## 🔄 Documentation Update Policy
+## Documentation Update Policy
 
 - **Technical Changes**: Update ARCHITECTURE.md
 - **UI Changes**: Update BD_and_FD_for_GUI.md
 - **Strategic Changes**: Update ROADMAP.md
 - **Overview Changes**: Update this documentation index
 
-## 🔄 Design Philosophy Continuity
+## Design Philosophy Continuity
 
 This documentation ensures:
 
@@ -95,14 +95,14 @@ This documentation ensures:
 3. **Future Extensibility**: Feature additions can follow the design philosophy
 4. **Quality Maintenance**: Consistent coding standards and implementation patterns
 
-## 📅 Update History
+## Update History
 
 | Date | Version | Changes |
 |------|---------|---------|
 | 2025-09-23 | v1.0.0 | Initial design philosophy documentation, GUI implementation completed |
 | 2025-09-23 | v1.0.1 | JSON external resource internationalization support completed |
 
-## 🌐 Language Support
+## Language Support
 
 This documentation is available in multiple languages:
 

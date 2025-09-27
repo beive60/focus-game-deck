@@ -120,11 +120,11 @@ foreach ($gameId in $config.games.PSObject.Properties.Name) {
 
 Write-Host "--- VALIDATION SUMMARY ---" -ForegroundColor White -BackgroundColor DarkBlue
 if ($allErrors.Count -eq 0) {
-    Write-Host "✅ All configurations are valid!" -ForegroundColor Green
+    Write-Host "All configurations are valid!" -ForegroundColor Green
     Write-Host ""
     Write-Host "Your configuration is ready to use." -ForegroundColor Green
 } else {
-    Write-Host "❌ Found $($allErrors.Count) validation error(s)" -ForegroundColor Red
+    Write-Host "Found $($allErrors.Count) validation error(s)" -ForegroundColor Red
     Write-Host ""
     Write-Host "Please fix the errors above before using the script." -ForegroundColor Red
 }

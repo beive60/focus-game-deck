@@ -14,7 +14,7 @@ Write-Host "Time since last change: $([math]::Round($timeDiff.TotalMinutes, 1)) 
 if ($timeDiff.TotalMinutes -lt 10) {
     Write-Host "✓ File was recently updated" -ForegroundColor Green
 } else {
-    Write-Host "⚠ File may not have been updated" -ForegroundColor Yellow
+    Write-Host "File may not have been updated" -ForegroundColor Yellow
 }
 
 # Load and check config

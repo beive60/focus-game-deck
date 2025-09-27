@@ -2,7 +2,7 @@
 
 GUI設定エディタのソースコードディレクトリです。
 
-## 📁 ファイル構成
+## ファイル構成
 
 - `ConfigEditor.ps1` - GUI設定エディタのメインロジック
 - `MainWindow.xaml` - WPFウィンドウのUIレイアウト定義
@@ -10,7 +10,7 @@ GUI設定エディタのソースコードディレクトリです。
 - `Build-ConfigEditor.ps1` - 実行ファイル(.exe)生成用ビルドスクリプト
 - `messages.json` - GUI用の国際化対応メッセージリソース
 
-## 🚀 クイックスタート
+## クイックスタート
 
 ### GUI設定エディタの起動
 
@@ -30,13 +30,13 @@ StartConfigEditor.bat
 .\Build-ConfigEditor.ps1 -Install -Build
 ```
 
-## 📖 詳細な使用方法
+## 詳細な使用方法
 
 完全な使用方法、トラブルシューティング、技術仕様については、以下の詳細マニュアルを参照してください：
 
 **[docs/ja/GUI-MANUAL.md](../docs/ja/GUI-MANUAL.md)**
 
-## 🔧 開発者向け情報
+## 開発者向け情報
 
 GUI設計の技術仕様、アーキテクチャ設計については：
 

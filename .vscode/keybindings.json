@@ -1,47 +1,47 @@
 [
-    // Build-related keyboard short        "args": "🧩 Cleanup - Delete Build Artifacts"uts
+    // Build-related keyboard short        "args": "Cleanup - Delete Build Artifacts"uts
     {
         "key": "ctrl+shift+b",
         "command": "workbench.action.tasks.runTask",
-        "args": "🏗️ Build - Development (unsigned)"
+        "args": "Build - Development (unsigned)"
     },
     {
         "key": "ctrl+shift+alt+b",
         "command": "workbench.action.tasks.runTask",
-        "args": "📦 Build - Production (signed)"
+        "args": "Build - Production (signed)"
     },
     // Test-related keyboard shortcuts
     {
         "key": "ctrl+shift+t",
         "command": "workbench.action.tasks.runTask",
-        "args": "🧪 Test - Simple Check"
+        "args": "Test - Simple Check"
     },
     {
         "key": "ctrl+shift+alt+t",
         "command": "workbench.action.tasks.runTask",
-        "args": "🔍 Developer Debug - Run All Tests"
+        "args": "Developer Debug - Run All Tests"
     },
     // Execution-related keyboard shortcuts
     {
         "key": "f5",
         "command": "workbench.action.tasks.runTask",
-        "args": "🎮 Run - Focus Game Deck"
+        "args": "Run - Focus Game Deck"
     },
     {
         "key": "ctrl+f5",
         "command": "workbench.action.tasks.runTask",
-        "args": "🚀 Launch - Release Version Executable"
+        "args": "Launch - Release Version Executable"
     },
     // Cleanup
     {
         "key": "ctrl+shift+del",
         "command": "workbench.action.tasks.runTask",
-        "args": "🧹 Cleanup - Delete Build Artifacts"
+        "args": "Cleanup - Delete Build Artifacts"
     },
     // GUI Config Editor
     {
         "key": "ctrl+shift+g",
         "command": "workbench.action.tasks.runTask",
-        "args": "⚙️ GUI Config Editor - Build"
+        "args": "GUI Config Editor - Build"
     }
 ]

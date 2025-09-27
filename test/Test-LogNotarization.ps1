@@ -425,10 +425,10 @@ function Show-TestSummary {
 
     if ($testResults.Failed -eq 0 -and $testResults.Passed -gt 0) {
         Write-Host ""
-        Write-Host "🎉 All tests passed! Log notarization system is working correctly." -ForegroundColor Green
+        Write-Host "All tests passed! Log notarization system is working correctly." -ForegroundColor Green
     } elseif ($testResults.Failed -gt 0) {
         Write-Host ""
-        Write-Host "❌ Some tests failed. Please check the configuration and Firebase setup." -ForegroundColor Red
+        Write-Host "Some tests failed. Please check the configuration and Firebase setup." -ForegroundColor Red
     }
 }
 

@@ -16,11 +16,11 @@ The Log Notarization System creates a tamper-evident record of your gaming sessi
 
 **Your privacy is completely protected:**
 
-- ✅ **Only hash values are transmitted** - never the actual log content
-- ✅ **No personal information** is sent to external servers
-- ✅ **Gaming behavior data stays local** - only cryptographic fingerprints are shared
-- ✅ **No user identification** is linked to the notarized hashes
-- ✅ **Anonymous operation** - no account creation or login required
+- **Only hash values are transmitted** - never the actual log content
+- **No personal information** is sent to external servers
+- **Gaming behavior data stays local** - only cryptographic fingerprints are shared
+- **No user identification** is linked to the notarized hashes
+- **Anonymous operation** - no account creation or login required
 
 ### How It Works
 
@@ -205,9 +205,9 @@ To verify a log file with chain-of-trust authentication:
    - Find the matching executable entry
    - Compare `appSignatureHash` with registry entry
 6. **Assessment**:
-   - ✅ **Fully Authentic**: Both hashes match official registry
-   - ⚠️ **Content Valid, Source Unknown**: Log hash valid but app signature not in registry
-   - ❌ **Invalid**: Log hash doesn't match file content
+   - **Fully Authentic**: Both hashes match official registry
+   - **Content Valid, Source Unknown**: Log hash valid but app signature not in registry
+   - **Invalid**: Log hash doesn't match file content
 
 ### Development vs Production Signatures
 
@@ -249,10 +249,10 @@ This enhanced system prevents several attack vectors:
 
 The enhanced system maintains privacy protection:
 
-- ✅ **No additional personal data**: Only cryptographic hashes are transmitted
-- ✅ **Executable path sanitization**: Only filename, not full paths containing usernames
-- ✅ **Anonymous operation**: No user identification required
-- ✅ **Audit trail**: All signature hashes are publicly verifiable
+- **No additional personal data**: Only cryptographic hashes are transmitted
+- **Executable path sanitization**: Only filename, not full paths containing usernames
+- **Anonymous operation**: No user identification required
+- **Audit trail**: All signature hashes are publicly verifiable
 
 ### Verification Command Line Example
 

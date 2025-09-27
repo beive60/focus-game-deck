@@ -19,7 +19,7 @@ class DiscordManager {
         $this.DiscordPath = $this.DetectDiscordPath()
         $this.RPCClient = $null
         $this.OriginalStatus = "online"
-        
+
         # Load RPC Client if RPC is enabled
         if ($this.DiscordConfig -and $this.DiscordConfig.rpc -and $this.DiscordConfig.rpc.enabled) {
             $this.InitializeRPCClient()
@@ -30,7 +30,7 @@ class DiscordManager {
     [string] DetectDiscordPath() {
         $localAppData = [Environment]::GetFolderPath("LocalApplicationData")
         $discordBaseDir = Join-Path $localAppData "Discord"
-        
+
         if (Test-Path $discordBaseDir) {
             # Find the latest Discord app version
             $appDirs = Get-ChildItem -Path $discordBaseDir -Directory -Name "app-*" | Sort-Object -Descending
@@ -42,7 +42,7 @@ class DiscordManager {
                 }
             }
         }
-        
+
         # Fallback to configured path
         if ($this.Config.path -and $this.Config.path -ne "") {
             $expandedPath = [Environment]::ExpandEnvironmentVariables($this.Config.path)
@@ -59,7 +59,7 @@ class DiscordManager {
             }
             return $expandedPath
         }
-        
+
         return ""
     }
 
@@ -75,12 +75,12 @@ class DiscordManager {
             Write-Host "Discord is already running"
             return $true
         }
-        
+
         if (-not $this.DiscordPath -or -not (Test-Path $this.DiscordPath)) {
             Write-Host "Discord executable not found"
             return $false
         }
-        
+
         try {
             Start-Process -FilePath $this.DiscordPath
             Write-Host "Discord started successfully"
@@ -197,10 +197,10 @@ class DiscordManager {
     [bool] SetOverlayEnabled([bool] $enabled) {
         $status = if ($enabled) { 'Enabled' } else { 'Disabled' }
         Write-Host "Discord overlay control: $status"
-        
+
         # Note: Discord doesn't provide direct API to disable overlay programmatically
         # This is a placeholder for potential future implementation or registry-based control
-        
+
         if ($this.DiscordConfig -and $this.DiscordConfig.disableOverlay -ne $null) {
             $shouldDisable = $this.DiscordConfig.disableOverlay
             if ($shouldDisable -and $enabled) {
@@ -208,7 +208,7 @@ class DiscordManager {
                 return $false
             }
         }
-        
+
         Write-Host "Overlay setting applied (Advanced feature - manual user configuration may be required)"
         return $true
     }
@@ -216,7 +216,7 @@ class DiscordManager {
     # Advanced error recovery
     [bool] RecoverFromError() {
         Write-Host "Attempting Discord error recovery..."
-        
+
         try {
             # Disconnect and reconnect RPC
             if ($this.RPCClient) {
@@ -227,7 +227,7 @@ class DiscordManager {
                     return $true
                 }
             }
-            
+
             # If RPC fails, try process restart
             if ($this.IsDiscordRunning()) {
                 Write-Host "Attempting Discord process recovery..."
@@ -235,7 +235,7 @@ class DiscordManager {
                 Start-Sleep -Seconds 3
                 return $this.StartDiscord()
             }
-            
+
             return $false
         }
         catch {
@@ -247,11 +247,11 @@ class DiscordManager {
     # Set Discord to Gaming Mode (Advanced - Full feature integration)
     [bool] SetGamingMode([string] $gameName = "Focus Game Deck") {
         Write-Host "Setting Discord to Gaming Mode (Advanced: Full integration)"
-        
+
         $success = $true
         $retryCount = 0
         $maxRetries = 3
-        
+
         while ($retryCount -lt $maxRetries) {
             try {
                 # Ensure Discord is running
@@ -263,41 +263,41 @@ class DiscordManager {
                     # Wait for Discord to fully start
                     Start-Sleep -Seconds 3
                 }
-                
+
                 # Control overlay if configured
                 if ($this.DiscordConfig -and $this.DiscordConfig.disableOverlay) {
                     $this.SetOverlayEnabled($false)
                 }
-                
+
                 # Apply RPC-based features if enabled
                 if ($this.DiscordConfig -and $this.DiscordConfig.rpc -and $this.DiscordConfig.rpc.enabled) {
                     # Set Rich Presence with game details
                     if ($this.DiscordConfig.customPresence -and $this.DiscordConfig.customPresence.enabled) {
                         $gameDetails = "Focus Gaming Mode Active"
                         $gameState = $this.DiscordConfig.customPresence.state
-                        
+
                         if (-not $this.SetRichPresence($gameName, $gameDetails, $gameState)) {
                             Write-Host "Failed to set Rich Presence, falling back to simple status"
-                            if (-not $this.SetDiscordStatus("🎮 Gaming Mode - $gameName")) {
+                            if (-not $this.SetDiscordStatus("Gaming Mode - $gameName")) {
                                 throw "Failed to set Discord status"
                             }
                         }
                     } else {
                         # Simple status update
-                        if (-not $this.SetDiscordStatus("🎮 Gaming Mode - $gameName")) {
+                        if (-not $this.SetDiscordStatus("Gaming Mode - $gameName")) {
                             throw "Failed to set Discord status"
                         }
                     }
                 }
-                
+
                 Write-Host "✓ Discord Advanced Gaming mode applied successfully"
                 return $true
-                
+
             }
             catch {
                 $retryCount++
                 Write-Host "Attempt $retryCount failed: $_"
-                
+
                 if ($retryCount -lt $maxRetries) {
                     Write-Host "Attempting error recovery..."
                     if ($this.RecoverFromError()) {
@@ -305,30 +305,30 @@ class DiscordManager {
                         continue
                     }
                 }
-                
+
                 $success = $false
             }
-            
+
             break
         }
-        
+
         if (-not $success) {
-            Write-Host "⚠ Discord Gaming mode applied with limitations"
+            Write-Host "Discord Gaming mode applied with limitations"
         }
-        
+
         return $success
     }
 
     # Restore Discord to normal mode (Enhanced - RPC + Process control)
     [bool] RestoreNormalMode() {
         Write-Host "Restoring Discord to normal mode (Enhanced: RPC + Process control)"
-        
+
         $success = $true
-        
+
         # Restore RPC-based status if enabled
         if ($this.DiscordConfig -and $this.DiscordConfig.rpc -and $this.DiscordConfig.rpc.enabled) {
             Write-Host "Clearing Discord custom status"
-            
+
             if ($this.RPCClient -and $this.RPCClient.Connected) {
                 if (-not $this.RPCClient.ClearActivity()) {
                     Write-Host "Failed to clear Discord activity"
@@ -336,7 +336,7 @@ class DiscordManager {
                 }
             }
         }
-        
+
         # Ensure Discord is still running
         if (-not $this.IsDiscordRunning()) {
             Write-Host "Discord is not running, starting it..."
@@ -344,11 +344,11 @@ class DiscordManager {
                 return $false
             }
         }
-        
+
         if ($success) {
             Write-Host "✓ Discord normal mode restored successfully"
         }
-        
+
         return $success
     }
 
@@ -374,14 +374,14 @@ function New-DiscordManager {
     param(
         [Parameter(Mandatory = $true)]
         [object] $DiscordConfig,
-        
+
         [Parameter(Mandatory = $true)]
         [object] $Messages,
 
         [Parameter(Mandatory = $false)]
         [object] $Logger = $null
     )
-    
+
     return [DiscordManager]::new($DiscordConfig, $Messages, $Logger)
 }
 
