@@ -101,13 +101,31 @@ function Get-LocalizedMessage {
         $message = $script:Messages.$Key
 
         # Replace placeholders if args provided
+        if ($Args.Length -gt 0) {
+            Write-Verbose "Debug: Processing message '$Key' with $($Args.Length) arguments"
+
         for ($i = 0; $i -lt $Args.Length; $i++) {
-            $message = $message -replace "\{$i\}", $Args[$i]
+                $placeholder = "{$i}"
+                $replacement = if ($null -ne $Args[$i]) {
+                    # Ensure safe string conversion and escape any problematic characters
+                    $Args[$i].ToString().Replace("`r", "").Replace("`n", " ")
+                } else {
+                    ""
+                }
+
+                if ($message.Contains($placeholder)) {
+                    $message = $message.Replace($placeholder, $replacement)
+                    Write-Verbose "Debug: Successfully replaced '$placeholder' with '$replacement'"
+                } else {
+                    Write-Verbose "Debug: Placeholder '$placeholder' not found in message template"
+                }
+            }
         }
 
         return $message
     } else {
         # Fallback to English if message not found
+        Write-Warning "Debug: Message key '$Key' not found in current language messages"
         return $Key
     }
 }
@@ -127,9 +145,21 @@ function Show-SafeMessage {
         $message = Get-LocalizedMessage -Key $MessageKey -Args $Args
         $title = Get-LocalizedMessage -Key $TitleKey
 
+        # Debug output for error messages only
+        if ($Icon -eq [System.Windows.MessageBoxImage]::Error) {
+            Write-Host "=== ERROR MESSAGE DEBUG ===" -ForegroundColor Red
+            Write-Host "MessageKey: $MessageKey" -ForegroundColor Yellow
+            Write-Host "Args Count: $($Args.Count)" -ForegroundColor Yellow
+            Write-Host "Args Values: $($Args -join ', ')" -ForegroundColor Yellow
+            Write-Host "Final Message: $message" -ForegroundColor Cyan
+            Write-Host "Final Title: $title" -ForegroundColor Cyan
+            Write-Host "=========================" -ForegroundColor Red
+        }
+
         return [System.Windows.MessageBox]::Show($message, $title, $Button, $Icon)
     } catch {
         # Fallback to key names if JSON loading fails
+        Write-Warning "Debug: Show-SafeMessage failed, using fallback: $($_.Exception.Message)"
         return [System.Windows.MessageBox]::Show($MessageKey, $TitleKey, $Button, $Icon)
     }
 }
@@ -202,6 +232,10 @@ function Initialize-ConfigEditor {
     param()
 
     try {
+        # Enable verbose output for debugging
+        $VerbosePreference = "Continue"
+        Write-Verbose "Debug: ConfigEditor initialization started"
+
         # Initialize config path first
         $script:ConfigPath = Join-Path (Split-Path $PSScriptRoot -Parent) "config\config.json"
 
@@ -804,7 +838,7 @@ function Load-GlobalSettings {
     # Language Setting
     $languageCombo = $script:Window.FindName("LanguageCombo")
     $currentLang = $script:ConfigData.language
-    if ($currentLang -eq "" -or $currentLang -eq $null) {
+    if ($currentLang -eq "" -or $null -eq $currentLang) {
         $languageCombo.SelectedIndex = 0  # Auto
     } elseif ($currentLang -eq "zh-CN") {
         $languageCombo.SelectedIndex = 1  # Chinese Simplified
@@ -1125,6 +1159,11 @@ function Handle-SaveConfig {
         Show-SafeMessage -MessageKey "configSaved" -TitleKey "info"
 
     } catch {
+        # Debug: Log the actual error message to help troubleshoot
+        Write-Host "Debug: Save config error - $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Debug: Error type - $($_.Exception.GetType().Name)" -ForegroundColor Red
+
+        # Show error message with proper error details
         Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
     }
 }
@@ -1133,18 +1172,32 @@ function Handle-SaveConfig {
 function Save-UIDataToConfig {
     param()
 
+    try {
+        # Ensure ConfigData exists before attempting to save
+        if (-not $script:ConfigData) {
+            throw "Configuration data is not loaded or is null"
+        }
+
     # Save current game if selected
     if ($script:CurrentGameId -and $script:CurrentGameId -ne "") {
+            Write-Verbose "Debug: Saving current game data for ID: $script:CurrentGameId"
         Save-CurrentGameData
     }
 
     # Save current app if selected
     if ($script:CurrentAppId -and $script:CurrentAppId -ne "") {
+            Write-Verbose "Debug: Saving current app data for ID: $script:CurrentAppId"
         Save-CurrentAppData
     }
 
     # Save global settings
+        Write-Verbose "Debug: Saving global settings data"
     Save-GlobalSettingsData
+
+    } catch {
+        Write-Error "Failed to save UI data to config: $($_.Exception.Message)"
+        throw
+    }
 }
 
 # Save current game data
@@ -1199,32 +1252,83 @@ function Save-CurrentGameData {
 function Save-CurrentAppData {
     param()
 
-    $appId = $script:Window.FindName("AppIdTextBox").Text
-    $appPath = $script:Window.FindName("AppPathTextBox").Text
-    $processName = $script:Window.FindName("AppProcessNameTextBox").Text
-    $arguments = $script:Window.FindName("AppArgumentsTextBox").Text
-    $gameStartAction = $script:Window.FindName("GameStartActionCombo").SelectedItem
-    $gameEndAction = $script:Window.FindName("GameEndActionCombo").SelectedItem
-    $terminationMethod = $script:Window.FindName("TerminationMethodCombo").SelectedItem
-    $gracefulTimeout = $script:Window.FindName("GracefulTimeoutTextBox").Text
+    try {
+        # Get UI control values with validation
+        $appIdControl = $script:Window.FindName("AppIdTextBox")
+        $appPathControl = $script:Window.FindName("AppPathTextBox")
+        $processNameControl = $script:Window.FindName("AppProcessNameTextBox")
+        $argumentsControl = $script:Window.FindName("AppArgumentsTextBox")
+        $gameStartActionControl = $script:Window.FindName("GameStartActionCombo")
+        $gameEndActionControl = $script:Window.FindName("GameEndActionCombo")
+        $terminationMethodControl = $script:Window.FindName("TerminationMethodCombo")
+        $gracefulTimeoutControl = $script:Window.FindName("GracefulTimeoutTextBox")
+
+        if (-not $appIdControl) {
+            throw "AppIdTextBox control not found"
+        }
+
+        $appId = $appIdControl.Text
+        $appPath = if ($appPathControl) { $appPathControl.Text } else { "" }
+        $processName = if ($processNameControl) { $processNameControl.Text } else { "" }
+        $arguments = if ($argumentsControl) { $argumentsControl.Text } else { "" }
+        $gameStartAction = if ($gameStartActionControl -and $gameStartActionControl.SelectedItem) { $gameStartActionControl.SelectedItem } else { "none" }
+        $gameEndAction = if ($gameEndActionControl -and $gameEndActionControl.SelectedItem) { $gameEndActionControl.SelectedItem } else { "none" }
+        $terminationMethod = if ($terminationMethodControl -and $terminationMethodControl.SelectedItem) { $terminationMethodControl.SelectedItem } else { "auto" }
+        $gracefulTimeoutText = if ($gracefulTimeoutControl) { $gracefulTimeoutControl.Text } else { "3000" }
+
+        Write-Verbose "Debug: Saving app data - ID: '$appId', Path: '$appPath'"
+
+        # Validate app ID
+        if ([string]::IsNullOrWhiteSpace($appId)) {
+            throw "App ID cannot be empty"
+        }
+
+        # Ensure managedApps section exists
+        if (-not $script:ConfigData.managedApps) {
+            $script:ConfigData | Add-Member -MemberType NoteProperty -Name "managedApps" -Value ([PSCustomObject]@{}) -Force
+        }
 
     # Update config data
-    if ($appId -ne $script:CurrentAppId) {
+        if ($appId -ne $script:CurrentAppId -and -not [string]::IsNullOrEmpty($script:CurrentAppId)) {
         # App ID changed, remove old and add new
+            Write-Verbose "Debug: App ID changed from '$script:CurrentAppId' to '$appId'"
+            if ($script:ConfigData.managedApps.PSObject.Properties[$script:CurrentAppId]) {
         $oldAppData = $script:ConfigData.managedApps.$script:CurrentAppId
         $script:ConfigData.managedApps.PSObject.Properties.Remove($script:CurrentAppId)
-        $script:ConfigData.managedApps | Add-Member -MemberType NoteProperty -Name $appId -Value $oldAppData
+                $script:ConfigData.managedApps | Add-Member -MemberType NoteProperty -Name $appId -Value $oldAppData -Force
     }
+        }
 
-    $script:ConfigData.managedApps.$appId.path = $appPath
-    $script:ConfigData.managedApps.$appId.processName = $processName
-    $script:ConfigData.managedApps.$appId.arguments = $arguments
-    $script:ConfigData.managedApps.$appId.gameStartAction = $gameStartAction
-    $script:ConfigData.managedApps.$appId.gameEndAction = $gameEndAction
+        # Ensure the app entry exists
+        if (-not $script:ConfigData.managedApps.PSObject.Properties[$appId]) {
+            Write-Verbose "Debug: Creating new app entry for '$appId'"
+            $script:ConfigData.managedApps | Add-Member -MemberType NoteProperty -Name $appId -Value ([PSCustomObject]@{}) -Force
+        }
 
-    # Save termination settings
-    $script:ConfigData.managedApps.$appId | Add-Member -MemberType NoteProperty -Name "terminationMethod" -Value $terminationMethod -Force
-    $script:ConfigData.managedApps.$appId | Add-Member -MemberType NoteProperty -Name "gracefulTimeoutMs" -Value ([int]$gracefulTimeout) -Force
+        # Update all properties
+        $appData = $script:ConfigData.managedApps.$appId
+        $appData | Add-Member -MemberType NoteProperty -Name "path" -Value $appPath -Force
+        $appData | Add-Member -MemberType NoteProperty -Name "processName" -Value $processName -Force
+        $appData | Add-Member -MemberType NoteProperty -Name "arguments" -Value $arguments -Force
+        $appData | Add-Member -MemberType NoteProperty -Name "gameStartAction" -Value $gameStartAction -Force
+        $appData | Add-Member -MemberType NoteProperty -Name "gameEndAction" -Value $gameEndAction -Force
+        $appData | Add-Member -MemberType NoteProperty -Name "terminationMethod" -Value $terminationMethod -Force
+
+        # Handle graceful timeout conversion
+        try {
+            $gracefulTimeoutInt = [int]$gracefulTimeoutText
+        } catch {
+            Write-Warning "Invalid graceful timeout value '$gracefulTimeoutText', using default 3000"
+            $gracefulTimeoutInt = 3000
+        }
+        $appData | Add-Member -MemberType NoteProperty -Name "gracefulTimeoutMs" -Value $gracefulTimeoutInt -Force
+
+        Write-Verbose "Debug: Successfully saved app data for '$appId'"
+
+    } catch {
+        Write-Error "Failed to save current app data: $($_.Exception.Message)"
+        throw
+    }
 }
 
 # Save global settings data
@@ -1602,7 +1706,13 @@ function Handle-GenerateLaunchers {
         }
 
         # Save current configuration before generating launchers
-        if (-not (Save-Configuration)) {
+        try {
+            Save-UIDataToConfig
+            $jsonString = $script:ConfigData | ConvertTo-Json -Depth 10
+            Set-Content -Path $script:ConfigPath -Value $jsonString -Encoding UTF8
+            Write-Verbose "Configuration saved before launcher generation"
+        } catch {
+            Write-Warning "Failed to save configuration before launcher generation: $($_.Exception.Message)"
             Show-SafeMessage -MessageKey "saveBeforeLaunchers" -TitleKey "warning" -Icon Warning
             return
         }
