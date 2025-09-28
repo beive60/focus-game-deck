@@ -1103,7 +1103,9 @@ function Handle-AddApp {
             arguments       = ""
         })
 
+    # Update all relevant lists and UI components
     Update-ManagedAppsList
+    Update-AppsToManagePanel  # Update Game Settings tab checkboxes
 
     # Select the new app
     $managedAppsList = $script:Window.FindName("ManagedAppsList")
@@ -1126,7 +1128,10 @@ function Handle-DeleteApp {
         $result = Show-SafeMessage -MessageKey "deleteAppConfirm" -TitleKey "confirmation" -Args @($selectedApp) -Button YesNo -Icon Question
         if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
             $script:ConfigData.managedApps.PSObject.Properties.Remove($selectedApp)
+
+            # Update all relevant lists and UI components
             Update-ManagedAppsList
+            Update-AppsToManagePanel  # Update Game Settings tab checkboxes
 
             # Clear details
             $script:Window.FindName("AppIdTextBox").Text = ""
@@ -1150,6 +1155,16 @@ function Handle-SaveConfig {
         # Convert to JSON and save
         $jsonString = $script:ConfigData | ConvertTo-Json -Depth 10
         Set-Content -Path $script:ConfigPath -Value $jsonString -Encoding UTF8
+
+        # After successful save, refresh all UI lists to ensure consistency
+        Update-ManagedAppsList
+        Update-GamesList
+        Update-AppsToManagePanel  # Refresh Game Settings tab checkboxes
+
+        # If a game is currently selected, update its Apps to Manage checkboxes
+        if ($script:CurrentGameId) {
+            Handle-GameSelectionChanged
+        }
 
         Show-SafeMessage -MessageKey "configSaved" -TitleKey "info"
 
@@ -1232,15 +1247,47 @@ function Save-CurrentGameData {
         $script:ConfigData.games | Add-Member -MemberType NoteProperty -Name $gameId -Value $oldGameData
     }
 
-    $script:ConfigData.games.$gameId.name = $gameName
-    $script:ConfigData.games.$gameId.platform = $selectedPlatform
-    $script:ConfigData.games.$gameId.processName = $processName
-    $script:ConfigData.games.$gameId.appsToManage = $appsToManage
+    # Safely update basic game properties
+    $gameObject = $script:ConfigData.games.$gameId
 
-    # Update platform-specific IDs
-    $script:ConfigData.games.$gameId.steamAppId = $steamAppId
-    $script:ConfigData.games.$gameId.epicGameId = $epicGameId
-    $script:ConfigData.games.$gameId.riotGameId = $riotGameId
+    # Ensure all basic properties exist
+    if (-not $gameObject.PSObject.Properties['name']) {
+        $gameObject | Add-Member -MemberType NoteProperty -Name 'name' -Value "" -Force
+    }
+    if (-not $gameObject.PSObject.Properties['platform']) {
+        $gameObject | Add-Member -MemberType NoteProperty -Name 'platform' -Value "steam" -Force
+    }
+    if (-not $gameObject.PSObject.Properties['processName']) {
+        $gameObject | Add-Member -MemberType NoteProperty -Name 'processName' -Value "" -Force
+    }
+    if (-not $gameObject.PSObject.Properties['appsToManage']) {
+        $gameObject | Add-Member -MemberType NoteProperty -Name 'appsToManage' -Value @() -Force
+    }
+
+    # Now safely set the values
+    $gameObject.name = $gameName
+    $gameObject.platform = $selectedPlatform
+    $gameObject.processName = $processName
+    $gameObject.appsToManage = $appsToManage
+
+    # Update platform-specific IDs - ensure properties exist before setting them
+    $gameObject = $script:ConfigData.games.$gameId
+
+    # Add properties if they don't exist
+    if (-not $gameObject.PSObject.Properties['steamAppId']) {
+        $gameObject | Add-Member -MemberType NoteProperty -Name 'steamAppId' -Value "" -Force
+    }
+    if (-not $gameObject.PSObject.Properties['epicGameId']) {
+        $gameObject | Add-Member -MemberType NoteProperty -Name 'epicGameId' -Value "" -Force
+    }
+    if (-not $gameObject.PSObject.Properties['riotGameId']) {
+        $gameObject | Add-Member -MemberType NoteProperty -Name 'riotGameId' -Value "" -Force
+    }
+
+    # Now safely set the values
+    $gameObject.steamAppId = $steamAppId
+    $gameObject.epicGameId = $epicGameId
+    $gameObject.riotGameId = $riotGameId
 }
 
 # Save current app data
@@ -1330,38 +1377,54 @@ function Save-CurrentAppData {
 function Save-GlobalSettingsData {
     param()
 
-    # OBS Settings
-    $script:ConfigData.obs.websocket.host = $script:Window.FindName("ObsHostTextBox").Text
-    $script:ConfigData.obs.websocket.port = [int]$script:Window.FindName("ObsPortTextBox").Text
+    # Ensure OBS section and subsections exist
+    if (-not $script:ConfigData.obs) {
+        $script:ConfigData | Add-Member -MemberType NoteProperty -Name "obs" -Value ([PSCustomObject]@{}) -Force
+    }
+    if (-not $script:ConfigData.obs.PSObject.Properties['websocket']) {
+        $script:ConfigData.obs | Add-Member -MemberType NoteProperty -Name "websocket" -Value ([PSCustomObject]@{}) -Force
+    }
+
+    # OBS Settings - safely set properties
+    $obsWebsocket = $script:ConfigData.obs.websocket
+    $obsWebsocket | Add-Member -MemberType NoteProperty -Name "host" -Value $script:Window.FindName("ObsHostTextBox").Text -Force
+    $obsWebsocket | Add-Member -MemberType NoteProperty -Name "port" -Value ([int]$script:Window.FindName("ObsPortTextBox").Text) -Force
 
     # Handle password encryption
     $passwordBox = $script:Window.FindName("ObsPasswordBox")
     if ($passwordBox.Password -and $passwordBox.Password.Length -gt 0) {
         # Convert plain text password to encrypted string for storage
         $securePassword = ConvertTo-SecureString -String $passwordBox.Password -AsPlainText -Force
-        $script:ConfigData.obs.websocket.password = $securePassword | ConvertFrom-SecureString
+        $obsWebsocket | Add-Member -MemberType NoteProperty -Name "password" -Value ($securePassword | ConvertFrom-SecureString) -Force
     } else {
-        $script:ConfigData.obs.websocket.password = ""
+        $obsWebsocket | Add-Member -MemberType NoteProperty -Name "password" -Value "" -Force
     }
 
-    $script:ConfigData.obs.replayBuffer = $script:Window.FindName("ReplayBufferCheckBox").IsChecked
+    $script:ConfigData.obs | Add-Member -MemberType NoteProperty -Name "replayBuffer" -Value $script:Window.FindName("ReplayBufferCheckBox").IsChecked -Force
 
-    # Path Settings (Multi-Platform)
-    $script:ConfigData.paths.steam = $script:Window.FindName("SteamPathTextBox").Text
-    $script:ConfigData.paths.epic = $script:Window.FindName("EpicPathTextBox").Text
-    $script:ConfigData.paths.riot = $script:Window.FindName("RiotPathTextBox").Text
-    $script:ConfigData.paths.obs = $script:Window.FindName("ObsPathTextBox").Text
+    # Ensure paths section exists
+    if (-not $script:ConfigData.paths) {
+        $script:ConfigData | Add-Member -MemberType NoteProperty -Name "paths" -Value ([PSCustomObject]@{}) -Force
+    }
+
+    # Path Settings (Multi-Platform) - safely set properties
+    $paths = $script:ConfigData.paths
+    $paths | Add-Member -MemberType NoteProperty -Name "steam" -Value $script:Window.FindName("SteamPathTextBox").Text -Force
+    $paths | Add-Member -MemberType NoteProperty -Name "epic" -Value $script:Window.FindName("EpicPathTextBox").Text -Force
+    $paths | Add-Member -MemberType NoteProperty -Name "riot" -Value $script:Window.FindName("RiotPathTextBox").Text -Force
+    $paths | Add-Member -MemberType NoteProperty -Name "obs" -Value $script:Window.FindName("ObsPathTextBox").Text -Force
 
     # Language Setting (language change detection is handled in real-time by event handler)
     $languageCombo = $script:Window.FindName("LanguageCombo")
     $selectedIndex = $languageCombo.SelectedIndex
-    switch ($selectedIndex) {
-        0 { $script:ConfigData.language = "" }         # Auto
-        1 { $script:ConfigData.language = "zh-CN" }    # Chinese Simplified
-        2 { $script:ConfigData.language = "ja" }       # Japanese
-        3 { $script:ConfigData.language = "en" }       # English
-        default { $script:ConfigData.language = "" }
+    $languageValue = switch ($selectedIndex) {
+        0 { "" }         # Auto
+        1 { "zh-CN" }    # Chinese Simplified
+        2 { "ja" }       # Japanese
+        3 { "en" }       # English
+        default { "" }
     }
+    $script:ConfigData | Add-Member -MemberType NoteProperty -Name "language" -Value $languageValue -Force
 
     # Initialize logging section if it doesn't exist
     if (-not $script:ConfigData.logging) {
