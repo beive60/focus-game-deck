@@ -1,4 +1,40 @@
-# Security Features
+# Security Policy
+
+## Supported Versions
+
+**Important Notice**: This software is provided "AS IS" under the MIT License without warranty. Security updates are provided on a best-effort basis and do not constitute any guarantee or obligation.
+
+| Version | Security Updates | Status |
+|---------|-----------------|--------|
+| v1.0.1-alpha | Best effort support | Current |
+| v1.0.0 | End of support | Legacy |
+
+### Security Update Policy
+
+We strive to address security vulnerabilities through:
+
+- Timely patches for reported vulnerabilities
+- Transparency in security communications
+- Maintaining the integrity of security features (e.g., Log Notarization, Code Signing)
+- Community-driven security improvements
+
+**Note**: Updates are provided on a voluntary basis, and users assume full responsibility for any security risks.
+
+## Reporting a Vulnerability
+
+We take all security vulnerabilities in this project seriously.
+If you discover a security vulnerability, please report it by creating an issue in our GitHub repository.
+
+**[Create a New Security Issue](https://github.com/mnao305/focus-game-deck/issues/new?assignees=&labels=bug,security&template=security-vulnerability-report.md&title=%5BSecurity%5D%3A+)**
+
+When reporting, please include the following information to help us resolve the issue quickly:
+
+- A clear and concise description of the vulnerability.
+- Steps to reproduce the vulnerability.
+- The version of the software affected.
+- Any relevant logs, screenshots, or proof-of-concept code.
+
+We appreciate your efforts to disclose your findings responsibly and will work with you to address the issue. Please do not disclose the vulnerability publicly until a patch has been released.
 
 ## Log Notarization System
 

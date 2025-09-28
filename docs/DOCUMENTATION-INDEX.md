@@ -1,117 +1,171 @@
-# Focus Game Deck - Documentation Index
+# Focus Game Deck - Documentation Index (Updated)
 
-## Project Overview
+Welcome to Focus Game Deck documentation! This index provides a comprehensive overview of all documentation, organized by purpose and audience.
 
-Focus Game Deck is a **gaming environment automation tool** for competitive PC gamers. It automatically controls related applications when games start, instantly creating an environment for focused gameplay.
+## Quick Navigation
 
-### Core Philosophy
+| I want to... | Start here |
+|--------------|------------|
+| **Use Focus Game Deck** | [Installation Guide](#-installation--setup) |
+| **Configure the application** | [Configuration Guide](#-configuration--customization) |
+| **Contribute to the project** | [Contributing Guide](#-contributing--development) |
+| **Understand the architecture** | [Developer Documentation](#-developer--technical-documentation) |
+| **See what's planned** | [Project Roadmap](#-project-planning--information) |
 
-- Building an **open and welcoming community**
-- Maximum freedom through **MIT License**
-- **Security First**: Minimizing anti-cheat false positive risks
-- **Transparency Assurance**: Complete open source
+## Documentation Overview
 
-## Documentation Structure
+### Installation & Setup
 
-Each document has a clear role and complements each other:
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| **[README.md](../README.md)** | Project overview and quick start | New users |
+| **[Installation Guide](user-guide/installation.md)** | Detailed setup instructions | All users |
+| **[Configuration Guide](user-guide/configuration.md)** | Complete configuration reference | Users and administrators |
 
-### Technical Documents
+### Configuration & Customization
 
-| Document | Purpose | Content |
-|----------|---------|---------|
-| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | **Detailed Technical Architecture Design** | System structure, design decisions, implementation guidelines, security design, **character encoding best practices** |
-| **[BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md)** | **GUI Configuration Editor Specifications** | Screen design, functional specifications, wireframes, UI implementation details |
-| **[BUILD-SYSTEM.md](./BUILD-SYSTEM.md)** | **Build System and Distribution Infrastructure** | Executable generation, digital signatures, automated build workflows |
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| **[Configuration Guide](user-guide/configuration.md)** | Complete configuration reference | All users |
 
-### Strategic Documents
+| **[Troubleshooting](user-guide/configuration.md#troubleshooting)** | Common issues and solutions | Users experiencing problems |
 
-| Document | Purpose | Content |
-|----------|---------|---------|
-| **[ROADMAP.md](./ROADMAP.md)** | **Project Strategy and Milestones** | Development phases, release plans, alpha test strategy |
+### Contributing & Development
 
-### � Reference Documents
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| **[Contributing Guide](../CONTRIBUTING.md)** | How to contribute to the project | New contributors |
+| **[Code of Conduct](../CODE_OF_CONDUCT.md)** | Community guidelines | All community members |
+| **[Project Philosophy](project-info/philosophy.md)** | Vision, mission, and values | Contributors and community |
 
-| Document | Purpose | Target Audience |
-|----------|---------|-----------------|
-| **[README.md](../README.md)** | Project overview (English) | International users and developers |
-| **[README.JP.md](../README.JP.md)** | Project overview (Japanese) | Japanese users |
-| **[GUI-MANUAL.md](./ja/GUI-MANUAL.md)** | GUI configuration editor user manual | End users and GUI users |
+### Developer & Technical Documentation
 
-### Implementation Documents
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| **[Architecture Guide](developer-guide/architecture.md)** | Technical design and implementation | Developers |
+| **[Build System](developer-guide/build-system.md)** | Development and distribution infrastructure | Developers and maintainers |
+| **[GUI Design Specifications](developer-guide/gui-design.md)** | Interface design and implementation | GUI developers |
+| **[Developer Release Guide](developer-guide/release-process.md)** | Release process and workflows | Maintainers |
 
-| File | Purpose | Recorded Content |
-|------|---------|------------------|
-| **[gui/ConfigEditor.ps1](../gui/ConfigEditor.ps1)** | GUI main code | Design philosophy recorded in header comments |
-| **[gui/messages.json](../gui/messages.json)** | Internationalization resources | JSON external resource implementation example |
-| **[DEVELOPER-RELEASE-GUIDE.md](./DEVELOPER-RELEASE-GUIDE.md)** | Developer release workflow | Complete build and release process documentation |
+### Project Planning & Information
 
-## Key Design Decisions
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| **[Project Roadmap](project-info/roadmap.md)** | Development timeline and milestones | All stakeholders |
+| **[Version Management](project-info/version-management.md)** | Versioning strategy and practices | Developers and maintainers |
+| **[Release Management](developer-guide/release-process.md)** | Release management procedures | Maintainers |
 
-### 1. **GUI Technology Choice: PowerShell + WPF**
+## Multilingual Documentation
 
-- **Location**: [ARCHITECTURE.md](./ARCHITECTURE.md#gui-technology-choice-powershell--wpf)
-- **Rationale**: Lightweight, consistency, ease of distribution
-- **Alternatives considered**: Windows Forms, Electron, C# WPF
+Focus Game Deck supports multiple languages:
 
-### 2. **Internationalization Method: JSON External Resources**
+| Language | Documentation Location | Coverage |
+|----------|----------------------|----------|
+| **English** | `docs/` (root) | Complete documentation |
+| **中文简体 (Chinese Simplified)** | Application interface | Built-in language support |
 
-- **Location**: [BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md#internationalization-method-json-external-resources)
-- **Rationale**: Solves Japanese character encoding issues, maintainability, standard approach
-- **Technical details**: Uses Unicode escape sequences
+## Document Categories Explained
 
-### 3. **Architecture Pattern: Configuration-Driven**
+### User Documentation
 
-- **Location**: [ARCHITECTURE.md](./ARCHITECTURE.md#configuration-management-json-configuration-file)
-- **Rationale**: Flexibility, extensibility, customization without code changes
-- **Implementation**: Behavior control through config.json
+**Purpose**: Help end users install, configure, and use Focus Game Deck effectively
 
-## � Quick Start
+**What you'll find**:
+
+- Step-by-step installation instructions
+- Configuration examples and best practices
+- Troubleshooting guides for common issues
+- FAQ and quick reference materials
+
+### Developer Documentation
+
+**Purpose**: Enable technical contributors to understand and extend the project
+
+**What you'll find**:
+
+- System architecture and design decisions
+- Build system and development workflow
+- Code contribution guidelines and standards
+- Technical implementation details
+
+### Project Documentation
+
+**Purpose**: Communicate project vision, planning, and community information
+
+**What you'll find**:
+
+- Project mission and philosophy
+- Development roadmap and milestones
+- Release management processes
+- Community guidelines and governance
+
+## Documentation Structure (Recommended)
+
+For future organization improvements, see [Documentation Structure Recommendations](STRUCTURE-RECOMMENDATIONS.md).
+
+The recommended structure separates documentation by audience and purpose:
+
+```text
+docs/
+├── user-guide/          # End-user documentation
+├── developer-guide/     # Developer and contributor docs
+├── project-info/        # Project management and planning
+└── localization/        # Language-specific documentation
+```
+
+## Getting Help
 
 ### For Users
 
-1. Check release status in **[ROADMAP.md](./ROADMAP.md)**
-2. Download official release version from GitHub Releases
-3. Run digitally signed .exe file
+1. **Quick Issues**: Check [Configuration Guide](user-guide/configuration.md) troubleshooting section
+2. **Installation Problems**: Follow [README.md](../README.md) prerequisites and setup
+3. **Configuration Questions**: Review complete [Configuration Guide](user-guide/configuration.md)
 
 ### For Developers
 
-1. Understand system design in **[ARCHITECTURE.md](./ARCHITECTURE.md)**
-2. Check GUI specifications in **[BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md)**
-3. Develop following coding standards
+1. **Architecture Questions**: Start with [Architecture Guide](developer-guide/architecture.md)
+2. **Contribution Process**: Review [Contributing Guide](../CONTRIBUTING.md)
+3. **Build Issues**: Check [Build System Documentation](developer-guide/build-system.md)
 
-## Documentation Update Policy
+### For All Users
 
-- **Technical Changes**: Update ARCHITECTURE.md
-- **UI Changes**: Update BD_and_FD_for_GUI.md
-- **Strategic Changes**: Update ROADMAP.md
-- **Overview Changes**: Update this documentation index
+1. **Search existing issues** in [GitHub Issues](https://github.com/beive60/focus-game-deck/issues)
+2. **Create new issue** with appropriate template
+3. **Join discussions** in [GitHub Discussions](https://github.com/beive60/focus-game-deck/discussions)
 
-## Design Philosophy Continuity
+## Documentation Standards
 
-This documentation ensures:
+### Writing Guidelines
 
-1. **Technical Continuity**: New developers can understand the design intent
-2. **Decision Transparency**: Why specific technology choices were made is clear
-3. **Future Extensibility**: Feature additions can follow the design philosophy
-4. **Quality Maintenance**: Consistent coding standards and implementation patterns
+- **Clear and concise** language for all skill levels
+- **Task-oriented** structure with actionable steps
+- **Code examples** for technical content
+- **Cross-references** between related documents
+
+### Technical Standards
+
+- **Markdown formatting** following project linting rules
+- **120-character line limit** for consistency
+- **Proper heading hierarchy** for navigation
+- **Alt text for images** for accessibility
+
+### Maintenance
+
+- **Update with code changes** to keep documentation current
+- **Version compatibility** notes for breaking changes
+- **Regular review** for accuracy and relevance
+- **Community feedback integration
 
 ## Update History
 
 | Date | Version | Changes |
 |------|---------|---------|
-| 2025-09-23 | v1.0.0 | Initial design philosophy documentation, GUI implementation completed |
+| 2024-09-28 | v2.0.0 | Documentation structure optimization and reorganization |
 | 2025-09-23 | v1.0.1 | JSON external resource internationalization support completed |
-
-## Language Support
-
-This documentation is available in multiple languages:
-
-- **English** (Main): [docs/DOCUMENTATION-INDEX.md](./DOCUMENTATION-INDEX.md)
-- **中文简体** (Chinese Simplified): Focus Game Deck now supports Chinese Simplified (zh-CN)
-- **日本語** (Japanese): [docs/ja/DOCUMENTATION-INDEX.md](./ja/DOCUMENTATION-INDEX.md)
-
-For Japanese-speaking contributors and users, please refer to the Japanese documentation in the `docs/ja/` directory. Chinese Simplified support has been added throughout the application interface and configuration editor.
+| 2025-09-23 | v1.0.0 | Initial design philosophy documentation, GUI implementation completed |
 
 ---
 
-*This design philosophy documentation aims to make the technical decisions of the Focus Game Deck project transparent and ensure long-term development consistency.*
+**Focus Game Deck Documentation** - Comprehensive guides for users, developers, and contributors.
+
+*For questions about documentation, create an issue with the `documentation` label.*
