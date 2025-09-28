@@ -80,14 +80,6 @@
                     "applicationId": ""
                 }
             }
-        },
-        "wallpaperEngine": {
-            "path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\wallpaper_engine\\wallpaper32.exe",
-            "processName": "wallpaper32|wallpaper64",
-            "gameStartAction": "pause-wallpaper",
-            "gameEndAction": "play-wallpaper",
-            "arguments": "",
-            "_comment": "Wallpaper Engine integration - Pauses wallpaper during gaming for better performance. Path should point to wallpaper32.exe or wallpaper64.exe depending on your system. Typical paths: Steam: C:\\Program Files (x86)\\Steam\\steamapps\\common\\wallpaper_engine\\ or Standalone: C:\\Program Files\\Wallpaper Engine\\"
         }
     },
     "games": {
@@ -121,7 +113,7 @@
             "executablePath": "%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
             "processName": "powershell",
             "arguments": "-NoExit -Command Write-Host 'Mock Game Running - Press any key to exit' -ForegroundColor Green; Read-Host",
-            "appsToManage": ["obs", "clibor", "wallpaperEngine"],
+            "appsToManage": ["obs", "clibor"],
             "_comment": "開発・テスト用の軽量モックゲーム。PowerShellコンソールを使用し、明確な終了方法を提供"
         },
         "apex": {

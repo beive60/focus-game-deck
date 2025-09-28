@@ -104,7 +104,7 @@ function Get-LocalizedMessage {
         if ($Args.Length -gt 0) {
             Write-Verbose "Debug: Processing message '$Key' with $($Args.Length) arguments"
 
-        for ($i = 0; $i -lt $Args.Length; $i++) {
+            for ($i = 0; $i -lt $Args.Length; $i++) {
                 $placeholder = "{$i}"
                 $replacement = if ($null -ne $Args[$i]) {
                     # Ensure safe string conversion and escape any problematic characters
@@ -348,9 +348,6 @@ function Get-AvailableActionsForApp {
         "clibor" {
             $specificActions += @("toggle-hotkeys")
         }
-        "wallpaper-engine" {
-            $specificActions += @("pause-wallpaper", "play-wallpaper")
-        }
         default {
             # Check by executable path as fallback for future extensibility
             if ($ExecutablePath -like "*Discord*") {
@@ -359,8 +356,6 @@ function Get-AvailableActionsForApp {
                 $specificActions += @("start-vtube-studio", "stop-vtube-studio")
             } elseif ($ExecutablePath -like "*Clibor*" -or $ExecutablePath -like "*clibor*") {
                 $specificActions += @("toggle-hotkeys")
-            } elseif ($ExecutablePath -like "*wallpaper*engine*" -or $ExecutablePath -like "*WallpaperEngine*") {
-                $specificActions += @("pause-wallpaper", "play-wallpaper")
             }
             # Generic applications get no additional actions beyond base actions
         }
@@ -1178,21 +1173,21 @@ function Save-UIDataToConfig {
             throw "Configuration data is not loaded or is null"
         }
 
-    # Save current game if selected
-    if ($script:CurrentGameId -and $script:CurrentGameId -ne "") {
+        # Save current game if selected
+        if ($script:CurrentGameId -and $script:CurrentGameId -ne "") {
             Write-Verbose "Debug: Saving current game data for ID: $script:CurrentGameId"
-        Save-CurrentGameData
-    }
+            Save-CurrentGameData
+        }
 
-    # Save current app if selected
-    if ($script:CurrentAppId -and $script:CurrentAppId -ne "") {
+        # Save current app if selected
+        if ($script:CurrentAppId -and $script:CurrentAppId -ne "") {
             Write-Verbose "Debug: Saving current app data for ID: $script:CurrentAppId"
-        Save-CurrentAppData
-    }
+            Save-CurrentAppData
+        }
 
-    # Save global settings
+        # Save global settings
         Write-Verbose "Debug: Saving global settings data"
-    Save-GlobalSettingsData
+        Save-GlobalSettingsData
 
     } catch {
         Write-Error "Failed to save UI data to config: $($_.Exception.Message)"
@@ -1288,15 +1283,15 @@ function Save-CurrentAppData {
             $script:ConfigData | Add-Member -MemberType NoteProperty -Name "managedApps" -Value ([PSCustomObject]@{}) -Force
         }
 
-    # Update config data
+        # Update config data
         if ($appId -ne $script:CurrentAppId -and -not [string]::IsNullOrEmpty($script:CurrentAppId)) {
-        # App ID changed, remove old and add new
+            # App ID changed, remove old and add new
             Write-Verbose "Debug: App ID changed from '$script:CurrentAppId' to '$appId'"
             if ($script:ConfigData.managedApps.PSObject.Properties[$script:CurrentAppId]) {
-        $oldAppData = $script:ConfigData.managedApps.$script:CurrentAppId
-        $script:ConfigData.managedApps.PSObject.Properties.Remove($script:CurrentAppId)
+                $oldAppData = $script:ConfigData.managedApps.$script:CurrentAppId
+                $script:ConfigData.managedApps.PSObject.Properties.Remove($script:CurrentAppId)
                 $script:ConfigData.managedApps | Add-Member -MemberType NoteProperty -Name $appId -Value $oldAppData -Force
-    }
+            }
         }
 
         # Ensure the app entry exists

@@ -1,6 +1,9 @@
 # User-specific configuration file
 config/config.json
 config/config.json.backup-*
+build/config/config.json
+build-tools/build/config/config.json
+release/config/config.json
 
 # PowerShell history file
 *.history

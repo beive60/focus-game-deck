@@ -96,8 +96,6 @@ Define all applications you want Focus Game Deck to control during gaming sessio
 | `restore-discord-normal` | Restore Discord normal mode | No |
 | `start-vtube-studio` | Start VTube Studio gaming mode | No |
 | `stop-vtube-studio` | Stop VTube Studio gaming mode | No |
-| `pause-wallpaper` | Pause Wallpaper Engine | No |
-| `play-wallpaper` | Resume Wallpaper Engine | No |
 | `none` | Do nothing | No |
 
 ### Termination Methods
@@ -176,16 +174,6 @@ Define all applications you want Focus Game Deck to control during gaming sessio
         "port": 8001,
         "enabled": false
     }
-}
-```
-
-#### Wallpaper Engine (Performance)
-```json
-"wallpaperEngine": {
-    "path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\wallpaper_engine\\wallpaper32.exe",
-    "processName": "wallpaper32|wallpaper64",
-    "gameStartAction": "pause-wallpaper",
-    "gameEndAction": "play-wallpaper"
 }
 ```
 
@@ -430,11 +418,6 @@ Use `*` for wildcard matching:
             "processName": "VTube Studio",
             "gameStartAction": "start-vtube-studio",
             "gameEndAction": "stop-vtube-studio"
-        },
-        "wallpaperEngine": {
-            "processName": "wallpaper32|wallpaper64",
-            "gameStartAction": "pause-wallpaper",
-            "gameEndAction": "play-wallpaper"
         }
     },
     "games": {
@@ -443,7 +426,7 @@ Use `*` for wildcard matching:
             "platform": "riot",
             "riotGameId": "valorant",
             "processName": "VALORANT-Win64-Shipping*",
-            "appsToManage": ["obs", "vtubeStudio", "wallpaperEngine"]
+            "appsToManage": ["obs", "vtubeStudio"]
         }
     }
 }
@@ -454,6 +437,7 @@ Use `*` for wildcard matching:
 ### Common Issues
 
 #### 1. Application Not Starting/Stopping
+
 **Problem**: Managed application doesn't respond to start/stop commands.
 
 **Solutions**:
