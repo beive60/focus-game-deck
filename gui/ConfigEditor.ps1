@@ -130,6 +130,163 @@ function Get-LocalizedMessage {
     }
 }
 
+# Helper function to measure button text width
+function Measure-ButtonTextWidth {
+    param(
+        [string]$Text,
+        [System.Windows.Controls.Button]$Button
+    )
+
+    if ([string]::IsNullOrEmpty($Text) -or -not $Button) {
+        return 0
+    }
+
+    try {
+        # Create a temporary TextBlock to measure text size
+        $textBlock = New-Object System.Windows.Controls.TextBlock
+        $textBlock.Text = $Text
+        $textBlock.FontFamily = $Button.FontFamily
+        $textBlock.FontSize = $Button.FontSize
+        $textBlock.FontWeight = $Button.FontWeight
+        $textBlock.FontStyle = $Button.FontStyle
+
+        # Measure the text
+        $textBlock.Measure([System.Windows.Size]::new([double]::PositiveInfinity, [double]::PositiveInfinity))
+
+        # Add some padding (approximately 10-15 pixels for button padding)
+        return $textBlock.DesiredSize.Width + 15
+    } catch {
+        # Fallback: estimate based on character count
+        return $Text.Length * 7
+    }
+}
+
+# Helper function to set button content with smart tooltip
+function Set-ButtonContentWithTooltip {
+    param(
+        [System.Windows.Controls.Button]$Button,
+        [string]$FullText
+    )
+
+    if (-not $Button -or [string]::IsNullOrEmpty($FullText)) {
+        return
+    }
+
+    try {
+        # Always set the full text as button content first
+        $Button.Content = $FullText
+
+        # Force UI update to ensure button width is calculated
+        $Button.UpdateLayout()
+        $Button.Dispatcher.Invoke([System.Windows.Threading.DispatcherPriority]::Background, [action] {})
+
+        # Get button's available width (considering margins and padding)
+        $buttonWidth = $Button.ActualWidth
+        if ($buttonWidth -eq 0) {
+            $buttonWidth = $Button.Width
+        }
+        $availableWidth = $buttonWidth - 15  # Account for internal padding and margins
+
+        Write-Verbose "Debug: Button '$($Button.Name)' - ActualWidth: $($Button.ActualWidth), Width: $($Button.Width), Available: $availableWidth"
+
+        # Measure actual text width
+        $textWidth = Measure-ButtonTextWidth -Text $FullText -Button $Button
+
+        Write-Verbose "Debug: Button '$($Button.Name)' - Text: '$FullText', TextWidth: $textWidth, AvailableWidth: $availableWidth"
+
+        # Set tooltip based on text width comparison or text length as fallback
+        $shouldShowTooltip = $false
+
+        if ($availableWidth -gt 0 -and $textWidth -gt $availableWidth) {
+            $shouldShowTooltip = $true
+            Write-Verbose "Debug: Tooltip needed due to width: $textWidth > $availableWidth"
+        } elseif ($availableWidth -le 0 -and $FullText.Length -gt 12) {
+            $shouldShowTooltip = $true
+            Write-Verbose "Debug: Tooltip needed due to text length: $($FullText.Length) > 12 (width measurement unavailable)"
+        }
+
+        if ($shouldShowTooltip) {
+            $Button.ToolTip = $FullText
+            Write-Verbose "Smart tooltip set for button '$($Button.Name)': '$FullText'"
+        } else {
+            $Button.ToolTip = $null
+            Write-Verbose "Debug: No tooltip needed for button '$($Button.Name)': '$FullText'"
+        }
+    } catch {
+        Write-Warning "Debug: Error in Set-ButtonContentWithTooltip for '$($Button.Name)': $($_.Exception.Message)"
+        # Fallback: Set tooltip based on text length
+        $Button.Content = $FullText
+        if ($FullText.Length -gt 10) {
+            $Button.ToolTip = $FullText
+            Write-Verbose "Fallback tooltip set for button '$($Button.Name)': '$FullText' (length: $($FullText.Length))"
+        } else {
+            $Button.ToolTip = $null
+            Write-Verbose "Fallback: No tooltip for button '$($Button.Name)': '$FullText' (length: $($FullText.Length))"
+        }
+    }
+}
+
+# Helper function to set smart tooltip for buttons (legacy compatibility)
+function Set-SmartTooltip {
+    param(
+        [System.Windows.Controls.Button]$Button,
+        [string]$Content = ""
+    )
+
+    if (-not $Button) {
+        return
+    }
+
+    # Use button's current content if no content specified
+    $textToCheck = if ([string]::IsNullOrEmpty($Content)) { $Button.Content } else { $Content }
+
+    # Use the new function
+    Set-ButtonContentWithTooltip -Button $Button -FullText $textToCheck
+}
+
+# Helper function to apply smart tooltips to all buttons
+function Update-AllButtonTooltips {
+    param()
+
+    try {
+        # Define button name to message key mappings
+        $buttonMappings = @{
+            "AddGameButton"           = "addButton"
+            "DuplicateGameButton"     = "duplicateButton"
+            "DeleteGameButton"        = "deleteButton"
+            "AddAppButton"            = "addButton"
+            "DeleteAppButton"         = "deleteButton"
+            "BrowseAppPathButton"     = "browseButton"
+            "BrowseSteamPathButton"   = "browseButton"
+            "BrowseEpicPathButton"    = "browseButton"
+            "BrowseRiotPathButton"    = "browseButton"
+            "BrowseObsPathButton"     = "browseButton"
+            "GenerateLaunchersButton" = "generateLaunchers"
+            "CheckUpdateButton"       = "checkUpdateButton"
+            "SaveButton"              = "saveButton"
+            "CloseButton"             = "closeButton"
+        }
+
+        # Apply smart tooltips to each button with full localized text
+        Write-Verbose "Debug: Starting tooltip update for $($buttonMappings.Count) buttons"
+        foreach ($buttonName in $buttonMappings.Keys) {
+            $button = $script:Window.FindName($buttonName)
+            if ($button) {
+                $messageKey = $buttonMappings[$buttonName]
+                $fullText = Get-LocalizedMessage -Key $messageKey
+                Write-Verbose "Debug: Processing button '$buttonName' with key '$messageKey' -> text '$fullText'"
+                Set-ButtonContentWithTooltip -Button $button -FullText $fullText
+            } else {
+                Write-Verbose "Debug: Button '$buttonName' not found in window"
+            }
+        }
+
+        Write-Verbose "Smart tooltips updated for all buttons with full localized text"
+    } catch {
+        Write-Warning "Failed to update button tooltips: $($_.Exception.Message)"
+    }
+}
+
 # Helper function for safe message display using JSON resources
 function Show-SafeMessage {
     param(
@@ -264,6 +421,24 @@ function Initialize-ConfigEditor {
 
         # Load data into UI
         Load-DataToUI
+
+        # Add event handler for when window is loaded and rendered
+        $script:Window.add_Loaded({
+                # Delay tooltip application to ensure UI is fully rendered
+                $script:Window.Dispatcher.BeginInvoke([System.Windows.Threading.DispatcherPriority]::Background, [action] {
+                        Write-Verbose "Debug: Applying tooltips after window load event"
+                        Update-AllButtonTooltips
+                    })
+            })
+
+        # Add event handler for when window content is rendered
+        $script:Window.add_ContentRendered({
+                Write-Verbose "Debug: Window content rendered - applying tooltips"
+                $script:Window.Dispatcher.BeginInvoke([System.Windows.Threading.DispatcherPriority]::ApplicationIdle, [action] {
+                        Write-Verbose "Debug: Applying tooltips after content rendered"
+                        Update-AllButtonTooltips
+                    })
+            })
 
         # Show window
         $script:Window.ShowDialog() | Out-Null
@@ -584,27 +759,27 @@ function Update-UITexts {
         $script:Window.FindName("ManagedAppsTab").Header = Get-LocalizedMessage -Key "managedAppsTabHeader"
         $script:Window.FindName("GlobalSettingsTab").Header = Get-LocalizedMessage -Key "globalSettingsTabHeader"
 
-        # Update buttons
+        # Update buttons with smart tooltips
         $addGameButton = $script:Window.FindName("AddGameButton")
-        if ($addGameButton) { $addGameButton.Content = Get-LocalizedMessage -Key "addButton" }
+        if ($addGameButton) { Set-ButtonContentWithTooltip -Button $addGameButton -FullText (Get-LocalizedMessage -Key "addButton") }
 
         $duplicateGameButton = $script:Window.FindName("DuplicateGameButton")
-        if ($duplicateGameButton) { $duplicateGameButton.Content = Get-LocalizedMessage -Key "duplicateButton" }
+        if ($duplicateGameButton) { Set-ButtonContentWithTooltip -Button $duplicateGameButton -FullText (Get-LocalizedMessage -Key "duplicateButton") }
 
         $deleteGameButton = $script:Window.FindName("DeleteGameButton")
-        if ($deleteGameButton) { $deleteGameButton.Content = Get-LocalizedMessage -Key "deleteButton" }
+        if ($deleteGameButton) { Set-ButtonContentWithTooltip -Button $deleteGameButton -FullText (Get-LocalizedMessage -Key "deleteButton") }
 
         $addAppButton = $script:Window.FindName("AddAppButton")
-        if ($addAppButton) { $addAppButton.Content = Get-LocalizedMessage -Key "addButton" }
+        if ($addAppButton) { Set-ButtonContentWithTooltip -Button $addAppButton -FullText (Get-LocalizedMessage -Key "addButton") }
 
         $deleteAppButton = $script:Window.FindName("DeleteAppButton")
-        if ($deleteAppButton) { $deleteAppButton.Content = Get-LocalizedMessage -Key "deleteButton" }
+        if ($deleteAppButton) { Set-ButtonContentWithTooltip -Button $deleteAppButton -FullText (Get-LocalizedMessage -Key "deleteButton") }
 
         $saveButton = $script:Window.FindName("SaveButton")
-        if ($saveButton) { $saveButton.Content = Get-LocalizedMessage -Key "saveButton" }
+        if ($saveButton) { Set-ButtonContentWithTooltip -Button $saveButton -FullText (Get-LocalizedMessage -Key "saveButton") }
 
         $closeButton = $script:Window.FindName("CloseButton")
-        if ($closeButton) { $closeButton.Content = Get-LocalizedMessage -Key "closeButton" }
+        if ($closeButton) { Set-ButtonContentWithTooltip -Button $closeButton -FullText (Get-LocalizedMessage -Key "closeButton") }
 
         # Update labels - Games tab
         $gamesListLabel = $script:Window.FindName("GamesListLabel")
@@ -675,18 +850,18 @@ function Update-UITexts {
         $languageLabel = $script:Window.FindName("LanguageLabel")
         if ($languageLabel) { $languageLabel.Content = Get-LocalizedMessage -Key "languageLabel" }
 
-        # Update browse buttons
+        # Update browse buttons with smart tooltips
         $browseSteamPathButton = $script:Window.FindName("BrowseSteamPathButton")
-        if ($browseSteamPathButton) { $browseSteamPathButton.Content = Get-LocalizedMessage -Key "browseButton" }
+        if ($browseSteamPathButton) { Set-ButtonContentWithTooltip -Button $browseSteamPathButton -FullText (Get-LocalizedMessage -Key "browseButton") }
 
         $browseEpicPathButton = $script:Window.FindName("BrowseEpicPathButton")
-        if ($browseEpicPathButton) { $browseEpicPathButton.Content = Get-LocalizedMessage -Key "browseButton" }
+        if ($browseEpicPathButton) { Set-ButtonContentWithTooltip -Button $browseEpicPathButton -FullText (Get-LocalizedMessage -Key "browseButton") }
 
         $browseRiotPathButton = $script:Window.FindName("BrowseRiotPathButton")
-        if ($browseRiotPathButton) { $browseRiotPathButton.Content = Get-LocalizedMessage -Key "browseButton" }
+        if ($browseRiotPathButton) { Set-ButtonContentWithTooltip -Button $browseRiotPathButton -FullText (Get-LocalizedMessage -Key "browseButton") }
 
         $browseObsPathButton = $script:Window.FindName("BrowseObsPathButton")
-        if ($browseObsPathButton) { $browseObsPathButton.Content = Get-LocalizedMessage -Key "browseButton" }
+        if ($browseObsPathButton) { Set-ButtonContentWithTooltip -Button $browseObsPathButton -FullText (Get-LocalizedMessage -Key "browseButton") }
 
         # Update labels - Managed Apps tab
         $appsListLabel = $script:Window.FindName("AppsListLabel")
@@ -720,21 +895,21 @@ function Update-UITexts {
         if ($gracefulTimeoutLabel) { $gracefulTimeoutLabel.Content = Get-LocalizedMessage -Key "gracefulTimeoutLabel" }
 
         $browseAppPathButton = $script:Window.FindName("BrowseAppPathButton")
-        if ($browseAppPathButton) { $browseAppPathButton.Content = Get-LocalizedMessage -Key "browseButton" }
+        if ($browseAppPathButton) { Set-ButtonContentWithTooltip -Button $browseAppPathButton -FullText (Get-LocalizedMessage -Key "browseButton") }
 
         # Update version and update-related texts
         $versionLabel = $script:Window.FindName("VersionLabel")
         if ($versionLabel) { $versionLabel.Text = Get-LocalizedMessage -Key "versionLabel" }
 
         $checkUpdateButton = $script:Window.FindName("CheckUpdateButton")
-        if ($checkUpdateButton) { $checkUpdateButton.Content = Get-LocalizedMessage -Key "checkUpdateButton" }
+        if ($checkUpdateButton) { Set-ButtonContentWithTooltip -Button $checkUpdateButton -FullText (Get-LocalizedMessage -Key "checkUpdateButton") }
 
         # Update launcher-related labels and buttons
         $launcherTypeLabel = $script:Window.FindName("LauncherTypeLabel")
         if ($launcherTypeLabel) { $launcherTypeLabel.Content = Get-LocalizedMessage -Key "launcherTypeLabel" }
 
         $generateLaunchersButton = $script:Window.FindName("GenerateLaunchersButton")
-        if ($generateLaunchersButton) { $generateLaunchersButton.Content = Get-LocalizedMessage -Key "generateLaunchers" }
+        if ($generateLaunchersButton) { Set-ButtonContentWithTooltip -Button $generateLaunchersButton -FullText (Get-LocalizedMessage -Key "generateLaunchers") }
 
         $launcherHelpText = $script:Window.FindName("LauncherHelpText")
         if ($launcherHelpText) { $launcherHelpText.Text = Get-LocalizedMessage -Key "launcherHelpText" }
@@ -746,6 +921,9 @@ function Update-UITexts {
         # Update log notarization checkbox
         $enableLogNotarizationCheckBox = $script:Window.FindName("EnableLogNotarizationCheckBox")
         if ($enableLogNotarizationCheckBox) { $enableLogNotarizationCheckBox.Content = Get-LocalizedMessage -Key "enableLogNotarization" }
+
+        # Update smart tooltips after text changes
+        Update-AllButtonTooltips
 
         Write-Verbose "UI texts updated for language: $script:CurrentLanguage"
     } catch {
@@ -1569,6 +1747,7 @@ function Handle-CheckUpdate {
 
         if ($checkUpdateButton) {
             $checkUpdateButton.IsEnabled = $false
+            Set-ButtonContentWithTooltip -Button $checkUpdateButton -FullText (Get-LocalizedMessage -Key "checkingUpdate")
         }
 
         # Refresh the UI immediately
@@ -1637,6 +1816,7 @@ function Handle-CheckUpdate {
         $checkUpdateButton = $script:Window.FindName("CheckUpdateButton")
         if ($checkUpdateButton) {
             $checkUpdateButton.IsEnabled = $true
+            Set-ButtonContentWithTooltip -Button $checkUpdateButton -FullText (Get-LocalizedMessage -Key "checkUpdateButton")
         }
     }
 }
@@ -1824,6 +2004,7 @@ function Handle-GenerateLaunchers {
         # Disable button during generation
         $generateButton.IsEnabled = $false
         $generateButton.Content = Get-LocalizedMessage -Key "generating"
+        Set-SmartTooltip -Button $generateButton
 
         # Get selected launcher type
         $selectedItem = $launcherTypeCombo.SelectedItem
@@ -1888,6 +2069,7 @@ function Handle-GenerateLaunchers {
         if ($generateButton) {
             $generateButton.IsEnabled = $true
             $generateButton.Content = Get-LocalizedMessage -Key "generateLaunchers"
+            Set-SmartTooltip -Button $generateButton
         }
     }
 }
