@@ -1,5 +1,6 @@
 # Build artifacts and executable files (should not be in version control)
 build/
+build-tools/build/
 release/
 
 # User-specific configuration files

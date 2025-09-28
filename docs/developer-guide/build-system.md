@@ -4,6 +4,12 @@
 
 This document describes the comprehensive build system implemented for Focus Game Deck, including executable generation, digital signature infrastructure, and automated release packaging.
 
+## Configuration File Security
+
+### Sensitive Data Management
+
+**CRITICAL SECURITY NOTICE**: Configuration files containing sensitive information (passwords, API keys, certificates) are excluded from version control to prevent accidental exposure.
+
 ## Build System Architecture
 
 ### Three-Tier Build System

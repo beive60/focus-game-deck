@@ -55,8 +55,8 @@ Click `launch_[your-game-id].lnk` (or `launch_[your-game-id].bat`) to start a ga
 | Document | Purpose |
 |----------|---------|
 | **📖 [Configuration Guide](docs/user-guide/configuration.md)** | Complete setup and configuration instructions |
-| For detailed build system documentation, see [docs/developer-guide/build-system.md](./docs/developer-guide/build-system.md). |
-| **[Build System](docs/BUILD-SYSTEM.md)** | Development and distribution infrastructure |
+| **🔧 [Build System](docs/developer-guide/build-system.md)** | Development build system and security guidelines |
+| **[Release Process](docs/developer-guide/release-process.md)** | Developer release workflow and procedures |
 | **[Roadmap](docs/ROADMAP.md)** | Project timeline and planned features |
 | **[All Documentation](docs/DOCUMENTATION-INDEX.md)** | Complete documentation index |
 
