@@ -49,6 +49,11 @@
                                     Width="80"
                                     Height="25"
                                     Margin="5"/>
+                            <Button Name="DuplicateGameButton"
+                                    Content="[DUPLICATE_BUTTON]"
+                                    Width="70"
+                                    Height="25"
+                                    Margin="5"/>
                             <Button Name="DeleteGameButton"
                                     Content="Delete"
                                     Width="60"

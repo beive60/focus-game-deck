@@ -181,6 +181,7 @@ function Replace-XamlPlaceholders {
             "[EPIC_PLATFORM]"              = Get-LocalizedMessage -Key "epicPlatform"
             "[RIOT_PLATFORM]"              = Get-LocalizedMessage -Key "riotPlatform"
             "[BROWSE_BUTTON]"              = Get-LocalizedMessage -Key "browseButton"
+            "[DUPLICATE_BUTTON]"           = Get-LocalizedMessage -Key "duplicateButton"
             "[OBS_SETTINGS_GROUP]"         = Get-LocalizedMessage -Key "obsSettingsGroup"
             "[PATH_SETTINGS_GROUP]"        = Get-LocalizedMessage -Key "pathSettingsGroup"
             "[GENERAL_SETTINGS_GROUP]"     = Get-LocalizedMessage -Key "generalSettingsGroup"
@@ -502,6 +503,9 @@ function Setup-EventHandlers {
     $addGameButton = $script:Window.FindName("AddGameButton")
     $addGameButton.add_Click({ Handle-AddGame })
 
+    $duplicateGameButton = $script:Window.FindName("DuplicateGameButton")
+    $duplicateGameButton.add_Click({ Handle-DuplicateGame })
+
     $deleteGameButton = $script:Window.FindName("DeleteGameButton")
     $deleteGameButton.add_Click({ Handle-DeleteGame })
 
@@ -583,6 +587,9 @@ function Update-UITexts {
         # Update buttons
         $addGameButton = $script:Window.FindName("AddGameButton")
         if ($addGameButton) { $addGameButton.Content = Get-LocalizedMessage -Key "addButton" }
+
+        $duplicateGameButton = $script:Window.FindName("DuplicateGameButton")
+        if ($duplicateGameButton) { $duplicateGameButton.Content = Get-LocalizedMessage -Key "duplicateButton" }
 
         $deleteGameButton = $script:Window.FindName("DeleteGameButton")
         if ($deleteGameButton) { $deleteGameButton.Content = Get-LocalizedMessage -Key "deleteButton" }
@@ -1051,6 +1058,79 @@ function Handle-AddGame {
     $gamesList.SelectedItem = $newGameId
 
     Show-SafeMessage -MessageKey "gameAdded" -TitleKey "info"
+}
+
+<#
+.SYNOPSIS
+    Duplicates the currently selected game with all its settings except the Game ID
+
+.DESCRIPTION
+    Creates a copy of the selected game with a new unique Game ID while preserving
+    all other configuration data including name, platform, app IDs, process name,
+    and apps to manage settings. Provides user feedback on success or failure.
+#>
+function Handle-DuplicateGame {
+    param()
+
+    try {
+        $gamesList = $script:Window.FindName("GamesList")
+        $selectedGame = $gamesList.SelectedItem
+
+        if (-not $selectedGame) {
+            Show-SafeMessage -MessageKey "noGameSelected" -TitleKey "warning" -Icon Warning
+            return
+        }
+
+        # Get the source game data
+        $sourceGameData = $script:ConfigData.games.$selectedGame
+
+        if (-not $sourceGameData) {
+            Show-SafeMessage -MessageKey "gameDuplicateError" -TitleKey "error" -Args @("Source game data not found") -Icon Error
+            return
+        }
+
+        # Generate new unique game ID
+        $newGameId = "duplicated_$(Get-Random -Minimum 1000 -Maximum 9999)"
+
+        # Ensure the new ID is unique
+        while ($script:ConfigData.games.PSObject.Properties[$newGameId]) {
+            $newGameId = "duplicated_$(Get-Random -Minimum 1000 -Maximum 9999)"
+        }
+
+        # Ensure games section exists
+        if (-not $script:ConfigData.games) {
+            $script:ConfigData | Add-Member -MemberType NoteProperty -Name "games" -Value ([PSCustomObject]@{})
+        }
+
+        # Create a deep copy of the source game data
+        $duplicatedGameData = [PSCustomObject]@{
+            name         = $sourceGameData.name + " (Copy)"
+            platform     = $sourceGameData.platform
+            steamAppId   = $sourceGameData.steamAppId
+            epicGameId   = $sourceGameData.epicGameId
+            riotGameId   = $sourceGameData.riotGameId
+            processName  = $sourceGameData.processName
+            appsToManage = @($sourceGameData.appsToManage)  # Create a new array copy
+        }
+
+        # Add the duplicated game to config data
+        $script:ConfigData.games | Add-Member -MemberType NoteProperty -Name $newGameId -Value $duplicatedGameData
+
+        # Update the games list to reflect the new game
+        Update-GamesList
+
+        # Select the newly duplicated game
+        $gamesList.SelectedItem = $newGameId
+
+        # Show success message with both old and new game IDs
+        Show-SafeMessage -MessageKey "gameDuplicated" -TitleKey "info" -Args @($selectedGame, $newGameId)
+
+        Write-Verbose "Successfully duplicated game '$selectedGame' to '$newGameId'"
+
+    } catch {
+        Write-Error "Failed to duplicate game: $($_.Exception.Message)"
+        Show-SafeMessage -MessageKey "gameDuplicateError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+    }
 }
 
 # Handle delete game
