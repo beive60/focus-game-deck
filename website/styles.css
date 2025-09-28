@@ -1,4 +1,53 @@
-/* Focus Game Deck - Minimal Design Styles */
+/* Focus Game Deck - Minimal Design Styles with Dark Theme Support */
+
+/* CSS Custom Properties for Theme Support */
+:root {
+    /* Light Theme (Default) */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+
+    --text-primary: #3333.feature-list {
+        list-style: none;
+    }
+
+    .feature-list li {
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+        transition: color 0.3s ease;
+    }
+
+    .feature-list li:last-child {
+        border-bottom: none;
+    }
+
+    .feature-name {
+        font-weight: 600;
+        color: var(--link-color);
+    }
+
+    econdary: #666666;
+    --border-color: #dddddd;
+    --link-color: #007acc;
+    --button-bg: #007acc;
+    --button-text: #ffffff;
+    --button-border: #007acc;
+    --shadow: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+    /* Dark Theme */
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --border-color: #444444;
+    --link-color: #4fc3f7;
+    --button-bg: #4fc3f7;
+    --button-text: #1a1a1a;
+    --button-border: #4fc3f7;
+    --shadow: rgba(0, 0, 0, 0.3);
+}
 
 /* Reset and Base Settings */
 * {
@@ -10,11 +59,12 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
     line-height: 1.6;
-    color: #333;
-    background-color: #fff;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Header Styles */
@@ -22,7 +72,7 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--border-color);
     margin-bottom: 40px;
     padding-bottom: 20px;
 }
@@ -31,24 +81,61 @@ header {
     text-align: left;
 }
 
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.theme-toggle {
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+}
+
+.theme-toggle:hover {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border-color: var(--button-border);
+}
+
+.theme-icon {
+    transition: opacity 0.3s ease;
+}
+
 .language-selector {
-    margin-left: auto;
+    margin-left: 0;
 }
 
 .language-selector select {
     padding: 8px 12px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     font-size: 14px;
     cursor: pointer;
     font-family: system-ui, -apple-system, sans-serif;
+    transition: all 0.3s ease;
 }
 
 .language-selector select:focus {
     outline: none;
-    border-color: #007acc;
-    box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
+    border-color: var(--link-color);
+    box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.2);
+}
+
+.language-selector select:hover {
+    background-color: var(--bg-secondary);
 }
 
 @media (max-width: 768px) {
@@ -62,20 +149,27 @@ header {
         text-align: center;
     }
 
+    .header-controls {
+        justify-content: center;
+        margin-left: 0;
+    }
+
     .language-selector {
         margin-left: 0;
     }
 }
 
+/* Typography */
 h1 {
     font-size: 2.5rem;
     font-weight: 300;
     margin-bottom: 10px;
+    color: var(--text-primary);
 }
 
 .subtitle {
     font-size: 1.1rem;
-    color: #666;
+    color: var(--text-secondary);
     font-weight: 300;
 }
 
@@ -84,11 +178,13 @@ h1 {
     margin: 30px 0;
     font-size: 1rem;
     line-height: 1.7;
+    color: var(--text-primary);
 }
 
 .description a {
-    color: #007bff;
+    color: var(--link-color);
     text-decoration: none;
+    transition: color 0.3s ease;
 }
 
 .description a:hover {
@@ -97,10 +193,12 @@ h1 {
 
 /* Download Section */
 .download-section {
-    background-color: #f8f9fa;
+    background-color: var(--bg-secondary);
     padding: 30px;
     border-radius: 8px;
     margin: 40px 0;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s ease;
 }
 
 .download-section h2 {
@@ -111,27 +209,33 @@ h1 {
 
 .download-btn {
     display: inline-block;
-    background-color: #007bff;
-    color: white;
+    background-color: var(--button-bg);
+    color: var(--button-text);
     text-decoration: none;
     padding: 12px 24px;
     border-radius: 4px;
     font-weight: 500;
     margin-right: 15px;
     margin-bottom: 10px;
-    transition: background-color 0.2s;
+    transition: all 0.3s ease;
+    border: 1px solid var(--button-border);
 }
 
 .download-btn:hover {
-    background-color: #0056b3;
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px var(--shadow);
 }
 
 .download-btn.secondary {
-    background-color: #6c757d;
+    background-color: transparent;
+    color: var(--link-color);
+    border: 1px solid var(--link-color);
 }
 
 .download-btn.secondary:hover {
-    background-color: #545b62;
+    background-color: var(--link-color);
+    color: var(--bg-primary);
 }
 
 /* Features Section */
@@ -143,12 +247,12 @@ h1 {
     font-size: 1.5rem;
     font-weight: 400;
     margin-bottom: 20px;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .features p {
     margin-bottom: 25px;
-    color: #555;
+    color: var(--text-secondary);
 }
 
 .feature-list {
@@ -179,6 +283,7 @@ h1 {
     font-size: 1.2rem;
     margin-bottom: 15px;
     font-weight: 400;
+    color: var(--text-primary);
 }
 
 .req-grid {
@@ -192,22 +297,25 @@ h1 {
     display: flex;
     align-items: center;
     padding: 8px 0;
+    color: var(--text-primary);
 }
 
 .req-label {
     font-weight: 500;
     margin-right: 10px;
     min-width: 80px;
+    color: var(--text-secondary);
 }
 
 /* Footer */
 footer {
     margin-top: 60px;
     padding-top: 20px;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid var(--border-color);
     font-size: 0.9rem;
-    color: #666;
+    color: var(--text-secondary);
     text-align: center;
+    transition: border-color 0.3s ease, color 0.3s ease;
 }
 
 .footer-links {
@@ -215,13 +323,15 @@ footer {
 }
 
 .footer-links a {
-    color: #007bff;
+    color: var(--link-color);
     text-decoration: none;
     margin: 0 10px;
+    transition: color 0.3s ease;
 }
 
 .footer-links a:hover {
     text-decoration: underline;
+    opacity: 0.8;
 }
 
 /* Responsive Design */

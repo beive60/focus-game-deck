@@ -1,722 +1,198 @@
-// Focus Game Deck - Landing Page Interactive Script
-
-document.addEventListener('DOMContentLoaded', async function () {
-    // Initialize internationalization support (async)
-    await initializeI18n();
-
-    // Initialize navigation
-    initializeNavigation();
-
-    // Initialize smooth scroll
-    initializeSmoothScroll();
-
-    // Initialize FAQ
-    initializeFAQ();
-
-    // Initialize scroll animations
-    initializeScrollAnimations();
-
-    // Initialize particle effect (optional)
-    initializeParticleEffect();
-});
-
-// Translation data for multilingual support (loaded from messages.json)
-let translations = {};
-
 /**
- * Load translation messages from external JSON file
- * @returns {Promise<Object>} Promise that resolves to the translations object
+ * Focus Game Deck - Simple Internationalization Script with Dark Theme Support
+ * Minimal multilingual support and theme management for the simplified website
  */
-async function loadTranslations() {
-    try {
-        const response = await fetch('./messages.json');
-        if (!response.ok) {
-            throw new Error(`Failed to load translations: ${response.status}`);
-        }
-        translations = await response.json();
-        return translations;
-    } catch (error) {
-        console.error('Error loading translations:', error);
-        // Fallback to English if loading fails
-        translations = {
-            en: {
-                nav_features: 'Features',
-                nav_benefits: 'Benefits',
-                nav_download: 'Download',
-                nav_faq: 'FAQ',
-                nav_language: 'Language',
-                hero_title_focus: 'FOCUS',
-                hero_title_game: 'GAME',
-                hero_title_deck: 'DECK',
-                hero_subtitle: 'Gaming Focus Enhancement Tool',
-                hero_description: 'Achieve pro-gamer level focus.',
-                hero_btn_download: 'Download',
-                hero_btn_learn_more: 'Learn More',
-                scroll_text: 'Scroll to learn more',
-                features_title: 'Features',
-                benefits_title: 'Benefits',
-                download_title: 'Download',
-                faq_title: 'FAQ',
-                footer_title: 'Focus Game Deck'
-            }
-        };
-        return translations;
+
+class ThemeManager {
+    constructor() {
+        this.currentTheme = this.detectTheme();
+        this.init();
     }
-}
 
-/**
- * Initialize multilingual support with async translation loading
- * @returns {Promise<void>} Promise that resolves when initialization is complete
- */
-async function initializeI18n() {
-    try {
-        // Load translations first
-        await loadTranslations();
-
-        // Get browser language settings
-        const browserLang = navigator.language || navigator.userLanguage;
-
-        // Get saved language settings from local storage
-        const savedLang = localStorage.getItem('focusGameDeckLang');
-
-        // Determine language (priority: saved setting > browser setting > default English)
-        let currentLang = 'en'; // Default is English
-
-        if (savedLang && translations[savedLang]) {
-            currentLang = savedLang;
-        } else if (browserLang.startsWith('zh')) {
-            currentLang = 'zh-CN';
-        } else if (browserLang.startsWith('ja')) {
-            currentLang = 'ja';
+    /**
+     * Detect preferred theme based on user preference or system settings
+     * @returns {string} 'light' or 'dark'
+     */
+    detectTheme() {
+        // 1. Check localStorage for saved preference
+        const savedTheme = localStorage.getItem('focus-game-deck-theme');
+        if (savedTheme && ['light', 'dark'].includes(savedTheme)) {
+            return savedTheme;
         }
 
-        // Set language
-        setLanguage(currentLang);
+        // 2. Check browser/system preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return 'dark';
+        }
 
-        // Set up language switcher event listeners
-        setupLanguageSwitcher();
-    } catch (error) {
-        console.error('Failed to initialize i18n:', error);
-        // Fallback to English with minimal translations
-        setLanguage('en');
-        setupLanguageSwitcher();
+        // 3. Default to light mode
+        return 'light';
     }
-}
 
-// Set up language switcher functionality
-function setupLanguageSwitcher() {
-    const languageToggle = document.getElementById('language-toggle');
-    const languageMenu = document.getElementById('language-menu');
-    const languageOptions = document.querySelectorAll('.language-option');
+    /**
+     * Initialize theme management
+     */
+    init() {
+        this.applyTheme(this.currentTheme);
+        this.setupThemeToggle();
+        this.watchSystemThemeChanges();
+    }
 
-    if (languageToggle && languageMenu) {
-        // Toggle language menu
-        languageToggle.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            languageMenu.classList.toggle('active');
-        });
+    /**
+     * Apply theme to the document
+     * @param {string} theme - 'light' or 'dark'
+     */
+    applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        this.currentTheme = theme;
+        localStorage.setItem('focus-game-deck-theme', theme);
+    }
 
-        // Handle language option clicks
-        languageOptions.forEach(option => {
-            option.addEventListener('click', function (e) {
-                e.preventDefault();
-                const selectedLang = this.getAttribute('data-lang');
-                setLanguage(selectedLang);
-                languageMenu.classList.remove('active');
+    /**
+     * Toggle between light and dark themes
+     */
+    toggleTheme() {
+        const newTheme = this.currentTheme === 'light' ? 'dark' : 'light';
+        this.applyTheme(newTheme);
+    }
+
+    /**
+     * Setup theme toggle button event listener
+     */
+    setupThemeToggle() {
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                this.toggleTheme();
             });
-        });
+        }
+    }
 
-        // Close menu when clicking outside
-        document.addEventListener('click', function (e) {
-            if (!languageToggle.contains(e.target) && !languageMenu.contains(e.target)) {
-                languageMenu.classList.remove('active');
+    /**
+     * Watch for system theme changes and update accordingly
+     */
+    watchSystemThemeChanges() {
+        if (window.matchMedia) {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            mediaQuery.addEventListener('change', (e) => {
+                // Only auto-update if user hasn't manually set a preference
+                const savedTheme = localStorage.getItem('focus-game-deck-theme');
+                if (!savedTheme) {
+                    const systemTheme = e.matches ? 'dark' : 'light';
+                    this.applyTheme(systemTheme);
+                }
+            });
+        }
+    }
+}
+
+class I18n {
+    constructor() {
+        this.currentLanguage = this.detectLanguage();
+        this.messages = {};
+        this.init();
+    }
+
+    detectLanguage() {
+        const stored = localStorage.getItem('focus-game-deck-language');
+        if (stored && ['ja', 'zh-CN', 'en'].includes(stored)) {
+            return stored;
+        }
+
+        const browserLang = navigator.language || navigator.userLanguage;
+        if (browserLang.startsWith('ja')) return 'ja';
+        if (browserLang.startsWith('zh')) return 'zh-CN';
+        return 'en';
+    }
+
+    async init() {
+        try {
+            await this.loadMessages();
+            this.updateLanguageSelector();
+            this.translatePage();
+            this.setupLanguageSelector();
+        } catch (error) {
+            console.error('Failed to initialize i18n:', error);
+        }
+    }
+
+    async loadMessages() {
+        try {
+            const response = await fetch('./messages.json');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            this.messages = await response.json();
+        } catch (error) {
+            console.error('Error loading translations:', error);
+            this.messages = { ja: {}, 'zh-CN': {}, en: {} };
+        }
+    }
+
+    updateLanguageSelector() {
+        const selector = document.getElementById('language-select');
+        if (selector) selector.value = this.currentLanguage;
+    }
+
+    setupLanguageSelector() {
+        const selector = document.getElementById('language-select');
+        if (selector) {
+            selector.addEventListener('change', (event) => {
+                this.changeLanguage(event.target.value);
+            });
+        }
+    }
+
+    changeLanguage(langCode) {
+        if (['ja', 'zh-CN', 'en'].includes(langCode)) {
+            this.currentLanguage = langCode;
+            localStorage.setItem('focus-game-deck-language', langCode);
+            this.translatePage();
+        }
+    }
+
+    translatePage() {
+        const currentMessages = this.messages[this.currentLanguage] || {};
+        const elements = document.querySelectorAll('[data-i18n]');
+
+        elements.forEach(element => {
+            const key = element.getAttribute('data-i18n');
+            const translation = currentMessages[key];
+
+            if (translation) {
+                if (element.tagName === 'INPUT' && (element.type === 'button' || element.type === 'submit')) {
+                    element.value = translation;
+                } else if (element.tagName === 'IMG') {
+                    element.alt = translation;
+                } else {
+                    element.textContent = translation;
+                }
             }
         });
+
+        if (currentMessages['site_title']) {
+            document.title = currentMessages['site_title'];
+        }
+
+        document.documentElement.lang = this.currentLanguage;
     }
 }
 
-/**
- * Set language and update UI text elements
- * @param {string} lang - Language code (e.g., 'en', 'ja', 'zh-CN')
- */
-function setLanguage(lang) {
-    if (!translations[lang]) {
-        console.warn(`Language ${lang} not found, falling back to English`);
-        lang = 'en';
-    }
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize theme management
+    window.themeManager = new ThemeManager();
 
-    const t = translations[lang];
+    // Initialize internationalization
+    window.i18n = new I18n();
 
-    // Set HTML language attribute
-    document.documentElement.lang = lang;
-
-    // Update text of each element
-    updateElementText('nav-features', t.nav_features);
-    updateElementText('nav-benefits', t.nav_benefits);
-    updateElementText('nav-download', t.nav_download);
-    updateElementText('nav-faq', t.nav_faq);
-    updateElementText('nav-language', t.nav_language);
-
-    // Hero section
-    updateElementText('hero-title-focus', t.hero_title_focus);
-    updateElementText('hero-title-game', t.hero_title_game);
-    updateElementText('hero-title-deck', t.hero_title_deck);
-    updateElementText('hero-subtitle', t.hero_subtitle);
-    updateElementText('hero-description', t.hero_description);
-    updateElementText('hero-btn-download', t.hero_btn_download);
-    updateElementText('hero-btn-learn-more', t.hero_btn_learn_more);
-    updateElementText('scroll-text', t.scroll_text);
-
-    // Features section
-    updateElementText('features-title', t.features_title);
-    updateElementText('features-subtitle', t.features_subtitle);
-    updateElementText('feature1-title', t.feature1_title);
-    updateElementText('feature1-desc', t.feature1_desc);
-    updateElementText('feature2-title', t.feature2_title);
-    updateElementText('feature2-desc', t.feature2_desc);
-    updateElementText('feature3-title', t.feature3_title);
-    updateElementText('feature3-desc', t.feature3_desc);
-    updateElementText('feature4-title', t.feature4_title);
-    updateElementText('feature4-desc', t.feature4_desc);
-    updateElementText('feature5-title', t.feature5_title);
-    updateElementText('feature5-desc', t.feature5_desc);
-    updateElementText('feature6-title', t.feature6_title);
-    updateElementText('feature6-desc', t.feature6_desc);
-
-    // Benefits section
-    updateElementText('benefits-title', t.benefits_title);
-    updateElementText('benefits-subtitle', t.benefits_subtitle);
-    updateElementText('benefit1-title', t.benefit1_title);
-    updateElementText('benefit1-desc', t.benefit1_desc);
-    updateElementText('benefit2-title', t.benefit2_title);
-    updateElementText('benefit2-desc', t.benefit2_desc);
-    updateElementText('benefit3-title', t.benefit3_title);
-    updateElementText('benefit3-desc', t.benefit3_desc);
-    updateElementText('stat1-number', t.stat1_number);
-    updateElementText('stat1-label', t.stat1_label);
-    updateElementText('stat2-number', t.stat2_number);
-    updateElementText('stat2-label', t.stat2_label);
-    updateElementText('stat3-number', t.stat3_number);
-    updateElementText('stat3-label', t.stat3_label);
-
-    // Download section
-    updateElementText('download-title', t.download_title);
-    updateElementText('download-subtitle', t.download_subtitle);
-    updateElementText('download-free-title', t.download_free_title);
-    updateElementText('download-pro-title', t.download_pro_title);
-    updateElementText('download-version', t.download_version);
-    updateElementText('download-free-feature1', t.download_free_feature1);
-    updateElementText('download-free-feature2', t.download_free_feature2);
-    updateElementText('download-free-feature3', t.download_free_feature3);
-    updateElementText('download-free-feature4', t.download_free_feature4);
-    updateElementText('download-pro-feature1', t.download_pro_feature1);
-    updateElementText('download-pro-feature2', t.download_pro_feature2);
-    updateElementText('download-pro-feature3', t.download_pro_feature3);
-    updateElementText('download-pro-feature4', t.download_pro_feature4);
-    updateElementText('download-pro-feature5', t.download_pro_feature5);
-    updateElementText('download-pro-feature6', t.download_pro_feature6);
-    updateElementText('download-free-btn', t.download_free_btn);
-    updateElementText('download-pro-btn', t.download_pro_btn);
-    updateElementText('download-size', t.download_size);
-    updateElementText('download-platform', t.download_platform);
-
-    // System requirements
-    updateElementText('system-requirements', t.system_requirements);
-    updateElementText('req-os', t.req_os);
-    updateElementText('req-powershell', t.req_powershell);
-    updateElementText('req-memory', t.req_memory);
-    updateElementText('req-storage', t.req_storage);
-    updateElementText('req-network', t.req_network);
-    updateElementText('req-optional', t.req_optional);
-
-    // FAQ
-    updateElementText('faq-title', t.faq_title);
-    updateElementText('faq-subtitle', t.faq_subtitle);
-    updateElementText('faq1-q', t.faq1_q);
-    updateElementText('faq1-a', t.faq1_a);
-    updateElementText('faq2-q', t.faq2_q);
-    updateElementText('faq2-a', t.faq2_a);
-    updateElementText('faq3-q', t.faq3_q);
-    updateElementText('faq3-a', t.faq3_a);
-    updateElementText('faq4-q', t.faq4_q);
-    updateElementText('faq4-a', t.faq4_a);
-
-    // Footer
-    updateElementText('footer-title', t.footer_title);
-    updateElementText('footer-desc', t.footer_desc);
-    updateElementText('footer-quick-links', t.footer_quick_links);
-    updateElementText('footer-features', t.footer_features);
-    updateElementText('footer-download', t.footer_download);
-    updateElementText('footer-support', t.footer_support);
-    updateElementText('footer-documentation', t.footer_documentation);
-    updateElementText('footer-community', t.footer_community);
-    updateElementText('footer-github', t.footer_github);
-    updateElementText('footer-discord', t.footer_discord);
-    updateElementText('footer-social', t.footer_social);
-    updateElementText('footer-copyright', t.footer_copyright);
-    updateElementText('footer-privacy', t.footer_privacy);
-    updateElementText('footer-terms', t.footer_terms);
-
-    // Save current language to local storage
-    localStorage.setItem('focusGameDeckLang', lang);
-
-    // Update language toggle button display
-    updateLanguageToggle(lang);
-}
-
-/**
- * Function to update element text
- * @param {string} id - Element ID
- * @param {string} text - Text content to set
- */
-function updateElementText(id, text) {
-    const element = document.getElementById(id);
-    if (element) {
-        element.textContent = text;
-    }
-}
-
-/**
- * Update language toggle button display
- * @param {string} currentLang - Current language code
- */
-function updateLanguageToggle(currentLang) {
-    const languageToggle = document.getElementById('language-toggle');
-    const languageOptions = document.querySelectorAll('.language-option');
-
-    if (languageToggle) {
-        let langDisplay, langPrefix;
-        switch (currentLang) {
-            case 'zh-CN':
-                langDisplay = '简体中文';
-                langPrefix = '[CN]';
-                break;
-            case 'ja':
-                langDisplay = '日本語';
-                langPrefix = '[JP]';
-                break;
-            default:
-                langDisplay = 'English';
-                langPrefix = '[US]';
-                break;
-        }
-        languageToggle.innerHTML = `${langPrefix} <span id="nav-language">${langDisplay}</span> <svg class="language-arrow" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"></path></svg>`;
-    }
-
-    // Update selection state of language options
-    languageOptions.forEach(option => {
-        const optionLang = option.getAttribute('data-lang');
-        if (optionLang === currentLang) {
-            option.classList.add('active');
-        } else {
-            option.classList.remove('active');
-        }
-    });
-}
-
-// Navigation related
-function initializeNavigation() {
-    const hamburger = document.querySelector('.hamburger');
-    const navMenu = document.querySelector('.nav-menu');
-    const navLinks = document.querySelectorAll('.nav-link');
-
-    // Toggle hamburger menu
-    hamburger.addEventListener('click', function () {
-        hamburger.classList.toggle('active');
-        navMenu.classList.toggle('active');
-        document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
-    });
-
-    // Handle navigation link clicks
-    navLinks.forEach(link => {
-        link.addEventListener('click', function () {
-            hamburger.classList.remove('active');
-            navMenu.classList.remove('active');
-            document.body.style.overflow = '';
-        });
-    });
-
-    // Navigation bar display control on scroll
-    let lastScrollTop = 0;
-    const navbar = document.querySelector('.navbar');
-
-    window.addEventListener('scroll', function () {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-        if (scrollTop > lastScrollTop && scrollTop > 100) {
-            // Hide when scrolling down
-            navbar.style.transform = 'translateY(-100%)';
-        } else {
-            // Show when scrolling up
-            navbar.style.transform = 'translateY(0)';
-        }
-
-        // Adjust background transparency
-        if (scrollTop > 50) {
-            navbar.style.background = 'rgba(10, 10, 10, 0.98)';
-        } else {
-            navbar.style.background = 'rgba(10, 10, 10, 0.95)';
-        }
-
-        lastScrollTop = scrollTop;
-    });
-}
-
-// Smooth scroll
-function initializeSmoothScroll() {
+    // Simple smooth scrolling
     const links = document.querySelectorAll('a[href^="#"]');
-
     links.forEach(link => {
         link.addEventListener('click', function (e) {
             e.preventDefault();
-
-            const targetId = this.getAttribute('href');
-            const targetElement = document.querySelector(targetId);
-
-            if (targetElement) {
-                const headerOffset = 80;
-                const elementPosition = targetElement.getBoundingClientRect().top;
-                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: 'smooth'
-                });
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth' });
             }
         });
     });
-}
-
-// FAQ expand/collapse functionality
-function initializeFAQ() {
-    const faqItems = document.querySelectorAll('.faq-item');
-
-    faqItems.forEach(item => {
-        const question = item.querySelector('.faq-question');
-
-        question.addEventListener('click', function () {
-            const isActive = item.classList.contains('active');
-
-            // Close all other FAQ items
-            faqItems.forEach(otherItem => {
-                if (otherItem !== item) {
-                    otherItem.classList.remove('active');
-                }
-            });
-
-            // Toggle clicked item
-            item.classList.toggle('active', !isActive);
-        });
-    });
-}
-
-// Scroll animations
-function initializeScrollAnimations() {
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver(function (entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animate-in');
-
-                // Counter animation
-                if (entry.target.classList.contains('stat-number')) {
-                    animateCounter(entry.target);
-                }
-            }
-        });
-    }, observerOptions);
-
-    // Observe animation target elements
-    const animateElements = document.querySelectorAll(
-        '.feature-card, .benefit-item, .stat-card, .download-card, .faq-item'
-    );
-
-    animateElements.forEach(el => {
-        observer.observe(el);
-    });
-
-    // Add CSS for counter animation
-    addAnimationStyles();
-}
-
-// Counter animation
-function animateCounter(element) {
-    const text = element.textContent;
-    const number = parseInt(text.match(/\d+/)[0]);
-    const suffix = text.replace(/\d+/, '');
-    const duration = 2000;
-    const startTime = performance.now();
-
-    function updateCounter(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-
-        // Easing function
-        const easeOutCubic = 1 - Math.pow(1 - progress, 3);
-        const currentNumber = Math.floor(number * easeOutCubic);
-
-        element.textContent = currentNumber + suffix;
-
-        if (progress < 1) {
-            requestAnimationFrame(updateCounter);
-        } else {
-            element.textContent = text; // Set final value
-        }
-    }
-
-    requestAnimationFrame(updateCounter);
-}
-
-// Dynamic CSS addition for animation
-function addAnimationStyles() {
-    const style = document.createElement('style');
-    style.textContent = `
-        .feature-card,
-        .benefit-item,
-        .stat-card,
-        .download-card,
-        .faq-item {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .feature-card.animate-in,
-        .benefit-item.animate-in,
-        .stat-card.animate-in,
-        .download-card.animate-in,
-        .faq-item.animate-in {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .feature-card {
-            transition-delay: 0.1s;
-        }
-
-        .feature-card:nth-child(2) {
-            transition-delay: 0.2s;
-        }
-
-        .feature-card:nth-child(3) {
-            transition-delay: 0.3s;
-        }
-
-        .feature-card:nth-child(4) {
-            transition-delay: 0.4s;
-        }
-
-        .feature-card:nth-child(5) {
-            transition-delay: 0.5s;
-        }
-
-        .feature-card:nth-child(6) {
-            transition-delay: 0.6s;
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-// Particle effect (lightweight version)
-function initializeParticleEffect() {
-    const hero = document.querySelector('.hero');
-    const particleCount = 50;
-
-    // Create particle container
-    const particleContainer = document.createElement('div');
-    particleContainer.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        overflow: hidden;
-        z-index: 1;
-    `;
-
-    hero.appendChild(particleContainer);
-
-    // Generate particles
-    for (let i = 0; i < particleCount; i++) {
-        createParticle(particleContainer);
-    }
-}
-
-function createParticle(container) {
-    const particle = document.createElement('div');
-    const size = Math.random() * 3 + 1;
-    const x = Math.random() * 100;
-    const animationDuration = Math.random() * 20 + 10;
-    const delay = Math.random() * 20;
-
-    particle.style.cssText = `
-        position: absolute;
-        width: ${size}px;
-        height: ${size}px;
-        background: radial-gradient(circle, rgba(0, 255, 136, 0.8) 0%, rgba(0, 255, 136, 0) 70%);
-        border-radius: 50%;
-        left: ${x}%;
-        top: 100%;
-        animation: float-up ${animationDuration}s linear ${delay}s infinite;
-        pointer-events: none;
-    `;
-
-    container.appendChild(particle);
-
-    // Add keyframes for particles
-    if (!document.querySelector('#particle-keyframes')) {
-        const style = document.createElement('style');
-        style.id = 'particle-keyframes';
-        style.textContent = `
-            @keyframes float-up {
-                0% {
-                    transform: translateY(0) translateX(0);
-                    opacity: 0;
-                }
-                10% {
-                    opacity: 1;
-                }
-                90% {
-                    opacity: 1;
-                }
-                100% {
-                    transform: translateY(-100vh) translateX(${Math.random() * 100 - 50}px);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-}
-
-// Ripple effect on button click
-function addRippleEffect() {
-    const buttons = document.querySelectorAll('.btn');
-
-    buttons.forEach(button => {
-        button.addEventListener('click', function (e) {
-            const ripple = document.createElement('span');
-            const rect = this.getBoundingClientRect();
-            const size = Math.max(rect.width, rect.height);
-            const x = e.clientX - rect.left - size / 2;
-            const y = e.clientY - rect.top - size / 2;
-
-            ripple.style.cssText = `
-                position: absolute;
-                width: ${size}px;
-                height: ${size}px;
-                left: ${x}px;
-                top: ${y}px;
-                background: rgba(255, 255, 255, 0.3);
-                border-radius: 50%;
-                transform: scale(0);
-                animation: ripple 0.6s ease-out;
-                pointer-events: none;
-            `;
-
-            this.style.position = 'relative';
-            this.style.overflow = 'hidden';
-            this.appendChild(ripple);
-
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
-        });
-    });
-
-    // Add keyframes for ripple animation
-    if (!document.querySelector('#ripple-keyframes')) {
-        const style = document.createElement('style');
-        style.id = 'ripple-keyframes';
-        style.textContent = `
-            @keyframes ripple {
-                to {
-                    transform: scale(2);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-}
-
-// Mouse following gradient effect
-function initializeMouseGradient() {
-    const hero = document.querySelector('.hero');
-    let mouseX = 0;
-    let mouseY = 0;
-
-    hero.addEventListener('mousemove', function (e) {
-        const rect = hero.getBoundingClientRect();
-        mouseX = ((e.clientX - rect.left) / rect.width) * 100;
-        mouseY = ((e.clientY - rect.top) / rect.height) * 100;
-
-        hero.style.background = `
-            radial-gradient(circle at ${mouseX}% ${mouseY}%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
-            linear-gradient(135deg, var(--bg-darker), var(--bg-dark))
-        `;
-    });
-
-    hero.addEventListener('mouseleave', function () {
-        hero.style.background = 'linear-gradient(135deg, var(--bg-darker), var(--bg-dark))';
-    });
-}
-
-// Performance monitoring
-function initializePerformanceMonitoring() {
-    if ('performance' in window) {
-        window.addEventListener('load', function () {
-            setTimeout(function () {
-                const perfData = performance.getEntriesByType('navigation')[0];
-                const loadTime = perfData.loadEventEnd - perfData.loadEventStart;
-
-                if (loadTime > 3000) {
-                    console.warn('Page load time exceeds 3 seconds:', loadTime + 'ms');
-                }
-            }, 100);
-        });
-    }
-}
-
-// Dark mode support (for future feature expansion)
-function initializeDarkModeToggle() {
-    // Currently dark mode only, but light mode can be implemented in the future
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-
-    prefersDark.addEventListener('change', function (e) {
-        if (e.matches) {
-            document.body.classList.add('dark-mode');
-        } else {
-            document.body.classList.remove('dark-mode');
-        }
-    });
-}
-
-// Error handling
-window.addEventListener('error', function (e) {
-    console.error('JavaScript Error:', e.error);
-    // Consider sending to error reporting service in production environment
-});
-
-// Processing on initialization completion
-window.addEventListener('load', function () {
-    // Add ripple effect
-    addRippleEffect();
-
-    // Initialize mouse follow effect
-    initializeMouseGradient();
-
-    // Initialize performance monitoring
-    initializePerformanceMonitoring();
-
-    // Initialize dark mode support
-    initializeDarkModeToggle();
-
-    console.log('Focus Game Deck - Landing Page loaded successfully!');
 });

@@ -15,12 +15,17 @@
             <h1 data-i18n="site_title">Focus Game Deck</h1>
             <p class="subtitle" data-i18n="site_subtitle">PowerShell-based Gaming Environment Manager</p>
         </div>
-        <div class="language-selector">
-            <select id="language-select">
-                <option value="en">🇺🇸 English</option>
-                <option value="ja">🇯🇵 日本語</option>
-                <option value="zh-CN">🇨🇳 中文</option>
-            </select>
+        <div class="header-controls">
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                <span class="theme-icon">🌓</span>
+            </button>
+            <div class="language-selector">
+                <select id="language-select">
+                    <option value="en">🇺🇸 English</option>
+                    <option value="ja">🇯🇵 日本語</option>
+                    <option value="zh-CN">🇨🇳 中文</option>
+                </select>
+            </div>
         </div>
     </header>
 
@@ -31,9 +36,9 @@
                     optimizing gaming environment and managing digital processes. It can be used to automatically
                     disable
                     processes conflicting with anti-cheat systems, optimize system resources, and integrate with gaming
-                    platforms. It supports a wide range of file formats, including PowerShell (.ps1), configuration
-                    (.json),
-                    and others.</span></p>
+                    platforms.
+                    It is built with PowerShell scripts (.ps1), uses JSON configuration files
+                    (.json) for settings management, and includes XAML files (.xaml) for GUI components.</span></p>
 
             <p data-i18n="description_2">Focus Game Deck is widely used in industries such as competitive gaming, game
                 streaming, and software
@@ -144,7 +149,7 @@
         </div>
         <p data-i18n="footer_copyright">Copyright © 2025 Focus Game Deck. Released under the MIT License.</p>
     </footer>
-    <script src="script-simple.js"></script>
+    <script src="script.js"></script>
 </body>
 
 </html>

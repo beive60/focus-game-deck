@@ -2,7 +2,7 @@
     "ja": {
         "site_title": "Focus Game Deck",
         "site_subtitle": "PowerShellベース ゲーミング環境マネージャー",
-        "description_1": "は無料のオープンソースソフトウェアツールで、ゲーミング環境の最適化とデジタルプロセスの管理に使用されます。アンチチートシステムと競合するプロセスの自動無効化、システムリソースの最適化、ゲーミングプラットフォームとの統合が可能です。PowerShell(.ps1)、設定(.json)などの幅広いファイル形式をサポートしています。",
+        "description_1": "は無料のオープンソースソフトウェアツールで、ゲーミング環境の最適化とデジタルプロセスの管理に使用されます。アンチチートシステムと競合するプロセスの自動無効化、システムリソースの最適化、ゲーミングプラットフォームとの統合が可能です。PowerShellスクリプト(.ps1)で構築され、設定管理にはJSON設定ファイル(.json)を使用し、GUIコンポーネントにはXAMLファイル(.xaml)を含んでいます。",
         "description_2": "Focus Game Deckは、競技ゲーミング、ゲーム配信、最適化ツールを必要とするゲーマー向けソフトウェア開発などの分野で広く使用されています。商用利用だけでなく、MITライセンスの下で個人・教育用途としても無料で利用できます。",
         "download_title": "ダウンロード",
         "download_description": "Focus Game DeckはWindows 10/11で利用可能です。最新リリースとソースコードはGitHubからアクセスできます。ネイティブパフォーマンスのバイナリ実行ファイル、およびカスタマイズ用PowerShellスクリプトとして提供されています。",
@@ -42,7 +42,7 @@
     "zh-CN": {
         "site_title": "Focus Game Deck",
         "site_subtitle": "基于PowerShell的游戏环境管理器",
-        "description_1": "是一个免费的开源软件工具，用于优化游戏环境和管理数字流程。它可以自动禁用与反作弊系统冲突的进程，优化系统资源，并与游戏平台集成。支持包括PowerShell (.ps1)、配置文件 (.json) 等在内的广泛文件格式。",
+        "description_1": "是一个免费的开源软件工具，用于优化游戏环境和管理数字流程。它可以自动禁用与反作弊系统冲突的进程，优化系统资源，并与游戏平台集成。使用PowerShell脚本 (.ps1) 构建，使用JSON配置文件 (.json) 进行设置管理，并包含XAML文件 (.xaml) 用于GUI组件。",
         "description_2": "Focus Game Deck广泛用于竞技游戏、游戏直播以及需要优化工具的游戏玩家软件开发等行业。除了商业用途外，在MIT许可证下也可供个人和教育用途免费使用。",
         "download_title": "下载",
         "download_description": "Focus Game Deck适用于Windows 10/11。最新版本和源代码可通过GitHub访问。Focus Game Deck提供原生性能的二进制可执行文件，以及用于定制的PowerShell脚本。",
@@ -82,7 +82,7 @@
     "en": {
         "site_title": "Focus Game Deck",
         "site_subtitle": "PowerShell-based Gaming Environment Manager",
-        "description_1": "is a free, open-source software tool, used for optimizing gaming environment and managing digital processes. It can be used to automatically disable processes conflicting with anti-cheat systems, optimize system resources, and integrate with gaming platforms. It supports a wide range of file formats, including PowerShell (.ps1), configuration (.json), and others.",
+        "description_1": "is a free, open-source software tool, used for optimizing gaming environment and managing digital processes. It can be used to automatically disable processes conflicting with anti-cheat systems, optimize system resources, and integrate with gaming platforms. It is built with PowerShell scripts (.ps1), uses JSON configuration files (.json) for settings management, and includes XAML files (.xaml) for GUI components.",
         "description_2": "Focus Game Deck is widely used in industries such as competitive gaming, game streaming, and software development for gamers who require optimization tools. As well as being employed commercially, it is also available as a free-to-use tool under the MIT license for personal and educational use.",
         "download_title": "Download",
         "download_description": "Focus Game Deck is available for Windows 10/11. The latest release and source code can be accessed through GitHub. Focus Game Deck is available as a binary executable of native performance, as well as PowerShell scripts for customization.",
