@@ -1,7 +1,5 @@
 # Focus Game Deck
 
-[日本語](./README.JP.md) | **English** | [**中文简体**](./README.zh-CN.md)
-
 **One-click gaming environment automation for competitive PC gamers.**
 
 Focus Game Deck automates your gaming session from start to finish - handling tedious environment setup before you play and automatically restoring everything when you're done. Let the tool handle the noise, so you can focus solely on winning.
@@ -19,7 +17,7 @@ Focus Game Deck automates your gaming session from start to finish - handling te
 - **Smart App Management** - Control any application with configurable startup/shutdown actions
 - **Zero-Config Setup** - Intelligent defaults with optional GUI configuration
 - **Robust Design** - Comprehensive validation and cleanup even if interrupted
-- **Gaming Integrations** - Built-in support for OBS, VTube Studio, Discord, Wallpaper Engine, and more
+- **Gaming Integrations** - Built-in support for OBS, VTube Studio, Discord
 - **Single-File Distribution** - Digitally signed executables, no installation required
 
 ## Quick Start
@@ -33,7 +31,7 @@ Focus-Game-Deck-Config-Editor.exe
 
 ### 2. Launch Games
 
-Click `launch_[your-game-id].lnk` or `launch_[your-game-id].bat` to start a game with your custom environment.
+Click `launch_[your-game-id].lnk` (or `launch_[your-game-id].bat`) to start a game with your custom environment.
 
 ## Prerequisites
 
@@ -50,7 +48,7 @@ Click `launch_[your-game-id].lnk` or `launch_[your-game-id].bat` to start a game
 
 **Integrations you can configure yourself:**
 
-- Discord, Wallpaper Engine, Clibor, AutoHotkey, [VTube Studio](https://denchisoft.com/)
+- Discord, Clibor, AutoHotkey, [VTube Studio](https://denchisoft.com/)
 
 ## Documentation
 
