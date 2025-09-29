@@ -116,7 +116,10 @@
         "autoLanguage": "自動 (システム言語に従う)",
         "languageChineseSimplified": "简体中文",
         "languageJapanese": "日本語",
-        "languageEnglish": "English"
+        "languageEnglish": "English",
+        "saveBeforeRestartError": "再起動前の設定保存に失敗しました: {0}",
+        "saveBeforeRestartErrorTitle": "保存エラー",
+        "continueRestartConfirm": "再起動前の設定保存に失敗しました。それでも再起動を続行しますか？"
     },
     "en": {
         "textLabel": "Text",
@@ -235,7 +238,10 @@
         "autoLanguage": "Auto (System Language)",
         "languageChineseSimplified": "简体中文",
         "languageJapanese": "日本語",
-        "languageEnglish": "English"
+        "languageEnglish": "English",
+        "saveBeforeRestartError": "Failed to save configuration before restart: {0}",
+        "saveBeforeRestartErrorTitle": "Save Error",
+        "continueRestartConfirm": "Failed to save configuration before restart. Continue with restart anyway?"
     },
     "zh-CN": {
         "textLabel": "文本",
@@ -354,6 +360,9 @@
         "autoLanguage": "自动 (跟随系统语言)",
         "languageChineseSimplified": "简体中文",
         "languageJapanese": "日本語",
-        "languageEnglish": "English"
+        "languageEnglish": "English",
+        "saveBeforeRestartError": "重启前保存配置失败: {0}",
+        "saveBeforeRestartErrorTitle": "保存错误",
+        "continueRestartConfirm": "重启前保存配置失败。仍然继续重启吗？"
     }
 }

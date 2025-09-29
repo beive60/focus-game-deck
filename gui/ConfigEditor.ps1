@@ -2148,12 +2148,7 @@ function Restart-ConfigEditor {
         } catch {
             Write-Warning "Failed to save configuration before restart: $($_.Exception.Message)"
             # Show error and ask if user still wants to restart
-            $continueRestart = [System.Windows.MessageBox]::Show(
-                "Failed to save configuration before restart. Continue with restart anyway?",
-                "Save Error",
-                [System.Windows.MessageBoxButton]::YesNo,
-                [System.Windows.MessageBoxImage]::Warning
-            )
+            $continueRestart = Show-SafeMessage -MessageKey "continueRestartConfirm" -TitleKey "saveBeforeRestartErrorTitle" -Button YesNo -Icon Warning
 
             if ($continueRestart -ne [System.Windows.MessageBoxResult]::Yes) {
                 return  # Cancel restart
