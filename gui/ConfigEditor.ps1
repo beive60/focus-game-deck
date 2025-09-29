@@ -362,6 +362,12 @@ function Replace-XamlPlaceholders {
             "[CANCEL_BUTTON]"              = Get-LocalizedMessage -Key "cancelButton"
             "[SAVE_BUTTON]"                = Get-LocalizedMessage -Key "saveButton"
             "[CLOSE_BUTTON]"               = Get-LocalizedMessage -Key "closeButton"
+            "[TOOLTIP_TERMINATION_METHOD]" = Get-LocalizedMessage -Key "tooltipTerminationMethod"
+            "[TOOLTIP_GRACEFUL_TIMEOUT]"   = Get-LocalizedMessage -Key "tooltipGracefulTimeout"
+            "[TOOLTIP_PROCESS_NAME]"       = Get-LocalizedMessage -Key "tooltipProcessName"
+            "[TOOLTIP_STEAM_APP_ID]"       = Get-LocalizedMessage -Key "tooltipSteamAppId"
+            "[TOOLTIP_EPIC_GAME_ID]"       = Get-LocalizedMessage -Key "tooltipEpicGameId"
+            "[TOOLTIP_RIOT_GAME_ID]"       = Get-LocalizedMessage -Key "tooltipRiotGameId"
         }
 
         # Replace all placeholders

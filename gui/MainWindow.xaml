@@ -5,7 +5,10 @@
         Width="900"
         MinHeight="550"
         MinWidth="700"
-        FontFamily="Yu Gothic UI, Segoe UI Variable, Segoe UI">
+        FontFamily="Yu Gothic UI, Segoe UI Variable, Segoe UI"
+        ToolTipService.InitialShowDelay="300"
+        ToolTipService.ShowDuration="10000"
+        ToolTipService.BetweenShowDelay="100">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -136,45 +139,85 @@
                                                   Tag="riot"/>
                                 </ComboBox>
 
-                                <Label Grid.Row="3"
-                                       Grid.Column="0"
-                                       Name="SteamAppIdLabel"
-                                       Content="Steam AppID:"
-                                       VerticalAlignment="Center"/>
+                                <StackPanel Grid.Row="3"
+                                            Grid.Column="0"
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_STEAM_APP_ID]">
+                                    <Label Name="SteamAppIdLabel"
+                                           Content="Steam AppID:"
+                                           VerticalAlignment="Center"/>
+                                    <TextBlock Text="?"
+                                               FontWeight="Bold"
+                                               Foreground="#0078D4"
+                                               Margin="3,0,0,0"
+                                               VerticalAlignment="Center"
+                                               ToolTip="[TOOLTIP_STEAM_APP_ID]"/>
+                                </StackPanel>
                                 <TextBox Grid.Row="3"
                                          Grid.Column="1"
                                          Name="SteamAppIdTextBox"
                                          Margin="5"/>
 
-                                <Label Grid.Row="4"
-                                       Grid.Column="0"
-                                       Name="EpicGameIdLabel"
-                                       Content="Epic GameID:"
-                                       VerticalAlignment="Center"
-                                       Visibility="Collapsed"/>
+                                <StackPanel Grid.Row="4"
+                                            Grid.Column="0"
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            Visibility="Collapsed"
+                                            ToolTip="[TOOLTIP_EPIC_GAME_ID]">
+                                    <Label Name="EpicGameIdLabel"
+                                           Content="Epic GameID:"
+                                           VerticalAlignment="Center"/>
+                                    <TextBlock Text="?"
+                                               FontWeight="Bold"
+                                               Foreground="#0078D4"
+                                               Margin="3,0,0,0"
+                                               VerticalAlignment="Center"
+                                               ToolTip="[TOOLTIP_EPIC_GAME_ID]"/>
+                                </StackPanel>
                                 <TextBox Grid.Row="4"
                                          Grid.Column="1"
                                          Name="EpicGameIdTextBox"
                                          Margin="5"
                                          Visibility="Collapsed"/>
 
-                                <Label Grid.Row="5"
-                                       Grid.Column="0"
-                                       Name="RiotGameIdLabel"
-                                       Content="Riot GameID:"
-                                       VerticalAlignment="Center"
-                                       Visibility="Collapsed"/>
+                                <StackPanel Grid.Row="5"
+                                            Grid.Column="0"
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            Visibility="Collapsed"
+                                            ToolTip="[TOOLTIP_RIOT_GAME_ID]">
+                                    <Label Name="RiotGameIdLabel"
+                                           Content="Riot GameID:"
+                                           VerticalAlignment="Center"/>
+                                    <TextBlock Text="?"
+                                               FontWeight="Bold"
+                                               Foreground="#0078D4"
+                                               Margin="3,0,0,0"
+                                               VerticalAlignment="Center"
+                                               ToolTip="[TOOLTIP_RIOT_GAME_ID]"/>
+                                </StackPanel>
                                 <TextBox Grid.Row="5"
                                          Grid.Column="1"
                                          Name="RiotGameIdTextBox"
                                          Margin="5"
                                          Visibility="Collapsed"/>
 
-                                <Label Grid.Row="6"
-                                       Grid.Column="0"
-                                       Name="ProcessNameLabel"
-                                       Content="Process Name:"
-                                       VerticalAlignment="Center"/>
+                                <StackPanel Grid.Row="6"
+                                            Grid.Column="0"
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_PROCESS_NAME]">
+                                    <Label Name="ProcessNameLabel"
+                                           Content="Process Name:"
+                                           VerticalAlignment="Center"/>
+                                    <TextBlock Text="?"
+                                               FontWeight="Bold"
+                                               Foreground="#0078D4"
+                                               Margin="3,0,0,0"
+                                               VerticalAlignment="Center"
+                                               ToolTip="[TOOLTIP_PROCESS_NAME]"/>
+                                </StackPanel>
                                 <TextBox Grid.Row="6"
                                          Grid.Column="1"
                                          Name="ProcessNameTextBox"
@@ -300,11 +343,21 @@
                                         Width="70"
                                         Height="25"/>
 
-                                <Label Grid.Row="2"
-                                       Grid.Column="0"
-                                       Name="AppProcessNameLabel"
-                                       Content="Process Name:"
-                                       VerticalAlignment="Center"/>
+                                <StackPanel Grid.Row="2"
+                                            Grid.Column="0"
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_PROCESS_NAME]">
+                                    <Label Name="AppProcessNameLabel"
+                                           Content="Process Name:"
+                                           VerticalAlignment="Center"/>
+                                    <TextBlock Text="?"
+                                               FontWeight="Bold"
+                                               Foreground="#0078D4"
+                                               Margin="3,0,0,0"
+                                               VerticalAlignment="Center"
+                                               ToolTip="[TOOLTIP_PROCESS_NAME]"/>
+                                </StackPanel>
                                 <TextBox Grid.Row="2"
                                          Grid.Column="1"
                                          Name="AppProcessNameTextBox"
@@ -340,21 +393,41 @@
                                          Name="AppArgumentsTextBox"
                                          Margin="5"/>
 
-                                <Label Grid.Row="6"
-                                       Grid.Column="0"
-                                       Name="TerminationMethodLabel"
-                                       Content="Termination Method:"
-                                       VerticalAlignment="Center"/>
+                                <StackPanel Grid.Row="6"
+                                            Grid.Column="0"
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_TERMINATION_METHOD]">
+                                    <Label Name="TerminationMethodLabel"
+                                           Content="Termination Method:"
+                                           VerticalAlignment="Center"/>
+                                    <TextBlock Text="?"
+                                               FontWeight="Bold"
+                                               Foreground="#0078D4"
+                                               Margin="3,0,0,0"
+                                               VerticalAlignment="Center"
+                                               ToolTip="[TOOLTIP_TERMINATION_METHOD]"/>
+                                </StackPanel>
                                 <ComboBox Grid.Row="6"
                                           Grid.Column="1"
                                           Name="TerminationMethodCombo"
                                           Margin="5"/>
 
-                                <Label Grid.Row="7"
-                                       Grid.Column="0"
-                                       Name="GracefulTimeoutLabel"
-                                       Content="Graceful Timeout (ms):"
-                                       VerticalAlignment="Center"/>
+                                <StackPanel Grid.Row="7"
+                                            Grid.Column="0"
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_GRACEFUL_TIMEOUT]">
+                                    <Label Name="GracefulTimeoutLabel"
+                                           Content="Graceful Timeout (ms):"
+                                           VerticalAlignment="Center"/>
+                                    <TextBlock Text="?"
+                                               FontWeight="Bold"
+                                               Foreground="#0078D4"
+                                               Margin="3,0,0,0"
+                                               VerticalAlignment="Center"
+                                               ToolTip="[TOOLTIP_GRACEFUL_TIMEOUT]"/>
+                                </StackPanel>
                                 <TextBox Grid.Row="7"
                                          Grid.Column="1"
                                          Name="GracefulTimeoutTextBox"

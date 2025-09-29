@@ -119,7 +119,13 @@
         "languageEnglish": "English",
         "saveBeforeRestartError": "再起動前の設定保存に失敗しました: {0}",
         "saveBeforeRestartErrorTitle": "保存エラー",
-        "continueRestartConfirm": "再起動前の設定保存に失敗しました。それでも再起動を続行しますか？"
+        "continueRestartConfirm": "再起動前の設定保存に失敗しました。それでも再起動を続行しますか？",
+        "tooltipTerminationMethod": "アプリケーションの終了方法を指定します。\n• graceful: 正常終了のみ（ダイアログ表示時はユーザー判断を待つ）\n• force: 強制終了のみ\n• auto: 正常終了を試行後、失敗時のみ強制終了（推奨）",
+        "tooltipGracefulTimeout": "正常終了を試行する際の待機時間をミリ秒で指定します。\n例：5000 = 5秒間待機\nDiscordやVTube Studio等の通信アプリは長めに設定することを推奨",
+        "tooltipProcessName": "監視対象のプロセス名を指定します。\n• タスクマネージャーの「詳細」タブで確認可能\n• 複数指定は | で区切る（例：Discord|DiscordPTB）\n• * でワイルドカード指定可能（例：r5apex*）",
+        "tooltipSteamAppId": "SteamアプリケーションIDを指定します。\n取得方法：\n1. Steam ストアページのURLから確認（例：/app/1172470/）\n2. SteamDBサイトで検索\n3. ライブラリで右クリック→プロパティ→URLをコピー",
+        "tooltipEpicGameId": "Epic Games LauncherのゲームIDを指定します。\n取得方法：\n1. Epic Games Launcherでゲームを右クリック\n2. 「ショートカットを作成」でデスクトップにショートカット作成\n3. ショートカットのプロパティからリンク先URLの一部を確認",
+        "tooltipRiotGameId": "Riot Clientのゲーム識別子を指定します。\n主要なID：\n• valorant - VALORANT\n• bacon - Legends of Runeterra\n• league_of_legends - リーグ・オブ・レジェンド"
     },
     "en": {
         "textLabel": "Text",
@@ -241,7 +247,13 @@
         "languageEnglish": "English",
         "saveBeforeRestartError": "Failed to save configuration before restart: {0}",
         "saveBeforeRestartErrorTitle": "Save Error",
-        "continueRestartConfirm": "Failed to save configuration before restart. Continue with restart anyway?"
+        "continueRestartConfirm": "Failed to save configuration before restart. Continue with restart anyway?",
+        "tooltipTerminationMethod": "Specifies how to terminate the application.\n• graceful: Normal termination only (waits for user decision when dialog appears)\n• force: Force termination only\n• auto: Try normal termination first, force only if failed (recommended)",
+        "tooltipGracefulTimeout": "Timeout in milliseconds when attempting normal termination.\nExample: 5000 = 5 seconds wait\nRecommend longer timeout for communication apps like Discord or VTube Studio",
+        "tooltipProcessName": "Specifies the process name to monitor.\n• Check in Task Manager 'Details' tab\n• Use | to separate multiple names (e.g., Discord|DiscordPTB)\n• Use * for wildcard matching (e.g., r5apex*)",
+        "tooltipSteamAppId": "Specifies the Steam Application ID.\nHow to find:\n1. Check Steam store page URL (e.g., /app/1172470/)\n2. Search on SteamDB website\n3. Right-click in library → Properties → Copy URL",
+        "tooltipEpicGameId": "Specifies the Epic Games Launcher game ID.\nHow to find:\n1. Right-click game in Epic Games Launcher\n2. Create desktop shortcut\n3. Check shortcut properties for the game ID in the target URL",
+        "tooltipRiotGameId": "Specifies the Riot Client game identifier.\nCommon IDs:\n• valorant - VALORANT\n• bacon - Legends of Runeterra\n• league_of_legends - League of Legends"
     },
     "zh-CN": {
         "textLabel": "文本",
@@ -363,6 +375,12 @@
         "languageEnglish": "English",
         "saveBeforeRestartError": "重启前保存配置失败: {0}",
         "saveBeforeRestartErrorTitle": "保存错误",
-        "continueRestartConfirm": "重启前保存配置失败。仍然继续重启吗？"
+        "continueRestartConfirm": "重启前保存配置失败。仍然继续重启吗？",
+        "tooltipTerminationMethod": "指定应用程序的终止方法。\n• graceful: 仅正常终止（出现对话框时等待用户决定）\n• force: 仅强制终止\n• auto: 先尝试正常终止，失败时才强制终止（推荐）",
+        "tooltipGracefulTimeout": "尝试正常终止时的等待时间（毫秒）。\n示例：5000 = 等待5秒\n建议通信应用（如Discord或VTube Studio）设置更长的超时时间",
+        "tooltipProcessName": "指定要监视的进程名称。\\n• 可在任务管理器的\\\"详细信息\\\"选项卡中查看\\n• 使用 | 分隔多个名称（例：Discord|DiscordPTB）\\n• 使用 * 进行通配符匹配（例：r5apex*）",
+        "tooltipSteamAppId": "指定Steam应用程序ID。\n获取方法：\n1. 查看Steam商店页面URL（例：/app/1172470/）\n2. 在SteamDB网站搜索\n3. 在库中右键→属性→复制URL",
+        "tooltipEpicGameId": "指定Epic Games启动器的游戏ID。\n获取方法：\n1. 在Epic Games启动器中右键点击游戏\n2. 创建桌面快捷方式\n3. 查看快捷方式属性中目标URL的游戏ID部分",
+        "tooltipRiotGameId": "指定Riot客户端的游戏标识符。\n常用ID：\n• valorant - VALORANT\n• bacon - 符文之地传说\n• league_of_legends - 英雄联盟"
     }
 }
