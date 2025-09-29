@@ -255,6 +255,7 @@ function Update-AllButtonTooltips {
             "DuplicateGameButton"     = "duplicateButton"
             "DeleteGameButton"        = "deleteButton"
             "AddAppButton"            = "addButton"
+            "DuplicateAppButton"      = "duplicateButton"
             "DeleteAppButton"         = "deleteButton"
             "BrowseAppPathButton"     = "browseButton"
             "BrowseSteamPathButton"   = "browseButton"
@@ -500,6 +501,87 @@ function Load-Configuration {
     }
 }
 
+# Common Helper Functions for Config Item Management
+
+<#
+.SYNOPSIS
+    Generates a unique ID for configuration items
+
+.DESCRIPTION
+    Creates a unique identifier with the specified prefix, ensuring no collision
+    with existing items in the provided collection. Uses random number generation
+    with collision detection for uniqueness.
+#>
+function New-UniqueConfigId {
+    param(
+        [Parameter(Mandatory)]
+        [object]$Collection,
+        [string]$Prefix = "new",
+        [int]$MinRandom = 1000,
+        [int]$MaxRandom = 9999
+    )
+
+    do {
+        $newId = "${Prefix}$(Get-Random -Minimum $MinRandom -Maximum $MaxRandom)"
+    } while ($Collection.PSObject.Properties[$newId])
+
+    return $newId
+}
+
+<#
+.SYNOPSIS
+    Validates the selected item for duplication operations
+
+.DESCRIPTION
+    Checks if an item is selected and if its source data exists in the configuration.
+    Returns validation result and displays appropriate error messages.
+#>
+function Test-DuplicateSource {
+    param(
+        [string]$SelectedItem,
+        [object]$SourceData,
+        [string]$ItemType  # "game" or "app"
+    )
+
+    if (-not $SelectedItem) {
+        Show-SafeMessage -MessageKey "no${ItemType}Selected" -TitleKey "warning" -Icon Warning
+        return $false
+    }
+
+    if (-not $SourceData) {
+        Show-SafeMessage -MessageKey "${ItemType}DuplicateError" -TitleKey "error" -Args @("Source ${ItemType} data not found") -Icon Error
+        return $false
+    }
+
+    return $true
+}
+
+<#
+.SYNOPSIS
+    Shows duplication result messages
+
+.DESCRIPTION
+    Displays success or error messages for duplication operations with proper
+    localization and error handling.
+#>
+function Show-DuplicateResult {
+    param(
+        [string]$OriginalId,
+        [string]$NewId,
+        [string]$ItemType,  # "Game" or "App"
+        [bool]$Success,
+        [string]$ErrorMessage = ""
+    )
+
+    if ($Success) {
+        Show-SafeMessage -MessageKey "${ItemType.ToLower()}Duplicated" -TitleKey "info" -Args @($OriginalId, $NewId)
+        Write-Verbose "Successfully duplicated ${ItemType.ToLower()} '$OriginalId' to '$NewId'"
+    } else {
+        Write-Error "Failed to duplicate ${ItemType.ToLower()}: $ErrorMessage"
+        Show-SafeMessage -MessageKey "${ItemType.ToLower()}DuplicateError" -TitleKey "error" -Args @($ErrorMessage) -Icon Error
+    }
+}
+
 # Get available actions for specific app (Dynamic Action Selection)
 function Get-AvailableActionsForApp {
     param(
@@ -603,11 +685,18 @@ function Setup-UIControls {
 
     # Setup Language combo box
     $languageCombo = $script:Window.FindName("LanguageCombo")
+
+    # Get localized language names from messages
+    $autoLanguageText = Get-LocalizedMessage -Key "autoLanguage"
+    $chineseSimplifiedText = Get-LocalizedMessage -Key "languageChineseSimplified"
+    $japaneseText = Get-LocalizedMessage -Key "languageJapanese"
+    $englishText = Get-LocalizedMessage -Key "languageEnglish"
+
     $languages = @(
-        "Auto (System Language)",
-        "Chinese Simplified (zh-CN)",
-        "Japanese (ja)",
-        "English (en)"
+        $autoLanguageText,
+        $chineseSimplifiedText,
+        $japaneseText,
+        $englishText
     )
 
     foreach ($lang in $languages) {
@@ -695,6 +784,9 @@ function Setup-EventHandlers {
     $addAppButton = $script:Window.FindName("AddAppButton")
     $addAppButton.add_Click({ Handle-AddApp })
 
+    $duplicateAppButton = $script:Window.FindName("DuplicateAppButton")
+    $duplicateAppButton.add_Click({ Handle-DuplicateApp })
+
     $deleteAppButton = $script:Window.FindName("DeleteAppButton")
     $deleteAppButton.add_Click({ Handle-DeleteApp })
 
@@ -771,6 +863,9 @@ function Update-UITexts {
 
         $addAppButton = $script:Window.FindName("AddAppButton")
         if ($addAppButton) { Set-ButtonContentWithTooltip -Button $addAppButton -FullText (Get-LocalizedMessage -Key "addButton") }
+
+        $duplicateAppButton = $script:Window.FindName("DuplicateAppButton")
+        if ($duplicateAppButton) { Set-ButtonContentWithTooltip -Button $duplicateAppButton -FullText (Get-LocalizedMessage -Key "duplicateButton") }
 
         $deleteAppButton = $script:Window.FindName("DeleteAppButton")
         if ($deleteAppButton) { Set-ButtonContentWithTooltip -Button $deleteAppButton -FullText (Get-LocalizedMessage -Key "deleteButton") }
@@ -1019,11 +1114,11 @@ function Load-GlobalSettings {
     $languageCombo = $script:Window.FindName("LanguageCombo")
     $currentLang = $script:ConfigData.language
     if ($currentLang -eq "" -or $null -eq $currentLang) {
-        $languageCombo.SelectedIndex = 0  # Auto
+        $languageCombo.SelectedIndex = 0  # Auto (System Language)
     } elseif ($currentLang -eq "zh-CN") {
-        $languageCombo.SelectedIndex = 1  # Chinese Simplified
+        $languageCombo.SelectedIndex = 1  # 简体中文
     } elseif ($currentLang -eq "ja") {
-        $languageCombo.SelectedIndex = 2  # Japanese
+        $languageCombo.SelectedIndex = 2  # 日本語
     } elseif ($currentLang -eq "en") {
         $languageCombo.SelectedIndex = 3  # English
     }
@@ -1212,13 +1307,15 @@ function Handle-AppSelectionChanged {
 function Handle-AddGame {
     param()
 
-    $newGameId = "newGame$(Get-Random -Minimum 1000 -Maximum 9999)"
-
-    # Add to config data
+    # Ensure games section exists
     if (-not $script:ConfigData.games) {
         $script:ConfigData | Add-Member -MemberType NoteProperty -Name "games" -Value ([PSCustomObject]@{})
     }
 
+    # Generate unique game ID
+    $newGameId = New-UniqueConfigId -Collection $script:ConfigData.games -Prefix "newGame"
+
+    # Add to config data
     $script:ConfigData.games | Add-Member -MemberType NoteProperty -Name $newGameId -Value ([PSCustomObject]@{
             name         = "New Game"
             platform     = "steam"  # Default to Steam
@@ -1253,32 +1350,20 @@ function Handle-DuplicateGame {
     try {
         $gamesList = $script:Window.FindName("GamesList")
         $selectedGame = $gamesList.SelectedItem
+        $sourceGameData = if ($selectedGame) { $script:ConfigData.games.$selectedGame } else { $null }
 
-        if (-not $selectedGame) {
-            Show-SafeMessage -MessageKey "noGameSelected" -TitleKey "warning" -Icon Warning
+        # Validate selection and source data
+        if (-not (Test-DuplicateSource -SelectedItem $selectedGame -SourceData $sourceGameData -ItemType "Game")) {
             return
-        }
-
-        # Get the source game data
-        $sourceGameData = $script:ConfigData.games.$selectedGame
-
-        if (-not $sourceGameData) {
-            Show-SafeMessage -MessageKey "gameDuplicateError" -TitleKey "error" -Args @("Source game data not found") -Icon Error
-            return
-        }
-
-        # Generate new unique game ID
-        $newGameId = "duplicated_$(Get-Random -Minimum 1000 -Maximum 9999)"
-
-        # Ensure the new ID is unique
-        while ($script:ConfigData.games.PSObject.Properties[$newGameId]) {
-            $newGameId = "duplicated_$(Get-Random -Minimum 1000 -Maximum 9999)"
         }
 
         # Ensure games section exists
         if (-not $script:ConfigData.games) {
             $script:ConfigData | Add-Member -MemberType NoteProperty -Name "games" -Value ([PSCustomObject]@{})
         }
+
+        # Generate new unique game ID
+        $newGameId = New-UniqueConfigId -Collection $script:ConfigData.games -Prefix "duplicated"
 
         # Create a deep copy of the source game data
         $duplicatedGameData = [PSCustomObject]@{
@@ -1300,14 +1385,11 @@ function Handle-DuplicateGame {
         # Select the newly duplicated game
         $gamesList.SelectedItem = $newGameId
 
-        # Show success message with both old and new game IDs
-        Show-SafeMessage -MessageKey "gameDuplicated" -TitleKey "info" -Args @($selectedGame, $newGameId)
-
-        Write-Verbose "Successfully duplicated game '$selectedGame' to '$newGameId'"
+        # Show success message
+        Show-DuplicateResult -OriginalId $selectedGame -NewId $newGameId -ItemType "Game" -Success $true
 
     } catch {
-        Write-Error "Failed to duplicate game: $($_.Exception.Message)"
-        Show-SafeMessage -MessageKey "gameDuplicateError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+        Show-DuplicateResult -OriginalId $selectedGame -NewId "" -ItemType "Game" -Success $false -ErrorMessage $_.Exception.Message
     }
 }
 
@@ -1346,13 +1428,15 @@ function Handle-DeleteGame {
 function Handle-AddApp {
     param()
 
-    $newAppId = "newApp$(Get-Random -Minimum 1000 -Maximum 9999)"
-
-    # Add to config data
+    # Ensure managedApps section exists
     if (-not $script:ConfigData.managedApps) {
         $script:ConfigData | Add-Member -MemberType NoteProperty -Name "managedApps" -Value ([PSCustomObject]@{})
     }
 
+    # Generate unique app ID
+    $newAppId = New-UniqueConfigId -Collection $script:ConfigData.managedApps -Prefix "newApp"
+
+    # Add to config data
     $script:ConfigData.managedApps | Add-Member -MemberType NoteProperty -Name $newAppId -Value ([PSCustomObject]@{
             path            = ""
             processName     = ""
@@ -1373,6 +1457,69 @@ function Handle-AddApp {
     Update-ActionComboBoxes -AppId $newAppId -ExecutablePath ""
 
     Show-SafeMessage -MessageKey "appAdded" -TitleKey "info"
+}
+
+# Handle duplicate app
+<#
+.SYNOPSIS
+    Duplicates the currently selected managed app with all its settings except the App ID
+
+.DESCRIPTION
+    Creates a copy of the selected managed app with a new unique App ID while preserving
+    all other configuration data including path, process name, actions, arguments,
+    and termination settings. Provides user feedback on success or failure.
+#>
+function Handle-DuplicateApp {
+    param()
+
+    try {
+        $managedAppsList = $script:Window.FindName("ManagedAppsList")
+        $selectedApp = $managedAppsList.SelectedItem
+        $sourceAppData = if ($selectedApp) { $script:ConfigData.managedApps.$selectedApp } else { $null }
+
+        # Validate selection and source data
+        if (-not (Test-DuplicateSource -SelectedItem $selectedApp -SourceData $sourceAppData -ItemType "App")) {
+            return
+        }
+
+        # Ensure managedApps section exists
+        if (-not $script:ConfigData.managedApps) {
+            $script:ConfigData | Add-Member -MemberType NoteProperty -Name "managedApps" -Value ([PSCustomObject]@{})
+        }
+
+        # Generate new unique app ID
+        $newAppId = New-UniqueConfigId -Collection $script:ConfigData.managedApps -Prefix "duplicated"
+
+        # Create a deep copy of the source app data
+        $duplicatedAppData = [PSCustomObject]@{
+            path              = $sourceAppData.path
+            processName       = $sourceAppData.processName
+            gameStartAction   = if ($sourceAppData.gameStartAction) { $sourceAppData.gameStartAction } else { "none" }
+            gameEndAction     = if ($sourceAppData.gameEndAction) { $sourceAppData.gameEndAction } else { "none" }
+            arguments         = if ($sourceAppData.arguments) { $sourceAppData.arguments } else { "" }
+            terminationMethod = if ($sourceAppData.terminationMethod) { $sourceAppData.terminationMethod } else { "auto" }
+            gracefulTimeoutMs = if ($sourceAppData.gracefulTimeoutMs) { $sourceAppData.gracefulTimeoutMs } else { 3000 }
+        }
+
+        # Add the duplicated app to config data
+        $script:ConfigData.managedApps | Add-Member -MemberType NoteProperty -Name $newAppId -Value $duplicatedAppData
+
+        # Update all relevant lists and UI components
+        Update-ManagedAppsList
+        Update-AppsToManagePanel  # Update Game Settings tab checkboxes
+
+        # Select the newly duplicated app
+        $managedAppsList.SelectedItem = $newAppId
+
+        # Update action combo boxes for the duplicated app
+        Update-ActionComboBoxes -AppId $newAppId -ExecutablePath $duplicatedAppData.path
+
+        # Show success message
+        Show-DuplicateResult -OriginalId $selectedApp -NewId $newAppId -ItemType "App" -Success $true
+
+    } catch {
+        Show-DuplicateResult -OriginalId $selectedApp -NewId "" -ItemType "App" -Success $false -ErrorMessage $_.Exception.Message
+    }
 }
 
 # Handle delete app
@@ -1676,9 +1823,9 @@ function Save-GlobalSettingsData {
     $languageCombo = $script:Window.FindName("LanguageCombo")
     $selectedIndex = $languageCombo.SelectedIndex
     $languageValue = switch ($selectedIndex) {
-        0 { "" }         # Auto
-        1 { "zh-CN" }    # Chinese Simplified
-        2 { "ja" }       # Japanese
+        0 { "" }         # Auto (System Language)
+        1 { "zh-CN" }    # 简体中文
+        2 { "ja" }       # 日本語
         3 { "en" }       # English
         default { "" }
     }

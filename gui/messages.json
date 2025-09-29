@@ -12,6 +12,7 @@
         "gameDuplicated": "ゲーム '{0}' が複製されました。新しいゲーム ID: '{1}'",
         "gameRemoved": "ゲームが削除されました。",
         "appAdded": "アプリが追加されました。",
+        "appDuplicated": "アプリ '{0}' が複製されました。新しいアプリ ID: '{1}'",
         "appRemoved": "アプリが削除されました。",
         "configSaved": "設定が保存されました。",
         "configLoadError": "設定ファイルの読み込みに失敗しました: {0}",
@@ -19,7 +20,9 @@
         "deleteGameConfirm": "ゲーム '{0}' を削除しますか？",
         "deleteAppConfirm": "アプリ '{0}' を削除しますか？",
         "noGameSelected": "ゲームが選択されていません。複製するゲームを選択してください。",
+        "noAppSelected": "アプリが選択されていません。複製するアプリを選択してください。",
         "gameDuplicateError": "ゲームの複製に失敗しました: {0}",
+        "appDuplicateError": "アプリの複製に失敗しました: {0}",
         "initError": "初期化エラーが発生しました",
         "configNotFound": "設定ファイルが見つかりません",
         "windowTitle": "Focus Game Deck - 設定エディタ",
@@ -103,7 +106,11 @@
         "languageChanged": "言語設定が変更されました",
         "languageChangeRestart": "言語設定の変更を完全に適用するには、設定エディタを再起動してください。\n\n※ 再起動時に現在の設定変更がすべて保存されます。\n\n今すぐ再起動しますか？",
         "restartNow": "今すぐ再起動",
-        "restartLater": "後で再起動"
+        "restartLater": "後で再起動",
+        "autoLanguage": "自動 (システム言語に従う)",
+        "languageChineseSimplified": "简体中文",
+        "languageJapanese": "日本語",
+        "languageEnglish": "English"
     },
     "en": {
         "textLabel": "Text",
@@ -118,6 +125,7 @@
         "gameDuplicated": "Game '{0}' has been duplicated. New game ID: '{1}'",
         "gameRemoved": "Game has been removed.",
         "appAdded": "Application has been added.",
+        "appDuplicated": "Application '{0}' has been duplicated. New app ID: '{1}'",
         "appRemoved": "Application has been removed.",
         "configSaved": "Configuration has been saved.",
         "configLoadError": "Failed to load configuration file: {0}",
@@ -125,7 +133,9 @@
         "deleteGameConfirm": "Delete game '{0}'?",
         "deleteAppConfirm": "Delete application '{0}'?",
         "noGameSelected": "No game selected. Please select a game to duplicate.",
+        "noAppSelected": "No application selected. Please select an application to duplicate.",
         "gameDuplicateError": "Failed to duplicate game: {0}",
+        "appDuplicateError": "Failed to duplicate application: {0}",
         "initError": "Initialization error occurred",
         "configNotFound": "Configuration file not found",
         "windowTitle": "Focus Game Deck - Configuration Editor",
@@ -209,7 +219,11 @@
         "languageChanged": "Language Setting Changed",
         "languageChangeRestart": "To fully apply the language setting change, please restart the configuration editor.\n\n※ All current configuration changes will be saved when restarting.\n\nWould you like to restart now?",
         "restartNow": "Restart Now",
-        "restartLater": "Restart Later"
+        "restartLater": "Restart Later",
+        "autoLanguage": "Auto (System Language)",
+        "languageChineseSimplified": "简体中文",
+        "languageJapanese": "日本語",
+        "languageEnglish": "English"
     },
     "zh-CN": {
         "textLabel": "文本",
@@ -224,6 +238,7 @@
         "gameDuplicated": "游戏 '{0}' 已复制。新游戏ID：'{1}'",
         "gameRemoved": "游戏已删除。",
         "appAdded": "应用程序已添加。",
+        "appDuplicated": "应用程序 '{0}' 已复制。新应用程序ID：'{1}'",
         "appRemoved": "应用程序已删除。",
         "configSaved": "配置已保存。",
         "configLoadError": "加载配置文件失败：{0}",
@@ -231,7 +246,9 @@
         "deleteGameConfirm": "删除游戏 '{0}' 吗？",
         "deleteAppConfirm": "删除应用程序 '{0}' 吗？",
         "noGameSelected": "未选择游戏。请选择要复制的游戏。",
+        "noAppSelected": "未选择应用程序。请选择要复制的应用程序。",
         "gameDuplicateError": "复制游戏失败：{0}",
+        "appDuplicateError": "复制应用程序失败：{0}",
         "initError": "发生初始化错误",
         "configNotFound": "未找到配置文件",
         "windowTitle": "Focus Game Deck - 配置编辑器",
@@ -315,6 +332,10 @@
         "languageChanged": "语言设置已更改",
         "languageChangeRestart": "要完全应用语言设置更改，请重新启动配置编辑器。\n\n※ 重新启动时将保存所有当前配置更改。\n\n现在重新启动吗？",
         "restartNow": "立即重新启动",
-        "restartLater": "稍后重新启动"
+        "restartLater": "稍后重新启动",
+        "autoLanguage": "自动 (跟随系统语言)",
+        "languageChineseSimplified": "简体中文",
+        "languageJapanese": "日本語",
+        "languageEnglish": "English"
     }
 }

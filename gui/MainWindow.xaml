@@ -224,6 +224,11 @@
                                     Width="80"
                                     Height="25"
                                     Margin="5"/>
+                            <Button Name="DuplicateAppButton"
+                                    Content="[DUPLICATE_BUTTON]"
+                                    Width="70"
+                                    Height="25"
+                                    Margin="5"/>
                             <Button Name="DeleteAppButton"
                                     Content="Delete"
                                     Width="60"
