@@ -4,7 +4,8 @@
         Height="650"
         Width="900"
         MinHeight="550"
-        MinWidth="700">
+        MinWidth="700"
+        FontFamily="Yu Gothic UI, Segoe UI Variable, Segoe UI">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -27,7 +28,8 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Games List -->
-                    <Grid Grid.Column="0">
+                    <Grid Grid.Column="0"
+                          Margin="10,0,5,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="30"/>
                             <RowDefinition Height="*"/>
@@ -40,7 +42,7 @@
                                FontWeight="Bold"/>
                         <ListBox Grid.Row="1"
                                  Name="GamesList"
-                                 Margin="0,5,5,5"/>
+                                 Margin="0,5,0,5"/>
                         <StackPanel Grid.Row="2"
                                     Orientation="Horizontal"
                                     HorizontalAlignment="Center">
@@ -65,7 +67,7 @@
                     <!-- Game Details -->
                     <ScrollViewer Grid.Column="1"
                                   VerticalScrollBarVisibility="Auto">
-                        <Grid Margin="10">
+                        <Grid Margin="5,0,10,0">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
@@ -202,7 +204,8 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Apps List -->
-                    <Grid Grid.Column="0">
+                    <Grid Grid.Column="0"
+                          Margin="10,0,5,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="30"/>
                             <RowDefinition Height="*"/>
@@ -215,7 +218,7 @@
                                FontWeight="Bold"/>
                         <ListBox Grid.Row="1"
                                  Name="ManagedAppsList"
-                                 Margin="0,5,5,5"/>
+                                 Margin="0,5,0,5"/>
                         <StackPanel Grid.Row="2"
                                     Orientation="Horizontal"
                                     HorizontalAlignment="Center">
@@ -240,7 +243,7 @@
                     <!-- App Details -->
                     <ScrollViewer Grid.Column="1"
                                   VerticalScrollBarVisibility="Auto">
-                        <Grid Margin="10">
+                        <Grid Margin="5,0,10,0">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
@@ -368,149 +371,10 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="20">
 
-                        <!-- OBS Settings Group -->
-                        <GroupBox Name="ObsSettingsGroup"
-                                  Header="[OBS_SETTINGS_GROUP]"
-                                  Margin="0,0,0,20">
-                            <Grid Margin="10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150"/>
-                                    <ColumnDefinition Width="200"/>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="35"/>
-                                    <RowDefinition Height="35"/>
-                                    <RowDefinition Height="35"/>
-                                </Grid.RowDefinitions>
-
-                                <Label Grid.Row="0"
-                                       Grid.Column="0"
-                                       Name="HostLabel"
-                                       Content="Host:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="0"
-                                         Grid.Column="1"
-                                         Name="ObsHostTextBox"
-                                         Margin="5"/>
-
-                                <Label Grid.Row="0"
-                                       Grid.Column="2"
-                                       Name="PortLabel"
-                                       Content="Port:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="0"
-                                         Grid.Column="3"
-                                         Name="ObsPortTextBox"
-                                         Margin="5"/>
-
-                                <Label Grid.Row="1"
-                                       Grid.Column="0"
-                                       Name="PasswordLabel"
-                                       Content="Password:"
-                                       VerticalAlignment="Center"/>
-                                <PasswordBox Grid.Row="1"
-                                             Grid.Column="1"
-                                             Name="ObsPasswordBox"
-                                             Margin="5"/>
-
-                                <CheckBox Grid.Row="2"
-                                          Grid.Column="0"
-                                          Grid.ColumnSpan="4"
-                                          Name="ReplayBufferCheckBox"
-                                          Content="[REPLAY_BUFFER_LABEL]"
-                                          VerticalAlignment="Center"
-                                          Margin="5"/>
-                            </Grid>
-                        </GroupBox>
-
-                        <!-- Paths Settings Group -->
-                        <GroupBox Name="PathSettingsGroup"
-                                  Header="[PATH_SETTINGS_GROUP]"
-                                  Margin="0,0,0,20">
-                            <Grid Margin="10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="180"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="80"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="35"/>
-                                    <RowDefinition Height="35"/>
-                                    <RowDefinition Height="35"/>
-                                    <RowDefinition Height="35"/>
-                                </Grid.RowDefinitions>
-
-                                <Label Grid.Row="0"
-                                       Grid.Column="0"
-                                       Name="SteamPathLabel"
-                                       Content="Steam.exe Path:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="0"
-                                         Grid.Column="1"
-                                         Name="SteamPathTextBox"
-                                         Margin="5"/>
-                                <Button Grid.Row="0"
-                                        Grid.Column="2"
-                                        Name="BrowseSteamPathButton"
-                                        Content="[BROWSE_BUTTON]"
-                                        Width="70"
-                                        Height="25"/>
-
-                                <Label Grid.Row="1"
-                                       Grid.Column="0"
-                                       Name="EpicPathLabel"
-                                       Content="Epic Games Launcher Path:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="1"
-                                         Grid.Column="1"
-                                         Name="EpicPathTextBox"
-                                         Margin="5"/>
-                                <Button Grid.Row="1"
-                                        Grid.Column="2"
-                                        Name="BrowseEpicPathButton"
-                                        Content="[BROWSE_BUTTON]"
-                                        Width="70"
-                                        Height="25"/>
-
-                                <Label Grid.Row="2"
-                                       Grid.Column="0"
-                                       Name="RiotPathLabel"
-                                       Content="Riot Client Path:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="2"
-                                         Grid.Column="1"
-                                         Name="RiotPathTextBox"
-                                         Margin="5"/>
-                                <Button Grid.Row="2"
-                                        Grid.Column="2"
-                                        Name="BrowseRiotPathButton"
-                                        Content="[BROWSE_BUTTON]"
-                                        Width="70"
-                                        Height="25"/>
-
-                                <Label Grid.Row="3"
-                                       Grid.Column="0"
-                                       Name="ObsPathLabel"
-                                       Content="obs64.exe Path:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="3"
-                                         Grid.Column="1"
-                                         Name="ObsPathTextBox"
-                                         Margin="5"/>
-                                <Button Grid.Row="3"
-                                        Grid.Column="2"
-                                        Name="BrowseObsPathButton"
-                                        Content="[BROWSE_BUTTON]"
-                                        Width="70"
-                                        Height="25"/>
-                            </Grid>
-                        </GroupBox>
-
                         <!-- General Settings Group -->
                         <GroupBox Name="GeneralSettingsGroup"
-                                  Header="[GENERAL_SETTINGS_GROUP]">
+                                  Header="[GENERAL_SETTINGS_GROUP]"
+                                  Margin="0,0,0,20">
                             <Grid Margin="10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="150"/>
@@ -599,6 +463,145 @@
                                            FontSize="11"
                                            Foreground="#666"
                                            Text="[LAUNCHER_HELP_TEXT]"/>
+                            </Grid>
+                        </GroupBox>
+
+                        <!-- OBS Settings Group -->
+                        <GroupBox Name="ObsSettingsGroup"
+                                  Header="[OBS_SETTINGS_GROUP]"
+                                  Margin="0,0,0,20">
+                            <Grid Margin="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="200"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="35"/>
+                                    <RowDefinition Height="35"/>
+                                    <RowDefinition Height="35"/>
+                                </Grid.RowDefinitions>
+
+                                <Label Grid.Row="0"
+                                       Grid.Column="0"
+                                       Name="HostLabel"
+                                       Content="Host:"
+                                       VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="0"
+                                         Grid.Column="1"
+                                         Name="ObsHostTextBox"
+                                         Margin="5"/>
+
+                                <Label Grid.Row="0"
+                                       Grid.Column="2"
+                                       Name="PortLabel"
+                                       Content="Port:"
+                                       VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="0"
+                                         Grid.Column="3"
+                                         Name="ObsPortTextBox"
+                                         Margin="5"/>
+
+                                <Label Grid.Row="1"
+                                       Grid.Column="0"
+                                       Name="PasswordLabel"
+                                       Content="Password:"
+                                       VerticalAlignment="Center"/>
+                                <PasswordBox Grid.Row="1"
+                                             Grid.Column="1"
+                                             Name="ObsPasswordBox"
+                                             Margin="5"/>
+
+                                <CheckBox Grid.Row="2"
+                                          Grid.Column="0"
+                                          Grid.ColumnSpan="4"
+                                          Name="ReplayBufferCheckBox"
+                                          Content="[REPLAY_BUFFER_LABEL]"
+                                          VerticalAlignment="Center"
+                                          Margin="5"/>
+                            </Grid>
+                        </GroupBox>
+
+                        <!-- Paths Settings Group -->
+                        <GroupBox Name="PathSettingsGroup"
+                                  Header="[PATH_SETTINGS_GROUP]">
+                            <Grid Margin="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="80"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="35"/>
+                                    <RowDefinition Height="35"/>
+                                    <RowDefinition Height="35"/>
+                                    <RowDefinition Height="35"/>
+                                </Grid.RowDefinitions>
+
+                                <Label Grid.Row="0"
+                                       Grid.Column="0"
+                                       Name="SteamPathLabel"
+                                       Content="Steam.exe Path:"
+                                       VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="0"
+                                         Grid.Column="1"
+                                         Name="SteamPathTextBox"
+                                         Margin="5"/>
+                                <Button Grid.Row="0"
+                                        Grid.Column="2"
+                                        Name="BrowseSteamPathButton"
+                                        Content="[BROWSE_BUTTON]"
+                                        Width="70"
+                                        Height="25"/>
+
+                                <Label Grid.Row="1"
+                                       Grid.Column="0"
+                                       Name="EpicPathLabel"
+                                       Content="Epic Games Launcher Path:"
+                                       VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="1"
+                                         Grid.Column="1"
+                                         Name="EpicPathTextBox"
+                                         Margin="5"/>
+                                <Button Grid.Row="1"
+                                        Grid.Column="2"
+                                        Name="BrowseEpicPathButton"
+                                        Content="[BROWSE_BUTTON]"
+                                        Width="70"
+                                        Height="25"/>
+
+                                <Label Grid.Row="2"
+                                       Grid.Column="0"
+                                       Name="RiotPathLabel"
+                                       Content="Riot Client Path:"
+                                       VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="2"
+                                         Grid.Column="1"
+                                         Name="RiotPathTextBox"
+                                         Margin="5"/>
+                                <Button Grid.Row="2"
+                                        Grid.Column="2"
+                                        Name="BrowseRiotPathButton"
+                                        Content="[BROWSE_BUTTON]"
+                                        Width="70"
+                                        Height="25"/>
+
+                                <Label Grid.Row="3"
+                                       Grid.Column="0"
+                                       Name="ObsPathLabel"
+                                       Content="obs64.exe Path:"
+                                       VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="3"
+                                         Grid.Column="1"
+                                         Name="ObsPathTextBox"
+                                         Margin="5"/>
+                                <Button Grid.Row="3"
+                                        Grid.Column="2"
+                                        Name="BrowseObsPathButton"
+                                        Content="[BROWSE_BUTTON]"
+                                        Width="70"
+                                        Height="25"/>
                             </Grid>
                         </GroupBox>
 
