@@ -649,16 +649,21 @@
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
                         Margin="0,0,20,0">
-                <Button Name="SaveButton"
-                        Content="[SAVE_BUTTON]"
+                <Button Name="ApplyButton"
+                        Content="[APPLY_BUTTON]"
                         Width="80"
                         Height="30"
-                        Margin="10,0"/>
-                <Button Name="CloseButton"
-                        Content="[CLOSE_BUTTON]"
+                        Margin="5,0"/>
+                <Button Name="OKButton"
+                        Content="[OK_BUTTON]"
                         Width="80"
                         Height="30"
-                        Margin="10,0"/>
+                        Margin="5,0"/>
+                <Button Name="CancelButton"
+                        Content="[CANCEL_BUTTON]"
+                        Width="80"
+                        Height="30"
+                        Margin="5,0"/>
             </StackPanel>
         </Grid>
 

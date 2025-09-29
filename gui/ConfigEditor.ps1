@@ -264,8 +264,9 @@ function Update-AllButtonTooltips {
             "BrowseObsPathButton"     = "browseButton"
             "GenerateLaunchersButton" = "generateLaunchers"
             "CheckUpdateButton"       = "checkUpdateButton"
-            "SaveButton"              = "saveButton"
-            "CloseButton"             = "closeButton"
+            "ApplyButton"             = "applyButton"
+            "OKButton"                = "okButton"
+            "CancelButton"            = "cancelButton"
         }
 
         # Apply smart tooltips to each button with full localized text
@@ -356,6 +357,9 @@ function Replace-XamlPlaceholders {
             "[LAUNCHER_HELP_TEXT]"         = Get-LocalizedMessage -Key "launcherHelpText"
             "[VERSION_LABEL]"              = Get-LocalizedMessage -Key "versionLabel"
             "[CHECK_UPDATE_BUTTON]"        = Get-LocalizedMessage -Key "checkUpdateButton"
+            "[APPLY_BUTTON]"               = Get-LocalizedMessage -Key "applyButton"
+            "[OK_BUTTON]"                  = Get-LocalizedMessage -Key "okButton"
+            "[CANCEL_BUTTON]"              = Get-LocalizedMessage -Key "cancelButton"
             "[SAVE_BUTTON]"                = Get-LocalizedMessage -Key "saveButton"
             "[CLOSE_BUTTON]"               = Get-LocalizedMessage -Key "closeButton"
         }
@@ -422,6 +426,10 @@ function Initialize-ConfigEditor {
 
         # Load data into UI
         Load-DataToUI
+
+        # Save original configuration for change tracking
+        Save-OriginalConfig
+        Set-ConfigModified -IsModified $false
 
         # Add event handler for when window is loaded and rendered
         $script:Window.add_Loaded({
@@ -754,11 +762,14 @@ function Setup-EventHandlers {
     param()
 
     # Footer buttons
-    $saveButton = $script:Window.FindName("SaveButton")
-    $saveButton.add_Click({ Handle-SaveConfig })
+    $applyButton = $script:Window.FindName("ApplyButton")
+    $applyButton.add_Click({ Handle-ApplyConfig })
 
-    $closeButton = $script:Window.FindName("CloseButton")
-    $closeButton.add_Click({ Handle-CloseWindow })
+    $okButton = $script:Window.FindName("OKButton")
+    $okButton.add_Click({ Handle-OKConfig })
+
+    $cancelButton = $script:Window.FindName("CancelButton")
+    $cancelButton.add_Click({ Handle-CancelConfig })
 
     # Games tab events
     $gamesList = $script:Window.FindName("GamesList")
@@ -816,6 +827,57 @@ function Setup-EventHandlers {
     } else {
         Write-Warning "LanguageCombo not found during event handler setup"
     }
+
+    # Window closing event (×ボタン)
+    $script:Window.add_Closing({ param($sender, $e); Handle-WindowClosing -Event $e })
+
+    # Setup change tracking event handlers
+    Setup-ChangeTrackingEventHandlers
+}
+
+# Setup change tracking event handlers for UI elements
+function Setup-ChangeTrackingEventHandlers {
+    param()
+
+    # Text boxes in Games tab
+    $script:Window.FindName("GameIdTextBox").add_TextChanged({ Set-ConfigModified })
+    $script:Window.FindName("GameNameTextBox").add_TextChanged({ Set-ConfigModified })
+    $script:Window.FindName("ProcessNameTextBox").add_TextChanged({ Set-ConfigModified })
+    $script:Window.FindName("SteamAppIdTextBox").add_TextChanged({ Set-ConfigModified })
+    $script:Window.FindName("EpicGameIdTextBox").add_TextChanged({ Set-ConfigModified })
+    $script:Window.FindName("RiotGameIdTextBox").add_TextChanged({ Set-ConfigModified })
+
+    # Platform combo box
+    $script:Window.FindName("PlatformComboBox").add_SelectionChanged({ Set-ConfigModified })
+
+    # Text boxes and controls in Managed Apps tab
+    $script:Window.FindName("AppIdTextBox").add_TextChanged({ Set-ConfigModified })
+    $script:Window.FindName("AppPathTextBox").add_TextChanged({ Set-ConfigModified })
+    $script:Window.FindName("AppProcessNameTextBox").add_TextChanged({ Set-ConfigModified })
+    $script:Window.FindName("AppArgumentsTextBox").add_TextChanged({ Set-ConfigModified })
+    $script:Window.FindName("GameStartActionCombo").add_SelectionChanged({ Set-ConfigModified })
+    $script:Window.FindName("GameEndActionCombo").add_SelectionChanged({ Set-ConfigModified })
+    $script:Window.FindName("TerminationMethodCombo").add_SelectionChanged({ Set-ConfigModified })
+    $script:Window.FindName("GracefulTimeoutTextBox").add_TextChanged({ Set-ConfigModified })
+
+    # Global settings controls
+    $script:Window.FindName("ObsHostTextBox").add_TextChanged({ Set-ConfigModified })
+    $script:Window.FindName("ObsPortTextBox").add_TextChanged({ Set-ConfigModified })
+    $script:Window.FindName("ObsPasswordBox").add_PasswordChanged({ Set-ConfigModified })
+    $script:Window.FindName("ReplayBufferCheckBox").add_Checked({ Set-ConfigModified })
+    $script:Window.FindName("ReplayBufferCheckBox").add_Unchecked({ Set-ConfigModified })
+
+    $script:Window.FindName("SteamPathTextBox").add_TextChanged({ Set-ConfigModified })
+    $script:Window.FindName("EpicPathTextBox").add_TextChanged({ Set-ConfigModified })
+    $script:Window.FindName("RiotPathTextBox").add_TextChanged({ Set-ConfigModified })
+    $script:Window.FindName("ObsPathTextBox").add_TextChanged({ Set-ConfigModified })
+
+    $script:Window.FindName("LanguageCombo").add_SelectionChanged({ Set-ConfigModified })
+    $script:Window.FindName("LogRetentionCombo").add_SelectionChanged({ Set-ConfigModified })
+    $script:Window.FindName("EnableLogNotarizationCheckBox").add_Checked({ Set-ConfigModified })
+    $script:Window.FindName("EnableLogNotarizationCheckBox").add_Unchecked({ Set-ConfigModified })
+
+    Write-Verbose "Change tracking event handlers setup completed"
 }
 
 # Load data into UI controls
@@ -870,11 +932,14 @@ function Update-UITexts {
         $deleteAppButton = $script:Window.FindName("DeleteAppButton")
         if ($deleteAppButton) { Set-ButtonContentWithTooltip -Button $deleteAppButton -FullText (Get-LocalizedMessage -Key "deleteButton") }
 
-        $saveButton = $script:Window.FindName("SaveButton")
-        if ($saveButton) { Set-ButtonContentWithTooltip -Button $saveButton -FullText (Get-LocalizedMessage -Key "saveButton") }
+        $applyButton = $script:Window.FindName("ApplyButton")
+        if ($applyButton) { Set-ButtonContentWithTooltip -Button $applyButton -FullText (Get-LocalizedMessage -Key "applyButton") }
 
-        $closeButton = $script:Window.FindName("CloseButton")
-        if ($closeButton) { Set-ButtonContentWithTooltip -Button $closeButton -FullText (Get-LocalizedMessage -Key "closeButton") }
+        $okButton = $script:Window.FindName("OKButton")
+        if ($okButton) { Set-ButtonContentWithTooltip -Button $okButton -FullText (Get-LocalizedMessage -Key "okButton") }
+
+        $cancelButton = $script:Window.FindName("CancelButton")
+        if ($cancelButton) { Set-ButtonContentWithTooltip -Button $cancelButton -FullText (Get-LocalizedMessage -Key "cancelButton") }
 
         # Update labels - Games tab
         $gamesListLabel = $script:Window.FindName("GamesListLabel")
@@ -2120,11 +2185,143 @@ function Restart-ConfigEditor {
     }
 }
 
-# Handle close window
+# Global variable to track changes
+$script:HasUnsavedChanges = $false
+$script:OriginalConfigData = $null
+
+# Mark configuration as modified
+function Set-ConfigModified {
+    param([bool]$IsModified = $true)
+    $script:HasUnsavedChanges = $IsModified
+
+    # Update window title to show unsaved changes
+    if ($script:Window) {
+        $baseTitle = Get-LocalizedMessage -Key "windowTitle"
+        if ($IsModified) {
+            $script:Window.Title = "$baseTitle *"
+        } else {
+            $script:Window.Title = $baseTitle
+        }
+    }
+}
+
+# Check if there are unsaved changes
+function Test-HasUnsavedChanges {
+    return $script:HasUnsavedChanges
+}
+
+# Store original configuration for comparison
+function Save-OriginalConfig {
+    if ($script:ConfigData) {
+        $script:OriginalConfigData = $script:ConfigData | ConvertTo-Json -Depth 10
+    }
+}
+
+# Handle Apply button - save changes but keep window open
+function Handle-ApplyConfig {
+    param()
+
+    try {
+        # Save current UI data back to config object
+        Save-UIDataToConfig
+
+        # Convert to JSON and save
+        $jsonString = $script:ConfigData | ConvertTo-Json -Depth 10
+        Set-Content -Path $script:ConfigPath -Value $jsonString -Encoding UTF8
+
+        # Update original config data and mark as not modified
+        Save-OriginalConfig
+        Set-ConfigModified -IsModified $false
+
+        # After successful save, refresh all UI lists to ensure consistency
+        Update-ManagedAppsList
+        Update-GamesList
+        Update-AppsToManagePanel
+
+        # If a game is currently selected, update its Apps to Manage checkboxes
+        if ($script:CurrentGameId) {
+            Handle-GameSelectionChanged
+        }
+
+        Show-SafeMessage -MessageKey "configSaved" -TitleKey "info"
+        Write-Verbose "Configuration applied successfully"
+
+    } catch {
+        Write-Host "Debug: Apply config error - $($_.Exception.Message)" -ForegroundColor Red
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+    }
+}
+
+# Handle OK button - save changes and close window
+function Handle-OKConfig {
+    param()
+
+    try {
+        # Save current UI data back to config object
+        Save-UIDataToConfig
+
+        # Convert to JSON and save
+        $jsonString = $script:ConfigData | ConvertTo-Json -Depth 10
+        Set-Content -Path $script:ConfigPath -Value $jsonString -Encoding UTF8
+
+        # Update original config data and mark as not modified
+        Save-OriginalConfig
+        Set-ConfigModified -IsModified $false
+
+        Show-SafeMessage -MessageKey "configSaved" -TitleKey "info"
+        Write-Verbose "Configuration saved successfully"
+
+        # Close window
+        $script:Window.Close()
+
+    } catch {
+        Write-Host "Debug: OK config error - $($_.Exception.Message)" -ForegroundColor Red
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+    }
+}
+
+# Handle Cancel button - discard unsaved changes and close window
+function Handle-CancelConfig {
+    param()
+
+    if (Test-HasUnsavedChanges) {
+        # Ask user to confirm discarding changes
+        $result = Show-SafeMessage -MessageKey "discardChangesConfirm" -TitleKey "confirmation" -Button YesNo -Icon Question
+        if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
+            # Discard changes and close
+            Set-ConfigModified -IsModified $false
+            $script:Window.Close()
+        }
+        # If No, don't close the window
+    } else {
+        # No unsaved changes, just close
+        $script:Window.Close()
+    }
+}
+
+# Handle window closing event (×ボタン)
+function Handle-WindowClosing {
+    param($Event)
+
+    if (Test-HasUnsavedChanges) {
+        # Ask user to confirm discarding changes
+        $result = Show-SafeMessage -MessageKey "discardChangesConfirm" -TitleKey "confirmation" -Button YesNo -Icon Question
+        if ($result -eq [System.Windows.MessageBoxResult]::No) {
+            # Cancel the close operation
+            $Event.Cancel = $true
+            return
+        }
+    }
+
+    # Allow window to close
+    Set-ConfigModified -IsModified $false
+}
+
+# Handle close window (legacy function for backward compatibility)
 function Handle-CloseWindow {
     param()
 
-    $script:Window.Close()
+    Handle-CancelConfig
 }
 
 <#
