@@ -29,11 +29,18 @@ $rootDir = Split-Path $scriptDir -Parent
 $configPath = Join-Path $rootDir "config\config.json"
 $coreScriptPath = Join-Path $rootDir "src\Invoke-FocusGameDeck.ps1"
 
+# Check if running from GUI (parameter to suppress pause)
+param(
+    [switch]$NoInteractive
+)
+
 # Check if config.json exists
 if (-not (Test-Path $configPath)) {
     Write-Host "Error: config\config.json not found." -ForegroundColor Red
     Write-Host "Please copy config\config.json.sample to config\config.json and configure it." -ForegroundColor Yellow
-    pause
+    if (-not $NoInteractive) {
+        pause
+    }
     exit 1
 }
 
@@ -190,7 +197,9 @@ try {
 
     if ($games.Count -eq 0) {
         Write-Host "Warning: No games found in configuration." -ForegroundColor Yellow
-        pause
+        if (-not $NoInteractive) {
+            pause
+        }
         exit 0
     }
 
@@ -247,6 +256,8 @@ try {
     Write-Host "Details: $($_.Exception.Message)" -ForegroundColor Red
     Write-Host "`nPlease check your config.json file for syntax errors." -ForegroundColor Yellow
 } finally {
-    Write-Host "`nPress any key to continue..." -ForegroundColor Gray
-    pause
+    if (-not $NoInteractive) {
+        Write-Host "`nPress any key to continue..." -ForegroundColor Gray
+        pause
+    }
 }

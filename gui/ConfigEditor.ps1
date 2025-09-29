@@ -2396,8 +2396,25 @@ function Handle-GenerateLaunchers {
         # Execute launcher creation script
         Write-Host "Generating launchers with script: $scriptPath"
 
-        # Run the script and capture output
-        $output = & $scriptPath 2>&1
+        # Run the script and capture both success and error output
+        try {
+            $scriptOutput = & $scriptPath -NoInteractive 2>&1
+            $scriptExitCode = $LASTEXITCODE
+
+            Write-Verbose "Script execution completed with exit code: $scriptExitCode"
+
+            # Process output for display
+            if ($scriptOutput) {
+                $output = $scriptOutput -join "`n"
+                Write-Verbose "Script output: $output"
+            } else {
+                $output = ""
+            }
+        } catch {
+            Write-Error "Failed to execute launcher script: $($_.Exception.Message)"
+            Show-SafeMessage -MessageKey "launcherCreationError" -TitleKey "error" -Icon Error
+            return
+        }
 
         # Check if launchers were created successfully
         $launcherPattern = if ($launcherType -eq "lnk") { "launch_*.lnk" } else { "launch_*.bat" }

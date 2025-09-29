@@ -1,6 +1,11 @@
 # This script reads the config.json file and automatically generates
 # a .bat launcher for each game defined in it.
 
+# Check if running from GUI (parameter to suppress pause)
+param(
+    [switch]$NoInteractive
+)
+
 # Get the directory where the script is located
 $scriptDir = $PSScriptRoot
 $rootDir = Split-Path $scriptDir -Parent
@@ -11,7 +16,9 @@ $coreScriptPath = Join-Path $rootDir "src\Invoke-FocusGameDeck.ps1"
 if (-not (Test-Path $configPath)) {
     Write-Host "Error: config\config.json not found."
     Write-Host "Please copy config\config.json.sample to config\config.json and configure it."
-    pause
+    if (-not $NoInteractive) {
+        pause
+    }
     exit 1
 }
 
@@ -52,4 +59,6 @@ pause
 
 Write-Host "`nAll launchers have been generated!"
 Write-Host "You can now double-click the 'launch_GAMEID.bat' files to start your games."
-pause
+if (-not $NoInteractive) {
+    pause
+}
