@@ -1605,6 +1605,11 @@ function Handle-DeleteApp {
         if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
             $script:ConfigData.managedApps.PSObject.Properties.Remove($selectedApp)
 
+            # Clear current app ID if the deleted app was selected
+            if ($script:CurrentAppId -eq $selectedApp) {
+                $script:CurrentAppId = ""
+            }
+
             # Update all relevant lists and UI components
             Update-ManagedAppsList
             Update-AppsToManagePanel  # Update Game Settings tab checkboxes
@@ -1670,10 +1675,17 @@ function Save-UIDataToConfig {
             Save-CurrentGameData
         }
 
-        # Save current app if selected
+        # Save current app if selected and valid
         if ($script:CurrentAppId -and $script:CurrentAppId -ne "") {
-            Write-Verbose "Debug: Saving current app data for ID: $script:CurrentAppId"
-            Save-CurrentAppData
+            # Check if the app ID still exists in the TextBox (it might have been cleared during deletion)
+            $appIdTextBox = $script:Window.FindName("AppIdTextBox")
+            if ($appIdTextBox -and $appIdTextBox.Text -and $appIdTextBox.Text -ne "") {
+                Write-Verbose "Debug: Saving current app data for ID: $script:CurrentAppId"
+                Save-CurrentAppData
+            } else {
+                Write-Verbose "Debug: Skipping app data save - App ID TextBox is empty (likely after deletion)"
+                $script:CurrentAppId = ""
+            }
         }
 
         # Save global settings
@@ -2393,10 +2405,8 @@ function Handle-GenerateLaunchers {
 
         if ($createdLaunchers -and $createdLaunchers.Count -gt 0) {
             $messageKey = if ($launcherType -eq "lnk") { "launchersCreatedEnhanced" } else { "launchersCreatedTraditional" }
-            $title = Get-LocalizedMessage -Key "success"
-            $message = (Get-LocalizedMessage -Key $messageKey) -f $createdLaunchers.Count
 
-            Show-SafeMessage -MessageKey $messageKey -TitleKey "success" -Icon Information
+            Show-SafeMessage -MessageKey $messageKey -TitleKey "success" -Args @($createdLaunchers.Count.ToString()) -Icon Information
 
             Write-Host "Successfully created $($createdLaunchers.Count) launchers:"
             $createdLaunchers | ForEach-Object { Write-Host "  - $($_.Name)" }
