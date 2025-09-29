@@ -86,6 +86,11 @@ try {
 
     # Auto-detect and update paths if needed
     foreach ($platformKey in $detectedPlatforms.Keys) {
+        # Skip direct platform as it doesn't need a global path
+        if ($platformKey -eq "direct") {
+            continue
+        }
+
         $platform = $detectedPlatforms[$platformKey]
         if ($platform.Available -and $platform.Path) {
             if (-not $config.paths.$platformKey -or $config.paths.$platformKey -ne $platform.Path) {

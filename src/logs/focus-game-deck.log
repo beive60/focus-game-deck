@@ -46,3 +46,49 @@
 [2025-09-26 21:52:25.101] [INFO    ] [TEST] Character encoding test message
 [2025-09-26 21:53:03.462] [INFO    ] [TEST] Character encoding test message
 [2025-09-26 21:55:07.442] [INFO    ] [TEST] Character encoding test message
+[2025-09-30 08:40:22.056] [INFO    ] [MAIN] Focus Game Deck started (Multi-Platform)
+[2025-09-30 08:40:22.066] [INFO    ] [MAIN] Game ID: mock-calc
+[2025-09-30 08:40:22.092] [INFO    ] [PLATFORM] Platform manager initialized
+[2025-09-30 08:40:22.109] [INFO    ] [PLATFORM] Riot Client detected at: C:\Riot Games\Riot Client\RiotClientServices.exe
+[2025-09-30 08:40:22.139] [INFO    ] [PLATFORM] Epic Games Launcher detected at: C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe
+[2025-09-30 08:40:22.151] [INFO    ] [PLATFORM] Available platforms: epic, steam, riot
+[2025-09-30 08:40:22.210] [ERROR   ] [CONFIG] Configuration validation failed
+[2025-09-30 08:41:31.500] [INFO    ] [MAIN] Focus Game Deck started (Multi-Platform)
+[2025-09-30 08:41:31.511] [INFO    ] [MAIN] Game ID: mock-calc
+[2025-09-30 08:41:31.527] [INFO    ] [PLATFORM] Platform manager initialized
+[2025-09-30 08:41:31.536] [INFO    ] [PLATFORM] Riot Client detected at: C:\Riot Games\Riot Client\RiotClientServices.exe
+[2025-09-30 08:41:31.545] [INFO    ] [PLATFORM] Epic Games Launcher detected at: C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe
+[2025-09-30 08:41:31.549] [INFO    ] [PLATFORM] Available platforms: epic, steam, riot
+[2025-09-30 08:41:31.604] [ERROR   ] [CONFIG] Configuration validation failed
+[2025-09-30 08:41:59.037] [INFO    ] [MAIN] Focus Game Deck started (Multi-Platform)
+[2025-09-30 08:41:59.047] [INFO    ] [MAIN] Game ID: mock-calc
+[2025-09-30 08:41:59.063] [INFO    ] [PLATFORM] Platform manager initialized
+[2025-09-30 08:41:59.071] [INFO    ] [PLATFORM] Riot Client detected at: C:\Riot Games\Riot Client\RiotClientServices.exe
+[2025-09-30 08:41:59.081] [INFO    ] [PLATFORM] Epic Games Launcher detected at: C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe
+[2025-09-30 08:41:59.086] [INFO    ] [PLATFORM] Available platforms: epic, steam, riot
+[2025-09-30 08:41:59.138] [INFO    ] [CONFIG] Configuration validation passed
+[2025-09-30 08:41:59.147] [ERROR   ] [PLATFORM] Platform 'direct' is not available or supported for game 'テスト用ゲーム (Calculator)'
+[2025-09-30 08:43:24.119] [INFO    ] [MAIN] Focus Game Deck started (Multi-Platform)
+[2025-09-30 08:43:24.129] [INFO    ] [MAIN] Game ID: mock-calc
+[2025-09-30 08:43:24.146] [INFO    ] [PLATFORM] Platform manager initialized
+[2025-09-30 08:43:24.170] [INFO    ] [PLATFORM] Riot Client detected at: C:\Riot Games\Riot Client\RiotClientServices.exe
+[2025-09-30 08:43:24.181] [INFO    ] [PLATFORM] Epic Games Launcher detected at: C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe
+[2025-09-30 08:43:24.187] [INFO    ] [PLATFORM] Available platforms: direct, epic, steam, riot
+[2025-09-30 08:43:24.300] [ERROR   ] [PLATFORM] Platform manager initialization failed: Exception setting "direct": "The property 'direct' cannot be found on this object. Verify that the property exists and can be set."
+[2025-09-30 08:44:01.540] [INFO    ] [MAIN] Focus Game Deck started (Multi-Platform)
+[2025-09-30 08:44:01.553] [INFO    ] [MAIN] Game ID: mock-calc
+[2025-09-30 08:44:01.569] [INFO    ] [PLATFORM] Platform manager initialized
+[2025-09-30 08:44:01.590] [INFO    ] [PLATFORM] Riot Client detected at: C:\Riot Games\Riot Client\RiotClientServices.exe
+[2025-09-30 08:44:01.597] [INFO    ] [PLATFORM] Epic Games Launcher detected at: C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe
+[2025-09-30 08:44:01.602] [INFO    ] [PLATFORM] Available platforms: direct, epic, steam, riot
+[2025-09-30 08:44:01.655] [INFO    ] [CONFIG] Configuration validation passed
+[2025-09-30 08:44:01.662] [INFO    ] [MAIN] Game configuration loaded: テスト用ゲーム (Calculator) (Platform: direct)
+[2025-09-30 08:44:01.681] [INFO    ] [OBS] OBS manager initialized
+[2025-09-30 08:44:01.684] [INFO    ] [MAIN] Starting operation: Multi-Platform Game Launch Sequence
+[2025-09-30 08:44:01.715] [INFO    ] [OBS] OBS started successfully
+[2025-09-30 08:44:01.898] [INFO    ] [OBS] OBS replay buffer started
+[2025-09-30 08:44:01.942] [INFO    ] [APP] Clibor hotkeys toggled for game start
+[2025-09-30 08:44:02.033] [INFO    ] [APP] Application startup sequence completed
+[2025-09-30 08:44:02.053] [INFO    ] [PLATFORM] Launching game via Direct Execution: C:\WINDOWS\System32\calc.exe
+[2025-09-30 08:44:02.088] [INFO    ] [PLATFORM] Launched directly: C:\WINDOWS\System32\calc.exe
+[2025-09-30 08:44:02.091] [INFO    ] [GAME] Game launch command sent to Direct Execution: テスト用ゲーム (Calculator)

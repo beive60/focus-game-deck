@@ -177,6 +177,8 @@ class AppManager {
                 return $this.TerminateProcess($processName, "auto", $timeoutMs, $appId)
             }
         }
+        # This should never be reached, but PowerShell requires all code paths to return a value
+        return $false
     }
 
     # Graceful process termination (allows user dialogs)

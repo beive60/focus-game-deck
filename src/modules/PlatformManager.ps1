@@ -7,7 +7,7 @@ class PlatformManager {
     [hashtable] $Config
     [object] $Messages
     [object] $Logger
-    
+
     PlatformManager([object] $Config, [object] $Messages, [object] $Logger = $null) {
         # Convert PSCustomObject to Hashtable if needed
         if ($Config -is [PSCustomObject]) {
@@ -18,19 +18,19 @@ class PlatformManager {
         } else {
             $this.Config = $Config
         }
-        
+
         $this.Messages = $Messages
         $this.Logger = $Logger
         $this.Platforms = @{}
         $this.InitializePlatforms()
     }
-    
+
     [void] InitializePlatforms() {
         # Steam Platform (existing support continued)
         $this.Platforms["steam"] = @{
             Name = "Steam"
             DetectPath = { $this.DetectSteamPath() }
-            LaunchCommand = { param($gamePath, $gameId) 
+            LaunchCommand = { param($gamePath, $gameId)
                 $steamPath = $this.Config.paths.steam
                 if (-not $steamPath -or -not (Test-Path $steamPath)) {
                     throw "Steam executable not found at configured path: $steamPath"
@@ -42,7 +42,7 @@ class PlatformManager {
             ProcessCheck = "steam"
             Required = $true
         }
-        
+
         # Epic Games Platform (v1.0 new support)
         $this.Platforms["epic"] = @{
             Name = "Epic Games"
@@ -70,7 +70,7 @@ class PlatformManager {
             ProcessCheck = "EpicGamesLauncher"
             Required = $false
         }
-        
+
         # Riot Client Platform (v1.0 new support)
         $this.Platforms["riot"] = @{
             Name = "Riot Client"
@@ -92,15 +92,44 @@ class PlatformManager {
             ProcessCheck = "RiotClientServices"
             Required = $false
         }
+
+        # Direct Platform (v1.0 new support for standalone executables)
+        $this.Platforms["direct"] = @{
+            Name = "Direct Execution"
+            DetectPath = { return "available" }  # Always available, return dummy string for compatibility
+            LaunchCommand = { param($gamePath, $gameId)
+                # For direct execution, gamePath is the executable path and gameId is ignored
+                if (-not $gamePath -or -not (Test-Path $gamePath)) {
+                    throw "Executable not found at path: $gamePath"
+                }
+                $gameArguments = ""
+                # Get arguments from game config if available
+                $gameConfig = $this.Config.games.$gameId
+                if ($gameConfig -and $gameConfig.arguments) {
+                    $gameArguments = $gameConfig.arguments
+                }
+
+                if ($gameArguments) {
+                    Start-Process -FilePath $gamePath -ArgumentList $gameArguments
+                    if ($this.Logger) { $this.Logger.Info("Launched directly with arguments: $gamePath $gameArguments", "PLATFORM") }
+                } else {
+                    Start-Process -FilePath $gamePath
+                    if ($this.Logger) { $this.Logger.Info("Launched directly: $gamePath", "PLATFORM") }
+                }
+            }
+            GameIdProperty = "executablePath"
+            ProcessCheck = $null
+            Required = $false
+        }
     }
-    
+
     [string] DetectSteamPath() {
         $steamPaths = @(
             "C:\Program Files (x86)\Steam\steam.exe",
             "C:\Program Files\Steam\steam.exe",
             (Get-ItemProperty -Path "HKCU:\Software\Valve\Steam" -Name "SteamExe" -ErrorAction SilentlyContinue).SteamExe
         )
-        
+
         foreach ($path in $steamPaths) {
             if ($path -and (Test-Path $path)) {
                 return $path
@@ -108,32 +137,32 @@ class PlatformManager {
         }
         return $null
     }
-    
+
     [string] DetectEpicPath() {
         # Epic Games Launcher detection logic
         $epicPaths = @(
             "C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe",
             "C:\Program Files\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe"
         )
-        
+
         foreach ($path in $epicPaths) {
             if (Test-Path $path) {
                 if ($this.Logger) { $this.Logger.Info("Epic Games Launcher detected at: $path", "PLATFORM") }
                 return $path
             }
         }
-        
+
         if ($this.Logger) { $this.Logger.Warning("Epic Games Launcher not found in standard locations", "PLATFORM") }
         return $null
     }
-    
+
     [string] DetectEAPath() {
         $eaPaths = @(
             "C:\Program Files\Electronic Arts\EA Desktop\EA Desktop\EADesktop.exe",
             "C:\Program Files (x86)\Electronic Arts\EA Desktop\EA Desktop\EADesktop.exe",
             "C:\Program Files\EA Games\EA Desktop\EA Desktop\EADesktop.exe"
         )
-        
+
         foreach ($path in $eaPaths) {
             if (Test-Path $path) {
                 return $path
@@ -141,32 +170,32 @@ class PlatformManager {
         }
         return $null
     }
-    
+
     [string] DetectRiotPath() {
         # Riot Client detection logic
         $riotPaths = @(
             "C:\Riot Games\Riot Client\RiotClientServices.exe",
             "$env:LOCALAPPDATA\Riot Games\Riot Client\RiotClientServices.exe"
         )
-        
+
         foreach ($path in $riotPaths) {
             if (Test-Path $path) {
                 if ($this.Logger) { $this.Logger.Info("Riot Client detected at: $path", "PLATFORM") }
                 return $path
             }
         }
-        
+
         if ($this.Logger) { $this.Logger.Warning("Riot Client not found in standard locations", "PLATFORM") }
         return $null
     }
-    
+
     [hashtable] DetectAllPlatforms() {
         $detectedPlatforms = @{}
-        
+
         foreach ($platformKey in $this.Platforms.Keys) {
             $platform = $this.Platforms[$platformKey]
             $detectedPath = & $platform.DetectPath
-            
+
             if ($detectedPath) {
                 $detectedPlatforms[$platformKey] = @{
                     Name = $platform.Name
@@ -181,25 +210,25 @@ class PlatformManager {
                 }
             }
         }
-        
+
         return $detectedPlatforms
     }
-    
+
     [bool] IsPlatformAvailable([string] $platformKey) {
         if (-not $this.Platforms.ContainsKey($platformKey)) {
             return $false
         }
-        
+
         $platform = $this.Platforms[$platformKey]
         $detectedPath = & $platform.DetectPath
         return $null -ne $detectedPath
     }
-    
+
     [void] LaunchGame([string] $platformKey, [object] $gameConfig) {
         if (-not $this.Platforms.ContainsKey($platformKey)) {
             throw "Unsupported platform: $platformKey"
         }
-        
+
         # Convert PSCustomObject to Hashtable
         if ($gameConfig -is [PSCustomObject]) {
             $configHash = @{}
@@ -208,31 +237,37 @@ class PlatformManager {
             }
             $gameConfig = $configHash
         }
-        
+
         $platform = $this.Platforms[$platformKey]
         $gameIdProperty = $platform.GameIdProperty
-        
+
         if (-not $gameConfig.ContainsKey($gameIdProperty)) {
             throw "Game configuration missing required field: $gameIdProperty for platform: $platformKey"
         }
-        
+
         $gameId = $gameConfig[$gameIdProperty]
-        
-        if ($this.Logger) { 
-            $this.Logger.Info("Launching game via $($platform.Name): $gameId", "PLATFORM") 
+
+        if ($this.Logger) {
+            $this.Logger.Info("Launching game via $($platform.Name): $gameId", "PLATFORM")
         }
-        
+
         try {
-            & $platform.LaunchCommand $null $gameId
+            # For direct platform, pass the executable path as the first parameter
+            if ($platformKey -eq "direct") {
+                $gamePath = $gameConfig[$gameIdProperty]  # executablePath
+                & $platform.LaunchCommand $gamePath $gameId
+            } else {
+                & $platform.LaunchCommand $null $gameId
+            }
         }
         catch {
-            if ($this.Logger) { 
-                $this.Logger.Error("Failed to launch game via $($platform.Name): $_", "PLATFORM") 
+            if ($this.Logger) {
+                $this.Logger.Error("Failed to launch game via $($platform.Name): $_", "PLATFORM")
             }
             throw
         }
     }
-    
+
     [string[]] GetSupportedPlatforms() {
         return $this.Platforms.Keys
     }
@@ -245,6 +280,6 @@ function New-PlatformManager {
         [object] $Messages,
         [object] $Logger = $null
     )
-    
+
     return [PlatformManager]::new($Config, $Messages, $Logger)
 }
