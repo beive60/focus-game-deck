@@ -33,3 +33,6 @@ launcher-debug.txt
 .vscode/launch.json
 .vscode/tasks.json
 .github/*
+
+# User logs
+src/logs/*.log
