@@ -276,9 +276,7 @@ try {
         if ($logger) { $logger.Info("Game process detected and monitoring started: $($gameConfig.processName)", "GAME") }
 
         # Wait for game process to end
-        while (Get-Process $gameConfig.processName -ErrorAction SilentlyContinue) {
-            Start-Sleep -Seconds 10
-        }
+        Wait-Process -Name $gameConfig.processName
 
         Write-Host ($msg.game_exited -f $gameConfig.name) -ForegroundColor Yellow
         if ($logger) { $logger.Info("Game process ended: $($gameConfig.name)", "GAME") }
