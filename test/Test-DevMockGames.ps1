@@ -68,9 +68,9 @@ param(
 # Setup paths
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $projectRoot = Split-Path -Parent $scriptDir
-$configPath = Join-Path $projectRoot "config\config.json"
-$configSamplePath = Join-Path $projectRoot "config\config.json.sample"
-$mainScriptPath = Join-Path $projectRoot "src\Invoke-FocusGameDeck.ps1"
+$configPath = Join-Path $projectRoot "config/config.json"
+$configSamplePath = Join-Path $projectRoot "config/config.json.sample"
+$mainScriptPath = Join-Path $projectRoot "src/Invoke-FocusGameDeck.ps1"
 
 Write-Host "=== Focus Game Deck - Development Mock Game Test ===" -ForegroundColor Cyan
 Write-Host "Mock Game ID: $MockGameId" -ForegroundColor Green
@@ -127,9 +127,9 @@ if ($DryRun) {
     Write-Host "- Managed Apps: $($mockGame.appsToManage -join ', ')"
     Write-Host ""
     Write-Host "This would provide fast testing without:"
-    Write-Host "✓ Long game startup times"
-    Write-Host "✓ Display occupation"
-    Write-Host "✓ Resource-intensive processes"
+    Write-Host "[OK] Long game startup times"
+    Write-Host "[OK] Display occupation"
+    Write-Host "[OK] Resource-intensive processes"
     Write-Host ""
     exit 0
 }
@@ -170,10 +170,10 @@ Write-Host ""
 Write-Host "=== Test Summary ===" -ForegroundColor Cyan
 Write-Host "Mock Game: $($mockGame.name)" -ForegroundColor White
 Write-Host "Benefits demonstrated:" -ForegroundColor White
-Write-Host "  ✓ Fast startup (< 5 seconds)" -ForegroundColor Green
-Write-Host "  ✓ No display occupation" -ForegroundColor Green
-Write-Host "  ✓ Minimal resource usage" -ForegroundColor Green
-Write-Host "  ✓ Real app management testing" -ForegroundColor Green
+Write-Host "  [OK] Fast startup (< 5 seconds)" -ForegroundColor Green
+Write-Host "  [OK] No display occupation" -ForegroundColor Green
+Write-Host "  [OK] Minimal resource usage" -ForegroundColor Green
+Write-Host "  [OK] Real app management testing" -ForegroundColor Green
 Write-Host ""
 Write-Host "For production testing, use actual game IDs (apex, dbd, genshin, valorant, etc.)" -ForegroundColor Yellow
 Write-Host "Mock games are now integrated into the main config.json for easier maintenance." -ForegroundColor Cyan

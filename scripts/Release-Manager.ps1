@@ -135,9 +135,9 @@ function Update-VersionInFile {
     $content = Get-Content $script:Config.VersionFile -Raw
 
     # Update version values
-    $content = $content -replace 'Major = \d+', "Major = $Major"
-    $content = $content -replace 'Minor = \d+', "Minor = $Minor"
-    $content = $content -replace 'Patch = \d+', "Patch = $Patch"
+    $content = $content -replace 'Major = /d+', "Major = $Major"
+    $content = $content -replace 'Minor = /d+', "Minor = $Minor"
+    $content = $content -replace 'Patch = /d+', "Patch = $Patch"
     $content = $content -replace 'PreRelease = "[^"]*"', "PreRelease = `"$PreRelease`""
 
     # Write updated content
@@ -178,7 +178,7 @@ function Get-NextVersion {
                 $preRelease = $PreReleaseType
             } else {
                 # Update existing prerelease
-                if ($preRelease -match '^(alpha|beta|rc)\.?(\d+)?$') {
+                if ($preRelease -match '^(alpha|beta|rc)/.?(/d+)?$') {
                     $type = $matches[1]
                     $number = if ($matches[2]) { [int]$matches[2] } else { 0 }
 

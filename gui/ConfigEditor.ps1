@@ -23,7 +23,7 @@
 # Date: 2025-09-23
 
 # Import language helper functions
-$LanguageHelperPath = Join-Path (Split-Path $PSScriptRoot) "scripts\LanguageHelper.ps1"
+$LanguageHelperPath = Join-Path (Split-Path $PSScriptRoot) "scripts/LanguageHelper.ps1"
 if (Test-Path $LanguageHelperPath) {
     . $LanguageHelperPath
 } else {
@@ -38,7 +38,7 @@ if (Test-Path $VersionModulePath) {
     Write-Warning "Version module not found: $VersionModulePath"
 }
 
-$UpdateCheckerPath = Join-Path (Split-Path $PSScriptRoot -Parent) "src\modules\UpdateChecker.ps1"
+$UpdateCheckerPath = Join-Path (Split-Path $PSScriptRoot -Parent) "src/modules/UpdateChecker.ps1"
 if (Test-Path $UpdateCheckerPath) {
     . $UpdateCheckerPath
 } else {
@@ -333,6 +333,7 @@ function Replace-XamlPlaceholders {
         # Define placeholder mappings
         $placeholders = @{
             "[WINDOW_TITLE]"               = Get-LocalizedMessage -Key "windowTitle"
+            "[GAME_LAUNCHER_TAB_HEADER]"   = Get-LocalizedMessage -Key "gameLauncherTabHeader"
             "[GAMES_TAB_HEADER]"           = Get-LocalizedMessage -Key "gamesTabHeader"
             "[MANAGED_APPS_TAB_HEADER]"    = Get-LocalizedMessage -Key "managedAppsTabHeader"
             "[GLOBAL_SETTINGS_TAB_HEADER]" = Get-LocalizedMessage -Key "globalSettingsTabHeader"
@@ -368,6 +369,15 @@ function Replace-XamlPlaceholders {
             "[TOOLTIP_STEAM_APP_ID]"       = Get-LocalizedMessage -Key "tooltipSteamAppId"
             "[TOOLTIP_EPIC_GAME_ID]"       = Get-LocalizedMessage -Key "tooltipEpicGameId"
             "[TOOLTIP_RIOT_GAME_ID]"       = Get-LocalizedMessage -Key "tooltipRiotGameId"
+            "[LAUNCHER_WELCOME_TEXT]"      = Get-LocalizedMessage -Key "launcherWelcomeText"
+            "[LAUNCHER_SUBTITLE_TEXT]"     = Get-LocalizedMessage -Key "launcherSubtitleText"
+            "[REFRESH_BUTTON]"             = Get-LocalizedMessage -Key "refreshButton"
+            "[EDIT_BUTTON]"                = Get-LocalizedMessage -Key "editButton"
+            "[LAUNCH_BUTTON]"              = Get-LocalizedMessage -Key "launchButton"
+            "[READY_TO_LAUNCH]"            = Get-LocalizedMessage -Key "readyToLaunch"
+            "[LAUNCHER_HINT_TEXT]"         = Get-LocalizedMessage -Key "launcherHintText"
+            "[ADD_GAME_BUTTON]"            = Get-LocalizedMessage -Key "addGameButton"
+            "[OPEN_CONFIG_BUTTON]"         = Get-LocalizedMessage -Key "openConfigButton"
         }
 
         # Replace all placeholders
@@ -383,8 +393,8 @@ function Replace-XamlPlaceholders {
             $newValue = $newValue -replace "'", "&apos;"
 
             # Also escape parentheses that might cause XML parsing issues
-            $newValue = $newValue -replace "\(", "&#40;"
-            $newValue = $newValue -replace "\)", "&#41;"
+            $newValue = $newValue -replace "/(", "&#40;"
+            $newValue = $newValue -replace "/)", "&#41;"
 
             $XamlContent = $XamlContent -replace [regex]::Escape($oldValue), $newValue
         }
@@ -406,7 +416,7 @@ function Initialize-ConfigEditor {
         Write-Verbose "Debug: ConfigEditor initialization started"
 
         # Initialize config path first
-        $script:ConfigPath = Join-Path (Split-Path $PSScriptRoot -Parent) "config\config.json"
+        $script:ConfigPath = Join-Path (Split-Path $PSScriptRoot -Parent) "config/config.json"
 
         # Load configuration first (needed for language detection)
         Load-Configuration
@@ -483,7 +493,7 @@ function Load-Configuration {
             Write-Host "Loaded config from: $script:ConfigPath"
         } else {
             # Load from sample if config doesn't exist
-            $configSamplePath = Join-Path (Split-Path $PSScriptRoot) "config\config.json.sample"
+            $configSamplePath = Join-Path (Split-Path $PSScriptRoot) "config/config.json.sample"
             if (Test-Path $configSamplePath) {
                 $jsonContent = Get-Content $configSamplePath -Raw -Encoding UTF8
                 $script:ConfigData = $jsonContent | ConvertFrom-Json
@@ -767,6 +777,22 @@ function Update-TerminationSettingsVisibility {
 function Setup-EventHandlers {
     param()
 
+    # Game Launcher tab events
+    $refreshGameListButton = $script:Window.FindName("RefreshGameListButton")
+    if ($refreshGameListButton) {
+        $refreshGameListButton.add_Click({ Update-GameLauncherList })
+    }
+
+    $addNewGameButton = $script:Window.FindName("AddNewGameButton")
+    if ($addNewGameButton) {
+        $addNewGameButton.add_Click({ Handle-AddNewGameFromLauncher })
+    }
+
+    $openConfigButton = $script:Window.FindName("OpenConfigButton")
+    if ($openConfigButton) {
+        $openConfigButton.add_Click({ Switch-ToGameSettingsTab })
+    }
+
     # Footer buttons
     $applyButton = $script:Window.FindName("ApplyButton")
     $applyButton.add_Click({ Handle-ApplyConfig })
@@ -901,6 +927,9 @@ function Load-DataToUI {
 
     # Load managed apps list
     Update-ManagedAppsList
+
+    # Initialize game launcher list
+    Update-GameLauncherList
 
     # Initialize version display
     Initialize-VersionDisplay
@@ -1961,6 +1990,324 @@ function Initialize-VersionDisplay {
     }
 }
 
+<#
+.SYNOPSIS
+    Updates the game launcher list with configured games
+
+.DESCRIPTION
+    Refreshes the game launcher tab with current game configurations,
+    creating interactive game cards for each configured game.
+#>
+function Update-GameLauncherList {
+    param()
+
+    try {
+        $gameLauncherList = $script:Window.FindName("GameLauncherList")
+        if (-not $gameLauncherList) {
+            Write-Warning "GameLauncherList control not found"
+            return
+        }
+
+        # Clear existing items
+        $gameLauncherList.Items.Clear()
+
+        # Check if games are configured
+        if (-not $script:ConfigData.games -or $script:ConfigData.games.PSObject.Properties.Count -eq 0) {
+            # Show "no games" message
+            $noGamesPanel = New-Object System.Windows.Controls.StackPanel
+            $noGamesPanel.HorizontalAlignment = "Center"
+            $noGamesPanel.VerticalAlignment = "Center"
+            $noGamesPanel.Margin = "20"
+
+            $noGamesText = New-Object System.Windows.Controls.TextBlock
+            $noGamesText.Text = Get-LocalizedMessage -Key "noGamesConfigured"
+            $noGamesText.FontSize = 16
+            $noGamesText.Foreground = "#666"
+            $noGamesText.HorizontalAlignment = "Center"
+
+            $noGamesPanel.Children.Add($noGamesText)
+            $gameLauncherList.Items.Add($noGamesPanel)
+            return
+        }
+
+        # Create game cards for each configured game
+        $script:ConfigData.games.PSObject.Properties | ForEach-Object {
+            $gameId = $_.Name
+            $gameData = $_.Value
+            $platform = if ($gameData.platform) { $gameData.platform } else { "steam" }
+
+            # Create game item data object
+            $gameItem = New-Object PSObject -Property @{
+                GameId = $gameId
+                DisplayName = $gameData.name
+                Platform = $platform.ToUpper()
+                ProcessName = $gameData.processName
+            }
+
+            # Create the UI element for this game
+            $gameCard = New-GameLauncherCard -GameItem $gameItem
+            $gameLauncherList.Items.Add($gameCard)
+        }
+
+        Write-Verbose "Game launcher list updated with $($script:ConfigData.games.PSObject.Properties.Count) games"
+
+    } catch {
+        Write-Warning "Failed to update game launcher list: $($_.Exception.Message)"
+    }
+}
+
+<#
+.SYNOPSIS
+    Creates a game launcher card UI element
+
+.DESCRIPTION
+    Creates an interactive game card with launch and edit buttons
+    for the game launcher tab interface.
+#>
+function New-GameLauncherCard {
+    param(
+        [Parameter(Mandatory)]
+        [PSObject]$GameItem
+    )
+
+    try {
+        # Create main border
+        $border = New-Object System.Windows.Controls.Border
+        $border.Background = "#F8F9FA"
+        $border.BorderBrush = "#E1E5E9"
+        $border.BorderThickness = 1
+        $border.CornerRadius = 8
+        $border.Margin = "0,0,0,10"
+        $border.Padding = 15
+
+        # Create main grid
+        $grid = New-Object System.Windows.Controls.Grid
+
+        # Define columns
+        $col1 = New-Object System.Windows.Controls.ColumnDefinition
+        $col1.Width = "*"
+        $col2 = New-Object System.Windows.Controls.ColumnDefinition
+        $col2.Width = "Auto"
+        $col3 = New-Object System.Windows.Controls.ColumnDefinition
+        $col3.Width = "Auto"
+
+        $grid.ColumnDefinitions.Add($col1)
+        $grid.ColumnDefinitions.Add($col2)
+        $grid.ColumnDefinitions.Add($col3)
+
+        # Game info section
+        $infoPanel = New-Object System.Windows.Controls.StackPanel
+        $infoPanel.VerticalAlignment = "Center"
+        [System.Windows.Controls.Grid]::SetColumn($infoPanel, 0)
+
+        # Game name
+        $nameText = New-Object System.Windows.Controls.TextBlock
+        $nameText.Text = $GameItem.DisplayName
+        $nameText.FontSize = 14
+        $nameText.FontWeight = "SemiBold"
+        $nameText.Foreground = "#333"
+        $infoPanel.Children.Add($nameText)
+
+        # Game details
+        $detailsPanel = New-Object System.Windows.Controls.StackPanel
+        $detailsPanel.Orientation = "Horizontal"
+        $detailsPanel.Margin = "0,4,0,0"
+
+        $platformLabel = New-Object System.Windows.Controls.TextBlock
+        $platformLabel.Text = "Platform: "
+        $platformLabel.FontSize = 11
+        $platformLabel.Foreground = "#666"
+        $detailsPanel.Children.Add($platformLabel)
+
+        $platformValue = New-Object System.Windows.Controls.TextBlock
+        $platformValue.Text = $GameItem.Platform
+        $platformValue.FontSize = 11
+        $platformValue.Foreground = "#0078D4"
+        $platformValue.FontWeight = "SemiBold"
+        $detailsPanel.Children.Add($platformValue)
+
+        $idLabel = New-Object System.Windows.Controls.TextBlock
+        $idLabel.Text = " | ID: "
+        $idLabel.FontSize = 11
+        $idLabel.Foreground = "#666"
+        $idLabel.Margin = "10,0,0,0"
+        $detailsPanel.Children.Add($idLabel)
+
+        $idValue = New-Object System.Windows.Controls.TextBlock
+        $idValue.Text = $GameItem.GameId
+        $idValue.FontSize = 11
+        $idValue.Foreground = "#666"
+        $idValue.FontFamily = "Consolas"
+        $detailsPanel.Children.Add($idValue)
+
+        $infoPanel.Children.Add($detailsPanel)
+        $grid.Children.Add($infoPanel)
+
+        # Edit button
+        $editButton = New-Object System.Windows.Controls.Button
+        $editButton.Content = Get-LocalizedMessage -Key "editButton"
+        $editButton.Width = 70
+        $editButton.Height = 32
+        $editButton.Margin = "10,0"
+        $editButton.Background = "#F1F3F4"
+        $editButton.BorderBrush = "#D0D7DE"
+        $editButton.FontSize = 11
+        [System.Windows.Controls.Grid]::SetColumn($editButton, 1)
+
+        # Edit button click handler
+        $editButton.add_Click({
+            Switch-ToGameSettingsTab -GameId $GameItem.GameId
+        }.GetNewClosure())
+
+        $grid.Children.Add($editButton)
+
+        # Launch button
+        $launchButton = New-Object System.Windows.Controls.Button
+        $launchButton.Content = Get-LocalizedMessage -Key "launchButton"
+        $launchButton.Width = 80
+        $launchButton.Height = 32
+        $launchButton.Background = "#0078D4"
+        $launchButton.Foreground = "White"
+        $launchButton.BorderBrush = "#0078D4"
+        $launchButton.FontWeight = "SemiBold"
+        $launchButton.FontSize = 12
+        [System.Windows.Controls.Grid]::SetColumn($launchButton, 2)
+
+        # Launch button click handler
+        $launchButton.add_Click({
+            Start-GameFromLauncher -GameId $GameItem.GameId
+        }.GetNewClosure())
+
+        $grid.Children.Add($launchButton)
+
+        $border.Child = $grid
+        return $border
+
+    } catch {
+        Write-Warning "Failed to create game launcher card: $($_.Exception.Message)"
+        return $null
+    }
+}
+
+<#
+.SYNOPSIS
+    Launches a game from the launcher tab
+
+.DESCRIPTION
+    Initiates game launch using the main game launcher script
+    and provides user feedback during the process.
+#>
+function Start-GameFromLauncher {
+    param(
+        [Parameter(Mandatory)]
+        [string]$GameId
+    )
+
+    try {
+        # Update status
+        $statusText = $script:Window.FindName("LauncherStatusText")
+        if ($statusText) {
+            $statusText.Text = Get-LocalizedMessage -Key "launchingGame" -Args @($GameId)
+        }
+
+        # Get the main launcher script path
+        $mainLauncherPath = Join-Path $PSScriptRoot "../src/Main.ps1"
+
+        # Check if main launcher exists
+        if (-not (Test-Path $mainLauncherPath)) {
+            # Fallback to legacy launcher
+            $mainLauncherPath = Join-Path $PSScriptRoot "../src/Invoke-FocusGameDeck.ps1"
+        }
+
+        if (-not (Test-Path $mainLauncherPath)) {
+            Show-SafeMessage -MessageKey "gameNotFound" -TitleKey "error" -Args @($GameId) -Icon Error
+            return
+        }
+
+        Write-Host "Launching game from GUI: $GameId" -ForegroundColor Cyan
+
+        # Launch the game using PowerShell
+        Start-Process -FilePath "powershell.exe" -ArgumentList @(
+            "-ExecutionPolicy", "Bypass",
+            "-File", $mainLauncherPath,
+            $GameId
+        ) -WindowStyle Minimized
+
+        # Reset status after a short delay
+        Start-Sleep -Milliseconds 2000
+        if ($statusText) {
+            $statusText.Text = Get-LocalizedMessage -Key "readyToLaunch"
+        }
+
+    } catch {
+        Write-Warning "Failed to launch game '$GameId': $($_.Exception.Message)"
+        Show-SafeMessage -MessageKey "launchFailed" -TitleKey "error" -Args @($GameId, $_.Exception.Message) -Icon Error
+
+        # Reset status
+        $statusText = $script:Window.FindName("LauncherStatusText")
+        if ($statusText) {
+            $statusText.Text = Get-LocalizedMessage -Key "readyToLaunch"
+        }
+    }
+}
+
+<#
+.SYNOPSIS
+    Switches to the Game Settings tab for editing
+
+.DESCRIPTION
+    Switches to the Games tab and optionally selects a specific game
+    for editing in the configuration interface.
+#>
+function Switch-ToGameSettingsTab {
+    param(
+        [string]$GameId = ""
+    )
+
+    try {
+        $mainTabControl = $script:Window.FindName("MainTabControl")
+        $gamesTab = $script:Window.FindName("GamesTab")
+
+        if ($mainTabControl -and $gamesTab) {
+            $mainTabControl.SelectedItem = $gamesTab
+
+            # If GameId specified, select that game
+            if (-not [string]::IsNullOrEmpty($GameId)) {
+                $gamesList = $script:Window.FindName("GamesList")
+                if ($gamesList) {
+                    $gamesList.SelectedItem = $GameId
+                }
+            }
+        }
+
+    } catch {
+        Write-Warning "Failed to switch to game settings tab: $($_.Exception.Message)"
+    }
+}
+
+<#
+.SYNOPSIS
+    Handles adding a new game from the launcher tab
+
+.DESCRIPTION
+    Switches to the Games tab and initiates the process of adding
+    a new game configuration.
+#>
+function Handle-AddNewGameFromLauncher {
+    param()
+
+    try {
+        # Switch to Games tab
+        Switch-ToGameSettingsTab
+
+        # Add new game
+        Handle-AddGame
+
+    } catch {
+        Write-Warning "Failed to add new game from launcher: $($_.Exception.Message)"
+    }
+}
+
 # Handle check update button click
 function Handle-CheckUpdate {
     param()
@@ -2370,9 +2717,9 @@ function Handle-GenerateLaunchers {
         # Determine script path based on launcher type
         $rootDir = Split-Path $PSScriptRoot -Parent
         if ($launcherType -eq "lnk") {
-            $scriptPath = Join-Path $rootDir "scripts\Create-Launchers-Enhanced.ps1"
+            $scriptPath = Join-Path $rootDir "scripts/Create-Launchers-Enhanced.ps1"
         } else {
-            $scriptPath = Join-Path $rootDir "scripts\Create-Launchers.ps1"
+            $scriptPath = Join-Path $rootDir "scripts/Create-Launchers.ps1"
         }
 
         # Check if script exists

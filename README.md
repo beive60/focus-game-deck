@@ -22,24 +22,30 @@ Focus Game Deck automates your gaming session from start to finish - handling te
 
 ## Quick Start
 
-### 1. Configure
+### 1. Launch Focus Game Deck
 
 ```bash
-# Launch GUI configuration editor
-Focus-Game-Deck-Config-Editor.exe
+# Launch unified application (GUI + Game Launcher)
+Focus-Game-Deck.exe
 ```
 
-### 2. Launch Games
+### 2. Configure & Launch Games
 
-Click `launch_[your-game-id].lnk` (or `launch_[your-game-id].bat`) to start a game with your custom environment.
+- **Setup**: Configure your games in the "Game Settings" tab
+- **Launch**: Use the "Game Launcher" tab for one-click game launching
+- **Alternative**: Use command line for direct game launch: `Focus-Game-Deck.exe <game-id>`
+
+### 3. Generate Shortcuts (Optional)
+
+Generate `launch_[game-id].lnk` files for desktop shortcuts via the GUI settings panel.
 
 ## Prerequisites
 
 **Required:**
 
-- Windows 10/11
+- Windows 11
 - PowerShell 5.1+ (included with Windows)
-- .NET Framework 4.7.2+ (included with Windows 10/11)
+- .NET Framework 4.7.2+ (included with Windows 11)
 
 **Integration recommendations:**
 
@@ -57,7 +63,7 @@ Click `launch_[your-game-id].lnk` (or `launch_[your-game-id].bat`) to start a ga
 | **📖 [Configuration Guide](docs/user-guide/configuration.md)** | Complete setup and configuration instructions |
 | **🔧 [Build System](docs/developer-guide/build-system.md)** | Development build system and security guidelines |
 | **[Release Process](docs/developer-guide/release-process.md)** | Developer release workflow and procedures |
-| **[Roadmap](docs/ROADMAP.md)** | Project timeline and planned features |
+| **[Roadmap](docs/project-info/roadmap.md)** | Project timeline and planned features |
 | **[All Documentation](docs/DOCUMENTATION-INDEX.md)** | Complete documentation index |
 
 ## Contributing

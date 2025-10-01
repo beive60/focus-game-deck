@@ -140,7 +140,7 @@ function Get-OSLanguage {
 
     try {
         # Method 3: Registry-based detection (Windows-specific)
-        $regLocale = Get-ItemProperty -Path "HKCU:\Control Panel\International" -Name "LocaleName" -ErrorAction SilentlyContinue
+        $regLocale = Get-ItemProperty -Path "HKCU:/Control Panel/International" -Name "LocaleName" -ErrorAction SilentlyContinue
         if ($regLocale -and $regLocale.LocaleName) {
             $regLang = $regLocale.LocaleName.Split('-')[0].ToLower()
             Write-Verbose "OS language detected via registry: $regLang"
@@ -212,7 +212,7 @@ function Set-CultureByLanguage {
     PSCustomObject containing localized messages
 
 .EXAMPLE
-    $messages = Get-LocalizedMessages -MessagesPath ".\messages.json" -LanguageCode "ja"
+    $messages = Get-LocalizedMessages -MessagesPath "./messages.json" -LanguageCode "ja"
 #>
 function Get-LocalizedMessages {
     param(

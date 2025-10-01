@@ -10,7 +10,7 @@
     },
     "managedApps": {
         "noWinKey": {
-            "path": "C:\\Apps\\NoWinKey\\NoWinKey.exe",
+            "path": "C:/Apps/NoWinKey/NoWinKey.exe",
             "processName": "NoWinKey",
             "gameStartAction": "start-process",
             "gameEndAction": "stop-process",
@@ -29,7 +29,7 @@
             "gracefulTimeoutMs": 2000
         },
         "clibor": {
-            "path": "C:\\Apps\\clibor\\Clibor.exe",
+            "path": "C:/Apps/clibor/Clibor.exe",
             "processName": "Clibor",
             "gameStartAction": "toggle-hotkeys",
             "gameEndAction": "toggle-hotkeys",
@@ -59,7 +59,7 @@
             }
         },
         "discord": {
-            "path": "%LOCALAPPDATA%\\Discord\\app-*\\Discord.exe",
+            "path": "%LOCALAPPDATA%/Discord/app-*/Discord.exe",
             "processName": "Discord",
             "gameStartAction": "set-discord-gaming-mode",
             "gameEndAction": "restore-discord-normal",
@@ -86,7 +86,7 @@
         "mock-calc": {
             "name": "テスト用ゲーム (Calculator)",
             "platform": "standalone",
-            "executablePath": "%SystemRoot%\\System32\\calc.exe",
+            "executablePath": "%SystemRoot%/System32/calc.exe",
             "processName": "Calculator|CalculatorApp",
             "appsToManage": [
                 "obs",
@@ -147,10 +147,10 @@
         }
     },
     "paths": {
-        "steam": "C:\\Program Files (x86)\\Steam\\steam.exe",
-        "epic": "C:\\Program Files (x86)\\Epic Games\\Launcher\\Portal\\Binaries\\Win32\\EpicGamesLauncher.exe",
-        "riot": "C:\\Riot Games\\Riot Client\\RiotClientServices.exe",
-        "obs": "C:\\Program Files\\obs-studio\\bin\\64bit\\obs64.exe"
+        "steam": "C:/Program Files (x86)/Steam/steam.exe",
+        "epic": "C:/Program Files (x86)/Epic Games/Launcher/Portal/Binaries/Win32/EpicGamesLauncher.exe",
+        "riot": "C:/Riot Games/Riot Client/RiotClientServices.exe",
+        "obs": "C:/Program Files/obs-studio/bin/64bit/obs64.exe"
     },
     "logging": {
         "level": "Info",

@@ -18,7 +18,7 @@ $ErrorActionPreference = "Stop"
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
 # Import required modules
-$LoggerModulePath = Join-Path $PSScriptRoot "..\src\modules\Logger.ps1"
+$LoggerModulePath = Join-Path $PSScriptRoot "../src/modules/Logger.ps1"
 if (Test-Path $LoggerModulePath) {
     . $LoggerModulePath
 } else {

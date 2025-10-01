@@ -2,6 +2,7 @@
 build/
 build-tools/build/
 release/
+*.exe
 
 # User-specific configuration files
 config/config.json
@@ -14,9 +15,14 @@ config/config.json.backup-*
 .DS_Store
 Thumbs.db
 
-# Generated launcher files
+# Generated launcher files (both old and new formats)
 launch_*.bat
 launch_*.lnk
+Create-Launchers.bat
+
+# Obsolete batch files from old architecture
+*ConfigEditor.bat
+Build-ConfigEditor.ps1
 
 # Test-related temporary files
 test/test-launchers/
@@ -28,11 +34,13 @@ test/*.tmp
 *.lnk.log
 launcher-debug.txt
 
-# VSCode user settings
+# VSCode user settings (but keep workspace config)
 .vscode/settings.json
 .vscode/launch.json
-.vscode/tasks.json
-.github/*
 
 # User logs
 src/logs/*.log
+
+# Temporary backup files
+*.backup
+*~

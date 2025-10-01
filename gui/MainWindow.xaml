@@ -21,6 +21,169 @@
                     Name="MainTabControl"
                     Margin="10">
 
+            <!-- Game Launcher Tab (New Primary Tab) -->
+            <TabItem Header="[GAME_LAUNCHER_TAB_HEADER]"
+                     Name="GameLauncherTab">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="50"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="100"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header Section -->
+                    <Grid Grid.Row="0"
+                            Margin="20,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0"
+                                VerticalAlignment="Center">
+                            <TextBlock Name="LauncherWelcomeText"
+                                       Text="[LAUNCHER_WELCOME_TEXT]"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       Foreground="#0078D4"/>
+                            <TextBlock Name="LauncherSubtitleText"
+                                       Text="[LAUNCHER_SUBTITLE_TEXT]"
+                                       FontSize="12"
+                                       Foreground="#666"
+                                       Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <Button Grid.Column="1"
+                                Name="RefreshGameListButton"
+                                Content="[REFRESH_BUTTON]"
+                                Width="100"
+                                Height="30"
+                                VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <!-- Game List Section -->
+                    <ScrollViewer Grid.Row="1"
+                            Margin="20,0,20,10"
+                            VerticalScrollBarVisibility="Auto">
+                        <ItemsControl Name="GameLauncherList"
+                                Margin="0,10">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#F8F9FA"
+                                            BorderBrush="#E1E5E9"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Margin="0,0,0,10"
+                                            Padding="15">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Game Info -->
+                                            <StackPanel Grid.Column="0"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding DisplayName}"
+                                                           FontSize="14"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="#333"/>
+                                                <StackPanel Orientation="Horizontal"
+                                                        Margin="0,4,0,0">
+                                                    <TextBlock Text="Platform: "
+                                                               FontSize="11"
+                                                               Foreground="#666"/>
+                                                    <TextBlock Text="{Binding Platform}"
+                                                               FontSize="11"
+                                                               Foreground="#0078D4"
+                                                               FontWeight="SemiBold"/>
+                                                    <TextBlock Text=" | ID: "
+                                                               FontSize="11"
+                                                               Foreground="#666"
+                                                               Margin="10,0,0,0"/>
+                                                    <TextBlock Text="{Binding GameId}"
+                                                               FontSize="11"
+                                                               Foreground="#666"
+                                                               FontFamily="Consolas"/>
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <!-- Action Buttons -->
+                                            <Button Grid.Column="1"
+                                                    Name="EditGameButton"
+                                                    Content="[EDIT_BUTTON]"
+                                                    Width="70"
+                                                    Height="32"
+                                                    Margin="10,0"
+                                                    Background="#F1F3F4"
+                                                    BorderBrush="#D0D7DE"
+                                                    FontSize="11"/>
+
+                                            <Button Grid.Column="2"
+                                                    Name="LaunchGameButton"
+                                                    Content="[LAUNCH_BUTTON]"
+                                                    Width="80"
+                                                    Height="32"
+                                                    Background="#0078D4"
+                                                    Foreground="White"
+                                                    BorderBrush="#0078D4"
+                                                    FontWeight="SemiBold"
+                                                    FontSize="12"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Footer Section -->
+                    <Grid Grid.Row="2"
+                            Background="#F8F9FA"
+                            Margin="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0"
+                                    Orientation="Vertical"
+                                    VerticalAlignment="Center"
+                                    Margin="20,0">
+                            <TextBlock Name="LauncherStatusText"
+                                       Text="[READY_TO_LAUNCH]"
+                                       FontSize="12"
+                                       Foreground="#666"/>
+                            <TextBlock Name="LauncherHintText"
+                                       Text="[LAUNCHER_HINT_TEXT]"
+                                       FontSize="10"
+                                       Foreground="#888"
+                                       Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,20,0">
+                            <Button Name="AddNewGameButton"
+                                    Content="[ADD_GAME_BUTTON]"
+                                    Width="100"
+                                    Height="35"
+                                    Margin="5"
+                                    Background="#28A745"
+                                    Foreground="White"
+                                    BorderBrush="#28A745"
+                                    FontWeight="SemiBold"/>
+                            <Button Name="OpenConfigButton"
+                                    Content="[OPEN_CONFIG_BUTTON]"
+                                    Width="100"
+                                    Height="35"
+                                    Margin="5"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
             <!-- Game Settings Tab -->
             <TabItem Header="[GAMES_TAB_HEADER]"
                      Name="GamesTab">

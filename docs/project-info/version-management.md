@@ -215,12 +215,12 @@ Get-ProjectVersion -IncludePreRelease -IncludeBuild # "1.0.1-alpha+20251024"
 
 ## Related Documentation
 
-- [ROADMAP.md](./ROADMAP.md) - Project roadmap
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - Technical architecture
-- [DEVELOPER-RELEASE-GUIDE.md](./DEVELOPER-RELEASE-GUIDE.md) - Detailed release procedures
+- [roadmap.md](/docs/project-info\roadmap.md) - Project roadmap
+- [architecture.md](/docs/project-info/architecture.md) - Technical architecture
+- [developer-release-guide.md](/docs/developer-guide\release-process.md) - Detailed release procedures
 
 ---
 
-**Last Updated**: September 27, 2025
-**Version**: 1.0.0
-**Created by**: GitHub Copilot Assistant
+Last Updated: October 1, 2025
+Version: 1.0.0
+Created by: GitHub Copilot Assistant

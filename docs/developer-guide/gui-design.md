@@ -162,7 +162,7 @@ To support alpha test implementation requirements, the following features are pl
 
 ### **3. Data Structure (Mapping with `config.json`)**
 
-The data structure of `config.json` that this application edits conforms to `config.json.sample`. Each UI control corresponds one-to-one with each key in this JSON file. (See `.\config\config.json.sample` for details).
+The data structure of `config.json` that this application edits conforms to `config.json.sample`. Each UI control corresponds one-to-one with each key in this JSON file. (See `./config/config.json.sample` for details).
 
 ## Screen Design (Wireframes)
 
@@ -224,7 +224,7 @@ Action items use dropdown lists to prevent configuration errors.
 | App List                 | Selected App Details                |
 | +-----------------------+ | ----------------------------------- |
 | | noWinKey              | | App ID:       [noWinKey________]    |
-| | autoHotkey            | | Executable Path:[C:\Apps\NWK..][Browse] |
+| | autoHotkey            | | Executable Path:[C:/Apps\NWK..][Browse] |
 | | clibor                | | Process Name: [NoWinKey________]    |
 | | luna                  | |                                     |
 | +-----------------------+ | Game Start Action:                  |
@@ -250,8 +250,8 @@ Language dropdown is automatically generated based on language keys present in m
 |   [x] Enable replay buffer during games                        |
 | --------------------------------------------------------------- |
 | Path Settings                                                  |
-|   Steam.exe Path:   [C:\Program Files..] [Browse]              |
-|   obs64.exe Path:   [C:\Program Files..] [Browse]              |
+|   Steam.exe Path:   [C:/Program Files..] [Browse]              |
+|   obs64.exe Path:   [C:/Program Files..] [Browse]              |
 | --------------------------------------------------------------- |
 | Overall Settings                                               |
 |   Display Language: [English (en)         ^]                   |
@@ -296,7 +296,7 @@ Regarding Japanese character garbling issues in PowerShell's `[System.Windows.Me
 ```json
 {
     "messages": {
-        "configSaved": "\u8a2d\u5b9a\u304c\u4fdd\u5b58\u3055\u308c\u307e\u3057\u305f\u3002"
+        "configSaved": "/u8a2d/u5b9a/u304c/u4fdd/u5b58/u3055/u308c/u307e/u3057/u305f/u3002"
     }
 }
 ```

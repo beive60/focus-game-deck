@@ -16,17 +16,17 @@ if (-not (Get-Module -Name Microsoft.PowerShell.Security)) {
 
 # Initialize script variables
 $scriptDir = $PSScriptRoot
-$configPath = Join-Path $scriptDir "..\config\config.json"
-$languageHelperPath = Join-Path $scriptDir "..\scripts\LanguageHelper.ps1"
-$messagesPath = Join-Path $scriptDir "..\config\messages.json"
+$configPath = Join-Path $scriptDir "../config/config.json"
+$languageHelperPath = Join-Path $scriptDir "../scripts/LanguageHelper.ps1"
+$messagesPath = Join-Path $scriptDir "../config/messages.json"
 
 # Import modules
 $modulePaths = @(
-    (Join-Path $scriptDir "modules\Logger.ps1"),
-    (Join-Path $scriptDir "modules\ConfigValidator.ps1"),
-    (Join-Path $scriptDir "modules\AppManager.ps1"),
-    (Join-Path $scriptDir "modules\OBSManager.ps1"),
-    (Join-Path $scriptDir "modules\PlatformManager.ps1")
+    (Join-Path $scriptDir "modules/Logger.ps1"),
+    (Join-Path $scriptDir "modules/ConfigValidator.ps1"),
+    (Join-Path $scriptDir "modules/AppManager.ps1"),
+    (Join-Path $scriptDir "modules/OBSManager.ps1"),
+    (Join-Path $scriptDir "modules/PlatformManager.ps1")
 )
 
 foreach ($modulePath in $modulePaths) {
@@ -318,7 +318,7 @@ try {
             $certificateId = $logger.FinalizeAndNotarizeLogAsync()
 
             if ($certificateId) {
-                Write-Host "✓ " -NoNewline -ForegroundColor Green
+                Write-Host "[OK] " -NoNewline -ForegroundColor Green
                 Write-Host "Log successfully notarized. Certificate ID: " -NoNewline -ForegroundColor White
                 Write-Host $certificateId -ForegroundColor Yellow
                 Write-Host "  This certificate can be used to verify log integrity if needed." -ForegroundColor Gray

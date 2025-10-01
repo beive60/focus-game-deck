@@ -1,43 +1,46 @@
-# Focus Game Deck - GUI設定エディタ
+# Focus Game Deck - GUI Configuration Editor
 
-GUI設定エディタのソースコードディレクトリです。
+This directory contains the source code for the GUI configuration editor.
 
-## ファイル構成
+> **Note**: Starting from v2.0.0, the GUI configuration editor is part of the unified architecture.
+> The main entry point is `src/Main.PS1`.
 
-- `ConfigEditor.ps1` - GUI設定エディタのメインロジック
-- `MainWindow.xaml` - WPFウィンドウのUIレイアウト定義
-- `StartConfigEditor.bat` - 設定エディタの起動用バッチファイル
-- `Build-ConfigEditor.ps1` - 実行ファイル(.exe)生成用ビルドスクリプト
-- `messages.json` - GUI用の国際化対応メッセージリソース
+## File Structure
 
-## クイックスタート
+- `ConfigEditor.ps1` - Main GUI configuration editor logic (part of unified architecture)
+- `MainWindow.xaml` - WPF window UI layout definition (includes Game Launcher tab)
+- `messages.json` - Internationalization message resources for GUI
 
-### GUI設定エディタの起動
+## Quick Start
 
-```cmd
-StartConfigEditor.bat
-```
-
-または
+### Unified GUI Application (Recommended)
 
 ```powershell
-.\ConfigEditor.ps1
+# Launch main application (integrates configuration editing and game launching)
+../src/Main.PS1
 ```
 
-### 実行ファイル生成
+### Standalone GUI Configuration Editor
 
 ```powershell
-.\Build-ConfigEditor.ps1 -Install -Build
+./ConfigEditor.ps1
 ```
 
-## 詳細な使用方法
+### Build Executable
 
-完全な使用方法、トラブルシューティング、技術仕様については、以下の詳細マニュアルを参照してください：
+```powershell
+# Use unified build system
+../Master-Build.ps1 -Development
+```
 
-**[docs/ja/GUI-MANUAL.md](../docs/ja/GUI-MANUAL.md)**
+## Detailed Usage
 
-## 開発者向け情報
+For complete usage instructions, troubleshooting, and technical specifications, refer to the detailed documentation:
 
-GUI設計の技術仕様、アーキテクチャ設計については：
+**[docs/user-guide/configuration.md](../docs/user-guide/configuration.md)**
 
-**[docs/ja/BD_and_FD_for_GUI.md](../docs/ja/BD_and_FD_for_GUI.md)**
+## Developer Information
+
+For GUI design technical specifications and architecture details, see:
+
+**[docs/developer-guide/gui-design.md](../docs/developer-guide/gui-design.md)**

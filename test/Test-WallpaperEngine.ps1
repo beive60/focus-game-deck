@@ -19,15 +19,15 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
 # Import required modules
 $rootPath = Split-Path $PSScriptRoot -Parent
-$configPath = Join-Path $rootPath "config\config.json"
-$appManagerPath = Join-Path $rootPath "src\modules\AppManager.ps1"
-$configValidatorPath = Join-Path $rootPath "src\modules\ConfigValidator.ps1"
-$messagesPath = Join-Path $rootPath "config\messages.json"
+$configPath = Join-Path $rootPath "config/config.json"
+$appManagerPath = Join-Path $rootPath "src/modules/AppManager.ps1"
+$configValidatorPath = Join-Path $rootPath "src/modules/ConfigValidator.ps1"
+$messagesPath = Join-Path $rootPath "config/messages.json"
 
 # Load modules
 if (Test-Path $appManagerPath) {
     . $appManagerPath
-    Write-Host "✓ AppManager module loaded" -ForegroundColor Green
+    Write-Host "[OK] AppManager module loaded" -ForegroundColor Green
 } else {
     Write-Error "AppManager module not found at: $appManagerPath"
     exit 1
@@ -35,7 +35,7 @@ if (Test-Path $appManagerPath) {
 
 if (Test-Path $configValidatorPath) {
     . $configValidatorPath
-    Write-Host "✓ ConfigValidator module loaded" -ForegroundColor Green
+    Write-Host "[OK] ConfigValidator module loaded" -ForegroundColor Green
 } else {
     Write-Error "ConfigValidator module not found at: $configValidatorPath"
     exit 1
@@ -44,7 +44,7 @@ if (Test-Path $configValidatorPath) {
 # Load configuration and messages
 try {
     $messages = Get-Content $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    Write-Host "✓ Messages loaded" -ForegroundColor Green
+    Write-Host "[OK] Messages loaded" -ForegroundColor Green
 } catch {
     Write-Error "Failed to load messages: $_"
     exit 1
@@ -54,7 +54,7 @@ try {
 $testConfig = @{
     managedApps = @{
         wallpaperEngine = @{
-            path            = "C:\Program Files (x86)\Steam\steamapps\common\wallpaper_engine\wallpaper32.exe"
+            path            = "C:/Program Files (x86)/Steam/steamapps/common/wallpaper_engine/wallpaper32.exe"
             processName     = "wallpaper32|wallpaper64"
             gameStartAction = "pause-wallpaper"
             gameEndAction   = "play-wallpaper"
@@ -69,7 +69,7 @@ $testConfig = @{
         }
     }
     paths       = @{
-        steam = "C:\Program Files (x86)\Steam\steam.exe"
+        steam = "C:/Program Files (x86)/Steam/steam.exe"
     }
 } | ConvertTo-Json -Depth 10 | ConvertFrom-Json
 
@@ -85,7 +85,7 @@ $validator = New-ConfigValidator -Config $testConfig -Messages $messages
 $validationResult = $validator.ValidateConfiguration($null)
 
 if ($validationResult) {
-    Write-Host "   ✓ Configuration validation passed" -ForegroundColor Green
+    Write-Host "   [OK] Configuration validation passed" -ForegroundColor Green
 } else {
     Write-Host "Configuration validation failed" -ForegroundColor Red
     $report = $validator.GetValidationReport()
@@ -101,7 +101,7 @@ Write-Host "└─ Creating AppManager instance with Wallpaper Engine config..."
 
 try {
     $appManager = New-AppManager -Config $testConfig -Messages $messages
-    Write-Host "   ✓ AppManager created successfully" -ForegroundColor Green
+    Write-Host "   [OK] AppManager created successfully" -ForegroundColor Green
 } catch {
     Write-Host "Failed to create AppManager: $_" -ForegroundColor Red
     exit 1
@@ -115,13 +115,13 @@ Write-Host "Test 3: Action Method Validation" -ForegroundColor Yellow
 Write-Host "└─ Testing pause-wallpaper action..."
 if ($TestMode.IsPresent) {
     Write-Host "   [TEST MODE] Simulating pause-wallpaper action..." -ForegroundColor Cyan
-    Write-Host "   ✓ pause-wallpaper action would be executed" -ForegroundColor Green
+    Write-Host "   [OK] pause-wallpaper action would be executed" -ForegroundColor Green
     $pauseResult = $true
 } else {
     try {
         $pauseResult = $appManager.InvokeAction("wallpaperEngine", "pause-wallpaper")
         if ($pauseResult) {
-            Write-Host "   ✓ pause-wallpaper action executed successfully" -ForegroundColor Green
+            Write-Host "   [OK] pause-wallpaper action executed successfully" -ForegroundColor Green
         } else {
             Write-Host "pause-wallpaper action failed" -ForegroundColor Red
         }
@@ -135,13 +135,13 @@ if ($TestMode.IsPresent) {
 Write-Host "└─ Testing play-wallpaper action..."
 if ($TestMode.IsPresent) {
     Write-Host "   [TEST MODE] Simulating play-wallpaper action..." -ForegroundColor Cyan
-    Write-Host "   ✓ play-wallpaper action would be executed" -ForegroundColor Green
+    Write-Host "   [OK] play-wallpaper action would be executed" -ForegroundColor Green
     $playResult = $true
 } else {
     try {
         $playResult = $appManager.InvokeAction("wallpaperEngine", "play-wallpaper")
         if ($playResult) {
-            Write-Host "   ✓ play-wallpaper action executed successfully" -ForegroundColor Green
+            Write-Host "   [OK] play-wallpaper action executed successfully" -ForegroundColor Green
         } else {
             Write-Host "play-wallpaper action failed" -ForegroundColor Red
         }
@@ -161,17 +161,17 @@ Write-Host "   System Architecture: $(if ($is64Bit) { '64-bit' } else { '32-bit'
 
 # Common Wallpaper Engine paths
 $commonPaths = @(
-    "C:\Program Files (x86)\Steam\steamapps\common\wallpaper_engine\wallpaper32.exe",
-    "C:\Program Files (x86)\Steam\steamapps\common\wallpaper_engine\wallpaper64.exe",
-    "C:\Program Files\Wallpaper Engine\wallpaper32.exe",
-    "C:\Program Files\Wallpaper Engine\wallpaper64.exe"
+    "C:/Program Files (x86)/Steam/steamapps/common/wallpaper_engine/wallpaper32.exe",
+    "C:/Program Files (x86)/Steam/steamapps/common/wallpaper_engine/wallpaper64.exe",
+    "C:/Program Files/Wallpaper Engine/wallpaper32.exe",
+    "C:/Program Files/Wallpaper Engine/wallpaper64.exe"
 )
 
 $foundPaths = @()
 foreach ($path in $commonPaths) {
     if (Test-Path $path) {
         $foundPaths += $path
-        Write-Host "   ✓ Found: $path" -ForegroundColor Green
+        Write-Host "   [OK] Found: $path" -ForegroundColor Green
     }
 }
 
@@ -179,7 +179,7 @@ if ($foundPaths.Count -eq 0) {
     Write-Host " No Wallpaper Engine installations found at common paths" -ForegroundColor Yellow
     Write-Host "      This is normal if Wallpaper Engine is not installed" -ForegroundColor Gray
 } else {
-    Write-Host "   ✓ Found $($foundPaths.Count) Wallpaper Engine executable(s)" -ForegroundColor Green
+    Write-Host "   [OK] Found $($foundPaths.Count) Wallpaper Engine executable(s)" -ForegroundColor Green
 }
 
 # Test 5: Error Handling
@@ -190,7 +190,7 @@ Write-Host "└─ Testing invalid path handling..."
 $invalidConfig = @{
     managedApps = @{
         wallpaperEngine = @{
-            path            = "C:\NonExistent\wallpaper32.exe"
+            path            = "C:\NonExistent/wallpaper32.exe"
             processName     = "wallpaper32"
             gameStartAction = "pause-wallpaper"
             gameEndAction   = "play-wallpaper"
@@ -203,7 +203,7 @@ $testAppManager = New-AppManager -Config $invalidConfig -Messages $messages
 $errorResult = $testAppManager.InvokeAction("wallpaperEngine", "pause-wallpaper")
 
 if (-not $errorResult) {
-    Write-Host "   ✓ Invalid path properly handled (returned false)" -ForegroundColor Green
+    Write-Host "   [OK] Invalid path properly handled (returned false)" -ForegroundColor Green
 } else {
     Write-Host "Invalid path not properly handled" -ForegroundColor Red
 }
@@ -225,7 +225,7 @@ if (-not $errorResult) { $passedTests++ }  # Error handling test passes when it 
 Write-Host "Tests Passed: $passedTests / $totalTests" -ForegroundColor $(if ($passedTests -eq $totalTests) { "Green" } else { "Yellow" })
 
 if ($passedTests -eq $totalTests) {
-    Write-Host "✓ All Wallpaper Engine integration tests passed!" -ForegroundColor Green
+    Write-Host "[OK] All Wallpaper Engine integration tests passed!" -ForegroundColor Green
     exit 0
 } else {
     Write-Host " Some tests failed or require attention" -ForegroundColor Yellow

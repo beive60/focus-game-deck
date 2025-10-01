@@ -31,9 +31,9 @@ if ($Verbose) { $VerbosePreference = "Continue" }
 
 # Initialize script variables
 $scriptDir = $PSScriptRoot
-$configPath = Join-Path $scriptDir "..\config\config.json"
-$messagesPath = Join-Path $scriptDir "..\config\messages.json"
-$loggerModulePath = Join-Path $scriptDir "..\src\modules\Logger.ps1"
+$configPath = Join-Path $scriptDir "../config/config.json"
+$messagesPath = Join-Path $scriptDir "../config/messages.json"
+$loggerModulePath = Join-Path $scriptDir "../src/modules/Logger.ps1"
 $testLogDir = Join-Path $scriptDir "temp-logs"
 $testLogFile = Join-Path $testLogDir "test-log-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
 
@@ -65,14 +65,14 @@ function Write-TestResult {
 
     if ($Passed) {
         $testResults.Passed++
-        Write-Host "✓ " -NoNewline -ForegroundColor Green
+        Write-Host "[OK] " -NoNewline -ForegroundColor Green
         Write-Host "$TestName" -ForegroundColor White
         if ($Message) {
             Write-Host "  $Message" -ForegroundColor Gray
         }
     } else {
         $testResults.Failed++
-        Write-Host "✗ " -NoNewline -ForegroundColor Red
+        Write-Host "[ERROR] " -NoNewline -ForegroundColor Red
         Write-Host "$TestName" -ForegroundColor White
         if ($Message) {
             Write-Host "  Error: $Message" -ForegroundColor Red

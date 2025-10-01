@@ -47,11 +47,11 @@ Write-Host "Testing JSON File Encoding..." -ForegroundColor Yellow
 
 # Test config.json
 try {
-    $configContent = Get-Content ".\config\config.json" -Raw -Encoding UTF8
+    $configContent = Get-Content "./config/config.json" -Raw -Encoding UTF8
     $null = $configContent | ConvertFrom-Json  # Test parsing
     Test-Result "config.json UTF-8 parsing" $true
 
-    $configBytes = [System.IO.File]::ReadAllBytes(".\config\config.json")
+    $configBytes = [System.IO.File]::ReadAllBytes("./config/config.json")
     $hasBOM = ($configBytes.Length -ge 3 -and $configBytes[0] -eq 0xEF -and $configBytes[1] -eq 0xBB -and $configBytes[2] -eq 0xBF)
     Test-Result "config.json without BOM" (-not $hasBOM) $(if ($hasBOM) { "BOM detected" } else { "" })
 } catch {
@@ -60,11 +60,11 @@ try {
 
 # Test messages.json
 try {
-    $messagesContent = Get-Content ".\config\messages.json" -Raw -Encoding UTF8
+    $messagesContent = Get-Content "./config/messages.json" -Raw -Encoding UTF8
     $messages = $messagesContent | ConvertFrom-Json
     Test-Result "messages.json UTF-8 parsing" $true
 
-    $messagesBytes = [System.IO.File]::ReadAllBytes(".\config\messages.json")
+    $messagesBytes = [System.IO.File]::ReadAllBytes("./config/messages.json")
     $hasBOM = ($messagesBytes.Length -ge 3 -and $messagesBytes[0] -eq 0xEF -and $messagesBytes[1] -eq 0xBB -and $messagesBytes[2] -eq 0xBF)
     Test-Result "messages.json without BOM" (-not $hasBOM) $(if ($hasBOM) { "BOM detected" } else { "" })
 
@@ -88,13 +88,13 @@ Test-Result "ASCII-safe console output" $true "Using [OK]/[ERROR] instead of UTF
 
 Write-Host "Testing Logger Compatibility..." -ForegroundColor Yellow
 try {
-    if (Test-Path ".\src\modules\Logger.ps1") {
-        . ".\src\modules\Logger.ps1"
+    if (Test-Path "./src/modules/Logger.ps1") {
+        . "./src/modules/Logger.ps1"
         Test-Result "Logger module loading" $true
 
-        if ((Test-Path ".\config\config.json") -and (Test-Path ".\config\messages.json")) {
-            $config = Get-Content ".\config\config.json" -Raw -Encoding UTF8 | ConvertFrom-Json
-            $messages = Get-Content ".\config\messages.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ((Test-Path "./config/config.json") -and (Test-Path "./config/messages.json")) {
+            $config = Get-Content "./config/config.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+            $messages = Get-Content "./config/messages.json" -Raw -Encoding UTF8 | ConvertFrom-Json
 
             $logger = Initialize-Logger -Config $config -Messages $messages.en
             Test-Result "Logger initialization" $true

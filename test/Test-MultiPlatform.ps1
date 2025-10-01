@@ -14,9 +14,9 @@ $srcDir = Join-Path $projectRoot "src"
 
 # Import modules for testing
 $modulePaths = @(
-    (Join-Path $srcDir "modules\Logger.ps1"),
-    (Join-Path $srcDir "modules\ConfigValidator.ps1"),
-    (Join-Path $srcDir "modules\PlatformManager.ps1")
+    (Join-Path $srcDir "modules/Logger.ps1"),
+    (Join-Path $srcDir "modules/ConfigValidator.ps1"),
+    (Join-Path $srcDir "modules/PlatformManager.ps1")
 )
 
 foreach ($modulePath in $modulePaths) {
@@ -41,7 +41,7 @@ function Test-Assert {
         [bool]$Condition,
         [string]$Message = ""
     )
-    
+
     if ($Condition) {
         $global:TestResults.Passed++
         $status = "PASS"
@@ -51,28 +51,28 @@ function Test-Assert {
         $status = "FAIL"
         $color = "Red"
     }
-    
+
     $result = "$status - $TestName"
     if ($Message) {
         $result += " ($Message)"
     }
-    
+
     $global:TestResults.Details += $result
     Write-Host $result -ForegroundColor $color
 }
 
 function Test-PlatformManager {
     Write-Host "`n=== PlatformManager Tests ===" -ForegroundColor Cyan
-    
+
     # Create test configuration
     $testConfig = @{
         paths = @{
-            steam = "C:\Program Files (x86)\Steam\steam.exe"
-            epic = "C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe"
+            steam = "C:/Program Files (x86)/Steam/steam.exe"
+            epic = "C:/Program Files (x86)/Epic Games/Launcher/Portal/Binaries/Win32/EpicGamesLauncher.exe"
             riot = "C:\Riot Games\Riot Client\RiotClientServices.exe"
         }
     }
-    
+
     # Test PlatformManager creation
     try {
         $platformManager = New-PlatformManager -Config $testConfig -Messages @{}
@@ -82,34 +82,34 @@ function Test-PlatformManager {
         Test-Assert "PlatformManager Creation" $false "Failed to create PlatformManager: $_"
         return
     }
-    
+
     # Test supported platforms
     $supportedPlatforms = $platformManager.GetSupportedPlatforms()
     Test-Assert "Supported Platforms Count" ($supportedPlatforms.Count -eq 3) "Expected 3 platforms (steam, epic, riot), got $($supportedPlatforms.Count)"
     Test-Assert "Steam Platform Support" ("steam" -in $supportedPlatforms) "Steam platform should be supported"
-    Test-Assert "Epic Platform Support" ("epic" -in $supportedPlatforms) "Epic platform should be supported"  
+    Test-Assert "Epic Platform Support" ("epic" -in $supportedPlatforms) "Epic platform should be supported"
     Test-Assert "Riot Platform Support" ("riot" -in $supportedPlatforms) "Riot platform should be supported"
-    
+
     # Test platform availability detection
     $steamAvailable = $platformManager.IsPlatformAvailable("steam")
     $epicAvailable = $platformManager.IsPlatformAvailable("epic")
     $riotAvailable = $platformManager.IsPlatformAvailable("riot")
-    
+
     Test-Assert "Steam Detection Logic" ($steamAvailable -is [bool]) "Steam detection should return boolean"
     Test-Assert "Epic Detection Logic" ($epicAvailable -is [bool]) "Epic detection should return boolean"
     Test-Assert "Riot Detection Logic" ($riotAvailable -is [bool]) "Riot detection should return boolean"
-    
+
     # Test platform detection methods
     $detectedPlatforms = $platformManager.DetectAllPlatforms()
     Test-Assert "Platform Detection Results" ($detectedPlatforms.Count -eq 3) "Should detect 3 platforms"
-    
+
     foreach ($platform in @("steam", "epic", "riot")) {
         $platformInfo = $detectedPlatforms[$platform]
         Test-Assert "$platform Detection Structure" ($null -ne $platformInfo) "$platform should have detection info"
         Test-Assert "$platform Available Property" ($platformInfo.ContainsKey("Available")) "$platform should have Available property"
         Test-Assert "$platform Name Property" ($platformInfo.ContainsKey("Name")) "$platform should have Name property"
     }
-    
+
     # Test game launch validation (without actual launch)
     $testGameConfigs = @{
         steam = @{
@@ -125,7 +125,7 @@ function Test-PlatformManager {
             name = "Test Riot Game"
         }
     }
-    
+
     foreach ($platform in $testGameConfigs.Keys) {
         $gameConfig = $testGameConfigs[$platform]
         try {
@@ -143,12 +143,12 @@ function Test-PlatformManager {
 
 function Test-ConfigValidator {
     Write-Host "`n=== ConfigValidator Multi-Platform Tests ===" -ForegroundColor Cyan
-    
+
     # Test configuration with multi-platform games
     $testConfig = @{
         managedApps = @{
             testApp = @{
-                path = "C:\Test\app.exe"
+                path = "C:\Test/app.exe"
                 processName = "testapp"
                 gameStartAction = "start-process"
                 gameEndAction = "stop-process"
@@ -191,10 +191,10 @@ function Test-ConfigValidator {
             }
         }
         paths = @{
-            steam = "C:\Steam\steam.exe"
+            steam = "C:/Steam/steam.exe"
         }
     }
-    
+
     try {
         $validator = New-ConfigValidator -Config $testConfig -Messages @{}
         Test-Assert "ConfigValidator Creation" ($null -ne $validator) "Successfully created ConfigValidator"
@@ -203,7 +203,7 @@ function Test-ConfigValidator {
         Test-Assert "ConfigValidator Creation" $false "Failed to create ConfigValidator: $_"
         return
     }
-    
+
     # Test individual game validations
     $testCases = @{
         "steamGame" = $true
@@ -212,25 +212,25 @@ function Test-ConfigValidator {
         "invalidGame" = $false  # Should fail due to unsupported platform
         "missingPlatform" = $true  # Should pass (defaults to steam)
     }
-    
+
     foreach ($gameId in $testCases.Keys) {
         $shouldPass = $testCases[$gameId]
-        
+
         # Clear previous validation results
         $validator.Errors = @()
         $validator.Warnings = @()
-        
+
         $validator.ValidateGameConfiguration($gameId)
-        
+
         $hasErrors = $validator.Errors.Count -gt 0
         $actualResult = -not $hasErrors
-        
+
         if ($shouldPass) {
             Test-Assert "Game '$gameId' Validation (Should Pass)" $actualResult "Expected no errors, got $($validator.Errors.Count) errors"
         } else {
             Test-Assert "Game '$gameId' Validation (Should Fail/Warn)" (-not $actualResult -or $validator.Warnings.Count -gt 0) "Expected errors or warnings"
         }
-        
+
         if ($Verbose -and ($validator.Errors.Count -gt 0 -or $validator.Warnings.Count -gt 0)) {
             Write-Host "  Errors: $($validator.Errors -join '; ')" -ForegroundColor Yellow
             Write-Host "  Warnings: $($validator.Warnings -join '; ')" -ForegroundColor Yellow
@@ -240,29 +240,29 @@ function Test-ConfigValidator {
 
 function Test-ConfigurationLoading {
     Write-Host "`n=== Configuration Loading Tests ===" -ForegroundColor Cyan
-    
-    $configPath = Join-Path $projectRoot "config\config.json"
-    
+
+    $configPath = Join-Path $projectRoot "config/config.json"
+
     # Test main config.json loading
     try {
         $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
         Test-Assert "Main Config Loading" ($null -ne $config) "Successfully loaded main configuration"
         Test-Assert "Config Has Games" ($null -ne $config.games) "Configuration should have games section"
         Test-Assert "Config Has Paths" ($null -ne $config.paths) "Configuration should have paths section"
-        
+
         # Test multi-platform game entries
         $gameIds = $config.games.PSObject.Properties.Name
         $multiPlatformGames = 0
-        
+
         foreach ($gameId in $gameIds) {
             $game = $config.games.$gameId
             if ($game.platform -and $game.platform -ne "steam") {
                 $multiPlatformGames++
             }
         }
-        
+
         Test-Assert "Multi-Platform Games Present" ($multiPlatformGames -gt 0) "Should have at least one non-Steam game configured"
-        
+
         # Test platform paths
         $expectedPlatforms = @("steam", "epic", "riot")
         foreach ($platform in $expectedPlatforms) {
@@ -281,7 +281,7 @@ Write-Host "Testing Epic Games & Riot Client Integration (v1.0)" -ForegroundColo
 Write-Host "======================================================" -ForegroundColor Green
 
 Test-ConfigurationLoading
-Test-PlatformManager  
+Test-PlatformManager
 Test-ConfigValidator
 
 # Display Results

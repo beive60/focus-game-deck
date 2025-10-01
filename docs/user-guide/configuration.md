@@ -21,11 +21,13 @@ This document provides detailed instructions for configuring Focus Game Deck to 
 ### 1. Choose Configuration Method
 
 **Option A: GUI Configuration Editor (Recommended)**
+
 - Run `Focus-Game-Deck-Config-Editor.exe`
 - Use the intuitive interface to configure all settings
 - Automatically generates valid `config.json`
 
 **Option B: Manual Configuration**
+
 - Copy `config/config.json.sample` to `config/config.json`
 - Edit the file following this guide
 
@@ -60,7 +62,7 @@ Define all applications you want Focus Game Deck to control during gaming sessio
 ```json
 "managedApps": {
     "appName": {
-        "path": "C:\\Path\\To\\Application.exe",
+        "path": "C:/Path/To/Application.exe",
         "processName": "ProcessName",
         "gameStartAction": "action-when-game-starts",
         "gameEndAction": "action-when-game-ends",
@@ -109,9 +111,10 @@ Define all applications you want Focus Game Deck to control during gaming sessio
 ### Application-Specific Examples
 
 #### NoWinKey (Disable Windows Key)
+
 ```json
 "noWinKey": {
-    "path": "C:\\Apps\\NoWinKey\\NoWinKey.exe",
+    "path": "C:/Apps/NoWinKey/NoWinKey.exe",
     "processName": "NoWinKey",
     "gameStartAction": "start-process",
     "gameEndAction": "stop-process",
@@ -121,9 +124,10 @@ Define all applications you want Focus Game Deck to control during gaming sessio
 ```
 
 #### Clibor (Clipboard Manager)
+
 ```json
 "clibor": {
-    "path": "C:\\Apps\\clibor\\Clibor.exe",
+    "path": "C:/Apps/clibor/Clibor.exe",
     "processName": "Clibor",
     "gameStartAction": "toggle-hotkeys",
     "gameEndAction": "toggle-hotkeys",
@@ -134,9 +138,10 @@ Define all applications you want Focus Game Deck to control during gaming sessio
 ```
 
 #### Discord (Communication)
+
 ```json
 "discord": {
-    "path": "%LOCALAPPDATA%\\Discord\\app-*\\Discord.exe",
+    "path": "%LOCALAPPDATA%/Discord/app-*/Discord.exe",
     "processName": "Discord",
     "gameStartAction": "set-discord-gaming-mode",
     "gameEndAction": "restore-discord-normal",
@@ -151,6 +156,7 @@ Define all applications you want Focus Game Deck to control during gaming sessio
 ```
 
 #### AutoHotkey (Script Manager)
+
 ```json
 "autoHotkey": {
     "path": "",
@@ -163,6 +169,7 @@ Define all applications you want Focus Game Deck to control during gaming sessio
 ```
 
 #### VTube Studio Integration
+
 ```json
 "vtubeStudio": {
     "path": "",
@@ -202,6 +209,7 @@ Define the games you want to manage and which applications should be controlled 
 ### Platform-Specific Configuration
 
 #### Steam Games
+
 ```json
 "apex": {
     "name": "Apex Legends",
@@ -213,6 +221,7 @@ Define the games you want to manage and which applications should be controlled 
 ```
 
 #### Epic Games
+
 ```json
 "genshin": {
     "name": "Genshin Impact",
@@ -224,6 +233,7 @@ Define the games you want to manage and which applications should be controlled 
 ```
 
 #### Riot Games
+
 ```json
 "valorant": {
     "name": "VALORANT",
@@ -235,11 +245,12 @@ Define the games you want to manage and which applications should be controlled 
 ```
 
 #### Standalone Applications
+
 ```json
 "custom-game": {
     "name": "Custom Game",
     "platform": "standalone",
-    "executablePath": "C:\\Games\\MyGame\\game.exe",
+    "executablePath": "C:/Games/MyGame/game.exe",
     "processName": "game*",
     "arguments": "-fullscreen",
     "appsToManage": ["noWinKey", "obs"]
@@ -249,17 +260,20 @@ Define the games you want to manage and which applications should be controlled 
 ### Finding Game Information
 
 #### Steam App IDs
+
 1. Visit the game's Steam store page
 2. Look at the URL: `store.steampowered.com/app/[APPID]/`
 3. Use the number as `steamAppId`
 
 #### Process Names
+
 1. Launch the game
 2. Open Task Manager (Ctrl+Shift+Esc)
 3. Find the game process in the "Processes" tab
 4. Use the process name (supports wildcards with `*`)
 
 #### Epic Game IDs
+
 1. Check Epic Games Launcher
 2. Or use third-party tools to find the game's internal ID
 
@@ -269,28 +283,32 @@ Configure paths to platform launchers and essential applications.
 
 ```json
 "paths": {
-    "steam": "C:\\Program Files (x86)\\Steam\\steam.exe",
-    "epic": "C:\\Program Files (x86)\\Epic Games\\Launcher\\Portal\\Binaries\\Win32\\EpicGamesLauncher.exe",
-    "riot": "C:\\Riot Games\\Riot Client\\RiotClientServices.exe",
-    "obs": "C:\\Program Files\\obs-studio\\bin\\64bit\\obs64.exe"
+    "steam": "C:/Program Files (x86)/Steam/steam.exe",
+    "epic": "C:/Program Files (x86)/Epic Games/Launcher/Portal/Binaries/Win32/EpicGamesLauncher.exe",
+    "riot": "C:/Riot Games/Riot Client/RiotClientServices.exe",
+    "obs": "C:/Program Files/obs-studio/bin/64bit/obs64.exe"
 }
 ```
 
 ### Common Installation Paths
 
 #### Steam
-- **Default**: `C:\\Program Files (x86)\\Steam\\steam.exe`
-- **Alternative**: `C:\\Steam\\steam.exe`
+
+- **Default**: `C:/Program Files (x86)/Steam/steam.exe`
+- **Alternative**: `C:/Steam/steam.exe`
 
 #### Epic Games Launcher
-- **Default**: `C:\\Program Files (x86)\\Epic Games\\Launcher\\Portal\\Binaries\\Win32\\EpicGamesLauncher.exe`
+
+- **Default**: `C:/Program Files (x86)/Epic Games/Launcher/Portal/Binaries/Win32/EpicGamesLauncher.exe`
 
 #### Riot Client
-- **Default**: `C:\\Riot Games\\Riot Client\\RiotClientServices.exe`
+
+- **Default**: `C:/Riot Games/Riot Client/RiotClientServices.exe`
 
 #### OBS Studio
-- **Default**: `C:\\Program Files\\obs-studio\\bin\\64bit\\obs64.exe`
-- **32-bit**: `C:\\Program Files (x86)\\obs-studio\\bin\\32bit\\obs32.exe`
+
+- **Default**: `C:/Program Files/obs-studio/bin/64bit/obs64.exe`
+- **32-bit**: `C:/Program Files (x86)/obs-studio/bin/32bit/obs32.exe`
 
 ## Logging Configuration
 
@@ -312,6 +330,7 @@ Configure how Focus Game Deck logs its activities.
 ```
 
 ### Logging Levels
+
 - `Trace`: Very detailed information
 - `Debug`: Debugging information
 - `Info`: General information (recommended)
@@ -320,6 +339,7 @@ Configure how Focus Game Deck logs its activities.
 - `Fatal`: Fatal errors only
 
 ### Log Notarization
+
 Enable cryptographic proof of log integrity for competitive gaming or dispute resolution:
 
 ```json
@@ -339,18 +359,21 @@ See [SECURITY.md](../SECURITY.md) for detailed information about log notarizatio
 ### Environment Variables
 
 You can use environment variables in paths:
+
 - `%LOCALAPPDATA%`: User's local app data
 - `%PROGRAMFILES%`: Program Files directory
 - `%SYSTEMROOT%`: Windows system directory
 
 Example:
+
 ```json
-"path": "%LOCALAPPDATA%\\Discord\\app-*\\Discord.exe"
+"path": "%LOCALAPPDATA%/Discord/app-*/Discord.exe"
 ```
 
 ### Multiple Process Names
 
 Use the pipe `|` character to match multiple process names:
+
 ```json
 "processName": "AutoHotkeyU64|AutoHotkey|AutoHotkey64"
 ```
@@ -358,6 +381,7 @@ Use the pipe `|` character to match multiple process names:
 ### Wildcard Patterns
 
 Use `*` for wildcard matching:
+
 ```json
 "processName": "r5apex*"  // Matches r5apex.exe, r5apex_dx12.exe, etc.
 ```
@@ -391,7 +415,7 @@ Use `*` for wildcard matching:
         }
     },
     "paths": {
-        "steam": "C:\\Program Files (x86)\\Steam\\steam.exe"
+        "steam": "C:/Program Files (x86)/Steam/steam.exe"
     }
 }
 ```
@@ -438,43 +462,52 @@ Use `*` for wildcard matching:
 
 #### 1. Application Not Starting/Stopping
 
-**Problem**: Managed application doesn't respond to start/stop commands.
+Problem: Managed application doesn't respond to start/stop commands.
 
 **Solutions**:
+
 - Verify the `path` is correct and file exists
 - Check `processName` matches exactly (use Task Manager)
 - Try different `terminationMethod` values
 - Increase `gracefulTimeoutMs` for slow applications
 
 #### 2. Game Not Launching
+
 **Problem**: Game doesn't start when running Focus Game Deck.
 
 **Solutions**:
+
 - Verify platform launcher path in `paths` section
 - Check game ID (Steam AppID, Epic Game ID, etc.)
 - Ensure the platform launcher is running
 - Test launching the game manually first
 
 #### 3. Process Name Issues
+
 **Problem**: Can't find correct process name for application.
 
 **Solutions**:
+
 - Use Task Manager to find exact process name
 - Try using wildcards: `processname*`
 - For multiple possible names: `name1|name2|name3`
 
 #### 4. Permission Errors
+
 **Problem**: "Access denied" or permission errors.
 
 **Solutions**:
+
 - Run Focus Game Deck as Administrator
 - Check if antivirus is blocking the application
 - Verify file permissions on target applications
 
 #### 5. Configuration Validation Errors
+
 **Problem**: Config file has syntax errors or invalid values.
 
 **Solutions**:
+
 - Use the GUI Config Editor for validation
 - Check JSON syntax with online validators
 - Ensure all referenced apps in `appsToManage` exist in `managedApps`
@@ -502,7 +535,7 @@ Use the mock games for testing:
 "mock-notepad": {
     "name": "Test Game (Notepad)",
     "platform": "standalone",
-    "executablePath": "C:\\Windows\\System32\\notepad.exe",
+    "executablePath": "C:/Windows/System32/notepad.exe",
     "processName": "notepad",
     "appsToManage": ["your-test-apps"]
 }
@@ -512,13 +545,13 @@ Run: `Focus-Game-Deck.exe mock-notepad`
 
 ## Related Documentation
 
-- **[README.md](../README.md)**: Project overview and quick start
-- **[SECURITY.md](../SECURITY.md)**: Security features and log notarization
-- **[GUI Manual](./ja/GUI-MANUAL.md)**: GUI configuration editor manual
-- **[Architecture](./ARCHITECTURE.md)**: Technical architecture details
+- [README.md](/README.md): Project overview and quick start
+- [SECURITY.md](/SECURITY.md): Security features and log notarization
+- [GUI Manual](/GUI-MANUAL.md): GUI configuration editor manual
+- [Architecture](docs/developer-guide/architecture.md): Technical architecture details
 
 ---
 
-**Last Updated**: September 28, 2025
-**Version**: 1.0.0
-**For**: Focus Game Deck v1.0.1+
+Last Updated: September 28, 2025
+Version: 1.0.0
+For: Focus Game Deck v1.0.1+

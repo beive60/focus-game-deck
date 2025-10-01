@@ -15,7 +15,7 @@
 
 # Import updated ConfigValidator module
 $scriptDir = $PSScriptRoot
-$configValidatorPath = Join-Path $scriptDir "..\src\modules\ConfigValidator.ps1"
+$configValidatorPath = Join-Path $scriptDir "../src/modules/ConfigValidator.ps1"
 if (Test-Path $configValidatorPath) {
     . $configValidatorPath
 } else {
@@ -75,7 +75,7 @@ Write-Host ""
 
 # Load configuration file
 $scriptDir = $PSScriptRoot
-$configPath = Join-Path $scriptDir "..\config\config.json"
+$configPath = Join-Path $scriptDir "../config/config.json"
 
 if (-not (Test-Path $configPath)) {
     Write-Host "Error: config.json not found at $configPath" -ForegroundColor Red

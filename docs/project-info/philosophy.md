@@ -66,7 +66,7 @@ The project name **Focus Game Deck** embodies our philosophy.
 ### Configuration-Driven Architecture
 
 * **No code changes required**: All behavior controlled through JSON configuration
-* **Extensibility**: Add new applications without modifying source code  
+* **Extensibility**: Add new applications without modifying source code
 * **Maintainability**: Clear separation between logic and configuration
 
 ### Internationalization by Design

@@ -27,8 +27,8 @@ class WebSocketAppManagerBase {
     # Generic WebSocket response receiver with timeout
     [object] ReceiveWebSocketResponse([int] $TimeoutSeconds = 5) {
         if (-not $this.WebSocket -or $this.WebSocket.State -ne "Open") {
-            if ($this.Logger) { 
-                $this.Logger.Warning("WebSocket not connected for $($this.AppName)", $this.AppName.ToUpper()) 
+            if ($this.Logger) {
+                $this.Logger.Warning("WebSocket not connected for $($this.AppName)", $this.AppName.ToUpper())
             }
             return $null
         }
@@ -38,15 +38,15 @@ class WebSocketAppManagerBase {
         $buffer = New-Object byte[] 8192
         $segment = New-Object ArraySegment[byte](, $buffer)
         $resultText = ""
-        
+
         try {
             while ($this.WebSocket.State -eq "Open") {
                 $receiveTask = $this.WebSocket.ReceiveAsync($segment, $cts.Token)
                 $receiveTask.Wait()
                 $result = $receiveTask.Result
-                
+
                 $resultText += [System.Text.Encoding]::UTF8.GetString($buffer, 0, $result.Count)
-                
+
                 if ($result.EndOfMessage) {
                     break
                 }
@@ -54,8 +54,8 @@ class WebSocketAppManagerBase {
             return $resultText | ConvertFrom-Json
         }
         catch {
-            if ($this.Logger) { 
-                $this.Logger.Error("WebSocket receive error for $($this.AppName): $_", $this.AppName.ToUpper()) 
+            if ($this.Logger) {
+                $this.Logger.Error("WebSocket receive error for $($this.AppName): $_", $this.AppName.ToUpper())
             }
             return $null
         }
@@ -64,8 +64,8 @@ class WebSocketAppManagerBase {
     # Generic WebSocket message sender
     [bool] SendWebSocketMessage([object] $message) {
         if (-not $this.WebSocket -or $this.WebSocket.State -ne "Open") {
-            if ($this.Logger) { 
-                $this.Logger.Warning("WebSocket not connected for $($this.AppName)", $this.AppName.ToUpper()) 
+            if ($this.Logger) {
+                $this.Logger.Warning("WebSocket not connected for $($this.AppName)", $this.AppName.ToUpper())
             }
             return $false
         }
@@ -78,8 +78,8 @@ class WebSocketAppManagerBase {
             return $true
         }
         catch {
-            if ($this.Logger) { 
-                $this.Logger.Error("WebSocket send error for $($this.AppName): $_", $this.AppName.ToUpper()) 
+            if ($this.Logger) {
+                $this.Logger.Error("WebSocket send error for $($this.AppName): $_", $this.AppName.ToUpper())
             }
             return $false
         }
@@ -91,25 +91,25 @@ class WebSocketAppManagerBase {
             $newWebSocket = $this.CreateWebSocketClient()
             $cts = New-Object System.Threading.CancellationTokenSource
             $cts.CancelAfter($timeoutMs)
-            
+
             $newWebSocket.ConnectAsync($uri, $cts.Token).Wait()
-            
+
             if ($newWebSocket.State -eq [System.Net.WebSockets.WebSocketState]::Open) {
-                if ($this.Logger) { 
-                    $this.Logger.Info("WebSocket connected to $uri for $($this.AppName)", $this.AppName.ToUpper()) 
+                if ($this.Logger) {
+                    $this.Logger.Info("WebSocket connected to $uri for $($this.AppName)", $this.AppName.ToUpper())
                 }
                 return $newWebSocket
             } else {
-                if ($this.Logger) { 
-                    $this.Logger.Error("WebSocket connection failed for $($this.AppName)", $this.AppName.ToUpper()) 
+                if ($this.Logger) {
+                    $this.Logger.Error("WebSocket connection failed for $($this.AppName)", $this.AppName.ToUpper())
                 }
                 $newWebSocket.Dispose()
                 return $null
             }
         }
         catch {
-            if ($this.Logger) { 
-                $this.Logger.Error("WebSocket connection error for $($this.AppName): $_", $this.AppName.ToUpper()) 
+            if ($this.Logger) {
+                $this.Logger.Error("WebSocket connection error for $($this.AppName): $_", $this.AppName.ToUpper())
             }
             return $null
         }
@@ -118,7 +118,7 @@ class WebSocketAppManagerBase {
     # Common WebSocket cleanup
     [void] CleanupWebSocket([System.Net.WebSockets.ClientWebSocket] $webSocket = $null) {
         $socketToClean = if ($webSocket) { $webSocket } else { $this.WebSocket }
-        
+
         if ($socketToClean) {
             try {
                 if ($socketToClean.State -eq [System.Net.WebSockets.WebSocketState]::Open) {
@@ -127,8 +127,8 @@ class WebSocketAppManagerBase {
             }
             catch {
                 # Ignore errors during disconnect
-                if ($this.Logger) { 
-                    $this.Logger.Warning("WebSocket cleanup warning for $($this.AppName): $_", $this.AppName.ToUpper()) 
+                if ($this.Logger) {
+                    $this.Logger.Warning("WebSocket cleanup warning for $($this.AppName): $_", $this.AppName.ToUpper())
                 }
             }
             finally {
@@ -147,23 +147,23 @@ class WebSocketAppManagerBase {
         }
 
         # Handle multiple process names separated by |
-        $processNames = $processName -split '\|'
-        
+        $processNames = $processName -split '/|'
+
         foreach ($name in $processNames) {
             $name = $name.Trim()
             if ($name -and (Get-Process -Name $name -ErrorAction SilentlyContinue)) {
                 return $true
             }
         }
-        
+
         return $false
     }
 
     # Common application startup utility with retry logic
     [bool] StartApplicationWithRetry([string] $appPath, [string] $arguments = "", [string] $processName = "", [int] $maxRetries = 10, [int] $retryDelaySeconds = 2) {
         if (-not $appPath -or -not (Test-Path $appPath)) {
-            if ($this.Logger) { 
-                $this.Logger.Error("Application path not found for $($this.AppName): $appPath", $this.AppName.ToUpper()) 
+            if ($this.Logger) {
+                $this.Logger.Error("Application path not found for $($this.AppName): $appPath", $this.AppName.ToUpper())
             }
             return $false
         }
@@ -176,10 +176,10 @@ class WebSocketAppManagerBase {
                 Start-Process -FilePath $appPath
             }
 
-            if ($this.Logger) { 
-                $this.Logger.Info("Started $($this.AppName) process: $appPath", $this.AppName.ToUpper()) 
+            if ($this.Logger) {
+                $this.Logger.Info("Started $($this.AppName) process: $appPath", $this.AppName.ToUpper())
             }
-            
+
             # Wait for startup if process name is provided
             if ($processName) {
                 $retryCount = 0
@@ -187,25 +187,25 @@ class WebSocketAppManagerBase {
                     Start-Sleep -Seconds $retryDelaySeconds
                     $retryCount++
                 }
-                
+
                 if ($this.IsProcessRunning($processName)) {
-                    if ($this.Logger) { 
-                        $this.Logger.Info("$($this.AppName) startup verified successfully", $this.AppName.ToUpper()) 
+                    if ($this.Logger) {
+                        $this.Logger.Info("$($this.AppName) startup verified successfully", $this.AppName.ToUpper())
                     }
                     return $true
                 } else {
-                    if ($this.Logger) { 
-                        $this.Logger.Error("$($this.AppName) startup verification failed (timeout)", $this.AppName.ToUpper()) 
+                    if ($this.Logger) {
+                        $this.Logger.Error("$($this.AppName) startup verification failed (timeout)", $this.AppName.ToUpper())
                     }
                     return $false
                 }
             }
-            
+
             return $true
         }
         catch {
-            if ($this.Logger) { 
-                $this.Logger.Error("Failed to start $($this.AppName): $_", $this.AppName.ToUpper()) 
+            if ($this.Logger) {
+                $this.Logger.Error("Failed to start $($this.AppName): $_", $this.AppName.ToUpper())
             }
             return $false
         }
@@ -214,28 +214,28 @@ class WebSocketAppManagerBase {
     # Common application shutdown utility with graceful handling
     [bool] StopApplicationGracefully([string] $processName, [int] $gracefulTimeoutMs = 5000) {
         if ([string]::IsNullOrEmpty($processName)) {
-            if ($this.Logger) { 
-                $this.Logger.Warning("No process name provided for $($this.AppName) shutdown", $this.AppName.ToUpper()) 
+            if ($this.Logger) {
+                $this.Logger.Warning("No process name provided for $($this.AppName) shutdown", $this.AppName.ToUpper())
             }
             return $false
         }
 
         if (-not $this.IsProcessRunning($processName)) {
-            if ($this.Logger) { 
-                $this.Logger.Info("$($this.AppName) is not running, skipping shutdown", $this.AppName.ToUpper()) 
+            if ($this.Logger) {
+                $this.Logger.Info("$($this.AppName) is not running, skipping shutdown", $this.AppName.ToUpper())
             }
             return $true
         }
 
         try {
             # Handle multiple process names separated by |
-            $processNames = $processName -split '\|'
+            $processNames = $processName -split '/|'
             $shutdownSuccess = $true
-            
+
             foreach ($name in $processNames) {
                 $name = $name.Trim()
                 if (-not $name) { continue }
-                
+
                 $processes = Get-Process -Name $name -ErrorAction SilentlyContinue
                 foreach ($process in $processes) {
                     try {
@@ -245,29 +245,29 @@ class WebSocketAppManagerBase {
                             # Force kill if graceful shutdown fails
                             $process.Kill()
                             $process.WaitForExit()
-                            if ($this.Logger) { 
-                                $this.Logger.Warning("Force killed $($this.AppName) process: $name", $this.AppName.ToUpper()) 
+                            if ($this.Logger) {
+                                $this.Logger.Warning("Force killed $($this.AppName) process: $name", $this.AppName.ToUpper())
                             }
                         } else {
-                            if ($this.Logger) { 
-                                $this.Logger.Info("Gracefully stopped $($this.AppName) process: $name", $this.AppName.ToUpper()) 
+                            if ($this.Logger) {
+                                $this.Logger.Info("Gracefully stopped $($this.AppName) process: $name", $this.AppName.ToUpper())
                             }
                         }
                     }
                     catch {
-                        if ($this.Logger) { 
-                            $this.Logger.Error("Failed to stop $($this.AppName) process $name : $_", $this.AppName.ToUpper()) 
+                        if ($this.Logger) {
+                            $this.Logger.Error("Failed to stop $($this.AppName) process $name : $_", $this.AppName.ToUpper())
                         }
                         $shutdownSuccess = $false
                     }
                 }
             }
-            
+
             return $shutdownSuccess
         }
         catch {
-            if ($this.Logger) { 
-                $this.Logger.Error("Error during $($this.AppName) shutdown: $_", $this.AppName.ToUpper()) 
+            if ($this.Logger) {
+                $this.Logger.Error("Error during $($this.AppName) shutdown: $_", $this.AppName.ToUpper())
             }
             return $false
         }
@@ -283,10 +283,10 @@ class WebSocketAppManagerBase {
             return ConvertTo-SecureString -String $PlainText -AsPlainText -Force
         }
         catch {
-            if ($this.Logger) { 
-                $this.Logger.Warning("ConvertTo-SecureString failed for $($this.AppName), using alternative method: $_", $this.AppName.ToUpper()) 
+            if ($this.Logger) {
+                $this.Logger.Warning("ConvertTo-SecureString failed for $($this.AppName), using alternative method: $_", $this.AppName.ToUpper())
             }
-            
+
             $secureString = New-Object System.Security.SecureString
             foreach ($char in $PlainText.ToCharArray()) {
                 $secureString.AppendChar($char)
@@ -312,7 +312,7 @@ function New-WebSocketAppManagerBase {
     param(
         [Parameter(Mandatory = $true)]
         [object] $Config,
-        
+
         [Parameter(Mandatory = $true)]
         [object] $Messages,
 
@@ -322,7 +322,7 @@ function New-WebSocketAppManagerBase {
         [Parameter(Mandatory = $false)]
         [string] $AppName = "Unknown"
     )
-    
+
     return [WebSocketAppManagerBase]::new($Config, $Messages, $Logger, $AppName)
 }
 

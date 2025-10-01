@@ -60,7 +60,7 @@ class PlatformManager {
                 } catch {
                     # Method 2: Epic Games URI (fixed version)
                     $epicUri = "com.epicgames.launcher://apps/$gameId`?action=launch`&silent=true"
-                    $tempBat = "$env:TEMP\launch_epic_$gameId.bat"
+                    $tempBat = "$env:TEMP/launch_epic_$gameId.bat"
                     "@echo off`nstart `"Epic Games`" `"$epicUri`"" | Out-File -FilePath $tempBat -Encoding ASCII
                     Start-Process -FilePath $tempBat -WindowStyle Hidden
                     if ($this.Logger) { $this.Logger.Info("Launched via Epic Games URI: GameID $gameId", "PLATFORM") }
@@ -125,9 +125,9 @@ class PlatformManager {
 
     [string] DetectSteamPath() {
         $steamPaths = @(
-            "C:\Program Files (x86)\Steam\steam.exe",
-            "C:\Program Files\Steam\steam.exe",
-            (Get-ItemProperty -Path "HKCU:\Software\Valve\Steam" -Name "SteamExe" -ErrorAction SilentlyContinue).SteamExe
+            "C:/Program Files (x86)/Steam/steam.exe",
+            "C:/Program Files/Steam/steam.exe",
+            (Get-ItemProperty -Path "HKCU:/Software/Valve/Steam" -Name "SteamExe" -ErrorAction SilentlyContinue).SteamExe
         )
 
         foreach ($path in $steamPaths) {
@@ -141,8 +141,8 @@ class PlatformManager {
     [string] DetectEpicPath() {
         # Epic Games Launcher detection logic
         $epicPaths = @(
-            "C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe",
-            "C:\Program Files\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe"
+            "C:/Program Files (x86)/Epic Games/Launcher/Portal/Binaries/Win32/EpicGamesLauncher.exe",
+            "C:/Program Files/Epic Games/Launcher/Portal/Binaries/Win32/EpicGamesLauncher.exe"
         )
 
         foreach ($path in $epicPaths) {
@@ -158,9 +158,9 @@ class PlatformManager {
 
     [string] DetectEAPath() {
         $eaPaths = @(
-            "C:\Program Files\Electronic Arts\EA Desktop\EA Desktop\EADesktop.exe",
-            "C:\Program Files (x86)\Electronic Arts\EA Desktop\EA Desktop\EADesktop.exe",
-            "C:\Program Files\EA Games\EA Desktop\EA Desktop\EADesktop.exe"
+            "C:/Program Files/Electronic Arts/EA Desktop/EA Desktop/EADesktop.exe",
+            "C:/Program Files (x86)/Electronic Arts/EA Desktop/EA Desktop/EADesktop.exe",
+            "C:/Program Files/EA Games/EA Desktop/EA Desktop/EADesktop.exe"
         )
 
         foreach ($path in $eaPaths) {

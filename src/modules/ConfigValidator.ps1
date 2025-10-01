@@ -337,22 +337,22 @@ class ConfigValidator {
         $platformChecks = @{
             "steam" = @{
                 Paths         = @(
-                    "C:\Program Files (x86)\Steam\steam.exe",
-                    "C:\Program Files\Steam\steam.exe"
+                    "C:/Program Files (x86)/Steam/steam.exe",
+                    "C:/Program Files/Steam/steam.exe"
                 )
-                RegistryPath  = "HKCU:\Software\Valve\Steam"
+                RegistryPath  = "HKCU:/Software/Valve/Steam"
                 RegistryValue = "SteamExe"
             }
             "epic"  = @{
                 Paths = @(
-                    "C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe",
-                    "C:\Program Files\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe"
+                    "C:/Program Files (x86)/Epic Games/Launcher/Portal/Binaries/Win32/EpicGamesLauncher.exe",
+                    "C:/Program Files/Epic Games/Launcher/Portal/Binaries/Win32/EpicGamesLauncher.exe"
                 )
             }
             "ea"    = @{
                 Paths = @(
-                    "C:\Program Files\Electronic Arts\EA Desktop\EA Desktop\EADesktop.exe",
-                    "C:\Program Files (x86)\Electronic Arts\EA Desktop\EA Desktop\EADesktop.exe"
+                    "C:/Program Files/Electronic Arts/EA Desktop/EA Desktop/EADesktop.exe",
+                    "C:/Program Files (x86)/Electronic Arts/EA Desktop/EA Desktop/EADesktop.exe"
                 )
             }
             "riot"  = @{

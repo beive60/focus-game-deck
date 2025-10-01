@@ -56,7 +56,7 @@ class Logger {
             if ($config.logging.filePath) {
                 $this.LogFilePath = $config.logging.filePath
             } else {
-                $this.LogFilePath = Join-Path $PSScriptRoot "..\logs\focus-game-deck.log"
+                $this.LogFilePath = Join-Path $PSScriptRoot "../logs/focus-game-deck.log"
             }
 
             # Initialize Firebase configuration for log notarization
@@ -66,7 +66,7 @@ class Logger {
                 $this.FirebaseDatabaseURL = $config.logging.firebase.databaseURL
             }
         } else {
-            $this.LogFilePath = Join-Path $PSScriptRoot "..\logs\focus-game-deck.log"
+            $this.LogFilePath = Join-Path $PSScriptRoot "../logs/focus-game-deck.log"
         }
 
         # Ensure log directory exists
@@ -261,9 +261,9 @@ class Logger {
             } else {
                 # Fallback: try to find the main executable in common locations
                 $possiblePaths = @(
-                    (Join-Path $PSScriptRoot "..\..\release\Focus-Game-Deck.exe"),
-                    (Join-Path $PSScriptRoot "..\..\build\Focus-Game-Deck.exe"),
-                    (Join-Path $PSScriptRoot "..\..\Focus-Game-Deck.exe")
+                    (Join-Path $PSScriptRoot "../..\release/Focus-Game-Deck.exe"),
+                    (Join-Path $PSScriptRoot "../../build/Focus-Game-Deck.exe"),
+                    (Join-Path $PSScriptRoot "../../Focus-Game-Deck.exe")
                 )
 
                 foreach ($path in $possiblePaths) {
@@ -314,7 +314,7 @@ class Logger {
     # Get application version from Version.ps1
     hidden [string] GetApplicationVersion() {
         try {
-            $versionScriptPath = Join-Path $PSScriptRoot "..\..\Version.ps1"
+            $versionScriptPath = Join-Path $PSScriptRoot "../../Version.ps1"
 
             if (Test-Path $versionScriptPath) {
                 # Execute Version.ps1 in isolated scope to get version information
@@ -346,7 +346,7 @@ class Logger {
         $fileSizeMB = $logFile.Length / 1MB
 
         if ($fileSizeMB -gt $maxSizeMB) {
-            $backupPath = $this.LogFilePath -replace '\.log$', "-backup-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+            $backupPath = $this.LogFilePath -replace '/.log$', "-backup-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
             Move-Item -Path $this.LogFilePath -Destination $backupPath
             $this.Info("Log file rotated. Backup created: $backupPath", "LOGGER")
         }

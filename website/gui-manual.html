@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Game Deck - GUI Manual</title>
+    <meta name="description" content="Complete GUI manual for Focus Game Deck unified gaming environment tool">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .manual-nav {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .manual-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .manual-nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+        }
+
+        .manual-nav a:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .manual-section {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .manual-section:last-child {
+            border-bottom: none;
+        }
+
+        .screenshot-placeholder {
+            background: var(--bg-secondary);
+            border: 2px dashed var(--border-color);
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            margin: 1rem 0;
+            border-radius: 8px;
+        }
+
+        .step-list {
+            counter-reset: step-counter;
+        }
+
+        .step-list li {
+            counter-increment: step-counter;
+            margin: 1rem 0;
+            padding-left: 3rem;
+            position: relative;
+        }
+
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: var(--accent-color);
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .feature-card h4 {
+            color: var(--accent-color);
+            margin-top: 0;
+        }
+
+        .back-to-main {
+            display: inline-block;
+            margin-bottom: 2rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            color: var(--text-color);
+            text-decoration: none;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+        }
+
+        .back-to-main:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-content">
+            <h1 data-i18n="manual_title">Focus Game Deck - GUI Manual</h1>
+            <p class="subtitle" data-i18n="manual_subtitle">Complete guide to the unified gaming environment interface
+            </p>
+        </div>
+        <div class="header-controls">
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                <span class="theme-icon">🌓</span>
+            </button>
+            <div class="language-selector">
+                <select id="language-select">
+                    <option value="en">🇺🇸 English</option>
+                    <option value="ja">🇯🇵 日本語</option>
+                    <option value="zh-CN">🇨🇳 中文</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <a href="index.html" class="back-to-main" data-i18n="back_to_main">← Back to Main Page</a>
+
+        <nav class="manual-nav">
+            <ul>
+                <li><a href="#quick-start" data-i18n="nav_quick_start">Quick Start</a></li>
+                <li><a href="#game-launcher" data-i18n="nav_game_launcher">Game Launcher</a></li>
+                <li><a href="#game-settings" data-i18n="nav_game_settings">Game Settings</a></li>
+                <li><a href="#app-management" data-i18n="nav_app_management">App Management</a></li>
+                <li><a href="#global-settings" data-i18n="nav_global_settings">Global Settings</a></li>
+                <li><a href="#troubleshooting" data-i18n="nav_troubleshooting">Troubleshooting</a></li>
+            </ul>
+        </nav>
+
+        <section id="quick-start" class="manual-section">
+            <h2 data-i18n="quick_start_title">Quick Start Guide</h2>
+            <p data-i18n="quick_start_intro">Focus Game Deck v2.0.0 introduces a unified interface that combines
+                configuration management and game launching in a single, user-friendly application.</p>
+
+            <h3 data-i18n="launching_app_title">Launching the Application</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4 data-i18n="gui_mode_title">GUI Mode (Default)</h4>
+                    <p data-i18n="gui_mode_desc">Simply double-click <code>Focus-Game-Deck.exe</code> to open the
+                        configuration interface.</p>
+                    <div class="screenshot-placeholder" data-i18n="screenshot_placeholder">Screenshot: Main application
+                        window</div>
+                </div>
+                <div class="feature-card">
+                    <h4 data-i18n="cli_mode_title">Command Line Mode</h4>
+                    <p data-i18n="cli_mode_desc">Run <code>Focus-Game-Deck.exe &lt;game-id&gt;</code> to launch games
+                        directly from command line.</p>
+                    <div class="screenshot-placeholder" data-i18n="screenshot_placeholder">Screenshot: Command line
+                        usage</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="game-launcher" class="manual-section">
+            <h2 data-i18n="game_launcher_title">Game Launcher Tab</h2>
+            <p data-i18n="game_launcher_intro">The Game Launcher tab is your primary interface for launching configured
+                games with optimized settings.</p>
+
+            <div class="screenshot-placeholder" data-i18n="screenshot_placeholder">Screenshot: Game Launcher tab
+                interface</div>
+
+            <h3 data-i18n="using_launcher_title">Using the Game Launcher</h3>
+            <ol class="step-list">
+                <li data-i18n="launcher_step_1">Select your game from the available game cards</li>
+                <li data-i18n="launcher_step_2">Review the game status and launch button</li>
+                <li data-i18n="launcher_step_3">Click "Launch Game" to start with optimized environment</li>
+                <li data-i18n="launcher_step_4">The application will automatically configure gaming settings</li>
+                <li data-i18n="launcher_step_5">Game will launch with anti-cheat protection and optimizations</li>
+            </ol>
+
+            <h3 data-i18n="launcher_features_title">Game Launcher Features</h3>
+            <ul>
+                <li data-i18n="launcher_feature_1">One-click game launching with environment optimization</li>
+                <li data-i18n="launcher_feature_2">Real-time status indicators for each game</li>
+                <li data-i18n="launcher_feature_3">Integration with Steam, Epic Games Store, and Riot Client</li>
+                <li data-i18n="launcher_feature_4">Automatic settings restoration after gaming sessions</li>
+            </ul>
+        </section>
+
+        <section id="game-settings" class="manual-section">
+            <h2 data-i18n="game_settings_title">Game Settings Configuration</h2>
+            <p data-i18n="game_settings_intro">Configure individual games with specific launch parameters, process
+                management, and platform integration.</p>
+
+            <div class="screenshot-placeholder" data-i18n="screenshot_placeholder">Screenshot: Game Settings tab</div>
+
+            <h3 data-i18n="adding_game_title">Adding a New Game</h3>
+            <ol class="step-list">
+                <li data-i18n="add_game_step_1">Navigate to the "Game Settings" tab</li>
+                <li data-i18n="add_game_step_2">Click "Add New Game" button</li>
+                <li data-i18n="add_game_step_3">Enter game details (Name, Steam App ID, Process Name)</li>
+                <li data-i18n="add_game_step_4">Configure platform-specific settings if needed</li>
+                <li data-i18n="add_game_step_5">Save configuration to make the game available in launcher</li>
+            </ol>
+
+            <h3 data-i18n="game_config_options_title">Configuration Options</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4 data-i18n="basic_settings_title">Basic Settings</h4>
+                    <ul>
+                        <li data-i18n="setting_game_name">Game Name: Display name in launcher</li>
+                        <li data-i18n="setting_steam_id">Steam App ID: For Steam integration</li>
+                        <li data-i18n="setting_process_name">Process Name: Executable filename</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h4 data-i18n="advanced_settings_title">Advanced Settings</h4>
+                    <ul>
+                        <li data-i18n="setting_launch_args">Launch Arguments: Custom startup parameters</li>
+                        <li data-i18n="setting_platform">Platform: Steam, Epic, Riot, or Standalone</li>
+                        <li data-i18n="setting_pre_actions">Pre-launch Actions: Environment preparation</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="app-management" class="manual-section">
+            <h2 data-i18n="app_management_title">Application Management</h2>
+            <p data-i18n="app_management_intro">Configure which applications to manage during gaming sessions for
+                optimal performance and anti-cheat compatibility.</p>
+
+            <div class="screenshot-placeholder" data-i18n="screenshot_placeholder">Screenshot: App Management tab</div>
+
+            <h3 data-i18n="managed_apps_title">Managed Applications</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4 data-i18n="system_apps_title">System Applications</h4>
+                    <ul>
+                        <li data-i18n="app_nowinkey">NoWinKey - Disable Windows key during gaming</li>
+                        <li data-i18n="app_autohotkey">AutoHotkey - Custom keyboard shortcuts</li>
+                        <li data-i18n="app_clibor">Clibor - Clipboard management utility</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h4 data-i18n="streaming_apps_title">Streaming & Content Creation</h4>
+                    <ul>
+                        <li data-i18n="app_obs">OBS Studio - Stream and recording management</li>
+                        <li data-i18n="app_vtube">VTube Studio - Virtual avatar management</li>
+                        <li data-i18n="app_discord">Discord - Communication and Rich Presence</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="global-settings" class="manual-section">
+            <h2 data-i18n="global_settings_title">Global Settings</h2>
+            <p data-i18n="global_settings_intro">Configure application-wide settings including language, integrations,
+                and system behavior.</p>
+
+            <div class="screenshot-placeholder" data-i18n="screenshot_placeholder">Screenshot: Global Settings tab</div>
+
+            <h3 data-i18n="global_config_title">Global Configuration Options</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4 data-i18n="language_settings_title">Language & Interface</h4>
+                    <ul>
+                        <li data-i18n="setting_language">Language: Auto-detect or manual selection</li>
+                        <li data-i18n="setting_theme">Theme: Light/Dark mode support</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h4 data-i18n="integration_settings_title">Integration Settings</h4>
+                    <ul>
+                        <li data-i18n="setting_obs_host">OBS WebSocket Host</li>
+                        <li data-i18n="setting_obs_port">OBS WebSocket Port</li>
+                        <li data-i18n="setting_obs_password">OBS WebSocket Password</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="troubleshooting" class="manual-section">
+            <h2 data-i18n="troubleshooting_title">Troubleshooting</h2>
+
+            <h3 data-i18n="common_issues_title">Common Issues and Solutions</h3>
+
+            <h4 data-i18n="issue_game_not_launching">Game Not Launching</h4>
+            <ol class="step-list">
+                <li data-i18n="troubleshoot_step_1">Verify game configuration in Game Settings tab</li>
+                <li data-i18n="troubleshoot_step_2">Check Steam App ID or executable path</li>
+                <li data-i18n="troubleshoot_step_3">Ensure platform (Steam/Epic/Riot) is running</li>
+                <li data-i18n="troubleshoot_step_4">Check application logs for error messages</li>
+            </ol>
+
+            <h4 data-i18n="issue_obs_connection">OBS Connection Issues</h4>
+            <ol class="step-list">
+                <li data-i18n="obs_troubleshoot_1">Verify OBS Studio is running with WebSocket plugin</li>
+                <li data-i18n="obs_troubleshoot_2">Check Host and Port settings in Global Settings</li>
+                <li data-i18n="obs_troubleshoot_3">Ensure WebSocket password matches configuration</li>
+                <li data-i18n="obs_troubleshoot_4">Test connection from OBS WebSocket settings</li>
+            </ol>
+
+            <h4 data-i18n="issue_anticheat">Anti-cheat Compatibility</h4>
+            <p data-i18n="anticheat_info">Focus Game Deck is designed to be anti-cheat friendly. If you encounter
+                issues:</p>
+            <ul>
+                <li data-i18n="anticheat_tip_1">Ensure you're using the digitally signed release version</li>
+                <li data-i18n="anticheat_tip_2">Add Focus Game Deck to your antivirus whitelist</li>
+                <li data-i18n="anticheat_tip_3">Report any false positives to the development team</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-links">
+            <a href="index.html" data-i18n="footer_home">Home</a>
+            <a href="https://github.com/beive60/focus-game-deck" data-i18n="footer_github">GitHub</a>
+            <a href="https://github.com/beive60/focus-game-deck/releases" data-i18n="footer_releases">Releases</a>
+            <a href="https://github.com/beive60/focus-game-deck/issues" data-i18n="footer_issues">Issues</a>
+        </div>
+        <p data-i18n="footer_copyright">Copyright © 2025 Focus Game Deck. Released under the MIT License.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

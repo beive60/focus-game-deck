@@ -28,7 +28,7 @@ This guide provides practical procedures for developers to execute version manag
 git pull origin main
 
 # Check current version
-.\scripts\Version-Helper.ps1 info
+./scripts/Version-Helper.ps1 info
 
 # Create working branch (if needed)
 git checkout -b feature/new-feature
@@ -92,33 +92,33 @@ migration tool."
 
 ```powershell
 # Execute comprehensive validation
-.\scripts\Version-Helper.ps1 validate
+./scripts/Version-Helper.ps1 validate
 
 # Verify the following items:
-# ✓ Git repository is clean (no uncommitted changes)
-# ✓ All tests passing
-# ✓ Documentation is up to date
-# ✓ Version.ps1 contains correct current version
+# [OK] Git repository is clean (no uncommitted changes)
+# [OK] All tests passing
+# [OK] Documentation is up to date
+# [OK] Version.ps1 contains correct current version
 ```
 
 #### 2. Determine Next Version
 
 ```powershell
 # Check next version options
-.\scripts\Version-Helper.ps1 next
+./scripts/Version-Helper.ps1 next
 
 # Sample output:
 # Current version: 1.0.1-alpha
 #
 # Release options:
 #   Major:  2.0.0
-#   Minor:  1.1.0
-#   Patch:  1.0.2
+#   Minor:  2.1.0
+#   Patch:  2.0.2
 #
 # Pre-release options:
-#   Alpha:  1.0.2-alpha
-#   Beta:   1.0.2-beta
-#   RC:     1.0.2-rc
+#   Alpha:  2.0.2-alpha
+#   Beta:   2.0.2-beta
+#   RC:     2.0.2-rc
 ```
 
 ### Phase 2: Version Update and Tag Creation
@@ -127,24 +127,24 @@ migration tool."
 
 ```powershell
 # Check with DRY RUN (no actual changes)
-.\scripts\Release-Manager.ps1 -UpdateType prerelease -PreReleaseType alpha -DryRun
+./scripts\Release-Manager.ps1 -UpdateType prerelease -PreReleaseType alpha -DryRun
 
 # Create actual release (generate tag and release notes)
-.\scripts\Release-Manager.ps1 -UpdateType prerelease -PreReleaseType alpha -CreateTag -GenerateReleaseNotes -ReleaseMessage "Alpha release for testing core functionality"
+./scripts\Release-Manager.ps1 -UpdateType prerelease -PreReleaseType alpha -CreateTag -GenerateReleaseNotes -ReleaseMessage "Alpha release for testing core functionality"
 ```
 
 #### Patch Release Example
 
 ```powershell
 # Bug fix release
-.\scripts\Release-Manager.ps1 -UpdateType patch -CreateTag -GenerateReleaseNotes -ReleaseMessage "Patch release with critical bug fixes"
+./scripts\Release-Manager.ps1 -UpdateType patch -CreateTag -GenerateReleaseNotes -ReleaseMessage "Patch release with critical bug fixes"
 ```
 
 #### Major Release Example
 
 ```powershell
 # Official release
-.\scripts\Release-Manager.ps1 -UpdateType minor -CreateTag -GenerateReleaseNotes -ReleaseMessage "Official v1.1.0 release with new platform support"
+./scripts\Release-Manager.ps1 -UpdateType minor -CreateTag -GenerateReleaseNotes -ReleaseMessage "Official v1.1.0 release with new platform support"
 ```
 
 ### Phase 3: GitHub Release Creation
@@ -163,28 +163,26 @@ code release-notes-1.0.2-alpha.md
 
 ```powershell
 # Development build (unsigned)
-.\Master-Build.ps1 -Development
+./Master-Build.ps1 -Development
 
 # Production build (signed) *Requires certificate setup
-.\Master-Build.ps1 -Production
+./Master-Build.ps1 -Production
 
 # Individual build operations
-.\build-tools\Build-FocusGameDeck.ps1 -Install    # Install ps2exe module
-.\build-tools\Build-FocusGameDeck.ps1 -Build      # Generate executables
-.\build-tools\Build-FocusGameDeck.ps1 -Sign       # Apply signatures to existing builds
-.\build-tools\Build-FocusGameDeck.ps1 -Clean      # Clean up build artifacts
+./build-tools/Build-FocusGameDeck.ps1 -Install    # Install ps2exe module
+./build-tools/Build-FocusGameDeck.ps1 -Build      # Generate executables
+./build-tools/Build-FocusGameDeck.ps1 -Sign       # Apply signatures to existing builds
+./build-tools/Build-FocusGameDeck.ps1 -Clean      # Clean up build artifacts
 
 # Individual digital signing operations
-.\Sign-Executables.ps1 -ListCertificates    # List available certificates
-.\Sign-Executables.ps1 -TestCertificate     # Test configured certificate
-.\Sign-Executables.ps1 -SignAll             # Sign all executables
+./Sign-Executables.ps1 -ListCertificates    # List available certificates
+./Sign-Executables.ps1 -TestCertificate     # Test configured certificate
+./Sign-Executables.ps1 -SignAll             # Sign all executables
 ```
 
 **Generated Executables**:
 
-- `Focus-Game-Deck.exe` - Main application
-- `Focus-Game-Deck-MultiPlatform.exe` - Multi-platform version
-- `Focus-Game-Deck-Config-Editor.exe` - GUI configuration editor
+- `Focus-Game-Deck.exe` - Application
 
 **Signing Configuration** (`config/signing-config.json`):
 
@@ -200,26 +198,21 @@ code release-notes-1.0.2-alpha.md
 
 #### 3. GitHub Release Creation Steps
 
-1. **Access GitHub Releases page**
+1. Access GitHub Releases page
    - <https://github.com/beive60/focus-game-deck/releases>
-
-2. **Click "Create a new release"**
-
-3. **Enter Release Information**
-
+2. Click "Create a new release"
+3. Enter Release Information
    ```text
    Tag: v1.0.2-alpha.1
    Release title: Focus Game Deck v1.0.2-alpha.1 - Alpha Test Release
    Description: [Copy content from generated release notes]
    ```
-
-4. **Upload Assets**
+4. Upload Assets
    - `FocusGameDeck-v1.0.2-alpha.1-Setup.exe`
    - `FocusGameDeck-v1.0.2-alpha.1-Portable.zip`
    - `SHA256SUMS.txt`
-
-5. **Release Settings**
-   - Pre-release: ✓ (for alpha/beta/RC versions)
+5. Release Settings
+   - Pre-release: [OK] (for alpha/beta/RC versions)
    - Set as latest release: (official versions only)
 
 ## Emergency Response
@@ -228,7 +221,7 @@ code release-notes-1.0.2-alpha.md
 
 ```powershell
 # Emergency bug fix release
-.\scripts\Release-Manager.ps1 -UpdateType patch -CreateTag -GenerateReleaseNotes -ReleaseMessage "Hotfix for critical security vulnerability"
+./scripts\Release-Manager.ps1 -UpdateType patch -CreateTag -GenerateReleaseNotes -ReleaseMessage "Hotfix for critical security vulnerability"
 
 # Immediately create GitHub Release and notify users
 ```
@@ -267,7 +260,7 @@ git push origin :v1.0.2-alpha.1  # Delete remote tag
 
 # Error: 'not a git repository'
 # Solution: Execute in project root directory
-cd C:\path\to\focus-game-deck
+cd C:/path\to/focus-game-deck
 ```
 
 #### 3. Release Notes Generation Fails
@@ -326,7 +319,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build Assets
-        run: .\build\Create-All-Assets.ps1
+        run: ./build/Create-All-Assets.ps1
       - name: Create Release
         uses: actions/create-release@v1
         # ... omitted
@@ -336,10 +329,10 @@ jobs:
 
 ### Related Documentation
 
-- [VERSION-MANAGEMENT.md](./VERSION-MANAGEMENT.md) - Semantic versioning specification
-- [GITHUB-RELEASES-GUIDE.md](./GITHUB-RELEASES-GUIDE.md) - GitHub Releases operation rules
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - Technical architecture
-- [ROADMAP.md](./ROADMAP.md) - Project roadmap
+- [VERSION-MANAGEMENT.md](/docs/project-info/version-management.md) - Semantic versioning specification
+- [release-process.md)](/docs/developer-guide/release-process.md) - GitHub Releases operation rules
+- [architecture.md](/docs/developer-guide/architecture.md) - Technical architecture
+- [roadmap.md](/docs/project-info/roadmap.md) - Project roadmap
 
 ### External Resources
 

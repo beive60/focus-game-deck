@@ -1,79 +1,86 @@
-# Config Editor 手動テストガイド
+# Config Editor Manual Test Guide
 
-## 現在の設定値（テスト前）
+## Current Configuration Values (Before Testing)
 
-- OBSホスト: localhost
-- OBSポート: 4455
-- 言語設定: (空)
+- OBS Host: localhost
+- OBS Port: 4455
+- Language Setting: (empty)
 
-## テスト手順
+## Test Procedures
 
-### 1. GUI起動確認
+### 1. GUI Launch Verification
 
-✓ Config Editorが正常に起動している
-✓ 3つのタブ（ゲーム設定、管理アプリ設定、グローバル設定）が表示されている
-✓ 日本語UIが正しく表示されている
+[OK] Config Editor launches normally
+[OK] Display of 4 tabs (Game Launcher, Game Settings, Management App Settings, Global Settings)
+[OK] UI displays correctly in system language
 
-### 2. グローバル設定タブのテスト
+### 2. Global Settings Tab Test
 
-以下の変更を行ってください：
+Make the following changes:
 
-- OBSホストを "localhost" から "testhost" に変更
-- OBSポートを "4455" から "4456" に変更  
-- 言語設定を "Auto (System Language)" から "Japanese (ja)" に変更
+- Change OBS Host from "localhost" to "testhost"
+- Change OBS Port from "4455" to "4456"
+- Change Language Setting from "Auto (System Language)" to "Japanese (ja)"
 
-### 3. ゲーム設定タブのテスト
+### 3. Game Settings Tab Test
 
-- 既存のゲーム（apex、dbd）が正しく表示されているか確認
-- "新しいゲームを追加" ボタンをクリック
-- 新しいゲームの詳細を入力：
-  - ゲーム名: "Test Game"
+- Verify existing games (apex, dbd) display correctly
+- Click "Add New Game" button
+- Enter new game details:
+  - Game Name: "Test Game"
   - Steam App ID: "999999"
-  - プロセス名: "testgame.exe"
+  - Process Name: "testgame.exe"
 
-### 4. 管理アプリ設定タブのテスト
+### 4. Game Launcher Tab Test
 
-- 既存のアプリ（noWinKey、autoHotkey、clibor、luna）が正しく表示されているか確認
-- 任意のアプリを選択して詳細を確認
+- Verify game cards display for configured games
+- Test game launch functionality (if Steam is available)
+- Verify status indicators and launch buttons work correctly
 
-### 5. 保存機能のテスト
+### 5. Management App Settings Tab Test
 
-- "設定を保存" ボタンをクリック
-- 保存完了のメッセージが日本語で表示されるか確認
+- Verify existing apps (noWinKey, autoHotkey, clibor, luna) display correctly
+- Select any app and verify details display
 
-### 6. アプリケーション終了
+### 6. Save Functionality Test
 
-- "閉じる" ボタンをクリックしてアプリケーションを終了
+- Click "Save Settings" button
+- Verify save completion message displays in selected language
 
-## テスト完了後の確認
+### 7. Application Exit
 
-このファイルを保存した後、以下のPowerShellコマンドを実行してconfig.jsonの変更を確認してください：
+- Click "Close" button to exit application
+
+## Post-Test Verification
+
+After saving this file, run the following PowerShell commands to verify config.json changes:
 
 ```powershell
-# 設定ファイルの変更時刻を確認
-Get-Item config\config.json | Select-Object Name, Length, LastWriteTime
+# Check configuration file modification time
+Get-Item config/config.json | Select-Object Name, Length, LastWriteTime
 
-# 変更された設定値を確認
-$config = Get-Content config\config.json -Raw | ConvertFrom-Json
-Write-Host "更新後のOBSホスト: $($config.obs.websocket.host)"
-Write-Host "更新後のOBSポート: $($config.obs.websocket.port)" 
-Write-Host "更新後の言語設定: '$($config.language)'"
+# Check changed configuration values
+$config = Get-Content config/config.json -Raw | ConvertFrom-Json
+Write-Host "Updated OBS Host: $($config.obs.websocket.host)"
+Write-Host "Updated OBS Port: $($config.obs.websocket.port)"
+Write-Host "Updated Language Setting: '$($config.language)'"
 
-# 新しく追加されたゲームを確認
+# Check newly added game
 if ($config.games.PSObject.Properties | Where-Object { $_.Value.name -eq "Test Game" }) {
-    Write-Host "✓ テストゲームが正常に追加されました" -ForegroundColor Green
+    Write-Host "[OK] Test game added successfully" -ForegroundColor Green
 } else {
-    Write-Host "✗ テストゲームが見つかりません" -ForegroundColor Red
+    Write-Host " Test game not found" -ForegroundColor Red
 }
 ```
 
-## 期待される結果
+## Expected Results
 
-- config.jsonファイルの最終更新時刻が現在時刻に近い
-- OBSホストが "testhost" に変更されている
-- OBSポートが "4456" に変更されている  
-- 言語設定が "ja" に変更されている
-- 新しいテストゲームが games セクションに追加されている
-- すべての日本語メッセージが正しく表示されている
+- config.json file last modified time is close to current time
+- OBS Host changed to "testhost"
+- OBS Port changed to "4456"
+- Language setting changed to "ja"
+- New test game added to games section
+- All localized messages display correctly
+- Game launcher tab functions properly with configured games
 
-このテストにより、Config Editorの基本的な編集・保存機能と日本語の文字エンコーディング対応が正しく動作することを確認できます。
+This test verifies that the Config Editor's basic editing and saving functionality, character encoding support, and integrated game launcher work correctly.

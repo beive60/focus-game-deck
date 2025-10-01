@@ -36,7 +36,7 @@ class DiscordManager {
             $appDirs = Get-ChildItem -Path $discordBaseDir -Directory -Name "app-*" | Sort-Object -Descending
             if ($appDirs.Count -gt 0) {
                 $latestAppDir = $appDirs[0]
-                $discordExe = Join-Path $discordBaseDir "$latestAppDir\Discord.exe"
+                $discordExe = Join-Path $discordBaseDir "$latestAppDir/Discord.exe"
                 if (Test-Path $discordExe) {
                     return $discordExe
                 }
@@ -48,12 +48,12 @@ class DiscordManager {
             $expandedPath = [Environment]::ExpandEnvironmentVariables($this.Config.path)
             # Handle wildcard paths
             if ($expandedPath -like "*app-*") {
-                $baseDir = $expandedPath -replace "app-\*.*", ""
+                $baseDir = $expandedPath -replace "app-/*.*", ""
                 if (Test-Path $baseDir) {
                     $appDirs = Get-ChildItem -Path $baseDir -Directory -Name "app-*" | Sort-Object -Descending
                     if ($appDirs.Count -gt 0) {
                         $latestAppDir = $appDirs[0]
-                        return Join-Path $baseDir "$latestAppDir\Discord.exe"
+                        return Join-Path $baseDir "$latestAppDir/Discord.exe"
                     }
                 }
             }
@@ -223,7 +223,7 @@ class DiscordManager {
                 $this.RPCClient.Disconnect()
                 Start-Sleep -Seconds 2
                 if ($this.ConnectRPC()) {
-                    Write-Host "✓ Discord RPC reconnected successfully"
+                    Write-Host "[OK] Discord RPC reconnected successfully"
                     return $true
                 }
             }
@@ -290,7 +290,7 @@ class DiscordManager {
                     }
                 }
 
-                Write-Host "✓ Discord Advanced Gaming mode applied successfully"
+                Write-Host "[OK] Discord Advanced Gaming mode applied successfully"
                 return $true
 
             }
@@ -346,7 +346,7 @@ class DiscordManager {
         }
 
         if ($success) {
-            Write-Host "✓ Discord normal mode restored successfully"
+            Write-Host "[OK] Discord normal mode restored successfully"
         }
 
         return $success

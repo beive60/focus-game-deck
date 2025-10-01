@@ -67,12 +67,12 @@ This method is for developers and advanced users who want full source code acces
 
 3. **Install Dependencies**
    ```powershell
-   .\build-tools\Build-FocusGameDeck.ps1 -Install
+   ./build-tools/Build-FocusGameDeck.ps1 -Install
    ```
 
 4. **Test Installation**
    ```powershell
-   .\src\Invoke-FocusGameDeck.ps1 --version
+   ./src/Invoke-FocusGameDeck.ps1 --version
    ```
 
 ## Initial Configuration
@@ -125,7 +125,7 @@ If you prefer to edit configuration files directly:
 ### Steam Integration
 
 1. **Locate Steam Installation**
-   - Default: `C:\Program Files (x86)\Steam\`
+   - Default: `C:/Program Files (x86)/Steam/`
    - Steam will be automatically detected in most cases
 
 2. **Game Library Detection**

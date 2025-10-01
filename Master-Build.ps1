@@ -78,7 +78,7 @@ function Clear-BuildArtifacts {
     $pathsToClean = @(
         (Join-Path $PSScriptRoot "build"),
         (Join-Path $PSScriptRoot "signed"),
-        (Join-Path $PSScriptRoot "gui\*.exe")
+        (Join-Path $PSScriptRoot "gui/*.exe")
     )
 
     foreach ($path in $pathsToClean) {
@@ -103,7 +103,7 @@ function Initialize-BuildEnvironment {
     Write-BuildLog "Setting up build environment..." "INFO" "Yellow"
 
     # Install ps2exe module
-    $buildScript = Join-Path $PSScriptRoot "build-tools\Build-FocusGameDeck.ps1"
+    $buildScript = Join-Path $PSScriptRoot "build-tools/Build-FocusGameDeck.ps1"
     return Invoke-BuildScript -ScriptPath $buildScript -Arguments @("-Install") -Description "Installing ps2exe module"
 }
 
@@ -111,7 +111,7 @@ function Initialize-BuildEnvironment {
 function Build-AllExecutables {
     Write-BuildLog "Building all executables..." "INFO" "Yellow"
 
-    $buildScript = Join-Path $PSScriptRoot "build-tools\Build-FocusGameDeck.ps1"
+    $buildScript = Join-Path $PSScriptRoot "build-tools/Build-FocusGameDeck.ps1"
     return Invoke-BuildScript -ScriptPath $buildScript -Arguments @("-Build") -Description "Building all executables"
 }
 
@@ -119,16 +119,16 @@ function Build-AllExecutables {
 function Add-CodeSignatures {
     Write-BuildLog "Signing all executables..." "INFO" "Yellow"
 
-    $signingScript = Join-Path $PSScriptRoot "build-tools\Sign-Executables.ps1"
+    $signingScript = Join-Path $PSScriptRoot "build-tools/Sign-Executables.ps1"
 
     # Check if signing is configured
-    $signingConfigPath = Join-Path $PSScriptRoot "config\signing-config.json"
+    $signingConfigPath = Join-Path $PSScriptRoot "config/signing-config.json"
     if (Test-Path $signingConfigPath) {
         try {
             $signingConfig = Get-Content $signingConfigPath -Raw | ConvertFrom-Json
             if (-not $signingConfig.codeSigningSettings.enabled) {
                 Write-BuildLog "Code signing is disabled in configuration" "WARNING" "Yellow"
-                Write-BuildLog "To enable signing, update config\signing-config.json" "INFO" "Cyan"
+                Write-BuildLog "To enable signing, update config/signing-config.json" "INFO" "Cyan"
                 return $true  # Not an error, just disabled
             }
         } catch {
@@ -179,7 +179,7 @@ function Record-SignatureHashes {
         }
 
         # Load existing signature hash registry
-        $registryPath = Join-Path $PSScriptRoot "docs\official_signature_hashes.json"
+        $registryPath = Join-Path $PSScriptRoot "docs/official_signature_hashes.json"
         if (-not (Test-Path $registryPath)) {
             Write-BuildLog "Signature hash registry not found: $registryPath" "ERROR" "Red"
             return $false
@@ -276,7 +276,7 @@ function New-ReleasePackage {
         New-Item -ItemType Directory -Path $releaseDir -Force | Out-Null
 
         # Copy built files
-        Copy-Item -Path "$sourceDir\*" -Destination $releaseDir -Recurse -Force
+        Copy-Item -Path "$sourceDir/*" -Destination $releaseDir -Recurse -Force
 
         # Create README for release
         $releaseReadme = @"
@@ -357,7 +357,7 @@ function Show-BuildSummary {
     }
 
     Write-Host "Version: $script:Version" -ForegroundColor White
-    Write-Host "Build Time: $($duration.ToString('mm\:ss'))" -ForegroundColor White
+    Write-Host "Build Time: $($duration.ToString('mm/:ss'))" -ForegroundColor White
     Write-Host "Signed: $(if ($IsSigned) { 'Yes' } else { 'No' })" -ForegroundColor White
 
     if ($Success) {
@@ -438,15 +438,15 @@ try {
     # Show usage if no workflow specified
     else {
         Write-Host "`nUsage:" -ForegroundColor Yellow
-        Write-Host "  .\Master-Build.ps1 -Development   # Build for development (no signing)"
-        Write-Host "  .\Master-Build.ps1 -Production    # Build for production (with signing)"
-        Write-Host "  .\Master-Build.ps1 -SetupOnly     # Only setup build environment"
-        Write-Host "  .\Master-Build.ps1 -Clean         # Clean all build artifacts"
-        Write-Host "  .\Master-Build.ps1 -Verbose       # Enable verbose logging"
+        Write-Host "  ./Master-Build.ps1 -Development   # Build for development (no signing)"
+        Write-Host "  ./Master-Build.ps1 -Production    # Build for production (with signing)"
+        Write-Host "  ./Master-Build.ps1 -SetupOnly     # Only setup build environment"
+        Write-Host "  ./Master-Build.ps1 -Clean         # Clean all build artifacts"
+        Write-Host "  ./Master-Build.ps1 -Verbose       # Enable verbose logging"
         Write-Host ""
         Write-Host "Examples:" -ForegroundColor Cyan
-        Write-Host "  .\Master-Build.ps1 -Development -Verbose"
-        Write-Host "  .\Master-Build.ps1 -Production"
+        Write-Host "  ./Master-Build.ps1 -Development -Verbose"
+        Write-Host "  ./Master-Build.ps1 -Production"
         Write-Host ""
         Write-Host "This script will:" -ForegroundColor White
         Write-Host "  1. Install required modules (ps2exe)"

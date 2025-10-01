@@ -48,14 +48,14 @@ For the complete project manifesto, see [Project Philosophy](docs/project-info/p
 
    ```powershell
    # Install ps2exe for building executables
-   .\build-tools\Build-FocusGameDeck.ps1 -Install
+   ./build-tools/Build-FocusGameDeck.ps1 -Install
    ```
 
 3. **Verify Setup**
 
    ```powershell
    # Run basic configuration validation
-   .\test\Simple-Check.ps1
+   .\test/Simple-Check.ps1
    ```
 
 ### Development Tools
@@ -101,7 +101,7 @@ For the complete project manifesto, see [Project Philosophy](docs/project-info/p
 
    ```powershell
    # Development build
-   .\Master-Build.ps1 -Development -Verbose
+   ./Master-Build.ps1 -Development -Verbose
    ```
 
 5. **Submit Pull Request**
@@ -200,13 +200,13 @@ try {
 
     # Validate result
     if ($result -eq "expected") {
-        Write-Host "✓ Test passed" -ForegroundColor Green
+        Write-Host "[OK] Test passed" -ForegroundColor Green
     } else {
         throw "Test failed: Expected 'expected', got '$result'"
     }
 }
 catch {
-    Write-Host "✗ Test failed: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "[ERROR] Test failed: $($_.Exception.Message)" -ForegroundColor Red
     exit 1
 }
 ```

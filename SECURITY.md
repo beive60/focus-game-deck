@@ -192,7 +192,7 @@ Each notarized record now contains:
   "logHash": "abc123...def789",                    // SHA256 hash of log file
   "appSignatureHash": "fedcba...987654",           // Certificate thumbprint of executable
   "appVersion": "v1.0.1-alpha",                    // Application version from Version.ps1
-  "executablePath": "C:\\Path\\To\\Focus-Game-Deck.exe",  // Path to running executable
+  "executablePath": "C:/Path/To/Focus-Game-Deck.exe",  // Path to running executable
   "clientTimestamp": "2025-09-26T10:30:00.123Z",  // When hash was calculated
   "serverTimestamp": "2025-09-26T10:30:01.456Z"   // When record was stored
 }

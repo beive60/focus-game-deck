@@ -71,7 +71,7 @@ function Invoke-AppAction {
         "stop-process" {
             if ($appConfig.processName -and $appConfig.processName -ne "") {
                 # Handle multiple process names separated by |
-                $processNames = $appConfig.processName -split '\|'
+                $processNames = $appConfig.processName -split '/|'
 
                 foreach ($processName in $processNames) {
                     $processName = $processName.Trim()
@@ -196,7 +196,7 @@ Write-Host ""
 
 # Load configuration file
 $scriptDir = $PSScriptRoot
-$configPath = Join-Path $scriptDir "..\config\config.json"
+$configPath = Join-Path $scriptDir "../config/config.json"
 
 if (-not (Test-Path $configPath)) {
     Write-Host "Error: config.json not found at $configPath" -ForegroundColor Red

@@ -47,19 +47,19 @@ Master-Build.ps1 (Tier 3: Orchestration)
 
 ```powershell
 # Development build (no signing)
-.\Master-Build.ps1 -Development
+./Master-Build.ps1 -Development
 
 # Production build (with signing)
-.\Master-Build.ps1 -Production
+./Master-Build.ps1 -Production
 
 # Setup dependencies only
-.\Master-Build.ps1 -SetupOnly
+./Master-Build.ps1 -SetupOnly
 
 # Clean all build artifacts
-.\Master-Build.ps1 -Clean
+./Master-Build.ps1 -Clean
 
 # Enable verbose logging
-.\Master-Build.ps1 -Development -Verbose
+./Master-Build.ps1 -Development -Verbose
 ```
 
 **Features**:
@@ -78,19 +78,19 @@ Master-Build.ps1 (Tier 3: Orchestration)
 
 ```powershell
 # Install ps2exe module
-.\build-tools\Build-FocusGameDeck.ps1 -Install
+./build-tools/Build-FocusGameDeck.ps1 -Install
 
 # Build all executables
-.\build-tools\Build-FocusGameDeck.ps1 -Build
+./build-tools/Build-FocusGameDeck.ps1 -Build
 
 # Sign existing build
-.\build-tools\Build-FocusGameDeck.ps1 -Sign
+./build-tools/Build-FocusGameDeck.ps1 -Sign
 
 # Clean build artifacts
-.\build-tools\Build-FocusGameDeck.ps1 -Clean
+./build-tools/Build-FocusGameDeck.ps1 -Clean
 
 # Complete workflow (install, build, sign)
-.\build-tools\Build-FocusGameDeck.ps1 -All
+./build-tools/Build-FocusGameDeck.ps1 -All
 ```
 
 **Generated Executables**:
@@ -107,16 +107,16 @@ Master-Build.ps1 (Tier 3: Orchestration)
 
 ```powershell
 # List available code signing certificates
-.\Sign-Executables.ps1 -ListCertificates
+./Sign-Executables.ps1 -ListCertificates
 
 # Test configured certificate
-.\Sign-Executables.ps1 -TestCertificate
+./Sign-Executables.ps1 -TestCertificate
 
 # Sign all executables in build directory
-.\Sign-Executables.ps1 -SignAll
+./Sign-Executables.ps1 -SignAll
 
 # Sign specific file
-.\Sign-Executables.ps1 -SignFile "path\to\executable.exe"
+./Sign-Executables.ps1 -SignFile "path\to/executable.exe"
 ```
 
 **Configuration** (`config/signing-config.json`):
@@ -126,7 +126,7 @@ Master-Build.ps1 (Tier 3: Orchestration)
   "codeSigningSettings": {
     "enabled": true,
     "certificateThumbprint": "YOUR_CERTIFICATE_THUMBPRINT",
-    "certificateStorePath": "Cert:\\CurrentUser\\My",
+    "certificateStorePath": "Cert:/CurrentUser/My",
     "timestampServer": "http://timestamp.digicert.com",
     "hashAlgorithm": "SHA256",
     "description": "Focus Game Deck - Gaming Environment Optimization Tool"
@@ -146,10 +146,10 @@ Master-Build.ps1 (Tier 3: Orchestration)
 ### Certificate Setup Process
 
 1. **Obtain EV Certificate**: Purchase from trusted Certificate Authority
-2. **Install Certificate**: Import into Windows Certificate Store (CurrentUser\My)
+2. **Install Certificate**: Import into Windows Certificate Store (CurrentUser/My)
 3. **Configure Thumbprint**: Update `certificateThumbprint` in signing-config.json
 4. **Enable Signing**: Set `enabled: true` in configuration
-5. **Test Setup**: Run `.\Sign-Executables.ps1 -TestCertificate`
+5. **Test Setup**: Run `./Sign-Executables.ps1 -TestCertificate`
 
 ### Timestamp Servers
 
@@ -189,7 +189,7 @@ focus-game-deck/
 
 ```powershell
 # Quick development build
-.\Master-Build.ps1 -Development
+./Master-Build.ps1 -Development
 
 # This will:
 # 1. Install ps2exe if needed
@@ -202,7 +202,7 @@ focus-game-deck/
 
 ```powershell
 # Complete production build
-.\Master-Build.ps1 -Production
+./Master-Build.ps1 -Production
 
 # This will:
 # 1. Install ps2exe if needed
@@ -218,11 +218,11 @@ After each build, verify the generated executables:
 
 ```powershell
 # Check executable signatures
-Get-AuthenticodeSignature "release\*.exe" | Format-Table Path, Status
+Get-AuthenticodeSignature "release/*.exe" | Format-Table Path, Status
 
 # Test executable functionality
-.\release\Focus-Game-Deck.exe --help
-.\release\Focus-Game-Deck-Config-Editor.exe
+.\release/Focus-Game-Deck.exe --help
+.\release/Focus-Game-Deck-Config-Editor.exe
 ```
 
 ## Troubleshooting
@@ -247,7 +247,7 @@ Install-Module -Name ps2exe -Scope CurrentUser -Force
 
 **Solution**:
 
-1. Run `.\Sign-Executables.ps1 -ListCertificates`
+1. Run `./Sign-Executables.ps1 -ListCertificates`
 2. Copy correct thumbprint to signing-config.json
 3. Verify certificate has private key access
 
@@ -259,8 +259,8 @@ Install-Module -Name ps2exe -Scope CurrentUser -Force
 
 ```powershell
 # Clean and rebuild:
-.\Master-Build.ps1 -Clean
-.\Master-Build.ps1 -Development
+./Master-Build.ps1 -Clean
+./Master-Build.ps1 -Development
 ```
 
 ### Debug Mode
@@ -268,7 +268,7 @@ Install-Module -Name ps2exe -Scope CurrentUser -Force
 Enable verbose logging for detailed troubleshooting:
 
 ```powershell
-.\Master-Build.ps1 -Development -Verbose
+./Master-Build.ps1 -Development -Verbose
 ```
 
 This provides:

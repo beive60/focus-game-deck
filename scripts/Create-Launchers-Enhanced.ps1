@@ -26,8 +26,8 @@
 # Get the directory where the script is located
 $scriptDir = $PSScriptRoot
 $rootDir = Split-Path $scriptDir -Parent
-$configPath = Join-Path $rootDir "config\config.json"
-$coreScriptPath = Join-Path $rootDir "src\Invoke-FocusGameDeck.ps1"
+$configPath = Join-Path $rootDir "config/config.json"
+$coreScriptPath = Join-Path $rootDir "src/Invoke-FocusGameDeck.ps1"
 
 # Check if running from GUI (parameter to suppress pause)
 param(
@@ -36,8 +36,8 @@ param(
 
 # Check if config.json exists
 if (-not (Test-Path $configPath)) {
-    Write-Host "Error: config\config.json not found." -ForegroundColor Red
-    Write-Host "Please copy config\config.json.sample to config\config.json and configure it." -ForegroundColor Yellow
+    Write-Host "Error: config/config.json not found." -ForegroundColor Red
+    Write-Host "Please copy config/config.json.sample to config/config.json and configure it." -ForegroundColor Yellow
     if (-not $NoInteractive) {
         pause
     }
@@ -77,7 +77,7 @@ if (-not (Test-Path $configPath)) {
     [bool] Returns $true if shortcut creation succeeded, $false otherwise
 
 .EXAMPLE
-    New-GameShortcut -ShortcutPath "C:\Games\launch_apex.lnk" -TargetPath "powershell.exe" -Arguments "-File script.ps1"
+    New-GameShortcut -ShortcutPath "C:/Games/launch_apex.lnk" -TargetPath "powershell.exe" -Arguments "-File script.ps1"
 #>
 function New-GameShortcut {
     param(
@@ -146,7 +146,7 @@ function New-GameShortcut {
     Root directory path where launcher files are located
 
 .EXAMPLE
-    Remove-OldLaunchers -RootDirectory "C:\FocusGameDeck"
+    Remove-OldLaunchers -RootDirectory "C:/FocusGameDeck"
 #>
 function Remove-OldLaunchers {
     param([string]$RootDirectory)

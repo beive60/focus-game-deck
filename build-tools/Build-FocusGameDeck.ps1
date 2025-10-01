@@ -73,8 +73,8 @@ if ($Build) {
             New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
         }
 
-        # Build main application
-        $mainScriptPath = Join-Path (Split-Path $PSScriptRoot -Parent) "src\Invoke-FocusGameDeck.ps1"
+        # Build main application (now using unified Main.ps1 entry point)
+        $mainScriptPath = Join-Path (Split-Path $PSScriptRoot -Parent) "src/Main.ps1"
         $mainOutputPath = Join-Path $buildDir "Focus-Game-Deck.exe"
 
         if (Test-Path $mainScriptPath) {
@@ -107,11 +107,11 @@ if ($Build) {
         # Main executable now includes multi-platform support
 
         # Build Config Editor if not already built
-        $configEditorPath = Join-Path (Split-Path $PSScriptRoot -Parent) "gui\Focus-Game-Deck-Config-Editor.exe"
+        $configEditorPath = Join-Path (Split-Path $PSScriptRoot -Parent) "gui/Focus-Game-Deck-Config-Editor.exe"
         if (-not (Test-Path $configEditorPath)) {
             Write-Host "Building Config Editor..." -ForegroundColor Cyan
 
-            $configEditorScript = Join-Path (Split-Path $PSScriptRoot -Parent) "gui\ConfigEditor.ps1"
+            $configEditorScript = Join-Path (Split-Path $PSScriptRoot -Parent) "gui/ConfigEditor.ps1"
             $configEditorOutput = Join-Path $buildDir "Focus-Game-Deck-Config-Editor.exe"
 
             if (Test-Path $configEditorScript) {
@@ -165,7 +165,7 @@ echo Focus Game Deck Launcher
 echo.
 echo Usage: Focus-Game-Deck.exe [GameId]
 echo.
-echo Available GameIds can be found in config\config.json
+echo Available GameIds can be found in config/config.json
 echo.
 pause
 "@
@@ -217,16 +217,16 @@ if (-not $Install -and -not $Build -and -not $Clean -and -not $Sign -and -not $A
     Write-Host "Focus Game Deck - Main Application Build Script" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "Usage:"
-    Write-Host "  .\Build-FocusGameDeck.ps1 -Install           # Install ps2exe module"
-    Write-Host "  .\Build-FocusGameDeck.ps1 -Build             # Build all executables"
-    Write-Host "  .\Build-FocusGameDeck.ps1 -Sign              # Sign existing build"
-    Write-Host "  .\Build-FocusGameDeck.ps1 -Clean             # Clean build artifacts"
-    Write-Host "  .\Build-FocusGameDeck.ps1 -All               # Install, build, and sign"
-    Write-Host "  .\Build-FocusGameDeck.ps1 -Build -Sign       # Build and sign"
+    Write-Host "  ./Build-FocusGameDeck.ps1 -Install           # Install ps2exe module"
+    Write-Host "  ./Build-FocusGameDeck.ps1 -Build             # Build all executables"
+    Write-Host "  ./Build-FocusGameDeck.ps1 -Sign              # Sign existing build"
+    Write-Host "  ./Build-FocusGameDeck.ps1 -Clean             # Clean build artifacts"
+    Write-Host "  ./Build-FocusGameDeck.ps1 -All               # Install, build, and sign"
+    Write-Host "  ./Build-FocusGameDeck.ps1 -Build -Sign       # Build and sign"
     Write-Host ""
     Write-Host "Example workflows:"
-    Write-Host "  Development: .\Build-FocusGameDeck.ps1 -Install -Build"
-    Write-Host "  Production:  .\Build-FocusGameDeck.ps1 -All"
+    Write-Host "  Development: ./Build-FocusGameDeck.ps1 -Install -Build"
+    Write-Host "  Production:  ./Build-FocusGameDeck.ps1 -All"
     Write-Host ""
     Write-Host "This script will create executable versions of:"
     Write-Host "  - Focus-Game-Deck.exe (main application)"

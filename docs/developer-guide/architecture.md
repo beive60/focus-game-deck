@@ -34,48 +34,72 @@ To maintain this design philosophy, please prioritize the following:
 
 ## Technical Architecture
 
-### System Structure
+### System Architecture Components
 
-```text
-Focus Game Deck
-├── Core Engine (PowerShell)
-│   ├── src/Invoke-FocusGameDeck.ps1     # Main engine
-│   ├── src/Invoke-FocusGameDeck-MultiPlatform.ps1  # Multi-platform version
-│   ├── src/modules/                     # Modular components
-│   │   ├── AppManager.ps1               # Application lifecycle management
-│   │   ├── OBSManager.ps1               # OBS Studio WebSocket integration
-│   │   ├── VTubeStudioManager.ps1       # VTube Studio integration
-│   │   ├── PlatformManager.ps1          # Multi-platform game launcher support
-│   │   └── ConfigValidator.ps1          # Configuration validation
-│   ├── scripts/Create-Launchers.ps1     # Launcher generation
-│   └── launch_*.bat                     # Game-specific launch scripts
-│
-├── Configuration Management
-│   ├── config/config.json               # Main configuration file
-│   ├── config/config.json.sample        # Sample configuration
-│   ├── config/messages.json             # Internationalization resources (for GUI)
-│   └── config/signing-config.json       # Digital signature configuration
-│
-├── GUI Module (PowerShell + WPF)
-│   ├── gui/MainWindow.xaml              # UI layout definition
-│   ├── gui/ConfigEditor.ps1             # GUI control logic
-│   ├── gui/messages.json                # GUI message resources
-│   └── gui/Build-ConfigEditor.ps1       # GUI build script
-│
-├── Build System & Distribution
-│   ├── Master-Build.ps1                 # Integrated build orchestration
-│   ├── build-tools/                     # Build-specific tools
-│   │   ├── Build-FocusGameDeck.ps1      # Main build script
-│   │   └── Sign-Executables.ps1         # Digital signature script
-│   ├── build/                           # Build artifacts directory
-│   ├── signed/                          # Signed executables directory
-│   └── release/                         # Release package directory
-│
-└── Documentation & Testing
-    ├── docs/                            # Design and specification documents
-    ├── test/                            # Test scripts
-    └── DOCUMENTATION-INDEX.md           # Documentation index
-```
+The Focus Game Deck architecture consists of five main layers, each serving distinct purposes:
+
+#### 1. Unified Entry Point
+
+- **`src/Main.PS1`** - Central application entry point (GUI mode or direct game launch)
+- **Routing Logic**: Handles argument parsing and delegates to appropriate subsystems
+
+#### 2. Core Engine Layer
+
+- **Primary Location**: `src/` directory
+- **Main Components**:
+  - `Invoke-FocusGameDeck.ps1` - Core game environment automation engine
+  - `modules/` - Modular component system with specialized managers
+- **Responsibility**: Game session lifecycle, app management, integration orchestration
+
+#### 3. Configuration Management
+
+- **Primary Location**: `config/` directory
+- **Key Files**: `config.json` (main), `messages.json` (i18n), `*.json.sample` (templates)
+- **Responsibility**: Centralized configuration, validation, internationalization resources
+
+#### 4. User Interface Layer
+
+- **Primary Location**: `gui/` directory
+- **Technology Stack**: PowerShell + WPF (XAML)
+- **Key Components**:
+  - `ConfigEditor.ps1` - GUI logic with integrated game launcher
+  - `MainWindow.xaml` - UI layout definition
+- **Responsibility**: User configuration, game launcher interface, settings management
+
+#### 5. Build & Distribution System
+
+- **Primary Location**: `build-tools/`, root-level build scripts
+- **Key Components**:
+  - `Master-Build.ps1` - Build orchestration
+  - `build-tools/Build-FocusGameDeck.ps1` - ps2exe compilation
+  - `build-tools/Sign-Executables.ps1` - Digital signature workflow
+- **Responsibility**: Executable generation, code signing, release packaging
+
+#### Component Reference Table
+
+| Component Type | Key Files | Primary Responsibility | Dependencies |
+|---------------|-----------|----------------------|--------------|
+| **Entry Point** | `src/Main.PS1` | Unified application entry and routing | Core engine modules |
+| **Core Engine** | `src/Invoke-FocusGameDeck.ps1` | Game session automation | Configuration, modules |
+| **Module System** | `src/modules/*.ps1` | Specialized service management | External APIs (OBS, VTube Studio) |
+| **Configuration** | `config/*.json` | Settings and localization | User preferences, defaults |
+| **User Interface** | `gui/ConfigEditor.ps1`, `gui/MainWindow.xaml` | Configuration and game launcher | Core engine, configuration |
+| **Build System** | `Master-Build.ps1`, `build-tools/*.ps1` | Compilation and distribution | ps2exe, signing certificates |
+| **Documentation** | `docs/**/*.md` | Architecture and usage guides | Project knowledge base |
+| **Testing** | `test/*.ps1` | Validation and integration testing | All components |
+
+> **Maintenance Note**: This table provides a logical view independent of physical file structure.
+> For current directory structure, use: `tree /f` (Windows) or `Get-ChildItem -Recurse` (PowerShell)
+>
+> **Structure Validation**: Run project statistics task to verify current architecture alignment:
+>
+> ```powershell
+> # Via VSCode task (recommended)
+> # Ctrl+Shift+P → "Tasks: Run Task" → "[STATS] Project Statistics"
+>
+> # Or direct execution
+> powershell -ExecutionPolicy Bypass -Command "& {your stats command here}"
+> ```
 
 ### Design Decision Records
 
@@ -86,7 +110,7 @@ Focus Game Deck
 - Windows Forms
 - Electron/Web Technologies
 - .NET WinForms/WPF (C#)
-- PowerShell + WPF ✅
+- PowerShell + WPF
 
 **Selection Rationale:**
 
@@ -101,7 +125,7 @@ Focus Game Deck
 
 - Direct Unicode code point specification
 - PowerShell embedded strings
-- JSON external resource files ✅
+- JSON external resource files
 
 **Selection Rationale:**
 
@@ -112,7 +136,7 @@ Focus Game Deck
 
 **Technical Details:**
 
-- Uses Unicode escape sequences (`\u30XX` format)
+- Uses Unicode escape sequences (`/u30XX` format)
 - UTF-8 encoding enforcement
 - Dynamic message retrieval through runtime JSON loading
 
@@ -122,7 +146,7 @@ Focus Game Deck
 
 - Manual PowerShell script distribution
 - PowerShell ISE packaging
-- ps2exe module compilation ✅
+- ps2exe module compilation
 - Migration to compiled languages (C#/.NET)
 
 **Selection Rationale:**
@@ -150,7 +174,7 @@ Focus Game Deck
 
 **Implementation Details:**
 
-- Certificate storage in Windows Certificate Store (CurrentUser\My)
+- Certificate storage in Windows Certificate Store (CurrentUser/My)
 - Automated signature verification post-signing
 - Multiple timestamp server fallback support
 - Signature metadata tracking in release packages
@@ -201,7 +225,7 @@ During VTube Studio integration development, significant code duplication was id
 
 - **Full Inheritance Model**: Create abstract base class with OBSManager/VTubeStudioManager inheriting all functionality
 - **Composition Pattern**: Separate WebSocket utility class with full delegation
-- **Hybrid Utility Class Pattern**: Common utility class with selective delegation and fallback mechanisms ✅
+- **Hybrid Utility Class Pattern**: Common utility class with selective delegation and fallback mechanisms
 - **Code Duplication**: Maintain separate implementations for flexibility
 
 **Selection Rationale:**
@@ -262,10 +286,10 @@ The original `Create-Launchers.ps1` generated `.bat` files for game launching, w
 
 **Options Considered:**
 
-- **Maintain Batch Files (.bat)**: Keep existing implementation for consistency ❌
-- **PowerShell Scripts (.ps1)**: Direct PowerShell execution with better control ⚠️
-- **Windows Shortcuts (.lnk)**: Native Windows shortcut files with enhanced UX ✅
-- **Desktop Applications**: Create native executables for each game ❌
+- **Maintain Batch Files (.bat)**: Keep existing implementation for consistency
+- **PowerShell Scripts (.ps1)**: Direct PowerShell execution with better control
+- **Windows Shortcuts (.lnk)**: Native Windows shortcut files with enhanced UX
+- **Desktop Applications**: Create native executables for each game
 
 **Selection Rationale:**
 
@@ -350,8 +374,8 @@ Due to frequent character encoding issues in PowerShell console environments, es
 
 ```powershell
 # Problematic: UTF-8 special characters cause garbling
-Write-Host "✓ Success" -ForegroundColor Green
-Write-Host "✗ Failed" -ForegroundColor Red
+Write-Host "[OK] Success" -ForegroundColor Green
+Write-Host "[ERROR] Failed" -ForegroundColor Red
 Write-Host "Warning" -ForegroundColor Yellow
 
 # Recommended: Use ASCII-compatible alternatives
@@ -404,7 +428,7 @@ $config = Get-Content -Path $jsonPath | ConvertFrom-Json
 ```powershell
 # Test JSON structure integrity
 try {
-    $messages = Get-Content -Path ".\config\messages.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+    $messages = Get-Content -Path "./config/messages.json" -Raw -Encoding UTF8 | ConvertFrom-Json
     $enCount = ($messages.en.PSObject.Properties | Measure-Object).Count
     $jaCount = ($messages.ja.PSObject.Properties | Measure-Object).Count
 
@@ -504,11 +528,11 @@ function Write-SafeMessage {
 ```powershell
 # If messages.json becomes corrupted:
 # 1. Backup the corrupted file
-Copy-Item ".\config\messages.json" ".\config\messages.json.corrupted"
+Copy-Item "./config/messages.json" "./config/messages.json.corrupted"
 
 # 2. Restore from sample or rebuild
-if (Test-Path ".\config\messages.json.sample") {
-    Copy-Item ".\config\messages.json.sample" ".\config\messages.json"
+if (Test-Path "./config/messages.json.sample") {
+    Copy-Item "./config/messages.json.sample" "./config/messages.json"
 } else {
     # Manually recreate with proper encoding
     $messages = @{
@@ -516,11 +540,11 @@ if (Test-Path ".\config\messages.json.sample") {
         ja = @{}
     }
     $jsonString = $messages | ConvertTo-Json -Depth 10
-    [System.IO.File]::WriteAllText(".\config\messages.json", $jsonString, [System.Text.Encoding]::UTF8)
+    [System.IO.File]::WriteAllText("./config/messages.json", $jsonString, [System.Text.Encoding]::UTF8)
 }
 
 # 3. Validate the restored file
-$test = Get-Content ".\config\messages.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+$test = Get-Content "./config/messages.json" -Raw -Encoding UTF8 | ConvertFrom-Json
 Write-Host "Messages file restored successfully" -ForegroundColor Green
 ```
 
@@ -638,14 +662,8 @@ To maintain this design philosophy, please prioritize the following:
 | 1.3.0 | 2025-09-24 | VTube Studio integration, character encoding guidelines added |
 | 1.4.0 | 2025-09-24 | WebSocket manager hybrid architecture pattern implemented |
 | 1.5.0 | 2025-09-26 | Enhanced launcher format implementation: Windows shortcuts over batch files for improved UX |
-| 1.6.0 | 2025-09-26 | **Comprehensive character encoding best practices**: Extended implementation guidelines with practical troubleshooting, validation procedures, and emergency recovery protocols |
-
-## Language Support
-
-This documentation is available in multiple languages:
-
-- **English** (Main): [docs/ARCHITECTURE.md](./ARCHITECTURE.md)
-- **日本語** (Japanese): [docs/ja/ARCHITECTURE.md](./ja/ARCHITECTURE.md)
+| 1.6.0 | 2025-09-26 | Comprehensive character encoding best practices: Extended implementation guidelines with practical troubleshooting, validation procedures, and emergency recovery protocols |
+| 2.0.0 | 2025-10-01 | Unified architecture implementation: Main.PS1 entry point with integrated GUI and game launcher, obsolete file cleanup, English documentation standardization |
 
 ---
 

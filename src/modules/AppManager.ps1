@@ -127,7 +127,7 @@ class AppManager {
         $gracefulTimeoutMs = if ($appConfig.gracefulTimeoutMs) { $appConfig.gracefulTimeoutMs } else { 3000 }
 
         # Handle multiple process names separated by |
-        $processNames = $appConfig.processName -split '\|'
+        $processNames = $appConfig.processName -split '/|'
         $processFound = $false
 
         foreach ($processName in $processNames) {

@@ -1,0 +1,396 @@
+{
+    "version": "2.0.0",
+    "label": "[BUILD] Development (unsigned)",
+    "tasks": [
+        {
+            "label": "[SETUP] Install ps2exe Module",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                ".\\build-tools\\Build-FocusGameDeck.ps1",
+                "-Install"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Install required modules (ps2exe)"
+        },
+        {
+            "label": "Build - Development (unsigned)",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                ".\\Master-Build.ps1",
+                "-Development",
+                "-Verbose"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Build all executables as development version (unsigned)"
+        },
+        {
+            "label": "[BUILD] Production (signed)",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                ".\\Master-Build.ps1",
+                "-Production",
+                "-Verbose"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Build and sign all executables as production version"
+        },
+        {
+            "label": "[CLEAN] Delete Build Artifacts",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                ".\\Master-Build.ps1",
+                "-Clean"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Delete all build artifacts and cache files"
+        },
+        {
+            "label": "[RUN] Focus Game Deck (Unified)",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                ".\\src\\Main.PS1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Run unified main application (GUI + Game Launcher)"
+        },
+        {
+            "label": "[RUN] Legacy Game Launcher",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                ".\\src\\Invoke-FocusGameDeck.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Run legacy game launcher directly (requires GameId parameter)"
+        },
+        {
+            "label": "[GUI] Config Editor (Standalone)",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                ".\\gui\\ConfigEditor.ps1"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Launch standalone GUI configuration editor"
+        },
+        {
+            "label": "[TEST] Simple Check",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                ".\\test\\Simple-Check.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Run basic configuration file checks"
+        },
+        {
+            "label": "[TEST] Config Validation",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                ".\\test\\Test-ConfigValidation.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Run detailed configuration file validation tests"
+        },
+        {
+            "label": "[TEST] Discord Functions",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                ".\\test\\Test-DiscordMVP.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test Discord integration features"
+        },
+        {
+            "label": "[TEST] OBS Connection",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                ".\\test\\Test-OBSConnection.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test OBS Studio WebSocket connection"
+        },
+        {
+            "label": "[TEST] VTube Studio Integration",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                ".\\test\\Test-VTubeStudioIntegration.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test VTube Studio integration features"
+        },
+        {
+            "label": "[LAUNCH] Release Version Executable",
+            "type": "shell",
+            "command": ".\\release\\Focus-Game-Deck.exe",
+            "args": [],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Launch built release version executable"
+        },
+        {
+            "label": "[INFO] Show Version Information",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                ".\\Version.ps1"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Display current project version information"
+        },
+        {
+            "label": "[DEBUG] Run All Tests",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                "Get-ChildItem -Path '.\\test\\Test-*.ps1' | ForEach-Object { Write-Host \"=== `$(`$_.Name) ===\" -ForegroundColor Cyan; & `$_.FullName; Write-Host \"\" }"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Run all test scripts sequentially (for developers)"
+        },
+        {
+            "label": "[STATS] Project Statistics",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                "`$ps1Files = Get-ChildItem -Path . -Include *.ps1 -Recurse; `$totalLines = 0; `$ps1Files | ForEach-Object { `$totalLines += (Get-Content `$_.FullName | Measure-Object -Line).Lines }; Write-Host 'Focus Game Deck Project Statistics' -ForegroundColor Cyan; Write-Host ('=' * 40) -ForegroundColor Cyan; Write-Host \"PowerShell Files: `$(`$ps1Files.Count)\" -ForegroundColor Green; Write-Host \"Total Lines: `$totalLines\" -ForegroundColor Green; Write-Host \"Config Files: `$((Get-ChildItem -Path .\\config -Filter *.json | Measure-Object).Count)\" -ForegroundColor Yellow; Write-Host \"Test Files: `$((Get-ChildItem -Path .\\test -Filter Test-*.ps1 | Measure-Object).Count)\" -ForegroundColor Cyan; Write-Host \"Modules: `$((Get-ChildItem -Path .\\src\\modules -Filter *.ps1 | Measure-Object).Count)\" -ForegroundColor Magenta"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Display project statistics"
+        }
+    ]
+}
