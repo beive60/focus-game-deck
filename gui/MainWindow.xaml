@@ -77,6 +77,7 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
@@ -232,6 +233,37 @@
                             <StackPanel Grid.Row="3"
                                         Name="AppsToManagePanel"
                                         Margin="10,0"/>
+
+                            <Grid Grid.Row="4"
+                                  Margin="0,20,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Label Grid.Column="0"
+                                       Name="LauncherTypeLabel2"
+                                       Content="Launcher Type:"
+                                       VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1"
+                                            Orientation="Horizontal"
+                                            Margin="5">
+                                    <ComboBox Name="LauncherTypeCombo"
+                                              Width="200"
+                                              HorizontalAlignment="Left">
+                                        <ComboBoxItem Content="[ENHANCED_SHORTCUTS]"
+                                                      Tag="lnk"
+                                                      IsSelected="True"/>
+                                        <ComboBoxItem Content="[TRADITIONAL_BATCH]"
+                                                      Tag="bat"/>
+                                    </ComboBox>
+                                    <Button Name="GenerateLaunchersButton"
+                                            Content="[GENERATE_LAUNCHERS]"
+                                            Width="130"
+                                            Height="25"
+                                            Margin="10,0,0,0"/>
+                                </StackPanel>
+                            </Grid>
                         </Grid>
                     </ScrollViewer>
                 </Grid>
@@ -478,25 +510,18 @@
                                        Name="LauncherTypeLabel"
                                        Content="Launcher Type:"
                                        VerticalAlignment="Center"/>
-                                <StackPanel Grid.Row="1"
-                                            Grid.Column="1"
-                                            Orientation="Horizontal"
-                                            Margin="5">
-                                    <ComboBox Name="LauncherTypeCombo"
-                                              Width="200"
-                                              HorizontalAlignment="Left">
-                                        <ComboBoxItem Content="[ENHANCED_SHORTCUTS]"
-                                                      Tag="lnk"
-                                                      IsSelected="True"/>
-                                        <ComboBoxItem Content="[TRADITIONAL_BATCH]"
-                                                      Tag="bat"/>
-                                    </ComboBox>
-                                    <Button Name="GenerateLaunchersButton"
-                                            Content="[GENERATE_LAUNCHERS]"
-                                            Width="130"
-                                            Height="25"
-                                            Margin="10,0,0,0"/>
-                                </StackPanel>
+                                <ComboBox Grid.Row="1"
+                                          Grid.Column="1"
+                                          Name="LauncherTypeCombo"
+                                          Margin="5"
+                                          Width="200"
+                                          HorizontalAlignment="Left">
+                                    <ComboBoxItem Content="[ENHANCED_SHORTCUTS]"
+                                                  Tag="lnk"
+                                                  IsSelected="True"/>
+                                    <ComboBoxItem Content="[TRADITIONAL_BATCH]"
+                                                  Tag="bat"/>
+                                </ComboBox>
 
                                 <Label Grid.Row="2"
                                        Grid.Column="0"
