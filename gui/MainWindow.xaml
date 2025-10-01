@@ -26,14 +26,14 @@
                      Name="GameLauncherTab">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="50"/>
+                        <RowDefinition Height="70"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="100"/>
                     </Grid.RowDefinitions>
 
                     <!-- Header Section -->
                     <Grid Grid.Row="0"
-                          Margin="20,10">
+                          Margin="20,15">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
@@ -44,8 +44,7 @@
                             <TextBlock Name="LauncherWelcomeText"
                                        Text="[LAUNCHER_WELCOME_TEXT]"
                                        FontSize="16"
-                                       FontWeight="Bold"
-                                       Foreground="#0078D4"/>
+                                       FontWeight="Bold"/>
                             <TextBlock Name="LauncherSubtitleText"
                                        Text="[LAUNCHER_SUBTITLE_TEXT]"
                                        FontSize="12"
@@ -116,8 +115,6 @@
                                                     Width="70"
                                                     Height="32"
                                                     Margin="10,0"
-                                                    Background="#F1F3F4"
-                                                    BorderBrush="#D0D7DE"
                                                     FontSize="11"/>
 
                                             <Button Grid.Column="2"
@@ -125,10 +122,6 @@
                                                     Content="[LAUNCH_BUTTON]"
                                                     Width="80"
                                                     Height="32"
-                                                    Background="#0078D4"
-                                                    Foreground="White"
-                                                    BorderBrush="#0078D4"
-                                                    FontWeight="SemiBold"
                                                     FontSize="12"/>
                                         </Grid>
                                     </Border>
@@ -139,7 +132,6 @@
 
                     <!-- Footer Section -->
                     <Grid Grid.Row="2"
-                          Background="#F8F9FA"
                           Margin="0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -170,9 +162,6 @@
                                     Width="100"
                                     Height="35"
                                     Margin="5"
-                                    Background="#28A745"
-                                    Foreground="White"
-                                    BorderBrush="#28A745"
                                     FontWeight="SemiBold"/>
                             <Button Name="OpenConfigButton"
                                     Content="[OPEN_CONFIG_BUTTON]"
@@ -274,7 +263,8 @@
                                 <TextBox Grid.Row="0"
                                          Grid.Column="1"
                                          Name="GameIdTextBox"
-                                         Margin="5"/>
+                                         Margin="5"
+                                         VerticalContentAlignment="Center"/>
 
                                 <Label Grid.Row="1"
                                        Grid.Column="0"
@@ -284,7 +274,8 @@
                                 <TextBox Grid.Row="1"
                                          Grid.Column="1"
                                          Name="GameNameTextBox"
-                                         Margin="5"/>
+                                         Margin="5"
+                                         VerticalContentAlignment="Center"/>
 
                                 <Label Grid.Row="2"
                                        Grid.Column="0"
@@ -321,7 +312,8 @@
                                 <TextBox Grid.Row="3"
                                          Grid.Column="1"
                                          Name="SteamAppIdTextBox"
-                                         Margin="5"/>
+                                         Margin="5"
+                                         VerticalContentAlignment="Center"/>
 
                                 <StackPanel Grid.Row="4"
                                             Grid.Column="0"
@@ -343,6 +335,7 @@
                                          Grid.Column="1"
                                          Name="EpicGameIdTextBox"
                                          Margin="5"
+                                         VerticalContentAlignment="Center"
                                          Visibility="Collapsed"/>
 
                                 <StackPanel Grid.Row="5"
@@ -365,6 +358,7 @@
                                          Grid.Column="1"
                                          Name="RiotGameIdTextBox"
                                          Margin="5"
+                                         VerticalContentAlignment="Center"
                                          Visibility="Collapsed"/>
 
                                 <StackPanel Grid.Row="6"
@@ -385,7 +379,8 @@
                                 <TextBox Grid.Row="6"
                                          Grid.Column="1"
                                          Name="ProcessNameTextBox"
-                                         Margin="5"/>
+                                         Margin="5"
+                                         VerticalContentAlignment="Center"/>
                             </Grid>
 
                             <Label Grid.Row="2"
@@ -520,7 +515,8 @@
                                 <TextBox Grid.Row="0"
                                          Grid.Column="1"
                                          Name="AppIdTextBox"
-                                         Margin="5"/>
+                                         Margin="5"
+                                         VerticalContentAlignment="Center"/>
 
                                 <Label Grid.Row="1"
                                        Grid.Column="0"
@@ -530,7 +526,8 @@
                                 <TextBox Grid.Row="1"
                                          Grid.Column="1"
                                          Name="AppPathTextBox"
-                                         Margin="5"/>
+                                         Margin="5"
+                                         VerticalContentAlignment="Center"/>
                                 <Button Grid.Row="1"
                                         Grid.Column="2"
                                         Name="BrowseAppPathButton"
@@ -556,7 +553,8 @@
                                 <TextBox Grid.Row="2"
                                          Grid.Column="1"
                                          Name="AppProcessNameTextBox"
-                                         Margin="5"/>
+                                         Margin="5"
+                                         VerticalContentAlignment="Center"/>
 
                                 <Label Grid.Row="3"
                                        Grid.Column="0"
@@ -586,7 +584,8 @@
                                 <TextBox Grid.Row="5"
                                          Grid.Column="1"
                                          Name="AppArgumentsTextBox"
-                                         Margin="5"/>
+                                         Margin="5"
+                                         VerticalContentAlignment="Center"/>
 
                                 <StackPanel Grid.Row="6"
                                             Grid.Column="0"
@@ -626,7 +625,8 @@
                                 <TextBox Grid.Row="7"
                                          Grid.Column="1"
                                          Name="GracefulTimeoutTextBox"
-                                         Margin="5"/>
+                                         Margin="5"
+                                         VerticalContentAlignment="Center"/>
                             </Grid>
                         </Grid>
                     </ScrollViewer>
@@ -752,7 +752,8 @@
                                 <TextBox Grid.Row="0"
                                          Grid.Column="1"
                                          Name="ObsHostTextBox"
-                                         Margin="5"/>
+                                         Margin="5"
+                                         VerticalContentAlignment="Center"/>
 
                                 <Label Grid.Row="0"
                                        Grid.Column="2"
@@ -762,7 +763,8 @@
                                 <TextBox Grid.Row="0"
                                          Grid.Column="3"
                                          Name="ObsPortTextBox"
-                                         Margin="5"/>
+                                         Margin="5"
+                                         VerticalContentAlignment="Center"/>
 
                                 <Label Grid.Row="1"
                                        Grid.Column="0"
@@ -808,7 +810,8 @@
                                 <TextBox Grid.Row="0"
                                          Grid.Column="1"
                                          Name="SteamPathTextBox"
-                                         Margin="5"/>
+                                         Margin="5"
+                                         VerticalContentAlignment="Center"/>
                                 <Button Grid.Row="0"
                                         Grid.Column="2"
                                         Name="BrowseSteamPathButton"
@@ -824,7 +827,8 @@
                                 <TextBox Grid.Row="1"
                                          Grid.Column="1"
                                          Name="EpicPathTextBox"
-                                         Margin="5"/>
+                                         Margin="5"
+                                         VerticalContentAlignment="Center"/>
                                 <Button Grid.Row="1"
                                         Grid.Column="2"
                                         Name="BrowseEpicPathButton"
@@ -840,7 +844,8 @@
                                 <TextBox Grid.Row="2"
                                          Grid.Column="1"
                                          Name="RiotPathTextBox"
-                                         Margin="5"/>
+                                         Margin="5"
+                                         VerticalContentAlignment="Center"/>
                                 <Button Grid.Row="2"
                                         Grid.Column="2"
                                         Name="BrowseRiotPathButton"
@@ -856,7 +861,8 @@
                                 <TextBox Grid.Row="3"
                                          Grid.Column="1"
                                          Name="ObsPathTextBox"
-                                         Margin="5"/>
+                                         Margin="5"
+                                         VerticalContentAlignment="Center"/>
                                 <Button Grid.Row="3"
                                         Grid.Column="2"
                                         Name="BrowseObsPathButton"
