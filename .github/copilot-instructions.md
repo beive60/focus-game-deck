@@ -41,5 +41,6 @@ This rule is important for cross-platform compatibility and to avoid issues rela
 - Keep line length within 120 characters.
 - Always add JSDoc-style comments to functions.
 - Use try-catch blocks for error handling and always include logging.
+- Do not use emojis anywhere in the codebase.
 
 Do not suggest code that does not comply with the above rules.
