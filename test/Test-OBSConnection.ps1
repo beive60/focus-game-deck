@@ -27,22 +27,21 @@ function Receive-OBSWebSocketResponse {
     $buffer = New-Object byte[] 8192 # 8KB buffer
     $segment = New-Object ArraySegment[byte](, $buffer)
     $resultText = ""
-    
+
     try {
         while ($WebSocket.State -eq "Open") {
             $receiveTask = $WebSocket.ReceiveAsync($segment, $cts.Token)
             $receiveTask.Wait()
             $result = $receiveTask.Result
-            
+
             $resultText += [System.Text.Encoding]::UTF8.GetString($buffer, 0, $result.Count)
-            
+
             if ($result.EndOfMessage) {
                 break
             }
         }
         return $resultText | ConvertFrom-Json
-    }
-    catch {
+    } catch {
         Write-Host "Error receiving from OBS WebSocket or timeout: $_"
         return $null
     }
@@ -55,15 +54,15 @@ function Connect-OBSWebSocket {
         [int]$Port = 4455,
         [System.Security.SecureString]$Password
     )
-    
+
     try {
         $ws = New-Object System.Net.WebSockets.ClientWebSocket
         $cts = New-Object System.Threading.CancellationTokenSource
         $cts.CancelAfter(5000) # 5 second timeout
-        
+
         $uri = "ws://${HostName}:${Port}"
         $ws.ConnectAsync($uri, $cts.Token).Wait()
-        
+
         if ($ws.State -ne [System.Net.WebSockets.WebSocketState]::Open) {
             Write-Host "Failed to connect to OBS WebSocket"
             return $null
@@ -82,7 +81,7 @@ function Connect-OBSWebSocket {
         # Send Identify message (Op 1)
         $identifyPayload = @{
             op = 1
-            d = @{
+            d  = @{
                 rpcVersion = 1
             }
         }
@@ -102,15 +101,15 @@ function Connect-OBSWebSocket {
                 $plainTextPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
                 [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
             }
-            
+
             # secret = base64(sha256(password + salt))
             $secretBytes = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($plainTextPassword + $salt))
             $secret = [System.Convert]::ToBase64String($secretBytes)
-            
+
             # authResponse = base64(sha256(secret + challenge))
             $authResponseBytes = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($secret + $challenge))
             $authResponse = [System.Convert]::ToBase64String($authResponseBytes)
-            
+
             $identifyPayload.d.authentication = $authResponse
         }
 
@@ -129,8 +128,7 @@ function Connect-OBSWebSocket {
 
         Write-Host "OBS WebSocket authentication successful." -ForegroundColor Green
         return $ws
-    }
-    catch {
+    } catch {
         Write-Host "OBS WebSocket connection/authentication error: $_" -ForegroundColor Red
         return $null
     }
@@ -142,12 +140,12 @@ function Connect-OBSWebSocket {
 # --- Main Test Logic ---
 
 # Load configuration file
-$scriptDir = $PSScriptRoot
-$configPath = Join-Path $scriptDir "config.json"
+$projectRoot = Split-Path $PSScriptRoot -Parent
+$configPath = Join-Path $projectRoot "config/config.json"
 
 if (-not (Test-Path $configPath)) {
-    Write-Host "Error: config.json not found in the script's directory." -ForegroundColor Red
-    Write-Host "Please create it from config.json.sample."
+    Write-Host "Error: config.json not found at $configPath" -ForegroundColor Red
+    Write-Host "Please ensure config.json exists in the config/ directory."
     exit 1
 }
 $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json

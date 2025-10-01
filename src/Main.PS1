@@ -28,7 +28,7 @@ param(
 $scriptDir = $PSScriptRoot
 $configPath = Join-Path $scriptDir "../config/config.json"
 $languageHelperPath = Join-Path $scriptDir "../scripts/LanguageHelper.ps1"
-$messagesPath = Join-Path $scriptDir "../config/messages.json"
+$messagesPath = Join-Path $scriptDir "../gui/messages.json"
 $gameLauncherPath = Join-Path $scriptDir "Invoke-FocusGameDeck.ps1"
 $configEditorPath = Join-Path $scriptDir "../gui/ConfigEditor.ps1"
 $versionScriptPath = Join-Path $scriptDir "../Version.ps1"

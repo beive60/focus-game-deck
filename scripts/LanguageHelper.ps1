@@ -14,7 +14,7 @@
     2. OS display language (if supported)
     3. English fallback (default)
 
-    Supported languages: ja (Japanese), en (English)
+    The module supports multiple languages with extensible architecture for future i18n expansion.
 
 .NOTES
     Used by both GUI ConfigEditor and main Invoke-FocusGameDeck scripts
@@ -33,14 +33,14 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
     The configuration object (PSCustomObject) containing language settings
 
 .PARAMETER SupportedLanguages
-    Array of supported language codes (default: @("en", "ja"))
+    Array of supported language codes (default includes common international languages)
 
 .RETURNS
-    String containing the detected language code ("en" or "ja")
+    String containing the detected language code (falls back to "en" if unsupported)
 
 .EXAMPLE
     $langCode = Get-DetectedLanguage -ConfigData $config
-    # Returns "ja" if Japanese is configured/detected, "en" otherwise
+    # Returns the appropriate language code based on config/OS detection, "en" as fallback
 #>
 function Get-DetectedLanguage {
     param(
@@ -91,7 +91,7 @@ function Get-DetectedLanguage {
 
 .EXAMPLE
     $osLang = Get-OSLanguage
-    # Returns "ja" on Japanese Windows, "en" on English Windows, etc.
+    # Returns the OS language code (e.g., "ja", "en", "zh-CN") based on system locale
 #>
 function Get-OSLanguage {
     try {
@@ -164,7 +164,7 @@ function Get-OSLanguage {
 
 .EXAMPLE
     Set-CultureByLanguage -LanguageCode "ja"
-    # Sets Japanese culture for proper character display
+    # Sets the appropriate culture for proper character display and formatting
 #>
 function Set-CultureByLanguage {
     param(
@@ -206,7 +206,7 @@ function Set-CultureByLanguage {
     Path to the messages.json file
 
 .PARAMETER LanguageCode
-    Language code to load ("en", "ja", "zh-CN")
+    Language code to load (supported codes vary based on available localizations)
 
 .RETURNS
     PSCustomObject containing localized messages

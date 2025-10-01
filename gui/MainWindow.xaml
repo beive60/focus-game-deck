@@ -33,14 +33,14 @@
 
                     <!-- Header Section -->
                     <Grid Grid.Row="0"
-                            Margin="20,10">
+                          Margin="20,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0"
-                                VerticalAlignment="Center">
+                                    VerticalAlignment="Center">
                             <TextBlock Name="LauncherWelcomeText"
                                        Text="[LAUNCHER_WELCOME_TEXT]"
                                        FontSize="16"
@@ -63,10 +63,10 @@
 
                     <!-- Game List Section -->
                     <ScrollViewer Grid.Row="1"
-                            Margin="20,0,20,10"
-                            VerticalScrollBarVisibility="Auto">
+                                  Margin="20,0,20,10"
+                                  VerticalScrollBarVisibility="Auto">
                         <ItemsControl Name="GameLauncherList"
-                                Margin="0,10">
+                                      Margin="0,10">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border Background="#F8F9FA"
@@ -84,13 +84,13 @@
 
                                             <!-- Game Info -->
                                             <StackPanel Grid.Column="0"
-                                                    VerticalAlignment="Center">
+                                                        VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding DisplayName}"
                                                            FontSize="14"
                                                            FontWeight="SemiBold"
                                                            Foreground="#333"/>
                                                 <StackPanel Orientation="Horizontal"
-                                                        Margin="0,4,0,0">
+                                                            Margin="0,4,0,0">
                                                     <TextBlock Text="Platform: "
                                                                FontSize="11"
                                                                Foreground="#666"/>
@@ -139,8 +139,8 @@
 
                     <!-- Footer Section -->
                     <Grid Grid.Row="2"
-                            Background="#F8F9FA"
-                            Margin="0">
+                          Background="#F8F9FA"
+                          Margin="0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
@@ -411,7 +411,7 @@
                                 <StackPanel Grid.Column="1"
                                             Orientation="Horizontal"
                                             Margin="5">
-                                    <ComboBox Name="LauncherTypeCombo"
+                                    <ComboBox Name="GameLauncherTypeCombo"
                                               Width="200"
                                               HorizontalAlignment="Left">
                                         <ComboBoxItem Content="[ENHANCED_SHORTCUTS]"

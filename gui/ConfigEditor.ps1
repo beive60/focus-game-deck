@@ -393,8 +393,8 @@ function Replace-XamlPlaceholders {
             $newValue = $newValue -replace "'", "&apos;"
 
             # Also escape parentheses that might cause XML parsing issues
-            $newValue = $newValue -replace "/(", "&#40;"
-            $newValue = $newValue -replace "/)", "&#41;"
+            $newValue = $newValue -replace "\(", "&#40;"
+            $newValue = $newValue -replace "\)", "&#41;"
 
             $XamlContent = $XamlContent -replace [regex]::Escape($oldValue), $newValue
         }
@@ -2038,9 +2038,9 @@ function Update-GameLauncherList {
 
             # Create game item data object
             $gameItem = New-Object PSObject -Property @{
-                GameId = $gameId
+                GameId      = $gameId
                 DisplayName = $gameData.name
-                Platform = $platform.ToUpper()
+                Platform    = $platform.ToUpper()
                 ProcessName = $gameData.processName
             }
 
@@ -2156,8 +2156,8 @@ function New-GameLauncherCard {
 
         # Edit button click handler
         $editButton.add_Click({
-            Switch-ToGameSettingsTab -GameId $GameItem.GameId
-        }.GetNewClosure())
+                Switch-ToGameSettingsTab -GameId $GameItem.GameId
+            }.GetNewClosure())
 
         $grid.Children.Add($editButton)
 
@@ -2175,8 +2175,8 @@ function New-GameLauncherCard {
 
         # Launch button click handler
         $launchButton.add_Click({
-            Start-GameFromLauncher -GameId $GameItem.GameId
-        }.GetNewClosure())
+                Start-GameFromLauncher -GameId $GameItem.GameId
+            }.GetNewClosure())
 
         $grid.Children.Add($launchButton)
 
@@ -2696,7 +2696,7 @@ function Handle-GenerateLaunchers {
     param()
 
     try {
-        # Get UI elements
+        # Get UI elements (Use Global Settings tab LauncherTypeCombo for generating launchers)
         $launcherTypeCombo = $script:Window.FindName("LauncherTypeCombo")
         $generateButton = $script:Window.FindName("GenerateLaunchersButton")
 

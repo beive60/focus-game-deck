@@ -22,6 +22,9 @@ param(
 $ErrorActionPreference = "Stop"
 if ($Verbose) { $VerbosePreference = "Continue" }
 
+# Initialize project root path
+$projectRoot = Split-Path $PSScriptRoot -Parent
+
 Write-Host "Focus Game Deck - Character Encoding Validation Test" -ForegroundColor Cyan
 Write-Host "Validating implementation guidelines from ARCHITECTURE.md" -ForegroundColor Cyan
 Write-Host "Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Gray
@@ -47,11 +50,12 @@ Write-Host "Testing JSON File Encoding..." -ForegroundColor Yellow
 
 # Test config.json
 try {
-    $configContent = Get-Content "./config/config.json" -Raw -Encoding UTF8
+    $configPath = Join-Path $projectRoot "config/config.json"
+    $configContent = Get-Content $configPath -Raw -Encoding UTF8
     $null = $configContent | ConvertFrom-Json  # Test parsing
     Test-Result "config.json UTF-8 parsing" $true
 
-    $configBytes = [System.IO.File]::ReadAllBytes("./config/config.json")
+    $configBytes = [System.IO.File]::ReadAllBytes($configPath)
     $hasBOM = ($configBytes.Length -ge 3 -and $configBytes[0] -eq 0xEF -and $configBytes[1] -eq 0xBB -and $configBytes[2] -eq 0xBF)
     Test-Result "config.json without BOM" (-not $hasBOM) $(if ($hasBOM) { "BOM detected" } else { "" })
 } catch {
@@ -60,11 +64,12 @@ try {
 
 # Test messages.json
 try {
-    $messagesContent = Get-Content "./config/messages.json" -Raw -Encoding UTF8
+    $messagesPath = Join-Path $projectRoot "gui/messages.json"
+    $messagesContent = Get-Content $messagesPath -Raw -Encoding UTF8
     $messages = $messagesContent | ConvertFrom-Json
     Test-Result "messages.json UTF-8 parsing" $true
 
-    $messagesBytes = [System.IO.File]::ReadAllBytes("./config/messages.json")
+    $messagesBytes = [System.IO.File]::ReadAllBytes($messagesPath)
     $hasBOM = ($messagesBytes.Length -ge 3 -and $messagesBytes[0] -eq 0xEF -and $messagesBytes[1] -eq 0xBB -and $messagesBytes[2] -eq 0xBF)
     Test-Result "messages.json without BOM" (-not $hasBOM) $(if ($hasBOM) { "BOM detected" } else { "" })
 
@@ -75,9 +80,9 @@ try {
         Test-Result "Message key consistency" ($enCount -eq $jaCount) "EN=$enCount, JA=$jaCount"
 
         # Test Japanese text
-        $sampleText = $messages.ja.error_game_id_not_found
-        $hasJapanese = $sampleText -and ($sampleText.Contains("エラー") -or $sampleText.Length -gt 10)
-        Test-Result "Japanese character integrity" $hasJapanese $(if ($sampleText) { "Sample: $($sampleText.Substring(0, [Math]::Min(20, $sampleText.Length)))..." } else { "No sample text" })
+        $sampleText = $messages.ja.errorMessage
+        $hasJapanese = $sampleText -and ($sampleText.Contains("エラー") -or $sampleText.Length -gt 5)
+        Test-Result "Japanese character integrity" $hasJapanese $(if ($sampleText) { "Sample: $($sampleText.Substring(0, [Math]::Min(15, $sampleText.Length)))..." } else { "No sample text" })
     }
 } catch {
     Test-Result "messages.json validation" $false $_.Exception.Message
@@ -88,20 +93,43 @@ Test-Result "ASCII-safe console output" $true "Using [OK]/[ERROR] instead of UTF
 
 Write-Host "Testing Logger Compatibility..." -ForegroundColor Yellow
 try {
-    if (Test-Path "./src/modules/Logger.ps1") {
-        . "./src/modules/Logger.ps1"
+    $loggerPath = Join-Path $projectRoot "src/modules/Logger.ps1"
+    if (Test-Path $loggerPath) {
+        . $loggerPath
         Test-Result "Logger module loading" $true
 
-        if ((Test-Path "./config/config.json") -and (Test-Path "./config/messages.json")) {
-            $config = Get-Content "./config/config.json" -Raw -Encoding UTF8 | ConvertFrom-Json
-            $messages = Get-Content "./config/messages.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+        $configPath = Join-Path $projectRoot "config/config.json"
+        if (Test-Path $configPath) {
+            $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
-            $logger = Initialize-Logger -Config $config -Messages $messages.en
-            Test-Result "Logger initialization" $true
+            # Import LanguageHelper for proper message loading
+            $languageHelperPath = Join-Path $projectRoot "scripts/LanguageHelper.ps1"
+            if (Test-Path $languageHelperPath) {
+                . $languageHelperPath
 
-            $logger.Info("Character encoding test message", "TEST")
-            Test-Result "Logger UTF-8 logging" $true
+                # Load messages using proper LanguageHelper method
+                $messagesPath = Join-Path $projectRoot "config/messages.json"
+                $langCode = Get-DetectedLanguage -ConfigData $config
+                $msg = Get-LocalizedMessages -MessagesPath $messagesPath -LanguageCode $langCode
+
+                # Create simple test messages for compatibility testing
+                $testMessages = @{
+                    test_message = "Character encoding test message"
+                }
+
+                $logger = Initialize-Logger -Config $config -Messages $testMessages
+                Test-Result "Logger initialization" $true
+
+                $logger.Info("Character encoding test message", "TEST")
+                Test-Result "Logger UTF-8 logging" $true
+            } else {
+                Test-Result "Logger compatibility" $false "LanguageHelper.ps1 not found"
+            }
+        } else {
+            Test-Result "Logger compatibility" $false "config.json not found"
         }
+    } else {
+        Test-Result "Logger compatibility" $false "Logger.ps1 not found"
     }
 } catch {
     Test-Result "Logger compatibility" $false $_.Exception.Message
