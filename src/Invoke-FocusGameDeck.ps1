@@ -250,7 +250,7 @@ try {
     # Launch game via appropriate platform
     Write-Host "Launching game via $($detectedPlatforms[$gamePlatform].Name)..." -ForegroundColor Cyan
     try {
-        $platformManager.LaunchGame($gamePlatform, $gameConfig)
+        $launcherProcess = $platformManager.LaunchGame($gamePlatform, $gameConfig)
         Write-Host ($msg.starting_game -f $gameConfig.name) -ForegroundColor Green
         if ($logger) { $logger.Info("Game launch command sent to $($detectedPlatforms[$gamePlatform].Name): $($gameConfig.name)", "GAME") }
     } catch {
@@ -260,23 +260,27 @@ try {
         throw
     }
 
-    # Wait for game process to start
+    # Wait for actual game process to start (not the launcher)
     Write-Host "Waiting for game process to start..." -ForegroundColor Yellow
+    $gameProcess = $null
     $processStartTimeout = 300  # 5 minutes timeout
-    $processStartElapsed = 0
+    $startTime = Get-Date
 
-    while (!(Get-Process $gameConfig.processName -ErrorAction SilentlyContinue) -and $processStartElapsed -lt $processStartTimeout) {
-        Start-Sleep -Seconds 30
-        $processStartElapsed += 30
-        Write-Host "." -NoNewline -ForegroundColor Yellow
-    }
+    do {
+        Start-Sleep -Seconds 3
+        $elapsed = (Get-Date) - $startTime
+        if ([int]$elapsed.TotalSeconds % 30 -eq 0 -and $elapsed.TotalSeconds -gt 0) {
+            Write-Host "." -NoNewline -ForegroundColor Yellow
+        }
+        $gameProcess = Get-Process $gameConfig.processName -ErrorAction SilentlyContinue
+    } while (-not $gameProcess -and $elapsed.TotalSeconds -lt $processStartTimeout)
 
-    if (Get-Process $gameConfig.processName -ErrorAction SilentlyContinue) {
+    if ($gameProcess) {
         Write-Host "`n$($msg.monitoring_process -f $gameConfig.name)" -ForegroundColor Green
         if ($logger) { $logger.Info("Game process detected and monitoring started: $($gameConfig.processName)", "GAME") }
 
         # Wait for game process to end
-        Wait-Process -Name $gameConfig.processName
+        Wait-Process -InputObject $gameProcess
 
         Write-Host ($msg.game_exited -f $gameConfig.name) -ForegroundColor Yellow
         if ($logger) { $logger.Info("Game process ended: $($gameConfig.name)", "GAME") }

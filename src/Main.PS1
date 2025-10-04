@@ -305,6 +305,14 @@ function Start-Game {
 #>
 function Main {
     try {
+        # Debug: Show received parameters
+        Write-Host "Main.ps1 Debug: Received parameters:" -ForegroundColor Yellow
+        Write-Host "  GameId: '$GameId'" -ForegroundColor Cyan
+        Write-Host "  Config: $Config" -ForegroundColor Cyan
+        Write-Host "  List: $List" -ForegroundColor Cyan
+        Write-Host "  Help: $Help" -ForegroundColor Cyan
+        Write-Host "  Version: $Version" -ForegroundColor Cyan
+
         # Handle help and version first (these don't require config)
         if ($Help) {
             Show-Help
@@ -321,13 +329,7 @@ function Main {
             return
         }
 
-        # Handle config editor launch (explicit or no arguments)
-        if ($Config -or [string]::IsNullOrWhiteSpace($GameId)) {
-            Start-ConfigEditor -WithGameLauncher
-            return
-        }
-
-        # Handle game launch (GameId provided)
+        # Handle game launch (GameId provided) - Check this first
         if (-not [string]::IsNullOrWhiteSpace($GameId)) {
             # Check if it's a help request disguised as GameId
             if ($GameId -match "^(help|--help|-h|/?)$") {
@@ -348,6 +350,12 @@ function Main {
             }
 
             Start-Game -GameId $GameId
+            return
+        }
+
+        # Handle config editor launch (explicit or no arguments)
+        if ($Config -or [string]::IsNullOrWhiteSpace($GameId)) {
+            Start-ConfigEditor -WithGameLauncher
             return
         }
 

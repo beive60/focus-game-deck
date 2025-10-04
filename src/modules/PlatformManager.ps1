@@ -28,32 +28,34 @@ class PlatformManager {
     [void] InitializePlatforms() {
         # Steam Platform (existing support continued)
         $this.Platforms["steam"] = @{
-            Name = "Steam"
-            DetectPath = { $this.DetectSteamPath() }
-            LaunchCommand = { param($gamePath, $gameId)
+            Name           = "Steam"
+            DetectPath     = { $this.DetectSteamPath() }
+            LaunchCommand  = { param($gamePath, $gameId)
                 $steamPath = $this.Config.paths.steam
                 if (-not $steamPath -or -not (Test-Path $steamPath)) {
                     throw "Steam executable not found at configured path: $steamPath"
                 }
-                Start-Process $steamPath -ArgumentList "-applaunch $gameId"
+                $process = Start-Process $steamPath -ArgumentList "-applaunch $gameId" -PassThru
                 if ($this.Logger) { $this.Logger.Info("Launched via Steam: AppID $gameId", "PLATFORM") }
+                return $process
             }
             GameIdProperty = "steamAppId"
-            ProcessCheck = "steam"
-            Required = $true
+            ProcessCheck   = "steam"
+            Required       = $true
         }
 
         # Epic Games Platform (v1.0 new support)
         $this.Platforms["epic"] = @{
-            Name = "Epic Games"
-            DetectPath = { $this.DetectEpicPath() }
-            LaunchCommand = { param($gamePath, $gameId)
+            Name           = "Epic Games"
+            DetectPath     = { $this.DetectEpicPath() }
+            LaunchCommand  = { param($gamePath, $gameId)
                 # Try multiple Epic Games Launcher launch methods
                 try {
                     # Method 1: Direct executable launch (recommended)
                     if ($gamePath -and (Test-Path $gamePath)) {
-                        Start-Process -FilePath $gamePath -ArgumentList "-epicapp=$gameId"
+                        $process = Start-Process -FilePath $gamePath -ArgumentList "-epicapp=$gameId" -PassThru
                         if ($this.Logger) { $this.Logger.Info("Launched via Epic Games executable: GameID $gameId", "PLATFORM") }
+                        return $process
                     } else {
                         throw "Epic Games executable not found"
                     }
@@ -62,20 +64,21 @@ class PlatformManager {
                     $epicUri = "com.epicgames.launcher://apps/$gameId`?action=launch`&silent=true"
                     $tempBat = "$env:TEMP/launch_epic_$gameId.bat"
                     "@echo off`nstart `"Epic Games`" `"$epicUri`"" | Out-File -FilePath $tempBat -Encoding ASCII
-                    Start-Process -FilePath $tempBat -WindowStyle Hidden
+                    $process = Start-Process -FilePath $tempBat -WindowStyle Hidden -PassThru
                     if ($this.Logger) { $this.Logger.Info("Launched via Epic Games URI: GameID $gameId", "PLATFORM") }
+                    return $process
                 }
             }
             GameIdProperty = "epicGameId"
-            ProcessCheck = "EpicGamesLauncher"
-            Required = $false
+            ProcessCheck   = "EpicGamesLauncher"
+            Required       = $false
         }
 
         # Riot Client Platform (v1.0 new support)
         $this.Platforms["riot"] = @{
-            Name = "Riot Client"
-            DetectPath = { $this.DetectRiotPath() }
-            LaunchCommand = { param($gamePath, $gameId)
+            Name           = "Riot Client"
+            DetectPath     = { $this.DetectRiotPath() }
+            LaunchCommand  = { param($gamePath, $gameId)
                 $riotPath = $this.Config.paths.riot
                 if (-not $riotPath -or -not (Test-Path $riotPath)) {
                     # Fallback: try auto-detection
@@ -85,19 +88,20 @@ class PlatformManager {
                     }
                 }
                 # Riot Client launch command
-                Start-Process $riotPath -ArgumentList "--launch-product=$gameId --launch-patchline=live"
+                $process = Start-Process $riotPath -ArgumentList "--launch-product=$gameId --launch-patchline=live" -PassThru
                 if ($this.Logger) { $this.Logger.Info("Launched via Riot Client: Product $gameId", "PLATFORM") }
+                return $process
             }
             GameIdProperty = "riotGameId"
-            ProcessCheck = "RiotClientServices"
-            Required = $false
+            ProcessCheck   = "RiotClientServices"
+            Required       = $false
         }
 
         # Direct Platform (v1.0 new support for standalone executables)
         $this.Platforms["direct"] = @{
-            Name = "Direct Execution"
-            DetectPath = { return "available" }  # Always available, return dummy string for compatibility
-            LaunchCommand = { param($gamePath, $gameId)
+            Name           = "Direct Execution"
+            DetectPath     = { return "available" }  # Always available, return dummy string for compatibility
+            LaunchCommand  = { param($gamePath, $gameId)
                 # For direct execution, gamePath is the executable path and gameId is ignored
                 if (-not $gamePath -or -not (Test-Path $gamePath)) {
                     throw "Executable not found at path: $gamePath"
@@ -110,16 +114,18 @@ class PlatformManager {
                 }
 
                 if ($gameArguments) {
-                    Start-Process -FilePath $gamePath -ArgumentList $gameArguments
+                    $process = Start-Process -FilePath $gamePath -ArgumentList $gameArguments -PassThru
                     if ($this.Logger) { $this.Logger.Info("Launched directly with arguments: $gamePath $gameArguments", "PLATFORM") }
+                    return $process
                 } else {
-                    Start-Process -FilePath $gamePath
+                    $process = Start-Process -FilePath $gamePath -PassThru
                     if ($this.Logger) { $this.Logger.Info("Launched directly: $gamePath", "PLATFORM") }
+                    return $process
                 }
             }
             GameIdProperty = "executablePath"
-            ProcessCheck = $null
-            Required = $false
+            ProcessCheck   = $null
+            Required       = $false
         }
     }
 
@@ -198,14 +204,14 @@ class PlatformManager {
 
             if ($detectedPath) {
                 $detectedPlatforms[$platformKey] = @{
-                    Name = $platform.Name
-                    Path = $detectedPath
+                    Name      = $platform.Name
+                    Path      = $detectedPath
                     Available = $true
                 }
             } else {
                 $detectedPlatforms[$platformKey] = @{
-                    Name = $platform.Name
-                    Path = $null
+                    Name      = $platform.Name
+                    Path      = $null
                     Available = $false
                 }
             }
@@ -224,7 +230,7 @@ class PlatformManager {
         return $null -ne $detectedPath
     }
 
-    [void] LaunchGame([string] $platformKey, [object] $gameConfig) {
+    [object] LaunchGame([string] $platformKey, [object] $gameConfig) {
         if (-not $this.Platforms.ContainsKey($platformKey)) {
             throw "Unsupported platform: $platformKey"
         }
@@ -255,12 +261,11 @@ class PlatformManager {
             # For direct platform, pass the executable path as the first parameter
             if ($platformKey -eq "direct") {
                 $gamePath = $gameConfig[$gameIdProperty]  # executablePath
-                & $platform.LaunchCommand $gamePath $gameId
+                return & $platform.LaunchCommand $gamePath $gameId
             } else {
-                & $platform.LaunchCommand $null $gameId
+                return & $platform.LaunchCommand $null $gameId
             }
-        }
-        catch {
+        } catch {
             if ($this.Logger) {
                 $this.Logger.Error("Failed to launch game via $($platform.Name): $_", "PLATFORM")
             }
