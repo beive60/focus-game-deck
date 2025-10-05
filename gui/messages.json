@@ -150,7 +150,15 @@
         "gameListUpdateError": "ゲームリストの更新でエラーが発生",
         "launchError": "起動エラー",
         "launcherNotFound": "ランチャーが見つかりません",
-        "gameLaunched": "ゲーム '{0}' を起動しました"
+        "gameLaunched": "ゲーム '{0}' を起動しました",
+        "gameSettingsSaved": "ゲーム設定が保存されました",
+        "managedAppsSettingsSaved": "管理アプリ設定が保存されました",
+        "globalSettingsSaved": "グローバル設定が保存されました",
+        "helpMenuHeader": "ヘルプ(&H)",
+        "checkUpdateMenuItem": "アップデートを確認(&U)",
+        "aboutMenuItem": "Focus Game Deck について(&A)",
+        "aboutTitle": "Focus Game Deck について",
+        "aboutMessage": "Focus Game Deck\n\nバージョン: {0}\n\nマルチプラットフォーム対応のゲームランチャーとアプリケーション管理ツールです。"
     },
     "en": {
         "textLabel": "Text",
@@ -303,7 +311,15 @@
         "gameListUpdateError": "Error occurred updating game list",
         "launchError": "Launch error",
         "launcherNotFound": "Game launcher not found",
-        "gameLaunched": "Game '{0}' launched successfully"
+        "gameLaunched": "Game '{0}' launched successfully",
+        "gameSettingsSaved": "Game settings have been saved",
+        "managedAppsSettingsSaved": "Managed apps settings have been saved",
+        "globalSettingsSaved": "Global settings have been saved",
+        "helpMenuHeader": "&Help",
+        "checkUpdateMenuItem": "Check for &Updates",
+        "aboutMenuItem": "&About Focus Game Deck",
+        "aboutTitle": "About Focus Game Deck",
+        "aboutMessage": "Focus Game Deck\n\nVersion: {0}\n\nA multi-platform game launcher with application management capabilities."
     },
     "zh-CN": {
         "textLabel": "文本",
@@ -456,6 +472,14 @@
         "gameListUpdateError": "更新游戏列表时发生错误",
         "launchError": "启动错误",
         "launcherNotFound": "未找到游戏启动器",
-        "gameLaunched": "游戏 '{0}' 启动成功"
+        "gameLaunched": "游戏 '{0}' 启动成功",
+        "gameSettingsSaved": "游戏设置已保存",
+        "managedAppsSettingsSaved": "管理应用程序设置已保存",
+        "globalSettingsSaved": "全局设置已保存",
+        "helpMenuHeader": "帮助(&H)",
+        "checkUpdateMenuItem": "检查更新(&U)",
+        "aboutMenuItem": "关于 Focus Game Deck(&A)",
+        "aboutTitle": "关于 Focus Game Deck",
+        "aboutMessage": "Focus Game Deck\n\n版本: {0}\n\n具有应用程序管理功能的多平台游戏启动器。"
     }
 }

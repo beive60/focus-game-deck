@@ -258,22 +258,26 @@ function Update-AllButtonTooltips {
     try {
         # Define button name to message key mappings
         $buttonMappings = @{
-            "AddGameButton"           = "addButton"
-            "DuplicateGameButton"     = "duplicateButton"
-            "DeleteGameButton"        = "deleteButton"
-            "AddAppButton"            = "addButton"
-            "DuplicateAppButton"      = "duplicateButton"
-            "DeleteAppButton"         = "deleteButton"
-            "BrowseAppPathButton"     = "browseButton"
-            "BrowseSteamPathButton"   = "browseButton"
-            "BrowseEpicPathButton"    = "browseButton"
-            "BrowseRiotPathButton"    = "browseButton"
-            "BrowseObsPathButton"     = "browseButton"
-            "GenerateLaunchersButton" = "generateLaunchers"
-            "CheckUpdateButton"       = "checkUpdateButton"
-            "ApplyButton"             = "applyButton"
-            "OKButton"                = "okButton"
-            "CancelButton"            = "cancelButton"
+            "AddGameButton"            = "addButton"
+            "DuplicateGameButton"      = "duplicateButton"
+            "DeleteGameButton"         = "deleteButton"
+            "AddAppButton"             = "addButton"
+            "DuplicateAppButton"       = "duplicateButton"
+            "DeleteAppButton"          = "deleteButton"
+            "BrowseAppPathButton"      = "browseButton"
+            "BrowseSteamPathButton"    = "browseButton"
+            "BrowseEpicPathButton"     = "browseButton"
+            "BrowseRiotPathButton"     = "browseButton"
+            "BrowseObsPathButton"      = "browseButton"
+            "GenerateLaunchersButton"  = "generateLaunchers"
+            # "CheckUpdateButton"       = "checkUpdateButton"  # Moved to menu
+            "SaveGameSettingsButton"   = "saveButton"
+            "SaveManagedAppsButton"    = "saveButton"
+            "SaveGlobalSettingsButton" = "saveButton"
+            # Legacy footer buttons - now commented out in XAML
+            # "ApplyButton"             = "applyButton"
+            # "OKButton"                = "okButton"
+            # "CancelButton"            = "cancelButton"
         }
 
         # Apply smart tooltips to each button with full localized text
@@ -525,6 +529,9 @@ function Replace-XamlPlaceholders {
             "[LAUNCHER_HINT_TEXT]"         = Get-LocalizedMessage -Key "launcherHintText"
             "[ADD_GAME_BUTTON]"            = Get-LocalizedMessage -Key "addGameButton"
             "[OPEN_CONFIG_BUTTON]"         = Get-LocalizedMessage -Key "openConfigButton"
+            "[HELP_MENU_HEADER]"           = Get-LocalizedMessage -Key "helpMenuHeader"
+            "[CHECK_UPDATE_MENU_ITEM]"     = Get-LocalizedMessage -Key "checkUpdateMenuItem"
+            "[ABOUT_MENU_ITEM]"            = Get-LocalizedMessage -Key "aboutMenuItem"
         }
 
         # Replace all placeholders
@@ -532,19 +539,38 @@ function Replace-XamlPlaceholders {
             $oldValue = $placeholder.Key
             $newValue = $placeholder.Value
 
-            # Escape XML special characters in the replacement value
-            $newValue = $newValue -replace "&", "&amp;"
-            $newValue = $newValue -replace "<", "&lt;"
-            $newValue = $newValue -replace ">", "&gt;"
-            $newValue = $newValue -replace '"', "&quot;"
-            $newValue = $newValue -replace "'", "&apos;"
+            # For menu items, preserve & character for access keys
+            $isMenuPlaceholder = $oldValue -match "_MENU_|_MENU_ITEM"
 
-            # Also escape parentheses that might cause XML parsing issues
-            $newValue = $newValue -replace "\(", "&#40;"
-            $newValue = $newValue -replace "\)", "&#41;"
+            Write-Verbose "Debug: Placeholder '$oldValue' -> '$newValue' (isMenu: $isMenuPlaceholder)"
+
+            if (-not $isMenuPlaceholder) {
+                # Escape XML special characters for non-menu items
+                $newValue = $newValue -replace "&", "&amp;"
+                $newValue = $newValue -replace "<", "&lt;"
+                $newValue = $newValue -replace ">", "&gt;"
+                $newValue = $newValue -replace '"', "&quot;"
+                $newValue = $newValue -replace "'", "&apos;"
+
+                # Also escape parentheses that might cause XML parsing issues
+                $newValue = $newValue -replace "\(", "&#40;"
+                $newValue = $newValue -replace "\)", "&#41;"
+            } else {
+                # For menu items, escape XML characters but handle & specially for WPF
+                $newValue = $newValue -replace "<", "&lt;"
+                $newValue = $newValue -replace ">", "&gt;"
+                $newValue = $newValue -replace '"', "&quot;"
+                # For WPF menus, use _ instead of & for access keys
+                $newValue = $newValue -replace "&", "_"
+            }
 
             $XamlContent = $XamlContent -replace [regex]::Escape($oldValue), $newValue
         }
+
+        # Debug: Save processed XAML to workspace file
+        $debugXamlPath = "debug_xaml.xml"
+        $XamlContent | Set-Content -Path $debugXamlPath -Encoding UTF8
+        Write-Verbose "Debug: Processed XAML saved to: $debugXamlPath"
 
         return $XamlContent
     } catch {
@@ -1065,15 +1091,29 @@ function Setup-EventHandlers {
         $openConfigButton.add_Click({ Switch-ToGameSettingsTab })
     }
 
-    # Footer buttons
-    $applyButton = $script:Window.FindName("ApplyButton")
-    $applyButton.add_Click({ Handle-ApplyConfig })
+    # Footer buttons - REMOVED: Apply, OK, Cancel (replaced with tab-specific Save buttons)
+    # $applyButton = $script:Window.FindName("ApplyButton")
+    # $applyButton.add_Click({ Handle-ApplyConfig })
+    # $okButton = $script:Window.FindName("OKButton")
+    # $okButton.add_Click({ Handle-OKConfig })
+    # $cancelButton = $script:Window.FindName("CancelButton")
+    # $cancelButton.add_Click({ Handle-CancelConfig })
 
-    $okButton = $script:Window.FindName("OKButton")
-    $okButton.add_Click({ Handle-OKConfig })
+    # Tab-specific Save button events
+    $saveGameSettingsButton = $script:Window.FindName("SaveGameSettingsButton")
+    if ($saveGameSettingsButton) {
+        $saveGameSettingsButton.add_Click({ Handle-SaveGameSettings })
+    }
 
-    $cancelButton = $script:Window.FindName("CancelButton")
-    $cancelButton.add_Click({ Handle-CancelConfig })
+    $saveManagedAppsButton = $script:Window.FindName("SaveManagedAppsButton")
+    if ($saveManagedAppsButton) {
+        $saveManagedAppsButton.add_Click({ Handle-SaveManagedApps })
+    }
+
+    $saveGlobalSettingsButton = $script:Window.FindName("SaveGlobalSettingsButton")
+    if ($saveGlobalSettingsButton) {
+        $saveGlobalSettingsButton.add_Click({ Handle-SaveGlobalSettings })
+    }
 
     # Games tab events
     $gamesList = $script:Window.FindName("GamesList")
@@ -1105,9 +1145,16 @@ function Setup-EventHandlers {
     $deleteAppButton = $script:Window.FindName("DeleteAppButton")
     $deleteAppButton.add_Click({ Handle-DeleteApp })
 
-    # Update check button event
-    $checkUpdateButton = $script:Window.FindName("CheckUpdateButton")
-    $checkUpdateButton.add_Click({ Handle-CheckUpdate })
+    # Menu item events
+    $checkUpdateMenuItem = $script:Window.FindName("CheckUpdateMenuItem")
+    if ($checkUpdateMenuItem) {
+        $checkUpdateMenuItem.add_Click({ Handle-CheckUpdate })
+    }
+
+    $aboutMenuItem = $script:Window.FindName("AboutMenuItem")
+    if ($aboutMenuItem) {
+        $aboutMenuItem.add_Click({ Handle-About })
+    }
 
     # Generate launchers button event
     $generateLaunchersButton = $script:Window.FindName("GenerateLaunchersButton")
@@ -1285,6 +1332,16 @@ function Update-UITexts {
         $cancelButton = $script:Window.FindName("CancelButton")
         if ($cancelButton) { Set-ButtonContentWithTooltip -Button $cancelButton -FullText (Get-LocalizedMessage -Key "cancelButton") }
 
+        # Update tab-specific Save buttons
+        $saveGameSettingsButton = $script:Window.FindName("SaveGameSettingsButton")
+        if ($saveGameSettingsButton) { Set-ButtonContentWithTooltip -Button $saveGameSettingsButton -FullText (Get-LocalizedMessage -Key "saveButton") }
+
+        $saveManagedAppsButton = $script:Window.FindName("SaveManagedAppsButton")
+        if ($saveManagedAppsButton) { Set-ButtonContentWithTooltip -Button $saveManagedAppsButton -FullText (Get-LocalizedMessage -Key "saveButton") }
+
+        $saveGlobalSettingsButton = $script:Window.FindName("SaveGlobalSettingsButton")
+        if ($saveGlobalSettingsButton) { Set-ButtonContentWithTooltip -Button $saveGlobalSettingsButton -FullText (Get-LocalizedMessage -Key "saveButton") }
+
         # Update labels - Games tab
         $gamesListLabel = $script:Window.FindName("GamesListLabel")
         if ($gamesListLabel) { $gamesListLabel.Content = Get-LocalizedMessage -Key "gamesListLabel" }
@@ -1405,8 +1462,8 @@ function Update-UITexts {
         $versionLabel = $script:Window.FindName("VersionLabel")
         if ($versionLabel) { $versionLabel.Text = Get-LocalizedMessage -Key "versionLabel" }
 
-        $checkUpdateButton = $script:Window.FindName("CheckUpdateButton")
-        if ($checkUpdateButton) { Set-ButtonContentWithTooltip -Button $checkUpdateButton -FullText (Get-LocalizedMessage -Key "checkUpdateButton") }
+        # CheckUpdateButton moved to Help menu
+        # Menu items are updated via XAML placeholder replacement
 
         # Update launcher-related labels and buttons
         $launcherTypeLabel = $script:Window.FindName("LauncherTypeLabel")
@@ -3071,6 +3128,113 @@ function Handle-WindowClosing {
 
     # Allow window to close
     Set-ConfigModified -IsModified $false
+}
+
+# Tab-specific Save button handlers
+
+# Handle Game Settings tab Save button
+function Handle-SaveGameSettings {
+    param()
+
+    try {
+        # Save only the game settings data
+        if ($script:CurrentGameId -and $script:CurrentGameId -ne "") {
+            Save-CurrentGameData
+        }
+
+        # Convert to JSON and save
+        $jsonString = $script:ConfigData | ConvertTo-Json -Depth 10
+        Set-Content -Path $script:ConfigPath -Value $jsonString -Encoding UTF8
+
+        # Refresh games list to ensure consistency
+        Update-GamesList
+        Update-AppsToManagePanel
+
+        # If a game is currently selected, refresh its data
+        if ($script:CurrentGameId) {
+            Handle-GameSelectionChanged
+        }
+
+        Show-SafeMessage -MessageKey "gameSettingsSaved" -TitleKey "info"
+        Write-Verbose "Game settings saved successfully"
+
+    } catch {
+        Write-Host "Debug: Save game settings error - $($_.Exception.Message)" -ForegroundColor Red
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+    }
+}
+
+# Handle Managed Apps tab Save button
+function Handle-SaveManagedApps {
+    param()
+
+    try {
+        # Save only the managed apps data
+        if ($script:CurrentAppId -and $script:CurrentAppId -ne "") {
+            # Check if the app ID still exists in the TextBox (it might have been cleared during deletion)
+            $appIdTextBox = $script:Window.FindName("AppIdTextBox")
+            if ($appIdTextBox -and $appIdTextBox.Text -and $appIdTextBox.Text -ne "") {
+                Save-CurrentAppData
+            }
+        }
+
+        # Convert to JSON and save
+        $jsonString = $script:ConfigData | ConvertTo-Json -Depth 10
+        Set-Content -Path $script:ConfigPath -Value $jsonString -Encoding UTF8
+
+        # Refresh managed apps list to ensure consistency
+        Update-ManagedAppsList
+        Update-AppsToManagePanel
+
+        # If an app is currently selected, refresh its data
+        if ($script:CurrentAppId) {
+            Handle-AppSelectionChanged
+        }
+
+        Show-SafeMessage -MessageKey "managedAppsSettingsSaved" -TitleKey "info"
+        Write-Verbose "Managed apps settings saved successfully"
+
+    } catch {
+        Write-Host "Debug: Save managed apps settings error - $($_.Exception.Message)" -ForegroundColor Red
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+    }
+}
+
+# Handle Global Settings tab Save button
+function Handle-SaveGlobalSettings {
+    param()
+
+    try {
+        # Save only the global settings data
+        Save-GlobalSettingsData
+
+        # Convert to JSON and save
+        $jsonString = $script:ConfigData | ConvertTo-Json -Depth 10
+        Set-Content -Path $script:ConfigPath -Value $jsonString -Encoding UTF8
+
+        Show-SafeMessage -MessageKey "globalSettingsSaved" -TitleKey "info"
+        Write-Verbose "Global settings saved successfully"
+
+    } catch {
+        Write-Host "Debug: Save global settings error - $($_.Exception.Message)" -ForegroundColor Red
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+    }
+}
+
+# Handle About menu item
+function Handle-About {
+    param()
+
+    try {
+        # Get version information
+        $versionInfo = Get-ProjectVersionInfo
+        Show-SafeMessage -MessageKey "aboutMessage" -TitleKey "aboutTitle" -Args @($versionInfo.FullVersion)
+
+    } catch {
+        Write-Warning "Failed to show about dialog: $($_.Exception.Message)"
+        $fallbackVersion = if ($versionInfo) { $versionInfo.FullVersion } else { "Unknown" }
+        [System.Windows.MessageBox]::Show("Focus Game Deck`nVersion: $fallbackVersion", "About", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+    }
 }
 
 # Handle close window (legacy function for backward compatibility)
