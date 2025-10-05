@@ -66,67 +66,6 @@
                                   VerticalScrollBarVisibility="Auto">
                         <ItemsControl Name="GameLauncherList"
                                       Margin="0,10">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="#F8F9FA"
-                                            BorderBrush="#E1E5E9"
-                                            BorderThickness="1"
-                                            CornerRadius="8"
-                                            Margin="0,0,0,10"
-                                            Padding="15">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-
-                                            <!-- Game Info -->
-                                            <StackPanel Grid.Column="0"
-                                                        VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding DisplayName}"
-                                                           FontSize="14"
-                                                           FontWeight="SemiBold"
-                                                           Foreground="#333"/>
-                                                <StackPanel Orientation="Horizontal"
-                                                            Margin="0,4,0,0">
-                                                    <TextBlock Text="Platform: "
-                                                               FontSize="11"
-                                                               Foreground="#666"/>
-                                                    <TextBlock Text="{Binding Platform}"
-                                                               FontSize="11"
-                                                               Foreground="#0078D4"
-                                                               FontWeight="SemiBold"/>
-                                                    <TextBlock Text=" | ID: "
-                                                               FontSize="11"
-                                                               Foreground="#666"
-                                                               Margin="10,0,0,0"/>
-                                                    <TextBlock Text="{Binding GameId}"
-                                                               FontSize="11"
-                                                               Foreground="#666"
-                                                               FontFamily="Consolas"/>
-                                                </StackPanel>
-                                            </StackPanel>
-
-                                            <!-- Action Buttons -->
-                                            <Button Grid.Column="1"
-                                                    Name="EditGameButton"
-                                                    Content="[EDIT_BUTTON]"
-                                                    Width="70"
-                                                    Height="32"
-                                                    Margin="10,0"
-                                                    FontSize="11"/>
-
-                                            <Button Grid.Column="2"
-                                                    Name="LaunchGameButton"
-                                                    Content="[LAUNCH_BUTTON]"
-                                                    Width="80"
-                                                    Height="32"
-                                                    FontSize="12"/>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
 
@@ -161,8 +100,7 @@
                                     Content="[ADD_GAME_BUTTON]"
                                     Width="100"
                                     Height="35"
-                                    Margin="5"
-                                    FontWeight="SemiBold"/>
+                                    Margin="5"/>
                             <Button Name="OpenConfigButton"
                                     Content="[OPEN_CONFIG_BUTTON]"
                                     Width="100"
