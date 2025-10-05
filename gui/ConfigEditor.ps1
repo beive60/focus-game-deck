@@ -101,32 +101,46 @@ function Load-Messages {
 function Get-LocalizedMessage {
     param(
         [string]$Key,
-        [string[]]$Args = @()
+        [array]$Arguments = @()
     )
 
     if ($script:Messages -and $script:Messages.PSObject.Properties[$Key]) {
         $message = $script:Messages.$Key
 
         # Replace placeholders if args provided
-        if ($Args.Length -gt 0) {
-            Write-Verbose "Debug: Processing message '$Key' with $($Args.Length) arguments"
+        if ($Arguments.Length -gt 0) {
+            Write-Verbose "Debug: Processing message '$Key' with $($Arguments.Length) arguments"
+            Write-Verbose "Debug: Original message template: '$message'"
+            Write-Verbose "Debug: Message type: $($message.GetType().Name)"
 
-            for ($i = 0; $i -lt $Args.Length; $i++) {
+            for ($i = 0; $i -lt $Arguments.Length; $i++) {
                 $placeholder = "{$i}"
-                $replacement = if ($null -ne $Args[$i]) {
-                    # Ensure safe string conversion and escape any problematic characters
-                    $Args[$i].ToString().Replace("`r", "").Replace("`n", " ")
+                $replacement = if ($null -ne $Arguments[$i]) {
+                    # Ensure safe string conversion - preserve newlines for proper message formatting
+                    [string]$Arguments[$i]
                 } else {
                     ""
                 }
 
-                if ($message.Contains($placeholder)) {
-                    $message = $message.Replace($placeholder, $replacement)
+                Write-Verbose "Debug: Looking for placeholder '$placeholder' in message"
+                Write-Verbose "Debug: Replacement value: '$replacement'"
+                Write-Verbose "Debug: Message contains placeholder check: $($message -like "*$placeholder*")"
+
+                # Use -replace operator with literal pattern matching for more reliable replacement
+                if ($message -like "*$placeholder*") {
+                    $oldMessage = $message
+                    # Use literal string replacement to avoid regex interpretation issues
+                    $message = $message -replace [regex]::Escape($placeholder), $replacement
                     Write-Verbose "Debug: Successfully replaced '$placeholder' with '$replacement'"
+                    Write-Verbose "Debug: Message before: '$oldMessage'"
+                    Write-Verbose "Debug: Message after:  '$message'"
                 } else {
-                    Write-Verbose "Debug: Placeholder '$placeholder' not found in message template"
+                    Write-Verbose "Debug: Placeholder '$placeholder' not found in message template: '$message'"
                 }
             }
+            Write-Verbose "Debug: Final processed message: '$message'"
+        } else {
+            Write-Verbose "Debug: No arguments provided for message '$Key', returning original message"
         }
 
         return $message
@@ -305,22 +319,22 @@ function Show-SafeMessage {
     param(
         [string]$MessageKey,
         [string]$TitleKey = "info",
-        [string[]]$Args = @(),
+        [array]$Arguments = @(),
         [System.Windows.MessageBoxButton]$Button = [System.Windows.MessageBoxButton]::OK,
         [System.Windows.MessageBoxImage]$Icon = [System.Windows.MessageBoxImage]::Information
     )
 
     try {
         # Get localized strings from JSON resources
-        $message = Get-LocalizedMessage -Key $MessageKey -Args $Args
+        $message = Get-LocalizedMessage -Key $MessageKey -Arguments $Arguments
         $title = Get-LocalizedMessage -Key $TitleKey
 
         # Debug output for error messages only
         if ($Icon -eq [System.Windows.MessageBoxImage]::Error) {
             Write-Host "=== ERROR MESSAGE DEBUG ===" -ForegroundColor Red
             Write-Host "MessageKey: $MessageKey" -ForegroundColor Yellow
-            Write-Host "Args Count: $($Args.Count)" -ForegroundColor Yellow
-            Write-Host "Args Values: $($Args -join ', ')" -ForegroundColor Yellow
+            Write-Host "Arguments Count: $($Arguments.Count)" -ForegroundColor Yellow
+            Write-Host "Arguments Values: $($Arguments -join ', ')" -ForegroundColor Yellow
             Write-Host "Final Message: $message" -ForegroundColor Cyan
             Write-Host "Final Title: $title" -ForegroundColor Cyan
             Write-Host "=========================" -ForegroundColor Red
@@ -330,6 +344,7 @@ function Show-SafeMessage {
     } catch {
         # Fallback to key names if JSON loading fails
         Write-Warning "Debug: Show-SafeMessage failed, using fallback: $($_.Exception.Message)"
+        Write-Warning "Arguments passed: $($Arguments -join ', ')"
         return [System.Windows.MessageBox]::Show($MessageKey, $TitleKey, $Button, $Icon)
     }
 }
@@ -401,13 +416,13 @@ function Start-GameFromLauncher {
         # Update status immediately for responsive feedback
         $statusText = $script:Window.FindName("LauncherStatusText")
         if ($statusText) {
-            $statusText.Text = Get-LocalizedMessage -Key "launchingGame" -Args @($GameId)
+            $statusText.Text = Get-LocalizedMessage -Key "launchingGame" -Arguments @($GameId)
             $statusText.Foreground = "#0066CC"  # Blue color for launching state
         }
 
         # Validate game exists in configuration
         if (-not $script:ConfigData.games -or -not $script:ConfigData.games.PSObject.Properties[$GameId]) {
-            Show-SafeMessage -MessageKey "gameNotFound" -TitleKey "error" -Args @($GameId) -Icon Error
+            Show-SafeMessage -MessageKey "gameNotFound" -TitleKey "error" -Arguments @($GameId) -Icon Error
             if ($statusText) {
                 $statusText.Text = Get-LocalizedMessage -Key "launchError"
                 $statusText.Foreground = "#CC0000"  # Red color for error
@@ -442,7 +457,7 @@ function Start-GameFromLauncher {
 
             # Update status with success message - no modal dialog
             if ($statusText) {
-                $statusText.Text = Get-LocalizedMessage -Key "gameLaunched" -Args @($GameId)
+                $statusText.Text = Get-LocalizedMessage -Key "gameLaunched" -Arguments @($GameId)
                 $statusText.Foreground = "#009900"  # Green color for success
             }
         }
@@ -463,7 +478,7 @@ function Start-GameFromLauncher {
         Write-Warning "Failed to launch game '$GameId': $($_.Exception.Message)"
 
         # Only show modal dialog for actual errors that need user attention
-        Show-SafeMessage -MessageKey "launchFailed" -TitleKey "error" -Args @($GameId, $_.Exception.Message) -Icon Error
+        Show-SafeMessage -MessageKey "launchFailed" -TitleKey "error" -Arguments @($GameId, $_.Exception.Message) -Icon Error
 
         # Update status for error
         $statusText = $script:Window.FindName("LauncherStatusText")
@@ -566,11 +581,6 @@ function Replace-XamlPlaceholders {
 
             $XamlContent = $XamlContent -replace [regex]::Escape($oldValue), $newValue
         }
-
-        # Debug: Save processed XAML to workspace file
-        $debugXamlPath = "debug_xaml.xml"
-        $XamlContent | Set-Content -Path $debugXamlPath -Encoding UTF8
-        Write-Verbose "Debug: Processed XAML saved to: $debugXamlPath"
 
         return $XamlContent
     } catch {
@@ -801,7 +811,7 @@ function Load-Configuration {
             }
         }
     } catch {
-        Show-SafeMessage -MessageKey "configLoadError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+        Show-SafeMessage -MessageKey "configLoadError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
         # Create default config
         $script:ConfigData = [PSCustomObject]@{
             language    = ""
@@ -871,7 +881,7 @@ function Test-DuplicateSource {
     }
 
     if (-not $SourceData) {
-        Show-SafeMessage -MessageKey "${ItemType}DuplicateError" -TitleKey "error" -Args @("Source ${ItemType} data not found") -Icon Error
+        Show-SafeMessage -MessageKey "${ItemType}DuplicateError" -TitleKey "error" -Arguments @("Source ${ItemType} data not found") -Icon Error
         return $false
     }
 
@@ -896,11 +906,11 @@ function Show-DuplicateResult {
     )
 
     if ($Success) {
-        Show-SafeMessage -MessageKey "${ItemType.ToLower()}Duplicated" -TitleKey "info" -Args @($OriginalId, $NewId)
+        Show-SafeMessage -MessageKey "${ItemType.ToLower()}Duplicated" -TitleKey "info" -Arguments @($OriginalId, $NewId)
         Write-Verbose "Successfully duplicated ${ItemType.ToLower()} '$OriginalId' to '$NewId'"
     } else {
         Write-Error "Failed to duplicate ${ItemType.ToLower()}: $ErrorMessage"
-        Show-SafeMessage -MessageKey "${ItemType.ToLower()}DuplicateError" -TitleKey "error" -Args @($ErrorMessage) -Icon Error
+        Show-SafeMessage -MessageKey "${ItemType.ToLower()}DuplicateError" -TitleKey "error" -Arguments @($ErrorMessage) -Icon Error
     }
 }
 
@@ -1867,7 +1877,7 @@ function Handle-DeleteGame {
     $selectedGame = $gamesList.SelectedItem
 
     if ($selectedGame) {
-        $result = Show-SafeMessage -MessageKey "deleteGameConfirm" -TitleKey "confirmation" -Args @($selectedGame) -Button YesNo -Icon Question
+        $result = Show-SafeMessage -MessageKey "deleteGameConfirm" -TitleKey "confirmation" -Arguments @($selectedGame) -Button YesNo -Icon Question
         if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
             $script:ConfigData.games.PSObject.Properties.Remove($selectedGame)
             Update-GamesList
@@ -1996,7 +2006,7 @@ function Handle-DeleteApp {
     $selectedApp = $managedAppsList.SelectedItem
 
     if ($selectedApp) {
-        $result = Show-SafeMessage -MessageKey "deleteAppConfirm" -TitleKey "confirmation" -Args @($selectedApp) -Button YesNo -Icon Question
+        $result = Show-SafeMessage -MessageKey "deleteAppConfirm" -TitleKey "confirmation" -Arguments @($selectedApp) -Button YesNo -Icon Question
         if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
             $script:ConfigData.managedApps.PSObject.Properties.Remove($selectedApp)
 
@@ -2050,7 +2060,7 @@ function Handle-SaveConfig {
         Write-Host "Debug: Error type - $($_.Exception.GetType().Name)" -ForegroundColor Red
 
         # Show error message with proper error details
-        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
     }
 }
 
@@ -2623,7 +2633,7 @@ function Update-GameLauncherList {
             if ($gameCount -eq 1) {
                 $statusText.Text = Get-LocalizedMessage -Key "oneGameReady"
             } else {
-                $statusText.Text = Get-LocalizedMessage -Key "multipleGamesReady" -Args @($gameCount.ToString())
+                $statusText.Text = Get-LocalizedMessage -Key "multipleGamesReady" -Arguments @($gameCount.ToString())
             }
         }
 
@@ -2749,14 +2759,14 @@ function Handle-CheckUpdate {
         # Process results
         if ($updateResult.UpdateAvailable) {
             # Update available
-            $message = Get-LocalizedMessage -Key "updateAvailable" -Args @($updateResult.LatestVersion, $updateResult.CurrentVersion)
+            $message = Get-LocalizedMessage -Key "updateAvailable" -Arguments @($updateResult.LatestVersion, $updateResult.CurrentVersion)
             if ($updateStatusText) {
                 $updateStatusText.Text = $message
                 $updateStatusText.Foreground = "#FF6600"
             }
 
             # Ask user if they want to open the releases page
-            $result = Show-SafeMessage -MessageKey "updateAvailableConfirm" -TitleKey "updateAvailableTitle" -Args @($updateResult.LatestVersion) -Button YesNo -Icon Question
+            $result = Show-SafeMessage -MessageKey "updateAvailableConfirm" -TitleKey "updateAvailableTitle" -Arguments @($updateResult.LatestVersion) -Button YesNo -Icon Question
             if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
                 if (-not (Open-ReleasesPage)) {
                     Show-SafeMessage -MessageKey "browserOpenError" -TitleKey "error" -Icon Warning
@@ -3061,7 +3071,7 @@ function Handle-ApplyConfig {
 
     } catch {
         Write-Host "Debug: Apply config error - $($_.Exception.Message)" -ForegroundColor Red
-        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
     }
 }
 
@@ -3089,7 +3099,7 @@ function Handle-OKConfig {
 
     } catch {
         Write-Host "Debug: OK config error - $($_.Exception.Message)" -ForegroundColor Red
-        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
     }
 }
 
@@ -3160,7 +3170,7 @@ function Handle-SaveGameSettings {
 
     } catch {
         Write-Host "Debug: Save game settings error - $($_.Exception.Message)" -ForegroundColor Red
-        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
     }
 }
 
@@ -3196,7 +3206,7 @@ function Handle-SaveManagedApps {
 
     } catch {
         Write-Host "Debug: Save managed apps settings error - $($_.Exception.Message)" -ForegroundColor Red
-        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
     }
 }
 
@@ -3217,7 +3227,7 @@ function Handle-SaveGlobalSettings {
 
     } catch {
         Write-Host "Debug: Save global settings error - $($_.Exception.Message)" -ForegroundColor Red
-        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
     }
 }
 
@@ -3226,12 +3236,32 @@ function Handle-About {
     param()
 
     try {
+        Write-Host "=== Handle-About DEBUG START ===" -ForegroundColor Cyan
+
         # Get version information
         $versionInfo = Get-ProjectVersionInfo
-        Show-SafeMessage -MessageKey "aboutMessage" -TitleKey "aboutTitle" -Args @($versionInfo.FullVersion)
+        Write-Host "Debug: About dialog - versionInfo type: $($versionInfo.GetType().Name)" -ForegroundColor Yellow
+        Write-Host "Debug: About dialog - versionInfo.FullVersion: '$($versionInfo.FullVersion)'" -ForegroundColor Yellow
+
+        # Create args array and verify its contents
+        $argsArray = @($versionInfo.FullVersion)
+        Write-Host "Debug: About dialog - Args array length: $($argsArray.Length)" -ForegroundColor Yellow
+        Write-Host "Debug: About dialog - Args[0]: '$($argsArray[0])'" -ForegroundColor Yellow
+        Write-Host "Debug: About dialog - Args[0] type: $($argsArray[0].GetType().Name)" -ForegroundColor Yellow
+
+        # Test message retrieval with verbose output
+        Write-Host "Debug: Testing Get-LocalizedMessage directly..." -ForegroundColor Green
+        $testMessage = Get-LocalizedMessage -Key "aboutMessage" -Args $argsArray
+        Write-Host "Debug: Direct call result: '$testMessage'" -ForegroundColor Green
+
+        Write-Host "Debug: Calling Show-SafeMessage..." -ForegroundColor Magenta
+        Show-SafeMessage -MessageKey "aboutMessage" -TitleKey "aboutTitle" -Arguments $argsArray
+
+        Write-Host "=== Handle-About DEBUG END ===" -ForegroundColor Cyan
 
     } catch {
         Write-Warning "Failed to show about dialog: $($_.Exception.Message)"
+        Write-Warning "Exception details: $($_.Exception)"
         $fallbackVersion = if ($versionInfo) { $versionInfo.FullVersion } else { "Unknown" }
         [System.Windows.MessageBox]::Show("Focus Game Deck`nVersion: $fallbackVersion", "About", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
     }
@@ -3330,7 +3360,7 @@ function Handle-GenerateLaunchers {
         if ($createdLaunchers -and $createdLaunchers.Count -gt 0) {
             $messageKey = if ($launcherType -eq "lnk") { "launchersCreatedEnhanced" } else { "launchersCreatedTraditional" }
 
-            Show-SafeMessage -MessageKey $messageKey -TitleKey "success" -Args @($createdLaunchers.Count.ToString()) -Icon Information
+            Show-SafeMessage -MessageKey $messageKey -TitleKey "success" -Arguments @($createdLaunchers.Count.ToString()) -Icon Information
 
             Write-Host "Successfully created $($createdLaunchers.Count) launchers:"
             $createdLaunchers | ForEach-Object { Write-Host "  - $($_.Name)" }
