@@ -394,10 +394,11 @@ function Start-GameFromLauncher {
     )
 
     try {
-        # Update status
+        # Update status immediately for responsive feedback
         $statusText = $script:Window.FindName("LauncherStatusText")
         if ($statusText) {
             $statusText.Text = Get-LocalizedMessage -Key "launchingGame" -Args @($GameId)
+            $statusText.Foreground = "#0066CC"  # Blue color for launching state
         }
 
         # Validate game exists in configuration
@@ -405,6 +406,7 @@ function Start-GameFromLauncher {
             Show-SafeMessage -MessageKey "gameNotFound" -TitleKey "error" -Args @($GameId) -Icon Error
             if ($statusText) {
                 $statusText.Text = Get-LocalizedMessage -Key "launchError"
+                $statusText.Foreground = "#CC0000"  # Red color for error
             }
             return
         }
@@ -416,6 +418,7 @@ function Start-GameFromLauncher {
             Show-SafeMessage -MessageKey "launcherNotFound" -TitleKey "error" -Icon Error
             if ($statusText) {
                 $statusText.Text = Get-LocalizedMessage -Key "launchError"
+                $statusText.Foreground = "#CC0000"  # Red color for error
             }
             return
         }
@@ -429,24 +432,24 @@ function Start-GameFromLauncher {
             "-GameId", $GameId
         ) -WindowStyle Minimized -PassThru
 
-        # Provide immediate feedback
+        # Provide immediate non-intrusive feedback
         if ($process) {
             Write-Verbose "Game launch process started with PID: $($process.Id)"
-            # Don't show modal dialog during window operations - it can interfere with window state
-            # Show-SafeMessage -MessageKey "gameLaunched" -TitleKey "info" -Args @($GameId)
 
-            # Use status text instead of modal dialog to avoid window disposal issues
+            # Update status with success message - no modal dialog
             if ($statusText) {
                 $statusText.Text = Get-LocalizedMessage -Key "gameLaunched" -Args @($GameId)
+                $statusText.Foreground = "#009900"  # Green color for success
             }
         }
 
-        # Reset status after a short delay using a background timer
+        # Reset status after delay without interrupting user workflow
         $timer = New-Object System.Windows.Threading.DispatcherTimer
-        $timer.Interval = [TimeSpan]::FromSeconds(3)
+        $timer.Interval = [TimeSpan]::FromSeconds(5)  # Longer delay for user to see feedback
         $timer.add_Tick({
                 if ($statusText) {
                     $statusText.Text = Get-LocalizedMessage -Key "readyToLaunch"
+                    $statusText.Foreground = "#333333"  # Reset to default color
                 }
                 $timer.Stop()
             })
@@ -454,12 +457,15 @@ function Start-GameFromLauncher {
 
     } catch {
         Write-Warning "Failed to launch game '$GameId': $($_.Exception.Message)"
+
+        # Only show modal dialog for actual errors that need user attention
         Show-SafeMessage -MessageKey "launchFailed" -TitleKey "error" -Args @($GameId, $_.Exception.Message) -Icon Error
 
-        # Reset status
+        # Update status for error
         $statusText = $script:Window.FindName("LauncherStatusText")
         if ($statusText) {
             $statusText.Text = Get-LocalizedMessage -Key "launchError"
+            $statusText.Foreground = "#CC0000"  # Red color for error
         }
     }
 }
@@ -702,32 +708,17 @@ function Initialize-ConfigEditor {
         }
 
         # Step 11: Show window
-        # Attempt to show the window. ShowDialog() is the preferred method as it opens the window
-        # as a modal dialog, blocking the script until the window is closed. However, this can fail
-        # in certain PowerShell environments (like the ISE). The catch block provides a fallback.
         try {
-            Write-Host "Step 11: Attempting to show window" -ForegroundColor Yellow
-            Write-Host "Step 11a: Window object validation" -ForegroundColor Cyan
-            Write-Host "- Window is null: $($null -eq $script:Window)" -ForegroundColor Cyan
-            Write-Host "- Window type: $($script:Window.GetType().FullName)" -ForegroundColor Cyan
-
-            Write-Host "Step 11b: Calling ShowDialog()" -ForegroundColor Cyan
+            Write-Host "Step 11: Showing window" -ForegroundColor Yellow
             $dialogResult = $script:Window.ShowDialog()
-            Write-Host "Step 11: Window displayed successfully, result: $dialogResult" -ForegroundColor Green
+            Write-Host "Step 11: Window displayed successfully" -ForegroundColor Green
         } catch {
-            Write-Host "Step 11 ShowDialog FAILED: $($_.Exception.Message)" -ForegroundColor Red
-            Write-Host "Step 11 Exception Type: $($_.Exception.GetType().Name)" -ForegroundColor Red
-            if ($_.Exception.InnerException) {
-                Write-Host "Step 11 Inner Exception: $($_.Exception.InnerException.Message)" -ForegroundColor Red
-            }
-
-            # Try alternative method
+            Write-Host "Step 11 ShowDialog failed, trying alternative method: $($_.Exception.Message)" -ForegroundColor Yellow
             try {
-                Write-Host "Step 11c: Trying alternative Show() method" -ForegroundColor Cyan
                 $script:Window.Show()
                 Write-Host "Step 11: Alternative Show() method succeeded" -ForegroundColor Green
 
-                Write-Host "Window is now visible. Press Ctrl+C to exit." -ForegroundColor Yellow
+                # Keep window alive with event loop
                 try {
                     while ($script:Window.IsVisible) {
                         Start-Sleep -Milliseconds 100
@@ -737,8 +728,8 @@ function Initialize-ConfigEditor {
                     Write-Verbose "Window event loop interrupted: $($_.Exception.Message)"
                 }
             } catch {
-                Write-Host "Step 11 Show ALSO FAILED: $($_.Exception.Message)" -ForegroundColor Red
-                throw "Failed to display window using any method: $($_.Exception.Message)"
+                Write-Host "Step 11 FAILED: $($_.Exception.Message)" -ForegroundColor Red
+                throw "Failed to display window: $($_.Exception.Message)"
             }
         }
 
