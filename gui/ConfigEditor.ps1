@@ -702,6 +702,9 @@ function Initialize-ConfigEditor {
         }
 
         # Step 11: Show window
+        # Attempt to show the window. ShowDialog() is the preferred method as it opens the window
+        # as a modal dialog, blocking the script until the window is closed. However, this can fail
+        # in certain PowerShell environments (like the ISE). The catch block provides a fallback.
         try {
             Write-Host "Step 11: Attempting to show window" -ForegroundColor Yellow
             Write-Host "Step 11a: Window object validation" -ForegroundColor Cyan
