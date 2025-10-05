@@ -379,6 +379,91 @@ function Test-Prerequisites {
     return $true
 }
 
+<#
+.SYNOPSIS
+    Launches a game from the launcher tab
+
+.DESCRIPTION
+    Initiates game launch using the main game launcher script
+    and provides user feedback during the process.
+#>
+function Start-GameFromLauncher {
+    param(
+        [Parameter(Mandatory)]
+        [string]$GameId
+    )
+
+    try {
+        # Update status
+        $statusText = $script:Window.FindName("LauncherStatusText")
+        if ($statusText) {
+            $statusText.Text = Get-LocalizedMessage -Key "launchingGame" -Args @($GameId)
+        }
+
+        # Validate game exists in configuration
+        if (-not $script:ConfigData.games -or -not $script:ConfigData.games.PSObject.Properties[$GameId]) {
+            Show-SafeMessage -MessageKey "gameNotFound" -TitleKey "error" -Args @($GameId) -Icon Error
+            if ($statusText) {
+                $statusText.Text = Get-LocalizedMessage -Key "launchError"
+            }
+            return
+        }
+
+        # Use the direct game launcher to avoid recursive ConfigEditor launches
+        $gameLauncherPath = Join-Path $PSScriptRoot "../src/Invoke-FocusGameDeck.ps1"
+
+        if (-not (Test-Path $gameLauncherPath)) {
+            Show-SafeMessage -MessageKey "launcherNotFound" -TitleKey "error" -Icon Error
+            if ($statusText) {
+                $statusText.Text = Get-LocalizedMessage -Key "launchError"
+            }
+            return
+        }
+
+        Write-Host "Launching game from GUI: $GameId" -ForegroundColor Cyan
+
+        # Launch the game using PowerShell - bypass Main.ps1 to prevent recursive ConfigEditor launch
+        $process = Start-Process -FilePath "powershell.exe" -ArgumentList @(
+            "-ExecutionPolicy", "Bypass",
+            "-File", $gameLauncherPath,
+            "-GameId", $GameId
+        ) -WindowStyle Minimized -PassThru
+
+        # Provide immediate feedback
+        if ($process) {
+            Write-Verbose "Game launch process started with PID: $($process.Id)"
+            # Don't show modal dialog during window operations - it can interfere with window state
+            # Show-SafeMessage -MessageKey "gameLaunched" -TitleKey "info" -Args @($GameId)
+
+            # Use status text instead of modal dialog to avoid window disposal issues
+            if ($statusText) {
+                $statusText.Text = Get-LocalizedMessage -Key "gameLaunched" -Args @($GameId)
+            }
+        }
+
+        # Reset status after a short delay using a background timer
+        $timer = New-Object System.Windows.Threading.DispatcherTimer
+        $timer.Interval = [TimeSpan]::FromSeconds(3)
+        $timer.add_Tick({
+                if ($statusText) {
+                    $statusText.Text = Get-LocalizedMessage -Key "readyToLaunch"
+                }
+                $timer.Stop()
+            })
+        $timer.Start()
+
+    } catch {
+        Write-Warning "Failed to launch game '$GameId': $($_.Exception.Message)"
+        Show-SafeMessage -MessageKey "launchFailed" -TitleKey "error" -Args @($GameId, $_.Exception.Message) -Icon Error
+
+        # Reset status
+        $statusText = $script:Window.FindName("LauncherStatusText")
+        if ($statusText) {
+            $statusText.Text = Get-LocalizedMessage -Key "launchError"
+        }
+    }
+}
+
 # Replace XAML placeholders with localized text
 function Replace-XamlPlaceholders {
     param(
@@ -2678,90 +2763,6 @@ function New-GameLauncherCard {
     }
 }
 
-<#
-.SYNOPSIS
-    Launches a game from the launcher tab
-
-.DESCRIPTION
-    Initiates game launch using the main game launcher script
-    and provides user feedback during the process.
-#>
-function Start-GameFromLauncher {
-    param(
-        [Parameter(Mandatory)]
-        [string]$GameId
-    )
-
-    try {
-        # Update status
-        $statusText = $script:Window.FindName("LauncherStatusText")
-        if ($statusText) {
-            $statusText.Text = Get-LocalizedMessage -Key "launchingGame" -Args @($GameId)
-        }
-
-        # Validate game exists in configuration
-        if (-not $script:ConfigData.games -or -not $script:ConfigData.games.PSObject.Properties[$GameId]) {
-            Show-SafeMessage -MessageKey "gameNotFound" -TitleKey "error" -Args @($GameId) -Icon Error
-            if ($statusText) {
-                $statusText.Text = Get-LocalizedMessage -Key "launchError"
-            }
-            return
-        }
-
-        # Use the direct game launcher to avoid recursive ConfigEditor launches
-        $gameLauncherPath = Join-Path $PSScriptRoot "../src/Invoke-FocusGameDeck.ps1"
-
-        if (-not (Test-Path $gameLauncherPath)) {
-            Show-SafeMessage -MessageKey "launcherNotFound" -TitleKey "error" -Icon Error
-            if ($statusText) {
-                $statusText.Text = Get-LocalizedMessage -Key "launchError"
-            }
-            return
-        }
-
-        Write-Host "Launching game from GUI: $GameId" -ForegroundColor Cyan
-
-        # Launch the game using PowerShell - bypass Main.ps1 to prevent recursive ConfigEditor launch
-        $process = Start-Process -FilePath "powershell.exe" -ArgumentList @(
-            "-ExecutionPolicy", "Bypass",
-            "-File", $gameLauncherPath,
-            "-GameId", $GameId
-        ) -WindowStyle Minimized -PassThru
-
-        # Provide immediate feedback
-        if ($process) {
-            Write-Verbose "Game launch process started with PID: $($process.Id)"
-            # Don't show modal dialog during window operations - it can interfere with window state
-            # Show-SafeMessage -MessageKey "gameLaunched" -TitleKey "info" -Args @($GameId)
-
-            # Use status text instead of modal dialog to avoid window disposal issues
-            if ($statusText) {
-                $statusText.Text = Get-LocalizedMessage -Key "gameLaunched" -Args @($GameId)
-            }
-        }
-
-        # Reset status after a short delay using a background timer
-        $timer = New-Object System.Windows.Threading.DispatcherTimer
-        $timer.Interval = [TimeSpan]::FromSeconds(3)
-        $timer.add_Tick({
-                if ($statusText) {
-                    $statusText.Text = Get-LocalizedMessage -Key "readyToLaunch"
-                }
-                $timer.Stop()
-            })
-        $timer.Start()
-
-    } catch {
-        Write-Warning "Failed to launch game '$GameId': $($_.Exception.Message)"
-        Show-SafeMessage -MessageKey "launchFailed" -TitleKey "error" -Args @($GameId, $_.Exception.Message) -Icon Error
-
-        # Reset status
-        $statusText = $script:Window.FindName("LauncherStatusText")
-        if ($statusText) {
-            $statusText.Text = Get-LocalizedMessage -Key "launchError"
-        }
-    }
-}
 
 <#
 .SYNOPSIS
