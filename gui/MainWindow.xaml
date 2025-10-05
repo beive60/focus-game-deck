@@ -10,15 +10,40 @@
         ToolTipService.ShowDuration="10000"
         ToolTipService.BetweenShowDelay="100">
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="60"/>
-        </Grid.RowDefinitions>
+    <DockPanel>
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="[HELP_MENU_HEADER]">
+                <MenuItem Name="CheckUpdateMenuItem"
+                          Header="[CHECK_UPDATE_MENU_ITEM]"/>
+                <Separator/>
+                <MenuItem Name="AboutMenuItem"
+                          Header="[ABOUT_MENU_ITEM]"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- Footer with reduced height -->
+        <Grid DockPanel.Dock="Bottom"
+                Height="35">
+            <StackPanel Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        Margin="20,0">
+                <TextBlock Name="VersionLabel"
+                           Text="[VERSION_LABEL]"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Foreground="#666"/>
+                <TextBlock Name="VersionText"
+                           Text="1.0.1-alpha"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Foreground="#666"
+                           Margin="5,0,0,0"/>
+            </StackPanel>
+        </Grid>
 
         <!-- Main TabControl -->
-        <TabControl Grid.Row="0"
-                    Name="MainTabControl"
+        <TabControl Name="MainTabControl"
                     Margin="10">
 
             <!-- Game Launcher Tab (New Primary Tab) -->
@@ -66,67 +91,6 @@
                                   VerticalScrollBarVisibility="Auto">
                         <ItemsControl Name="GameLauncherList"
                                       Margin="0,10">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="#F8F9FA"
-                                            BorderBrush="#E1E5E9"
-                                            BorderThickness="1"
-                                            CornerRadius="8"
-                                            Margin="0,0,0,10"
-                                            Padding="15">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-
-                                            <!-- Game Info -->
-                                            <StackPanel Grid.Column="0"
-                                                        VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding DisplayName}"
-                                                           FontSize="14"
-                                                           FontWeight="SemiBold"
-                                                           Foreground="#333"/>
-                                                <StackPanel Orientation="Horizontal"
-                                                            Margin="0,4,0,0">
-                                                    <TextBlock Text="Platform: "
-                                                               FontSize="11"
-                                                               Foreground="#666"/>
-                                                    <TextBlock Text="{Binding Platform}"
-                                                               FontSize="11"
-                                                               Foreground="#0078D4"
-                                                               FontWeight="SemiBold"/>
-                                                    <TextBlock Text=" | ID: "
-                                                               FontSize="11"
-                                                               Foreground="#666"
-                                                               Margin="10,0,0,0"/>
-                                                    <TextBlock Text="{Binding GameId}"
-                                                               FontSize="11"
-                                                               Foreground="#666"
-                                                               FontFamily="Consolas"/>
-                                                </StackPanel>
-                                            </StackPanel>
-
-                                            <!-- Action Buttons -->
-                                            <Button Grid.Column="1"
-                                                    Name="EditGameButton"
-                                                    Content="[EDIT_BUTTON]"
-                                                    Width="70"
-                                                    Height="32"
-                                                    Margin="10,0"
-                                                    FontSize="11"/>
-
-                                            <Button Grid.Column="2"
-                                                    Name="LaunchGameButton"
-                                                    Content="[LAUNCH_BUTTON]"
-                                                    Width="80"
-                                                    Height="32"
-                                                    FontSize="12"/>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
 
@@ -161,8 +125,7 @@
                                     Content="[ADD_GAME_BUTTON]"
                                     Width="100"
                                     Height="35"
-                                    Margin="5"
-                                    FontWeight="SemiBold"/>
+                                    Margin="5"/>
                             <Button Name="OpenConfigButton"
                                     Content="[OPEN_CONFIG_BUTTON]"
                                     Width="100"
@@ -177,236 +140,559 @@
             <TabItem Header="[GAMES_TAB_HEADER]"
                      Name="GamesTab">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="250"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="50"/>
+                    </Grid.RowDefinitions>
 
-                    <!-- Games List -->
-                    <Grid Grid.Column="0"
-                          Margin="10,0,5,0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="30"/>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="40"/>
-                        </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="250"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                        <Label Grid.Row="0"
-                               Name="GamesListLabel"
-                               Content="Games List"
-                               FontWeight="Bold"/>
-                        <ListBox Grid.Row="1"
-                                 Name="GamesList"
-                                 Margin="0,5,0,5"/>
-                        <StackPanel Grid.Row="2"
-                                    Orientation="Horizontal"
-                                    HorizontalAlignment="Center">
-                            <Button Name="AddGameButton"
-                                    Content="Add New..."
-                                    Width="80"
-                                    Height="25"
-                                    Margin="5"/>
-                            <Button Name="DuplicateGameButton"
-                                    Content="[DUPLICATE_BUTTON]"
-                                    Width="70"
-                                    Height="25"
-                                    Margin="5"/>
-                            <Button Name="DeleteGameButton"
-                                    Content="Delete"
-                                    Width="60"
-                                    Height="25"
-                                    Margin="5"/>
-                        </StackPanel>
-                    </Grid>
-
-                    <!-- Game Details -->
-                    <ScrollViewer Grid.Column="1"
-                                  VerticalScrollBarVisibility="Auto">
-                        <Grid Margin="5,0,10,0">
+                        <!-- Games List -->
+                        <Grid Grid.Column="0"
+                              Margin="10,0,5,0">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="30"/>
                                 <RowDefinition Height="*"/>
+                                <RowDefinition Height="40"/>
                             </Grid.RowDefinitions>
 
                             <Label Grid.Row="0"
-                                   Name="GameDetailsLabel"
-                                   Content="Selected Game Details"
-                                   FontWeight="Bold"
-                                   FontSize="14"/>
+                                   Name="GamesListLabel"
+                                   Content="Games List"
+                                   FontWeight="Bold"/>
+                            <ListBox Grid.Row="1"
+                                     Name="GamesList"
+                                     Margin="0,5,0,5"/>
+                            <StackPanel Grid.Row="2"
+                                        Orientation="Horizontal"
+                                        HorizontalAlignment="Center">
+                                <Button Name="AddGameButton"
+                                        Content="Add New..."
+                                        Width="80"
+                                        Height="25"
+                                        Margin="5"/>
+                                <Button Name="DuplicateGameButton"
+                                        Content="[DUPLICATE_BUTTON]"
+                                        Width="70"
+                                        Height="25"
+                                        Margin="5"/>
+                                <Button Name="DeleteGameButton"
+                                        Content="Delete"
+                                        Width="60"
+                                        Height="25"
+                                        Margin="5"/>
+                            </StackPanel>
+                        </Grid>
 
-                            <Grid Grid.Row="1"
-                                  Margin="0,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
+                        <!-- Game Details -->
+                        <ScrollViewer Grid.Column="1"
+                                      VerticalScrollBarVisibility="Auto">
+                            <Grid Margin="5,0,10,0">
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
 
                                 <Label Grid.Row="0"
-                                       Grid.Column="0"
-                                       Name="GameIdLabel"
-                                       Content="Game ID:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="0"
-                                         Grid.Column="1"
-                                         Name="GameIdTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"/>
+                                       Name="GameDetailsLabel"
+                                       Content="Selected Game Details"
+                                       FontWeight="Bold"
+                                       FontSize="14"/>
 
-                                <Label Grid.Row="1"
-                                       Grid.Column="0"
-                                       Name="GameNameLabel"
-                                       Content="Display Name:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="1"
-                                         Grid.Column="1"
-                                         Name="GameNameTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"/>
+                                <Grid Grid.Row="1"
+                                      Margin="0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="30"/>
+                                        <RowDefinition Height="30"/>
+                                        <RowDefinition Height="30"/>
+                                        <RowDefinition Height="30"/>
+                                        <RowDefinition Height="30"/>
+                                        <RowDefinition Height="30"/>
+                                        <RowDefinition Height="30"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Label Grid.Row="0"
+                                           Grid.Column="0"
+                                           Name="GameIdLabel"
+                                           Content="Game ID:"
+                                           VerticalAlignment="Center"/>
+                                    <TextBox Grid.Row="0"
+                                             Grid.Column="1"
+                                             Name="GameIdTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"/>
+
+                                    <Label Grid.Row="1"
+                                           Grid.Column="0"
+                                           Name="GameNameLabel"
+                                           Content="Display Name:"
+                                           VerticalAlignment="Center"/>
+                                    <TextBox Grid.Row="1"
+                                             Grid.Column="1"
+                                             Name="GameNameTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"/>
+
+                                    <Label Grid.Row="2"
+                                           Grid.Column="0"
+                                           Name="PlatformLabel"
+                                           Content="Platform:"
+                                           VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Row="2"
+                                              Grid.Column="1"
+                                              Name="PlatformComboBox"
+                                              Margin="5">
+                                        <ComboBoxItem Content="[STEAM_PLATFORM]"
+                                                      Tag="steam"/>
+                                        <ComboBoxItem Content="[EPIC_PLATFORM]"
+                                                      Tag="epic"/>
+                                        <ComboBoxItem Content="[RIOT_PLATFORM]"
+                                                      Tag="riot"/>
+                                    </ComboBox>
+
+                                    <StackPanel Grid.Row="3"
+                                                Grid.Column="0"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                ToolTip="[TOOLTIP_STEAM_APP_ID]">
+                                        <Label Name="SteamAppIdLabel"
+                                               Content="Steam AppID:"
+                                               VerticalAlignment="Center"/>
+                                        <TextBlock Text="?"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0078D4"
+                                                   Margin="3,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="[TOOLTIP_STEAM_APP_ID]"/>
+                                    </StackPanel>
+                                    <TextBox Grid.Row="3"
+                                             Grid.Column="1"
+                                             Name="SteamAppIdTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"/>
+
+                                    <StackPanel Grid.Row="4"
+                                                Grid.Column="0"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                Visibility="Collapsed"
+                                                ToolTip="[TOOLTIP_EPIC_GAME_ID]">
+                                        <Label Name="EpicGameIdLabel"
+                                               Content="Epic GameID:"
+                                               VerticalAlignment="Center"/>
+                                        <TextBlock Text="?"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0078D4"
+                                                   Margin="3,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="[TOOLTIP_EPIC_GAME_ID]"/>
+                                    </StackPanel>
+                                    <TextBox Grid.Row="4"
+                                             Grid.Column="1"
+                                             Name="EpicGameIdTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"
+                                             Visibility="Collapsed"/>
+
+                                    <StackPanel Grid.Row="5"
+                                                Grid.Column="0"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                Visibility="Collapsed"
+                                                ToolTip="[TOOLTIP_RIOT_GAME_ID]">
+                                        <Label Name="RiotGameIdLabel"
+                                               Content="Riot GameID:"
+                                               VerticalAlignment="Center"/>
+                                        <TextBlock Text="?"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0078D4"
+                                                   Margin="3,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="[TOOLTIP_RIOT_GAME_ID]"/>
+                                    </StackPanel>
+                                    <TextBox Grid.Row="5"
+                                             Grid.Column="1"
+                                             Name="RiotGameIdTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"
+                                             Visibility="Collapsed"/>
+
+                                    <StackPanel Grid.Row="6"
+                                                Grid.Column="0"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                ToolTip="[TOOLTIP_PROCESS_NAME]">
+                                        <Label Name="ProcessNameLabel"
+                                               Content="Process Name:"
+                                               VerticalAlignment="Center"/>
+                                        <TextBlock Text="?"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0078D4"
+                                                   Margin="3,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="[TOOLTIP_PROCESS_NAME]"/>
+                                    </StackPanel>
+                                    <TextBox Grid.Row="6"
+                                             Grid.Column="1"
+                                             Name="ProcessNameTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"/>
+                                </Grid>
 
                                 <Label Grid.Row="2"
-                                       Grid.Column="0"
-                                       Name="PlatformLabel"
-                                       Content="Platform:"
-                                       VerticalAlignment="Center"/>
-                                <ComboBox Grid.Row="2"
-                                          Grid.Column="1"
-                                          Name="PlatformComboBox"
-                                          Margin="5">
-                                    <ComboBoxItem Content="[STEAM_PLATFORM]"
-                                                  Tag="steam"/>
-                                    <ComboBoxItem Content="[EPIC_PLATFORM]"
-                                                  Tag="epic"/>
-                                    <ComboBoxItem Content="[RIOT_PLATFORM]"
-                                                  Tag="riot"/>
-                                </ComboBox>
-
+                                       Name="AppsToManageLabel"
+                                       Content="Apps to Manage:"
+                                       FontWeight="Bold"
+                                       Margin="0,10,0,5"/>
                                 <StackPanel Grid.Row="3"
-                                            Grid.Column="0"
-                                            Orientation="Horizontal"
-                                            VerticalAlignment="Center"
-                                            ToolTip="[TOOLTIP_STEAM_APP_ID]">
-                                    <Label Name="SteamAppIdLabel"
-                                           Content="Steam AppID:"
-                                           VerticalAlignment="Center"/>
-                                    <TextBlock Text="?"
-                                               FontWeight="Bold"
-                                               Foreground="#0078D4"
-                                               Margin="3,0,0,0"
-                                               VerticalAlignment="Center"
-                                               ToolTip="[TOOLTIP_STEAM_APP_ID]"/>
-                                </StackPanel>
-                                <TextBox Grid.Row="3"
-                                         Grid.Column="1"
-                                         Name="SteamAppIdTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"/>
+                                            Name="AppsToManagePanel"
+                                            Margin="10,0"/>
 
-                                <StackPanel Grid.Row="4"
-                                            Grid.Column="0"
-                                            Orientation="Horizontal"
-                                            VerticalAlignment="Center"
-                                            Visibility="Collapsed"
-                                            ToolTip="[TOOLTIP_EPIC_GAME_ID]">
-                                    <Label Name="EpicGameIdLabel"
-                                           Content="Epic GameID:"
-                                           VerticalAlignment="Center"/>
-                                    <TextBlock Text="?"
-                                               FontWeight="Bold"
-                                               Foreground="#0078D4"
-                                               Margin="3,0,0,0"
-                                               VerticalAlignment="Center"
-                                               ToolTip="[TOOLTIP_EPIC_GAME_ID]"/>
-                                </StackPanel>
-                                <TextBox Grid.Row="4"
-                                         Grid.Column="1"
-                                         Name="EpicGameIdTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"
-                                         Visibility="Collapsed"/>
+                                <Grid Grid.Row="4"
+                                      Margin="0,20,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
 
-                                <StackPanel Grid.Row="5"
-                                            Grid.Column="0"
-                                            Orientation="Horizontal"
-                                            VerticalAlignment="Center"
-                                            Visibility="Collapsed"
-                                            ToolTip="[TOOLTIP_RIOT_GAME_ID]">
-                                    <Label Name="RiotGameIdLabel"
-                                           Content="Riot GameID:"
+                                    <Label Grid.Column="0"
+                                           Name="LauncherTypeLabel2"
+                                           Content="Launcher Type:"
                                            VerticalAlignment="Center"/>
-                                    <TextBlock Text="?"
-                                               FontWeight="Bold"
-                                               Foreground="#0078D4"
-                                               Margin="3,0,0,0"
-                                               VerticalAlignment="Center"
-                                               ToolTip="[TOOLTIP_RIOT_GAME_ID]"/>
-                                </StackPanel>
-                                <TextBox Grid.Row="5"
-                                         Grid.Column="1"
-                                         Name="RiotGameIdTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"
-                                         Visibility="Collapsed"/>
-
-                                <StackPanel Grid.Row="6"
-                                            Grid.Column="0"
-                                            Orientation="Horizontal"
-                                            VerticalAlignment="Center"
-                                            ToolTip="[TOOLTIP_PROCESS_NAME]">
-                                    <Label Name="ProcessNameLabel"
-                                           Content="Process Name:"
-                                           VerticalAlignment="Center"/>
-                                    <TextBlock Text="?"
-                                               FontWeight="Bold"
-                                               Foreground="#0078D4"
-                                               Margin="3,0,0,0"
-                                               VerticalAlignment="Center"
-                                               ToolTip="[TOOLTIP_PROCESS_NAME]"/>
-                                </StackPanel>
-                                <TextBox Grid.Row="6"
-                                         Grid.Column="1"
-                                         Name="ProcessNameTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"/>
+                                    <StackPanel Grid.Column="1"
+                                                Orientation="Horizontal"
+                                                Margin="5">
+                                        <ComboBox Name="GameLauncherTypeCombo"
+                                                  Width="200"
+                                                  HorizontalAlignment="Left">
+                                            <ComboBoxItem Content="[ENHANCED_SHORTCUTS]"
+                                                          Tag="lnk"
+                                                          IsSelected="True"/>
+                                            <ComboBoxItem Content="[TRADITIONAL_BATCH]"
+                                                          Tag="bat"/>
+                                        </ComboBox>
+                                        <Button Name="GenerateLaunchersButton"
+                                                Content="[GENERATE_LAUNCHERS]"
+                                                Width="130"
+                                                Height="25"
+                                                Margin="10,0,0,0"/>
+                                    </StackPanel>
+                                </Grid>
                             </Grid>
+                        </ScrollViewer>
+                    </Grid>
 
-                            <Label Grid.Row="2"
-                                   Name="AppsToManageLabel"
-                                   Content="Apps to Manage:"
-                                   FontWeight="Bold"
-                                   Margin="0,10,0,5"/>
-                            <StackPanel Grid.Row="3"
-                                        Name="AppsToManagePanel"
-                                        Margin="10,0"/>
+                    <!-- Tab-specific Save Button -->
+                    <Grid Grid.Row="1"
+                          Background="#F8F8F8"
+                          Margin="0,5,0,0">
+                        <Button Name="SaveGameSettingsButton"
+                                Content="[SAVE_BUTTON]"
+                                Width="100"
+                                Height="30"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Margin="0,0,20,0"
+                                Background="#0078D4"
+                                Foreground="White"
+                                BorderThickness="0"/>
+                    </Grid>
+                </Grid>
+            </TabItem>
 
-                            <Grid Grid.Row="4"
-                                  Margin="0,20,0,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
+            <!-- Managed Apps Tab -->
+            <TabItem Header="[MANAGED_APPS_TAB_HEADER]"
+                     Name="ManagedAppsTab">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="50"/>
+                    </Grid.RowDefinitions>
 
-                                <Label Grid.Column="0"
-                                       Name="LauncherTypeLabel2"
-                                       Content="Launcher Type:"
-                                       VerticalAlignment="Center"/>
-                                <StackPanel Grid.Column="1"
-                                            Orientation="Horizontal"
-                                            Margin="5">
-                                    <ComboBox Name="GameLauncherTypeCombo"
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="250"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Apps List -->
+                        <Grid Grid.Column="0"
+                              Margin="10,0,5,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="30"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="40"/>
+                            </Grid.RowDefinitions>
+
+                            <Label Grid.Row="0"
+                                   Name="AppsListLabel"
+                                   Content="Apps List"
+                                   FontWeight="Bold"/>
+                            <ListBox Grid.Row="1"
+                                     Name="ManagedAppsList"
+                                     Margin="0,5,0,5"/>
+                            <StackPanel Grid.Row="2"
+                                        Orientation="Horizontal"
+                                        HorizontalAlignment="Center">
+                                <Button Name="AddAppButton"
+                                        Content="Add New..."
+                                        Width="80"
+                                        Height="25"
+                                        Margin="5"/>
+                                <Button Name="DuplicateAppButton"
+                                        Content="[DUPLICATE_BUTTON]"
+                                        Width="70"
+                                        Height="25"
+                                        Margin="5"/>
+                                <Button Name="DeleteAppButton"
+                                        Content="Delete"
+                                        Width="60"
+                                        Height="25"
+                                        Margin="5"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- App Details -->
+                        <ScrollViewer Grid.Column="1"
+                                      VerticalScrollBarVisibility="Auto">
+                            <Grid Margin="5,0,10,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <Label Grid.Row="0"
+                                       Name="AppDetailsLabel"
+                                       Content="Selected App Details"
+                                       FontWeight="Bold"
+                                       FontSize="14"/>
+
+                                <Grid Grid.Row="1"
+                                      Margin="0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="80"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="30"/>
+                                        <RowDefinition Height="30"/>
+                                        <RowDefinition Height="30"/>
+                                        <RowDefinition Height="30"/>
+                                        <RowDefinition Height="30"/>
+                                        <RowDefinition Height="30"/>
+                                        <RowDefinition Height="30"/>
+                                        <RowDefinition Height="30"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Label Grid.Row="0"
+                                           Grid.Column="0"
+                                           Name="AppIdLabel"
+                                           Content="App ID:"
+                                           VerticalAlignment="Center"/>
+                                    <TextBox Grid.Row="0"
+                                             Grid.Column="1"
+                                             Name="AppIdTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"/>
+
+                                    <Label Grid.Row="1"
+                                           Grid.Column="0"
+                                           Name="AppPathLabel"
+                                           Content="Executable Path:"
+                                           VerticalAlignment="Center"/>
+                                    <TextBox Grid.Row="1"
+                                             Grid.Column="1"
+                                             Name="AppPathTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"/>
+                                    <Button Grid.Row="1"
+                                            Grid.Column="2"
+                                            Name="BrowseAppPathButton"
+                                            Content="[BROWSE_BUTTON]"
+                                            Width="70"
+                                            Height="25"/>
+
+                                    <StackPanel Grid.Row="2"
+                                                Grid.Column="0"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                ToolTip="[TOOLTIP_PROCESS_NAME]">
+                                        <Label Name="AppProcessNameLabel"
+                                               Content="Process Name:"
+                                               VerticalAlignment="Center"/>
+                                        <TextBlock Text="?"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0078D4"
+                                                   Margin="3,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="[TOOLTIP_PROCESS_NAME]"/>
+                                    </StackPanel>
+                                    <TextBox Grid.Row="2"
+                                             Grid.Column="1"
+                                             Name="AppProcessNameTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"/>
+
+                                    <Label Grid.Row="3"
+                                           Grid.Column="0"
+                                           Name="GameStartActionLabel"
+                                           Content="Game Start Action:"
+                                           VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Row="3"
+                                              Grid.Column="1"
+                                              Name="GameStartActionCombo"
+                                              Margin="5"/>
+
+                                    <Label Grid.Row="4"
+                                           Grid.Column="0"
+                                           Name="GameEndActionLabel"
+                                           Content="Game End Action:"
+                                           VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Row="4"
+                                              Grid.Column="1"
+                                              Name="GameEndActionCombo"
+                                              Margin="5"/>
+
+                                    <Label Grid.Row="5"
+                                           Grid.Column="0"
+                                           Name="AppArgumentsLabel"
+                                           Content="Launch Arguments:"
+                                           VerticalAlignment="Center"/>
+                                    <TextBox Grid.Row="5"
+                                             Grid.Column="1"
+                                             Name="AppArgumentsTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"/>
+
+                                    <StackPanel Grid.Row="6"
+                                                Grid.Column="0"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                ToolTip="[TOOLTIP_TERMINATION_METHOD]">
+                                        <Label Name="TerminationMethodLabel"
+                                               Content="Termination Method:"
+                                               VerticalAlignment="Center"/>
+                                        <TextBlock Text="?"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0078D4"
+                                                   Margin="3,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="[TOOLTIP_TERMINATION_METHOD]"/>
+                                    </StackPanel>
+                                    <ComboBox Grid.Row="6"
+                                              Grid.Column="1"
+                                              Name="TerminationMethodCombo"
+                                              Margin="5"/>
+
+                                    <StackPanel Grid.Row="7"
+                                                Grid.Column="0"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                ToolTip="[TOOLTIP_GRACEFUL_TIMEOUT]">
+                                        <Label Name="GracefulTimeoutLabel"
+                                               Content="Graceful Timeout (ms):"
+                                               VerticalAlignment="Center"/>
+                                        <TextBlock Text="?"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0078D4"
+                                                   Margin="3,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="[TOOLTIP_GRACEFUL_TIMEOUT]"/>
+                                    </StackPanel>
+                                    <TextBox Grid.Row="7"
+                                             Grid.Column="1"
+                                             Name="GracefulTimeoutTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"/>
+                                </Grid>
+                            </Grid>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <!-- Tab-specific Save Button -->
+                    <Grid Grid.Row="1"
+                          Background="#F8F8F8"
+                          Margin="0,5,0,0">
+                        <Button Name="SaveManagedAppsButton"
+                                Content="[SAVE_BUTTON]"
+                                Width="100"
+                                Height="30"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Margin="0,0,20,0"
+                                Background="#0078D4"
+                                Foreground="White"
+                                BorderThickness="0"/>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- Global Settings Tab -->
+            <TabItem Header="[GLOBAL_SETTINGS_TAB_HEADER]"
+                     Name="GlobalSettingsTab">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="50"/>
+                    </Grid.RowDefinitions>
+
+                    <ScrollViewer Grid.Row="0"
+                            VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="20">
+
+                            <!-- General Settings Group -->
+                            <GroupBox Name="GeneralSettingsGroup"
+                                      Header="[GENERAL_SETTINGS_GROUP]"
+                                      Margin="0,0,0,20">
+                                <Grid Margin="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="35"/>
+                                        <RowDefinition Height="35"/>
+                                        <RowDefinition Height="35"/>
+                                        <RowDefinition Height="35"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Label Grid.Row="0"
+                                           Grid.Column="0"
+                                           Name="LanguageLabel"
+                                           Content="Display Language:"
+                                           VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Row="0"
+                                              Grid.Column="1"
+                                              Name="LanguageCombo"
+                                              Margin="5"
+                                              Width="200"
+                                              HorizontalAlignment="Left"/>
+
+                                    <Label Grid.Row="1"
+                                           Grid.Column="0"
+                                           Name="LauncherTypeLabel"
+                                           Content="Launcher Type:"
+                                           VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Row="1"
+                                              Grid.Column="1"
+                                              Name="LauncherTypeCombo"
+                                              Margin="5"
                                               Width="200"
                                               HorizontalAlignment="Left">
                                         <ComboBoxItem Content="[ENHANCED_SHORTCUTS]"
@@ -415,527 +701,215 @@
                                         <ComboBoxItem Content="[TRADITIONAL_BATCH]"
                                                       Tag="bat"/>
                                     </ComboBox>
-                                    <Button Name="GenerateLaunchersButton"
-                                            Content="[GENERATE_LAUNCHERS]"
-                                            Width="130"
-                                            Height="25"
-                                            Margin="10,0,0,0"/>
-                                </StackPanel>
-                            </Grid>
-                        </Grid>
-                    </ScrollViewer>
-                </Grid>
-            </TabItem>
 
-            <!-- Managed Apps Tab -->
-            <TabItem Header="[MANAGED_APPS_TAB_HEADER]"
-                     Name="ManagedAppsTab">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="250"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Apps List -->
-                    <Grid Grid.Column="0"
-                          Margin="10,0,5,0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="30"/>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="40"/>
-                        </Grid.RowDefinitions>
-
-                        <Label Grid.Row="0"
-                               Name="AppsListLabel"
-                               Content="Apps List"
-                               FontWeight="Bold"/>
-                        <ListBox Grid.Row="1"
-                                 Name="ManagedAppsList"
-                                 Margin="0,5,0,5"/>
-                        <StackPanel Grid.Row="2"
-                                    Orientation="Horizontal"
-                                    HorizontalAlignment="Center">
-                            <Button Name="AddAppButton"
-                                    Content="Add New..."
-                                    Width="80"
-                                    Height="25"
-                                    Margin="5"/>
-                            <Button Name="DuplicateAppButton"
-                                    Content="[DUPLICATE_BUTTON]"
-                                    Width="70"
-                                    Height="25"
-                                    Margin="5"/>
-                            <Button Name="DeleteAppButton"
-                                    Content="Delete"
-                                    Width="60"
-                                    Height="25"
-                                    Margin="5"/>
-                        </StackPanel>
-                    </Grid>
-
-                    <!-- App Details -->
-                    <ScrollViewer Grid.Column="1"
-                                  VerticalScrollBarVisibility="Auto">
-                        <Grid Margin="5,0,10,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <Label Grid.Row="0"
-                                   Name="AppDetailsLabel"
-                                   Content="Selected App Details"
-                                   FontWeight="Bold"
-                                   FontSize="14"/>
-
-                            <Grid Grid.Row="1"
-                                  Margin="0,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="80"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="30"/>
-                                </Grid.RowDefinitions>
-
-                                <Label Grid.Row="0"
-                                       Grid.Column="0"
-                                       Name="AppIdLabel"
-                                       Content="App ID:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="0"
-                                         Grid.Column="1"
-                                         Name="AppIdTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"/>
-
-                                <Label Grid.Row="1"
-                                       Grid.Column="0"
-                                       Name="AppPathLabel"
-                                       Content="Executable Path:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="1"
-                                         Grid.Column="1"
-                                         Name="AppPathTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"/>
-                                <Button Grid.Row="1"
-                                        Grid.Column="2"
-                                        Name="BrowseAppPathButton"
-                                        Content="[BROWSE_BUTTON]"
-                                        Width="70"
-                                        Height="25"/>
-
-                                <StackPanel Grid.Row="2"
-                                            Grid.Column="0"
-                                            Orientation="Horizontal"
-                                            VerticalAlignment="Center"
-                                            ToolTip="[TOOLTIP_PROCESS_NAME]">
-                                    <Label Name="AppProcessNameLabel"
-                                           Content="Process Name:"
+                                    <Label Grid.Row="2"
+                                           Grid.Column="0"
+                                           Name="LogRetentionLabel"
+                                           Content="[LOG_RETENTION_LABEL]"
                                            VerticalAlignment="Center"/>
-                                    <TextBlock Text="?"
-                                               FontWeight="Bold"
-                                               Foreground="#0078D4"
-                                               Margin="3,0,0,0"
-                                               VerticalAlignment="Center"
-                                               ToolTip="[TOOLTIP_PROCESS_NAME]"/>
-                                </StackPanel>
-                                <TextBox Grid.Row="2"
-                                         Grid.Column="1"
-                                         Name="AppProcessNameTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"/>
+                                    <ComboBox Grid.Row="2"
+                                              Grid.Column="1"
+                                              Name="LogRetentionCombo"
+                                              Margin="5"
+                                              Width="200"
+                                              HorizontalAlignment="Left">
+                                        <ComboBoxItem Content="[LOG_RETENTION_30]"
+                                                      Tag="30"/>
+                                        <ComboBoxItem Content="[LOG_RETENTION_90]"
+                                                      Tag="90"
+                                                      IsSelected="True"/>
+                                        <ComboBoxItem Content="[LOG_RETENTION_180]"
+                                                      Tag="180"/>
+                                        <ComboBoxItem Content="[LOG_RETENTION_UNLIMITED]"
+                                                      Tag="-1"/>
+                                    </ComboBox>
 
-                                <Label Grid.Row="3"
-                                       Grid.Column="0"
-                                       Name="GameStartActionLabel"
-                                       Content="Game Start Action:"
-                                       VerticalAlignment="Center"/>
-                                <ComboBox Grid.Row="3"
-                                          Grid.Column="1"
-                                          Name="GameStartActionCombo"
-                                          Margin="5"/>
+                                    <CheckBox Grid.Row="3"
+                                              Grid.Column="0"
+                                              Grid.ColumnSpan="2"
+                                              Name="EnableLogNotarizationCheckBox"
+                                              Content="[ENABLE_LOG_NOTARIZATION]"
+                                              VerticalAlignment="Center"
+                                              Margin="5"/>
 
-                                <Label Grid.Row="4"
-                                       Grid.Column="0"
-                                       Name="GameEndActionLabel"
-                                       Content="Game End Action:"
-                                       VerticalAlignment="Center"/>
-                                <ComboBox Grid.Row="4"
-                                          Grid.Column="1"
-                                          Name="GameEndActionCombo"
-                                          Margin="5"/>
+                                    <TextBlock Grid.Row="4"
+                                               Grid.Column="1"
+                                               Name="LauncherHelpText"
+                                               Margin="5,5,0,0"
+                                               TextWrapping="Wrap"
+                                               FontSize="11"
+                                               Foreground="#666"
+                                               Text="[LAUNCHER_HELP_TEXT]"/>
+                                </Grid>
+                            </GroupBox>
 
-                                <Label Grid.Row="5"
-                                       Grid.Column="0"
-                                       Name="AppArgumentsLabel"
-                                       Content="Launch Arguments:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="5"
-                                         Grid.Column="1"
-                                         Name="AppArgumentsTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"/>
+                            <!-- OBS Settings Group -->
+                            <GroupBox Name="ObsSettingsGroup"
+                                      Header="[OBS_SETTINGS_GROUP]"
+                                      Margin="0,0,0,20">
+                                <Grid Margin="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="200"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="35"/>
+                                        <RowDefinition Height="35"/>
+                                        <RowDefinition Height="35"/>
+                                    </Grid.RowDefinitions>
 
-                                <StackPanel Grid.Row="6"
-                                            Grid.Column="0"
-                                            Orientation="Horizontal"
-                                            VerticalAlignment="Center"
-                                            ToolTip="[TOOLTIP_TERMINATION_METHOD]">
-                                    <Label Name="TerminationMethodLabel"
-                                           Content="Termination Method:"
+                                    <Label Grid.Row="0"
+                                           Grid.Column="0"
+                                           Name="HostLabel"
+                                           Content="Host:"
                                            VerticalAlignment="Center"/>
-                                    <TextBlock Text="?"
-                                               FontWeight="Bold"
-                                               Foreground="#0078D4"
-                                               Margin="3,0,0,0"
-                                               VerticalAlignment="Center"
-                                               ToolTip="[TOOLTIP_TERMINATION_METHOD]"/>
-                                </StackPanel>
-                                <ComboBox Grid.Row="6"
-                                          Grid.Column="1"
-                                          Name="TerminationMethodCombo"
-                                          Margin="5"/>
-
-                                <StackPanel Grid.Row="7"
-                                            Grid.Column="0"
-                                            Orientation="Horizontal"
-                                            VerticalAlignment="Center"
-                                            ToolTip="[TOOLTIP_GRACEFUL_TIMEOUT]">
-                                    <Label Name="GracefulTimeoutLabel"
-                                           Content="Graceful Timeout (ms):"
-                                           VerticalAlignment="Center"/>
-                                    <TextBlock Text="?"
-                                               FontWeight="Bold"
-                                               Foreground="#0078D4"
-                                               Margin="3,0,0,0"
-                                               VerticalAlignment="Center"
-                                               ToolTip="[TOOLTIP_GRACEFUL_TIMEOUT]"/>
-                                </StackPanel>
-                                <TextBox Grid.Row="7"
-                                         Grid.Column="1"
-                                         Name="GracefulTimeoutTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"/>
-                            </Grid>
-                        </Grid>
-                    </ScrollViewer>
-                </Grid>
-            </TabItem>
-
-            <!-- Global Settings Tab -->
-            <TabItem Header="[GLOBAL_SETTINGS_TAB_HEADER]"
-                     Name="GlobalSettingsTab">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="20">
-
-                        <!-- General Settings Group -->
-                        <GroupBox Name="GeneralSettingsGroup"
-                                  Header="[GENERAL_SETTINGS_GROUP]"
-                                  Margin="0,0,0,20">
-                            <Grid Margin="10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="35"/>
-                                    <RowDefinition Height="35"/>
-                                    <RowDefinition Height="35"/>
-                                    <RowDefinition Height="35"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-
-                                <Label Grid.Row="0"
-                                       Grid.Column="0"
-                                       Name="LanguageLabel"
-                                       Content="Display Language:"
-                                       VerticalAlignment="Center"/>
-                                <ComboBox Grid.Row="0"
-                                          Grid.Column="1"
-                                          Name="LanguageCombo"
-                                          Margin="5"
-                                          Width="200"
-                                          HorizontalAlignment="Left"/>
-
-                                <Label Grid.Row="1"
-                                       Grid.Column="0"
-                                       Name="LauncherTypeLabel"
-                                       Content="Launcher Type:"
-                                       VerticalAlignment="Center"/>
-                                <ComboBox Grid.Row="1"
-                                          Grid.Column="1"
-                                          Name="LauncherTypeCombo"
-                                          Margin="5"
-                                          Width="200"
-                                          HorizontalAlignment="Left">
-                                    <ComboBoxItem Content="[ENHANCED_SHORTCUTS]"
-                                                  Tag="lnk"
-                                                  IsSelected="True"/>
-                                    <ComboBoxItem Content="[TRADITIONAL_BATCH]"
-                                                  Tag="bat"/>
-                                </ComboBox>
-
-                                <Label Grid.Row="2"
-                                       Grid.Column="0"
-                                       Name="LogRetentionLabel"
-                                       Content="[LOG_RETENTION_LABEL]"
-                                       VerticalAlignment="Center"/>
-                                <ComboBox Grid.Row="2"
-                                          Grid.Column="1"
-                                          Name="LogRetentionCombo"
-                                          Margin="5"
-                                          Width="200"
-                                          HorizontalAlignment="Left">
-                                    <ComboBoxItem Content="[LOG_RETENTION_30]"
-                                                  Tag="30"/>
-                                    <ComboBoxItem Content="[LOG_RETENTION_90]"
-                                                  Tag="90"
-                                                  IsSelected="True"/>
-                                    <ComboBoxItem Content="[LOG_RETENTION_180]"
-                                                  Tag="180"/>
-                                    <ComboBoxItem Content="[LOG_RETENTION_UNLIMITED]"
-                                                  Tag="-1"/>
-                                </ComboBox>
-
-                                <CheckBox Grid.Row="3"
-                                          Grid.Column="0"
-                                          Grid.ColumnSpan="2"
-                                          Name="EnableLogNotarizationCheckBox"
-                                          Content="[ENABLE_LOG_NOTARIZATION]"
-                                          VerticalAlignment="Center"
-                                          Margin="5"/>
-
-                                <TextBlock Grid.Row="4"
-                                           Grid.Column="1"
-                                           Name="LauncherHelpText"
-                                           Margin="5,5,0,0"
-                                           TextWrapping="Wrap"
-                                           FontSize="11"
-                                           Foreground="#666"
-                                           Text="[LAUNCHER_HELP_TEXT]"/>
-                            </Grid>
-                        </GroupBox>
-
-                        <!-- OBS Settings Group -->
-                        <GroupBox Name="ObsSettingsGroup"
-                                  Header="[OBS_SETTINGS_GROUP]"
-                                  Margin="0,0,0,20">
-                            <Grid Margin="10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150"/>
-                                    <ColumnDefinition Width="200"/>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="35"/>
-                                    <RowDefinition Height="35"/>
-                                    <RowDefinition Height="35"/>
-                                </Grid.RowDefinitions>
-
-                                <Label Grid.Row="0"
-                                       Grid.Column="0"
-                                       Name="HostLabel"
-                                       Content="Host:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="0"
-                                         Grid.Column="1"
-                                         Name="ObsHostTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"/>
-
-                                <Label Grid.Row="0"
-                                       Grid.Column="2"
-                                       Name="PortLabel"
-                                       Content="Port:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="0"
-                                         Grid.Column="3"
-                                         Name="ObsPortTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"/>
-
-                                <Label Grid.Row="1"
-                                       Grid.Column="0"
-                                       Name="PasswordLabel"
-                                       Content="Password:"
-                                       VerticalAlignment="Center"/>
-                                <PasswordBox Grid.Row="1"
+                                    <TextBox Grid.Row="0"
                                              Grid.Column="1"
-                                             Name="ObsPasswordBox"
-                                             Margin="5"/>
+                                             Name="ObsHostTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"/>
 
-                                <CheckBox Grid.Row="2"
-                                          Grid.Column="0"
-                                          Grid.ColumnSpan="4"
-                                          Name="ReplayBufferCheckBox"
-                                          Content="[REPLAY_BUFFER_LABEL]"
-                                          VerticalAlignment="Center"
-                                          Margin="5"/>
-                            </Grid>
-                        </GroupBox>
+                                    <Label Grid.Row="0"
+                                           Grid.Column="2"
+                                           Name="PortLabel"
+                                           Content="Port:"
+                                           VerticalAlignment="Center"/>
+                                    <TextBox Grid.Row="0"
+                                             Grid.Column="3"
+                                             Name="ObsPortTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"/>
 
-                        <!-- Paths Settings Group -->
-                        <GroupBox Name="PathSettingsGroup"
-                                  Header="[PATH_SETTINGS_GROUP]">
-                            <Grid Margin="10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="180"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="80"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="35"/>
-                                    <RowDefinition Height="35"/>
-                                    <RowDefinition Height="35"/>
-                                    <RowDefinition Height="35"/>
-                                </Grid.RowDefinitions>
+                                    <Label Grid.Row="1"
+                                           Grid.Column="0"
+                                           Name="PasswordLabel"
+                                           Content="Password:"
+                                           VerticalAlignment="Center"/>
+                                    <PasswordBox Grid.Row="1"
+                                                 Grid.Column="1"
+                                                 Name="ObsPasswordBox"
+                                                 Margin="5"/>
 
-                                <Label Grid.Row="0"
-                                       Grid.Column="0"
-                                       Name="SteamPathLabel"
-                                       Content="Steam.exe Path:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="0"
-                                         Grid.Column="1"
-                                         Name="SteamPathTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"/>
-                                <Button Grid.Row="0"
-                                        Grid.Column="2"
-                                        Name="BrowseSteamPathButton"
-                                        Content="[BROWSE_BUTTON]"
-                                        Width="70"
-                                        Height="25"/>
+                                    <CheckBox Grid.Row="2"
+                                              Grid.Column="0"
+                                              Grid.ColumnSpan="4"
+                                              Name="ReplayBufferCheckBox"
+                                              Content="[REPLAY_BUFFER_LABEL]"
+                                              VerticalAlignment="Center"
+                                              Margin="5"/>
+                                </Grid>
+                            </GroupBox>
 
-                                <Label Grid.Row="1"
-                                       Grid.Column="0"
-                                       Name="EpicPathLabel"
-                                       Content="Epic Games Launcher Path:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="1"
-                                         Grid.Column="1"
-                                         Name="EpicPathTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"/>
-                                <Button Grid.Row="1"
-                                        Grid.Column="2"
-                                        Name="BrowseEpicPathButton"
-                                        Content="[BROWSE_BUTTON]"
-                                        Width="70"
-                                        Height="25"/>
+                            <!-- Paths Settings Group -->
+                            <GroupBox Name="PathSettingsGroup"
+                                      Header="[PATH_SETTINGS_GROUP]">
+                                <Grid Margin="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="180"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="80"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="35"/>
+                                        <RowDefinition Height="35"/>
+                                        <RowDefinition Height="35"/>
+                                        <RowDefinition Height="35"/>
+                                    </Grid.RowDefinitions>
 
-                                <Label Grid.Row="2"
-                                       Grid.Column="0"
-                                       Name="RiotPathLabel"
-                                       Content="Riot Client Path:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="2"
-                                         Grid.Column="1"
-                                         Name="RiotPathTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"/>
-                                <Button Grid.Row="2"
-                                        Grid.Column="2"
-                                        Name="BrowseRiotPathButton"
-                                        Content="[BROWSE_BUTTON]"
-                                        Width="70"
-                                        Height="25"/>
+                                    <Label Grid.Row="0"
+                                           Grid.Column="0"
+                                           Name="SteamPathLabel"
+                                           Content="Steam.exe Path:"
+                                           VerticalAlignment="Center"/>
+                                    <TextBox Grid.Row="0"
+                                             Grid.Column="1"
+                                             Name="SteamPathTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"/>
+                                    <Button Grid.Row="0"
+                                            Grid.Column="2"
+                                            Name="BrowseSteamPathButton"
+                                            Content="[BROWSE_BUTTON]"
+                                            Width="70"
+                                            Height="25"/>
 
-                                <Label Grid.Row="3"
-                                       Grid.Column="0"
-                                       Name="ObsPathLabel"
-                                       Content="obs64.exe Path:"
-                                       VerticalAlignment="Center"/>
-                                <TextBox Grid.Row="3"
-                                         Grid.Column="1"
-                                         Name="ObsPathTextBox"
-                                         Margin="5"
-                                         VerticalContentAlignment="Center"/>
-                                <Button Grid.Row="3"
-                                        Grid.Column="2"
-                                        Name="BrowseObsPathButton"
-                                        Content="[BROWSE_BUTTON]"
-                                        Width="70"
-                                        Height="25"/>
-                            </Grid>
-                        </GroupBox>
+                                    <Label Grid.Row="1"
+                                           Grid.Column="0"
+                                           Name="EpicPathLabel"
+                                           Content="Epic Games Launcher Path:"
+                                           VerticalAlignment="Center"/>
+                                    <TextBox Grid.Row="1"
+                                             Grid.Column="1"
+                                             Name="EpicPathTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"/>
+                                    <Button Grid.Row="1"
+                                            Grid.Column="2"
+                                            Name="BrowseEpicPathButton"
+                                            Content="[BROWSE_BUTTON]"
+                                            Width="70"
+                                            Height="25"/>
 
-                    </StackPanel>
-                </ScrollViewer>
+                                    <Label Grid.Row="2"
+                                           Grid.Column="0"
+                                           Name="RiotPathLabel"
+                                           Content="Riot Client Path:"
+                                           VerticalAlignment="Center"/>
+                                    <TextBox Grid.Row="2"
+                                             Grid.Column="1"
+                                             Name="RiotPathTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"/>
+                                    <Button Grid.Row="2"
+                                            Grid.Column="2"
+                                            Name="BrowseRiotPathButton"
+                                            Content="[BROWSE_BUTTON]"
+                                            Width="70"
+                                            Height="25"/>
+
+                                    <Label Grid.Row="3"
+                                           Grid.Column="0"
+                                           Name="ObsPathLabel"
+                                           Content="obs64.exe Path:"
+                                           VerticalAlignment="Center"/>
+                                    <TextBox Grid.Row="3"
+                                             Grid.Column="1"
+                                             Name="ObsPathTextBox"
+                                             Margin="5"
+                                             VerticalContentAlignment="Center"/>
+                                    <Button Grid.Row="3"
+                                            Grid.Column="2"
+                                            Name="BrowseObsPathButton"
+                                            Content="[BROWSE_BUTTON]"
+                                            Width="70"
+                                            Height="25"/>
+                                </Grid>
+                            </GroupBox>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Tab-specific Save Button -->
+                    <Grid Grid.Row="1"
+                          Background="#F8F8F8"
+                          Margin="0,5,0,0">
+                        <Button Name="SaveGlobalSettingsButton"
+                                Content="[SAVE_BUTTON]"
+                                Width="100"
+                                Height="30"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Margin="0,0,20,0"
+                                Background="#0078D4"
+                                Foreground="White"
+                                BorderThickness="0"/>
+                    </Grid>
+                </Grid>
             </TabItem>
 
         </TabControl>
 
-        <!-- Footer -->
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Version and Update Info -->
-            <StackPanel Grid.Column="0"
-                        Orientation="Horizontal"
-                        VerticalAlignment="Center"
-                        Margin="20,0">
-                <TextBlock Name="VersionLabel"
-                           Text="[VERSION_LABEL]"
-                           VerticalAlignment="Center"
-                           FontSize="11"
-                           Foreground="#666"/>
-                <TextBlock Name="VersionText"
-                           Text="1.0.1-alpha"
-                           VerticalAlignment="Center"
-                           FontSize="11"
-                           Foreground="#666"
-                           Margin="0,0,15,0"/>
-                <Button Name="CheckUpdateButton"
-                        Content="[CHECK_UPDATE_BUTTON]"
-                        Width="120"
-                        Height="25"
-                        FontSize="11"/>
-                <TextBlock Name="UpdateStatusText"
-                           Text=""
-                           VerticalAlignment="Center"
-                           FontSize="11"
-                           Margin="10,0,0,0"/>
-            </StackPanel>
-
-            <!-- Action Buttons -->
-            <StackPanel Grid.Column="1"
-                        Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Margin="0,0,20,0">
-                <Button Name="ApplyButton"
-                        Content="[APPLY_BUTTON]"
-                        Width="80"
-                        Height="30"
-                        Margin="5,0"/>
-                <Button Name="OKButton"
-                        Content="[OK_BUTTON]"
-                        Width="80"
-                        Height="30"
-                        Margin="5,0"/>
-                <Button Name="CancelButton"
-                        Content="[CANCEL_BUTTON]"
-                        Width="80"
-                        Height="30"
-                        Margin="5,0"/>
-            </StackPanel>
-        </Grid>
-
-    </Grid>
+    </DockPanel>
 </Window>

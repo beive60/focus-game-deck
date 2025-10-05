@@ -5,6 +5,11 @@
 # 1. Lightweight & Simple - Uses Windows native WPF, no additional runtime required
 # 2. Maintainable & Extensible - Configuration-driven design with modular structure
 # 3. User-Friendly - Intuitive 3-tab GUI with proper internationalization support
+
+# Script parameters
+param(
+    [switch]$NoAutoStart
+)
 #
 # Technical Architecture:
 # - PowerShell + WPF: Windows-native GUI technology for lightweight implementation
@@ -65,6 +70,8 @@ $script:CurrentGameId = ""
 $script:CurrentAppId = ""
 $script:Messages = $null
 $script:CurrentLanguage = "en"  # Default language
+$script:HasUnsavedChanges = $false  # Initialize change tracking variable
+$script:OriginalConfigData = $null  # Initialize original config tracking
 
 # Load messages from JSON file with language detection
 function Load-Messages {
@@ -94,32 +101,46 @@ function Load-Messages {
 function Get-LocalizedMessage {
     param(
         [string]$Key,
-        [string[]]$Args = @()
+        [array]$Arguments = @()
     )
 
     if ($script:Messages -and $script:Messages.PSObject.Properties[$Key]) {
         $message = $script:Messages.$Key
 
         # Replace placeholders if args provided
-        if ($Args.Length -gt 0) {
-            Write-Verbose "Debug: Processing message '$Key' with $($Args.Length) arguments"
+        if ($Arguments.Length -gt 0) {
+            Write-Verbose "Debug: Processing message '$Key' with $($Arguments.Length) arguments"
+            Write-Verbose "Debug: Original message template: '$message'"
+            Write-Verbose "Debug: Message type: $($message.GetType().Name)"
 
-            for ($i = 0; $i -lt $Args.Length; $i++) {
+            for ($i = 0; $i -lt $Arguments.Length; $i++) {
                 $placeholder = "{$i}"
-                $replacement = if ($null -ne $Args[$i]) {
-                    # Ensure safe string conversion and escape any problematic characters
-                    $Args[$i].ToString().Replace("`r", "").Replace("`n", " ")
+                $replacement = if ($null -ne $Arguments[$i]) {
+                    # Ensure safe string conversion - preserve newlines for proper message formatting
+                    [string]$Arguments[$i]
                 } else {
                     ""
                 }
 
-                if ($message.Contains($placeholder)) {
-                    $message = $message.Replace($placeholder, $replacement)
+                Write-Verbose "Debug: Looking for placeholder '$placeholder' in message"
+                Write-Verbose "Debug: Replacement value: '$replacement'"
+                Write-Verbose "Debug: Message contains placeholder check: $($message -like "*$placeholder*")"
+
+                # Use -replace operator with literal pattern matching for more reliable replacement
+                if ($message -like "*$placeholder*") {
+                    $oldMessage = $message
+                    # Use literal string replacement to avoid regex interpretation issues
+                    $message = $message -replace [regex]::Escape($placeholder), $replacement
                     Write-Verbose "Debug: Successfully replaced '$placeholder' with '$replacement'"
+                    Write-Verbose "Debug: Message before: '$oldMessage'"
+                    Write-Verbose "Debug: Message after:  '$message'"
                 } else {
-                    Write-Verbose "Debug: Placeholder '$placeholder' not found in message template"
+                    Write-Verbose "Debug: Placeholder '$placeholder' not found in message template: '$message'"
                 }
             }
+            Write-Verbose "Debug: Final processed message: '$message'"
+        } else {
+            Write-Verbose "Debug: No arguments provided for message '$Key', returning original message"
         }
 
         return $message
@@ -251,22 +272,26 @@ function Update-AllButtonTooltips {
     try {
         # Define button name to message key mappings
         $buttonMappings = @{
-            "AddGameButton"           = "addButton"
-            "DuplicateGameButton"     = "duplicateButton"
-            "DeleteGameButton"        = "deleteButton"
-            "AddAppButton"            = "addButton"
-            "DuplicateAppButton"      = "duplicateButton"
-            "DeleteAppButton"         = "deleteButton"
-            "BrowseAppPathButton"     = "browseButton"
-            "BrowseSteamPathButton"   = "browseButton"
-            "BrowseEpicPathButton"    = "browseButton"
-            "BrowseRiotPathButton"    = "browseButton"
-            "BrowseObsPathButton"     = "browseButton"
-            "GenerateLaunchersButton" = "generateLaunchers"
-            "CheckUpdateButton"       = "checkUpdateButton"
-            "ApplyButton"             = "applyButton"
-            "OKButton"                = "okButton"
-            "CancelButton"            = "cancelButton"
+            "AddGameButton"            = "addButton"
+            "DuplicateGameButton"      = "duplicateButton"
+            "DeleteGameButton"         = "deleteButton"
+            "AddAppButton"             = "addButton"
+            "DuplicateAppButton"       = "duplicateButton"
+            "DeleteAppButton"          = "deleteButton"
+            "BrowseAppPathButton"      = "browseButton"
+            "BrowseSteamPathButton"    = "browseButton"
+            "BrowseEpicPathButton"     = "browseButton"
+            "BrowseRiotPathButton"     = "browseButton"
+            "BrowseObsPathButton"      = "browseButton"
+            "GenerateLaunchersButton"  = "generateLaunchers"
+            # "CheckUpdateButton"       = "checkUpdateButton"  # Moved to menu
+            "SaveGameSettingsButton"   = "saveButton"
+            "SaveManagedAppsButton"    = "saveButton"
+            "SaveGlobalSettingsButton" = "saveButton"
+            # Legacy footer buttons - now commented out in XAML
+            # "ApplyButton"             = "applyButton"
+            # "OKButton"                = "okButton"
+            # "CancelButton"            = "cancelButton"
         }
 
         # Apply smart tooltips to each button with full localized text
@@ -294,22 +319,22 @@ function Show-SafeMessage {
     param(
         [string]$MessageKey,
         [string]$TitleKey = "info",
-        [string[]]$Args = @(),
+        [array]$Arguments = @(),
         [System.Windows.MessageBoxButton]$Button = [System.Windows.MessageBoxButton]::OK,
         [System.Windows.MessageBoxImage]$Icon = [System.Windows.MessageBoxImage]::Information
     )
 
     try {
         # Get localized strings from JSON resources
-        $message = Get-LocalizedMessage -Key $MessageKey -Args $Args
+        $message = Get-LocalizedMessage -Key $MessageKey -Arguments $Arguments
         $title = Get-LocalizedMessage -Key $TitleKey
 
         # Debug output for error messages only
         if ($Icon -eq [System.Windows.MessageBoxImage]::Error) {
             Write-Host "=== ERROR MESSAGE DEBUG ===" -ForegroundColor Red
             Write-Host "MessageKey: $MessageKey" -ForegroundColor Yellow
-            Write-Host "Args Count: $($Args.Count)" -ForegroundColor Yellow
-            Write-Host "Args Values: $($Args -join ', ')" -ForegroundColor Yellow
+            Write-Host "Arguments Count: $($Arguments.Count)" -ForegroundColor Yellow
+            Write-Host "Arguments Values: $($Arguments -join ', ')" -ForegroundColor Yellow
             Write-Host "Final Message: $message" -ForegroundColor Cyan
             Write-Host "Final Title: $title" -ForegroundColor Cyan
             Write-Host "=========================" -ForegroundColor Red
@@ -319,7 +344,148 @@ function Show-SafeMessage {
     } catch {
         # Fallback to key names if JSON loading fails
         Write-Warning "Debug: Show-SafeMessage failed, using fallback: $($_.Exception.Message)"
+        Write-Warning "Arguments passed: $($Arguments -join ', ')"
         return [System.Windows.MessageBox]::Show($MessageKey, $TitleKey, $Button, $Icon)
+    }
+}
+
+# Add validation function for prerequisites
+function Test-Prerequisites {
+    param()
+
+    $issues = @()
+
+    # Check PowerShell version
+    if ($PSVersionTable.PSVersion.Major -lt 5) {
+        $issues += "PowerShell version 5.0 or higher required. Current: $($PSVersionTable.PSVersion)"
+    }
+
+    # Check essential files
+    $requiredFiles = @(
+        (Join-Path $PSScriptRoot "MainWindow.xaml"),
+        (Join-Path $PSScriptRoot "messages.json"),
+        (Join-Path (Split-Path $PSScriptRoot) "config/config.json")
+    )
+
+    # Also check for sample config if main config doesn't exist
+    if (-not (Test-Path (Join-Path (Split-Path $PSScriptRoot) "config/config.json"))) {
+        $requiredFiles += (Join-Path (Split-Path $PSScriptRoot) "config/config.json.sample")
+    }
+
+    foreach ($file in $requiredFiles) {
+        if (-not (Test-Path $file)) {
+            $issues += "Required file missing: $file"
+        }
+    }
+
+    # Check .NET Framework version for WPF
+    try {
+        Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
+        Add-Type -AssemblyName PresentationCore -ErrorAction Stop
+        Add-Type -AssemblyName WindowsBase -ErrorAction Stop
+    } catch {
+        $issues += "WPF assemblies not available: $($_.Exception.Message)"
+    }
+
+    if ($issues.Count -gt 0) {
+        Write-Host "=== PREREQUISITES CHECK FAILED ===" -ForegroundColor Red
+        $issues | ForEach-Object { Write-Host "- $_" -ForegroundColor Red }
+        Write-Host "================================" -ForegroundColor Red
+        return $false
+    }
+
+    Write-Host "Prerequisites check passed" -ForegroundColor Green
+    return $true
+}
+
+<#
+.SYNOPSIS
+    Launches a game from the launcher tab
+
+.DESCRIPTION
+    Initiates game launch using the main game launcher script
+    and provides user feedback during the process.
+#>
+function Start-GameFromLauncher {
+    param(
+        [Parameter(Mandatory)]
+        [string]$GameId
+    )
+
+    try {
+        # Update status immediately for responsive feedback
+        $statusText = $script:Window.FindName("LauncherStatusText")
+        if ($statusText) {
+            $statusText.Text = Get-LocalizedMessage -Key "launchingGame" -Arguments @($GameId)
+            $statusText.Foreground = "#0066CC"  # Blue color for launching state
+        }
+
+        # Validate game exists in configuration
+        if (-not $script:ConfigData.games -or -not $script:ConfigData.games.PSObject.Properties[$GameId]) {
+            Show-SafeMessage -MessageKey "gameNotFound" -TitleKey "error" -Arguments @($GameId) -Icon Error
+            if ($statusText) {
+                $statusText.Text = Get-LocalizedMessage -Key "launchError"
+                $statusText.Foreground = "#CC0000"  # Red color for error
+            }
+            return
+        }
+
+        # Use the direct game launcher to avoid recursive ConfigEditor launches
+        $gameLauncherPath = Join-Path $PSScriptRoot "../src/Invoke-FocusGameDeck.ps1"
+
+        if (-not (Test-Path $gameLauncherPath)) {
+            Show-SafeMessage -MessageKey "launcherNotFound" -TitleKey "error" -Icon Error
+            if ($statusText) {
+                $statusText.Text = Get-LocalizedMessage -Key "launchError"
+                $statusText.Foreground = "#CC0000"  # Red color for error
+            }
+            return
+        }
+
+        Write-Host "Launching game from GUI: $GameId" -ForegroundColor Cyan
+
+        # Launch the game using PowerShell - bypass Main.ps1 to prevent recursive ConfigEditor launch
+        $process = Start-Process -FilePath "powershell.exe" -ArgumentList @(
+            "-ExecutionPolicy", "Bypass",
+            "-File", $gameLauncherPath,
+            "-GameId", $GameId
+        ) -WindowStyle Minimized -PassThru
+
+        # Provide immediate non-intrusive feedback
+        if ($process) {
+            Write-Verbose "Game launch process started with PID: $($process.Id)"
+
+            # Update status with success message - no modal dialog
+            if ($statusText) {
+                $statusText.Text = Get-LocalizedMessage -Key "gameLaunched" -Arguments @($GameId)
+                $statusText.Foreground = "#009900"  # Green color for success
+            }
+        }
+
+        # Reset status after delay without interrupting user workflow
+        $timer = New-Object System.Windows.Threading.DispatcherTimer
+        $timer.Interval = [TimeSpan]::FromSeconds(5)  # Longer delay for user to see feedback
+        $timer.add_Tick({
+                if ($statusText) {
+                    $statusText.Text = Get-LocalizedMessage -Key "readyToLaunch"
+                    $statusText.Foreground = "#333333"  # Reset to default color
+                }
+                $timer.Stop()
+            })
+        $timer.Start()
+
+    } catch {
+        Write-Warning "Failed to launch game '$GameId': $($_.Exception.Message)"
+
+        # Only show modal dialog for actual errors that need user attention
+        Show-SafeMessage -MessageKey "launchFailed" -TitleKey "error" -Arguments @($GameId, $_.Exception.Message) -Icon Error
+
+        # Update status for error
+        $statusText = $script:Window.FindName("LauncherStatusText")
+        if ($statusText) {
+            $statusText.Text = Get-LocalizedMessage -Key "launchError"
+            $statusText.Foreground = "#CC0000"  # Red color for error
+        }
     }
 }
 
@@ -378,6 +544,9 @@ function Replace-XamlPlaceholders {
             "[LAUNCHER_HINT_TEXT]"         = Get-LocalizedMessage -Key "launcherHintText"
             "[ADD_GAME_BUTTON]"            = Get-LocalizedMessage -Key "addGameButton"
             "[OPEN_CONFIG_BUTTON]"         = Get-LocalizedMessage -Key "openConfigButton"
+            "[HELP_MENU_HEADER]"           = Get-LocalizedMessage -Key "helpMenuHeader"
+            "[CHECK_UPDATE_MENU_ITEM]"     = Get-LocalizedMessage -Key "checkUpdateMenuItem"
+            "[ABOUT_MENU_ITEM]"            = Get-LocalizedMessage -Key "aboutMenuItem"
         }
 
         # Replace all placeholders
@@ -385,16 +554,30 @@ function Replace-XamlPlaceholders {
             $oldValue = $placeholder.Key
             $newValue = $placeholder.Value
 
-            # Escape XML special characters in the replacement value
-            $newValue = $newValue -replace "&", "&amp;"
-            $newValue = $newValue -replace "<", "&lt;"
-            $newValue = $newValue -replace ">", "&gt;"
-            $newValue = $newValue -replace '"', "&quot;"
-            $newValue = $newValue -replace "'", "&apos;"
+            # For menu items, preserve & character for access keys
+            $isMenuPlaceholder = $oldValue -match "_MENU_|_MENU_ITEM"
 
-            # Also escape parentheses that might cause XML parsing issues
-            $newValue = $newValue -replace "\(", "&#40;"
-            $newValue = $newValue -replace "\)", "&#41;"
+            Write-Verbose "Debug: Placeholder '$oldValue' -> '$newValue' (isMenu: $isMenuPlaceholder)"
+
+            if (-not $isMenuPlaceholder) {
+                # Escape XML special characters for non-menu items
+                $newValue = $newValue -replace "&", "&amp;"
+                $newValue = $newValue -replace "<", "&lt;"
+                $newValue = $newValue -replace ">", "&gt;"
+                $newValue = $newValue -replace '"', "&quot;"
+                $newValue = $newValue -replace "'", "&apos;"
+
+                # Also escape parentheses that might cause XML parsing issues
+                $newValue = $newValue -replace "\(", "&#40;"
+                $newValue = $newValue -replace "\)", "&#41;"
+            } else {
+                # For menu items, escape XML characters but handle & specially for WPF
+                $newValue = $newValue -replace "<", "&lt;"
+                $newValue = $newValue -replace ">", "&gt;"
+                $newValue = $newValue -replace '"', "&quot;"
+                # For WPF menus, use _ instead of & for access keys
+                $newValue = $newValue -replace "&", "_"
+            }
 
             $XamlContent = $XamlContent -replace [regex]::Escape($oldValue), $newValue
         }
@@ -413,65 +596,190 @@ function Initialize-ConfigEditor {
     try {
         # Enable verbose output for debugging
         $VerbosePreference = "Continue"
-        Write-Verbose "Debug: ConfigEditor initialization started"
+        Write-Host "=== ConfigEditor initialization started ===" -ForegroundColor Green
 
-        # Initialize config path first
-        $script:ConfigPath = Join-Path (Split-Path $PSScriptRoot -Parent) "config/config.json"
+        # Step 1: Load WPF assemblies
+        try {
+            Write-Host "Step 1: Loading WPF assemblies" -ForegroundColor Yellow
+            Add-Type -AssemblyName PresentationFramework
+            Add-Type -AssemblyName PresentationCore
+            Add-Type -AssemblyName WindowsBase
+            Write-Host "Step 1: WPF assemblies loaded successfully" -ForegroundColor Green
+        } catch {
+            Write-Host "Step 1 FAILED: $($_.Exception.Message)" -ForegroundColor Red
+            throw "WPF assembly loading failed: $($_.Exception.Message)"
+        }
 
-        # Load configuration first (needed for language detection)
-        Load-Configuration
+        # Step 2: Initialize config path
+        try {
+            Write-Host "Step 2: Initializing config path" -ForegroundColor Yellow
+            $script:ConfigPath = Join-Path (Split-Path $PSScriptRoot -Parent) "config/config.json"
+            Write-Host "Step 2: Config path set to: $script:ConfigPath" -ForegroundColor Green
+        } catch {
+            Write-Host "Step 2 FAILED: $($_.Exception.Message)" -ForegroundColor Red
+            throw "Config path initialization failed: $($_.Exception.Message)"
+        }
 
-        # Load messages with detected language
-        Load-Messages
+        # Step 3: Load configuration
+        try {
+            Write-Host "Step 3: Loading configuration" -ForegroundColor Yellow
+            Load-Configuration
+            Write-Host "Step 3: Configuration loaded successfully" -ForegroundColor Green
+        } catch {
+            Write-Host "Step 3 FAILED: $($_.Exception.Message)" -ForegroundColor Red
+            throw "Configuration loading failed: $($_.Exception.Message)"
+        }
 
-        # Load XAML
-        $xamlPath = Join-Path $PSScriptRoot "MainWindow.xaml"
-        $xamlContent = Get-Content $xamlPath -Raw -Encoding UTF8
+        # Step 4: Load messages
+        try {
+            Write-Host "Step 4: Loading messages" -ForegroundColor Yellow
+            Load-Messages
+            Write-Host "Step 4: Messages loaded successfully for language: $script:CurrentLanguage" -ForegroundColor Green
+        } catch {
+            Write-Host "Step 4 FAILED: $($_.Exception.Message)" -ForegroundColor Red
+            throw "Message loading failed: $($_.Exception.Message)"
+        }
 
-        # Replace placeholders with localized text
-        $xamlContent = Replace-XamlPlaceholders -XamlContent $xamlContent
+        # Step 5: Load and process XAML
+        try {
+            Write-Host "Step 5: Loading XAML" -ForegroundColor Yellow
+            $xamlPath = Join-Path $PSScriptRoot "MainWindow.xaml"
 
-        $reader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
-        $script:Window = [Windows.Markup.XamlReader]::Load($reader)
+            if (-not (Test-Path $xamlPath)) {
+                throw "XAML file not found: $xamlPath"
+            }
 
-        # Setup UI controls
-        Setup-UIControls
+            $xamlContent = Get-Content $xamlPath -Raw -Encoding UTF8
+            Write-Host "Step 5a: XAML content loaded, length: $($xamlContent.Length)" -ForegroundColor Cyan
 
-        # Setup event handlers
-        Setup-EventHandlers
+            $xamlContent = Replace-XamlPlaceholders -XamlContent $xamlContent
+            Write-Host "Step 5b: XAML placeholders replaced" -ForegroundColor Cyan
 
-        # Load data into UI
-        Load-DataToUI
+            $reader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
+            Write-Host "Step 5c: XML Reader created successfully" -ForegroundColor Cyan
 
-        # Save original configuration for change tracking
-        Save-OriginalConfig
-        Set-ConfigModified -IsModified $false
+            $script:Window = [Windows.Markup.XamlReader]::Load($reader)
+            Write-Host "Step 5d: XamlReader.Load completed" -ForegroundColor Cyan
 
-        # Add event handler for when window is loaded and rendered
-        $script:Window.add_Loaded({
-                # Delay tooltip application to ensure UI is fully rendered
-                $script:Window.Dispatcher.BeginInvoke([System.Windows.Threading.DispatcherPriority]::Background, [action] {
-                        Write-Verbose "Debug: Applying tooltips after window load event"
+            if (-not $script:Window) {
+                throw "XamlReader returned null window object"
+            }
+
+            Write-Host "Step 5: XAML loaded successfully, window type: $($script:Window.GetType().FullName)" -ForegroundColor Green
+        } catch {
+            Write-Host "Step 5 FAILED: $($_.Exception.Message)" -ForegroundColor Red
+            if ($_.Exception.InnerException) {
+                Write-Host "Step 5 Inner Exception: $($_.Exception.InnerException.Message)" -ForegroundColor Red
+            }
+            throw "XAML loading failed: $($_.Exception.Message)"
+        }
+
+        # Step 6: Setup UI controls
+        try {
+            Write-Host "Step 6: Setting up UI controls" -ForegroundColor Yellow
+            Setup-UIControls
+            Write-Host "Step 6: UI controls setup completed" -ForegroundColor Green
+        } catch {
+            Write-Host "Step 6 FAILED: $($_.Exception.Message)" -ForegroundColor Red
+            throw "UI controls setup failed: $($_.Exception.Message)"
+        }
+
+        # Step 7: Setup event handlers
+        try {
+            Write-Host "Step 7: Setting up event handlers" -ForegroundColor Yellow
+            Setup-EventHandlers
+            Write-Host "Step 7: Event handlers setup completed" -ForegroundColor Green
+        } catch {
+            Write-Host "Step 7 FAILED: $($_.Exception.Message)" -ForegroundColor Red
+            throw "Event handlers setup failed: $($_.Exception.Message)"
+        }
+
+        # Step 8: Load data into UI
+        try {
+            Write-Host "Step 8: Loading data into UI" -ForegroundColor Yellow
+            Load-DataToUI
+            Write-Host "Step 8: Data loading completed" -ForegroundColor Green
+        } catch {
+            Write-Host "Step 8 FAILED: $($_.Exception.Message)" -ForegroundColor Red
+            throw "Data loading failed: $($_.Exception.Message)"
+        }
+
+        # Step 9: Setup change tracking
+        try {
+            Write-Host "Step 9: Setting up change tracking" -ForegroundColor Yellow
+            Save-OriginalConfig
+            Set-ConfigModified -IsModified $false
+            Write-Host "Step 9: Change tracking setup completed" -ForegroundColor Green
+        } catch {
+            Write-Host "Step 9 WARNING: $($_.Exception.Message)" -ForegroundColor Magenta
+            Write-Warning "Configuration change tracking disabled due to setup failure"
+        }
+
+        # Step 10: Setup window event handlers
+        try {
+            Write-Host "Step 10: Setting up window event handlers" -ForegroundColor Yellow
+            $script:Window.add_Loaded({
+                    try {
+                        Write-Verbose "Debug: Window loaded event triggered"
                         Update-AllButtonTooltips
-                    })
-            })
+                        Write-Verbose "Debug: Button tooltips updated after window load"
+                    } catch {
+                        Write-Warning "Failed to update tooltips after window load: $($_.Exception.Message)"
+                    }
+                })
 
-        # Add event handler for when window content is rendered
-        $script:Window.add_ContentRendered({
-                Write-Verbose "Debug: Window content rendered - applying tooltips"
-                $script:Window.Dispatcher.BeginInvoke([System.Windows.Threading.DispatcherPriority]::ApplicationIdle, [action] {
-                        Write-Verbose "Debug: Applying tooltips after content rendered"
+            $script:Window.add_ContentRendered({
+                    try {
+                        Write-Verbose "Debug: Window content rendered event triggered"
                         Update-AllButtonTooltips
-                    })
-            })
+                        Write-Verbose "Debug: Button tooltips updated after content render"
+                    } catch {
+                        Write-Warning "Failed to update tooltips after content render: $($_.Exception.Message)"
+                    }
+                })
+            Write-Host "Step 10: Window event handlers setup completed" -ForegroundColor Green
+        } catch {
+            Write-Host "Step 10 FAILED: $($_.Exception.Message)" -ForegroundColor Red
+            throw "Window event handlers setup failed: $($_.Exception.Message)"
+        }
 
-        # Show window
-        $script:Window.ShowDialog() | Out-Null
+        # Step 11: Show window
+        try {
+            Write-Host "Step 11: Showing window" -ForegroundColor Yellow
+            $dialogResult = $script:Window.ShowDialog()
+            Write-Host "Step 11: Window displayed successfully" -ForegroundColor Green
+        } catch {
+            Write-Host "Step 11 ShowDialog failed, trying alternative method: $($_.Exception.Message)" -ForegroundColor Yellow
+            try {
+                $script:Window.Show()
+                Write-Host "Step 11: Alternative Show() method succeeded" -ForegroundColor Green
+
+                # Keep window alive with event loop
+                try {
+                    while ($script:Window.IsVisible) {
+                        Start-Sleep -Milliseconds 100
+                        [System.Windows.Forms.Application]::DoEvents()
+                    }
+                } catch {
+                    Write-Verbose "Window event loop interrupted: $($_.Exception.Message)"
+                }
+            } catch {
+                Write-Host "Step 11 FAILED: $($_.Exception.Message)" -ForegroundColor Red
+                throw "Failed to display window: $($_.Exception.Message)"
+            }
+        }
+
+        Write-Host "=== ConfigEditor initialization completed ===" -ForegroundColor Green
 
     } catch {
-        Write-Host "Debug: Exception caught in Initialize-ConfigEditor" -ForegroundColor Red
-        Write-Host "Debug: Exception message: $($_.Exception.Message)" -ForegroundColor Red
-        Write-Host "Debug: Exception location: Line $($_.InvocationInfo.ScriptLineNumber)" -ForegroundColor Red
+        Write-Host "=== INITIALIZATION FAILED ===" -ForegroundColor Red
+        Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Location: Line $($_.InvocationInfo.ScriptLineNumber)" -ForegroundColor Red
+        Write-Host "Full exception details:" -ForegroundColor Red
+        Write-Host ($_.Exception | Format-List * -Force | Out-String) -ForegroundColor Red
+        Write-Host "Call stack:" -ForegroundColor Red
+        Write-Host $_.ScriptStackTrace -ForegroundColor Red
+        Write-Host "================================" -ForegroundColor Red
 
         try {
             Show-SafeMessage -MessageKey "initError" -TitleKey "error" -Icon Error
@@ -503,7 +811,7 @@ function Load-Configuration {
             }
         }
     } catch {
-        Show-SafeMessage -MessageKey "configLoadError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+        Show-SafeMessage -MessageKey "configLoadError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
         # Create default config
         $script:ConfigData = [PSCustomObject]@{
             language    = ""
@@ -573,7 +881,7 @@ function Test-DuplicateSource {
     }
 
     if (-not $SourceData) {
-        Show-SafeMessage -MessageKey "${ItemType}DuplicateError" -TitleKey "error" -Args @("Source ${ItemType} data not found") -Icon Error
+        Show-SafeMessage -MessageKey "${ItemType}DuplicateError" -TitleKey "error" -Arguments @("Source ${ItemType} data not found") -Icon Error
         return $false
     }
 
@@ -598,11 +906,11 @@ function Show-DuplicateResult {
     )
 
     if ($Success) {
-        Show-SafeMessage -MessageKey "${ItemType.ToLower()}Duplicated" -TitleKey "info" -Args @($OriginalId, $NewId)
+        Show-SafeMessage -MessageKey "${ItemType.ToLower()}Duplicated" -TitleKey "info" -Arguments @($OriginalId, $NewId)
         Write-Verbose "Successfully duplicated ${ItemType.ToLower()} '$OriginalId' to '$NewId'"
     } else {
         Write-Error "Failed to duplicate ${ItemType.ToLower()}: $ErrorMessage"
-        Show-SafeMessage -MessageKey "${ItemType.ToLower()}DuplicateError" -TitleKey "error" -Args @($ErrorMessage) -Icon Error
+        Show-SafeMessage -MessageKey "${ItemType.ToLower()}DuplicateError" -TitleKey "error" -Arguments @($ErrorMessage) -Icon Error
     }
 }
 
@@ -793,15 +1101,29 @@ function Setup-EventHandlers {
         $openConfigButton.add_Click({ Switch-ToGameSettingsTab })
     }
 
-    # Footer buttons
-    $applyButton = $script:Window.FindName("ApplyButton")
-    $applyButton.add_Click({ Handle-ApplyConfig })
+    # Footer buttons - REMOVED: Apply, OK, Cancel (replaced with tab-specific Save buttons)
+    # $applyButton = $script:Window.FindName("ApplyButton")
+    # $applyButton.add_Click({ Handle-ApplyConfig })
+    # $okButton = $script:Window.FindName("OKButton")
+    # $okButton.add_Click({ Handle-OKConfig })
+    # $cancelButton = $script:Window.FindName("CancelButton")
+    # $cancelButton.add_Click({ Handle-CancelConfig })
 
-    $okButton = $script:Window.FindName("OKButton")
-    $okButton.add_Click({ Handle-OKConfig })
+    # Tab-specific Save button events
+    $saveGameSettingsButton = $script:Window.FindName("SaveGameSettingsButton")
+    if ($saveGameSettingsButton) {
+        $saveGameSettingsButton.add_Click({ Handle-SaveGameSettings })
+    }
 
-    $cancelButton = $script:Window.FindName("CancelButton")
-    $cancelButton.add_Click({ Handle-CancelConfig })
+    $saveManagedAppsButton = $script:Window.FindName("SaveManagedAppsButton")
+    if ($saveManagedAppsButton) {
+        $saveManagedAppsButton.add_Click({ Handle-SaveManagedApps })
+    }
+
+    $saveGlobalSettingsButton = $script:Window.FindName("SaveGlobalSettingsButton")
+    if ($saveGlobalSettingsButton) {
+        $saveGlobalSettingsButton.add_Click({ Handle-SaveGlobalSettings })
+    }
 
     # Games tab events
     $gamesList = $script:Window.FindName("GamesList")
@@ -833,9 +1155,16 @@ function Setup-EventHandlers {
     $deleteAppButton = $script:Window.FindName("DeleteAppButton")
     $deleteAppButton.add_Click({ Handle-DeleteApp })
 
-    # Update check button event
-    $checkUpdateButton = $script:Window.FindName("CheckUpdateButton")
-    $checkUpdateButton.add_Click({ Handle-CheckUpdate })
+    # Menu item events
+    $checkUpdateMenuItem = $script:Window.FindName("CheckUpdateMenuItem")
+    if ($checkUpdateMenuItem) {
+        $checkUpdateMenuItem.add_Click({ Handle-CheckUpdate })
+    }
+
+    $aboutMenuItem = $script:Window.FindName("AboutMenuItem")
+    if ($aboutMenuItem) {
+        $aboutMenuItem.add_Click({ Handle-About })
+    }
 
     # Generate launchers button event
     $generateLaunchersButton = $script:Window.FindName("GenerateLaunchersButton")
@@ -871,45 +1200,79 @@ function Setup-EventHandlers {
 function Setup-ChangeTrackingEventHandlers {
     param()
 
-    # Text boxes in Games tab
-    $script:Window.FindName("GameIdTextBox").add_TextChanged({ Set-ConfigModified })
-    $script:Window.FindName("GameNameTextBox").add_TextChanged({ Set-ConfigModified })
-    $script:Window.FindName("ProcessNameTextBox").add_TextChanged({ Set-ConfigModified })
-    $script:Window.FindName("SteamAppIdTextBox").add_TextChanged({ Set-ConfigModified })
-    $script:Window.FindName("EpicGameIdTextBox").add_TextChanged({ Set-ConfigModified })
-    $script:Window.FindName("RiotGameIdTextBox").add_TextChanged({ Set-ConfigModified })
+    try {
+        # Helper function to safely add event handlers
+        function Add-SafeEventHandler {
+            param(
+                [string]$ControlName,
+                [string]$EventType,
+                [scriptblock]$Handler
+            )
 
-    # Platform combo box
-    $script:Window.FindName("PlatformComboBox").add_SelectionChanged({ Set-ConfigModified })
+            try {
+                $control = $script:Window.FindName($ControlName)
+                if ($control) {
+                    switch ($EventType) {
+                        "TextChanged" { $control.add_TextChanged($Handler) }
+                        "SelectionChanged" { $control.add_SelectionChanged($Handler) }
+                        "Checked" { $control.add_Checked($Handler) }
+                        "Unchecked" { $control.add_Unchecked($Handler) }
+                        "PasswordChanged" { $control.add_PasswordChanged($Handler) }
+                        default { Write-Warning "Unknown event type: $EventType for control $ControlName" }
+                    }
+                    Write-Verbose "Successfully added $EventType event handler to $ControlName"
+                } else {
+                    Write-Verbose "Control '$ControlName' not found - skipping event handler setup"
+                }
+            } catch {
+                Write-Warning "Failed to add $EventType event handler to $ControlName`: $($_.Exception.Message)"
+            }
+        }
 
-    # Text boxes and controls in Managed Apps tab
-    $script:Window.FindName("AppIdTextBox").add_TextChanged({ Set-ConfigModified })
-    $script:Window.FindName("AppPathTextBox").add_TextChanged({ Set-ConfigModified })
-    $script:Window.FindName("AppProcessNameTextBox").add_TextChanged({ Set-ConfigModified })
-    $script:Window.FindName("AppArgumentsTextBox").add_TextChanged({ Set-ConfigModified })
-    $script:Window.FindName("GameStartActionCombo").add_SelectionChanged({ Set-ConfigModified })
-    $script:Window.FindName("GameEndActionCombo").add_SelectionChanged({ Set-ConfigModified })
-    $script:Window.FindName("TerminationMethodCombo").add_SelectionChanged({ Set-ConfigModified })
-    $script:Window.FindName("GracefulTimeoutTextBox").add_TextChanged({ Set-ConfigModified })
+        # Text boxes in Games tab
+        Add-SafeEventHandler "GameIdTextBox" "TextChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "GameNameTextBox" "TextChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "ProcessNameTextBox" "TextChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "SteamAppIdTextBox" "TextChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "EpicGameIdTextBox" "TextChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "RiotGameIdTextBox" "TextChanged" { Set-ConfigModified }
 
-    # Global settings controls
-    $script:Window.FindName("ObsHostTextBox").add_TextChanged({ Set-ConfigModified })
-    $script:Window.FindName("ObsPortTextBox").add_TextChanged({ Set-ConfigModified })
-    $script:Window.FindName("ObsPasswordBox").add_PasswordChanged({ Set-ConfigModified })
-    $script:Window.FindName("ReplayBufferCheckBox").add_Checked({ Set-ConfigModified })
-    $script:Window.FindName("ReplayBufferCheckBox").add_Unchecked({ Set-ConfigModified })
+        # Platform combo box
+        Add-SafeEventHandler "PlatformComboBox" "SelectionChanged" { Set-ConfigModified }
 
-    $script:Window.FindName("SteamPathTextBox").add_TextChanged({ Set-ConfigModified })
-    $script:Window.FindName("EpicPathTextBox").add_TextChanged({ Set-ConfigModified })
-    $script:Window.FindName("RiotPathTextBox").add_TextChanged({ Set-ConfigModified })
-    $script:Window.FindName("ObsPathTextBox").add_TextChanged({ Set-ConfigModified })
+        # Text boxes and controls in Managed Apps tab
+        Add-SafeEventHandler "AppIdTextBox" "TextChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "AppPathTextBox" "TextChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "AppProcessNameTextBox" "TextChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "AppArgumentsTextBox" "TextChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "GameStartActionCombo" "SelectionChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "GameEndActionCombo" "SelectionChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "TerminationMethodCombo" "SelectionChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "GracefulTimeoutTextBox" "TextChanged" { Set-ConfigModified }
 
-    $script:Window.FindName("LanguageCombo").add_SelectionChanged({ Set-ConfigModified })
-    $script:Window.FindName("LogRetentionCombo").add_SelectionChanged({ Set-ConfigModified })
-    $script:Window.FindName("EnableLogNotarizationCheckBox").add_Checked({ Set-ConfigModified })
-    $script:Window.FindName("EnableLogNotarizationCheckBox").add_Unchecked({ Set-ConfigModified })
+        # Global settings controls
+        Add-SafeEventHandler "ObsHostTextBox" "TextChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "ObsPortTextBox" "TextChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "ObsPasswordBox" "PasswordChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "ReplayBufferCheckBox" "Checked" { Set-ConfigModified }
+        Add-SafeEventHandler "ReplayBufferCheckBox" "Unchecked" { Set-ConfigModified }
 
-    Write-Verbose "Change tracking event handlers setup completed"
+        Add-SafeEventHandler "SteamPathTextBox" "TextChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "EpicPathTextBox" "TextChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "RiotPathTextBox" "TextChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "ObsPathTextBox" "TextChanged" { Set-ConfigModified }
+
+        Add-SafeEventHandler "LanguageCombo" "SelectionChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "LogRetentionCombo" "SelectionChanged" { Set-ConfigModified }
+        Add-SafeEventHandler "EnableLogNotarizationCheckBox" "Checked" { Set-ConfigModified }
+        Add-SafeEventHandler "EnableLogNotarizationCheckBox" "Unchecked" { Set-ConfigModified }
+
+        Write-Verbose "Change tracking event handlers setup completed successfully"
+
+    } catch {
+        Write-Warning "Error in Setup-ChangeTrackingEventHandlers: $($_.Exception.Message)"
+        # Don't throw - continue with initialization even if some event handlers fail
+    }
 }
 
 # Load data into UI controls
@@ -930,6 +1293,9 @@ function Load-DataToUI {
 
     # Initialize game launcher list
     Update-GameLauncherList
+
+    # Initialize launcher tab status texts
+    Initialize-LauncherTabTexts
 
     # Initialize version display
     Initialize-VersionDisplay
@@ -975,6 +1341,16 @@ function Update-UITexts {
 
         $cancelButton = $script:Window.FindName("CancelButton")
         if ($cancelButton) { Set-ButtonContentWithTooltip -Button $cancelButton -FullText (Get-LocalizedMessage -Key "cancelButton") }
+
+        # Update tab-specific Save buttons
+        $saveGameSettingsButton = $script:Window.FindName("SaveGameSettingsButton")
+        if ($saveGameSettingsButton) { Set-ButtonContentWithTooltip -Button $saveGameSettingsButton -FullText (Get-LocalizedMessage -Key "saveButton") }
+
+        $saveManagedAppsButton = $script:Window.FindName("SaveManagedAppsButton")
+        if ($saveManagedAppsButton) { Set-ButtonContentWithTooltip -Button $saveManagedAppsButton -FullText (Get-LocalizedMessage -Key "saveButton") }
+
+        $saveGlobalSettingsButton = $script:Window.FindName("SaveGlobalSettingsButton")
+        if ($saveGlobalSettingsButton) { Set-ButtonContentWithTooltip -Button $saveGlobalSettingsButton -FullText (Get-LocalizedMessage -Key "saveButton") }
 
         # Update labels - Games tab
         $gamesListLabel = $script:Window.FindName("GamesListLabel")
@@ -1096,8 +1472,8 @@ function Update-UITexts {
         $versionLabel = $script:Window.FindName("VersionLabel")
         if ($versionLabel) { $versionLabel.Text = Get-LocalizedMessage -Key "versionLabel" }
 
-        $checkUpdateButton = $script:Window.FindName("CheckUpdateButton")
-        if ($checkUpdateButton) { Set-ButtonContentWithTooltip -Button $checkUpdateButton -FullText (Get-LocalizedMessage -Key "checkUpdateButton") }
+        # CheckUpdateButton moved to Help menu
+        # Menu items are updated via XAML placeholder replacement
 
         # Update launcher-related labels and buttons
         $launcherTypeLabel = $script:Window.FindName("LauncherTypeLabel")
@@ -1501,7 +1877,7 @@ function Handle-DeleteGame {
     $selectedGame = $gamesList.SelectedItem
 
     if ($selectedGame) {
-        $result = Show-SafeMessage -MessageKey "deleteGameConfirm" -TitleKey "confirmation" -Args @($selectedGame) -Button YesNo -Icon Question
+        $result = Show-SafeMessage -MessageKey "deleteGameConfirm" -TitleKey "confirmation" -Arguments @($selectedGame) -Button YesNo -Icon Question
         if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
             $script:ConfigData.games.PSObject.Properties.Remove($selectedGame)
             Update-GamesList
@@ -1630,7 +2006,7 @@ function Handle-DeleteApp {
     $selectedApp = $managedAppsList.SelectedItem
 
     if ($selectedApp) {
-        $result = Show-SafeMessage -MessageKey "deleteAppConfirm" -TitleKey "confirmation" -Args @($selectedApp) -Button YesNo -Icon Question
+        $result = Show-SafeMessage -MessageKey "deleteAppConfirm" -TitleKey "confirmation" -Arguments @($selectedApp) -Button YesNo -Icon Question
         if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
             $script:ConfigData.managedApps.PSObject.Properties.Remove($selectedApp)
 
@@ -1684,7 +2060,7 @@ function Handle-SaveConfig {
         Write-Host "Debug: Error type - $($_.Exception.GetType().Name)" -ForegroundColor Red
 
         # Show error message with proper error details
-        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
     }
 }
 
@@ -1990,6 +2366,40 @@ function Initialize-VersionDisplay {
     }
 }
 
+# Initialize launcher tab texts
+function Initialize-LauncherTabTexts {
+    param()
+
+    try {
+        # Initialize launcher welcome and subtitle texts
+        $launcherWelcomeText = $script:Window.FindName("LauncherWelcomeText")
+        if ($launcherWelcomeText) {
+            $launcherWelcomeText.Text = Get-LocalizedMessage -Key "launcherWelcomeText"
+        }
+
+        $launcherSubtitleText = $script:Window.FindName("LauncherSubtitleText")
+        if ($launcherSubtitleText) {
+            $launcherSubtitleText.Text = Get-LocalizedMessage -Key "launcherSubtitleText"
+        }
+
+        # Initialize launcher status text (this will be updated by Update-GameLauncherList)
+        $launcherStatusText = $script:Window.FindName("LauncherStatusText")
+        if ($launcherStatusText) {
+            $launcherStatusText.Text = Get-LocalizedMessage -Key "readyToLaunch"
+        }
+
+        # Initialize launcher hint text
+        $launcherHintText = $script:Window.FindName("LauncherHintText")
+        if ($launcherHintText) {
+            $launcherHintText.Text = Get-LocalizedMessage -Key "launcherHintText"
+        }
+
+        Write-Verbose "Launcher tab texts initialized"
+    } catch {
+        Write-Warning "Failed to initialize launcher tab texts: $($_.Exception.Message)"
+    }
+}
+
 <#
 .SYNOPSIS
     Updates the game launcher list with configured games
@@ -2002,9 +2412,18 @@ function Update-GameLauncherList {
     param()
 
     try {
+        # Update launcher status
+        $statusText = $script:Window.FindName("LauncherStatusText")
+        if ($statusText) {
+            $statusText.Text = Get-LocalizedMessage -Key "refreshingGameList"
+        }
+
         $gameLauncherList = $script:Window.FindName("GameLauncherList")
         if (-not $gameLauncherList) {
             Write-Warning "GameLauncherList control not found"
+            if ($statusText) {
+                $statusText.Text = Get-LocalizedMessage -Key "gameListError"
+            }
             return
         }
 
@@ -2027,14 +2446,22 @@ function Update-GameLauncherList {
 
             $noGamesPanel.Children.Add($noGamesText)
             $gameLauncherList.Items.Add($noGamesPanel)
+
+            # Update status text for no games
+            if ($statusText) {
+                $statusText.Text = Get-LocalizedMessage -Key "noGamesFound"
+            }
             return
         }
 
         # Create game cards for each configured game
+        $gameCount = 0
         $script:ConfigData.games.PSObject.Properties | ForEach-Object {
             $gameId = $_.Name
             $gameData = $_.Value
             $platform = if ($gameData.platform) { $gameData.platform } else { "steam" }
+
+            Write-Verbose "Creating game card for: $gameId (Name: $($gameData.name), Platform: $platform)"
 
             # Create game item data object
             $gameItem = New-Object PSObject -Property @{
@@ -2044,15 +2471,180 @@ function Update-GameLauncherList {
                 ProcessName = $gameData.processName
             }
 
-            # Create the UI element for this game
-            $gameCard = New-GameLauncherCard -GameItem $gameItem
-            $gameLauncherList.Items.Add($gameCard)
+            # Create the UI element for this game inline to avoid output capture issues
+            try {
+                # Create main border
+                $border = New-Object System.Windows.Controls.Border
+                $border.Background = "#F8F9FA"
+                $border.BorderBrush = "#E1E5E9"
+                $border.BorderThickness = 1
+                $border.CornerRadius = 8
+                $border.Margin = "0,0,0,10"
+                $border.Padding = 15
+
+                # Add hover effect to game card
+                $border.add_MouseEnter({
+                        $this.Background = "#F1F3F5"
+                        $this.BorderBrush = "#D1D9E0"
+                    })
+                $border.add_MouseLeave({
+                        $this.Background = "#F8F9FA"
+                        $this.BorderBrush = "#E1E5E9"
+                    })
+
+                # Create main grid
+                $grid = New-Object System.Windows.Controls.Grid
+
+                # Define columns
+                $col1 = New-Object System.Windows.Controls.ColumnDefinition
+                $col1.Width = "*"
+                $col2 = New-Object System.Windows.Controls.ColumnDefinition
+                $col2.Width = "Auto"
+                $col3 = New-Object System.Windows.Controls.ColumnDefinition
+                $col3.Width = "Auto"
+
+                $grid.ColumnDefinitions.Add($col1)
+                $grid.ColumnDefinitions.Add($col2)
+                $grid.ColumnDefinitions.Add($col3)
+
+                # Game info section
+                $infoPanel = New-Object System.Windows.Controls.StackPanel
+                $infoPanel.VerticalAlignment = "Center"
+                [System.Windows.Controls.Grid]::SetColumn($infoPanel, 0)
+
+                # Game name
+                $nameText = New-Object System.Windows.Controls.TextBlock
+                $nameText.Text = $gameItem.DisplayName
+                $nameText.FontSize = 14
+                $nameText.FontWeight = "SemiBold"
+                $nameText.Foreground = "#333"
+                $infoPanel.Children.Add($nameText)
+
+                # Game details
+                $detailsPanel = New-Object System.Windows.Controls.StackPanel
+                $detailsPanel.Orientation = "Horizontal"
+                $detailsPanel.Margin = "0,4,0,0"
+
+                $platformLabel = New-Object System.Windows.Controls.TextBlock
+                $platformLabel.Text = "Platform: "
+                $platformLabel.FontSize = 11
+                $platformLabel.Foreground = "#666"
+                $detailsPanel.Children.Add($platformLabel)
+
+                $platformValue = New-Object System.Windows.Controls.TextBlock
+                $platformValue.Text = $gameItem.Platform
+                $platformValue.FontSize = 11
+                $platformValue.Foreground = "#0078D4"
+                $platformValue.FontWeight = "SemiBold"
+                $detailsPanel.Children.Add($platformValue)
+
+                $idLabel = New-Object System.Windows.Controls.TextBlock
+                $idLabel.Text = " | ID: "
+                $idLabel.FontSize = 11
+                $idLabel.Foreground = "#666"
+                $idLabel.Margin = "10,0,0,0"
+                $detailsPanel.Children.Add($idLabel)
+
+                $idValue = New-Object System.Windows.Controls.TextBlock
+                $idValue.Text = $gameItem.GameId
+                $idValue.FontSize = 11
+                $idValue.Foreground = "#666"
+                $idValue.FontFamily = "Consolas"
+                $detailsPanel.Children.Add($idValue)
+
+                $infoPanel.Children.Add($detailsPanel)
+                $grid.Children.Add($infoPanel)
+
+                # Edit button
+                $editButton = New-Object System.Windows.Controls.Button
+                $editButton.Content = Get-LocalizedMessage -Key "editButton"
+                $editButton.Width = 70
+                $editButton.Height = 32
+                $editButton.Margin = "10,0"
+                $editButton.Background = "#F1F3F4"
+                $editButton.BorderBrush = "#D0D7DE"
+                $editButton.FontSize = 11
+                $editButton.Cursor = "Hand"
+                [System.Windows.Controls.Grid]::SetColumn($editButton, 1)
+
+                # Add hover effects to edit button
+                $editButton.add_MouseEnter({
+                        $this.Background = "#E8EAED"
+                        $this.BorderBrush = "#C1C8CD"
+                    })
+                $editButton.add_MouseLeave({
+                        $this.Background = "#F1F3F4"
+                        $this.BorderBrush = "#D0D7DE"
+                    })
+
+                # Edit button click handler
+                $editButton.add_Click({
+                        Switch-ToGameSettingsTab -GameId $gameId
+                    }.GetNewClosure())
+
+                $grid.Children.Add($editButton)
+
+                # Launch button
+                $launchButton = New-Object System.Windows.Controls.Button
+                $launchButton.Content = Get-LocalizedMessage -Key "launchButton"
+                $launchButton.Width = 80
+                $launchButton.Height = 32
+                $launchButton.Background = "#0078D4"
+                $launchButton.Foreground = "White"
+                $launchButton.BorderBrush = "#0078D4"
+                $launchButton.FontWeight = "SemiBold"
+                $launchButton.FontSize = 12
+                $launchButton.Cursor = "Hand"
+                [System.Windows.Controls.Grid]::SetColumn($launchButton, 2)
+
+                # Add hover effects to launch button
+                $launchButton.add_MouseEnter({
+                        $this.Background = "#106EBE"
+                        $this.BorderBrush = "#106EBE"
+                    })
+                $launchButton.add_MouseLeave({
+                        $this.Background = "#0078D4"
+                        $this.BorderBrush = "#0078D4"
+                    })
+
+                # Launch button click handler
+                $launchButton.add_Click({
+                        Start-GameFromLauncher -GameId $gameId
+                    }.GetNewClosure())
+
+                $grid.Children.Add($launchButton)
+
+                $border.Child = $grid
+
+                # Add the border directly to ItemsControl
+                Write-Verbose "Game card created successfully for: $gameId"
+                Write-Verbose "Game card type: $($border.GetType().FullName)"
+                $gameLauncherList.Items.Add($border)
+                $gameCount++
+                Write-Verbose "Game card added to list. Total items in ItemsControl: $($gameLauncherList.Items.Count)"
+
+            } catch {
+                Write-Warning "Failed to create game card for: $gameId - $($_.Exception.Message)"
+            }
         }
 
-        Write-Verbose "Game launcher list updated with $($script:ConfigData.games.PSObject.Properties.Count) games"
+        # Update status text with game count
+        if ($statusText) {
+            if ($gameCount -eq 1) {
+                $statusText.Text = Get-LocalizedMessage -Key "oneGameReady"
+            } else {
+                $statusText.Text = Get-LocalizedMessage -Key "multipleGamesReady" -Arguments @($gameCount.ToString())
+            }
+        }
+
+        Write-Verbose "Game launcher list updated with $gameCount games"
 
     } catch {
         Write-Warning "Failed to update game launcher list: $($_.Exception.Message)"
+        $statusText = $script:Window.FindName("LauncherStatusText")
+        if ($statusText) {
+            $statusText.Text = Get-LocalizedMessage -Key "gameListUpdateError"
+        }
     }
 }
 
@@ -2064,192 +2656,6 @@ function Update-GameLauncherList {
     Creates an interactive game card with launch and edit buttons
     for the game launcher tab interface.
 #>
-function New-GameLauncherCard {
-    param(
-        [Parameter(Mandatory)]
-        [PSObject]$GameItem
-    )
-
-    try {
-        # Create main border
-        $border = New-Object System.Windows.Controls.Border
-        $border.Background = "#F8F9FA"
-        $border.BorderBrush = "#E1E5E9"
-        $border.BorderThickness = 1
-        $border.CornerRadius = 8
-        $border.Margin = "0,0,0,10"
-        $border.Padding = 15
-
-        # Create main grid
-        $grid = New-Object System.Windows.Controls.Grid
-
-        # Define columns
-        $col1 = New-Object System.Windows.Controls.ColumnDefinition
-        $col1.Width = "*"
-        $col2 = New-Object System.Windows.Controls.ColumnDefinition
-        $col2.Width = "Auto"
-        $col3 = New-Object System.Windows.Controls.ColumnDefinition
-        $col3.Width = "Auto"
-
-        $grid.ColumnDefinitions.Add($col1)
-        $grid.ColumnDefinitions.Add($col2)
-        $grid.ColumnDefinitions.Add($col3)
-
-        # Game info section
-        $infoPanel = New-Object System.Windows.Controls.StackPanel
-        $infoPanel.VerticalAlignment = "Center"
-        [System.Windows.Controls.Grid]::SetColumn($infoPanel, 0)
-
-        # Game name
-        $nameText = New-Object System.Windows.Controls.TextBlock
-        $nameText.Text = $GameItem.DisplayName
-        $nameText.FontSize = 14
-        $nameText.FontWeight = "SemiBold"
-        $nameText.Foreground = "#333"
-        $infoPanel.Children.Add($nameText)
-
-        # Game details
-        $detailsPanel = New-Object System.Windows.Controls.StackPanel
-        $detailsPanel.Orientation = "Horizontal"
-        $detailsPanel.Margin = "0,4,0,0"
-
-        $platformLabel = New-Object System.Windows.Controls.TextBlock
-        $platformLabel.Text = "Platform: "
-        $platformLabel.FontSize = 11
-        $platformLabel.Foreground = "#666"
-        $detailsPanel.Children.Add($platformLabel)
-
-        $platformValue = New-Object System.Windows.Controls.TextBlock
-        $platformValue.Text = $GameItem.Platform
-        $platformValue.FontSize = 11
-        $platformValue.Foreground = "#0078D4"
-        $platformValue.FontWeight = "SemiBold"
-        $detailsPanel.Children.Add($platformValue)
-
-        $idLabel = New-Object System.Windows.Controls.TextBlock
-        $idLabel.Text = " | ID: "
-        $idLabel.FontSize = 11
-        $idLabel.Foreground = "#666"
-        $idLabel.Margin = "10,0,0,0"
-        $detailsPanel.Children.Add($idLabel)
-
-        $idValue = New-Object System.Windows.Controls.TextBlock
-        $idValue.Text = $GameItem.GameId
-        $idValue.FontSize = 11
-        $idValue.Foreground = "#666"
-        $idValue.FontFamily = "Consolas"
-        $detailsPanel.Children.Add($idValue)
-
-        $infoPanel.Children.Add($detailsPanel)
-        $grid.Children.Add($infoPanel)
-
-        # Edit button
-        $editButton = New-Object System.Windows.Controls.Button
-        $editButton.Content = Get-LocalizedMessage -Key "editButton"
-        $editButton.Width = 70
-        $editButton.Height = 32
-        $editButton.Margin = "10,0"
-        $editButton.Background = "#F1F3F4"
-        $editButton.BorderBrush = "#D0D7DE"
-        $editButton.FontSize = 11
-        [System.Windows.Controls.Grid]::SetColumn($editButton, 1)
-
-        # Edit button click handler
-        $editButton.add_Click({
-                Switch-ToGameSettingsTab -GameId $GameItem.GameId
-            }.GetNewClosure())
-
-        $grid.Children.Add($editButton)
-
-        # Launch button
-        $launchButton = New-Object System.Windows.Controls.Button
-        $launchButton.Content = Get-LocalizedMessage -Key "launchButton"
-        $launchButton.Width = 80
-        $launchButton.Height = 32
-        $launchButton.Background = "#0078D4"
-        $launchButton.Foreground = "White"
-        $launchButton.BorderBrush = "#0078D4"
-        $launchButton.FontWeight = "SemiBold"
-        $launchButton.FontSize = 12
-        [System.Windows.Controls.Grid]::SetColumn($launchButton, 2)
-
-        # Launch button click handler
-        $launchButton.add_Click({
-                Start-GameFromLauncher -GameId $GameItem.GameId
-            }.GetNewClosure())
-
-        $grid.Children.Add($launchButton)
-
-        $border.Child = $grid
-        return $border
-
-    } catch {
-        Write-Warning "Failed to create game launcher card: $($_.Exception.Message)"
-        return $null
-    }
-}
-
-<#
-.SYNOPSIS
-    Launches a game from the launcher tab
-
-.DESCRIPTION
-    Initiates game launch using the main game launcher script
-    and provides user feedback during the process.
-#>
-function Start-GameFromLauncher {
-    param(
-        [Parameter(Mandatory)]
-        [string]$GameId
-    )
-
-    try {
-        # Update status
-        $statusText = $script:Window.FindName("LauncherStatusText")
-        if ($statusText) {
-            $statusText.Text = Get-LocalizedMessage -Key "launchingGame" -Args @($GameId)
-        }
-
-        # Get the main launcher script path
-        $mainLauncherPath = Join-Path $PSScriptRoot "../src/Main.ps1"
-
-        # Check if main launcher exists
-        if (-not (Test-Path $mainLauncherPath)) {
-            # Fallback to legacy launcher
-            $mainLauncherPath = Join-Path $PSScriptRoot "../src/Invoke-FocusGameDeck.ps1"
-        }
-
-        if (-not (Test-Path $mainLauncherPath)) {
-            Show-SafeMessage -MessageKey "gameNotFound" -TitleKey "error" -Args @($GameId) -Icon Error
-            return
-        }
-
-        Write-Host "Launching game from GUI: $GameId" -ForegroundColor Cyan
-
-        # Launch the game using PowerShell
-        Start-Process -FilePath "powershell.exe" -ArgumentList @(
-            "-ExecutionPolicy", "Bypass",
-            "-File", $mainLauncherPath,
-            $GameId
-        ) -WindowStyle Minimized
-
-        # Reset status after a short delay
-        Start-Sleep -Milliseconds 2000
-        if ($statusText) {
-            $statusText.Text = Get-LocalizedMessage -Key "readyToLaunch"
-        }
-
-    } catch {
-        Write-Warning "Failed to launch game '$GameId': $($_.Exception.Message)"
-        Show-SafeMessage -MessageKey "launchFailed" -TitleKey "error" -Args @($GameId, $_.Exception.Message) -Icon Error
-
-        # Reset status
-        $statusText = $script:Window.FindName("LauncherStatusText")
-        if ($statusText) {
-            $statusText.Text = Get-LocalizedMessage -Key "readyToLaunch"
-        }
-    }
-}
 
 <#
 .SYNOPSIS
@@ -2273,10 +2679,27 @@ function Switch-ToGameSettingsTab {
 
             # If GameId specified, select that game
             if (-not [string]::IsNullOrEmpty($GameId)) {
-                $gamesList = $script:Window.FindName("GamesList")
-                if ($gamesList) {
-                    $gamesList.SelectedItem = $GameId
-                }
+                # Use dispatcher to ensure UI is updated after tab switch
+                $script:Window.Dispatcher.BeginInvoke([System.Windows.Threading.DispatcherPriority]::Background, [action] {
+                        $gamesList = $script:Window.FindName("GamesList")
+                        if ($gamesList) {
+                            # First ensure the games list is updated
+                            Update-GamesList
+
+                            # Find and select the game
+                            for ($i = 0; $i -lt $gamesList.Items.Count; $i++) {
+                                if ($gamesList.Items[$i] -eq $GameId) {
+                                    $gamesList.SelectedIndex = $i
+                                    break
+                                }
+                            }
+
+                            # Ensure focus on the selected game
+                            if ($gamesList.SelectedItem -eq $GameId) {
+                                Write-Verbose "Game '$GameId' selected in Games tab"
+                            }
+                        }
+                    })
             }
         }
 
@@ -2336,14 +2759,14 @@ function Handle-CheckUpdate {
         # Process results
         if ($updateResult.UpdateAvailable) {
             # Update available
-            $message = Get-LocalizedMessage -Key "updateAvailable" -Args @($updateResult.LatestVersion, $updateResult.CurrentVersion)
+            $message = Get-LocalizedMessage -Key "updateAvailable" -Arguments @($updateResult.LatestVersion, $updateResult.CurrentVersion)
             if ($updateStatusText) {
                 $updateStatusText.Text = $message
                 $updateStatusText.Foreground = "#FF6600"
             }
 
             # Ask user if they want to open the releases page
-            $result = Show-SafeMessage -MessageKey "updateAvailableConfirm" -TitleKey "updateAvailableTitle" -Args @($updateResult.LatestVersion) -Button YesNo -Icon Question
+            $result = Show-SafeMessage -MessageKey "updateAvailableConfirm" -TitleKey "updateAvailableTitle" -Arguments @($updateResult.LatestVersion) -Button YesNo -Icon Question
             if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
                 if (-not (Open-ReleasesPage)) {
                     Show-SafeMessage -MessageKey "browserOpenError" -TitleKey "error" -Icon Warning
@@ -2552,28 +2975,68 @@ $script:OriginalConfigData = $null
 # Mark configuration as modified
 function Set-ConfigModified {
     param([bool]$IsModified = $true)
-    $script:HasUnsavedChanges = $IsModified
 
-    # Update window title to show unsaved changes
-    if ($script:Window) {
-        $baseTitle = Get-LocalizedMessage -Key "windowTitle"
-        if ($IsModified) {
-            $script:Window.Title = "$baseTitle *"
-        } else {
-            $script:Window.Title = $baseTitle
+    try {
+        # Initialize the variable if it doesn't exist
+        if (-not (Get-Variable -Name "HasUnsavedChanges" -Scope Script -ErrorAction SilentlyContinue)) {
+            $script:HasUnsavedChanges = $false
         }
+
+        $script:HasUnsavedChanges = $IsModified
+
+        # Update window title to show unsaved changes
+        if ($script:Window) {
+            try {
+                $baseTitle = Get-LocalizedMessage -Key "windowTitle"
+                if ($IsModified) {
+                    $script:Window.Title = "$baseTitle *"
+                } else {
+                    $script:Window.Title = $baseTitle
+                }
+            } catch {
+                Write-Verbose "Warning: Failed to update window title: $($_.Exception.Message)"
+                # Fallback title
+                if ($IsModified) {
+                    $script:Window.Title = "Focus Game Deck Configuration *"
+                } else {
+                    $script:Window.Title = "Focus Game Deck Configuration"
+                }
+            }
+        }
+    } catch {
+        Write-Verbose "Warning: Error in Set-ConfigModified: $($_.Exception.Message)"
+        # Don't throw - this should not cause initialization to fail
     }
 }
 
 # Check if there are unsaved changes
 function Test-HasUnsavedChanges {
-    return $script:HasUnsavedChanges
+    try {
+        # Initialize the variable if it doesn't exist
+        if (-not (Get-Variable -Name "HasUnsavedChanges" -Scope Script -ErrorAction SilentlyContinue)) {
+            $script:HasUnsavedChanges = $false
+        }
+        return $script:HasUnsavedChanges
+    } catch {
+        Write-Verbose "Warning: Error in Test-HasUnsavedChanges: $($_.Exception.Message)"
+        return $false  # Default to no unsaved changes if there's an error
+    }
 }
 
 # Store original configuration for comparison
 function Save-OriginalConfig {
-    if ($script:ConfigData) {
-        $script:OriginalConfigData = $script:ConfigData | ConvertTo-Json -Depth 10
+    try {
+        if ($script:ConfigData) {
+            $script:OriginalConfigData = $script:ConfigData | ConvertTo-Json -Depth 10
+            Write-Verbose "Original configuration saved for change tracking"
+        } else {
+            Write-Verbose "No configuration data to save for change tracking"
+            $script:OriginalConfigData = $null
+        }
+    } catch {
+        Write-Warning "Failed to save original configuration: $($_.Exception.Message)"
+        $script:OriginalConfigData = $null
+        # Don't throw - this should not cause initialization to fail
     }
 }
 
@@ -2608,7 +3071,7 @@ function Handle-ApplyConfig {
 
     } catch {
         Write-Host "Debug: Apply config error - $($_.Exception.Message)" -ForegroundColor Red
-        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
     }
 }
 
@@ -2636,7 +3099,7 @@ function Handle-OKConfig {
 
     } catch {
         Write-Host "Debug: OK config error - $($_.Exception.Message)" -ForegroundColor Red
-        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Args @($_.Exception.Message) -Icon Error
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
     }
 }
 
@@ -2675,6 +3138,133 @@ function Handle-WindowClosing {
 
     # Allow window to close
     Set-ConfigModified -IsModified $false
+}
+
+# Tab-specific Save button handlers
+
+# Handle Game Settings tab Save button
+function Handle-SaveGameSettings {
+    param()
+
+    try {
+        # Save only the game settings data
+        if ($script:CurrentGameId -and $script:CurrentGameId -ne "") {
+            Save-CurrentGameData
+        }
+
+        # Convert to JSON and save
+        $jsonString = $script:ConfigData | ConvertTo-Json -Depth 10
+        Set-Content -Path $script:ConfigPath -Value $jsonString -Encoding UTF8
+
+        # Refresh games list to ensure consistency
+        Update-GamesList
+        Update-AppsToManagePanel
+
+        # If a game is currently selected, refresh its data
+        if ($script:CurrentGameId) {
+            Handle-GameSelectionChanged
+        }
+
+        Show-SafeMessage -MessageKey "gameSettingsSaved" -TitleKey "info"
+        Write-Verbose "Game settings saved successfully"
+
+    } catch {
+        Write-Host "Debug: Save game settings error - $($_.Exception.Message)" -ForegroundColor Red
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
+    }
+}
+
+# Handle Managed Apps tab Save button
+function Handle-SaveManagedApps {
+    param()
+
+    try {
+        # Save only the managed apps data
+        if ($script:CurrentAppId -and $script:CurrentAppId -ne "") {
+            # Check if the app ID still exists in the TextBox (it might have been cleared during deletion)
+            $appIdTextBox = $script:Window.FindName("AppIdTextBox")
+            if ($appIdTextBox -and $appIdTextBox.Text -and $appIdTextBox.Text -ne "") {
+                Save-CurrentAppData
+            }
+        }
+
+        # Convert to JSON and save
+        $jsonString = $script:ConfigData | ConvertTo-Json -Depth 10
+        Set-Content -Path $script:ConfigPath -Value $jsonString -Encoding UTF8
+
+        # Refresh managed apps list to ensure consistency
+        Update-ManagedAppsList
+        Update-AppsToManagePanel
+
+        # If an app is currently selected, refresh its data
+        if ($script:CurrentAppId) {
+            Handle-AppSelectionChanged
+        }
+
+        Show-SafeMessage -MessageKey "managedAppsSettingsSaved" -TitleKey "info"
+        Write-Verbose "Managed apps settings saved successfully"
+
+    } catch {
+        Write-Host "Debug: Save managed apps settings error - $($_.Exception.Message)" -ForegroundColor Red
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
+    }
+}
+
+# Handle Global Settings tab Save button
+function Handle-SaveGlobalSettings {
+    param()
+
+    try {
+        # Save only the global settings data
+        Save-GlobalSettingsData
+
+        # Convert to JSON and save
+        $jsonString = $script:ConfigData | ConvertTo-Json -Depth 10
+        Set-Content -Path $script:ConfigPath -Value $jsonString -Encoding UTF8
+
+        Show-SafeMessage -MessageKey "globalSettingsSaved" -TitleKey "info"
+        Write-Verbose "Global settings saved successfully"
+
+    } catch {
+        Write-Host "Debug: Save global settings error - $($_.Exception.Message)" -ForegroundColor Red
+        Show-SafeMessage -MessageKey "configSaveError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
+    }
+}
+
+# Handle About menu item
+function Handle-About {
+    param()
+
+    try {
+        Write-Host "=== Handle-About DEBUG START ===" -ForegroundColor Cyan
+
+        # Get version information
+        $versionInfo = Get-ProjectVersionInfo
+        Write-Host "Debug: About dialog - versionInfo type: $($versionInfo.GetType().Name)" -ForegroundColor Yellow
+        Write-Host "Debug: About dialog - versionInfo.FullVersion: '$($versionInfo.FullVersion)'" -ForegroundColor Yellow
+
+        # Create args array and verify its contents
+        $argsArray = @($versionInfo.FullVersion)
+        Write-Host "Debug: About dialog - Args array length: $($argsArray.Length)" -ForegroundColor Yellow
+        Write-Host "Debug: About dialog - Args[0]: '$($argsArray[0])'" -ForegroundColor Yellow
+        Write-Host "Debug: About dialog - Args[0] type: $($argsArray[0].GetType().Name)" -ForegroundColor Yellow
+
+        # Test message retrieval with verbose output
+        Write-Host "Debug: Testing Get-LocalizedMessage directly..." -ForegroundColor Green
+        $testMessage = Get-LocalizedMessage -Key "aboutMessage" -Args $argsArray
+        Write-Host "Debug: Direct call result: '$testMessage'" -ForegroundColor Green
+
+        Write-Host "Debug: Calling Show-SafeMessage..." -ForegroundColor Magenta
+        Show-SafeMessage -MessageKey "aboutMessage" -TitleKey "aboutTitle" -Arguments $argsArray
+
+        Write-Host "=== Handle-About DEBUG END ===" -ForegroundColor Cyan
+
+    } catch {
+        Write-Warning "Failed to show about dialog: $($_.Exception.Message)"
+        Write-Warning "Exception details: $($_.Exception)"
+        $fallbackVersion = if ($versionInfo) { $versionInfo.FullVersion } else { "Unknown" }
+        [System.Windows.MessageBox]::Show("Focus Game Deck`nVersion: $fallbackVersion", "About", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+    }
 }
 
 # Handle close window (legacy function for backward compatibility)
@@ -2770,7 +3360,7 @@ function Handle-GenerateLaunchers {
         if ($createdLaunchers -and $createdLaunchers.Count -gt 0) {
             $messageKey = if ($launcherType -eq "lnk") { "launchersCreatedEnhanced" } else { "launchersCreatedTraditional" }
 
-            Show-SafeMessage -MessageKey $messageKey -TitleKey "success" -Args @($createdLaunchers.Count.ToString()) -Icon Information
+            Show-SafeMessage -MessageKey $messageKey -TitleKey "success" -Arguments @($createdLaunchers.Count.ToString()) -Icon Information
 
             Write-Host "Successfully created $($createdLaunchers.Count) launchers:"
             $createdLaunchers | ForEach-Object { Write-Host "  - $($_.Name)" }
@@ -2793,5 +3383,12 @@ function Handle-GenerateLaunchers {
     }
 }
 
-# Start the application
-Initialize-ConfigEditor
+# Start the application only if not suppressed
+if (-not $NoAutoStart) {
+    if (Test-Prerequisites) {
+        Initialize-ConfigEditor
+    } else {
+        Write-Host "Cannot start ConfigEditor due to missing prerequisites" -ForegroundColor Red
+        exit 1
+    }
+}
