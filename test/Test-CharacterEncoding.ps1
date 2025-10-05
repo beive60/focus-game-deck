@@ -64,7 +64,7 @@ try {
 
 # Test messages.json
 try {
-    $messagesPath = Join-Path $projectRoot "gui/messages.json"
+    $messagesPath = Join-Path $projectRoot "../gui/messages.json"
     $messagesContent = Get-Content $messagesPath -Raw -Encoding UTF8
     $messages = $messagesContent | ConvertFrom-Json
     Test-Result "messages.json UTF-8 parsing" $true
