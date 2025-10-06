@@ -1513,6 +1513,29 @@ function Update-GamesList {
         $script:ConfigData.games.PSObject.Properties | ForEach-Object {
             $gamesList.Items.Add($_.Name)
         }
+
+        # Auto-select the first game if games exist
+        if ($gamesList.Items.Count -gt 0) {
+            $gamesList.SelectedIndex = 0
+        } else {
+            # Games section exists but is empty (all games were deleted) - automatically create a new game
+            try {
+                Write-Verbose "All games were deleted from configuration. Creating new game entry."
+                Handle-AddGame
+            } catch {
+                Write-Warning "Failed to automatically create game after deletion: $($_.Exception.Message)"
+                # Even if auto-creation fails, continue with empty list rather than breaking the UI
+            }
+        }
+    } else {
+        # No games section exists - automatically create a new game
+        try {
+            Write-Verbose "No games found in configuration. Creating initial game entry."
+            Handle-AddGame
+        } catch {
+            Write-Warning "Failed to automatically create initial game: $($_.Exception.Message)"
+            # Even if auto-creation fails, continue with empty list rather than breaking the UI
+        }
     }
 }
 
@@ -1526,6 +1549,29 @@ function Update-ManagedAppsList {
     if ($script:ConfigData.managedApps) {
         $script:ConfigData.managedApps.PSObject.Properties | ForEach-Object {
             $managedAppsList.Items.Add($_.Name)
+        }
+
+        # Auto-select the first app if apps exist
+        if ($managedAppsList.Items.Count -gt 0) {
+            $managedAppsList.SelectedIndex = 0
+        } else {
+            # ManagedApps section exists but is empty (all apps were deleted) - automatically create a new app
+            try {
+                Write-Verbose "All managed apps were deleted from configuration. Creating new app entry."
+                Handle-AddApp
+            } catch {
+                Write-Warning "Failed to automatically create app after deletion: $($_.Exception.Message)"
+                # Even if auto-creation fails, continue with empty list rather than breaking the UI
+            }
+        }
+    } else {
+        # No managedApps section exists - automatically create a new app
+        try {
+            Write-Verbose "No managed apps found in configuration. Creating initial app entry."
+            Handle-AddApp
+        } catch {
+            Write-Warning "Failed to automatically create initial app: $($_.Exception.Message)"
+            # Even if auto-creation fails, continue with empty list rather than breaking the UI
         }
     }
 
