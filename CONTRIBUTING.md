@@ -71,7 +71,7 @@ For the complete project manifesto, see [Project Philosophy](docs/project-info/p
 
 - `main` - Stable release branch
 - `develop` - Integration branch for new features
-- `feature/feature-name` - Feature development branches
+- `feat/feature-name` - Feature development branches
 - `bugfix/bug-description` - Bug fix branches
 
 ### Typical Development Flow
