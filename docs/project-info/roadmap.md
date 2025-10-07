@@ -118,7 +118,7 @@ Based on this vision, this roadmap defines the path to evolve Focus Game Deck fr
 
 | Major Feature | Priority | Notes |
 | :---- | :---- | :---- |
-| **Non-Steam Platform Support** | **Critical** | Support for Epic Games, EA App, Riot Client, etc. Essential feature for significantly expanding user base. |
+| **Non-Steam Platform Support** | **Critical** | Support for Epic Games, EA App, Riot Client, etc. [IN PROGRESS: Standalone platform testing implemented] Essential feature for significantly expanding user base. |
 | **Setup Wizard** | **High** | Complete basic configuration (Steam path, etc.) through interactive dialog on first startup. Minimize setup barriers to the extreme. |
 | **Chinese/Korean Language Support** | **Medium** | Expand reach to huge Asian gamer markets. Consider translation cooperation from community. |
 
