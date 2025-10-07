@@ -37,17 +37,29 @@ Make the following changes:
 - Test game launch functionality (if Steam is available)
 - Verify status indicators and launch buttons work correctly
 
-### 5. Management App Settings Tab Test
+### 5. Standalone Platform Test
+
+- Verify "Standalone" platform option appears in Platform dropdown
+- Test executable path field visibility when standalone is selected
+- Click "Browse" button to test file dialog functionality
+- Enter standalone game details:
+  - Game Name: "Test Standalone Game"
+  - Platform: "Standalone"
+  - Executable Path: Browse to select an .exe file
+  - Process Name: "testgame"
+- Save and verify the standalone game is saved correctly in config.json
+
+### 6. Management App Settings Tab Test
 
 - Verify existing apps (noWinKey, autoHotkey, clibor, luna) display correctly
 - Select any app and verify details display
 
-### 6. Save Functionality Test
+### 7. Save Functionality Test
 
 - Click "Save Settings" button
 - Verify save completion message displays in selected language
 
-### 7. Application Exit
+### 8. Application Exit
 
 - Click "Close" button to exit application
 
