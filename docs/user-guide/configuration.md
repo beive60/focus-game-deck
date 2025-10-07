@@ -246,6 +246,8 @@ Define the games you want to manage and which applications should be controlled 
 
 #### Standalone Applications
 
+For games not available through major platforms (Steam, Epic, etc.):
+
 ```json
 "custom-game": {
     "name": "Custom Game",
@@ -256,6 +258,14 @@ Define the games you want to manage and which applications should be controlled 
     "appsToManage": ["noWinKey", "obs"]
 }
 ```
+
+| Property | Description | Required |
+|----------|-------------|----------|
+| `platform` | Must be set to "standalone" | Yes |
+| `executablePath` | Full path to game executable | Yes |
+| `processName` | Process name for monitoring | Yes |
+| `arguments` | Command line arguments | No |
+| `appsToManage` | List of managed applications | No |
 
 ### Finding Game Information
 

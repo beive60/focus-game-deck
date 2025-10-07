@@ -217,6 +217,9 @@ catch {
 # Run individual tests
 .\test\Test-ConfigValidation.ps1
 
+# Run standalone platform GUI tests
+.\test\Test-standalone-gui-functionality.ps1
+
 # Run all tests
 Get-ChildItem -Path ".\test\Test-*.ps1" | ForEach-Object { & $_.FullName }
 
