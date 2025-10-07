@@ -272,22 +272,23 @@ function Update-AllButtonTooltips {
     try {
         # Define button name to message key mappings
         $buttonMappings = @{
-            "AddGameButton"            = "addButton"
-            "DuplicateGameButton"      = "duplicateButton"
-            "DeleteGameButton"         = "deleteButton"
-            "AddAppButton"             = "addButton"
-            "DuplicateAppButton"       = "duplicateButton"
-            "DeleteAppButton"          = "deleteButton"
-            "BrowseAppPathButton"      = "browseButton"
-            "BrowseSteamPathButton"    = "browseButton"
-            "BrowseEpicPathButton"     = "browseButton"
-            "BrowseRiotPathButton"     = "browseButton"
-            "BrowseObsPathButton"      = "browseButton"
-            "GenerateLaunchersButton"  = "generateLaunchers"
+            "AddGameButton"              = "addButton"
+            "DuplicateGameButton"        = "duplicateButton"
+            "DeleteGameButton"           = "deleteButton"
+            "AddAppButton"               = "addButton"
+            "DuplicateAppButton"         = "duplicateButton"
+            "DeleteAppButton"            = "deleteButton"
+            "BrowseAppPathButton"        = "browseButton"
+            "BrowseExecutablePathButton" = "browseButton"
+            "BrowseSteamPathButton"      = "browseButton"
+            "BrowseEpicPathButton"       = "browseButton"
+            "BrowseRiotPathButton"       = "browseButton"
+            "BrowseObsPathButton"        = "browseButton"
+            "GenerateLaunchersButton"    = "generateLaunchers"
             # "CheckUpdateButton"       = "checkUpdateButton"  # Moved to menu
-            "SaveGameSettingsButton"   = "saveButton"
-            "SaveManagedAppsButton"    = "saveButton"
-            "SaveGlobalSettingsButton" = "saveButton"
+            "SaveGameSettingsButton"     = "saveButton"
+            "SaveManagedAppsButton"      = "saveButton"
+            "SaveGlobalSettingsButton"   = "saveButton"
             # Legacy footer buttons - now commented out in XAML
             # "ApplyButton"             = "applyButton"
             # "OKButton"                = "okButton"
@@ -506,6 +507,7 @@ function Replace-XamlPlaceholders {
             "[STEAM_PLATFORM]"             = Get-LocalizedMessage -Key "steamPlatform"
             "[EPIC_PLATFORM]"              = Get-LocalizedMessage -Key "epicPlatform"
             "[RIOT_PLATFORM]"              = Get-LocalizedMessage -Key "riotPlatform"
+            "[STANDALONE_PLATFORM]"        = Get-LocalizedMessage -Key "standalonePlatform"
             "[BROWSE_BUTTON]"              = Get-LocalizedMessage -Key "browseButton"
             "[DUPLICATE_BUTTON]"           = Get-LocalizedMessage -Key "duplicateButton"
             "[OBS_SETTINGS_GROUP]"         = Get-LocalizedMessage -Key "obsSettingsGroup"
@@ -535,6 +537,7 @@ function Replace-XamlPlaceholders {
             "[TOOLTIP_STEAM_APP_ID]"       = Get-LocalizedMessage -Key "tooltipSteamAppId"
             "[TOOLTIP_EPIC_GAME_ID]"       = Get-LocalizedMessage -Key "tooltipEpicGameId"
             "[TOOLTIP_RIOT_GAME_ID]"       = Get-LocalizedMessage -Key "tooltipRiotGameId"
+            "[TOOLTIP_EXECUTABLE_PATH]"    = Get-LocalizedMessage -Key "tooltipExecutablePath"
             "[LAUNCHER_WELCOME_TEXT]"      = Get-LocalizedMessage -Key "launcherWelcomeText"
             "[LAUNCHER_SUBTITLE_TEXT]"     = Get-LocalizedMessage -Key "launcherSubtitleText"
             "[REFRESH_BUTTON]"             = Get-LocalizedMessage -Key "refreshButton"
@@ -1181,6 +1184,12 @@ function Setup-EventHandlers {
         $gameEndActionCombo.add_SelectionChanged({ Update-TerminationSettingsVisibility })
     }
 
+    # Browse button events
+    $browseExecutablePathButton = $script:Window.FindName("BrowseExecutablePathButton")
+    if ($browseExecutablePathButton) {
+        $browseExecutablePathButton.add_Click({ Handle-BrowseExecutablePath })
+    }
+
     # Language selection change event
     $languageCombo = $script:Window.FindName("LanguageCombo")
     if ($languageCombo) {
@@ -1468,6 +1477,9 @@ function Update-UITexts {
         $browseAppPathButton = $script:Window.FindName("BrowseAppPathButton")
         if ($browseAppPathButton) { Set-ButtonContentWithTooltip -Button $browseAppPathButton -FullText (Get-LocalizedMessage -Key "browseButton") }
 
+        $browseExecutablePathButton = $script:Window.FindName("BrowseExecutablePathButton")
+        if ($browseExecutablePathButton) { Set-ButtonContentWithTooltip -Button $browseExecutablePathButton -FullText (Get-LocalizedMessage -Key "browseButton") }
+
         # Update version and update-related texts
         $versionLabel = $script:Window.FindName("VersionLabel")
         if ($versionLabel) { $versionLabel.Text = Get-LocalizedMessage -Key "versionLabel" }
@@ -1704,6 +1716,16 @@ function Update-PlatformFields {
     $script:Window.FindName("RiotGameIdLabel").Visibility = "Collapsed"
     $script:Window.FindName("RiotGameIdTextBox").Visibility = "Collapsed"
 
+    # Hide standalone executable path fields
+    $executablePathLabelPanel = $script:Window.FindName("ExecutablePathLabelPanel")
+    $executablePathInputGrid = $script:Window.FindName("ExecutablePathInputGrid")
+    if ($executablePathLabelPanel) {
+        $executablePathLabelPanel.Visibility = "Collapsed"
+    }
+    if ($executablePathInputGrid) {
+        $executablePathInputGrid.Visibility = "Collapsed"
+    }
+
     # Show platform-specific fields based on selection
     switch ($Platform) {
         "steam" {
@@ -1717,6 +1739,17 @@ function Update-PlatformFields {
         "riot" {
             $script:Window.FindName("RiotGameIdLabel").Visibility = "Visible"
             $script:Window.FindName("RiotGameIdTextBox").Visibility = "Visible"
+        }
+        "standalone" {
+            # Show executable path fields for standalone games
+            $executablePathLabelPanel = $script:Window.FindName("ExecutablePathLabelPanel")
+            $executablePathInputGrid = $script:Window.FindName("ExecutablePathInputGrid")
+            if ($executablePathLabelPanel) {
+                $executablePathLabelPanel.Visibility = "Visible"
+            }
+            if ($executablePathInputGrid) {
+                $executablePathInputGrid.Visibility = "Visible"
+            }
         }
     }
 }
@@ -1774,6 +1807,9 @@ function Handle-GameSelectionChanged {
         $script:Window.FindName("SteamAppIdTextBox").Text = if ($gameData.steamAppId) { $gameData.steamAppId } else { "" }
         $script:Window.FindName("EpicGameIdTextBox").Text = if ($gameData.epicGameId) { $gameData.epicGameId } else { "" }
         $script:Window.FindName("RiotGameIdTextBox").Text = if ($gameData.riotGameId) { $gameData.riotGameId } else { "" }
+
+        # Load standalone executable path
+        $script:Window.FindName("ExecutablePathTextBox").Text = if ($gameData.executablePath) { $gameData.executablePath } else { "" }
 
         # Update apps to manage checkboxes
         $panel = $script:Window.FindName("AppsToManagePanel")
@@ -1839,13 +1875,14 @@ function Handle-AddGame {
 
     # Add to config data
     $script:ConfigData.games | Add-Member -MemberType NoteProperty -Name $newGameId -Value ([PSCustomObject]@{
-            name         = "New Game"
-            platform     = "steam"  # Default to Steam
-            steamAppId   = ""
-            epicGameId   = ""
-            riotGameId   = ""
-            processName  = ""
-            appsToManage = @()
+            name           = "New Game"
+            platform       = "steam"  # Default to Steam
+            steamAppId     = ""
+            epicGameId     = ""
+            riotGameId     = ""
+            executablePath = ""
+            processName    = ""
+            appsToManage   = @()
         })
 
     Update-GamesList
@@ -2169,6 +2206,9 @@ function Save-CurrentGameData {
     $epicGameId = $script:Window.FindName("EpicGameIdTextBox").Text
     $riotGameId = $script:Window.FindName("RiotGameIdTextBox").Text
 
+    # Get standalone executable path
+    $executablePath = $script:Window.FindName("ExecutablePathTextBox").Text
+
     # Get selected apps to manage
     $appsToManage = @()
     $panel = $script:Window.FindName("AppsToManagePanel")
@@ -2227,6 +2267,12 @@ function Save-CurrentGameData {
     $gameObject.steamAppId = $steamAppId
     $gameObject.epicGameId = $epicGameId
     $gameObject.riotGameId = $riotGameId
+
+    # Handle standalone platform executable path
+    if (-not $gameObject.PSObject.Properties['executablePath']) {
+        $gameObject | Add-Member -MemberType NoteProperty -Name 'executablePath' -Value "" -Force
+    }
+    $gameObject.executablePath = $executablePath
 }
 
 # Save current app data
@@ -2751,6 +2797,37 @@ function Switch-ToGameSettingsTab {
 
     } catch {
         Write-Warning "Failed to switch to game settings tab: $($_.Exception.Message)"
+    }
+}
+
+<#
+.SYNOPSIS
+    Handles browsing for executable path for standalone games
+
+.DESCRIPTION
+    Opens a file dialog to allow the user to select an executable file
+    for standalone games and updates the executable path text box.
+#>
+function Handle-BrowseExecutablePath {
+    param()
+
+    try {
+        $openFileDialog = New-Object System.Windows.Forms.OpenFileDialog
+        $openFileDialog.Filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*"
+        $openFileDialog.Title = Get-LocalizedMessage -Key "selectExecutableFile"
+        $openFileDialog.InitialDirectory = [Environment]::GetFolderPath("ProgramFiles")
+
+        $result = $openFileDialog.ShowDialog()
+        if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+            $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
+            if ($executablePathTextBox) {
+                $executablePathTextBox.Text = $openFileDialog.FileName
+                Set-ConfigModified
+            }
+        }
+    } catch {
+        Write-Warning "Failed to browse for executable path: $($_.Exception.Message)"
+        Show-SafeMessage -MessageKey "error" -TitleKey "error" -Message "Failed to browse for executable file: $($_.Exception.Message)"
     }
 }
 
