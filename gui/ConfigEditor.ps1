@@ -1529,6 +1529,8 @@ function Update-GamesList {
         # Auto-select the first game if games exist
         if ($gamesList.Items.Count -gt 0) {
             $gamesList.SelectedIndex = 0
+            # Manually trigger the selection changed event to ensure proper initialization
+            Handle-GameSelectionChanged
         } else {
             # Games section exists but is empty (all games were deleted) - automatically create a new game
             try {
@@ -1566,6 +1568,8 @@ function Update-ManagedAppsList {
         # Auto-select the first app if apps exist
         if ($managedAppsList.Items.Count -gt 0) {
             $managedAppsList.SelectedIndex = 0
+            # Manually trigger the selection changed event to ensure proper initialization
+            Handle-AppSelectionChanged
         } else {
             # ManagedApps section exists but is empty (all apps were deleted) - automatically create a new app
             try {
@@ -1795,12 +1799,12 @@ function Handle-GameSelectionChanged {
             if (-not $found) {
                 $platformCombo.SelectedIndex = 0  # Steam as fallback
             }
-            Update-PlatformFields -Platform $gameData.platform
+            # Remove duplicate Update-PlatformFields call since it's handled by the SelectionChanged event
         } else {
             # Default to Steam for backward compatibility
             $platformCombo = $script:Window.FindName("PlatformComboBox")
             $platformCombo.SelectedIndex = 0  # Steam
-            Update-PlatformFields -Platform "steam"
+            # Remove duplicate Update-PlatformFields call since it's handled by the SelectionChanged event
         }
 
         # Load platform-specific IDs
@@ -1856,8 +1860,7 @@ function Handle-AppSelectionChanged {
         $gameStartActionCombo.SelectedItem = $appData.gameStartAction
         $gameEndActionCombo.SelectedItem = $appData.gameEndAction
 
-        # Update termination settings visibility based on selected actions
-        Update-TerminationSettingsVisibility
+        # Remove duplicate Update-TerminationSettingsVisibility call since it's handled by the SelectionChanged events
     }
 }
 
