@@ -2,11 +2,13 @@ class ConfigEditorState {
     # Properties
     [string]$ConfigPath
     [PSCustomObject]$ConfigData
+    [string]$OriginalConfigData
 
     # Constructor
     ConfigEditorState([string]$configPath) {
         $this.ConfigPath = $configPath
         $this.ConfigData = $null
+        $this.OriginalConfigData = $null
     }
 
     # Load configuration from file
@@ -148,6 +150,23 @@ class ConfigEditorState {
             # Fallback to simple array of existing apps
             $appIds = @($this.ConfigData.managedApps.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
             $this.ConfigData.managedApps | Add-Member -MemberType NoteProperty -Name "_order" -Value $appIds -Force
+        }
+    }
+
+    # Store original configuration for comparison
+    [void] SaveOriginalConfig() {
+        try {
+            if ($this.ConfigData) {
+                $this.OriginalConfigData = $this.ConfigData | ConvertTo-Json -Depth 10
+                Write-Verbose "Original configuration saved for change tracking"
+            } else {
+                Write-Verbose "No configuration data to save for change tracking"
+                $this.OriginalConfigData = $null
+            }
+        } catch {
+            Write-Warning "Failed to save original configuration: $($_.Exception.Message)"
+            $this.OriginalConfigData = $null
+            # Don't throw - this should not cause initialization to fail
         }
     }
 }
