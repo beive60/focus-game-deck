@@ -27,6 +27,32 @@ param(
 # Version: 1.1.0 - Dynamic Language Detection and English Support
 # Date: 2025-09-23
 
+. "$PSScriptRoot/ConfigEditor.State.ps1"
+. "$PSScriptRoot/ConfigEditor.UI.ps1"
+. "$PSScriptRoot/ConfigEditor.Events.ps1"
+
+try {
+    # 状態管理クラスを初期化
+    $stateManager = [ConfigEditor.State]::new()
+
+    # UI管理クラスを初期化（XAMLを読み込み、Windowオブジェクトを生成）
+    $uiManager = [ConfigEditor.UI]::new($stateManager.Messages)
+    $window = $uiManager.Window
+
+    # イベントハンドラクラスを初期化
+    $eventHandler = [ConfigEditor.Events]::new($uiManager, $stateManager)
+    $eventHandler.RegisterAll()
+
+    # データをUIにロード
+    $uiManager.LoadDataToUI($stateManager.ConfigData)
+
+    # ウィンドウを表示
+    $window.ShowDialog()
+
+} catch {
+    # エラー処理
+}
+
 # Import language helper functions
 $LanguageHelperPath = Join-Path (Split-Path $PSScriptRoot) "scripts/LanguageHelper.ps1"
 if (Test-Path $LanguageHelperPath) {
@@ -812,156 +838,6 @@ function Initialize-ConfigEditor {
             Write-Host "Debug: Failed to show error message: $($_.Exception.Message)" -ForegroundColor Red
             [System.Windows.MessageBox]::Show("Initialization error occurred: $($_.Exception.Message)", "Error", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
         }
-    }
-}
-
-# Load configuration from file
-function Load-Configuration {
-    param()
-
-    try {
-        if (Test-Path $script:ConfigPath) {
-            $jsonContent = Get-Content $script:ConfigPath -Raw -Encoding UTF8
-            $script:ConfigData = $jsonContent | ConvertFrom-Json
-            Write-Host "Loaded config from: $script:ConfigPath"
-        } else {
-            # Load from sample if config doesn't exist
-            $configSamplePath = Join-Path (Split-Path $PSScriptRoot) "config/config.json.sample"
-            if (Test-Path $configSamplePath) {
-                $jsonContent = Get-Content $configSamplePath -Raw -Encoding UTF8
-                $script:ConfigData = $jsonContent | ConvertFrom-Json
-                Write-Host "Loaded config from sample: $configSamplePath"
-            } else {
-                throw "configNotFound"
-            }
-        }
-
-        # Initialize games._order array for improved version
-        Initialize-GameOrder
-
-        # Initialize managedApps._order array for improved version
-        Initialize-AppOrder
-
-    } catch {
-        Show-SafeMessage -MessageKey "configLoadError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
-        # Create default config
-        $script:ConfigData = [PSCustomObject]@{
-            language    = ""
-            obs         = [PSCustomObject]@{
-                websocket    = [PSCustomObject]@{
-                    host     = "localhost"
-                    port     = 4455
-                    password = ""
-                }
-                replayBuffer = $true
-            }
-            managedApps = [PSCustomObject]@{}
-            games       = [PSCustomObject]@{}
-            paths       = [PSCustomObject]@{
-                steam = ""
-                obs   = ""
-            }
-        }
-    }
-}
-
-# Initialize games._order array with enhanced version structure
-function Initialize-GameOrder {
-    param()
-
-    try {
-        if (-not $script:ConfigData.games) {
-            $script:ConfigData.games = [PSCustomObject]@{}
-        }
-
-        # Check if _order exists and is valid
-        if (-not $script:ConfigData.games.PSObject.Properties['_order'] -or -not $script:ConfigData.games._order) {
-            Write-Host "games._order not found in config. Initializing." -ForegroundColor Yellow
-            $gameIds = @($script:ConfigData.games.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
-            $script:ConfigData.games | Add-Member -MemberType NoteProperty -Name "_order" -Value $gameIds -Force
-            Set-ConfigModified
-        } else {
-            # Validate existing _order against actual games
-            $existingGames = @($script:ConfigData.games.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
-            $validGameOrder = @()
-
-            # Keep games that exist in both _order and games
-            foreach ($gameId in $script:ConfigData.games._order) {
-                if ($gameId -in $existingGames) {
-                    $validGameOrder += $gameId
-                }
-            }
-
-            # Add games that exist but are not in _order
-            foreach ($gameId in $existingGames) {
-                if ($gameId -notin $validGameOrder) {
-                    $validGameOrder += $gameId
-                }
-            }
-
-            # Update _order if changes were made
-            if ($validGameOrder.Count -ne $script:ConfigData.games._order.Count -or
-                (@($validGameOrder) -ne @($script:ConfigData.games._order)).Length -gt 0) {
-                Write-Host "Fixed games._order inconsistencies" -ForegroundColor Yellow
-                $script:ConfigData.games._order = $validGameOrder
-                Set-ConfigModified
-            }
-        }
-    } catch {
-        Write-Error "Failed to initialize game order: $($_.Exception.Message)"
-        # Fallback to simple array of existing games
-        $gameIds = @($script:ConfigData.games.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
-        $script:ConfigData.games | Add-Member -MemberType NoteProperty -Name "_order" -Value $gameIds -Force
-    }
-}
-
-# Initialize managedApps._order array with enhanced version structure
-function Initialize-AppOrder {
-    param()
-
-    try {
-        if (-not $script:ConfigData.managedApps) {
-            $script:ConfigData.managedApps = [PSCustomObject]@{}
-        }
-
-        # Check if _order exists and is valid
-        if (-not $script:ConfigData.managedApps.PSObject.Properties['_order'] -or -not $script:ConfigData.managedApps._order) {
-            Write-Host "managedApps._order not found in config. Initializing." -ForegroundColor Yellow
-            $appIds = @($script:ConfigData.managedApps.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
-            $script:ConfigData.managedApps | Add-Member -MemberType NoteProperty -Name "_order" -Value $appIds -Force
-            Set-ConfigModified
-        } else {
-            # Validate existing _order against actual apps
-            $existingApps = @($script:ConfigData.managedApps.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
-            $validAppOrder = @()
-
-            # Keep apps that exist in both _order and managedApps
-            foreach ($appId in $script:ConfigData.managedApps._order) {
-                if ($appId -in $existingApps) {
-                    $validAppOrder += $appId
-                }
-            }
-
-            # Add apps that exist but are not in _order
-            foreach ($appId in $existingApps) {
-                if ($appId -notin $validAppOrder) {
-                    $validAppOrder += $appId
-                }
-            }
-
-            # Update _order if changes were made
-            if ($validAppOrder.Count -ne $script:ConfigData.managedApps._order.Count -or
-                (@($validAppOrder) -ne @($script:ConfigData.managedApps._order)).Length -gt 0) {
-                Write-Host "Fixed managedApps._order inconsistencies" -ForegroundColor Yellow
-                $script:ConfigData.managedApps._order = $validAppOrder
-                Set-ConfigModified
-            }
-        }
-    } catch {
-        Write-Error "Failed to initialize app order: $($_.Exception.Message)"
-        # Fallback to simple array of existing apps
-        $appIds = @($script:ConfigData.managedApps.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
-        $script:ConfigData.managedApps | Add-Member -MemberType NoteProperty -Name "_order" -Value $appIds -Force
     }
 }
 
@@ -2692,300 +2568,6 @@ function Handle-SaveConfig {
     }
 }
 
-# Save UI data back to config object
-function Save-UIDataToConfig {
-    param()
-
-    try {
-        # Ensure ConfigData exists before attempting to save
-        if (-not $script:ConfigData) {
-            throw "Configuration data is not loaded or is null"
-        }
-
-        # Save current game if selected
-        if ($script:CurrentGameId -and $script:CurrentGameId -ne "") {
-            Write-Verbose "Debug: Saving current game data for ID: $script:CurrentGameId"
-            Save-CurrentGameData
-        }
-
-        # Save current app if selected and valid
-        if ($script:CurrentAppId -and $script:CurrentAppId -ne "") {
-            # Check if the app ID still exists in the TextBox (it might have been cleared during deletion)
-            $appIdTextBox = $script:Window.FindName("AppIdTextBox")
-            if ($appIdTextBox -and $appIdTextBox.Text -and $appIdTextBox.Text -ne "") {
-                Write-Verbose "Debug: Saving current app data for ID: $script:CurrentAppId"
-                Save-CurrentAppData
-            } else {
-                Write-Verbose "Debug: Skipping app data save - App ID TextBox is empty (likely after deletion)"
-                $script:CurrentAppId = ""
-            }
-        }
-
-        # Save global settings
-        Write-Verbose "Debug: Saving global settings data"
-        Save-GlobalSettingsData
-
-    } catch {
-        Write-Error "Failed to save UI data to config: $($_.Exception.Message)"
-        throw
-    }
-}
-
-# Save current game data
-function Save-CurrentGameData {
-    param()
-
-    $gameId = $script:Window.FindName("GameIdTextBox").Text
-    $gameName = $script:Window.FindName("GameNameTextBox").Text
-    $processName = $script:Window.FindName("ProcessNameTextBox").Text
-
-    # Get platform selection
-    $platformCombo = $script:Window.FindName("PlatformComboBox")
-    $selectedPlatform = "steam"  # Default
-    if ($platformCombo.SelectedItem -and $platformCombo.SelectedItem.Tag) {
-        $selectedPlatform = $platformCombo.SelectedItem.Tag
-    }
-
-    # Get platform-specific IDs
-    $steamAppId = $script:Window.FindName("SteamAppIdTextBox").Text
-    $epicGameId = $script:Window.FindName("EpicGameIdTextBox").Text
-    $riotGameId = $script:Window.FindName("RiotGameIdTextBox").Text
-
-    # Get standalone executable path
-    $executablePath = $script:Window.FindName("ExecutablePathTextBox").Text
-
-    # Get selected apps to manage
-    $appsToManage = @()
-    $panel = $script:Window.FindName("AppsToManagePanel")
-    foreach ($child in $panel.Children) {
-        if ($child -is [System.Windows.Controls.CheckBox] -and $child.IsChecked) {
-            $appsToManage += $child.Content
-        }
-    }
-
-    # Update config data
-    if ($gameId -ne $script:CurrentGameId) {
-        # Game ID changed, remove old and add new
-        $oldGameData = $script:ConfigData.games.$script:CurrentGameId
-        $script:ConfigData.games.PSObject.Properties.Remove($script:CurrentGameId)
-        $script:ConfigData.games | Add-Member -MemberType NoteProperty -Name $gameId -Value $oldGameData
-    }
-
-    # Safely update basic game properties
-    $gameObject = $script:ConfigData.games.$gameId
-
-    # Ensure all basic properties exist
-    if (-not $gameObject.PSObject.Properties['name']) {
-        $gameObject | Add-Member -MemberType NoteProperty -Name 'name' -Value "" -Force
-    }
-    if (-not $gameObject.PSObject.Properties['platform']) {
-        $gameObject | Add-Member -MemberType NoteProperty -Name 'platform' -Value "steam" -Force
-    }
-    if (-not $gameObject.PSObject.Properties['processName']) {
-        $gameObject | Add-Member -MemberType NoteProperty -Name 'processName' -Value "" -Force
-    }
-    if (-not $gameObject.PSObject.Properties['appsToManage']) {
-        $gameObject | Add-Member -MemberType NoteProperty -Name 'appsToManage' -Value @() -Force
-    }
-
-    # Now safely set the values
-    $gameObject.name = $gameName
-    $gameObject.platform = $selectedPlatform
-    $gameObject.processName = $processName
-    $gameObject.appsToManage = $appsToManage
-
-    # Update platform-specific IDs - ensure properties exist before setting them
-    $gameObject = $script:ConfigData.games.$gameId
-
-    # Add properties if they don't exist
-    if (-not $gameObject.PSObject.Properties['steamAppId']) {
-        $gameObject | Add-Member -MemberType NoteProperty -Name 'steamAppId' -Value "" -Force
-    }
-    if (-not $gameObject.PSObject.Properties['epicGameId']) {
-        $gameObject | Add-Member -MemberType NoteProperty -Name 'epicGameId' -Value "" -Force
-    }
-    if (-not $gameObject.PSObject.Properties['riotGameId']) {
-        $gameObject | Add-Member -MemberType NoteProperty -Name 'riotGameId' -Value "" -Force
-    }
-
-    # Now safely set the values
-    $gameObject.steamAppId = $steamAppId
-    $gameObject.epicGameId = $epicGameId
-    $gameObject.riotGameId = $riotGameId
-
-    # Handle standalone platform executable path
-    if (-not $gameObject.PSObject.Properties['executablePath']) {
-        $gameObject | Add-Member -MemberType NoteProperty -Name 'executablePath' -Value "" -Force
-    }
-    $gameObject.executablePath = $executablePath
-}
-
-# Save current app data
-function Save-CurrentAppData {
-    param()
-
-    try {
-        # Get UI control values with validation
-        $appIdControl = $script:Window.FindName("AppIdTextBox")
-        $appPathControl = $script:Window.FindName("AppPathTextBox")
-        $processNameControl = $script:Window.FindName("AppProcessNameTextBox")
-        $argumentsControl = $script:Window.FindName("AppArgumentsTextBox")
-        $gameStartActionControl = $script:Window.FindName("GameStartActionCombo")
-        $gameEndActionControl = $script:Window.FindName("GameEndActionCombo")
-        $terminationMethodControl = $script:Window.FindName("TerminationMethodCombo")
-        $gracefulTimeoutControl = $script:Window.FindName("GracefulTimeoutTextBox")
-
-        if (-not $appIdControl) {
-            throw "AppIdTextBox control not found"
-        }
-
-        $appId = $appIdControl.Text
-        $appPath = if ($appPathControl) { $appPathControl.Text } else { "" }
-        $processName = if ($processNameControl) { $processNameControl.Text } else { "" }
-        $arguments = if ($argumentsControl) { $argumentsControl.Text } else { "" }
-        $gameStartAction = if ($gameStartActionControl -and $gameStartActionControl.SelectedItem) { $gameStartActionControl.SelectedItem } else { "none" }
-        $gameEndAction = if ($gameEndActionControl -and $gameEndActionControl.SelectedItem) { $gameEndActionControl.SelectedItem } else { "none" }
-        $terminationMethod = if ($terminationMethodControl -and $terminationMethodControl.SelectedItem) { $terminationMethodControl.SelectedItem } else { "auto" }
-        $gracefulTimeoutText = if ($gracefulTimeoutControl) { $gracefulTimeoutControl.Text } else { "3000" }
-
-        Write-Verbose "Debug: Saving app data - ID: '$appId', Path: '$appPath'"
-
-        # Validate app ID
-        if ([string]::IsNullOrWhiteSpace($appId)) {
-            throw "App ID cannot be empty"
-        }
-
-        # Ensure managedApps section exists
-        if (-not $script:ConfigData.managedApps) {
-            $script:ConfigData | Add-Member -MemberType NoteProperty -Name "managedApps" -Value ([PSCustomObject]@{}) -Force
-        }
-
-        # Update config data
-        if ($appId -ne $script:CurrentAppId -and -not [string]::IsNullOrEmpty($script:CurrentAppId)) {
-            # App ID changed, remove old and add new
-            Write-Verbose "Debug: App ID changed from '$script:CurrentAppId' to '$appId'"
-            if ($script:ConfigData.managedApps.PSObject.Properties[$script:CurrentAppId]) {
-                $oldAppData = $script:ConfigData.managedApps.$script:CurrentAppId
-                $script:ConfigData.managedApps.PSObject.Properties.Remove($script:CurrentAppId)
-                $script:ConfigData.managedApps | Add-Member -MemberType NoteProperty -Name $appId -Value $oldAppData -Force
-            }
-        }
-
-        # Ensure the app entry exists
-        if (-not $script:ConfigData.managedApps.PSObject.Properties[$appId]) {
-            Write-Verbose "Debug: Creating new app entry for '$appId'"
-            $script:ConfigData.managedApps | Add-Member -MemberType NoteProperty -Name $appId -Value ([PSCustomObject]@{}) -Force
-        }
-
-        # Update all properties
-        $appData = $script:ConfigData.managedApps.$appId
-        $appData | Add-Member -MemberType NoteProperty -Name "path" -Value $appPath -Force
-        $appData | Add-Member -MemberType NoteProperty -Name "processName" -Value $processName -Force
-        $appData | Add-Member -MemberType NoteProperty -Name "arguments" -Value $arguments -Force
-        $appData | Add-Member -MemberType NoteProperty -Name "gameStartAction" -Value $gameStartAction -Force
-        $appData | Add-Member -MemberType NoteProperty -Name "gameEndAction" -Value $gameEndAction -Force
-        $appData | Add-Member -MemberType NoteProperty -Name "terminationMethod" -Value $terminationMethod -Force
-
-        # Handle graceful timeout conversion
-        try {
-            $gracefulTimeoutInt = [int]$gracefulTimeoutText
-        } catch {
-            Write-Warning "Invalid graceful timeout value '$gracefulTimeoutText', using default 3000"
-            $gracefulTimeoutInt = 3000
-        }
-        $appData | Add-Member -MemberType NoteProperty -Name "gracefulTimeoutMs" -Value $gracefulTimeoutInt -Force
-
-        Write-Verbose "Debug: Successfully saved app data for '$appId'"
-
-    } catch {
-        Write-Error "Failed to save current app data: $($_.Exception.Message)"
-        throw
-    }
-}
-
-# Save global settings data
-function Save-GlobalSettingsData {
-    param()
-
-    # Ensure OBS section and subsections exist
-    if (-not $script:ConfigData.obs) {
-        $script:ConfigData | Add-Member -MemberType NoteProperty -Name "obs" -Value ([PSCustomObject]@{}) -Force
-    }
-    if (-not $script:ConfigData.obs.PSObject.Properties['websocket']) {
-        $script:ConfigData.obs | Add-Member -MemberType NoteProperty -Name "websocket" -Value ([PSCustomObject]@{}) -Force
-    }
-
-    # OBS Settings - safely set properties
-    $obsWebsocket = $script:ConfigData.obs.websocket
-    $obsWebsocket | Add-Member -MemberType NoteProperty -Name "host" -Value $script:Window.FindName("ObsHostTextBox").Text -Force
-    $obsWebsocket | Add-Member -MemberType NoteProperty -Name "port" -Value ([int]$script:Window.FindName("ObsPortTextBox").Text) -Force
-
-    # Handle password encryption
-    $passwordBox = $script:Window.FindName("ObsPasswordBox")
-    if ($passwordBox.Password -and $passwordBox.Password.Length -gt 0) {
-        # Convert plain text password to encrypted string for storage
-        $securePassword = ConvertTo-SecureString -String $passwordBox.Password -AsPlainText -Force
-        $obsWebsocket | Add-Member -MemberType NoteProperty -Name "password" -Value ($securePassword | ConvertFrom-SecureString) -Force
-    } else {
-        $obsWebsocket | Add-Member -MemberType NoteProperty -Name "password" -Value "" -Force
-    }
-
-    $script:ConfigData.obs | Add-Member -MemberType NoteProperty -Name "replayBuffer" -Value $script:Window.FindName("ReplayBufferCheckBox").IsChecked -Force
-
-    # Ensure paths section exists
-    if (-not $script:ConfigData.paths) {
-        $script:ConfigData | Add-Member -MemberType NoteProperty -Name "paths" -Value ([PSCustomObject]@{}) -Force
-    }
-
-    # Path Settings (Multi-Platform) - safely set properties
-    $paths = $script:ConfigData.paths
-    $paths | Add-Member -MemberType NoteProperty -Name "steam" -Value $script:Window.FindName("SteamPathTextBox").Text -Force
-    $paths | Add-Member -MemberType NoteProperty -Name "epic" -Value $script:Window.FindName("EpicPathTextBox").Text -Force
-    $paths | Add-Member -MemberType NoteProperty -Name "riot" -Value $script:Window.FindName("RiotPathTextBox").Text -Force
-    $paths | Add-Member -MemberType NoteProperty -Name "obs" -Value $script:Window.FindName("ObsPathTextBox").Text -Force
-
-    # Language Setting (language change detection is handled in real-time by event handler)
-    $languageCombo = $script:Window.FindName("LanguageCombo")
-    $selectedIndex = $languageCombo.SelectedIndex
-    $languageValue = switch ($selectedIndex) {
-        0 { "" }         # Auto (System Language)
-        1 { "zh-CN" }    # 简体中文
-        2 { "ja" }       # 日本語
-        3 { "en" }       # English
-        default { "" }
-    }
-    $script:ConfigData | Add-Member -MemberType NoteProperty -Name "language" -Value $languageValue -Force
-
-    # Initialize logging section if it doesn't exist
-    if (-not $script:ConfigData.logging) {
-        $script:ConfigData | Add-Member -MemberType NoteProperty -Name "logging" -Value ([PSCustomObject]@{})
-    }
-
-    # Log Retention Setting
-    $logRetentionCombo = $script:Window.FindName("LogRetentionCombo")
-    if ($logRetentionCombo -and $logRetentionCombo.SelectedItem) {
-        $selectedTag = $logRetentionCombo.SelectedItem.Tag
-        $retentionDays = [int]$selectedTag
-
-        # Add or update the logRetentionDays property
-        if ($script:ConfigData.logging.PSObject.Properties["logRetentionDays"]) {
-            $script:ConfigData.logging.logRetentionDays = $retentionDays
-        } else {
-            $script:ConfigData.logging | Add-Member -MemberType NoteProperty -Name "logRetentionDays" -Value $retentionDays
-        }
-    }
-
-    # Log Notarization Setting
-    $logNotarizationCheckBox = $script:Window.FindName("EnableLogNotarizationCheckBox")
-    if ($logNotarizationCheckBox) {
-        if ($script:ConfigData.logging.PSObject.Properties["enableNotarization"]) {
-            $script:ConfigData.logging.enableNotarization = $logNotarizationCheckBox.IsChecked
-        } else {
-            $script:ConfigData.logging | Add-Member -MemberType NoteProperty -Name "enableNotarization" -Value $logNotarizationCheckBox.IsChecked
-        }
-    }
-}
-
 # Initialize version display
 function Initialize-VersionDisplay {
     param()
@@ -3946,23 +3528,6 @@ function Test-HasUnsavedChanges {
     } catch {
         Write-Verbose "Warning: Error in Test-HasUnsavedChanges: $($_.Exception.Message)"
         return $false  # Default to no unsaved changes if there's an error
-    }
-}
-
-# Store original configuration for comparison
-function Save-OriginalConfig {
-    try {
-        if ($script:ConfigData) {
-            $script:OriginalConfigData = $script:ConfigData | ConvertTo-Json -Depth 10
-            Write-Verbose "Original configuration saved for change tracking"
-        } else {
-            Write-Verbose "No configuration data to save for change tracking"
-            $script:OriginalConfigData = $null
-        }
-    } catch {
-        Write-Warning "Failed to save original configuration: $($_.Exception.Message)"
-        $script:OriginalConfigData = $null
-        # Don't throw - this should not cause initialization to fail
     }
 }
 
