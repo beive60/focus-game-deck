@@ -157,7 +157,7 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="30"/>
                                 <RowDefinition Height="*"/>
-                                <RowDefinition Height="40"/>
+                                <RowDefinition Height="55"/>
                             </Grid.RowDefinitions>
 
                             <Label Grid.Row="0"
@@ -168,23 +168,62 @@
                                      Name="GamesList"
                                      Margin="0,5,0,5"/>
                             <StackPanel Grid.Row="2"
-                                        Orientation="Horizontal"
+                                        Orientation="Vertical"
                                         HorizontalAlignment="Center">
-                                <Button Name="AddGameButton"
-                                        Content="Add New..."
-                                        Width="80"
-                                        Height="25"
-                                        Margin="5"/>
-                                <Button Name="DuplicateGameButton"
-                                        Content="[DUPLICATE_BUTTON]"
-                                        Width="70"
-                                        Height="25"
-                                        Margin="5"/>
-                                <Button Name="DeleteGameButton"
-                                        Content="Delete"
-                                        Width="60"
-                                        Height="25"
-                                        Margin="5"/>
+                                <!-- Main action buttons -->
+                                <StackPanel Orientation="Horizontal"
+                                            HorizontalAlignment="Center"
+                                            Margin="0,0,0,5">
+                                    <Button Name="AddGameButton"
+                                            Content="Add New..."
+                                            Width="65"
+                                            Height="22"
+                                            Margin="2"/>
+                                    <Button Name="DuplicateGameButton"
+                                            Content="[DUPLICATE_BUTTON]"
+                                            Width="55"
+                                            Height="22"
+                                            Margin="2"/>
+                                    <Button Name="DeleteGameButton"
+                                            Content="Delete"
+                                            Width="50"
+                                            Height="22"
+                                            Margin="2"/>
+                                </StackPanel>
+
+                                <!-- Game order buttons -->
+                                <StackPanel Orientation="Horizontal"
+                                            HorizontalAlignment="Center"
+                                            Margin="0,0,0,0">
+                                    <Button Name="MoveGameTopButton"
+                                            Content="[moveTopButton]"
+                                            Width="41"
+                                            Height="22"
+                                            Margin="2"
+                                            ToolTip="[moveTopTooltip]"
+                                            FontSize="10"/>
+                                    <Button Name="MoveGameUpButton"
+                                            Content="[moveUpButton]"
+                                            Width="41"
+                                            Height="22"
+                                            Margin="2"
+                                            ToolTip="[moveUpTooltip]"
+                                            FontSize="10"/>
+                                    <Button Name="MoveGameDownButton"
+                                            Content="[moveDownButton]"
+                                            Width="41"
+                                            Height="22"
+                                            Margin="2"
+                                            ToolTip="[moveDownTooltip]"
+                                            FontSize="10"/>
+                                    <Button Name="MoveGameBottomButton"
+                                            Content="[moveBottomButton]"
+                                            Width="41"
+                                            Height="22"
+                                            Margin="2"
+                                            ToolTip="[moveBottomTooltip]"
+                                            FontSize="10"/>
+                                </StackPanel>
                             </StackPanel>
                         </Grid>
 
@@ -474,7 +513,7 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="30"/>
                                 <RowDefinition Height="*"/>
-                                <RowDefinition Height="40"/>
+                                <RowDefinition Height="55"/>
                             </Grid.RowDefinitions>
 
                             <Label Grid.Row="0"
@@ -485,23 +524,62 @@
                                      Name="ManagedAppsList"
                                      Margin="0,5,0,5"/>
                             <StackPanel Grid.Row="2"
-                                        Orientation="Horizontal"
+                                        Orientation="Vertical"
                                         HorizontalAlignment="Center">
-                                <Button Name="AddAppButton"
-                                        Content="Add New..."
-                                        Width="80"
-                                        Height="25"
-                                        Margin="5"/>
-                                <Button Name="DuplicateAppButton"
-                                        Content="[DUPLICATE_BUTTON]"
-                                        Width="70"
-                                        Height="25"
-                                        Margin="5"/>
-                                <Button Name="DeleteAppButton"
-                                        Content="Delete"
-                                        Width="60"
-                                        Height="25"
-                                        Margin="5"/>
+                                <!-- Main action buttons -->
+                                <StackPanel Orientation="Horizontal"
+                                            HorizontalAlignment="Center"
+                                            Margin="0,0,0,5">
+                                    <Button Name="AddAppButton"
+                                            Content="Add New..."
+                                            Width="65"
+                                            Height="22"
+                                            Margin="2"/>
+                                    <Button Name="DuplicateAppButton"
+                                            Content="[DUPLICATE_BUTTON]"
+                                            Width="55"
+                                            Height="22"
+                                            Margin="2"/>
+                                    <Button Name="DeleteAppButton"
+                                            Content="Delete"
+                                            Width="50"
+                                            Height="22"
+                                            Margin="2"/>
+                                </StackPanel>
+
+                                <!-- App order buttons -->
+                                <StackPanel Orientation="Horizontal"
+                                            HorizontalAlignment="Center"
+                                            Margin="0,0,0,0">
+                                    <Button Name="MoveAppTopButton"
+                                            Content="[moveTopButton]"
+                                            Width="41"
+                                            Height="22"
+                                            Margin="2"
+                                            ToolTip="[moveTopTooltip]"
+                                            FontSize="10"/>
+                                    <Button Name="MoveAppUpButton"
+                                            Content="[moveUpButton]"
+                                            Width="41"
+                                            Height="22"
+                                            Margin="2"
+                                            ToolTip="[moveUpTooltip]"
+                                            FontSize="10"/>
+                                    <Button Name="MoveAppDownButton"
+                                            Content="[moveDownButton]"
+                                            Width="41"
+                                            Height="22"
+                                            Margin="2"
+                                            ToolTip="[moveDownTooltip]"
+                                            FontSize="10"/>
+                                    <Button Name="MoveAppBottomButton"
+                                            Content="[moveBottomButton]"
+                                            Width="41"
+                                            Height="22"
+                                            Margin="2"
+                                            ToolTip="[moveBottomTooltip]"
+                                            FontSize="10"/>
+                                </StackPanel>
                             </StackPanel>
                         </Grid>
 

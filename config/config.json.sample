@@ -9,6 +9,14 @@
         "replayBuffer": true
     },
     "managedApps": {
+        "_order": [
+            "noWinKey",
+            "autoHotkey",
+            "clibor",
+            "luna",
+            "vtubeStudio",
+            "discord"
+        ],
         "noWinKey": {
             "path": "C:/Apps/NoWinKey/NoWinKey.exe",
             "processName": "NoWinKey",
@@ -83,6 +91,13 @@
         }
     },
     "games": {
+        "_order": [
+            "mock-calc",
+            "apex",
+            "dbd",
+            "genshin",
+            "valorant"
+        ],
         "mock-calc": {
             "name": "テスト用ゲーム (Calculator)",
             "platform": "standalone",
