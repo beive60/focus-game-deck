@@ -162,7 +162,15 @@
         "checkUpdateMenuItem": "アップデートを確認(&U)",
         "aboutMenuItem": "Focus Game Deck について(&A)",
         "aboutTitle": "Focus Game Deck について",
-        "aboutMessage": "Focus Game Deck\n\nバージョン: {0}\n\nマルチプラットフォーム対応のゲームランチャーとアプリケーション管理ツールです。"
+        "aboutMessage": "Focus Game Deck\n\nバージョン: {0}\n\nマルチプラットフォーム対応のゲームランチャーとアプリケーション管理ツールです。",
+        "moveTopButton": "⇈",
+        "moveUpButton": "↑",
+        "moveDownButton": "↓",
+        "moveBottomButton": "⇊",
+        "moveTopTooltip": "選択したゲームを一番上に移動",
+        "moveUpTooltip": "選択したゲームを上に移動",
+        "moveDownTooltip": "選択したゲームを下に移動",
+        "moveBottomTooltip": "選択したゲームを一番下に移動"
     },
     "en": {
         "textLabel": "Text",
@@ -327,7 +335,15 @@
         "checkUpdateMenuItem": "Check for &Updates",
         "aboutMenuItem": "&About Focus Game Deck",
         "aboutTitle": "About Focus Game Deck",
-        "aboutMessage": "Focus Game Deck\n\nVersion: {0}\n\nA multi-platform game launcher with application management capabilities."
+        "aboutMessage": "Focus Game Deck\n\nVersion: {0}\n\nA multi-platform game launcher with application management capabilities.",
+        "moveTopButton": "⇈",
+        "moveUpButton": "↑",
+        "moveDownButton": "↓",
+        "moveBottomButton": "⇊",
+        "moveTopTooltip": "Move selected game to top",
+        "moveUpTooltip": "Move selected game up",
+        "moveDownTooltip": "Move selected game down",
+        "moveBottomTooltip": "Move selected game to bottom"
     },
     "zh-CN": {
         "textLabel": "文本",
@@ -492,6 +508,14 @@
         "checkUpdateMenuItem": "检查更新(&U)",
         "aboutMenuItem": "关于 Focus Game Deck(&A)",
         "aboutTitle": "关于 Focus Game Deck",
-        "aboutMessage": "Focus Game Deck\n\n版本: {0}\n\n具有应用程序管理功能的多平台游戏启动器。"
+        "aboutMessage": "Focus Game Deck\n\n版本: {0}\n\n具有应用程序管理功能的多平台游戏启动器。",
+        "moveTopButton": "⇈",
+        "moveUpButton": "↑",
+        "moveDownButton": "↓",
+        "moveBottomButton": "⇊",
+        "moveTopTooltip": "将选定游戏移至顶部",
+        "moveUpTooltip": "将选定游戏向上移动",
+        "moveDownTooltip": "将选定游戏向下移动",
+        "moveBottomTooltip": "将选定游戏移至底部"
     }
 }
