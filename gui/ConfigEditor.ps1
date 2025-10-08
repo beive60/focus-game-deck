@@ -284,6 +284,10 @@ function Update-AllButtonTooltips {
             "BrowseEpicPathButton"       = "browseButton"
             "BrowseRiotPathButton"       = "browseButton"
             "BrowseObsPathButton"        = "browseButton"
+            "AutoDetectSteamButton"      = "autoDetectButton"
+            "AutoDetectEpicButton"       = "autoDetectButton"
+            "AutoDetectRiotButton"       = "autoDetectButton"
+            "AutoDetectObsButton"        = "autoDetectButton"
             "GenerateLaunchersButton"    = "generateLaunchers"
             # "CheckUpdateButton"       = "checkUpdateButton"  # Moved to menu
             "SaveGameSettingsButton"     = "saveButton"
@@ -538,6 +542,11 @@ function Replace-XamlPlaceholders {
             "[TOOLTIP_EPIC_GAME_ID]"       = Get-LocalizedMessage -Key "tooltipEpicGameId"
             "[TOOLTIP_RIOT_GAME_ID]"       = Get-LocalizedMessage -Key "tooltipRiotGameId"
             "[TOOLTIP_EXECUTABLE_PATH]"    = Get-LocalizedMessage -Key "tooltipExecutablePath"
+            "[TOOLTIP_LAUNCH_ARGUMENTS]"   = Get-LocalizedMessage -Key "tooltipLaunchArguments"
+            "[TOOLTIP_GAME_ACTIONS]"       = Get-LocalizedMessage -Key "tooltipGameActions"
+            "[TOOLTIP_APP_ID]"             = Get-LocalizedMessage -Key "tooltipAppId"
+            "[TOOLTIP_GAME_ID]"            = Get-LocalizedMessage -Key "tooltipGameId"
+            "[TOOLTIP_DISPLAY_NAME]"       = Get-LocalizedMessage -Key "tooltipDisplayName"
             "[LAUNCHER_WELCOME_TEXT]"      = Get-LocalizedMessage -Key "launcherWelcomeText"
             "[LAUNCHER_SUBTITLE_TEXT]"     = Get-LocalizedMessage -Key "launcherSubtitleText"
             "[REFRESH_BUTTON]"             = Get-LocalizedMessage -Key "refreshButton"
@@ -558,6 +567,11 @@ function Replace-XamlPlaceholders {
             "[moveUpTooltip]"              = Get-LocalizedMessage -Key "moveUpTooltip"
             "[moveDownTooltip]"            = Get-LocalizedMessage -Key "moveDownTooltip"
             "[moveBottomTooltip]"          = Get-LocalizedMessage -Key "moveBottomTooltip"
+            "[AUTO_DETECT_BUTTON]"         = Get-LocalizedMessage -Key "autoDetectButton"
+            "[AUTO_DETECT_STEAM_TOOLTIP]"  = Get-LocalizedMessage -Key "autoDetectSteamTooltip"
+            "[AUTO_DETECT_EPIC_TOOLTIP]"   = Get-LocalizedMessage -Key "autoDetectEpicTooltip"
+            "[AUTO_DETECT_RIOT_TOOLTIP]"   = Get-LocalizedMessage -Key "autoDetectRiotTooltip"
+            "[AUTO_DETECT_OBS_TOOLTIP]"    = Get-LocalizedMessage -Key "autoDetectObsTooltip"
         }
 
         # Replace all placeholders
@@ -1345,6 +1359,27 @@ function Setup-EventHandlers {
     $browseExecutablePathButton = $script:Window.FindName("BrowseExecutablePathButton")
     if ($browseExecutablePathButton) {
         $browseExecutablePathButton.add_Click({ Handle-BrowseExecutablePath })
+    }
+
+    # Auto-detect button events
+    $autoDetectSteamButton = $script:Window.FindName("AutoDetectSteamButton")
+    if ($autoDetectSteamButton) {
+        $autoDetectSteamButton.add_Click({ Handle-AutoDetectPath -Platform "Steam" })
+    }
+
+    $autoDetectEpicButton = $script:Window.FindName("AutoDetectEpicButton")
+    if ($autoDetectEpicButton) {
+        $autoDetectEpicButton.add_Click({ Handle-AutoDetectPath -Platform "Epic" })
+    }
+
+    $autoDetectRiotButton = $script:Window.FindName("AutoDetectRiotButton")
+    if ($autoDetectRiotButton) {
+        $autoDetectRiotButton.add_Click({ Handle-AutoDetectPath -Platform "Riot" })
+    }
+
+    $autoDetectObsButton = $script:Window.FindName("AutoDetectObsButton")
+    if ($autoDetectObsButton) {
+        $autoDetectObsButton.add_Click({ Handle-AutoDetectPath -Platform "Obs" })
     }
 
     # Language selection change event
@@ -3452,6 +3487,262 @@ function Handle-CheckUpdate {
         if ($checkUpdateButton) {
             $checkUpdateButton.IsEnabled = $true
             Set-ButtonContentWithTooltip -Button $checkUpdateButton -FullText (Get-LocalizedMessage -Key "checkUpdateButton")
+        }
+    }
+}
+
+<#
+.SYNOPSIS
+    Handles automatic path detection for platform executables
+
+.DESCRIPTION
+    Performs automatic detection of platform executable paths based on user request.
+    Searches common installation directories and registry entries to locate executables.
+    Provides user feedback during the detection process and allows selection when
+    multiple installations are found.
+
+.PARAMETER Platform
+    The platform to detect: "Steam", "Epic", "Riot", or "Obs"
+#>
+function Handle-AutoDetectPath {
+    param(
+        [Parameter(Mandatory)]
+        [ValidateSet("Steam", "Epic", "Riot", "Obs")]
+        [string]$Platform
+    )
+
+    try {
+        # Get UI elements
+        $platformLower = $Platform.ToLower()
+        $textBoxName = "${Platform}PathTextBox"
+        $buttonName = "AutoDetect${Platform}Button"
+
+        $textBox = $script:Window.FindName($textBoxName)
+        $button = $script:Window.FindName($buttonName)
+
+        if (-not $textBox -or -not $button) {
+            Write-Warning "UI elements not found for platform: $Platform"
+            return
+        }
+
+        # Disable button and show progress
+        $button.IsEnabled = $false
+        $originalButtonContent = $button.Content
+        $button.Content = Get-LocalizedMessage -Key "autoDetectInProgress"
+
+        # Define search parameters for each platform
+        $searchConfig = @{
+            "Steam" = @{
+                ExecutableName    = "steam.exe"
+                RegistryPaths     = @(
+                    "HKLM:\SOFTWARE\WOW6432Node\Valve\Steam",
+                    "HKLM:\SOFTWARE\Valve\Steam",
+                    "HKCU:\SOFTWARE\Valve\Steam"
+                )
+                RegistryValueName = "InstallPath"
+                CommonPaths       = @(
+                    "${env:ProgramFiles}\Steam",
+                    "${env:ProgramFiles(x86)}\Steam",
+                    "C:\Program Files\Steam",
+                    "C:\Program Files (x86)\Steam"
+                )
+            }
+            "Epic"  = @{
+                ExecutableName    = "EpicGamesLauncher.exe"
+                RegistryPaths     = @(
+                    "HKLM:\SOFTWARE\WOW6432Node\Epic Games\EpicGamesLauncher",
+                    "HKLM:\SOFTWARE\Epic Games\EpicGamesLauncher"
+                )
+                RegistryValueName = "AppDataPath"
+                CommonPaths       = @(
+                    "${env:ProgramFiles}\Epic Games\Launcher\Engine\Binaries\Win64",
+                    "${env:ProgramFiles(x86)}\Epic Games\Launcher\Engine\Binaries\Win64",
+                    "C:\Program Files\Epic Games\Launcher\Engine\Binaries\Win64",
+                    "C:\Program Files (x86)\Epic Games\Launcher\Engine\Binaries\Win64"
+                )
+            }
+            "Riot"  = @{
+                ExecutableName    = "RiotClientServices.exe"
+                RegistryPaths     = @(
+                    "HKLM:\SOFTWARE\WOW6432Node\Riot Games\RiotGamesInstalls",
+                    "HKLM:\SOFTWARE\Riot Games\RiotGamesInstalls"
+                )
+                RegistryValueName = "Path"
+                CommonPaths       = @(
+                    "${env:ProgramFiles}\Riot Games\Riot Client",
+                    "${env:ProgramFiles(x86)}\Riot Games\Riot Client",
+                    "C:\Program Files\Riot Games\Riot Client",
+                    "C:\Program Files (x86)\Riot Games\Riot Client",
+                    "C:\Riot Games\Riot Client"
+                )
+            }
+            "Obs"   = @{
+                ExecutableName    = "obs64.exe"
+                RegistryPaths     = @(
+                    "HKLM:\SOFTWARE\WOW6432Node\OBS Studio",
+                    "HKLM:\SOFTWARE\OBS Studio"
+                )
+                RegistryValueName = "InstallLocation"
+                CommonPaths       = @(
+                    "${env:ProgramFiles}\obs-studio\bin\64bit",
+                    "${env:ProgramFiles(x86)}\obs-studio\bin\64bit",
+                    "C:\Program Files\obs-studio\bin\64bit",
+                    "C:\Program Files (x86)\obs-studio\bin\64bit"
+                )
+            }
+        }
+
+        $config = $searchConfig[$Platform]
+        if (-not $config) {
+            throw "Unsupported platform: $Platform"
+        }
+
+        Write-Verbose "Starting auto-detection for $Platform"
+        $foundPaths = @()
+
+        # Search in registry
+        foreach ($regPath in $config.RegistryPaths) {
+            try {
+                if (Test-Path $regPath) {
+                    $installPath = Get-ItemProperty -Path $regPath -Name $config.RegistryValueName -ErrorAction SilentlyContinue
+                    if ($installPath) {
+                        $fullPath = Join-Path $installPath.($config.RegistryValueName) $config.ExecutableName
+                        if (Test-Path $fullPath) {
+                            $foundPaths += $fullPath
+                            Write-Verbose "Found via registry: $fullPath"
+                        }
+                    }
+                }
+            } catch {
+                Write-Verbose "Registry search failed for $regPath : $($_.Exception.Message)"
+            }
+        }
+
+        # Search in common paths
+        foreach ($commonPath in $config.CommonPaths) {
+            try {
+                $expandedPath = [Environment]::ExpandEnvironmentVariables($commonPath)
+                $fullPath = Join-Path $expandedPath $config.ExecutableName
+                if (Test-Path $fullPath -and $fullPath -notin $foundPaths) {
+                    $foundPaths += $fullPath
+                    Write-Verbose "Found in common path: $fullPath"
+                }
+            } catch {
+                Write-Verbose "Common path search failed for $commonPath : $($_.Exception.Message)"
+            }
+        }
+
+        # Process results
+        if ($foundPaths.Count -eq 0) {
+            Show-SafeMessage -MessageKey "autoDetectFailed" -TitleKey "pathNotFound" -Arguments @($config.ExecutableName) -Icon Information
+        } elseif ($foundPaths.Count -eq 1) {
+            $textBox.Text = $foundPaths[0]
+            Set-ConfigModified
+            Show-SafeMessage -MessageKey "autoDetectSuccess" -TitleKey "info" -Arguments @($foundPaths[0]) -Icon Information
+        } else {
+            # Multiple paths found - let user choose
+            $selectedPath = Show-PathSelectionDialog -Paths $foundPaths -Platform $Platform
+            if ($selectedPath) {
+                $textBox.Text = $selectedPath
+                Set-ConfigModified
+                Show-SafeMessage -MessageKey "autoDetectSuccess" -TitleKey "info" -Arguments @($selectedPath) -Icon Information
+            }
+        }
+
+    } catch {
+        Write-Error "Auto-detection failed for $Platform : $($_.Exception.Message)"
+        Show-SafeMessage -MessageKey "autoDetectError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
+    } finally {
+        # Restore button state
+        if ($button) {
+            $button.IsEnabled = $true
+            $button.Content = $originalButtonContent
+        }
+    }
+}
+
+<#
+.SYNOPSIS
+    Shows a dialog for selecting from multiple detected paths
+
+.DESCRIPTION
+    When multiple installations are detected, presents a selection dialog
+    to allow the user to choose the preferred installation path.
+
+.PARAMETER Paths
+    Array of detected paths
+
+.PARAMETER Platform
+    The platform name for display purposes
+#>
+function Show-PathSelectionDialog {
+    param(
+        [Parameter(Mandatory)]
+        [string[]]$Paths,
+        [Parameter(Mandatory)]
+        [string]$Platform
+    )
+
+    try {
+        # Create selection dialog
+        $form = New-Object System.Windows.Forms.Form
+        $form.Text = Get-LocalizedMessage -Key "selectPath"
+        $form.Size = New-Object System.Drawing.Size(500, 300)
+        $form.StartPosition = "CenterParent"
+        $form.FormBorderStyle = "FixedDialog"
+        $form.MaximizeBox = $false
+        $form.MinimizeBox = $false
+
+        # Add label
+        $label = New-Object System.Windows.Forms.Label
+        $label.Text = Get-LocalizedMessage -Key "multiplePathsFound"
+        $label.Location = New-Object System.Drawing.Point(10, 10)
+        $label.Size = New-Object System.Drawing.Size(460, 30)
+        $form.Controls.Add($label)
+
+        # Add listbox
+        $listBox = New-Object System.Windows.Forms.ListBox
+        $listBox.Location = New-Object System.Drawing.Point(10, 45)
+        $listBox.Size = New-Object System.Drawing.Size(460, 150)
+        foreach ($path in $Paths) {
+            $listBox.Items.Add($path)
+        }
+        $listBox.SelectedIndex = 0
+        $form.Controls.Add($listBox)
+
+        # Add buttons
+        $okButton = New-Object System.Windows.Forms.Button
+        $okButton.Text = "OK"
+        $okButton.Location = New-Object System.Drawing.Point(310, 210)
+        $okButton.Size = New-Object System.Drawing.Size(75, 25)
+        $okButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+        $form.Controls.Add($okButton)
+
+        $cancelButton = New-Object System.Windows.Forms.Button
+        $cancelButton.Text = "Cancel"
+        $cancelButton.Location = New-Object System.Drawing.Point(395, 210)
+        $cancelButton.Size = New-Object System.Drawing.Size(75, 25)
+        $cancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+        $form.Controls.Add($cancelButton)
+
+        $form.AcceptButton = $okButton
+        $form.CancelButton = $cancelButton
+
+        # Show dialog
+        $result = $form.ShowDialog()
+        if ($result -eq [System.Windows.Forms.DialogResult]::OK -and $listBox.SelectedItem) {
+            return $listBox.SelectedItem.ToString()
+        }
+
+        return $null
+
+    } catch {
+        Write-Error "Failed to show path selection dialog: $($_.Exception.Message)"
+        # Fallback to first path
+        return $Paths[0]
+    } finally {
+        if ($form) {
+            $form.Dispose()
         }
     }
 }
