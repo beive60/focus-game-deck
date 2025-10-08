@@ -1404,77 +1404,6 @@ function Update-PlatformFields {
 
 <#
 .SYNOPSIS
-    Updates the enabled state of move buttons based on current selection
-
-.DESCRIPTION
-    Provides intelligent button state management by enabling/disabling move buttons
-    based on the current game selection position in the list.
-#>
-function Update-MoveButtonStates {
-    param()
-
-    try {
-        $gamesList = $script:Window.FindName("GamesList")
-        $selectedIndex = $gamesList.SelectedIndex
-        $totalItems = $gamesList.Items.Count
-
-        $moveTopButton = $script:Window.FindName("MoveGameTopButton")
-        $moveUpButton = $script:Window.FindName("MoveGameUpButton")
-        $moveDownButton = $script:Window.FindName("MoveGameDownButton")
-        $moveBottomButton = $script:Window.FindName("MoveGameBottomButton")
-
-        if ($selectedIndex -lt 0 -or $totalItems -le 1) {
-            # No selection or only one item - disable all buttons
-            if ($moveTopButton) { $moveTopButton.IsEnabled = $false }
-            if ($moveUpButton) { $moveUpButton.IsEnabled = $false }
-            if ($moveDownButton) { $moveDownButton.IsEnabled = $false }
-            if ($moveBottomButton) { $moveBottomButton.IsEnabled = $false }
-        } else {
-            # Enable/disable based on position
-            if ($moveTopButton) { $moveTopButton.IsEnabled = ($selectedIndex -gt 0) }
-            if ($moveUpButton) { $moveUpButton.IsEnabled = ($selectedIndex -gt 0) }
-            if ($moveDownButton) { $moveDownButton.IsEnabled = ($selectedIndex -lt ($totalItems - 1)) }
-            if ($moveBottomButton) { $moveBottomButton.IsEnabled = ($selectedIndex -lt ($totalItems - 1)) }
-        }
-    } catch {
-        Write-Warning "Failed to update move button states: $($_.Exception.Message)"
-    }
-}
-
-# Update managed app move button states
-function Update-MoveAppButtonStates {
-    param()
-
-    try {
-        $managedAppsList = $script:Window.FindName("ManagedAppsList")
-        $selectedIndex = $managedAppsList.SelectedIndex
-        $totalItems = $managedAppsList.Items.Count
-
-        $moveTopButton = $script:Window.FindName("MoveAppTopButton")
-        $moveUpButton = $script:Window.FindName("MoveAppUpButton")
-        $moveDownButton = $script:Window.FindName("MoveAppDownButton")
-        $moveBottomButton = $script:Window.FindName("MoveAppBottomButton")
-
-        if ($selectedIndex -lt 0 -or $totalItems -le 1) {
-            # No selection or only one item - disable all buttons
-            if ($moveTopButton) { $moveTopButton.IsEnabled = $false }
-            if ($moveUpButton) { $moveUpButton.IsEnabled = $false }
-            if ($moveDownButton) { $moveDownButton.IsEnabled = $false }
-            if ($moveBottomButton) { $moveBottomButton.IsEnabled = $false }
-        } else {
-            # Enable/disable based on position
-            if ($moveTopButton) { $moveTopButton.IsEnabled = ($selectedIndex -gt 0) }
-            if ($moveUpButton) { $moveUpButton.IsEnabled = ($selectedIndex -gt 0) }
-            if ($moveDownButton) { $moveDownButton.IsEnabled = ($selectedIndex -lt ($totalItems - 1)) }
-            if ($moveBottomButton) { $moveBottomButton.IsEnabled = ($selectedIndex -lt ($totalItems - 1)) }
-        }
-    } catch {
-        Write-Warning "Failed to update move app button states: $($_.Exception.Message)"
-    }
-}
-
-<#
-.SYNOPSIS
     Switches to the Game Settings tab for editing
 
 .DESCRIPTION
@@ -1717,57 +1646,6 @@ function Restart-ConfigEditor {
 # Global variable to track changes
 $script:HasUnsavedChanges = $false
 $script:OriginalConfigData = $null
-
-# Mark configuration as modified
-function Set-ConfigModified {
-    param([bool]$IsModified = $true)
-
-    try {
-        # Initialize the variable if it doesn't exist
-        if (-not (Get-Variable -Name "HasUnsavedChanges" -Scope Script -ErrorAction SilentlyContinue)) {
-            $script:HasUnsavedChanges = $false
-        }
-
-        $script:HasUnsavedChanges = $IsModified
-
-        # Update window title to show unsaved changes
-        if ($script:Window) {
-            try {
-                $baseTitle = Get-LocalizedMessage -Key "windowTitle"
-                if ($IsModified) {
-                    $script:Window.Title = "$baseTitle *"
-                } else {
-                    $script:Window.Title = $baseTitle
-                }
-            } catch {
-                Write-Verbose "Warning: Failed to update window title: $($_.Exception.Message)"
-                # Fallback title
-                if ($IsModified) {
-                    $script:Window.Title = "Focus Game Deck Configuration *"
-                } else {
-                    $script:Window.Title = "Focus Game Deck Configuration"
-                }
-            }
-        }
-    } catch {
-        Write-Verbose "Warning: Error in Set-ConfigModified: $($_.Exception.Message)"
-        # Don't throw - this should not cause initialization to fail
-    }
-}
-
-# Check if there are unsaved changes
-function Test-HasUnsavedChanges {
-    try {
-        # Initialize the variable if it doesn't exist
-        if (-not (Get-Variable -Name "HasUnsavedChanges" -Scope Script -ErrorAction SilentlyContinue)) {
-            $script:HasUnsavedChanges = $false
-        }
-        return $script:HasUnsavedChanges
-    } catch {
-        Write-Verbose "Warning: Error in Test-HasUnsavedChanges: $($_.Exception.Message)"
-        return $false  # Default to no unsaved changes if there's an error
-    }
-}
 
 # Start the application only if not suppressed
 if (-not $NoAutoStart) {
