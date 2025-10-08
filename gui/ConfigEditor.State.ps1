@@ -3,12 +3,28 @@ class ConfigEditorState {
     [string]$ConfigPath
     [PSCustomObject]$ConfigData
     [string]$OriginalConfigData
+    
+    # Additional properties for refactoring from global variables
+    [System.Windows.Window]$Window
+    [string]$CurrentGameId
+    [string]$CurrentAppId
+    [PSCustomObject]$Messages
+    [string]$CurrentLanguage
+    [bool]$HasUnsavedChanges
 
     # Constructor
     ConfigEditorState([string]$configPath) {
         $this.ConfigPath = $configPath
         $this.ConfigData = $null
         $this.OriginalConfigData = $null
+        
+        # Initialize additional properties
+        $this.Window = $null
+        $this.CurrentGameId = ""
+        $this.CurrentAppId = ""
+        $this.Messages = $null
+        $this.CurrentLanguage = "en"  # Default language
+        $this.HasUnsavedChanges = $false
     }
 
     # Load configuration from file
