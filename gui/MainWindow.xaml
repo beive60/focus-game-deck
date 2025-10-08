@@ -264,22 +264,42 @@
                                         <RowDefinition Height="30"/>
                                     </Grid.RowDefinitions>
 
-                                    <Label Grid.Row="0"
-                                           Grid.Column="0"
-                                           Name="GameIdLabel"
-                                           Content="Game ID:"
-                                           VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Row="0"
+                                                Grid.Column="0"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                ToolTip="[TOOLTIP_GAME_ID]">
+                                        <Label Name="GameIdLabel"
+                                               Content="Game ID:"
+                                               VerticalAlignment="Center"/>
+                                        <TextBlock Text="?"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0078D4"
+                                                   Margin="3,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="[TOOLTIP_GAME_ID]"/>
+                                    </StackPanel>
                                     <TextBox Grid.Row="0"
                                              Grid.Column="1"
                                              Name="GameIdTextBox"
                                              Margin="5"
                                              VerticalContentAlignment="Center"/>
 
-                                    <Label Grid.Row="1"
-                                           Grid.Column="0"
-                                           Name="GameNameLabel"
-                                           Content="Display Name:"
-                                           VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Row="1"
+                                                Grid.Column="0"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                ToolTip="[TOOLTIP_DISPLAY_NAME]">
+                                        <Label Name="GameNameLabel"
+                                               Content="Display Name:"
+                                               VerticalAlignment="Center"/>
+                                        <TextBlock Text="?"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0078D4"
+                                                   Margin="3,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="[TOOLTIP_DISPLAY_NAME]"/>
+                                    </StackPanel>
                                     <TextBox Grid.Row="1"
                                              Grid.Column="1"
                                              Name="GameNameTextBox"
@@ -617,11 +637,21 @@
                                         <RowDefinition Height="30"/>
                                     </Grid.RowDefinitions>
 
-                                    <Label Grid.Row="0"
-                                           Grid.Column="0"
-                                           Name="AppIdLabel"
-                                           Content="App ID:"
-                                           VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Row="0"
+                                                Grid.Column="0"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                ToolTip="[TOOLTIP_APP_ID]">
+                                        <Label Name="AppIdLabel"
+                                               Content="App ID:"
+                                               VerticalAlignment="Center"/>
+                                        <TextBlock Text="?"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0078D4"
+                                                   Margin="3,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="[TOOLTIP_APP_ID]"/>
+                                    </StackPanel>
                                     <TextBox Grid.Row="0"
                                              Grid.Column="1"
                                              Name="AppIdTextBox"
@@ -666,31 +696,61 @@
                                              Margin="5"
                                              VerticalContentAlignment="Center"/>
 
-                                    <Label Grid.Row="3"
-                                           Grid.Column="0"
-                                           Name="GameStartActionLabel"
-                                           Content="Game Start Action:"
-                                           VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Row="3"
+                                                Grid.Column="0"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                ToolTip="[TOOLTIP_GAME_ACTIONS]">
+                                        <Label Name="GameStartActionLabel"
+                                               Content="Game Start Action:"
+                                               VerticalAlignment="Center"/>
+                                        <TextBlock Text="?"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0078D4"
+                                                   Margin="3,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="[TOOLTIP_GAME_ACTIONS]"/>
+                                    </StackPanel>
                                     <ComboBox Grid.Row="3"
                                               Grid.Column="1"
                                               Name="GameStartActionCombo"
                                               Margin="5"/>
 
-                                    <Label Grid.Row="4"
-                                           Grid.Column="0"
-                                           Name="GameEndActionLabel"
-                                           Content="Game End Action:"
-                                           VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Row="4"
+                                                Grid.Column="0"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                ToolTip="[TOOLTIP_GAME_ACTIONS]">
+                                        <Label Name="GameEndActionLabel"
+                                               Content="Game End Action:"
+                                               VerticalAlignment="Center"/>
+                                        <TextBlock Text="?"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0078D4"
+                                                   Margin="3,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="[TOOLTIP_GAME_ACTIONS]"/>
+                                    </StackPanel>
                                     <ComboBox Grid.Row="4"
                                               Grid.Column="1"
                                               Name="GameEndActionCombo"
                                               Margin="5"/>
 
-                                    <Label Grid.Row="5"
-                                           Grid.Column="0"
-                                           Name="AppArgumentsLabel"
-                                           Content="Launch Arguments:"
-                                           VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Row="5"
+                                                Grid.Column="0"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                ToolTip="[TOOLTIP_LAUNCH_ARGUMENTS]">
+                                        <Label Name="AppArgumentsLabel"
+                                               Content="Launch Arguments:"
+                                               VerticalAlignment="Center"/>
+                                        <TextBlock Text="?"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0078D4"
+                                                   Margin="3,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="[TOOLTIP_LAUNCH_ARGUMENTS]"/>
+                                    </StackPanel>
                                     <TextBox Grid.Row="5"
                                              Grid.Column="1"
                                              Name="AppArgumentsTextBox"
@@ -928,6 +988,8 @@
                                         <ColumnDefinition Width="180"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="25"/>
                                     </Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="35"/>
@@ -952,6 +1014,21 @@
                                             Content="[BROWSE_BUTTON]"
                                             Width="70"
                                             Height="25"/>
+                                    <Button Grid.Row="0"
+                                            Grid.Column="3"
+                                            Name="AutoDetectSteamButton"
+                                            Content="[AUTO_DETECT_BUTTON]"
+                                            Width="70"
+                                            Height="25"
+                                            Margin="5,0,0,0"/>
+                                    <TextBlock Grid.Row="0"
+                                               Grid.Column="4"
+                                               Text="?"
+                                               FontWeight="Bold"
+                                               Foreground="#0078D4"
+                                               Margin="3,0,0,0"
+                                               VerticalAlignment="Center"
+                                               ToolTip="[AUTO_DETECT_STEAM_TOOLTIP]"/>
 
                                     <Label Grid.Row="1"
                                            Grid.Column="0"
@@ -969,6 +1046,21 @@
                                             Content="[BROWSE_BUTTON]"
                                             Width="70"
                                             Height="25"/>
+                                    <Button Grid.Row="1"
+                                            Grid.Column="3"
+                                            Name="AutoDetectEpicButton"
+                                            Content="[AUTO_DETECT_BUTTON]"
+                                            Width="70"
+                                            Height="25"
+                                            Margin="5,0,0,0"/>
+                                    <TextBlock Grid.Row="1"
+                                               Grid.Column="4"
+                                               Text="?"
+                                               FontWeight="Bold"
+                                               Foreground="#0078D4"
+                                               Margin="3,0,0,0"
+                                               VerticalAlignment="Center"
+                                               ToolTip="[AUTO_DETECT_EPIC_TOOLTIP]"/>
 
                                     <Label Grid.Row="2"
                                            Grid.Column="0"
@@ -986,6 +1078,21 @@
                                             Content="[BROWSE_BUTTON]"
                                             Width="70"
                                             Height="25"/>
+                                    <Button Grid.Row="2"
+                                            Grid.Column="3"
+                                            Name="AutoDetectRiotButton"
+                                            Content="[AUTO_DETECT_BUTTON]"
+                                            Width="70"
+                                            Height="25"
+                                            Margin="5,0,0,0"/>
+                                    <TextBlock Grid.Row="2"
+                                               Grid.Column="4"
+                                               Text="?"
+                                               FontWeight="Bold"
+                                               Foreground="#0078D4"
+                                               Margin="3,0,0,0"
+                                               VerticalAlignment="Center"
+                                               ToolTip="[AUTO_DETECT_RIOT_TOOLTIP]"/>
 
                                     <Label Grid.Row="3"
                                            Grid.Column="0"
@@ -1003,6 +1110,21 @@
                                             Content="[BROWSE_BUTTON]"
                                             Width="70"
                                             Height="25"/>
+                                    <Button Grid.Row="3"
+                                            Grid.Column="3"
+                                            Name="AutoDetectObsButton"
+                                            Content="[AUTO_DETECT_BUTTON]"
+                                            Width="70"
+                                            Height="25"
+                                            Margin="5,0,0,0"/>
+                                    <TextBlock Grid.Row="3"
+                                               Grid.Column="4"
+                                               Text="?"
+                                               FontWeight="Bold"
+                                               Foreground="#0078D4"
+                                               Margin="3,0,0,0"
+                                               VerticalAlignment="Center"
+                                               ToolTip="[AUTO_DETECT_OBS_TOOLTIP]"/>
                                 </Grid>
                             </GroupBox>
 
