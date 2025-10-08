@@ -550,6 +550,14 @@ function Replace-XamlPlaceholders {
             "[HELP_MENU_HEADER]"           = Get-LocalizedMessage -Key "helpMenuHeader"
             "[CHECK_UPDATE_MENU_ITEM]"     = Get-LocalizedMessage -Key "checkUpdateMenuItem"
             "[ABOUT_MENU_ITEM]"            = Get-LocalizedMessage -Key "aboutMenuItem"
+            "[moveTopButton]"              = Get-LocalizedMessage -Key "moveTopButton"
+            "[moveUpButton]"               = Get-LocalizedMessage -Key "moveUpButton"
+            "[moveDownButton]"             = Get-LocalizedMessage -Key "moveDownButton"
+            "[moveBottomButton]"           = Get-LocalizedMessage -Key "moveBottomButton"
+            "[moveTopTooltip]"             = Get-LocalizedMessage -Key "moveTopTooltip"
+            "[moveUpTooltip]"              = Get-LocalizedMessage -Key "moveUpTooltip"
+            "[moveDownTooltip]"            = Get-LocalizedMessage -Key "moveDownTooltip"
+            "[moveBottomTooltip]"          = Get-LocalizedMessage -Key "moveBottomTooltip"
         }
 
         # Replace all placeholders
@@ -813,6 +821,13 @@ function Load-Configuration {
                 throw "configNotFound"
             }
         }
+
+        # Initialize games._order array for improved version
+        Initialize-GameOrder
+
+        # Initialize managedApps._order array for improved version
+        Initialize-AppOrder
+
     } catch {
         Show-SafeMessage -MessageKey "configLoadError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
         # Create default config
@@ -833,6 +848,106 @@ function Load-Configuration {
                 obs   = ""
             }
         }
+    }
+}
+
+# Initialize games._order array with enhanced version structure
+function Initialize-GameOrder {
+    param()
+
+    try {
+        if (-not $script:ConfigData.games) {
+            $script:ConfigData.games = [PSCustomObject]@{}
+        }
+
+        # Check if _order exists and is valid
+        if (-not $script:ConfigData.games.PSObject.Properties['_order'] -or -not $script:ConfigData.games._order) {
+            Write-Host "games._order not found in config. Initializing." -ForegroundColor Yellow
+            $gameIds = @($script:ConfigData.games.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
+            $script:ConfigData.games | Add-Member -MemberType NoteProperty -Name "_order" -Value $gameIds -Force
+            Set-ConfigModified
+        } else {
+            # Validate existing _order against actual games
+            $existingGames = @($script:ConfigData.games.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
+            $validGameOrder = @()
+
+            # Keep games that exist in both _order and games
+            foreach ($gameId in $script:ConfigData.games._order) {
+                if ($gameId -in $existingGames) {
+                    $validGameOrder += $gameId
+                }
+            }
+
+            # Add games that exist but are not in _order
+            foreach ($gameId in $existingGames) {
+                if ($gameId -notin $validGameOrder) {
+                    $validGameOrder += $gameId
+                }
+            }
+
+            # Update _order if changes were made
+            if ($validGameOrder.Count -ne $script:ConfigData.games._order.Count -or
+                (@($validGameOrder) -ne @($script:ConfigData.games._order)).Length -gt 0) {
+                Write-Host "Fixed games._order inconsistencies" -ForegroundColor Yellow
+                $script:ConfigData.games._order = $validGameOrder
+                Set-ConfigModified
+            }
+        }
+    } catch {
+        Write-Error "Failed to initialize game order: $($_.Exception.Message)"
+        # Fallback to simple array of existing games
+        $gameIds = @($script:ConfigData.games.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
+        $script:ConfigData.games | Add-Member -MemberType NoteProperty -Name "_order" -Value $gameIds -Force
+    }
+}
+
+# Initialize managedApps._order array with enhanced version structure
+function Initialize-AppOrder {
+    param()
+
+    try {
+        if (-not $script:ConfigData.managedApps) {
+            $script:ConfigData.managedApps = [PSCustomObject]@{}
+        }
+
+        # Check if _order exists and is valid
+        if (-not $script:ConfigData.managedApps.PSObject.Properties['_order'] -or -not $script:ConfigData.managedApps._order) {
+            Write-Host "managedApps._order not found in config. Initializing." -ForegroundColor Yellow
+            $appIds = @($script:ConfigData.managedApps.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
+            $script:ConfigData.managedApps | Add-Member -MemberType NoteProperty -Name "_order" -Value $appIds -Force
+            Set-ConfigModified
+        } else {
+            # Validate existing _order against actual apps
+            $existingApps = @($script:ConfigData.managedApps.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
+            $validAppOrder = @()
+
+            # Keep apps that exist in both _order and managedApps
+            foreach ($appId in $script:ConfigData.managedApps._order) {
+                if ($appId -in $existingApps) {
+                    $validAppOrder += $appId
+                }
+            }
+
+            # Add apps that exist but are not in _order
+            foreach ($appId in $existingApps) {
+                if ($appId -notin $validAppOrder) {
+                    $validAppOrder += $appId
+                }
+            }
+
+            # Update _order if changes were made
+            if ($validAppOrder.Count -ne $script:ConfigData.managedApps._order.Count -or
+                (@($validAppOrder) -ne @($script:ConfigData.managedApps._order)).Length -gt 0) {
+                Write-Host "Fixed managedApps._order inconsistencies" -ForegroundColor Yellow
+                $script:ConfigData.managedApps._order = $validAppOrder
+                Set-ConfigModified
+            }
+        }
+    } catch {
+        Write-Error "Failed to initialize app order: $($_.Exception.Message)"
+        # Fallback to simple array of existing apps
+        $appIds = @($script:ConfigData.managedApps.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
+        $script:ConfigData.managedApps | Add-Member -MemberType NoteProperty -Name "_order" -Value $appIds -Force
     }
 }
 
@@ -1140,6 +1255,48 @@ function Setup-EventHandlers {
 
     $deleteGameButton = $script:Window.FindName("DeleteGameButton")
     $deleteGameButton.add_Click({ Handle-DeleteGame })
+
+    # Game order buttons
+    $moveGameTopButton = $script:Window.FindName("MoveGameTopButton")
+    if ($moveGameTopButton) {
+        $moveGameTopButton.add_Click({ Handle-MoveGame -Direction "Top" })
+    }
+
+    $moveGameUpButton = $script:Window.FindName("MoveGameUpButton")
+    if ($moveGameUpButton) {
+        $moveGameUpButton.add_Click({ Handle-MoveGame -Direction "Up" })
+    }
+
+    $moveGameDownButton = $script:Window.FindName("MoveGameDownButton")
+    if ($moveGameDownButton) {
+        $moveGameDownButton.add_Click({ Handle-MoveGame -Direction "Down" })
+    }
+
+    $moveGameBottomButton = $script:Window.FindName("MoveGameBottomButton")
+    if ($moveGameBottomButton) {
+        $moveGameBottomButton.add_Click({ Handle-MoveGame -Direction "Bottom" })
+    }
+
+    # Managed App order buttons
+    $moveAppTopButton = $script:Window.FindName("MoveAppTopButton")
+    if ($moveAppTopButton) {
+        $moveAppTopButton.add_Click({ Handle-MoveApp -Direction "Top" })
+    }
+
+    $moveAppUpButton = $script:Window.FindName("MoveAppUpButton")
+    if ($moveAppUpButton) {
+        $moveAppUpButton.add_Click({ Handle-MoveApp -Direction "Up" })
+    }
+
+    $moveAppDownButton = $script:Window.FindName("MoveAppDownButton")
+    if ($moveAppDownButton) {
+        $moveAppDownButton.add_Click({ Handle-MoveApp -Direction "Down" })
+    }
+
+    $moveAppBottomButton = $script:Window.FindName("MoveAppBottomButton")
+    if ($moveAppBottomButton) {
+        $moveAppBottomButton.add_Click({ Handle-MoveApp -Direction "Bottom" })
+    }
 
     # Platform selection event
     $platformCombo = $script:Window.FindName("PlatformComboBox")
@@ -1522,8 +1679,21 @@ function Update-GamesList {
     $gamesList.Items.Clear()
 
     if ($script:ConfigData.games) {
-        $script:ConfigData.games.PSObject.Properties | ForEach-Object {
-            $gamesList.Items.Add($_.Name)
+        # Use games._order for ordering if available
+        if ($script:ConfigData.games._order) {
+            foreach ($gameId in $script:ConfigData.games._order) {
+                # Verify the game still exists in the games object
+                if ($script:ConfigData.games.PSObject.Properties[$gameId]) {
+                    $gamesList.Items.Add($gameId)
+                }
+            }
+        } else {
+            # Fallback to original behavior if _order doesn't exist
+            $script:ConfigData.games.PSObject.Properties | ForEach-Object {
+                if ($_.Name -ne '_order') {
+                    $gamesList.Items.Add($_.Name)
+                }
+            }
         }
 
         # Auto-select the first game if games exist
@@ -1561,8 +1731,21 @@ function Update-ManagedAppsList {
     $managedAppsList.Items.Clear()
 
     if ($script:ConfigData.managedApps) {
-        $script:ConfigData.managedApps.PSObject.Properties | ForEach-Object {
-            $managedAppsList.Items.Add($_.Name)
+        # Use managedApps._order for ordering if available
+        if ($script:ConfigData.managedApps._order) {
+            foreach ($appId in $script:ConfigData.managedApps._order) {
+                # Verify the app still exists in the managedApps object
+                if ($script:ConfigData.managedApps.PSObject.Properties[$appId]) {
+                    $managedAppsList.Items.Add($appId)
+                }
+            }
+        } else {
+            # Fallback to original behavior if _order doesn't exist
+            $script:ConfigData.managedApps.PSObject.Properties | ForEach-Object {
+                if ($_.Name -ne '_order') {
+                    $managedAppsList.Items.Add($_.Name)
+                }
+            }
         }
 
         # Auto-select the first app if apps exist
@@ -1824,6 +2007,9 @@ function Handle-GameSelectionChanged {
             }
         }
     }
+
+    # Update move button states based on current selection
+    Update-MoveButtonStates
 }
 
 # Handle managed app selection changed
@@ -1861,6 +2047,12 @@ function Handle-AppSelectionChanged {
         $gameEndActionCombo.SelectedItem = $appData.gameEndAction
 
         # Remove duplicate Update-TerminationSettingsVisibility call since it's handled by the SelectionChanged events
+
+        # Update move button states
+        Update-MoveAppButtonStates
+    } else {
+        # No selection - disable all move buttons
+        Update-MoveAppButtonStates
     }
 }
 
@@ -1887,6 +2079,12 @@ function Handle-AddGame {
             processName    = ""
             appsToManage   = @()
         })
+
+    # Add to games._order array
+    if (-not $script:ConfigData.games._order) {
+        $script:ConfigData.games | Add-Member -MemberType NoteProperty -Name "_order" -Value @() -Force
+    }
+    $script:ConfigData.games._order += $newGameId
 
     Update-GamesList
 
@@ -1966,6 +2164,12 @@ function Handle-DeleteGame {
         $result = Show-SafeMessage -MessageKey "deleteGameConfirm" -TitleKey "confirmation" -Arguments @($selectedGame) -Button YesNo -Icon Question
         if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
             $script:ConfigData.games.PSObject.Properties.Remove($selectedGame)
+
+            # Remove from games._order array
+            if ($script:ConfigData.games._order) {
+                $script:ConfigData.games._order = $script:ConfigData.games._order | Where-Object { $_ -ne $selectedGame }
+            }
+
             Update-GamesList
 
             # Clear details
@@ -1983,6 +2187,192 @@ function Handle-DeleteGame {
 
             Show-SafeMessage -MessageKey "gameRemoved" -TitleKey "info"
         }
+    }
+}
+
+<#
+.SYNOPSIS
+    Moves the selected game in the games list order
+
+.DESCRIPTION
+    Provides enhanced game ordering functionality with comprehensive error handling,
+    button state management, and performance optimization. Supports Top, Up, Down,
+    and Bottom movement operations.
+
+.PARAMETER Direction
+    The direction to move the game: "Top", "Up", "Down", or "Bottom"
+#>
+function Handle-MoveGame {
+    param(
+        [ValidateSet("Top", "Up", "Down", "Bottom")]
+        [string]$Direction
+    )
+
+    try {
+        $gamesList = $script:Window.FindName("GamesList")
+        $selectedIndex = $gamesList.SelectedIndex
+        $selectedItem = $gamesList.SelectedItem
+
+        if ($selectedIndex -lt 0 -or -not $selectedItem) {
+            Write-Host "No game selected for moving" -ForegroundColor Yellow
+            Update-MoveButtonStates
+            return
+        }
+
+        # Ensure _order array exists
+        if (-not $script:ConfigData.games._order) {
+            Initialize-GameOrder
+        }
+
+        $orderArray = @($script:ConfigData.games._order)
+        $currentIndex = $orderArray.IndexOf($selectedItem)
+
+        if ($currentIndex -eq -1) {
+            Write-Warning "Selected game not found in _order array. Reinitializing order."
+            Initialize-GameOrder
+            Update-GamesList
+            return
+        }
+
+        # Calculate new index
+        $newIndex = switch ($Direction) {
+            "Top" { 0 }
+            "Up" { [Math]::Max(0, $currentIndex - 1) }
+            "Down" { [Math]::Min($orderArray.Length - 1, $currentIndex + 1) }
+            "Bottom" { $orderArray.Length - 1 }
+        }
+
+        # Skip if no movement needed
+        if ($newIndex -eq $currentIndex) {
+            Write-Host "Game '$selectedItem' is already at the target position" -ForegroundColor Yellow
+            Update-MoveButtonStates
+            return
+        }
+
+        # Perform efficient array reordering
+        $newArray = switch ($Direction) {
+            "Top" {
+                @($selectedItem) + ($orderArray | Where-Object { $_ -ne $selectedItem })
+            }
+            "Bottom" {
+                ($orderArray | Where-Object { $_ -ne $selectedItem }) + @($selectedItem)
+            }
+            default {
+                $tempArray = @()
+                for ($i = 0; $i -lt $orderArray.Length; $i++) {
+                    if ($i -eq $currentIndex) { continue }
+                    if ($i -eq $newIndex) {
+                        if ($newIndex -lt $currentIndex) {
+                            $tempArray += $selectedItem
+                            $tempArray += $orderArray[$i]
+                        } else {
+                            $tempArray += $orderArray[$i]
+                            $tempArray += $selectedItem
+                        }
+                    } else {
+                        $tempArray += $orderArray[$i]
+                    }
+                }
+                $tempArray
+            }
+        }
+
+        # Update configuration
+        $script:ConfigData.games._order = $newArray
+        Set-ConfigModified
+
+        # Update UI
+        Update-GamesList
+
+        # Restore selection to moved item
+        $gamesList.SelectedItem = $selectedItem
+        $gamesList.ScrollIntoView($selectedItem)
+
+        # Update button states
+        Update-MoveButtonStates
+
+        Write-Host "Moved '$selectedItem' $Direction successfully" -ForegroundColor Green
+
+    } catch {
+        Write-Error "Failed to move game: $($_.Exception.Message)"
+        # On error, attempt to restore UI state
+        try {
+            Update-GamesList
+            Update-MoveButtonStates
+        } catch {
+            Write-Error "Failed to restore UI after move error: $($_.Exception.Message)"
+        }
+    }
+}
+
+<#
+.SYNOPSIS
+    Updates the enabled state of move buttons based on current selection
+
+.DESCRIPTION
+    Provides intelligent button state management by enabling/disabling move buttons
+    based on the current game selection position in the list.
+#>
+function Update-MoveButtonStates {
+    param()
+
+    try {
+        $gamesList = $script:Window.FindName("GamesList")
+        $selectedIndex = $gamesList.SelectedIndex
+        $totalItems = $gamesList.Items.Count
+
+        $moveTopButton = $script:Window.FindName("MoveGameTopButton")
+        $moveUpButton = $script:Window.FindName("MoveGameUpButton")
+        $moveDownButton = $script:Window.FindName("MoveGameDownButton")
+        $moveBottomButton = $script:Window.FindName("MoveGameBottomButton")
+
+        if ($selectedIndex -lt 0 -or $totalItems -le 1) {
+            # No selection or only one item - disable all buttons
+            if ($moveTopButton) { $moveTopButton.IsEnabled = $false }
+            if ($moveUpButton) { $moveUpButton.IsEnabled = $false }
+            if ($moveDownButton) { $moveDownButton.IsEnabled = $false }
+            if ($moveBottomButton) { $moveBottomButton.IsEnabled = $false }
+        } else {
+            # Enable/disable based on position
+            if ($moveTopButton) { $moveTopButton.IsEnabled = ($selectedIndex -gt 0) }
+            if ($moveUpButton) { $moveUpButton.IsEnabled = ($selectedIndex -gt 0) }
+            if ($moveDownButton) { $moveDownButton.IsEnabled = ($selectedIndex -lt ($totalItems - 1)) }
+            if ($moveBottomButton) { $moveBottomButton.IsEnabled = ($selectedIndex -lt ($totalItems - 1)) }
+        }
+    } catch {
+        Write-Warning "Failed to update move button states: $($_.Exception.Message)"
+    }
+}
+
+# Update managed app move button states
+function Update-MoveAppButtonStates {
+    param()
+
+    try {
+        $managedAppsList = $script:Window.FindName("ManagedAppsList")
+        $selectedIndex = $managedAppsList.SelectedIndex
+        $totalItems = $managedAppsList.Items.Count
+
+        $moveTopButton = $script:Window.FindName("MoveAppTopButton")
+        $moveUpButton = $script:Window.FindName("MoveAppUpButton")
+        $moveDownButton = $script:Window.FindName("MoveAppDownButton")
+        $moveBottomButton = $script:Window.FindName("MoveAppBottomButton")
+
+        if ($selectedIndex -lt 0 -or $totalItems -le 1) {
+            # No selection or only one item - disable all buttons
+            if ($moveTopButton) { $moveTopButton.IsEnabled = $false }
+            if ($moveUpButton) { $moveUpButton.IsEnabled = $false }
+            if ($moveDownButton) { $moveDownButton.IsEnabled = $false }
+            if ($moveBottomButton) { $moveBottomButton.IsEnabled = $false }
+        } else {
+            # Enable/disable based on position
+            if ($moveTopButton) { $moveTopButton.IsEnabled = ($selectedIndex -gt 0) }
+            if ($moveUpButton) { $moveUpButton.IsEnabled = ($selectedIndex -gt 0) }
+            if ($moveDownButton) { $moveDownButton.IsEnabled = ($selectedIndex -lt ($totalItems - 1)) }
+            if ($moveBottomButton) { $moveBottomButton.IsEnabled = ($selectedIndex -lt ($totalItems - 1)) }
+        }
+    } catch {
+        Write-Warning "Failed to update move app button states: $($_.Exception.Message)"
     }
 }
 
@@ -2006,6 +2396,14 @@ function Handle-AddApp {
             gameEndAction   = "none"
             arguments       = ""
         })
+
+    # Add to order array
+    Initialize-AppOrder
+    if ($script:ConfigData.managedApps._order -is [Array]) {
+        $script:ConfigData.managedApps._order += $newAppId
+    } else {
+        $script:ConfigData.managedApps._order = @($newAppId)
+    }
 
     # Update all relevant lists and UI components
     Update-ManagedAppsList
@@ -2096,6 +2494,11 @@ function Handle-DeleteApp {
         if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
             $script:ConfigData.managedApps.PSObject.Properties.Remove($selectedApp)
 
+            # Remove from order array
+            if ($script:ConfigData.managedApps._order -is [Array]) {
+                $script:ConfigData.managedApps._order = @($script:ConfigData.managedApps._order | Where-Object { $_ -ne $selectedApp })
+            }
+
             # Clear current app ID if the deleted app was selected
             if ($script:CurrentAppId -eq $selectedApp) {
                 $script:CurrentAppId = ""
@@ -2112,6 +2515,110 @@ function Handle-DeleteApp {
             $script:Window.FindName("AppArgumentsTextBox").Text = ""
 
             Show-SafeMessage -MessageKey "appRemoved" -TitleKey "info"
+        }
+    }
+}
+
+# Handle move managed app
+function Handle-MoveApp {
+    param(
+        [ValidateSet("Top", "Up", "Down", "Bottom")]
+        [string]$Direction
+    )
+
+    try {
+        $managedAppsList = $script:Window.FindName("ManagedAppsList")
+        $selectedIndex = $managedAppsList.SelectedIndex
+        $selectedItem = $managedAppsList.SelectedItem
+
+        if ($selectedIndex -lt 0 -or -not $selectedItem) {
+            Write-Host "No app selected for moving" -ForegroundColor Yellow
+            Update-MoveAppButtonStates
+            return
+        }
+
+        # Ensure _order array exists
+        if (-not $script:ConfigData.managedApps._order) {
+            Initialize-AppOrder
+        }
+
+        $orderArray = @($script:ConfigData.managedApps._order)
+        $currentIndex = $orderArray.IndexOf($selectedItem)
+
+        if ($currentIndex -eq -1) {
+            Write-Warning "Selected app not found in _order array. Reinitializing order."
+            Initialize-AppOrder
+            Update-ManagedAppsList
+            return
+        }
+
+        # Calculate new index
+        $newIndex = switch ($Direction) {
+            "Top" { 0 }
+            "Up" { [Math]::Max(0, $currentIndex - 1) }
+            "Down" { [Math]::Min($orderArray.Length - 1, $currentIndex + 1) }
+            "Bottom" { $orderArray.Length - 1 }
+        }
+
+        # Skip if no movement needed
+        if ($newIndex -eq $currentIndex) {
+            Write-Host "App '$selectedItem' is already at the target position" -ForegroundColor Yellow
+            Update-MoveAppButtonStates
+            return
+        }
+
+        # Perform efficient array reordering
+        $newArray = switch ($Direction) {
+            "Top" {
+                @($selectedItem) + ($orderArray | Where-Object { $_ -ne $selectedItem })
+            }
+            "Bottom" {
+                ($orderArray | Where-Object { $_ -ne $selectedItem }) + @($selectedItem)
+            }
+            default {
+                $tempArray = @()
+                for ($i = 0; $i -lt $orderArray.Length; $i++) {
+                    if ($i -eq $currentIndex) { continue }
+                    if ($i -eq $newIndex) {
+                        if ($newIndex -lt $currentIndex) {
+                            $tempArray += $selectedItem
+                            $tempArray += $orderArray[$i]
+                        } else {
+                            $tempArray += $orderArray[$i]
+                            $tempArray += $selectedItem
+                        }
+                    } else {
+                        $tempArray += $orderArray[$i]
+                    }
+                }
+                $tempArray
+            }
+        }
+
+        # Update configuration
+        $script:ConfigData.managedApps._order = $newArray
+        Set-ConfigModified
+
+        # Update UI
+        Update-ManagedAppsList
+
+        # Restore selection to moved item
+        $managedAppsList.SelectedItem = $selectedItem
+        $managedAppsList.ScrollIntoView($selectedItem)
+
+        # Update button states
+        Update-MoveAppButtonStates
+
+        Write-Host "Moved '$selectedItem' $Direction successfully" -ForegroundColor Green
+
+    } catch {
+        Write-Error "Failed to move app: $($_.Exception.Message)"
+        # On error, attempt to restore UI state
+        try {
+            Update-ManagedAppsList
+            Update-MoveAppButtonStates
+        } catch {
+            Write-Error "Failed to restore UI after move error: $($_.Exception.Message)"
         }
     }
 }
@@ -2549,11 +3056,13 @@ function Update-GameLauncherList {
             return
         }
 
-        # Create game cards for each configured game
+        # Create game cards for each configured game in order
         $gameCount = 0
-        $script:ConfigData.games.PSObject.Properties | ForEach-Object {
-            $gameId = $_.Name
-            $gameData = $_.Value
+        $gameOrder = if ($script:ConfigData.games._order) { $script:ConfigData.games._order } else { @($script:ConfigData.games.PSObject.Properties.Name | Where-Object { $_ -ne '_order' }) }
+
+        foreach ($gameId in $gameOrder) {
+            if (-not $script:ConfigData.games.PSObject.Properties[$gameId]) { continue }
+            $gameData = $script:ConfigData.games.$gameId
             $platform = if ($gameData.platform) { $gameData.platform } else { "steam" }
 
             Write-Verbose "Creating game card for: $gameId (Name: $($gameData.name), Platform: $platform)"
