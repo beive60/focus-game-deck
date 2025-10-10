@@ -1058,4 +1058,72 @@ class ConfigEditorEvents {
             Show-SafeMessage -Key "launcherGenerationFailed" -MessageType "Error" -FormatArgs @($_.Exception.Message)
         }
     }
+    # Register all UI event handlers
+    [void] RegisterAll() {
+        try {
+            Write-Host "Registering all UI event handlers..." -ForegroundColor Yellow
+
+            # --- Window Events ---
+            $this.uiManager.Window.add_Closing({
+                    param($sender, $e)
+                    $this.HandleWindowClosing($e)
+                })
+
+            # --- Game Settings Tab ---
+            $this.uiManager.Window.FindName("GamesList").add_SelectionChanged({ $this.HandleGameSelectionChanged() })
+            $this.uiManager.Window.FindName("PlatformComboBox").add_SelectionChanged({ $this.HandlePlatformSelectionChanged() })
+            $this.uiManager.Window.FindName("AddGameButton").add_Click({ $this.HandleAddGame() })
+            $this.uiManager.Window.FindName("DuplicateGameButton").add_Click({ $this.HandleDuplicateGame() })
+            $this.uiManager.Window.FindName("DeleteGameButton").add_Click({ $this.HandleDeleteGame() })
+            $this.uiManager.Window.FindName("BrowseExecutablePathButton").add_Click({ $this.HandleBrowseExecutablePath() })
+            $this.uiManager.Window.FindName("SaveGameSettingsButton").add_Click({ $this.HandleSaveGameSettings() })
+
+            # Game order buttons
+            $this.uiManager.Window.FindName("MoveGameTopButton").add_Click({ $this.HandleMoveGame("Top") })
+            $this.uiManager.Window.FindName("MoveGameUpButton").add_Click({ $this.HandleMoveGame("Up") })
+            $this.uiManager.Window.FindName("MoveGameDownButton").add_Click({ $this.HandleMoveGame("Down") })
+            $this.uiManager.Window.FindName("MoveGameBottomButton").add_Click({ $this.HandleMoveGame("Bottom") })
+
+            # --- Managed Apps Tab ---
+            $this.uiManager.Window.FindName("ManagedAppsList").add_SelectionChanged({ $this.HandleAppSelectionChanged() })
+            $this.uiManager.Window.FindName("AddAppButton").add_Click({ $this.HandleAddApp() })
+            $this.uiManager.Window.FindName("DuplicateAppButton").add_Click({ $this.HandleDuplicateApp() })
+            $this.uiManager.Window.FindName("DeleteAppButton").add_Click({ $this.HandleDeleteApp() })
+            $this.uiManager.Window.FindName("BrowseAppPathButton").add_Click({ $this.HandleBrowseExecutablePath() }) # Note: This might need a specific handler if the target textbox is different
+            $this.uiManager.Window.FindName("SaveManagedAppsButton").add_Click({ $this.HandleSaveManagedApps() })
+
+            # App order buttons
+            $this.uiManager.Window.FindName("MoveAppTopButton").add_Click({ $this.HandleMoveApp("Top") })
+            $this.uiManager.Window.FindName("MoveAppUpButton").add_Click({ $this.HandleMoveApp("Up") })
+            $this.uiManager.Window.FindName("MoveAppDownButton").add_Click({ $this.HandleMoveApp("Down") })
+            $this.uiManager.Window.FindName("MoveAppBottomButton").add_Click({ $this.HandleMoveApp("Bottom") })
+
+            # --- Global Settings Tab ---
+            $this.uiManager.Window.FindName("LanguageCombo").add_SelectionChanged({ $this.HandleLanguageSelectionChanged() })
+            $this.uiManager.Window.FindName("SaveGlobalSettingsButton").add_Click({ $this.HandleSaveGlobalSettings() })
+
+            # Auto-detect buttons
+            $this.uiManager.Window.FindName("AutoDetectSteamButton").add_Click({ $this.HandleAutoDetectPath("Steam") })
+            $this.uiManager.Window.FindName("AutoDetectEpicButton").add_Click({ $this.HandleAutoDetectPath("Epic") })
+            $this.uiManager.Window.FindName("AutoDetectRiotButton").add_Click({ $this.HandleAutoDetectPath("Riot") })
+            $this.uiManager.Window.FindName("AutoDetectObsButton").add_Click({ $this.HandleAutoDetectPath("Obs") })
+
+            # --- Menu Items ---
+            $this.uiManager.Window.FindName("CheckUpdateMenuItem").add_Click({ $this.HandleCheckUpdate() })
+            $this.uiManager.Window.FindName("AboutMenuItem").add_Click({ $this.HandleAbout() })
+
+            # --- Launcher Tab ---
+            # Note: Launcher tab buttons might need specific handlers if they exist.
+            # Example:
+            # $this.uiManager.Window.FindName("RefreshGameListButton").add_Click({ $this.HandleRefreshGameList() })
+            # $this.uiManager.Window.FindName("AddNewGameButton").add_Click({ $this.HandleAddNewGameFromLauncher() })
+
+
+            Write-Host "All UI event handlers registered successfully." -ForegroundColor Green
+        } catch {
+            Write-Error "Failed to register event handlers: $($_.Exception.Message)"
+            # Optionally show an error message box to the user
+            Show-SafeMessage -MessageKey "initError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
+        }
+    }
 }
