@@ -157,6 +157,14 @@ function Initialize-ConfigEditor {
     } catch {
         Write-Host "=== INITIALIZATION FAILED ===" -ForegroundColor Red
         Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+        if ($_.InvocationInfo.ScriptName) {
+            $projectRoot = Split-Path $PSScriptRoot -Parent
+            $relativePath = $_.InvocationInfo.ScriptName -replace [regex]::Escape($projectRoot), "."
+            $relativePath = $relativePath -replace "\\", "/"  # Convert to forward slashes
+            Write-Host "Module: $relativePath" -ForegroundColor Red
+        } else {
+            Write-Host "Module: <Main Script>" -ForegroundColor Red
+        }
         Write-Host "Location: Line $($_.InvocationInfo.ScriptLineNumber)" -ForegroundColor Red
 
         try {
