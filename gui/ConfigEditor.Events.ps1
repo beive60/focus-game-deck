@@ -1122,8 +1122,19 @@ class ConfigEditorEvents {
             Write-Host "All UI event handlers registered successfully." -ForegroundColor Green
         } catch {
             Write-Error "Failed to register event handlers: $($_.Exception.Message)"
-            # Optionally show an error message box to the user
-            Show-SafeMessage -MessageKey "initError" -TitleKey "error" -Arguments @($_.Exception.Message) -Icon Error
+
+            # catchブロック内でUIの初期化失敗をユーザーに通知する
+            try {
+                $this.uiManager.ShowSafeMessage("initError", "Error", @($_.Exception.Message), "Error")
+            } catch {
+                # ShowSafeMessageも失敗した場合のフォールバック
+                [System.Windows.MessageBox]::Show(
+                    "Failed to register event handlers: $($_.Exception.Message)",
+                    "Initialization Error",
+                    [System.Windows.MessageBoxButton]::OK,
+                    [System.Windows.MessageBoxImage]::Error
+                )
+            }
         }
     }
 }
