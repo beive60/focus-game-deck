@@ -133,20 +133,82 @@ function Initialize-ConfigEditor {
         $localization = [ConfigEditorLocalization]::new()
 
         # Step 5: Initialize state manager with config path
+        Write-Host "Initializing state manager..." -ForegroundColor Yellow
         $stateManager = [ConfigEditorState]::new($script:ConfigPath)
         $stateManager.LoadConfiguration()
+
+        # Validate configuration data
+        if ($null -eq $stateManager.ConfigData) {
+            throw "Configuration data is null after loading"
+        }
+        Write-Host "Configuration data structure: $($stateManager.ConfigData.GetType().Name)" -ForegroundColor Yellow
+
         $stateManager.SaveOriginalConfig()
+        Write-Host "State manager initialized successfully" -ForegroundColor Green
 
         # Step 6: Initialize UI manager
-        $uiManager = [ConfigEditorUI]::new($stateManager)
-        $window = $uiManager.Window
+        Write-Host "Initializing UI manager..." -ForegroundColor Yellow
+        try {
+            Write-Host "DEBUG: Creating ConfigEditorUI instance..." -ForegroundColor Cyan
+            $uiManager = [ConfigEditorUI]::new($stateManager)
+            Write-Host "DEBUG: ConfigEditorUI instance created: $($null -ne $uiManager)" -ForegroundColor Cyan
+
+            if ($null -eq $uiManager) {
+                throw "Failed to create UI manager"
+            }
+
+            Write-Host "DEBUG: Checking uiManager.Window..." -ForegroundColor Cyan
+
+            if ($null -eq $uiManager.Window) {
+                Write-Host "DEBUG: uiManager.Window is null" -ForegroundColor Red
+                Write-Host "DEBUG: Available uiManager properties:" -ForegroundColor Cyan
+                $uiManager | Get-Member -MemberType Property | ForEach-Object {
+                    $propName = $_.Name
+                    try {
+                        $propValue = $uiManager.$propName
+                        Write-Host "  - $propName : $propValue" -ForegroundColor Cyan
+                    } catch {
+                        Write-Host "  - $propName : <Error accessing property>" -ForegroundColor Yellow
+                    }
+                }
+                throw "UI manager Window is null"
+            } else {
+                Write-Host "DEBUG: uiManager.Window type: $($uiManager.Window.GetType().Name)" -ForegroundColor Cyan
+            }
+
+            $window = $uiManager.Window
+            Write-Host "UI manager initialized successfully" -ForegroundColor Green
+        } catch {
+            Write-Host "DEBUG: UI Manager initialization error details:" -ForegroundColor Red
+            Write-Host "DEBUG: Error type: $($_.Exception.GetType().Name)" -ForegroundColor Red
+            Write-Host "DEBUG: Error message: $($_.Exception.Message)" -ForegroundColor Red
+            if ($_.Exception.InnerException) {
+                Write-Host "DEBUG: Inner exception: $($_.Exception.InnerException.Message)" -ForegroundColor Red
+            }
+            throw
+        }
 
         # Step 7: Initialize event handler
         $eventHandler = [ConfigEditorEvents]::new($uiManager, $stateManager)
         $eventHandler.RegisterAll()
 
         # Step 8: Load data to UI
-        $uiManager.LoadDataToUI($stateManager.ConfigData)
+        Write-Host "Loading data to UI..." -ForegroundColor Yellow
+        try {
+            if ($null -eq $uiManager) {
+                throw "UIManager is null"
+            }
+            if ($null -eq $stateManager.ConfigData) {
+                throw "ConfigData is null"
+            }
+            $uiManager.LoadDataToUI($stateManager.ConfigData)
+            Write-Host "Data loaded to UI successfully" -ForegroundColor Green
+        } catch {
+            Write-Host "Failed to load data to UI: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "UIManager exists: $($null -ne $uiManager)" -ForegroundColor Yellow
+            Write-Host "ConfigData exists: $($null -ne $stateManager.ConfigData)" -ForegroundColor Yellow
+            throw
+        }
 
         # Step 9: Show window
         Write-Host "Showing window..." -ForegroundColor Yellow
