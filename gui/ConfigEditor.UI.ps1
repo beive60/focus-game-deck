@@ -4,66 +4,136 @@ class ConfigEditorUI {
     [System.Windows.Window]$Window
     [string]$CurrentGameId
     [string]$CurrentAppId
-    [string[]]$Messages
+    [PSObject]$Messages
     [string]$CurrentLanguage
     [bool]$HasUnsavedChanges
 
     # Constructor
-    ConfigEditorUI([ConfigEditorState]$state) {
-        $this.State = $state
-        $this.Window = $null
-        $this.CurrentGameId = ""
-        $this.CurrentAppId = ""
-        $this.Messages = @()
-        $this.CurrentLanguage = "en"
-        $this.HasUnsavedChanges = $false
+    ConfigEditorUI([ConfigEditorState]$stateManager) {
+        try {
+            Write-Host "DEBUG: ConfigEditorUI constructor started" -ForegroundColor Cyan
+            $this.State = $stateManager
+            Write-Host "DEBUG: State manager assigned successfully" -ForegroundColor Cyan
+
+            # Load XAML
+            Write-Host "DEBUG: Loading XAML file..." -ForegroundColor Cyan
+            $xamlPath = Join-Path $PSScriptRoot "MainWindow.xaml"
+            Write-Host "DEBUG: XAML path: $xamlPath" -ForegroundColor Cyan
+
+            if (-not (Test-Path $xamlPath)) {
+                throw "XAML file not found: $xamlPath"
+            }
+            Write-Host "DEBUG: XAML file exists" -ForegroundColor Cyan
+
+            $xamlContent = Get-Content $xamlPath -Raw -Encoding UTF8
+            Write-Host "DEBUG: XAML content loaded, length: $($xamlContent.Length)" -ForegroundColor Cyan
+
+            # Parse XAML
+            Write-Host "DEBUG: Parsing XAML..." -ForegroundColor Cyan
+            $xmlReader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
+            $this.Window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
+            Write-Host "DEBUG: XAML parsed successfully" -ForegroundColor Cyan
+
+            if ($null -eq $this.Window) {
+                throw "Failed to create Window from XAML"
+            }
+            Write-Host "DEBUG: Window created successfully, type: $($this.Window.GetType().Name)" -ForegroundColor Cyan
+
+            # Initialize other components
+            $this.InitializeComponents()
+            Write-Host "DEBUG: ConfigEditorUI constructor completed successfully" -ForegroundColor Cyan
+
+        } catch {
+            Write-Host "DEBUG: ConfigEditorUI constructor failed: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "DEBUG: Exception type: $($_.Exception.GetType().Name)" -ForegroundColor Red
+            if ($_.Exception.InnerException) {
+                Write-Host "DEBUG: Inner exception: $($_.Exception.InnerException.Message)" -ForegroundColor Red
+            }
+            Write-Host "DEBUG: Stack trace: $($_.Exception.StackTrace)" -ForegroundColor Red
+            throw
+        }
     }
 
-    # Get localized message from messages array
-    [string]GetLocalizedMessage([string]$Key, [array]$Arguments = @()) {
-        if ($this.Messages -and $this.Messages.PSObject.Properties[$Key]) {
-            $message = $this.Messages.$Key
+    # Initialize UI components
+    [void]InitializeComponents() {
+        try {
+            Write-Host "DEBUG: InitializeComponents started" -ForegroundColor Cyan
 
-            # Replace placeholders if args provided
-            if ($Arguments.Length -gt 0) {
-                Write-Verbose "Debug: Processing message '$Key' with $($Arguments.Length) arguments"
-                Write-Verbose "Debug: Original message template: '$message'"
-                Write-Verbose "Debug: Message type: $($message.GetType().Name)"
+            # プロパティの初期化
+            $this.CurrentGameId = ""
+            $this.CurrentAppId = ""
+            $this.CurrentLanguage = "en"
+            $this.HasUnsavedChanges = $false
 
-                for ($i = 0; $i -lt $Arguments.Length; $i++) {
-                    $placeholder = "{$i}"
-                    $replacement = if ($null -ne $Arguments[$i]) {
-                        # Ensure safe string conversion - preserve newlines for proper message formatting
-                        [string]$Arguments[$i]
-                    } else {
-                        ""
-                    }
-
-                    Write-Verbose "Debug: Looking for placeholder '$placeholder' in message"
-                    Write-Verbose "Debug: Replacement value: '$replacement'"
-                    Write-Verbose "Debug: Message contains placeholder check: $($message -like "*$placeholder*")"
-
-                    # Use -replace operator with literal pattern matching for more reliable replacement
-                    if ($message -like "*$placeholder*") {
-                        $oldMessage = $message
-                        # Use literal string replacement to avoid regex interpretation issues
-                        $message = $message -replace [regex]::Escape($placeholder), $replacement
-                        Write-Verbose "Debug: Successfully replaced '$placeholder' with '$replacement'"
-                        Write-Verbose "Debug: Message before: '$oldMessage'"
-                        Write-Verbose "Debug: Message after:  '$message'"
-                    } else {
-                        Write-Verbose "Debug: Placeholder '$placeholder' not found in message template: '$message'"
-                    }
-                }
-                Write-Verbose "Debug: Final processed message: '$message'"
-            } else {
-                Write-Verbose "Debug: No arguments provided for message '$Key', returning original message"
+            # メッセージの初期化 - シンプルな初期化に変更
+            Write-Host "DEBUG: Initializing localization..." -ForegroundColor Cyan
+            try {
+                # 空のメッセージオブジェクトで初期化（フォールバック）
+                $this.Messages = @{}
+                Write-Host "DEBUG: Messages initialized with empty fallback" -ForegroundColor Cyan
+            } catch {
+                Write-Host "DEBUG: Localization initialization failed: $($_.Exception.Message)" -ForegroundColor Red
+                $this.Messages = @{}  # フォールバック
             }
 
-            return $message
-        } else {
-            # Fallback to English if message not found
-            Write-Warning "Debug: Message key '$Key' not found in current language messages"
+            # Window プロパティの初期化
+            $this.Window.DataContext = $this
+
+            Write-Host "DEBUG: InitializeComponents completed" -ForegroundColor Cyan
+        } catch {
+            Write-Host "DEBUG: InitializeComponents failed: $($_.Exception.Message)" -ForegroundColor Red
+            throw
+        }
+    }
+
+    # Add the missing GetLocalizedMessage method
+    <#
+    .SYNOPSIS
+        Gets a localized message for the specified key.
+
+    .DESCRIPTION
+        Retrieves a localized message from the messages collection or falls back to using the localization service.
+
+    .PARAMETER Key
+        The message key to retrieve.
+
+    .OUTPUTS
+        String
+            Returns the localized message string, or the key itself if no message is found.
+    #>
+    [string]GetLocalizedMessage([string]$Key) {
+        try {
+            # First try to get from cached messages
+            if ($this.Messages -and $this.Messages.ContainsKey($Key)) {
+                return $this.Messages[$Key]
+            }
+
+            # Fallback: try to get from localization service directly - but prevent recursion
+            try {
+                # Use a static flag to prevent infinite recursion
+                if (-not $script:LocalizationInProgress) {
+                    $script:LocalizationInProgress = $true
+
+                    $localization = [ConfigEditorLocalization]::new()
+                    if ($localization | Get-Member -Name "GetMessage" -MemberType Method) {
+                        $message = $localization.GetMessage($Key)
+                        $script:LocalizationInProgress = $false
+                        return $message
+                    }
+
+                    $script:LocalizationInProgress = $false
+                }
+            } catch {
+                $script:LocalizationInProgress = $false
+                Write-Verbose "Failed to get message from localization service: $($_.Exception.Message)"
+            }
+
+            # Final fallback: return the key itself
+            Write-Verbose "No localized message found for key: $Key"
+            return $Key
+        } catch {
+            $script:LocalizationInProgress = $false
+            Write-Verbose "Error getting localized message for key '$Key': $($_.Exception.Message)"
             return $Key
         }
     }
@@ -416,30 +486,34 @@ class ConfigEditorUI {
     }
 
     # Load data into UI controls
-    [void]LoadDataToUI([PSObject]$ConfigData, [scriptblock]$LoadGlobalSettingsCallback) {
-        # Load global settings first (this may update the current language)
-        # This is handled by callback since it's data layer responsibility
-        if ($LoadGlobalSettingsCallback) {
-            & $LoadGlobalSettingsCallback
+    [void]LoadDataToUI([PSObject]$ConfigData) {
+        try {
+            # グローバル設定の読み込み
+            $this.LoadGlobalSettings($ConfigData)
+
+            # UI テキストの更新
+            $this.UpdateUITexts($ConfigData)
+
+            # リストの更新
+            $this.UpdateGamesList($ConfigData)
+            $this.UpdateManagedAppsList($ConfigData)
+            $this.UpdateGameLauncherList($ConfigData)
+
+            # その他の初期化
+            $this.InitializeLauncherTabTexts()
+            $this.InitializeVersionDisplay()
+
+            Write-Verbose "Data loaded to UI successfully"
+        } catch {
+            Write-Error "Failed to load data to UI: $($_.Exception.Message)"
+            throw
         }
+    }
 
-        # Update UI text with current language (after global settings are loaded)
-        $this.UpdateUITexts($ConfigData)
-
-        # Load games list
-        $this.UpdateGamesList($ConfigData)
-
-        # Load managed apps list
-        $this.UpdateManagedAppsList($ConfigData)
-
-        # Initialize game launcher list
-        $this.UpdateGameLauncherList($ConfigData)
-
-        # Initialize launcher tab status texts
-        $this.InitializeLauncherTabTexts()
-
-        # Initialize version display
-        $this.InitializeVersionDisplay()
+    # グローバル設定の読み込みを独立したメソッドに
+    [void]LoadGlobalSettings([PSObject]$ConfigData) {
+        $callback = $this.CreateLoadGlobalSettingsCallback($ConfigData)
+        & $callback
     }
 
     # Update games list
@@ -465,10 +539,14 @@ class ConfigEditorUI {
                 }
             }
 
-            # Auto-select the first game if games exist
+            # Auto-select the first game if games exist - but don't trigger events manually
             if ($gamesList.Items.Count -gt 0) {
-                $gamesList.SelectedIndex = 0
-                # Note: Manual trigger of selection changed event should be handled externally
+                try {
+                    $gamesList.SelectedIndex = 0
+                    # Let the event handler system handle the selection change
+                } catch {
+                    Write-Verbose "Failed to set initial game selection: $($_.Exception.Message)"
+                }
             }
         }
     }
@@ -496,10 +574,14 @@ class ConfigEditorUI {
                 }
             }
 
-            # Auto-select the first app if apps exist
+            # Auto-select the first app if apps exist - but don't trigger events manually
             if ($managedAppsList.Items.Count -gt 0) {
-                $managedAppsList.SelectedIndex = 0
-                # Note: Manual trigger of selection changed event should be handled externally
+                try {
+                    $managedAppsList.SelectedIndex = 0
+                    # Let the event handler system handle the selection change
+                } catch {
+                    Write-Verbose "Failed to set initial app selection: $($_.Exception.Message)"
+                }
             }
         }
     }
@@ -595,5 +677,103 @@ class ConfigEditorUI {
         } catch {
             Write-Warning "Failed to initialize launcher tab texts: $($_.Exception.Message)"
         }
+    }
+
+    <#
+    .SYNOPSIS
+        Creates a callback function to load global settings into UI controls.
+
+    .DESCRIPTION
+        This function generates a scriptblock callback that loads global settings from the provided configuration data into the corresponding UI controls.
+
+    .PARAMETER ConfigData
+        The configuration data (as a PSObject) containing global settings to be loaded.
+
+    .OUTPUTS
+        ScriptBlock
+            Returns a scriptblock that performs the loading of global settings into the UI.
+
+    .EXAMPLE
+        $callback = New-GlobalSettingsLoader -ConfigData $config
+        $callback.Invoke()
+    #>
+    [scriptblock]CreateLoadGlobalSettingsCallback([PSObject]$ConfigData) {
+        return {
+            try {
+                Write-Verbose "Loading global settings into UI controls"
+
+                # Load OBS settings
+                if ($ConfigData.globalSettings.obs) {
+                    $hostTextBox = $this.Window.FindName("HostTextBox")
+                    if ($hostTextBox -and $ConfigData.globalSettings.obs.host) {
+                        $hostTextBox.Text = $ConfigData.globalSettings.obs.host
+                    }
+
+                    $portTextBox = $this.Window.FindName("PortTextBox")
+                    if ($portTextBox -and $ConfigData.globalSettings.obs.port) {
+                        $portTextBox.Text = $ConfigData.globalSettings.obs.port.ToString()
+                    }
+
+                    $passwordBox = $this.Window.FindName("PasswordBox")
+                    if ($passwordBox -and $ConfigData.globalSettings.obs.password) {
+                        $passwordBox.Password = $ConfigData.globalSettings.obs.password
+                    }
+
+                    $replayBufferCheckBox = $this.Window.FindName("ReplayBufferCheckBox")
+                    if ($replayBufferCheckBox) {
+                        $replayBufferCheckBox.IsChecked = $ConfigData.globalSettings.obs.enableReplayBuffer -eq $true
+                    }
+                }
+
+                # Load path settings
+                if ($ConfigData.globalSettings.paths) {
+                    $steamPathTextBox = $this.Window.FindName("SteamPathTextBox")
+                    if ($steamPathTextBox -and $ConfigData.globalSettings.paths.steam) {
+                        $steamPathTextBox.Text = $ConfigData.globalSettings.paths.steam
+                    }
+
+                    $epicPathTextBox = $this.Window.FindName("EpicPathTextBox")
+                    if ($epicPathTextBox -and $ConfigData.globalSettings.paths.epic) {
+                        $epicPathTextBox.Text = $ConfigData.globalSettings.paths.epic
+                    }
+
+                    $riotPathTextBox = $this.Window.FindName("RiotPathTextBox")
+                    if ($riotPathTextBox -and $ConfigData.globalSettings.paths.riot) {
+                        $riotPathTextBox.Text = $ConfigData.globalSettings.paths.riot
+                    }
+
+                    $obsPathTextBox = $this.Window.FindName("ObsPathTextBox")
+                    if ($obsPathTextBox -and $ConfigData.globalSettings.paths.obs) {
+                        $obsPathTextBox.Text = $ConfigData.globalSettings.paths.obs
+                    }
+                }
+
+                # Load general settings
+                if ($ConfigData.globalSettings) {
+                    # Load language setting and update current language
+                    $languageComboBox = $this.Window.FindName("LanguageComboBox")
+                    if ($languageComboBox -and $ConfigData.globalSettings.language) {
+                        $this.CurrentLanguage = $ConfigData.globalSettings.language
+                        $languageComboBox.SelectedValue = $ConfigData.globalSettings.language
+                    }
+
+                    # Load log retention setting
+                    $logRetentionTextBox = $this.Window.FindName("LogRetentionTextBox")
+                    if ($logRetentionTextBox -and $ConfigData.globalSettings.logRetentionDays) {
+                        $logRetentionTextBox.Text = $ConfigData.globalSettings.logRetentionDays.ToString()
+                    }
+
+                    # Load log notarization setting
+                    $enableLogNotarizationCheckBox = $this.Window.FindName("EnableLogNotarizationCheckBox")
+                    if ($enableLogNotarizationCheckBox) {
+                        $enableLogNotarizationCheckBox.IsChecked = $ConfigData.globalSettings.enableLogNotarization -eq $true
+                    }
+                }
+
+                Write-Verbose "Global settings loaded successfully"
+            } catch {
+                Write-Warning "Failed to load global settings: $($_.Exception.Message)"
+            }
+        }.GetNewClosure()
     }
 }
