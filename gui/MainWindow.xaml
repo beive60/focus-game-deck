@@ -162,7 +162,7 @@
 
                             <Label Grid.Row="0"
                                    Name="GamesListLabel"
-                                   Content="Games List"
+                                   Content="[GAMES_LIST_LABEL]"
                                    FontWeight="Bold"/>
                             <ListBox Grid.Row="1"
                                      Name="GamesList"
@@ -175,7 +175,7 @@
                                             HorizontalAlignment="Center"
                                             Margin="0,0,0,5">
                                     <Button Name="AddGameButton"
-                                            Content="Add New..."
+                                            Content="[ADD_BUTTON]"
                                             Width="65"
                                             Height="22"
                                             Margin="2"/>
@@ -185,7 +185,7 @@
                                             Height="22"
                                             Margin="2"/>
                                     <Button Name="DeleteGameButton"
-                                            Content="Delete"
+                                            Content="[DELETE_BUTTON]"
                                             Width="50"
                                             Height="22"
                                             Margin="2"/>
@@ -243,7 +243,7 @@
 
                                 <Label Grid.Row="0"
                                        Name="GameDetailsLabel"
-                                       Content="Selected Game Details"
+                                       Content="[GAME_DETAILS_LABEL]"
                                        FontWeight="Bold"
                                        FontSize="14"/>
 
@@ -270,7 +270,7 @@
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_GAME_ID]">
                                         <Label Name="GameIdLabel"
-                                               Content="Game ID:"
+                                               Content="[GAME_ID_LABEL]"
                                                VerticalAlignment="Center"/>
                                         <TextBlock Text="?"
                                                    FontWeight="Bold"
@@ -291,7 +291,7 @@
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_DISPLAY_NAME]">
                                         <Label Name="GameNameLabel"
-                                               Content="Display Name:"
+                                               Content="[GAME_NAME_LABEL]"
                                                VerticalAlignment="Center"/>
                                         <TextBlock Text="?"
                                                    FontWeight="Bold"
@@ -309,7 +309,7 @@
                                     <Label Grid.Row="2"
                                            Grid.Column="0"
                                            Name="PlatformLabel"
-                                           Content="Platform:"
+                                           Content="[PLATFORM_LABEL]"
                                            VerticalAlignment="Center"/>
                                     <ComboBox Grid.Row="2"
                                               Grid.Column="1"
@@ -331,7 +331,7 @@
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_STEAM_APP_ID]">
                                         <Label Name="SteamAppIdLabel"
-                                               Content="Steam AppID:"
+                                               Content="[STEAM_APP_ID_LABEL]"
                                                VerticalAlignment="Center"/>
                                         <TextBlock Text="?"
                                                    FontWeight="Bold"
@@ -353,7 +353,7 @@
                                                 Visibility="Collapsed"
                                                 ToolTip="[TOOLTIP_EPIC_GAME_ID]">
                                         <Label Name="EpicGameIdLabel"
-                                               Content="Epic GameID:"
+                                               Content="[EPIC_GAME_ID_LABEL]"
                                                VerticalAlignment="Center"/>
                                         <TextBlock Text="?"
                                                    FontWeight="Bold"
@@ -376,7 +376,7 @@
                                                 Visibility="Collapsed"
                                                 ToolTip="[TOOLTIP_RIOT_GAME_ID]">
                                         <Label Name="RiotGameIdLabel"
-                                               Content="Riot GameID:"
+                                               Content="[RIOT_GAME_ID_LABEL]"
                                                VerticalAlignment="Center"/>
                                         <TextBlock Text="?"
                                                    FontWeight="Bold"
@@ -400,7 +400,7 @@
                                                 Name="ExecutablePathLabelPanel"
                                                 ToolTip="[TOOLTIP_EXECUTABLE_PATH]">
                                         <Label Name="ExecutablePathLabel"
-                                               Content="Executable Path:"
+                                               Content="[EXECUTABLE_PATH_LABEL]"
                                                VerticalAlignment="Center"/>
                                         <TextBlock Text="?"
                                                    FontWeight="Bold"
@@ -435,7 +435,7 @@
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_PROCESS_NAME]">
                                         <Label Name="ProcessNameLabel"
-                                               Content="Process Name:"
+                                               Content="[PROCESS_NAME_LABEL]"
                                                VerticalAlignment="Center"/>
                                         <TextBlock Text="?"
                                                    FontWeight="Bold"
@@ -453,7 +453,7 @@
 
                                 <Label Grid.Row="2"
                                        Name="AppsToManageLabel"
-                                       Content="Apps to Manage:"
+                                       Content="[APPS_TO_MANAGE_LABEL]"
                                        FontWeight="Bold"
                                        Margin="0,10,0,5"/>
                                 <StackPanel Grid.Row="3"
@@ -469,7 +469,7 @@
 
                                     <Label Grid.Column="0"
                                            Name="LauncherTypeLabel2"
-                                           Content="Launcher Type:"
+                                           Content="[LAUNCHER_TYPE_LABEL]"
                                            VerticalAlignment="Center"/>
                                     <StackPanel Grid.Column="1"
                                                 Orientation="Horizontal"
@@ -538,7 +538,7 @@
 
                             <Label Grid.Row="0"
                                    Name="AppsListLabel"
-                                   Content="Apps List"
+                                   Content="[APPS_LIST_LABEL]"
                                    FontWeight="Bold"/>
                             <ListBox Grid.Row="1"
                                      Name="ManagedAppsList"
@@ -551,7 +551,7 @@
                                             HorizontalAlignment="Center"
                                             Margin="0,0,0,5">
                                     <Button Name="AddAppButton"
-                                            Content="Add New..."
+                                            Content="[ADD_BUTTON]"
                                             Width="65"
                                             Height="22"
                                             Margin="2"/>
@@ -561,7 +561,7 @@
                                             Height="22"
                                             Margin="2"/>
                                     <Button Name="DeleteAppButton"
-                                            Content="Delete"
+                                            Content="[DELETE_BUTTON]"
                                             Width="50"
                                             Height="22"
                                             Margin="2"/>
@@ -615,7 +615,7 @@
 
                                 <Label Grid.Row="0"
                                        Name="AppDetailsLabel"
-                                       Content="Selected App Details"
+                                       Content="[APP_DETAILS_LABEL]"
                                        FontWeight="Bold"
                                        FontSize="14"/>
 
@@ -643,7 +643,7 @@
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_APP_ID]">
                                         <Label Name="AppIdLabel"
-                                               Content="App ID:"
+                                               Content="[APP_ID_LABEL]"
                                                VerticalAlignment="Center"/>
                                         <TextBlock Text="?"
                                                    FontWeight="Bold"
@@ -661,7 +661,7 @@
                                     <Label Grid.Row="1"
                                            Grid.Column="0"
                                            Name="AppPathLabel"
-                                           Content="Executable Path:"
+                                           Content="[APP_PATH_LABEL]"
                                            VerticalAlignment="Center"/>
                                     <TextBox Grid.Row="1"
                                              Grid.Column="1"
@@ -681,7 +681,7 @@
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_PROCESS_NAME]">
                                         <Label Name="AppProcessNameLabel"
-                                               Content="Process Name:"
+                                               Content="[PROCESS_NAME_LABEL]"
                                                VerticalAlignment="Center"/>
                                         <TextBlock Text="?"
                                                    FontWeight="Bold"
@@ -702,7 +702,7 @@
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_GAME_ACTIONS]">
                                         <Label Name="GameStartActionLabel"
-                                               Content="Game Start Action:"
+                                               Content="[GAME_START_ACTION_LABEL]"
                                                VerticalAlignment="Center"/>
                                         <TextBlock Text="?"
                                                    FontWeight="Bold"
@@ -722,7 +722,7 @@
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_GAME_ACTIONS]">
                                         <Label Name="GameEndActionLabel"
-                                               Content="Game End Action:"
+                                               Content="[GAME_END_ACTION_LABEL]"
                                                VerticalAlignment="Center"/>
                                         <TextBlock Text="?"
                                                    FontWeight="Bold"
@@ -742,7 +742,7 @@
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_LAUNCH_ARGUMENTS]">
                                         <Label Name="AppArgumentsLabel"
-                                               Content="Launch Arguments:"
+                                               Content="[ARGUMENTS_LABEL]"
                                                VerticalAlignment="Center"/>
                                         <TextBlock Text="?"
                                                    FontWeight="Bold"
@@ -763,7 +763,7 @@
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_TERMINATION_METHOD]">
                                         <Label Name="TerminationMethodLabel"
-                                               Content="Termination Method:"
+                                               Content="[TERMINATION_METHOD_LABEL]"
                                                VerticalAlignment="Center"/>
                                         <TextBlock Text="?"
                                                    FontWeight="Bold"
@@ -783,7 +783,7 @@
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_GRACEFUL_TIMEOUT]">
                                         <Label Name="GracefulTimeoutLabel"
-                                               Content="Graceful Timeout (ms):"
+                                               Content="[GRACEFUL_TIMEOUT_LABEL]"
                                                VerticalAlignment="Center"/>
                                         <TextBlock Text="?"
                                                    FontWeight="Bold"
@@ -853,7 +853,7 @@
                                     <Label Grid.Row="0"
                                            Grid.Column="0"
                                            Name="LanguageLabel"
-                                           Content="Display Language:"
+                                           Content="[LANGUAGE_LABEL]"
                                            VerticalAlignment="Center"/>
                                     <ComboBox Grid.Row="0"
                                               Grid.Column="1"
@@ -865,7 +865,7 @@
                                     <Label Grid.Row="1"
                                            Grid.Column="0"
                                            Name="LauncherTypeLabel"
-                                           Content="Launcher Type:"
+                                           Content="[LAUNCHER_TYPE_LABEL]"
                                            VerticalAlignment="Center"/>
                                     <ComboBox Grid.Row="1"
                                               Grid.Column="1"
@@ -941,7 +941,7 @@
                                     <Label Grid.Row="0"
                                            Grid.Column="0"
                                            Name="HostLabel"
-                                           Content="Host:"
+                                           Content="[HOST_LABEL]"
                                            VerticalAlignment="Center"/>
                                     <TextBox Grid.Row="0"
                                              Grid.Column="1"
@@ -952,7 +952,7 @@
                                     <Label Grid.Row="0"
                                            Grid.Column="2"
                                            Name="PortLabel"
-                                           Content="Port:"
+                                           Content="[PORT_LABEL]"
                                            VerticalAlignment="Center"/>
                                     <TextBox Grid.Row="0"
                                              Grid.Column="3"
@@ -963,7 +963,7 @@
                                     <Label Grid.Row="1"
                                            Grid.Column="0"
                                            Name="PasswordLabel"
-                                           Content="Password:"
+                                           Content="[PASSWORD_LABEL]"
                                            VerticalAlignment="Center"/>
                                     <PasswordBox Grid.Row="1"
                                                  Grid.Column="1"
@@ -1001,7 +1001,7 @@
                                     <Label Grid.Row="0"
                                            Grid.Column="0"
                                            Name="SteamPathLabel"
-                                           Content="Steam.exe Path:"
+                                           Content="[STEAM_PATH_LABEL]"
                                            VerticalAlignment="Center"/>
                                     <TextBox Grid.Row="0"
                                              Grid.Column="1"
@@ -1033,7 +1033,7 @@
                                     <Label Grid.Row="1"
                                            Grid.Column="0"
                                            Name="EpicPathLabel"
-                                           Content="Epic Games Launcher Path:"
+                                           Content="[EPIC_PATH_LABEL]"
                                            VerticalAlignment="Center"/>
                                     <TextBox Grid.Row="1"
                                              Grid.Column="1"
@@ -1065,7 +1065,7 @@
                                     <Label Grid.Row="2"
                                            Grid.Column="0"
                                            Name="RiotPathLabel"
-                                           Content="Riot Client Path:"
+                                           Content="[RIOT_PATH_LABEL]"
                                            VerticalAlignment="Center"/>
                                     <TextBox Grid.Row="2"
                                              Grid.Column="1"
@@ -1097,7 +1097,7 @@
                                     <Label Grid.Row="3"
                                            Grid.Column="0"
                                            Name="ObsPathLabel"
-                                           Content="obs64.exe Path:"
+                                           Content="[OBS_PATH_LABEL]"
                                            VerticalAlignment="Center"/>
                                     <TextBox Grid.Row="3"
                                              Grid.Column="1"

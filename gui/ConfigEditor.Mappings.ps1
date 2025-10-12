@@ -100,6 +100,7 @@ $LabelMappings = @{
     "TerminationMethodLabel" = "terminationMethodLabel"
     "GracefulTimeoutLabel"   = "gracefulTimeoutLabel"
     "LauncherTypeLabel"      = "launcherTypeLabel"
+    "LauncherTypeLabel2"     = "launcherTypeLabel"
     "LogRetentionLabel"      = "logRetentionLabel"
     "ExecutablePathLabel"    = "executablePathLabel"
 }
