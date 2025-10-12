@@ -1,3 +1,6 @@
+# Import mappings at the top of the file
+. "$PSScriptRoot/ConfigEditor.Mappings.ps1"
+
 class ConfigEditorUI {
     # Properties
     [ConfigEditorState]$State
@@ -32,12 +35,25 @@ class ConfigEditorUI {
             Write-Host "DEBUG: Parsing XAML..." -ForegroundColor Cyan
             $xmlReader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
             $this.Window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
+            $xmlReader.Close()  # Properly close the XML reader
             Write-Host "DEBUG: XAML parsed successfully" -ForegroundColor Cyan
 
             if ($null -eq $this.Window) {
                 throw "Failed to create Window from XAML"
             }
             Write-Host "DEBUG: Window created successfully, type: $($this.Window.GetType().Name)" -ForegroundColor Cyan
+
+            # Set up proper window closing behavior
+            $this.Window.add_Closed({
+                param($sender, $e)
+                Write-Host "DEBUG: Window closed event triggered" -ForegroundColor Yellow
+                try {
+                    # Clean up resources
+                    $this.Cleanup()
+                } catch {
+                    Write-Warning "Error during cleanup: $($_.Exception.Message)"
+                }
+            })
 
             # Initialize other components
             $this.InitializeComponents()
@@ -54,29 +70,39 @@ class ConfigEditorUI {
         }
     }
 
-    # Initialize UI components
+    <#
+    .SYNOPSIS
+        Initializes UI components and sets default values.
+
+    .DESCRIPTION
+        Initializes properties, localization, and window data context for the ConfigEditor UI.
+        Sets up fallback values for localization if initialization fails.
+
+    .OUTPUTS
+        None
+    #>
     [void]InitializeComponents() {
         try {
             Write-Host "DEBUG: InitializeComponents started" -ForegroundColor Cyan
 
-            # プロパティの初期化
+            # Initialize properties
             $this.CurrentGameId = ""
             $this.CurrentAppId = ""
             $this.CurrentLanguage = "en"
             $this.HasUnsavedChanges = $false
 
-            # メッセージの初期化 - シンプルな初期化に変更
+            # Initialize messages - simplified initialization
             Write-Host "DEBUG: Initializing localization..." -ForegroundColor Cyan
             try {
-                # 空のメッセージオブジェクトで初期化（フォールバック）
+                # Initialize with empty message object (fallback)
                 $this.Messages = @{}
                 Write-Host "DEBUG: Messages initialized with empty fallback" -ForegroundColor Cyan
             } catch {
                 Write-Host "DEBUG: Localization initialization failed: $($_.Exception.Message)" -ForegroundColor Red
-                $this.Messages = @{}  # フォールバック
+                $this.Messages = @{}  # Fallback
             }
 
-            # Window プロパティの初期化
+            # Initialize Window properties
             $this.Window.DataContext = $this
 
             Write-Host "DEBUG: InitializeComponents completed" -ForegroundColor Cyan
@@ -86,7 +112,6 @@ class ConfigEditorUI {
         }
     }
 
-    # Add the missing GetLocalizedMessage method
     <#
     .SYNOPSIS
         Gets a localized message for the specified key.
@@ -138,7 +163,24 @@ class ConfigEditorUI {
         }
     }
 
-    # Helper function to measure button text width
+    <#
+    .SYNOPSIS
+        Measures the text width for a button.
+
+    .DESCRIPTION
+        Creates a temporary TextBlock to measure the actual rendered width of text for a button,
+        considering font properties and adding padding.
+
+    .PARAMETER Text
+        The text to measure.
+
+    .PARAMETER Button
+        The button whose font properties to use for measurement.
+
+    .OUTPUTS
+        Double
+            Returns the estimated width in pixels, including padding.
+    #>
     [double]MeasureButtonTextWidth([string]$Text, [System.Windows.Controls.Button]$Button) {
         if ([string]::IsNullOrEmpty($Text) -or -not $Button) {
             return 0
@@ -164,7 +206,51 @@ class ConfigEditorUI {
         }
     }
 
-    # Helper function to set button content with smart tooltip
+    <#
+    .SYNOPSIS
+        Gets a mapping variable from script scope.
+
+    .DESCRIPTION
+        Helper method to safely retrieve mapping variables from script scope since
+        class methods cannot directly access global variables.
+
+    .PARAMETER MappingName
+        The name of the mapping variable to retrieve.
+
+    .OUTPUTS
+        Hashtable
+            Returns the mapping hashtable or empty hashtable if not found.
+    #>
+    [hashtable]GetMappingFromScope([string]$MappingName) {
+        try {
+            $mapping = Get-Variable -Name $MappingName -Scope Script -ValueOnly -ErrorAction SilentlyContinue
+            if ($mapping -and $mapping -is [hashtable]) {
+                return $mapping
+            }
+            return @{}
+        } catch {
+            Write-Verbose "Failed to get mapping '$MappingName': $($_.Exception.Message)"
+            return @{}
+        }
+    }
+
+    <#
+    .SYNOPSIS
+        Sets button content with smart tooltip based on text width.
+
+    .DESCRIPTION
+        Sets the button content and intelligently determines whether a tooltip is needed
+        based on the text width compared to available button space.
+
+    .PARAMETER Button
+        The button to update.
+
+    .PARAMETER FullText
+        The full text to display and potentially use as tooltip.
+
+    .OUTPUTS
+        None
+    #>
     [void]SetButtonContentWithTooltip([System.Windows.Controls.Button]$Button, [string]$FullText) {
         if (-not $Button -or [string]::IsNullOrEmpty($FullText)) {
             return
@@ -224,245 +310,99 @@ class ConfigEditorUI {
         }
     }
 
-    # Helper function to apply smart tooltips to all buttons
-    [void]UpdateAllButtonTooltips() {
-        try {
-            # Define button name to message key mappings
-            $buttonMappings = @{
-                "AddGameButton"              = "addButton"
-                "DuplicateGameButton"        = "duplicateButton"
-                "DeleteGameButton"           = "deleteButton"
-                "AddAppButton"               = "addButton"
-                "DuplicateAppButton"         = "duplicateButton"
-                "DeleteAppButton"            = "deleteButton"
-                "BrowseAppPathButton"        = "browseButton"
-                "BrowseExecutablePathButton" = "browseButton"
-                "BrowseSteamPathButton"      = "browseButton"
-                "BrowseEpicPathButton"       = "browseButton"
-                "BrowseRiotPathButton"       = "browseButton"
-                "BrowseObsPathButton"        = "browseButton"
-                "AutoDetectSteamButton"      = "autoDetectButton"
-                "AutoDetectEpicButton"       = "autoDetectButton"
-                "AutoDetectRiotButton"       = "autoDetectButton"
-                "AutoDetectObsButton"        = "autoDetectButton"
-                "GenerateLaunchersButton"    = "generateLaunchers"
-                "SaveGameSettingsButton"     = "saveButton"
-                "SaveManagedAppsButton"      = "saveButton"
-                "SaveGlobalSettingsButton"   = "saveButton"
-            }
+    <#
+    .SYNOPSIS
+        Updates tooltips for a specific category of buttons.
 
-            # Apply smart tooltips to each button with full localized text
-            Write-Verbose "Debug: Starting tooltip update for $($buttonMappings.Count) buttons"
-            foreach ($buttonName in $buttonMappings.Keys) {
+    .DESCRIPTION
+        Updates button tooltips for buttons in a specific functional category, allowing for more granular control.
+
+    .PARAMETER CategoryName
+        The name of the button category for logging purposes.
+
+    .PARAMETER CategoryMappings
+        The hashtable containing the button mappings for this category.
+
+    .OUTPUTS
+        None
+    #>
+    [void]UpdateButtonCategory([string]$CategoryName, [hashtable]$CategoryMappings) {
+        try {
+            Write-Verbose "Debug: Updating $CategoryName buttons ($($CategoryMappings.Count) buttons)"
+
+            foreach ($buttonName in $CategoryMappings.Keys) {
                 $button = $this.Window.FindName($buttonName)
                 if ($button) {
-                    $messageKey = $buttonMappings[$buttonName]
+                    $messageKey = $CategoryMappings[$buttonName]
                     $fullText = $this.GetLocalizedMessage($messageKey)
-                    Write-Verbose "Debug: Processing button '$buttonName' with key '$messageKey' -> text '$fullText'"
+                    Write-Verbose "Debug: Processing $CategoryName button '$buttonName' with key '$messageKey' -> text '$fullText'"
                     $this.SetButtonContentWithTooltip($button, $fullText)
                 } else {
-                    Write-Verbose "Debug: Button '$buttonName' not found in window"
+                    Write-Verbose "Debug: $CategoryName button '$buttonName' not found in window"
                 }
             }
-
-            Write-Verbose "Debug: Button tooltip update completed"
         } catch {
-            Write-Warning "Failed to update button tooltips: $($_.Exception.Message)"
+            Write-Warning "Failed to update $CategoryName button category: $($_.Exception.Message)"
         }
     }
 
-    # Update UI texts based on current language
+    <#
+    .SYNOPSIS
+        Updates smart tooltips for all buttons using categorized mappings.
+
+    .DESCRIPTION
+        Applies smart tooltips to all buttons organized by functional categories from the mappings file.
+        Uses categorized approach for better maintainability and targeted updates.
+
+    .OUTPUTS
+        None
+    #>
+    [void]UpdateAllButtonTooltips() {
+        try {
+            Write-Verbose "Debug: Starting categorized tooltip update"
+
+            # Get mappings using helper method
+            $crudMappings = $this.GetMappingFromScope("CrudButtonMappings")
+            $browserMappings = $this.GetMappingFromScope("BrowserButtonMappings")
+            $autoDetectMappings = $this.GetMappingFromScope("AutoDetectButtonMappings")
+            $actionMappings = $this.GetMappingFromScope("ActionButtonMappings")
+            $movementMappings = $this.GetMappingFromScope("MovementButtonMappings")
+
+            # Update different button categories using imported mappings
+            if ($crudMappings.Count -gt 0) { $this.UpdateButtonCategory("Crud", $crudMappings) }
+            if ($browserMappings.Count -gt 0) { $this.UpdateButtonCategory("Browser", $browserMappings) }
+            if ($autoDetectMappings.Count -gt 0) { $this.UpdateButtonCategory("AutoDetect", $autoDetectMappings) }
+            if ($actionMappings.Count -gt 0) { $this.UpdateButtonCategory("Action", $actionMappings) }
+            if ($movementMappings.Count -gt 0) { $this.UpdateButtonCategory("Movement", $movementMappings) }
+
+            Write-Verbose "Debug: Categorized button tooltip update completed"
+        } catch {
+            Write-Warning "Failed to update button tooltips: $($_.Exception.Message)"
+        }
+    }    <#
+    .SYNOPSIS
+        Updates UI texts based on current language using mappings.
+
+    .DESCRIPTION
+        Updates all UI text elements (buttons, labels, tabs, etc.) using the centralized mapping system
+        for better maintainability and consistency.
+
+    .PARAMETER ConfigData
+        The configuration data containing language and other settings.
+
+    .OUTPUTS
+        None
+    #>
     [void]UpdateUITexts([PSObject]$ConfigData) {
         try {
             # Update window title
             $this.Window.Title = $this.GetLocalizedMessage("windowTitle")
 
-            # Update tab headers
-            $this.Window.FindName("GamesTab").Header = $this.GetLocalizedMessage("gamesTabHeader")
-            $this.Window.FindName("ManagedAppsTab").Header = $this.GetLocalizedMessage("managedAppsTabHeader")
-            $this.Window.FindName("GlobalSettingsTab").Header = $this.GetLocalizedMessage("globalSettingsTabHeader")
-
-            # Update buttons with smart tooltips
-            $addGameButton = $this.Window.FindName("AddGameButton")
-            if ($addGameButton) { $this.SetButtonContentWithTooltip($addGameButton, $this.GetLocalizedMessage("addButton")) }
-
-            $duplicateGameButton = $this.Window.FindName("DuplicateGameButton")
-            if ($duplicateGameButton) { $this.SetButtonContentWithTooltip($duplicateGameButton, $this.GetLocalizedMessage("duplicateButton")) }
-
-            $deleteGameButton = $this.Window.FindName("DeleteGameButton")
-            if ($deleteGameButton) { $this.SetButtonContentWithTooltip($deleteGameButton, $this.GetLocalizedMessage("deleteButton")) }
-
-            $addAppButton = $this.Window.FindName("AddAppButton")
-            if ($addAppButton) { $this.SetButtonContentWithTooltip($addAppButton, $this.GetLocalizedMessage("addButton")) }
-
-            $duplicateAppButton = $this.Window.FindName("DuplicateAppButton")
-            if ($duplicateAppButton) { $this.SetButtonContentWithTooltip($duplicateAppButton, $this.GetLocalizedMessage("duplicateButton")) }
-
-            $deleteAppButton = $this.Window.FindName("DeleteAppButton")
-            if ($deleteAppButton) { $this.SetButtonContentWithTooltip($deleteAppButton, $this.GetLocalizedMessage("deleteButton")) }
-
-            $applyButton = $this.Window.FindName("ApplyButton")
-            if ($applyButton) { $this.SetButtonContentWithTooltip($applyButton, $this.GetLocalizedMessage("applyButton")) }
-
-            $okButton = $this.Window.FindName("OKButton")
-            if ($okButton) { $this.SetButtonContentWithTooltip($okButton, $this.GetLocalizedMessage("okButton")) }
-
-            $cancelButton = $this.Window.FindName("CancelButton")
-            if ($cancelButton) { $this.SetButtonContentWithTooltip($cancelButton, $this.GetLocalizedMessage("cancelButton")) }
-
-            # Update tab-specific Save buttons
-            $saveGameSettingsButton = $this.Window.FindName("SaveGameSettingsButton")
-            if ($saveGameSettingsButton) { $this.SetButtonContentWithTooltip($saveGameSettingsButton, $this.GetLocalizedMessage("saveButton")) }
-
-            $saveManagedAppsButton = $this.Window.FindName("SaveManagedAppsButton")
-            if ($saveManagedAppsButton) { $this.SetButtonContentWithTooltip($saveManagedAppsButton, $this.GetLocalizedMessage("saveButton")) }
-
-            $saveGlobalSettingsButton = $this.Window.FindName("SaveGlobalSettingsButton")
-            if ($saveGlobalSettingsButton) { $this.SetButtonContentWithTooltip($saveGlobalSettingsButton, $this.GetLocalizedMessage("saveButton")) }
-
-            # Update labels - Games tab
-            $gamesListLabel = $this.Window.FindName("GamesListLabel")
-            if ($gamesListLabel) { $gamesListLabel.Content = $this.GetLocalizedMessage("gamesListLabel") }
-
-            $gameDetailsLabel = $this.Window.FindName("GameDetailsLabel")
-            if ($gameDetailsLabel) { $gameDetailsLabel.Content = $this.GetLocalizedMessage("gameDetailsLabel") }
-
-            $gameIdLabel = $this.Window.FindName("GameIdLabel")
-            if ($gameIdLabel) { $gameIdLabel.Content = $this.GetLocalizedMessage("gameIdLabel") }
-
-            $gameNameLabel = $this.Window.FindName("GameNameLabel")
-            if ($gameNameLabel) { $gameNameLabel.Content = $this.GetLocalizedMessage("gameNameLabel") }
-
-            $platformLabel = $this.Window.FindName("PlatformLabel")
-            if ($platformLabel) { $platformLabel.Content = $this.GetLocalizedMessage("platformLabel") }
-
-            $steamAppIdLabel = $this.Window.FindName("SteamAppIdLabel")
-            if ($steamAppIdLabel) { $steamAppIdLabel.Content = $this.GetLocalizedMessage("steamAppIdLabel") }
-
-            $epicGameIdLabel = $this.Window.FindName("EpicGameIdLabel")
-            if ($epicGameIdLabel) { $epicGameIdLabel.Content = $this.GetLocalizedMessage("epicGameIdLabel") }
-
-            $riotGameIdLabel = $this.Window.FindName("RiotGameIdLabel")
-            if ($riotGameIdLabel) { $riotGameIdLabel.Content = $this.GetLocalizedMessage("riotGameIdLabel") }
-
-            $processNameLabel = $this.Window.FindName("ProcessNameLabel")
-            if ($processNameLabel) { $processNameLabel.Content = $this.GetLocalizedMessage("processNameLabel") }
-
-            $appsToManageLabel = $this.Window.FindName("AppsToManageLabel")
-            if ($appsToManageLabel) { $appsToManageLabel.Content = $this.GetLocalizedMessage("appsToManageLabel") }
-
-            # Update group boxes - Global Settings tab
-            $obsSettingsGroup = $this.Window.FindName("ObsSettingsGroup")
-            if ($obsSettingsGroup) { $obsSettingsGroup.Header = $this.GetLocalizedMessage("obsSettingsGroup") }
-
-            $pathSettingsGroup = $this.Window.FindName("PathSettingsGroup")
-            if ($pathSettingsGroup) { $pathSettingsGroup.Header = $this.GetLocalizedMessage("pathSettingsGroup") }
-
-            $generalSettingsGroup = $this.Window.FindName("GeneralSettingsGroup")
-            if ($generalSettingsGroup) { $generalSettingsGroup.Header = $this.GetLocalizedMessage("generalSettingsGroup") }
-
-            # Update labels - Global Settings tab
-            $hostLabel = $this.Window.FindName("HostLabel")
-            if ($hostLabel) { $hostLabel.Content = $this.GetLocalizedMessage("hostLabel") }
-
-            $portLabel = $this.Window.FindName("PortLabel")
-            if ($portLabel) { $portLabel.Content = $this.GetLocalizedMessage("portLabel") }
-
-            $passwordLabel = $this.Window.FindName("PasswordLabel")
-            if ($passwordLabel) { $passwordLabel.Content = $this.GetLocalizedMessage("passwordLabel") }
-
-            $replayBufferCheckBox = $this.Window.FindName("ReplayBufferCheckBox")
-            if ($replayBufferCheckBox) { $replayBufferCheckBox.Content = $this.GetLocalizedMessage("replayBufferLabel") }
-
-            $steamPathLabel = $this.Window.FindName("SteamPathLabel")
-            if ($steamPathLabel) { $steamPathLabel.Content = $this.GetLocalizedMessage("steamPathLabel") }
-
-            $epicPathLabel = $this.Window.FindName("EpicPathLabel")
-            if ($epicPathLabel) { $epicPathLabel.Content = $this.GetLocalizedMessage("epicPathLabel") }
-
-            $riotPathLabel = $this.Window.FindName("RiotPathLabel")
-            if ($riotPathLabel) { $riotPathLabel.Content = $this.GetLocalizedMessage("riotPathLabel") }
-
-            $obsPathLabel = $this.Window.FindName("ObsPathLabel")
-            if ($obsPathLabel) { $obsPathLabel.Content = $this.GetLocalizedMessage("obsPathLabel") }
-
-            $languageLabel = $this.Window.FindName("LanguageLabel")
-            if ($languageLabel) { $languageLabel.Content = $this.GetLocalizedMessage("languageLabel") }
-
-            # Update browse buttons with smart tooltips
-            $browseSteamPathButton = $this.Window.FindName("BrowseSteamPathButton")
-            if ($browseSteamPathButton) { $this.SetButtonContentWithTooltip($browseSteamPathButton, $this.GetLocalizedMessage("browseButton")) }
-
-            $browseEpicPathButton = $this.Window.FindName("BrowseEpicPathButton")
-            if ($browseEpicPathButton) { $this.SetButtonContentWithTooltip($browseEpicPathButton, $this.GetLocalizedMessage("browseButton")) }
-
-            $browseRiotPathButton = $this.Window.FindName("BrowseRiotPathButton")
-            if ($browseRiotPathButton) { $this.SetButtonContentWithTooltip($browseRiotPathButton, $this.GetLocalizedMessage("browseButton")) }
-
-            $browseObsPathButton = $this.Window.FindName("BrowseObsPathButton")
-            if ($browseObsPathButton) { $this.SetButtonContentWithTooltip($browseObsPathButton, $this.GetLocalizedMessage("browseButton")) }
-
-            # Update labels - Managed Apps tab
-            $appsListLabel = $this.Window.FindName("AppsListLabel")
-            if ($appsListLabel) { $appsListLabel.Content = $this.GetLocalizedMessage("appsListLabel") }
-
-            $appDetailsLabel = $this.Window.FindName("AppDetailsLabel")
-            if ($appDetailsLabel) { $appDetailsLabel.Content = $this.GetLocalizedMessage("appDetailsLabel") }
-
-            $appIdLabel = $this.Window.FindName("AppIdLabel")
-            if ($appIdLabel) { $appIdLabel.Content = $this.GetLocalizedMessage("appIdLabel") }
-
-            $appPathLabel = $this.Window.FindName("AppPathLabel")
-            if ($appPathLabel) { $appPathLabel.Content = $this.GetLocalizedMessage("appPathLabel") }
-
-            $appProcessNameLabel = $this.Window.FindName("AppProcessNameLabel")
-            if ($appProcessNameLabel) { $appProcessNameLabel.Content = $this.GetLocalizedMessage("processNameLabel") }
-
-            $gameStartActionLabel = $this.Window.FindName("GameStartActionLabel")
-            if ($gameStartActionLabel) { $gameStartActionLabel.Content = $this.GetLocalizedMessage("gameStartActionLabel") }
-
-            $gameEndActionLabel = $this.Window.FindName("GameEndActionLabel")
-            if ($gameEndActionLabel) { $gameEndActionLabel.Content = $this.GetLocalizedMessage("gameEndActionLabel") }
-
-            $appArgumentsLabel = $this.Window.FindName("AppArgumentsLabel")
-            if ($appArgumentsLabel) { $appArgumentsLabel.Content = $this.GetLocalizedMessage("argumentsLabel") }
-
-            $terminationMethodLabel = $this.Window.FindName("TerminationMethodLabel")
-            if ($terminationMethodLabel) { $terminationMethodLabel.Content = $this.GetLocalizedMessage("terminationMethodLabel") }
-
-            $gracefulTimeoutLabel = $this.Window.FindName("GracefulTimeoutLabel")
-            if ($gracefulTimeoutLabel) { $gracefulTimeoutLabel.Content = $this.GetLocalizedMessage("gracefulTimeoutLabel") }
-
-            $browseAppPathButton = $this.Window.FindName("BrowseAppPathButton")
-            if ($browseAppPathButton) { $this.SetButtonContentWithTooltip($browseAppPathButton, $this.GetLocalizedMessage("browseButton")) }
-
-            $browseExecutablePathButton = $this.Window.FindName("BrowseExecutablePathButton")
-            if ($browseExecutablePathButton) { $this.SetButtonContentWithTooltip($browseExecutablePathButton, $this.GetLocalizedMessage("browseButton")) }
-
-            # Update version and update-related texts
-            $versionLabel = $this.Window.FindName("VersionLabel")
-            if ($versionLabel) { $versionLabel.Text = $this.GetLocalizedMessage("versionLabel") }
-
-            # Update launcher-related labels and buttons
-            $launcherTypeLabel = $this.Window.FindName("LauncherTypeLabel")
-            if ($launcherTypeLabel) { $launcherTypeLabel.Content = $this.GetLocalizedMessage("launcherTypeLabel") }
-
-            $generateLaunchersButton = $this.Window.FindName("GenerateLaunchersButton")
-            if ($generateLaunchersButton) { $this.SetButtonContentWithTooltip($generateLaunchersButton, $this.GetLocalizedMessage("generateLaunchers")) }
-
-            $launcherHelpText = $this.Window.FindName("LauncherHelpText")
-            if ($launcherHelpText) { $launcherHelpText.Text = $this.GetLocalizedMessage("launcherHelpText") }
-
-            # Update log retention label
-            $logRetentionLabel = $this.Window.FindName("LogRetentionLabel")
-            if ($logRetentionLabel) { $logRetentionLabel.Content = $this.GetLocalizedMessage("logRetentionLabel") }
-
-            # Update log notarization checkbox
-            $enableLogNotarizationCheckBox = $this.Window.FindName("EnableLogNotarizationCheckBox")
-            if ($enableLogNotarizationCheckBox) { $enableLogNotarizationCheckBox.Content = $this.GetLocalizedMessage("enableLogNotarization") }
-
-            # Update smart tooltips after text changes
+            # Update all button tooltips using the mapping
             $this.UpdateAllButtonTooltips()
+
+            # Update other UI elements using mappings
+            $this.UpdateElementsFromMappings()
 
             Write-Verbose "UI texts updated for language: $($this.CurrentLanguage)"
         } catch {
@@ -470,7 +410,211 @@ class ConfigEditorUI {
         }
     }
 
-    # Initialize version display
+    <#
+    .SYNOPSIS
+        Updates UI elements from centralized mappings.
+
+    .DESCRIPTION
+        Updates various UI element types (tabs, labels, checkboxes, etc.) using the mappings
+        defined in ConfigEditor.Mappings.ps1 for centralized maintenance.
+
+    .OUTPUTS
+        None
+    #>
+    [void]UpdateElementsFromMappings() {
+        try {
+            # Update tab headers
+            $tabMappings = @{
+                "GamesTab"          = "gamesTabHeader"
+                "ManagedAppsTab"    = "managedAppsTabHeader"
+                "GlobalSettingsTab" = "globalSettingsTabHeader"
+            }
+
+            foreach ($elementName in $tabMappings.Keys) {
+                $element = $this.Window.FindName($elementName)
+                if ($element) {
+                    $messageKey = $tabMappings[$elementName]
+                    $element.Header = $this.GetLocalizedMessage($messageKey)
+                }
+            }
+
+            # Update labels using centralized approach
+            $this.UpdateLabelsFromMappings()
+
+            # Update group boxes
+            $this.UpdateGroupBoxesFromMappings()
+
+            # Update checkboxes
+            $this.UpdateCheckBoxesFromMappings()
+
+            # Update text elements
+            $this.UpdateTextElementsFromMappings()
+
+        } catch {
+            Write-Warning "Failed to update elements from mappings: $($_.Exception.Message)"
+        }
+    }
+
+    <#
+    .SYNOPSIS
+        Updates label elements from mappings.
+
+    .DESCRIPTION
+        Updates all label elements using a centralized mapping approach for consistency.
+
+    .OUTPUTS
+        None
+    #>
+    [void]UpdateLabelsFromMappings() {
+        try {
+            $labelMappings = @{
+                "GamesListLabel"         = "gamesListLabel"
+                "GameDetailsLabel"       = "gameDetailsLabel"
+                "GameIdLabel"            = "gameIdLabel"
+                "GameNameLabel"          = "gameNameLabel"
+                "PlatformLabel"          = "platformLabel"
+                "SteamAppIdLabel"        = "steamAppIdLabel"
+                "EpicGameIdLabel"        = "epicGameIdLabel"
+                "RiotGameIdLabel"        = "riotGameIdLabel"
+                "ProcessNameLabel"       = "processNameLabel"
+                "AppsToManageLabel"      = "appsToManageLabel"
+                "HostLabel"              = "hostLabel"
+                "PortLabel"              = "portLabel"
+                "PasswordLabel"          = "passwordLabel"
+                "SteamPathLabel"         = "steamPathLabel"
+                "EpicPathLabel"          = "epicPathLabel"
+                "RiotPathLabel"          = "riotPathLabel"
+                "ObsPathLabel"           = "obsPathLabel"
+                "LanguageLabel"          = "languageLabel"
+                "AppsListLabel"          = "appsListLabel"
+                "AppDetailsLabel"        = "appDetailsLabel"
+                "AppIdLabel"             = "appIdLabel"
+                "AppPathLabel"           = "appPathLabel"
+                "AppProcessNameLabel"    = "processNameLabel"
+                "GameStartActionLabel"   = "gameStartActionLabel"
+                "GameEndActionLabel"     = "gameEndActionLabel"
+                "AppArgumentsLabel"      = "argumentsLabel"
+                "TerminationMethodLabel" = "terminationMethodLabel"
+                "GracefulTimeoutLabel"   = "gracefulTimeoutLabel"
+                "LauncherTypeLabel"      = "launcherTypeLabel"
+                "LogRetentionLabel"      = "logRetentionLabel"
+                "ExecutablePathLabel"    = "executablePathLabel"
+            }
+
+            foreach ($elementName in $labelMappings.Keys) {
+                $element = $this.Window.FindName($elementName)
+                if ($element) {
+                    $messageKey = $labelMappings[$elementName]
+                    $element.Content = $this.GetLocalizedMessage($messageKey)
+                }
+            }
+        } catch {
+            Write-Warning "Failed to update labels from mappings: $($_.Exception.Message)"
+        }
+    }
+
+    <#
+    .SYNOPSIS
+        Updates group box headers from mappings.
+
+    .DESCRIPTION
+        Updates group box header text using centralized mappings.
+
+    .OUTPUTS
+        None
+    #>
+    [void]UpdateGroupBoxesFromMappings() {
+        try {
+            $groupBoxMappings = @{
+                "ObsSettingsGroup"     = "obsSettingsGroup"
+                "PathSettingsGroup"    = "pathSettingsGroup"
+                "GeneralSettingsGroup" = "generalSettingsGroup"
+            }
+
+            foreach ($elementName in $groupBoxMappings.Keys) {
+                $element = $this.Window.FindName($elementName)
+                if ($element) {
+                    $messageKey = $groupBoxMappings[$elementName]
+                    $element.Header = $this.GetLocalizedMessage($messageKey)
+                }
+            }
+        } catch {
+            Write-Warning "Failed to update group boxes from mappings: $($_.Exception.Message)"
+        }
+    }
+
+    <#
+    .SYNOPSIS
+        Updates checkbox content from mappings.
+
+    .DESCRIPTION
+        Updates checkbox content text using centralized mappings.
+
+    .OUTPUTS
+        None
+    #>
+    [void]UpdateCheckBoxesFromMappings() {
+        try {
+            $checkBoxMappings = @{
+                "ReplayBufferCheckBox"          = "replayBufferLabel"
+                "EnableLogNotarizationCheckBox" = "enableLogNotarization"
+            }
+
+            foreach ($elementName in $checkBoxMappings.Keys) {
+                $element = $this.Window.FindName($elementName)
+                if ($element) {
+                    $messageKey = $checkBoxMappings[$elementName]
+                    $element.Content = $this.GetLocalizedMessage($messageKey)
+                }
+            }
+        } catch {
+            Write-Warning "Failed to update checkboxes from mappings: $($_.Exception.Message)"
+        }
+    }
+
+    <#
+    .SYNOPSIS
+        Updates text elements from mappings.
+
+    .DESCRIPTION
+        Updates TextBlock and other text elements using centralized mappings.
+
+    .OUTPUTS
+        None
+    #>
+    [void]UpdateTextElementsFromMappings() {
+        try {
+            $textMappings = @{
+                "VersionLabel"         = "versionLabel"
+                "LauncherWelcomeText"  = "launcherWelcomeText"
+                "LauncherSubtitleText" = "launcherSubtitleText"
+                "LauncherStatusText"   = "readyToLaunch"
+                "LauncherHintText"     = "launcherHintText"
+                "LauncherHelpText"     = "launcherHelpText"
+            }
+
+            foreach ($elementName in $textMappings.Keys) {
+                $element = $this.Window.FindName($elementName)
+                if ($element) {
+                    $messageKey = $textMappings[$elementName]
+                    $element.Text = $this.GetLocalizedMessage($messageKey)
+                }
+            }
+        } catch {
+            Write-Warning "Failed to update text elements from mappings: $($_.Exception.Message)"
+        }
+    }
+
+    <#
+    .SYNOPSIS
+        Initializes version display in the UI.
+
+    .DESCRIPTION
+        Retrieves project version information and displays it in the version text element.
+
+    .OUTPUTS
+        None
+    #>
     [void]InitializeVersionDisplay() {
         try {
             $versionInfo = Get-ProjectVersionInfo
@@ -485,21 +629,34 @@ class ConfigEditorUI {
         }
     }
 
-    # Load data into UI controls
+    <#
+    .SYNOPSIS
+        Loads configuration data into UI controls.
+
+    .DESCRIPTION
+        Loads all configuration data into the appropriate UI controls, including global settings,
+        UI texts, and various lists.
+
+    .PARAMETER ConfigData
+        The configuration data to load into the UI.
+
+    .OUTPUTS
+        None
+    #>
     [void]LoadDataToUI([PSObject]$ConfigData) {
         try {
-            # グローバル設定の読み込み
+            # Load global settings
             $this.LoadGlobalSettings($ConfigData)
 
-            # UI テキストの更新
+            # Update UI texts
             $this.UpdateUITexts($ConfigData)
 
-            # リストの更新
+            # Update lists
             $this.UpdateGamesList($ConfigData)
             $this.UpdateManagedAppsList($ConfigData)
             $this.UpdateGameLauncherList($ConfigData)
 
-            # その他の初期化
+            # Other initialization
             $this.InitializeLauncherTabTexts()
             $this.InitializeVersionDisplay()
 
@@ -510,13 +667,39 @@ class ConfigEditorUI {
         }
     }
 
-    # グローバル設定の読み込みを独立したメソッドに
+    <#
+    .SYNOPSIS
+        Loads global settings into UI controls.
+
+    .DESCRIPTION
+        Loads global settings from configuration data into the appropriate UI controls
+        using a callback function for better organization.
+
+    .PARAMETER ConfigData
+        The configuration data containing global settings.
+
+    .OUTPUTS
+        None
+    #>
     [void]LoadGlobalSettings([PSObject]$ConfigData) {
         $callback = $this.CreateLoadGlobalSettingsCallback($ConfigData)
         & $callback
     }
 
-    # Update games list
+    <#
+    .SYNOPSIS
+        Updates the games list UI control.
+
+    .DESCRIPTION
+        Updates the games list control with games from configuration data, respecting the order
+        defined in the _order property if available.
+
+    .PARAMETER ConfigData
+        The configuration data containing games information.
+
+    .OUTPUTS
+        None
+    #>
     [void]UpdateGamesList([PSObject]$ConfigData) {
         $gamesList = $this.Window.FindName("GamesList")
         $gamesList.Items.Clear()
@@ -551,7 +734,20 @@ class ConfigEditorUI {
         }
     }
 
-    # Update managed apps list
+    <#
+    .SYNOPSIS
+        Updates the managed apps list UI control.
+
+    .DESCRIPTION
+        Updates the managed apps list control with apps from configuration data, respecting the order
+        defined in the _order property if available.
+
+    .PARAMETER ConfigData
+        The configuration data containing managed apps information.
+
+    .OUTPUTS
+        None
+    #>
     [void]UpdateManagedAppsList([PSObject]$ConfigData) {
         $managedAppsList = $this.Window.FindName("ManagedAppsList")
         $managedAppsList.Items.Clear()
@@ -586,7 +782,20 @@ class ConfigEditorUI {
         }
     }
 
-    # Update game launcher list
+    <#
+    .SYNOPSIS
+        Updates the game launcher list UI control.
+
+    .DESCRIPTION
+        Updates the game launcher list control with games from configuration data,
+        creating game cards for the launcher interface.
+
+    .PARAMETER ConfigData
+        The configuration data containing games information.
+
+    .OUTPUTS
+        None
+    #>
     [void]UpdateGameLauncherList([PSObject]$ConfigData) {
         try {
             $gameLauncherList = $this.Window.FindName("GameLauncherList")
@@ -647,7 +856,16 @@ class ConfigEditorUI {
         }
     }
 
-    # Initialize launcher tab texts
+    <#
+    .SYNOPSIS
+        Initializes launcher tab text elements.
+
+    .DESCRIPTION
+        Initializes various text elements specific to the launcher tab with localized content.
+
+    .OUTPUTS
+        None
+    #>
     [void]InitializeLauncherTabTexts() {
         try {
             # Initialize launcher welcome and subtitle texts
@@ -676,6 +894,42 @@ class ConfigEditorUI {
             Write-Verbose "Launcher tab texts initialized"
         } catch {
             Write-Warning "Failed to initialize launcher tab texts: $($_.Exception.Message)"
+        }
+    }
+
+    <#
+    .SYNOPSIS
+        Cleans up resources and references to prevent memory leaks.
+
+    .DESCRIPTION
+        Properly disposes of resources, clears references, and performs cleanup operations
+        to prevent PowerShell from crashing on window close.
+
+    .OUTPUTS
+        None
+    #>
+    [void]Cleanup() {
+        try {
+            Write-Host "DEBUG: Starting UI cleanup" -ForegroundColor Yellow
+
+            # Clear references to prevent circular dependencies
+            if ($this.State) {
+                $this.State = $null
+            }
+
+            # Clear messages
+            if ($this.Messages) {
+                $this.Messages = $null
+            }
+
+            # Force garbage collection
+            [System.GC]::Collect()
+            [System.GC]::WaitForPendingFinalizers()
+            [System.GC]::Collect()
+
+            Write-Host "DEBUG: UI cleanup completed" -ForegroundColor Green
+        } catch {
+            Write-Warning "Error during UI cleanup: $($_.Exception.Message)"
         }
     }
 

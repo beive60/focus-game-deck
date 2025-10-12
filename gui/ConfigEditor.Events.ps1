@@ -866,13 +866,23 @@ class ConfigEditorEvents {
 
     # Handle window closing
     [void] HandleWindowClosing([System.ComponentModel.CancelEventArgs]$Event) {
-        if (Test-HasUnsavedChanges) {
-            $result = Show-SafeMessage -Key "confirmDiscardChanges" -MessageType "Question" -Button "YesNoCancel" -DefaultResult "Cancel"
+        try {
+            Write-Host "DEBUG: HandleWindowClosing called" -ForegroundColor Cyan
 
-            if ($result -ne "Yes") {
-                $Event.Cancel = $true
-                return
+            if (Test-HasUnsavedChanges) {
+                $result = Show-SafeMessage -Key "confirmDiscardChanges" -MessageType "Question" -Button "YesNoCancel" -DefaultResult "Cancel"
+
+                if ($result -ne "Yes") {
+                    Write-Host "DEBUG: User cancelled window closing" -ForegroundColor Yellow
+                    $Event.Cancel = $true
+                    return
+                }
             }
+
+            Write-Host "DEBUG: Window closing approved" -ForegroundColor Green
+        } catch {
+            Write-Warning "Error in HandleWindowClosing: $($_.Exception.Message)"
+            # Don't cancel on error - allow window to close
         }
     }
 
@@ -1066,8 +1076,14 @@ class ConfigEditorEvents {
             # --- Window Events ---
             $this.uiManager.Window.add_Closing({
                     param($sender, $e)
-                    $this.HandleWindowClosing($e)
-                })
+                    try {
+                        Write-Host "DEBUG: Window Closing event fired" -ForegroundColor Cyan
+                        $this.HandleWindowClosing($e)
+                    } catch {
+                        Write-Warning "Error in window closing event: $($_.Exception.Message)"
+                        # Don't cancel on error
+                    }
+            })
 
             # --- Game Settings Tab ---
             $this.uiManager.Window.FindName("GamesList").add_SelectionChanged({ $this.HandleGameSelectionChanged() })
