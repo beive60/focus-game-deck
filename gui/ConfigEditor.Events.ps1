@@ -1122,19 +1122,11 @@ class ConfigEditorEvents {
             Write-Host "All UI event handlers registered successfully." -ForegroundColor Green
         } catch {
             Write-Error "Failed to register event handlers: $($_.Exception.Message)"
+            Write-Host "Critical initialization failure. Application may not function properly." -ForegroundColor Red
 
-            # catchブロック内でUIの初期化失敗をユーザーに通知する
-            try {
-                $this.uiManager.ShowSafeMessage("initError", "Error", @($_.Exception.Message), "Error")
-            } catch {
-                # ShowSafeMessageも失敗した場合のフォールバック
-                [System.Windows.MessageBox]::Show(
-                    "Failed to register event handlers: $($_.Exception.Message)",
-                    "Initialization Error",
-                    [System.Windows.MessageBoxButton]::OK,
-                    [System.Windows.MessageBoxImage]::Error
-                )
-            }
+            # This level of error requires developer-only logging
+            # User notification is unnecessary for system-level failures
+            throw $_  # Stop application initialization
         }
     }
 }
