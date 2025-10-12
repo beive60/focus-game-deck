@@ -35,6 +35,9 @@ C:\Users\YourName\Documents\project
 
 This rule is important for cross-platform compatibility and to avoid issues related to escape characters.
 
+## Attribute Wrapping in XAML
+
+When writing XAML code, if an element has multiple attributes, each attribute should be placed on a new line and indented for better readability.
 
 ## Rule Summary
 
