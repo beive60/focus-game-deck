@@ -47,6 +47,7 @@ function Test-Prerequisites {
     $requiredFiles = @(
         (Join-Path $PSScriptRoot "MainWindow.xaml"),
         (Join-Path $PSScriptRoot "messages.json"),
+        (Join-Path $PSScriptRoot "ConfigEditor.Mappings.ps1"),
         (Join-Path (Split-Path $PSScriptRoot) "config/config.json")
     )
 
@@ -108,6 +109,46 @@ function Load-Configuration {
     }
 }
 
+# Validate UI mappings function
+function Test-UIMappings {
+    param()
+
+    try {
+        $mappingVariables = @(
+            'ButtonMappings',
+            'CrudButtonMappings',
+            'BrowserButtonMappings',
+            'AutoDetectButtonMappings',
+            'ActionButtonMappings',
+            'MovementButtonMappings'
+        )
+
+        $missingMappings = @()
+        foreach ($varName in $mappingVariables) {
+            if (-not (Get-Variable -Name $varName -Scope Global -ErrorAction SilentlyContinue)) {
+                $missingMappings += $varName
+            }
+        }
+
+        if ($missingMappings.Count -gt 0) {
+            Write-Warning "Missing UI mappings: $($missingMappings -join ', ')"
+            return $false
+        }
+
+        # Validate mapping structure
+        if ((Get-Variable -Name 'ButtonMappings' -Scope Global -ErrorAction SilentlyContinue).Value.Count -eq 0) {
+            Write-Warning "ButtonMappings is empty"
+            return $false
+        }
+
+        Write-Host "UI mappings validated successfully" -ForegroundColor Green
+        return $true
+    } catch {
+        Write-Warning "Failed to validate UI mappings: $($_.Exception.Message)"
+        return $false
+    }
+}
+
 # Initialize the application
 function Initialize-ConfigEditor {
     try {
@@ -123,11 +164,17 @@ function Initialize-ConfigEditor {
 
         # Step 3: NOW we can safely dot-source files that contain WPF types
         Write-Host "Loading script modules..." -ForegroundColor Yellow
+        . "$PSScriptRoot/ConfigEditor.Mappings.ps1"      # Load mappings first
         . "$PSScriptRoot/ConfigEditor.State.ps1"
         . "$PSScriptRoot/ConfigEditor.Localization.ps1"
-        . "$PSScriptRoot/ConfigEditor.UI.ps1"
+        . "$PSScriptRoot/ConfigEditor.UI.ps1"            # UI depends on mappings
         . "$PSScriptRoot/ConfigEditor.Events.ps1"
         Write-Host "Script modules loaded successfully" -ForegroundColor Green
+
+        # Step 3.5: Validate UI mappings
+        if (-not (Test-UIMappings)) {
+            Write-Warning "UI mappings validation failed - some features may not work properly"
+        }
 
         # Step 4: Initialize localization
         $localization = [ConfigEditorLocalization]::new()
@@ -149,6 +196,11 @@ function Initialize-ConfigEditor {
         # Step 6: Initialize UI manager
         Write-Host "Initializing UI manager..." -ForegroundColor Yellow
         try {
+            # Validate mappings are available before creating UI
+            if (-not (Get-Variable -Name "ButtonMappings" -Scope Script -ErrorAction SilentlyContinue)) {
+                Write-Warning "Button mappings not loaded - UI functionality may be limited"
+            }
+
             Write-Host "DEBUG: Creating ConfigEditorUI instance..." -ForegroundColor Cyan
             $uiManager = [ConfigEditorUI]::new($stateManager)
             Write-Host "DEBUG: ConfigEditorUI instance created: $($null -ne $uiManager)" -ForegroundColor Cyan
@@ -185,6 +237,13 @@ function Initialize-ConfigEditor {
             if ($_.Exception.InnerException) {
                 Write-Host "DEBUG: Inner exception: $($_.Exception.InnerException.Message)" -ForegroundColor Red
             }
+
+            # Check if mapping-related error
+            if ($_.Exception.Message -match "ButtonMappings|Mappings|mapping") {
+                Write-Host "DEBUG: This appears to be a mapping-related error" -ForegroundColor Yellow
+                Write-Host "DEBUG: Verify ConfigEditor.Mappings.ps1 is properly loaded" -ForegroundColor Yellow
+            }
+
             throw
         }
 
@@ -212,7 +271,32 @@ function Initialize-ConfigEditor {
 
         # Step 9: Show window
         Write-Host "Showing window..." -ForegroundColor Yellow
-        $window.ShowDialog()
+        try {
+            # Use ShowDialog() which properly handles the window lifecycle
+            $dialogResult = $window.ShowDialog()
+            Write-Host "DEBUG: Window closed with result: $dialogResult" -ForegroundColor Cyan
+        } catch {
+            Write-Host "DEBUG: Window show/close error: $($_.Exception.Message)" -ForegroundColor Red
+        } finally {
+            # Ensure proper cleanup
+            if ($window) {
+                try {
+                    Write-Host "DEBUG: Final window cleanup" -ForegroundColor Yellow
+                    $window = $null
+                } catch {
+                    Write-Warning "Error in final window cleanup: $($_.Exception.Message)"
+                }
+            }
+
+            # Force cleanup of global variables
+            $script:Window = $null
+            $script:ConfigData = $null
+
+            # Force garbage collection to clean up WPF resources
+            [System.GC]::Collect()
+            [System.GC]::WaitForPendingFinalizers()
+            [System.GC]::Collect()
+        }
 
         Write-Host "=== ConfigEditor initialization completed ===" -ForegroundColor Green
 
