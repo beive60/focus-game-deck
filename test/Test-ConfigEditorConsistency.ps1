@@ -1,31 +1,31 @@
 <#
-SYNOPSIS
-    Tests consistency between MainWindowxaml and ConfigEditorMappingsps1
+.SYNOPSIS
+    Tests consistency between MainWindow.xaml and ConfigEditor.Mappings.ps1
 
-DESCRIPTION
-    This test verifies that all UI elements with placeholders in MainWindowxaml
-    have corresponding mappings defined in ConfigEditorMappingsps1
+.DESCRIPTION
+    This test verifies that all UI elements with placeholders in MainWindow.xaml
+    have corresponding mappings defined in ConfigEditor.Mappings.ps1
     This ensures the localization system works properly
 
-PARAMETER ShowDetails
+.PARAMETER ShowDetails
     Enable detailed output showing mapping information
 
-EXAMPLE
-    \Test-ConfigEditorConsistencyps1
+.EXAMPLE
+    .\Test-ConfigEditorConsistency.ps1
 
-EXAMPLE
-    \Test-ConfigEditorConsistencyps1 -ShowDetails
+.EXAMPLE
+    .\Test-ConfigEditorConsistency.ps1 -ShowDetails
 
-NOTES
+.NOTES
     Author: Focus Game Deck Development Team
-    Version: 100
+    Version: 1.0.1
     Created: 2025-10-12
 #>
 
 [CmdletBinding()]
 param(
     [switch]$ShowDetails
-    )
+)
 
 # Set error action preference
 $ErrorActionPreference = 'Stop'
@@ -39,7 +39,7 @@ Write-Host "=== Focus Game Deck - ConfigEditor Consistency Test ===" -Foreground
 
 # Check if required files exist
 if (-not (Test-Path $MainWindowPath)) {
-    Write-Error "Main.Window.xaml not found at: $MainWindowPath"
+    Write-Error "MainWindow.xaml not found at: $MainWindowPath"
     exit 1
 }
 
@@ -49,26 +49,26 @@ if (-not (Test-Path $MappingsPath)) {
 }
 
 Write-Host "Checking files:" -ForegroundColor Yellow
-Write-Host "- Main.Window.xaml: $MainWindowPath" -ForegroundColor Gray
+Write-Host "- MainWindow.xaml: $MainWindowPath" -ForegroundColor Gray
 Write-Host "- Mappings file:   $MappingsPath" -ForegroundColor Gray
 
 try {
     # Load mappings
     Write-Host "Loading ConfigEditor mappings" -ForegroundColor Yellow
-    $MappingsPath
+    . $MappingsPath
     Write-Host "[OK] Mappings loaded successfully" -ForegroundColor Green
 
-    # Extract UI elements and their placeholders from Main.Window.xaml
-    Write-Host "Analyzing Main.Window.xaml" -ForegroundColor Yellow
+    # Extract UI elements and their placeholders from MainWindow.xaml
+    Write-Host "Analyzing MainWindow.xaml" -ForegroundColor Yellow
     $content = Get-Content -Path $MainWindowPath -Encoding UTF8 -Raw
-    $regex = '<[\w\.:]+\s+(?=[^>]*\bx:Name\s*=\s*"[^"]*")(?=[^>]*\b(Content|Text|Header)\s*=\s*"[^"]*")[^>]*?/?>'
+    $regex = '<[\w\.:]+\s+(?=[^>]*\bx:Name\s*=\s*"[^"]*")(?=[^>]*\b(Content|Text|Header|ToolTip)\s*=\s*"[^"]*")[^>]*?/?>'
     $matches = [regex]::Matches($content, $regex)
 
     $uiElements = @{}
     foreach ($match in $matches) {
         $elementText = $match.Value
         $nameMatch = [regex]::Match($elementText, '\bx:Name\s*=\s*"([^"]*)"')
-        $placeholderMatch = [regex]::Match($elementText, '\b(?:Content|Text|Header)\s*=\s*"([^"]*)"')
+        $placeholderMatch = [regex]::Match($elementText, '\b(?:Content|Text|Header|ToolTip)\s*=\s*"([^"]*)"')
 
         if ($nameMatch.Success -and $placeholderMatch.Success) {
             $elementName = $nameMatch.Groups[1].Value
@@ -93,32 +93,29 @@ try {
     $missingMappings = @()
     $foundMappings = @()
 
-    $allMappingTables = @($ButtonMappings, $LabelMappings, $TabMappings, $TextMappings, $CheckBoxMappings, $MenuItemMappings)
+    $allMappingTables = @{
+        Button   = $ButtonMappings
+        Label    = $LabelMappings
+        Tab      = $TabMappings
+        Text     = $TextMappings
+        CheckBox = $CheckBoxMappings
+        MenuItem = $MenuItemMappings
+        Tooltip  = $TooltipMappings
+    }
 
-    foreach ($elementName in $uiElementsKeys) {
+    foreach ($elementName in $uiElements.Keys) {
         $found = $false
-        $mappingType = ""
-
-        foreach ($mappingTable in $allMappingTables) {
-            if ($mappingTableContainsKey[$elementName]) {
+        foreach ($type in $allMappingTables.Keys) {
+            $mappingTable = $allMappingTables[$type]
+            if ($mappingTable.ContainsKey($elementName)) {
                 $found = $true
                 $mappingKey = $mappingTable[$elementName]
-
-                # Determine mapping type
-                switch ($mappingTable) {
-                    { $_ -eq $ButtonMappings } { $mappingType = "Button" }
-                    { $_ -eq $LabelMappings } { $mappingType = "Label" }
-                    { $_ -eq $TabMappings } { $mappingType = "Tab" }
-                    { $_ -eq $TextMappings } { $mappingType = "Text" }
-                    { $_ -eq $CheckBoxMappings } { $mappingType = "CheckBox" }
-                    { $_ -eq $MenuItemMappings } { $mappingType = "MenuItem" }
-                }
 
                 $foundMappings += [PSCustomObject]@{
                     ElementName = $elementName
                     Placeholder = $uiElements[$elementName]
                     MappingKey  = $mappingKey
-                    Type        = $mappingType
+                    Type        = $type
                 }
                 break
             }
@@ -133,6 +130,10 @@ try {
     }
 
     # Display results
+    $uiElementsCount = $uiElements.Count
+    $foundMappingsCount = $foundMappings.Count
+    $missingMappingsCount = $missingMappings.Count
+
     Write-Host "Mapping Analysis Results:" -ForegroundColor Blue
     Write-Host "- Total UI elements: $($uiElementsCount)" -ForegroundColor Gray
     Write-Host "- Mapped elements:   $($foundMappingsCount)" -ForegroundColor Green
@@ -142,7 +143,7 @@ try {
     if ($ShowDetails -and $foundMappingsCount -gt 0) {
         Write-Host "[OK] Successfully mapped elements:" -ForegroundColor Green
         $foundMappings | Sort-Object ElementName | ForEach-Object {
-            Write-Host "   [$($_Type)] $($_ElementName) -> $($_MappingKey)" -ForegroundColor Gray
+            Write-Host "   [$($_.Type)] $($_.ElementName) -> $($_.MappingKey)" -ForegroundColor Gray
         }
         Write-Host ""
     }
@@ -150,10 +151,10 @@ try {
     # Show mapping statistics by type
     if ($ShowDetails) {
         Write-Host "Mapping statistics by type:" -ForegroundColor Blue
-        $typeStats = $foundMappings | Group-Object Type | Sort-Object Name
-        foreach ($stat in $typeStats) {
-            Write-Host "   $($statName): $($statCount) elements" -ForegroundColor Gray
+        $foundMappings | Group-Object Type | Sort-Object Name | ForEach-Object {
+            Write-Host "   $($_.Name): $($_.Count) elements" -ForegroundColor Gray
         }
+        Write-Host ""
     }
 
     # Final result
@@ -165,14 +166,14 @@ try {
         Write-Host "[NG] TEST FAILED: Missing mappings detected!" -ForegroundColor Red
         Write-Host "Elements requiring mappings:" -ForegroundColor Yellow
         $missingMappings | Sort-Object ElementName | ForEach-Object {
-            Write-Host "   - $($_ElementName) [Placeholder: $($_Placeholder)]" -ForegroundColor Red
+            Write-Host "   - $($_.ElementName) [Placeholder: $($_.Placeholder)]" -ForegroundColor Red
         }
         Write-Host "Please add the missing mappings to ConfigEditor.Mappings.ps1" -ForegroundColor Yellow
         exit 1
     }
 
 } catch {
-    Write-Host "[NG] TEST ERROR: $($_ExceptionMessage)" -ForegroundColor Red
-    Write-Host "Stack trace: $($_ScriptStackTrace)" -ForegroundColor Gray
+    Write-Host "[NG] TEST ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Stack trace: $($_.ScriptStackTrace)" -ForegroundColor Gray
     exit 1
 }
