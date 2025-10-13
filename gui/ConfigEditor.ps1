@@ -114,6 +114,7 @@ function Test-UIMappings {
     param()
 
     try {
+        # ScopeをScriptに変更
         $mappingVariables = @(
             'ButtonMappings',
             'CrudButtonMappings',
@@ -125,7 +126,7 @@ function Test-UIMappings {
 
         $missingMappings = @()
         foreach ($varName in $mappingVariables) {
-            if (-not (Get-Variable -Name $varName -Scope Global -ErrorAction SilentlyContinue)) {
+            if (-not (Get-Variable -Name $varName -Scope Script -ErrorAction SilentlyContinue)) {
                 $missingMappings += $varName
             }
         }
@@ -136,7 +137,7 @@ function Test-UIMappings {
         }
 
         # Validate mapping structure
-        if ((Get-Variable -Name 'ButtonMappings' -Scope Global -ErrorAction SilentlyContinue).Value.Count -eq 0) {
+        if ((Get-Variable -Name 'ButtonMappings' -Scope Script -ErrorAction SilentlyContinue).Value.Count -eq 0) {
             Write-Warning "ButtonMappings is empty"
             return $false
         }
@@ -202,7 +203,18 @@ function Initialize-ConfigEditor {
             }
 
             Write-Host "DEBUG: Creating ConfigEditorUI instance..." -ForegroundColor Cyan
-            $uiManager = [ConfigEditorUI]::new($stateManager)
+
+            $allMappings = @{
+                Button   = $ButtonMappings
+                Label    = $LabelMappings
+                Tab      = $TabMappings
+                Text     = $TextMappings
+                CheckBox = $CheckBoxMappings
+                MenuItem = $MenuItemMappings
+                Tooltip  = $TooltipMappings
+            }
+            $uiManager = [ConfigEditorUI]::new($stateManager, $allMappings, $localization)
+
             Write-Host "DEBUG: ConfigEditorUI instance created: $($null -ne $uiManager)" -ForegroundColor Cyan
 
             if ($null -eq $uiManager) {
