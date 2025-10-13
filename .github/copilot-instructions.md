@@ -4,15 +4,16 @@ When generating code for this project, strictly follow the rules below.
 
 ## Essential Reference Documents
 
-- This project must follow the rules documented in the following files:
-    - `./docs/DOCUMENTATION-INDEX.md`
-    - `./docs/developer-guide/architecture.md`
-    - `./docs/developer-guide/build-system.md`
-    - `./docs/developer-guide/gui-design.md`
-    - `./docs/developer-guide/release-process.md`
-    - `./docs/project-info/philosophy.md`
-    - `./docs/project-info/roadmap.md`
-    - `./docs/project-info/version-management.md`
+This project must follow the rules documented in the following files:
+
+- `./docs/DOCUMENTATION-INDEX.md`
+- `./docs/developer-guide/architecture.md`
+- `./docs/developer-guide/build-system.md`
+- `./docs/developer-guide/gui-design.md`
+- `./docs/developer-guide/release-process.md`
+- `./docs/project-info/philosophy.md`
+- `./docs/project-info/roadmap.md`
+- `./docs/project-info/version-management.md`
 
 ## Writing paths
 
