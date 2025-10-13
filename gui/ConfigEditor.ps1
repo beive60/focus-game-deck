@@ -114,7 +114,6 @@ function Test-UIMappings {
     param()
 
     try {
-        # ScopeをScriptに変更
         $mappingVariables = @(
             'ButtonMappings',
             'CrudButtonMappings',
@@ -126,6 +125,7 @@ function Test-UIMappings {
 
         $missingMappings = @()
         foreach ($varName in $mappingVariables) {
+            # [修正] ScopeをGlobalからScriptに変更
             if (-not (Get-Variable -Name $varName -Scope Script -ErrorAction SilentlyContinue)) {
                 $missingMappings += $varName
             }
@@ -137,6 +137,7 @@ function Test-UIMappings {
         }
 
         # Validate mapping structure
+        # [修正] ScopeをGlobalからScriptに変更
         if ((Get-Variable -Name 'ButtonMappings' -Scope Script -ErrorAction SilentlyContinue).Value.Count -eq 0) {
             Write-Warning "ButtonMappings is empty"
             return $false
