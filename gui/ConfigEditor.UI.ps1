@@ -16,46 +16,38 @@ class ConfigEditorUI {
     [bool]$HasUnsavedChanges
 
     # Constructor
-    ConfigEditorUI([ConfigEditorState]$stateManager, [hashtable]$allMappings) {
+    ConfigEditorUI([ConfigEditorState]$stateManager) {
         try {
-            Write-Host "DEBUG: ConfigEditorUI constructor started" -ForegroundColor Cyan
-            $this.State = $stateManager
-            $this.Mappings = $allMappings
             Write-Host "DEBUG: ConfigEditorUI constructor started" -ForegroundColor Cyan
             $this.State = $stateManager
             Write-Host "DEBUG: State manager assigned successfully" -ForegroundColor Cyan
 
             # Load XAML
-            Write-Host "DEBUG: Loading XAML file..." -ForegroundColor Cyan
+            Write-Host "DEBUG: [1/6] Loading XAML file..." -ForegroundColor Cyan
             $xamlPath = Join-Path $PSScriptRoot "MainWindow.xaml"
-            Write-Host "DEBUG: XAML path: $xamlPath" -ForegroundColor Cyan
-
             if (-not (Test-Path $xamlPath)) {
                 throw "XAML file not found: $xamlPath"
             }
-            Write-Host "DEBUG: XAML file exists" -ForegroundColor Cyan
-
             $xamlContent = Get-Content $xamlPath -Raw -Encoding UTF8
-            Write-Host "DEBUG: XAML content loaded, length: $($xamlContent.Length)" -ForegroundColor Cyan
+            Write-Host "DEBUG: [2/6] XAML content loaded, length: $($xamlContent.Length)" -ForegroundColor Cyan
 
             # Parse XAML
-            Write-Host "DEBUG: Parsing XAML..." -ForegroundColor Cyan
+            Write-Host "DEBUG: [3/6] Parsing XAML..." -ForegroundColor Cyan
             $xmlReader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
             $this.Window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
-            $xmlReader.Close()  # Properly close the XML reader
-            Write-Host "DEBUG: XAML parsed successfully" -ForegroundColor Cyan
+            $xmlReader.Close()
+            Write-Host "DEBUG: [4/6] XAML parsed successfully" -ForegroundColor Cyan
 
             if ($null -eq $this.Window) {
                 throw "Failed to create Window from XAML"
             }
-            Write-Host "DEBUG: Window created successfully, type: $($this.Window.GetType().Name)" -ForegroundColor Cyan
 
             # Set up proper window closing behavior
+            Write-Host "DEBUG: [5/6] Adding window event handlers..." -ForegroundColor Cyan
             $this.Window.add_Closed({
                 param($sender, $e)
                 Write-Host "DEBUG: Window closed event triggered" -ForegroundColor Yellow
                 try {
-                    # Clean up resources
                     $this.Cleanup()
                 } catch {
                     Write-Warning "Error during cleanup: $($_.Exception.Message)"
@@ -63,6 +55,7 @@ class ConfigEditorUI {
             })
 
             # Initialize other components
+            Write-Host "DEBUG: [6/6] Initializing other components..." -ForegroundColor Cyan
             $this.InitializeComponents()
             Write-Host "DEBUG: ConfigEditorUI constructor completed successfully" -ForegroundColor Cyan
 
