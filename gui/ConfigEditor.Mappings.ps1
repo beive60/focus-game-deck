@@ -131,6 +131,7 @@ $CheckBoxMappings = @{
 
 # MenuItem mappings
 $MenuItemMappings = @{
+    "HelpMenu"            = "helpMenuHeader"
     "CheckUpdateMenuItem" = "checkUpdateMenuItem"
     "AboutMenuItem"       = "aboutMenuItem"
 }
@@ -170,13 +171,13 @@ function Get-ButtonMappingsByCategory {
 
     try {
         switch ($Category) {
-            "Crud"       { return $CrudButtonMappings }
-            "Browser"    { return $BrowserButtonMappings }
+            "Crud" { return $CrudButtonMappings }
+            "Browser" { return $BrowserButtonMappings }
             "AutoDetect" { return $AutoDetectButtonMappings }
-            "Action"     { return $ActionButtonMappings }
-            "Movement"   { return $MovementButtonMappings }
-            "All"        { return $ButtonMappings }
-            default      { return @{} }
+            "Action" { return $ActionButtonMappings }
+            "Movement" { return $MovementButtonMappings }
+            "All" { return $ButtonMappings }
+            default { return @{} }
         }
     } catch {
         Write-Warning "Error getting button mappings for category '$Category': $($_.Exception.Message)"
@@ -216,14 +217,14 @@ function Get-LocalizationKey {
     try {
         # Define mapping table lookup based on element type
         $mappingTables = switch ($ElementType) {
-            "Button"   { @($ButtonMappings) }
-            "Label"    { @($LabelMappings) }
-            "Tab"      { @($TabMappings) }
-            "Text"     { @($TextMappings) }
+            "Button" { @($ButtonMappings) }
+            "Label" { @($LabelMappings) }
+            "Tab" { @($TabMappings) }
+            "Text" { @($TextMappings) }
             "CheckBox" { @($CheckBoxMappings) }
             "MenuItem" { @($MenuItemMappings) }
-            "Tooltip"  { @($TooltipMappings) }
-            default    { @($ButtonMappings, $LabelMappings, $TabMappings, $TextMappings, $CheckBoxMappings, $MenuItemMappings, $TooltipMappings) }
+            "Tooltip" { @($TooltipMappings) }
+            default { @($ButtonMappings, $LabelMappings, $TabMappings, $TextMappings, $CheckBoxMappings, $MenuItemMappings, $TooltipMappings) }
         }
 
         # Search through the specified mapping tables
