@@ -1,5 +1,8 @@
 # Import mappings at the top of the file
-. "$PSScriptRoot/ConfigEditor.Mappings.ps1"
+$ProjectRoot = Split-Path -Parent $PSScriptRoot
+$MappingsPath = Join-Path $ProjectRoot "gui/ConfigEditor.Mappings.ps1"
+
+. $MappingsPath
 
 class ConfigEditorUI {
     # Properties
@@ -450,6 +453,9 @@ class ConfigEditorUI {
             # Update text elements
             $this.UpdateTextElementsFromMappings()
 
+            # Update menu items
+            $this.UpdateMenuItemsFromMappings()
+
         } catch {
             Write-Warning "Failed to update elements from mappings: $($_.Exception.Message)"
         }
@@ -602,6 +608,46 @@ class ConfigEditorUI {
             }
         } catch {
             Write-Warning "Failed to update text elements from mappings: $($_.Exception.Message)"
+        }
+    }
+
+    <#
+    .SYNOPSIS
+        Updates menu item headers from mappings.
+
+    .DESCRIPTION
+        Updates menu item header text using centralized mappings.
+
+    .OUTPUTS
+        None
+    #>
+    [void]UpdateMenuItemsFromMappings() {
+        try {
+            $menuItemMappings = $this.GetMappingFromScope("MenuItemMappings")
+
+            Write-Host "DEBUG: MenuItemMappings count: $($menuItemMappings.Count)" -ForegroundColor Cyan
+
+            foreach ($elementName in $menuItemMappings.Keys) {
+                $element = $this.Window.FindName($elementName)
+                $messageKey = $menuItemMappings[$elementName]
+                $localizedText = $this.GetLocalizedMessage($messageKey)
+
+                Write-Host "DEBUG: Processing menu item '$elementName' -> key '$messageKey' -> text '$localizedText'" -ForegroundColor Yellow
+
+                if ($element) {
+                    $oldHeader = $element.Header
+                    $element.Header = $localizedText
+                    Write-Host "DEBUG: Menu item '$elementName' header changed from '$oldHeader' to '$($element.Header)'" -ForegroundColor Green
+
+                    # UI更新を強制
+                    $element.UpdateLayout()
+                } else {
+                    Write-Host "DEBUG: Menu item '$elementName' not found in window" -ForegroundColor Red
+                }
+            }
+        } catch {
+            Write-Warning "Failed to update menu items from mappings: $($_.Exception.Message)"
+            Write-Host "DEBUG: Exception details: $($_.Exception)" -ForegroundColor Red
         }
     }
 
