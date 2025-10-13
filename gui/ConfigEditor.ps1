@@ -241,7 +241,8 @@ function Initialize-ConfigEditor {
                 Write-Host "DEBUG: uiManager.Window type: $($uiManager.Window.GetType().Name)" -ForegroundColor Cyan
             }
 
-            $window = $uiManager.Window
+            $script:Window = $uiManager.Window
+
             Write-Host "UI manager initialized successfully" -ForegroundColor Green
         } catch {
             Write-Host "DEBUG: UI Manager initialization error details:" -ForegroundColor Red
@@ -292,6 +293,14 @@ function Initialize-ConfigEditor {
             Write-Host "DEBUG: Window show/close error: $($_.Exception.Message)" -ForegroundColor Red
         } finally {
             # Ensure proper cleanup
+            if ($uiManager) {
+                try {
+                    Write-Host "DEBUG: Final UI manager cleanup" -ForegroundColor Yellow
+                    $uiManager.Cleanup()
+                } catch {
+                    Write-Warning "Error in final UI manager cleanup: $($_.Exception.Message)"
+                }
+            }
             if ($window) {
                 try {
                     Write-Host "DEBUG: Final window cleanup" -ForegroundColor Yellow
