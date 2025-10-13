@@ -8,7 +8,7 @@
 #>
 
 # CRUD operation buttons (Add, Duplicate, Delete)
-$CrudButtonMappings = @{
+$script:CrudButtonMappings = @{
     "AddGameButton"       = "addButton"
     "DuplicateGameButton" = "duplicateButton"
     "DeleteGameButton"    = "deleteButton"
@@ -19,7 +19,7 @@ $CrudButtonMappings = @{
 }
 
 # File browser buttons
-$BrowserButtonMappings = @{
+$script:BrowserButtonMappings = @{
     "BrowseAppPathButton"        = "browseButton"
     "BrowseExecutablePathButton" = "browseButton"
     "BrowseSteamPathButton"      = "browseButton"
@@ -29,7 +29,7 @@ $BrowserButtonMappings = @{
 }
 
 # Auto-detection buttons
-$AutoDetectButtonMappings = @{
+$script:AutoDetectButtonMappings = @{
     "AutoDetectSteamButton" = "autoDetectButton"
     "AutoDetectEpicButton"  = "autoDetectButton"
     "AutoDetectRiotButton"  = "autoDetectButton"
@@ -37,7 +37,7 @@ $AutoDetectButtonMappings = @{
 }
 
 # Save and action buttons
-$ActionButtonMappings = @{
+$script:ActionButtonMappings = @{
     "SaveGameSettingsButton"   = "saveButton"
     "SaveManagedAppsButton"    = "saveButton"
     "SaveGlobalSettingsButton" = "saveButton"
@@ -47,7 +47,7 @@ $ActionButtonMappings = @{
 }
 
 # List movement buttons
-$MovementButtonMappings = @{
+$script:MovementButtonMappings = @{
     "MoveGameTopButton"    = "moveTopButton"
     "MoveGameUpButton"     = "moveUpButton"
     "MoveGameDownButton"   = "moveDownButton"
@@ -59,15 +59,15 @@ $MovementButtonMappings = @{
 }
 
 # Combined mapping for backward compatibility
-$ButtonMappings = @{}
-$CrudButtonMappings.GetEnumerator() | ForEach-Object { $ButtonMappings[$_.Key] = $_.Value }
-$BrowserButtonMappings.GetEnumerator() | ForEach-Object { $ButtonMappings[$_.Key] = $_.Value }
-$AutoDetectButtonMappings.GetEnumerator() | ForEach-Object { $ButtonMappings[$_.Key] = $_.Value }
-$ActionButtonMappings.GetEnumerator() | ForEach-Object { $ButtonMappings[$_.Key] = $_.Value }
-$MovementButtonMappings.GetEnumerator() | ForEach-Object { $ButtonMappings[$_.Key] = $_.Value }
+$script:ButtonMappings = @{}
+$script:CrudButtonMappings.GetEnumerator() | ForEach-Object { $script:ButtonMappings[$_.Key] = $_.Value }
+$script:BrowserButtonMappings.GetEnumerator() | ForEach-Object { $script:ButtonMappings[$_.Key] = $_.Value }
+$script:AutoDetectButtonMappings.GetEnumerator() | ForEach-Object { $script:ButtonMappings[$_.Key] = $_.Value }
+$script:ActionButtonMappings.GetEnumerator() | ForEach-Object { $script:ButtonMappings[$_.Key] = $_.Value }
+$script:MovementButtonMappings.GetEnumerator() | ForEach-Object { $script:ButtonMappings[$_.Key] = $_.Value }
 
 # Label and GroupBox header mappings
-$LabelMappings = @{
+$script:LabelMappings = @{
     "GamesListLabel"         = "gamesListLabel"
     "GameDetailsLabel"       = "gameDetailsLabel"
     "GameIdLabel"            = "gameIdLabel"
@@ -106,7 +106,7 @@ $LabelMappings = @{
 }
 
 # Tab header mappings
-$TabMappings = @{
+$script:TabMappings = @{
     "GameLauncherTab"   = "gameLauncherTabHeader"
     "GamesTab"          = "gamesTabHeader"
     "ManagedAppsTab"    = "managedAppsTabHeader"
@@ -114,7 +114,7 @@ $TabMappings = @{
 }
 
 # TextBlock and Text element mappings
-$TextMappings = @{
+$script:TextMappings = @{
     "VersionLabel"         = "versionLabel"
     "LauncherWelcomeText"  = "launcherWelcomeText"
     "LauncherSubtitleText" = "launcherSubtitleText"
@@ -124,20 +124,20 @@ $TextMappings = @{
 }
 
 # CheckBox content mappings
-$CheckBoxMappings = @{
+$script:CheckBoxMappings = @{
     "ReplayBufferCheckBox"          = "replayBufferLabel"
     "EnableLogNotarizationCheckBox" = "enableLogNotarization"
 }
 
 # MenuItem mappings
-$MenuItemMappings = @{
+$script:MenuItemMappings = @{
     "HelpMenu"            = "helpMenuHeader"
     "CheckUpdateMenuItem" = "checkUpdateMenuItem"
     "AboutMenuItem"       = "aboutMenuItem"
 }
 
 # Tooltip mappings for elements that don't have visible text but need tooltips
-$TooltipMappings = @{
+$script:TooltipMappings = @{
     "MoveGameTopButton"    = "moveTopTooltip"
     "MoveGameUpButton"     = "moveUpTooltip"
     "MoveGameDownButton"   = "moveDownTooltip"
@@ -171,12 +171,12 @@ function Get-ButtonMappingsByCategory {
 
     try {
         switch ($Category) {
-            "Crud" { return $CrudButtonMappings }
-            "Browser" { return $BrowserButtonMappings }
-            "AutoDetect" { return $AutoDetectButtonMappings }
-            "Action" { return $ActionButtonMappings }
-            "Movement" { return $MovementButtonMappings }
-            "All" { return $ButtonMappings }
+            "Crud" { return $script:CrudButtonMappings }
+            "Browser" { return $script:BrowserButtonMappings }
+            "AutoDetect" { return $script:AutoDetectButtonMappings }
+            "Action" { return $script:ActionButtonMappings }
+            "Movement" { return $script:MovementButtonMappings }
+            "All" { return $script:ButtonMappings }
             default { return @{} }
         }
     } catch {
@@ -217,14 +217,14 @@ function Get-LocalizationKey {
     try {
         # Define mapping table lookup based on element type
         $mappingTables = switch ($ElementType) {
-            "Button" { @($ButtonMappings) }
-            "Label" { @($LabelMappings) }
-            "Tab" { @($TabMappings) }
-            "Text" { @($TextMappings) }
-            "CheckBox" { @($CheckBoxMappings) }
-            "MenuItem" { @($MenuItemMappings) }
-            "Tooltip" { @($TooltipMappings) }
-            default { @($ButtonMappings, $LabelMappings, $TabMappings, $TextMappings, $CheckBoxMappings, $MenuItemMappings, $TooltipMappings) }
+            "Button" { @($script:ButtonMappings) }
+            "Label" { @($script:LabelMappings) }
+            "Tab" { @($script:TabMappings) }
+            "Text" { @($script:TextMappings) }
+            "CheckBox" { @($script:CheckBoxMappings) }
+            "MenuItem" { @($script:MenuItemMappings) }
+            "Tooltip" { @($script:TooltipMappings) }
+            default { @($script:ButtonMappings, $script:LabelMappings, $script:TabMappings, $script:TextMappings, $script:CheckBoxMappings, $script:MenuItemMappings, $script:TooltipMappings) }
         }
 
         # Search through the specified mapping tables
@@ -264,7 +264,7 @@ function Get-ElementsForKey {
 
     try {
         $elements = @()
-        $allMappings = @($ButtonMappings, $LabelMappings, $TabMappings, $TextMappings, $CheckBoxMappings, $MenuItemMappings, $TooltipMappings)
+        $allMappings = @($script:ButtonMappings, $script:LabelMappings, $script:TabMappings, $script:TextMappings, $script:CheckBoxMappings, $script:MenuItemMappings, $script:TooltipMappings)
 
         foreach ($mapping in $allMappings) {
             foreach ($kvp in $mapping.GetEnumerator()) {
@@ -283,4 +283,4 @@ function Get-ElementsForKey {
 
 # Variables are automatically available in the caller's scope when dot-sourced
 # No Export-ModuleMember needed for dot-sourced scripts
-Write-Verbose "ConfigEditor.Mappings.ps1 loaded successfully with $($ButtonMappings.Count) button mappings"
+Write-Verbose "ConfigEditor.Mappings.ps1 loaded successfully with $($script:ButtonMappings.Count) button mappings"

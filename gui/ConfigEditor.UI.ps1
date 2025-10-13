@@ -16,11 +16,14 @@ class ConfigEditorUI {
     [bool]$HasUnsavedChanges
 
     # Constructor
-    ConfigEditorUI([ConfigEditorState]$stateManager) {
+    ConfigEditorUI([ConfigEditorState]$stateManager, [hashtable]$allMappings, [ConfigEditorLocalization]$localization) {
         try {
             Write-Host "DEBUG: ConfigEditorUI constructor started" -ForegroundColor Cyan
             $this.State = $stateManager
-            Write-Host "DEBUG: State manager assigned successfully" -ForegroundColor Cyan
+            $this.Mappings = $allMappings
+            $this.Messages = $localization.Messages
+            $this.CurrentLanguage = $localization.CurrentLanguage
+            Write-Host "DEBUG: State manager, Mappings, and Localization assigned successfully" -ForegroundColor Cyan
 
             # Load XAML
             Write-Host "DEBUG: [1/6] Loading XAML file..." -ForegroundColor Cyan
@@ -101,20 +104,7 @@ class ConfigEditorUI {
                 Write-Verbose "[GetLocalizedMessage] Found key '$Key' in cached messages. Value: '$message'"
                 return $message
             }
-
-            if (-not $script:LocalizationInProgress) {
-                $script:LocalizationInProgress = $true
-                $localization = [ConfigEditorLocalization]::new()
-                if ($localization | Get-Member -Name "GetMessage" -MemberType Method) {
-                    $message = $localization.GetMessage($Key)
-                    $script:LocalizationInProgress = $false
-                    Write-Verbose "[GetLocalizedMessage] Found key '$Key' via service. Value: '$message'"
-                    return $message
-                }
-                $script:LocalizationInProgress = $false
-            }
         } catch {
-            $script:LocalizationInProgress = $false
             Write-Warning "[GetLocalizedMessage] Error getting message for key '$Key': $($_.Exception.Message)"
         }
 
@@ -606,44 +596,64 @@ class ConfigEditorUI {
         $callback.Invoke()
     #>
     [scriptblock]CreateLoadGlobalSettingsCallback([PSObject]$ConfigData) {
+        $self = $this
         return {
             try {
                 Write-Verbose "Loading global settings into UI controls"
 
-                # Load OBS settings
-                if ($ConfigData.obs.websocket) {
-                    $this.Window.FindName("ObsHostTextBox").Text = $ConfigData.obs.websocket.host
-                    $this.Window.FindName("ObsPortTextBox").Text = $ConfigData.obs.websocket.port
-                    $this.Window.FindName("ObsPasswordBox").Password = $ConfigData.obs.websocket.password
-                }
-                if ($ConfigData.obs) {
-                    $this.Window.FindName("ReplayBufferCheckBox").IsChecked = [bool]$ConfigData.obs.replayBuffer
+                $obsHostTextBox = $self.Window.FindName("ObsHostTextBox")
+                if ($obsHostTextBox -and $ConfigData.obs.websocket) {
+                    $obsHostTextBox.Text = $ConfigData.obs.websocket.host
                 }
 
+                $obsPortTextBox = $self.Window.FindName("ObsPortTextBox")
+                if ($obsPortTextBox -and $ConfigData.obs.websocket) {
+                    $obsPortTextBox.Text = $ConfigData.obs.websocket.port
+                }
 
-                # Load path settings
+                $obsPasswordBox = $self.Window.FindName("ObsPasswordBox")
+                if ($obsPasswordBox -and $ConfigData.obs.websocket) {
+                    $obsPasswordBox.Password = $ConfigData.obs.websocket.password
+                }
+
+                $replayBufferCheckBox = $self.Window.FindName("ReplayBufferCheckBox")
+                if ($replayBufferCheckBox -and $ConfigData.obs) {
+                    $replayBufferCheckBox.IsChecked = [bool]$ConfigData.obs.replayBuffer
+                }
+
                 if ($ConfigData.paths) {
-                    $this.Window.FindName("SteamPathTextBox").Text = $ConfigData.paths.steam
-                    $this.Window.FindName("EpicPathTextBox").Text = $ConfigData.paths.epic
-                    $this.Window.FindName("RiotPathTextBox").Text = $ConfigData.paths.riot
-                    $this.Window.FindName("ObsPathTextBox").Text = $ConfigData.paths.obs
+                    $steamPathTextBox = $self.Window.FindName("SteamPathTextBox")
+                    if ($steamPathTextBox) { $steamPathTextBox.Text = $ConfigData.paths.steam }
+
+                    $epicPathTextBox = $self.Window.FindName("EpicPathTextBox")
+                    if ($epicPathTextBox) { $epicPathTextBox.Text = $ConfigData.paths.epic }
+
+                    $riotPathTextBox = $self.Window.FindName("RiotPathTextBox")
+                    if ($riotPathTextBox) { $riotPathTextBox.Text = $ConfigData.paths.riot }
+
+                    $obsPathTextBox = $self.Window.FindName("ObsPathTextBox")
+                    if ($obsPathTextBox) { $obsPathTextBox.Text = $ConfigData.paths.obs }
                 }
 
-                # Load general settings
-                $langCombo = $this.Window.FindName("LanguageCombo")
-                $selectedLang = if($ConfigData.language) {$ConfigData.language} else {""}
-                # This needs to be improved to handle the actual items in the combobox
-                # For now, we just log it.
-                Write-Verbose "Configured language: $selectedLang"
+                $langCombo = $self.Window.FindName("LanguageCombo")
+                if ($langCombo) {
+                    # Implement selection logic based on $ConfigData.language
+                }
 
+                $launcherTypeCombo = $self.Window.FindName("LauncherTypeCombo")
+                if ($launcherTypeCombo) {
+                    # Implement selection logic
+                }
 
-                $launcherTypeCombo = $this.Window.FindName("LauncherTypeCombo")
-                # Similar logic for launcher type
+                $logRetentionCombo = $self.Window.FindName("LogRetentionCombo")
+                if ($logRetentionCombo) {
+                    # Implement selection logic
+                }
 
-                $logRetentionCombo = $this.Window.FindName("LogRetentionCombo")
-                # Similar logic for log retention
-
-                $this.Window.FindName("EnableLogNotarizationCheckBox").IsChecked = [bool]$ConfigData.logging.enableNotarization
+                $enableLogNotarizationCheckBox = $self.Window.FindName("EnableLogNotarizationCheckBox")
+                if ($enableLogNotarizationCheckBox -and $ConfigData.logging) {
+                    $enableLogNotarizationCheckBox.IsChecked = [bool]$ConfigData.logging.enableNotarization
+                }
 
                 Write-Verbose "Global settings loaded successfully"
             } catch {
