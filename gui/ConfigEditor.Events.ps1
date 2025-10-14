@@ -212,7 +212,7 @@ class ConfigEditorEvents {
         }
 
         # Mark as modified
-        $self.stateManager.SetModified()
+        $this.stateManager.SetModified()
 
         Show-SafeMessage -Key "gameAdded" -MessageType "Information"
         Write-Verbose "Added new game: $newGameId"
@@ -860,7 +860,7 @@ class ConfigEditorEvents {
         try {
             Write-Host "DEBUG: HandleWindowClosing called" -ForegroundColor Cyan
 
-            if ($self.stateManager.TestHasUnsavedChanges()) {
+            if ($this.stateManager.TestHasUnsavedChanges()) {
                 $result = Show-SafeMessage -Key "confirmDiscardChanges" -MessageType "Question" -Button "YesNoCancel" -DefaultResult "Cancel"
 
                 if ($result -ne "Yes") {
@@ -1068,52 +1068,52 @@ class ConfigEditorEvents {
             $self = $this
 
             # --- Window Events ---
-            $self.uiManager.Window.add_Closing({
-                param($sender, $e)
-                try {
-                    Write-Host "DEBUG: Window Closing event fired" -ForegroundColor Cyan
-                    $self.HandleWindowClosing($e)
-                } catch {
-                    Write-Warning "Error in window closing event: $($_.Exception.Message)"
-                }
-            }.GetNewClosure())
+            $this.uiManager.Window.add_Closing({
+                    param($sender, $e)
+                    try {
+                        Write-Host "DEBUG: Window Closing event fired" -ForegroundColor Cyan
+                        $self.HandleWindowClosing($e)
+                    } catch {
+                        Write-Warning "Error in window closing event: $($_.Exception.Message)"
+                    }
+                }.GetNewClosure())
 
             # --- Game Settings Tab ---
-            $self.uiManager.Window.FindName("GamesList").add_SelectionChanged({ $self.HandleGameSelectionChanged() }.GetNewClosure())
-            $self.uiManager.Window.FindName("PlatformComboBox").add_SelectionChanged({ $self.HandlePlatformSelectionChanged() }.GetNewClosure())
-            $self.uiManager.Window.FindName("AddGameButton").add_Click({ $self.HandleAddGame() }.GetNewClosure())
-            $self.uiManager.Window.FindName("DuplicateGameButton").add_Click({ $self.HandleDuplicateGame() }.GetNewClosure())
-            $self.uiManager.Window.FindName("DeleteGameButton").add_Click({ $self.HandleDeleteGame() }.GetNewClosure())
-            $self.uiManager.Window.FindName("BrowseExecutablePathButton").add_Click({ $self.HandleBrowseExecutablePath() }.GetNewClosure())
-            $self.uiManager.Window.FindName("SaveGameSettingsButton").add_Click({ $self.HandleSaveGameSettings() }.GetNewClosure())
-            $self.uiManager.Window.FindName("MoveGameTopButton").add_Click({ $self.HandleMoveGame("Top") }.GetNewClosure())
-            $self.uiManager.Window.FindName("MoveGameUpButton").add_Click({ $self.HandleMoveGame("Up") }.GetNewClosure())
-            $self.uiManager.Window.FindName("MoveGameDownButton").add_Click({ $self.HandleMoveGame("Down") }.GetNewClosure())
-            $self.uiManager.Window.FindName("MoveGameBottomButton").add_Click({ $self.HandleMoveGame("Bottom") }.GetNewClosure())
+            $this.uiManager.Window.FindName("GamesList").add_SelectionChanged({ $self.HandleGameSelectionChanged() }.GetNewClosure())
+            $this.uiManager.Window.FindName("PlatformComboBox").add_SelectionChanged({ $self.HandlePlatformSelectionChanged() }.GetNewClosure())
+            $this.uiManager.Window.FindName("AddGameButton").add_Click({ $self.HandleAddGame() }.GetNewClosure())
+            $this.uiManager.Window.FindName("DuplicateGameButton").add_Click({ $self.HandleDuplicateGame() }.GetNewClosure())
+            $this.uiManager.Window.FindName("DeleteGameButton").add_Click({ $self.HandleDeleteGame() }.GetNewClosure())
+            $this.uiManager.Window.FindName("BrowseExecutablePathButton").add_Click({ $self.HandleBrowseExecutablePath() }.GetNewClosure())
+            $this.uiManager.Window.FindName("SaveGameSettingsButton").add_Click({ $self.HandleSaveGameSettings() }.GetNewClosure())
+            $this.uiManager.Window.FindName("MoveGameTopButton").add_Click({ $self.HandleMoveGame("Top") }.GetNewClosure())
+            $this.uiManager.Window.FindName("MoveGameUpButton").add_Click({ $self.HandleMoveGame("Up") }.GetNewClosure())
+            $this.uiManager.Window.FindName("MoveGameDownButton").add_Click({ $self.HandleMoveGame("Down") }.GetNewClosure())
+            $this.uiManager.Window.FindName("MoveGameBottomButton").add_Click({ $self.HandleMoveGame("Bottom") }.GetNewClosure())
 
             # --- Managed Apps Tab ---
-            $self.uiManager.Window.FindName("ManagedAppsList").add_SelectionChanged({ $self.HandleAppSelectionChanged() }.GetNewClosure())
-            $self.uiManager.Window.FindName("AddAppButton").add_Click({ $self.HandleAddApp() }.GetNewClosure())
-            $self.uiManager.Window.FindName("DuplicateAppButton").add_Click({ $self.HandleDuplicateApp() }.GetNewClosure())
-            $self.uiManager.Window.FindName("DeleteAppButton").add_Click({ $self.HandleDeleteApp() }.GetNewClosure())
-            $self.uiManager.Window.FindName("BrowseAppPathButton").add_Click({ $self.HandleBrowseExecutablePath() }.GetNewClosure())
-            $self.uiManager.Window.FindName("SaveManagedAppsButton").add_Click({ $self.HandleSaveManagedApps() }.GetNewClosure())
-            $self.uiManager.Window.FindName("MoveAppTopButton").add_Click({ $self.HandleMoveApp("Top") }.GetNewClosure())
-            $self.uiManager.Window.FindName("MoveAppUpButton").add_Click({ $self.HandleMoveApp("Up") }.GetNewClosure())
-            $self.uiManager.Window.FindName("MoveAppDownButton").add_Click({ $self.HandleMoveApp("Down") }.GetNewClosure())
-            $self.uiManager.Window.FindName("MoveAppBottomButton").add_Click({ $self.HandleMoveApp("Bottom") }.GetNewClosure())
+            $this.uiManager.Window.FindName("ManagedAppsList").add_SelectionChanged({ $self.HandleAppSelectionChanged() }.GetNewClosure())
+            $this.uiManager.Window.FindName("AddAppButton").add_Click({ $self.HandleAddApp() }.GetNewClosure())
+            $this.uiManager.Window.FindName("DuplicateAppButton").add_Click({ $self.HandleDuplicateApp() }.GetNewClosure())
+            $this.uiManager.Window.FindName("DeleteAppButton").add_Click({ $self.HandleDeleteApp() }.GetNewClosure())
+            $this.uiManager.Window.FindName("BrowseAppPathButton").add_Click({ $self.HandleBrowseExecutablePath() }.GetNewClosure())
+            $this.uiManager.Window.FindName("SaveManagedAppsButton").add_Click({ $self.HandleSaveManagedApps() }.GetNewClosure())
+            $this.uiManager.Window.FindName("MoveAppTopButton").add_Click({ $self.HandleMoveApp("Top") }.GetNewClosure())
+            $this.uiManager.Window.FindName("MoveAppUpButton").add_Click({ $self.HandleMoveApp("Up") }.GetNewClosure())
+            $this.uiManager.Window.FindName("MoveAppDownButton").add_Click({ $self.HandleMoveApp("Down") }.GetNewClosure())
+            $this.uiManager.Window.FindName("MoveAppBottomButton").add_Click({ $self.HandleMoveApp("Bottom") }.GetNewClosure())
 
             # --- Global Settings Tab ---
-            $self.uiManager.Window.FindName("LanguageCombo").add_SelectionChanged({ $self.HandleLanguageSelectionChanged() }.GetNewClosure())
-            $self.uiManager.Window.FindName("SaveGlobalSettingsButton").add_Click({ $self.HandleSaveGlobalSettings() }.GetNewClosure())
-            $self.uiManager.Window.FindName("AutoDetectSteamButton").add_Click({ $self.HandleAutoDetectPath("Steam") }.GetNewClosure())
-            $self.uiManager.Window.FindName("AutoDetectEpicButton").add_Click({ $self.HandleAutoDetectPath("Epic") }.GetNewClosure())
-            $self.uiManager.Window.FindName("AutoDetectRiotButton").add_Click({ $self.HandleAutoDetectPath("Riot") }.GetNewClosure())
-            $self.uiManager.Window.FindName("AutoDetectObsButton").add_Click({ $self.HandleAutoDetectPath("Obs") }.GetNewClosure())
+            $this.uiManager.Window.FindName("LanguageCombo").add_SelectionChanged({ $self.HandleLanguageSelectionChanged() }.GetNewClosure())
+            $this.uiManager.Window.FindName("SaveGlobalSettingsButton").add_Click({ $self.HandleSaveGlobalSettings() }.GetNewClosure())
+            $this.uiManager.Window.FindName("AutoDetectSteamButton").add_Click({ $self.HandleAutoDetectPath("Steam") }.GetNewClosure())
+            $this.uiManager.Window.FindName("AutoDetectEpicButton").add_Click({ $self.HandleAutoDetectPath("Epic") }.GetNewClosure())
+            $this.uiManager.Window.FindName("AutoDetectRiotButton").add_Click({ $self.HandleAutoDetectPath("Riot") }.GetNewClosure())
+            $this.uiManager.Window.FindName("AutoDetectObsButton").add_Click({ $self.HandleAutoDetectPath("Obs") }.GetNewClosure())
 
             # --- Menu Items ---
-            $self.uiManager.Window.FindName("CheckUpdateMenuItem").add_Click({ $self.HandleCheckUpdate() }.GetNewClosure())
-            $self.uiManager.Window.FindName("AboutMenuItem").add_Click({ $self.HandleAbout() }.GetNewClosure())
+            $this.uiManager.Window.FindName("CheckUpdateMenuItem").add_Click({ $self.HandleCheckUpdate() }.GetNewClosure())
+            $this.uiManager.Window.FindName("AboutMenuItem").add_Click({ $self.HandleAbout() }.GetNewClosure())
 
             Write-Host "All UI event handlers registered successfully." -ForegroundColor Green
         } catch {

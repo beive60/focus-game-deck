@@ -48,14 +48,14 @@ class ConfigEditorUI {
             # Set up proper window closing behavior
             Write-Host "DEBUG: [5/6] Adding window event handlers..." -ForegroundColor Cyan
             $this.Window.add_Closed({
-                param($sender, $e)
-                Write-Host "DEBUG: Window closed event triggered" -ForegroundColor Yellow
-                try {
-                    $this.Cleanup()
-                } catch {
-                    Write-Warning "Error during cleanup: $($_.Exception.Message)"
-                }
-            })
+                    param($sender, $e)
+                    Write-Host "DEBUG: Window closed event triggered" -ForegroundColor Yellow
+                    try {
+                        $this.Cleanup()
+                    } catch {
+                        Write-Warning "Error during cleanup: $($_.Exception.Message)"
+                    }
+                })
 
             # Initialize other components
             Write-Host "DEBUG: [6/6] Initializing other components..." -ForegroundColor Cyan
@@ -84,7 +84,7 @@ class ConfigEditorUI {
             $this.CurrentAppId = ""
             $this.CurrentLanguage = "en"
             $this.HasUnsavedChanges = $false
-            $this.Messages = @{}
+            # messages are now passed in constructor
             $this.Window.DataContext = $this
             Write-Host "DEBUG: InitializeComponents completed" -ForegroundColor Cyan
         } catch {
@@ -99,8 +99,9 @@ class ConfigEditorUI {
     #>
     [string]GetLocalizedMessage([string]$Key) {
         try {
-            if ($this.Messages -and $this.Messages.ContainsKey($Key)) {
-                $message = $this.Messages[$Key]
+            # MODIFIED: Use PSCustomObject property check instead of ContainsKey
+            if ($this.Messages -and $this.Messages.PSObject.Properties[$Key]) {
+                $message = $this.Messages.$Key
                 Write-Verbose "[GetLocalizedMessage] Found key '$Key' in cached messages. Value: '$message'"
                 return $message
             }
@@ -473,7 +474,8 @@ class ConfigEditorUI {
             $gameLauncherList.Items.Clear()
 
             # Check if games are configured
-            if (-not $ConfigData.games -or $ConfigData.games.PSObject.Properties.Count -eq 1) { # checking for 1 to account for _order
+            if (-not $ConfigData.games -or $ConfigData.games.PSObject.Properties.Count -eq 1) {
+                # checking for 1 to account for _order
                 # Show "no games" message
                 $noGamesPanel = New-Object System.Windows.Controls.StackPanel
                 $noGamesPanel.HorizontalAlignment = "Center"
@@ -527,10 +529,10 @@ class ConfigEditorUI {
             # or for elements not covered by the generic mapping.
             $textMappings = $this.GetMappingFromScope("TextMappings")
             $launcherKeys = @("LauncherWelcomeText", "LauncherSubtitleText", "LauncherStatusText", "LauncherHintText")
-            foreach($key in $launcherKeys) {
-                if($textMappings.ContainsKey($key)) {
+            foreach ($key in $launcherKeys) {
+                if ($textMappings.ContainsKey($key)) {
                     $element = $this.Window.FindName($key)
-                    if($element) {
+                    if ($element) {
                         $element.Text = $this.GetLocalizedMessage($textMappings[$key])
                     }
                 }
