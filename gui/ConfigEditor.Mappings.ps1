@@ -148,6 +148,22 @@ $script:TooltipMappings = @{
     "MoveAppBottomButton"  = "moveBottomTooltip"
 }
 
+# ComboBoxItem content mappings
+$script:ComboBoxItemMappings = @{
+    "LogRetention7Item"               = "logRetention30"
+    "LogRetention30Item"              = "logRetention90"
+    "LogRetention180Item"             = "logRetention180"
+    "LogRetentionUnlimitedItem"       = "logRetentionUnlimited"
+    "LauncherTypeEnhancedItem"        = "enhancedShortcuts"
+    "LauncherTypeTraditionalItem"     = "traditionalBatch"
+    "GameLauncherTypeEnhancedItem"    = "enhancedShortcuts"
+    "GameLauncherTypeTraditionalItem" = "traditionalBatch"
+    "PlatformStandaloneItem"          = "standalonePlatform"
+    "PlatformSteamItem"               = "steamPlatform"
+    "PlatformEpicItem"                = "epicPlatform"
+    "PlatformRiotItem"                = "riotPlatform"
+}
+
 <#
 .SYNOPSIS
     Gets button mappings by functionality category.
@@ -210,7 +226,7 @@ function Get-LocalizationKey {
         [string]$ElementName,
 
         [Parameter(Mandatory = $false)]
-        [ValidateSet("Button", "Label", "Tab", "Text", "CheckBox", "MenuItem", "Tooltip")]
+        [ValidateSet("Button", "Label", "Tab", "Text", "CheckBox", "MenuItem", "Tooltip", "ComboBoxItem")]
         [string]$ElementType
     )
 
@@ -224,7 +240,8 @@ function Get-LocalizationKey {
             "CheckBox" { @($script:CheckBoxMappings) }
             "MenuItem" { @($script:MenuItemMappings) }
             "Tooltip" { @($script:TooltipMappings) }
-            default { @($script:ButtonMappings, $script:LabelMappings, $script:TabMappings, $script:TextMappings, $script:CheckBoxMappings, $script:MenuItemMappings, $script:TooltipMappings) }
+            "ComboBoxItem" { @($script:ComboBoxItemMappings) }
+            default { @($script:ButtonMappings, $script:LabelMappings, $script:TabMappings, $script:TextMappings, $script:CheckBoxMappings, $script:MenuItemMappings, $script:TooltipMappings, $script:ComboBoxItemMappings) }
         }
 
         # Search through the specified mapping tables
@@ -264,7 +281,7 @@ function Get-ElementsForKey {
 
     try {
         $elements = @()
-        $allMappings = @($script:ButtonMappings, $script:LabelMappings, $script:TabMappings, $script:TextMappings, $script:CheckBoxMappings, $script:MenuItemMappings, $script:TooltipMappings)
+        $allMappings = @($script:ButtonMappings, $script:LabelMappings, $script:TabMappings, $script:TextMappings, $script:CheckBoxMappings, $script:MenuItemMappings, $script:TooltipMappings, $script:ComboBoxItemMappings)
 
         foreach ($mapping in $allMappings) {
             foreach ($kvp in $mapping.GetEnumerator()) {
@@ -283,4 +300,4 @@ function Get-ElementsForKey {
 
 # Variables are automatically available in the caller's scope when dot-sourced
 # No Export-ModuleMember needed for dot-sourced scripts
-Write-Verbose "ConfigEditor.Mappings.ps1 loaded successfully with $($script:ButtonMappings.Count) button mappings"
+Write-Verbose "ConfigEditor.Mappings.ps1 loaded successfully with $($script:ButtonMappings.Count) button mappings, $($script:LabelMappings.Count) label mappings, $($script:TabMappings.Count) tab mappings, $($script:TextMappings.Count) text mappings, $($script:CheckBoxMappings.Count) checkbox mappings, $($script:MenuItemMappings.Count) menu item mappings, $($script:TooltipMappings.Count) tooltip mappings, and $($script:ComboBoxItemMappings.Count) ComboBoxItem mappings"
