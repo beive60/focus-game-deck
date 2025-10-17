@@ -60,6 +60,7 @@ class ConfigEditorUI {
             # Initialize other components
             Write-Host "DEBUG: [6/6] Initializing other components..." -ForegroundColor Cyan
             $this.InitializeComponents()
+            $this.InitializeGameActionCombos()
             Write-Host "DEBUG: ConfigEditorUI constructor completed successfully" -ForegroundColor Cyan
 
         } catch {
@@ -662,5 +663,133 @@ class ConfigEditorUI {
                 Write-Warning "Failed to load global settings: $($_.Exception.Message)"
             }
         }.GetNewClosure()
+    }
+
+    <#
+    .SYNOPSIS
+    Initializes the game action combo boxes with available actions.
+    .DESCRIPTION
+    Populates the GameStartActionCombo and GameEndActionCombo with predefined action options.
+    .OUTPUTS
+    None
+    .EXAMPLE
+    $this.InitializeGameActionCombos()
+    #>
+    [void]InitializeGameActionCombos() {
+        try {
+            # Finds and adds items to GameStartActionCombo and GameEndActionCombo.
+            $gameStartActionCombo = $this.Window.FindName("GameStartActionCombo")
+            $gameEndActionCombo = $this.Window.FindName("GameEndActionCombo")
+
+            if ($gameStartActionCombo -and $gameEndActionCombo) {
+                $actions = @("none", "start-process", "stop-process", "toggle-hotkeys", "start-vtube-studio", "stop-vtube-studio", "set-discord-gaming-mode", "restore-discord-normal", "pause-wallpaper", "play-wallpaper")
+
+                $gameStartActionCombo.ItemsSource = $actions
+                $gameEndActionCombo.ItemsSource = $actions
+
+                $gameStartActionCombo.SelectedIndex = 0
+                $gameEndActionCombo.SelectedIndex = 0
+
+                Write-Verbose "Game action combo boxes initialized successfully"
+            }
+        } catch {
+            Write-Warning "Failed to initialize game action combo boxes: $($_.Exception.Message)"
+        }
+    }
+
+    <#
+    .SYNOPSIS
+    Gets available game actions based on platform and permissions.
+    .DESCRIPTION
+    Returns an array of action objects containing Content and Tag properties
+    based on the specified platform and user permission level.
+    .PARAMETER platform
+    The gaming platform (steam, standalone, epic, riot).
+    .PARAMETER permissions
+    User permission level (Standard, Advanced).
+    .OUTPUTS
+    Array of hashtables with Content and Tag properties.
+    #>
+    [array]GetAvailableGameActions([string]$platform, [string]$permissions) {
+        # Base actions always available
+        $baseActions = @(
+            @{ Content = "[NO_ACTION]"; Tag = "none" }
+        )
+
+        # Conditional actions based on platform and permissions
+        $conditionalActions = @()
+
+        if ($platform -eq "steam" -or $platform -eq "standalone") {
+            $conditionalActions += @{ Content = "[START_PROCESS]"; Tag = "start_process" }
+            $conditionalActions += @{ Content = "[STOP_PROCESS]"; Tag = "stop_process" }
+        }
+
+        if ($permissions -eq "Advanced") {
+            $conditionalActions += @{ Content = "[Invoke_COMMAND_WITH_PARAMETERS]"; Tag = "invoke_command_with_parameters" }
+        }
+
+        return $baseActions + $conditionalActions
+    }
+
+    <#
+    .SYNOPSIS
+    Adds a ComboBoxItem to the specified ComboBox control.
+    .DESCRIPTION
+    Creates and adds a new ComboBoxItem with the specified content and tag
+    to the provided ComboBox control.
+    .PARAMETER comboBox
+    The ComboBox control to add the item to.
+    .PARAMETER content
+    The display text for the ComboBoxItem.
+    .PARAMETER tag
+    The tag value for the ComboBoxItem.
+    #>
+    [void]AddComboBoxActionItem([System.Windows.Controls.ComboBox]$comboBox, [string]$content, [string]$tag) {
+        try {
+            $item = New-Object System.Windows.Controls.ComboBoxItem
+            $item.Content = $content
+            $item.Tag = $tag
+            $comboBox.Items.Add($item) | Out-Null
+        } catch {
+            Write-Host "Error adding ComboBox item: $($_.Exception.Message)" -ForegroundColor Red
+        }
+    }
+
+    <#
+    .SYNOPSIS
+    Event handler for platform selection changes.
+    .DESCRIPTION
+    Updates game action combo boxes when the platform selection changes
+    to show appropriate actions for the selected platform.
+    .PARAMETER sender
+    The ComboBox that triggered the event.
+    .PARAMETER e
+    Selection changed event arguments.
+    #>
+    [void]OnPlatformSelectionChanged([object]$sender, [System.Windows.Controls.SelectionChangedEventArgs]$e) {
+        try {
+            if ($sender.SelectedItem -and $sender.SelectedItem.Tag) {
+                $selectedPlatform = $sender.SelectedItem.Tag.ToString()
+                $currentPermissions = $this.GetCurrentUserPermissions()
+                $this.InitializeGameActionCombos($selectedPlatform, $currentPermissions)
+            }
+        } catch {
+            Write-Host "Error handling platform selection change: $($_.Exception.Message)" -ForegroundColor Red
+        }
+    }
+
+    <#
+    .SYNOPSIS
+    Gets the current user permission level.
+    .DESCRIPTION
+    Determines the current user's permission level for action availability.
+    This is a placeholder function that should be implemented based on your
+    application's permission system.
+    .OUTPUTS
+    String representing permission level (Standard or Advanced).
+    #>
+    [string]GetCurrentUserPermissions() {
+        # TODO: Implement actual permission logic
+        return "Standard"
     }
 }
