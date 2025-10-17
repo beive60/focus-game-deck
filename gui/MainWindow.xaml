@@ -836,7 +836,9 @@
                                         x:Name="GameStartActionCombo"
                                         Grid.Row="3"
                                         Grid.Column="1"
-                                        Margin="5"/>
+                                        Margin="5">
+
+                                    </ComboBox>
 
                                     <StackPanel
                                         x:Name="GameEndActionLabelPanel"
@@ -862,7 +864,9 @@
                                         x:Name="GameEndActionCombo"
                                         Grid.Row="4"
                                         Grid.Column="1"
-                                        Margin="5"/>
+                                        Margin="5">
+
+                                    </ComboBox>
 
                                     <StackPanel
                                         x:Name="AppArgumentsLabelPanel"
