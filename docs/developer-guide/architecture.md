@@ -211,7 +211,19 @@ The Focus Game Deck architecture consists of five main layers, each serving dist
 - **Extensibility**: WebSocket API integration foundation for future model control features
 - **Platform Agnostic**: Supports both Steam and standalone VTube Studio installations
 
-#### 7. WebSocket Manager Architecture: Hybrid Utility Class Pattern
+
+#### 7. Code Signing Certificate Selection
+
+**Initial Consideration:**
+
+- The ideal choice was an Extended Validation (EV) certificate, aiming for the highest level of trust and SmartScreen compatibility.
+
+**Practical Decision:**
+
+- However, obtaining an EV certificate proved to be extremely difficult for an individual developer or sole proprietor due to strict requirements and verification processes.
+- As a realistic alternative, an Organization Validation (OV) certificate was selected. This option provides sufficient trust for code signing and SmartScreen reputation, while being attainable for small businesses and individual developers.
+
+#### 8. WebSocket Manager Architecture: Hybrid Utility Class Pattern
 
 **Problem Context:**
 

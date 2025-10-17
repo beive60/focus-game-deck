@@ -136,16 +136,18 @@ Master-Build.ps1 (Tier 3: Orchestration)
 
 ## Digital Signature Infrastructure
 
+
 ### Certificate Requirements
 
-- **Type**: Extended Validation (EV) Code Signing Certificate
+- **Type**: Code Signing Certificate (EV or OV)
 - **Recommended Providers**: DigiCert, Sectigo, GlobalSign, Entrust
 - **Key Usage**: Digital Signature, Key Encipherment
 - **Extended Key Usage**: Code Signing
 
+
 ### Certificate Setup Process
 
-1. **Obtain EV Certificate**: Purchase from trusted Certificate Authority
+1. **Obtain EV or OV Certificate**: Purchase from a trusted Certificate Authority
 2. **Install Certificate**: Import into Windows Certificate Store (CurrentUser/My)
 3. **Configure Thumbprint**: Update `certificateThumbprint` in signing-config.json
 4. **Enable Signing**: Set `enabled: true` in configuration
