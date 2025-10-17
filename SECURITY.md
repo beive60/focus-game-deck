@@ -149,6 +149,7 @@ The Log Notarization System is particularly valuable in scenarios such as:
 - **Competitive gaming verification**: Showing unmodified session data
 - **Legal proceedings**: Providing cryptographically verifiable evidence
 
+
 ## Enhanced Chain-of-Trust Authentication (v1.0.1+)
 
 Starting from version 1.0.1, Focus Game Deck implements an **Enhanced Chain-of-Trust Authentication System** that not only proves log integrity but also verifies the **authenticity of the application** that generated the logs.
@@ -174,7 +175,7 @@ The enhanced system creates a **cryptographic chain of trust** by recording:
 
 ```text
 [Signed .exe] → [Digital Signature] → [Certificate Hash] → [Firebase Record]
-     ↓                                                           ↑
+  ↓                                                           ↑
 [Log Generation] → [SHA256 Hash] → [Combined with App Hash] → [Upload]
 ```
 
@@ -198,9 +199,10 @@ Each notarized record now contains:
 }
 ```
 
+
 ### Official Signature Registry
 
-All official releases maintain a registry of authentic signature hashes in [`docs/official_signature_hashes.json`](docs/official_signature_hashes.json):
+All official releases are signed with a code signing certificate (EV or OV) and maintain a registry of authentic signature hashes in [`docs/official_signature_hashes.json`](docs/official_signature_hashes.json):
 
 ```json
 {
@@ -225,6 +227,7 @@ All official releases maintain a registry of authentic signature hashes in [`doc
 }
 ```
 
+
 ### Verification Process (Enhanced)
 
 To verify a log file with chain-of-trust authentication:
@@ -232,18 +235,18 @@ To verify a log file with chain-of-trust authentication:
 1. **Obtain Certificate ID** from user
 2. **Query Firebase record** using Certificate ID
 3. **Extract authentication data**:
-   - `logHash`: Used for log integrity verification
-   - `appSignatureHash`: Used for application authenticity verification
-   - `appVersion`: Used to locate official registry entry
+  - `logHash`: Used for log integrity verification
+  - `appSignatureHash`: Used for application authenticity verification
+  - `appVersion`: Used to locate official registry entry
 4. **Verify log integrity**: Calculate SHA256 of log file, compare with `logHash`
 5. **Verify application authenticity**:
-   - Look up `appVersion` in `docs/official_signature_hashes.json`
-   - Find the matching executable entry
-   - Compare `appSignatureHash` with registry entry
+  - Look up `appVersion` in `docs/official_signature_hashes.json`
+  - Find the matching executable entry
+  - Compare `appSignatureHash` with registry entry (EV or OV certificate)
 6. **Assessment**:
-   - **Fully Authentic**: Both hashes match official registry
-   - **Content Valid, Source Unknown**: Log hash valid but app signature not in registry
-   - **Invalid**: Log hash doesn't match file content
+  - **Fully Authentic**: Both hashes match official registry
+  - **Content Valid, Source Unknown**: Log hash valid but app signature not in registry
+  - **Invalid**: Log hash doesn't match file content
 
 ### Development vs Production Signatures
 
