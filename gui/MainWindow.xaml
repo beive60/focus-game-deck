@@ -1056,12 +1056,12 @@
                                         Margin="5">
                                         <ComboBoxItem
                                             x:Name="LogRetention7Item"
-                                            Content="[LOG_RETENTION_30]"
-                                            Tag="30"/>
+                                            Content="[LOG_RETENTION_7]"
+                                            Tag="7"/>
                                         <ComboBoxItem
                                             x:Name="LogRetention30Item"
-                                            Content="[LOG_RETENTION_90]"
-                                            Tag="90"
+                                            Content="[LOG_RETENTION_30]"
+                                            Tag="30"
                                             IsSelected="True"/>
                                         <ComboBoxItem
                                             x:Name="LogRetention180Item"

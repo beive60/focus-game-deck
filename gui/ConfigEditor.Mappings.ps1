@@ -149,9 +149,11 @@ $script:TooltipMappings = @{
 }
 
 # ComboBoxItem content mappings
+# Note: Only includes ComboBoxItems that are statically defined in MainWindow.xaml
+# Dynamic ComboBoxItems (e.g., game actions) are localized separately in InitializeGameActionCombos()
 $script:ComboBoxItemMappings = @{
-    "LogRetention7Item"               = "logRetention30"
-    "LogRetention30Item"              = "logRetention90"
+    "LogRetention7Item"               = "logRetention7"
+    "LogRetention30Item"              = "logRetention30"
     "LogRetention180Item"             = "logRetention180"
     "LogRetentionUnlimitedItem"       = "logRetentionUnlimited"
     "LauncherTypeEnhancedItem"        = "enhancedShortcuts"
@@ -162,17 +164,21 @@ $script:ComboBoxItemMappings = @{
     "PlatformSteamItem"               = "steamPlatform"
     "PlatformEpicItem"                = "epicPlatform"
     "PlatformRiotItem"                = "riotPlatform"
-    # Game action mappings
-    "GameActionNoneItem"              = "gameActionNone"
-    "GameActionStartProcessItem"      = "gameActionStartProcess"
-    "GameActionStopProcessItem"       = "gameActionStopProcess"
-    "GameActionToggleHotkeysItem"     = "gameActionToggleHotkeys"
-    "GameActionStartVtubeStudioItem"  = "gameActionStartVtubeStudio"
-    "GameActionStopVtubeStudioItem"   = "gameActionStopVtubeStudio"
-    "GameActionSetDiscordGamingItem"  = "gameActionSetDiscordGaming"
-    "GameActionRestoreDiscordItem"    = "gameActionRestoreDiscord"
-    "GameActionPauseWallpaperItem"    = "gameActionPauseWallpaper"
-    "GameActionPlayWallpaperItem"     = "gameActionPlayWallpaper"
+}
+
+# Game action message key mappings (used for dynamic ComboBoxItem creation)
+# These are not x:Name values but message keys used in InitializeGameActionCombos()
+$script:GameActionMessageKeys = @{
+    "none"                    = "gameActionNone"
+    "start-process"           = "gameActionStartProcess"
+    "stop-process"            = "gameActionStopProcess"
+    "toggle-hotkeys"          = "gameActionToggleHotkeys"
+    "start-vtube-studio"      = "gameActionStartVtubeStudio"
+    "stop-vtube-studio"       = "gameActionStopVtubeStudio"
+    "set-discord-gaming-mode" = "gameActionSetDiscordGaming"
+    "restore-discord-normal"  = "gameActionRestoreDiscord"
+    "pause-wallpaper"         = "gameActionPauseWallpaper"
+    "play-wallpaper"          = "gameActionPlayWallpaper"
 }
 
 <#
@@ -347,7 +353,7 @@ function Get-ComboBoxItemLocalizationKey {
 
 .DESCRIPTION
     This function checks if all ComboBoxItem mappings have valid message keys
-    in the provided messages hashtable.
+    in the provided messages hashtable. Also validates game action message keys.
 
 .PARAMETER Messages
     The messages hashtable containing localized strings.
@@ -378,12 +384,23 @@ function Test-ComboBoxItemMappings {
 
         $languageMessages = $Messages[$Language]
 
+        # Validate static ComboBoxItem mappings
         foreach ($kvp in $script:ComboBoxItemMappings.GetEnumerator()) {
             $elementName = $kvp.Key
             $messageKey = $kvp.Value
 
             if (-not $languageMessages.ContainsKey($messageKey)) {
                 $missingKeys += "Missing message key '$messageKey' for ComboBoxItem '$elementName'"
+            }
+        }
+
+        # Validate game action message keys
+        foreach ($kvp in $script:GameActionMessageKeys.GetEnumerator()) {
+            $actionTag = $kvp.Key
+            $messageKey = $kvp.Value
+
+            if (-not $languageMessages.ContainsKey($messageKey)) {
+                $missingKeys += "Missing message key '$messageKey' for game action '$actionTag'"
             }
         }
 
@@ -396,4 +413,4 @@ function Test-ComboBoxItemMappings {
 
 # Variables are automatically available in the caller's scope when dot-sourced
 # No Export-ModuleMember needed for dot-sourced scripts
-Write-Verbose "ConfigEditor.Mappings.ps1 loaded successfully with $($script:ButtonMappings.Count) button mappings, $($script:LabelMappings.Count) label mappings, $($script:TabMappings.Count) tab mappings, $($script:TextMappings.Count) text mappings, $($script:CheckBoxMappings.Count) checkbox mappings, $($script:MenuItemMappings.Count) menu item mappings, $($script:TooltipMappings.Count) tooltip mappings, and $($script:ComboBoxItemMappings.Count) ComboBoxItem mappings"
+Write-Verbose "ConfigEditor.Mappings.ps1 loaded successfully with $($script:ButtonMappings.Count) button mappings, $($script:LabelMappings.Count) label mappings, $($script:TabMappings.Count) tab mappings, $($script:TextMappings.Count) text mappings, $($script:CheckBoxMappings.Count) checkbox mappings, $($script:MenuItemMappings.Count) menu item mappings, $($script:TooltipMappings.Count) tooltip mappings, $($script:ComboBoxItemMappings.Count) static ComboBoxItem mappings, and $($script:GameActionMessageKeys.Count) game action message keys"
