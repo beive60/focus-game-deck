@@ -206,13 +206,14 @@ function Initialize-ConfigEditor {
             Write-Host "DEBUG: Creating ConfigEditorUI instance..." -ForegroundColor Cyan
 
             $allMappings = @{
-                Button   = $ButtonMappings
-                Label    = $LabelMappings
-                Tab      = $TabMappings
-                Text     = $TextMappings
-                CheckBox = $CheckBoxMappings
-                MenuItem = $MenuItemMappings
-                Tooltip  = $TooltipMappings
+                Button       = $ButtonMappings
+                Label        = $LabelMappings
+                Tab          = $TabMappings
+                Text         = $TextMappings
+                CheckBox     = $CheckBoxMappings
+                MenuItem     = $MenuItemMappings
+                Tooltip      = $TooltipMappings
+                ComboBoxItem = $ComboBoxItemMappings
             }
             $uiManager = [ConfigEditorUI]::new($stateManager, $allMappings, $localization)
 
