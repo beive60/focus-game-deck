@@ -1,10 +1,14 @@
 # Import mappings at the top of the file
-. "$PSScriptRoot/ConfigEditor.Mappings.ps1"
+$ProjectRoot = Split-Path -Parent $PSScriptRoot
+$MappingsPath = Join-Path $ProjectRoot "gui/ConfigEditor.Mappings.ps1"
+
+. $MappingsPath
 
 class ConfigEditorUI {
     # Properties
     [ConfigEditorState]$State
     [System.Windows.Window]$Window
+    [hashtable]$Mappings
     [string]$CurrentGameId
     [string]$CurrentAppId
     [PSObject]$Messages
@@ -12,51 +16,51 @@ class ConfigEditorUI {
     [bool]$HasUnsavedChanges
 
     # Constructor
-    ConfigEditorUI([ConfigEditorState]$stateManager) {
+    ConfigEditorUI([ConfigEditorState]$stateManager, [hashtable]$allMappings, [ConfigEditorLocalization]$localization) {
         try {
             Write-Host "DEBUG: ConfigEditorUI constructor started" -ForegroundColor Cyan
             $this.State = $stateManager
-            Write-Host "DEBUG: State manager assigned successfully" -ForegroundColor Cyan
+            $this.Mappings = $allMappings
+            $this.Messages = $localization.Messages
+            $this.CurrentLanguage = $localization.CurrentLanguage
+            Write-Host "DEBUG: State manager, Mappings, and Localization assigned successfully" -ForegroundColor Cyan
 
             # Load XAML
-            Write-Host "DEBUG: Loading XAML file..." -ForegroundColor Cyan
+            Write-Host "DEBUG: [1/6] Loading XAML file..." -ForegroundColor Cyan
             $xamlPath = Join-Path $PSScriptRoot "MainWindow.xaml"
-            Write-Host "DEBUG: XAML path: $xamlPath" -ForegroundColor Cyan
-
             if (-not (Test-Path $xamlPath)) {
                 throw "XAML file not found: $xamlPath"
             }
-            Write-Host "DEBUG: XAML file exists" -ForegroundColor Cyan
-
             $xamlContent = Get-Content $xamlPath -Raw -Encoding UTF8
-            Write-Host "DEBUG: XAML content loaded, length: $($xamlContent.Length)" -ForegroundColor Cyan
+            Write-Host "DEBUG: [2/6] XAML content loaded, length: $($xamlContent.Length)" -ForegroundColor Cyan
 
             # Parse XAML
-            Write-Host "DEBUG: Parsing XAML..." -ForegroundColor Cyan
+            Write-Host "DEBUG: [3/6] Parsing XAML..." -ForegroundColor Cyan
             $xmlReader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
             $this.Window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
-            $xmlReader.Close()  # Properly close the XML reader
-            Write-Host "DEBUG: XAML parsed successfully" -ForegroundColor Cyan
+            $xmlReader.Close()
+            Write-Host "DEBUG: [4/6] XAML parsed successfully" -ForegroundColor Cyan
 
             if ($null -eq $this.Window) {
                 throw "Failed to create Window from XAML"
             }
-            Write-Host "DEBUG: Window created successfully, type: $($this.Window.GetType().Name)" -ForegroundColor Cyan
 
             # Set up proper window closing behavior
+            Write-Host "DEBUG: [5/6] Adding window event handlers..." -ForegroundColor Cyan
             $this.Window.add_Closed({
-                param($sender, $e)
-                Write-Host "DEBUG: Window closed event triggered" -ForegroundColor Yellow
-                try {
-                    # Clean up resources
-                    $this.Cleanup()
-                } catch {
-                    Write-Warning "Error during cleanup: $($_.Exception.Message)"
-                }
-            })
+                    param($sender, $e)
+                    Write-Host "DEBUG: Window closed event triggered" -ForegroundColor Yellow
+                    try {
+                        $this.Cleanup()
+                    } catch {
+                        Write-Warning "Error during cleanup: $($_.Exception.Message)"
+                    }
+                })
 
             # Initialize other components
+            Write-Host "DEBUG: [6/6] Initializing other components..." -ForegroundColor Cyan
             $this.InitializeComponents()
+            $this.InitializeGameActionCombos()
             Write-Host "DEBUG: ConfigEditorUI constructor completed successfully" -ForegroundColor Cyan
 
         } catch {
@@ -73,38 +77,16 @@ class ConfigEditorUI {
     <#
     .SYNOPSIS
         Initializes UI components and sets default values.
-
-    .DESCRIPTION
-        Initializes properties, localization, and window data context for the ConfigEditor UI.
-        Sets up fallback values for localization if initialization fails.
-
-    .OUTPUTS
-        None
     #>
     [void]InitializeComponents() {
         try {
             Write-Host "DEBUG: InitializeComponents started" -ForegroundColor Cyan
-
-            # Initialize properties
             $this.CurrentGameId = ""
             $this.CurrentAppId = ""
             $this.CurrentLanguage = "en"
             $this.HasUnsavedChanges = $false
-
-            # Initialize messages - simplified initialization
-            Write-Host "DEBUG: Initializing localization..." -ForegroundColor Cyan
-            try {
-                # Initialize with empty message object (fallback)
-                $this.Messages = @{}
-                Write-Host "DEBUG: Messages initialized with empty fallback" -ForegroundColor Cyan
-            } catch {
-                Write-Host "DEBUG: Localization initialization failed: $($_.Exception.Message)" -ForegroundColor Red
-                $this.Messages = @{}  # Fallback
-            }
-
-            # Initialize Window properties
+            # messages are now passed in constructor
             $this.Window.DataContext = $this
-
             Write-Host "DEBUG: InitializeComponents completed" -ForegroundColor Cyan
         } catch {
             Write-Host "DEBUG: InitializeComponents failed: $($_.Exception.Message)" -ForegroundColor Red
@@ -115,93 +97,39 @@ class ConfigEditorUI {
     <#
     .SYNOPSIS
         Gets a localized message for the specified key.
-
-    .DESCRIPTION
-        Retrieves a localized message from the messages collection or falls back to using the localization service.
-
-    .PARAMETER Key
-        The message key to retrieve.
-
-    .OUTPUTS
-        String
-            Returns the localized message string, or the key itself if no message is found.
     #>
     [string]GetLocalizedMessage([string]$Key) {
         try {
-            # First try to get from cached messages
-            if ($this.Messages -and $this.Messages.ContainsKey($Key)) {
-                return $this.Messages[$Key]
+            # MODIFIED: Use PSCustomObject property check instead of ContainsKey
+            if ($this.Messages -and $this.Messages.PSObject.Properties[$Key]) {
+                $message = $this.Messages.$Key
+                Write-Verbose "[GetLocalizedMessage] Found key '$Key' in cached messages. Value: '$message'"
+                return $message
             }
-
-            # Fallback: try to get from localization service directly - but prevent recursion
-            try {
-                # Use a static flag to prevent infinite recursion
-                if (-not $script:LocalizationInProgress) {
-                    $script:LocalizationInProgress = $true
-
-                    $localization = [ConfigEditorLocalization]::new()
-                    if ($localization | Get-Member -Name "GetMessage" -MemberType Method) {
-                        $message = $localization.GetMessage($Key)
-                        $script:LocalizationInProgress = $false
-                        return $message
-                    }
-
-                    $script:LocalizationInProgress = $false
-                }
-            } catch {
-                $script:LocalizationInProgress = $false
-                Write-Verbose "Failed to get message from localization service: $($_.Exception.Message)"
-            }
-
-            # Final fallback: return the key itself
-            Write-Verbose "No localized message found for key: $Key"
-            return $Key
         } catch {
-            $script:LocalizationInProgress = $false
-            Write-Verbose "Error getting localized message for key '$Key': $($_.Exception.Message)"
-            return $Key
+            Write-Warning "[GetLocalizedMessage] Error getting message for key '$Key': $($_.Exception.Message)"
         }
+
+        Write-Warning "[GetLocalizedMessage] No localized message found for key: '$Key'. Returning key itself."
+        return $Key
     }
 
     <#
     .SYNOPSIS
         Measures the text width for a button.
-
-    .DESCRIPTION
-        Creates a temporary TextBlock to measure the actual rendered width of text for a button,
-        considering font properties and adding padding.
-
-    .PARAMETER Text
-        The text to measure.
-
-    .PARAMETER Button
-        The button whose font properties to use for measurement.
-
-    .OUTPUTS
-        Double
-            Returns the estimated width in pixels, including padding.
     #>
     [double]MeasureButtonTextWidth([string]$Text, [System.Windows.Controls.Button]$Button) {
-        if ([string]::IsNullOrEmpty($Text) -or -not $Button) {
-            return 0
-        }
-
+        if ([string]::IsNullOrEmpty($Text) -or -not $Button) { return 0 }
         try {
-            # Create a temporary TextBlock to measure text size
             $textBlock = New-Object System.Windows.Controls.TextBlock
             $textBlock.Text = $Text
             $textBlock.FontFamily = $Button.FontFamily
             $textBlock.FontSize = $Button.FontSize
             $textBlock.FontWeight = $Button.FontWeight
             $textBlock.FontStyle = $Button.FontStyle
-
-            # Measure the text
             $textBlock.Measure([System.Windows.Size]::new([double]::PositiveInfinity, [double]::PositiveInfinity))
-
-            # Add some padding (approximately 10-15 pixels for button padding)
             return $textBlock.DesiredSize.Width + 15
         } catch {
-            # Fallback: estimate based on character count
             return $Text.Length * 7
         }
     }
@@ -209,17 +137,6 @@ class ConfigEditorUI {
     <#
     .SYNOPSIS
         Gets a mapping variable from script scope.
-
-    .DESCRIPTION
-        Helper method to safely retrieve mapping variables from script scope since
-        class methods cannot directly access global variables.
-
-    .PARAMETER MappingName
-        The name of the mapping variable to retrieve.
-
-    .OUTPUTS
-        Hashtable
-            Returns the mapping hashtable or empty hashtable if not found.
     #>
     [hashtable]GetMappingFromScope([string]$MappingName) {
         try {
@@ -227,9 +144,10 @@ class ConfigEditorUI {
             if ($mapping -and $mapping -is [hashtable]) {
                 return $mapping
             }
+            Write-Warning "[GetMappingFromScope] Mapping '$MappingName' not found or is not a hashtable."
             return @{}
         } catch {
-            Write-Verbose "Failed to get mapping '$MappingName': $($_.Exception.Message)"
+            Write-Warning "[GetMappingFromScope] Failed to get mapping '$MappingName': $($_.Exception.Message)"
             return @{}
         }
     }
@@ -237,174 +155,63 @@ class ConfigEditorUI {
     <#
     .SYNOPSIS
         Sets button content with smart tooltip based on text width.
-
-    .DESCRIPTION
-        Sets the button content and intelligently determines whether a tooltip is needed
-        based on the text width compared to available button space.
-
-    .PARAMETER Button
-        The button to update.
-
-    .PARAMETER FullText
-        The full text to display and potentially use as tooltip.
-
-    .OUTPUTS
-        None
     #>
     [void]SetButtonContentWithTooltip([System.Windows.Controls.Button]$Button, [string]$FullText) {
-        if (-not $Button -or [string]::IsNullOrEmpty($FullText)) {
-            return
-        }
-
+        if (-not $Button -or [string]::IsNullOrEmpty($FullText)) { return }
         try {
-            # Always set the full text as button content first
             $Button.Content = $FullText
-
-            # Force UI update to ensure button width is calculated
             $Button.UpdateLayout()
             $Button.Dispatcher.Invoke([System.Windows.Threading.DispatcherPriority]::Background, [action] {})
-
-            # Get button's available width (considering margins and padding)
             $buttonWidth = $Button.ActualWidth
-            if ($buttonWidth -eq 0) {
-                $buttonWidth = $Button.Width
-            }
-            $availableWidth = $buttonWidth - 15  # Account for internal padding and margins
-
-            Write-Verbose "Debug: Button '$($Button.Name)' - ActualWidth: $($Button.ActualWidth), Width: $($Button.Width), Available: $availableWidth"
-
-            # Measure actual text width
+            if ($buttonWidth -eq 0) { $buttonWidth = $Button.Width }
+            $availableWidth = $buttonWidth - 15
             $textWidth = $this.MeasureButtonTextWidth($FullText, $Button)
-
-            Write-Verbose "Debug: Button '$($Button.Name)' - Text: '$FullText', TextWidth: $textWidth, AvailableWidth: $availableWidth"
-
-            # Set tooltip based on text width comparison or text length as fallback
-            $shouldShowTooltip = $false
-
-            if ($availableWidth -gt 0 -and $textWidth -gt $availableWidth) {
-                $shouldShowTooltip = $true
-                Write-Verbose "Debug: Tooltip needed due to width: $textWidth > $availableWidth"
-            } elseif ($availableWidth -le 0 -and $FullText.Length -gt 12) {
-                $shouldShowTooltip = $true
-                Write-Verbose "Debug: Tooltip needed due to text length: $($FullText.Length) > 12 (width measurement unavailable)"
-            }
-
+            $shouldShowTooltip = ($availableWidth -gt 0 -and $textWidth -gt $availableWidth) -or ($availableWidth -le 0 -and $FullText.Length -gt 12)
             if ($shouldShowTooltip) {
                 $Button.ToolTip = $FullText
-                Write-Verbose "Smart tooltip set for button '$($Button.Name)': '$FullText'"
+                Write-Verbose "[SetButtonContentWithTooltip] Set tooltip for '$($Button.Name)': '$FullText'"
             } else {
                 $Button.ToolTip = $null
-                Write-Verbose "Debug: No tooltip needed for button '$($Button.Name)': '$FullText'"
             }
         } catch {
-            Write-Warning "Debug: Error in SetButtonContentWithTooltip for '$($Button.Name)': $($_.Exception.Message)"
-            # Fallback: Set tooltip based on text length
+            Write-Warning "[SetButtonContentWithTooltip] Error for '$($Button.Name)': $($_.Exception.Message)"
             $Button.Content = $FullText
-            if ($FullText.Length -gt 10) {
-                $Button.ToolTip = $FullText
-                Write-Verbose "Fallback tooltip set for button '$($Button.Name)': '$FullText' (length: $($FullText.Length))"
-            } else {
-                $Button.ToolTip = $null
-                Write-Verbose "Fallback: No tooltip for button '$($Button.Name)': '$FullText' (length: $($FullText.Length))"
-            }
+            if ($FullText.Length -gt 10) { $Button.ToolTip = $FullText } else { $Button.ToolTip = $null }
         }
     }
 
     <#
-    .SYNOPSIS
-        Updates tooltips for a specific category of buttons.
-
-    .DESCRIPTION
-        Updates button tooltips for buttons in a specific functional category, allowing for more granular control.
-
-    .PARAMETER CategoryName
-        The name of the button category for logging purposes.
-
-    .PARAMETER CategoryMappings
-        The hashtable containing the button mappings for this category.
-
-    .OUTPUTS
-        None
-    #>
-    [void]UpdateButtonCategory([string]$CategoryName, [hashtable]$CategoryMappings) {
-        try {
-            Write-Verbose "Debug: Updating $CategoryName buttons ($($CategoryMappings.Count) buttons)"
-
-            foreach ($buttonName in $CategoryMappings.Keys) {
-                $button = $this.Window.FindName($buttonName)
-                if ($button) {
-                    $messageKey = $CategoryMappings[$buttonName]
-                    $fullText = $this.GetLocalizedMessage($messageKey)
-                    Write-Verbose "Debug: Processing $CategoryName button '$buttonName' with key '$messageKey' -> text '$fullText'"
-                    $this.SetButtonContentWithTooltip($button, $fullText)
-                } else {
-                    Write-Verbose "Debug: $CategoryName button '$buttonName' not found in window"
-                }
-            }
-        } catch {
-            Write-Warning "Failed to update $CategoryName button category: $($_.Exception.Message)"
-        }
-    }
-
-    <#
-    .SYNOPSIS
-        Updates smart tooltips for all buttons using categorized mappings.
-
-    .DESCRIPTION
-        Applies smart tooltips to all buttons organized by functional categories from the mappings file.
-        Uses categorized approach for better maintainability and targeted updates.
-
-    .OUTPUTS
-        None
-    #>
-    [void]UpdateAllButtonTooltips() {
-        try {
-            Write-Verbose "Debug: Starting categorized tooltip update"
-
-            # Get mappings using helper method
-            $crudMappings = $this.GetMappingFromScope("CrudButtonMappings")
-            $browserMappings = $this.GetMappingFromScope("BrowserButtonMappings")
-            $autoDetectMappings = $this.GetMappingFromScope("AutoDetectButtonMappings")
-            $actionMappings = $this.GetMappingFromScope("ActionButtonMappings")
-            $movementMappings = $this.GetMappingFromScope("MovementButtonMappings")
-
-            # Update different button categories using imported mappings
-            if ($crudMappings.Count -gt 0) { $this.UpdateButtonCategory("Crud", $crudMappings) }
-            if ($browserMappings.Count -gt 0) { $this.UpdateButtonCategory("Browser", $browserMappings) }
-            if ($autoDetectMappings.Count -gt 0) { $this.UpdateButtonCategory("AutoDetect", $autoDetectMappings) }
-            if ($actionMappings.Count -gt 0) { $this.UpdateButtonCategory("Action", $actionMappings) }
-            if ($movementMappings.Count -gt 0) { $this.UpdateButtonCategory("Movement", $movementMappings) }
-
-            Write-Verbose "Debug: Categorized button tooltip update completed"
-        } catch {
-            Write-Warning "Failed to update button tooltips: $($_.Exception.Message)"
-        }
-    }    <#
     .SYNOPSIS
         Updates UI texts based on current language using mappings.
-
-    .DESCRIPTION
-        Updates all UI text elements (buttons, labels, tabs, etc.) using the centralized mapping system
-        for better maintainability and consistency.
-
-    .PARAMETER ConfigData
-        The configuration data containing language and other settings.
-
-    .OUTPUTS
-        None
     #>
     [void]UpdateUITexts([PSObject]$ConfigData) {
         try {
+            Write-Verbose "--- Starting UI Text Update for language: $($this.CurrentLanguage) ---"
+
             # Update window title
             $this.Window.Title = $this.GetLocalizedMessage("windowTitle")
+            Write-Verbose "Window Title set to: '$($this.Window.Title)'"
 
-            # Update all button tooltips using the mapping
-            $this.UpdateAllButtonTooltips()
+            # Update all button contents and tooltips
+            Write-Verbose "Updating all buttons..."
+            $allButtonMappings = $this.Mappings['Button']
+            foreach ($buttonName in $allButtonMappings.Keys) {
+                $button = $this.Window.FindName($buttonName)
+                if ($button) {
+                    $messageKey = $allButtonMappings[$buttonName]
+                    $fullText = $this.GetLocalizedMessage($messageKey)
+                    Write-Verbose "  - Button '$buttonName': Key='$messageKey', Text='$fullText'"
+                    $this.SetButtonContentWithTooltip($button, $fullText)
+                } else {
+                    Write-Verbose "  - Button '$buttonName' not found in XAML."
+                }
+            }
 
-            # Update other UI elements using mappings
+            # Update other UI elements
+            Write-Verbose "Updating other UI elements (Labels, Tabs, etc.)..."
             $this.UpdateElementsFromMappings()
 
-            Write-Verbose "UI texts updated for language: $($this.CurrentLanguage)"
+            Write-Verbose "--- UI Text Update Completed ---"
         } catch {
             Write-Warning "Failed to update UI texts: $($_.Exception.Message)"
         }
@@ -413,198 +220,57 @@ class ConfigEditorUI {
     <#
     .SYNOPSIS
         Updates UI elements from centralized mappings.
-
-    .DESCRIPTION
-        Updates various UI element types (tabs, labels, checkboxes, etc.) using the mappings
-        defined in ConfigEditor.Mappings.ps1 for centralized maintenance.
-
-    .OUTPUTS
-        None
     #>
     [void]UpdateElementsFromMappings() {
         try {
-            # Update tab headers
-            $tabMappings = @{
-                "GamesTab"          = "gamesTabHeader"
-                "ManagedAppsTab"    = "managedAppsTabHeader"
-                "GlobalSettingsTab" = "globalSettingsTabHeader"
-            }
+            $allMappings = $this.Mappings
 
-            foreach ($elementName in $tabMappings.Keys) {
-                $element = $this.Window.FindName($elementName)
-                if ($element) {
-                    $messageKey = $tabMappings[$elementName]
-                    $element.Header = $this.GetLocalizedMessage($messageKey)
+            foreach ($elementType in $allMappings.Keys) {
+                $mappingTable = $allMappings[$elementType]
+                Write-Verbose "Processing '$elementType' mappings (count: $($mappingTable.Count))..."
+                foreach ($elementName in $mappingTable.Keys) {
+                    $element = $this.Window.FindName($elementName)
+                    if ($element) {
+                        $messageKey = $mappingTable[$elementName]
+                        $localizedText = $this.GetLocalizedMessage($messageKey)
+                        $propToSet = ""
+                        $currentValue = ""
+
+                        switch ($element.GetType().Name) {
+                            "TabItem" { $propToSet = "Header"; $currentValue = $element.Header }
+                            "Label" { $propToSet = "Content"; $currentValue = $element.Content }
+                            "GroupBox" { $propToSet = "Header"; $currentValue = $element.Header }
+                            "CheckBox" { $propToSet = "Content"; $currentValue = $element.Content }
+                            "TextBlock" { $propToSet = "Text"; $currentValue = $element.Text }
+                            "MenuItem" { $propToSet = "Header"; $currentValue = $element.Header }
+                            "ComboBoxItem" { $propToSet = "Content"; $currentValue = $element.Content }
+                            "Button" { if ($elementType -eq "Tooltip") { $propToSet = "ToolTip"; $currentValue = $element.ToolTip } }
+                            default {
+                                if ($element | Get-Member -Name "Header" -MemberType Property) { $propToSet = "Header"; $currentValue = $element.Header }
+                                elseif ($element | Get-Member -Name "Content" -MemberType Property) { $propToSet = "Content"; $currentValue = $element.Content }
+                                elseif ($element | Get-Member -Name "Text" -MemberType Property) { $propToSet = "Text"; $currentValue = $element.Text }
+                                elseif ($element | Get-Member -Name "ToolTip" -MemberType Property) { $propToSet = "ToolTip"; $currentValue = $element.ToolTip }
+                            }
+                        }
+
+                        if ($propToSet) {
+                            Write-Verbose "  - Updating '$elementName' ($($element.GetType().Name)). Key: '$messageKey', Prop: '$propToSet', Text: '$localizedText'"
+                            Write-Verbose "    Before: '$currentValue'"
+                            $element.$propToSet = $localizedText
+                            Write-Verbose "    After : '$($element.$propToSet)'"
+                        } else {
+                            Write-Verbose "  - Skipped '$elementName' of type '$($element.GetType().Name)' - no property to set."
+                        }
+
+                    } else {
+                        Write-Verbose "  - Element '$elementName' not found in XAML for '$elementType' mapping."
+                    }
                 }
             }
-
-            # Update labels using centralized approach
-            $this.UpdateLabelsFromMappings()
-
-            # Update group boxes
-            $this.UpdateGroupBoxesFromMappings()
-
-            # Update checkboxes
-            $this.UpdateCheckBoxesFromMappings()
-
-            # Update text elements
-            $this.UpdateTextElementsFromMappings()
-
         } catch {
             Write-Warning "Failed to update elements from mappings: $($_.Exception.Message)"
         }
     }
-
-    <#
-    .SYNOPSIS
-        Updates label elements from mappings.
-
-    .DESCRIPTION
-        Updates all label elements using a centralized mapping approach for consistency.
-
-    .OUTPUTS
-        None
-    #>
-    [void]UpdateLabelsFromMappings() {
-        try {
-            $labelMappings = @{
-                "GamesListLabel"         = "gamesListLabel"
-                "GameDetailsLabel"       = "gameDetailsLabel"
-                "GameIdLabel"            = "gameIdLabel"
-                "GameNameLabel"          = "gameNameLabel"
-                "PlatformLabel"          = "platformLabel"
-                "SteamAppIdLabel"        = "steamAppIdLabel"
-                "EpicGameIdLabel"        = "epicGameIdLabel"
-                "RiotGameIdLabel"        = "riotGameIdLabel"
-                "ProcessNameLabel"       = "processNameLabel"
-                "AppsToManageLabel"      = "appsToManageLabel"
-                "HostLabel"              = "hostLabel"
-                "PortLabel"              = "portLabel"
-                "PasswordLabel"          = "passwordLabel"
-                "SteamPathLabel"         = "steamPathLabel"
-                "EpicPathLabel"          = "epicPathLabel"
-                "RiotPathLabel"          = "riotPathLabel"
-                "ObsPathLabel"           = "obsPathLabel"
-                "LanguageLabel"          = "languageLabel"
-                "AppsListLabel"          = "appsListLabel"
-                "AppDetailsLabel"        = "appDetailsLabel"
-                "AppIdLabel"             = "appIdLabel"
-                "AppPathLabel"           = "appPathLabel"
-                "AppProcessNameLabel"    = "processNameLabel"
-                "GameStartActionLabel"   = "gameStartActionLabel"
-                "GameEndActionLabel"     = "gameEndActionLabel"
-                "AppArgumentsLabel"      = "argumentsLabel"
-                "TerminationMethodLabel" = "terminationMethodLabel"
-                "GracefulTimeoutLabel"   = "gracefulTimeoutLabel"
-                "LauncherTypeLabel"      = "launcherTypeLabel"
-                "LogRetentionLabel"      = "logRetentionLabel"
-                "ExecutablePathLabel"    = "executablePathLabel"
-            }
-
-            foreach ($elementName in $labelMappings.Keys) {
-                $element = $this.Window.FindName($elementName)
-                if ($element) {
-                    $messageKey = $labelMappings[$elementName]
-                    $element.Content = $this.GetLocalizedMessage($messageKey)
-                }
-            }
-        } catch {
-            Write-Warning "Failed to update labels from mappings: $($_.Exception.Message)"
-        }
-    }
-
-    <#
-    .SYNOPSIS
-        Updates group box headers from mappings.
-
-    .DESCRIPTION
-        Updates group box header text using centralized mappings.
-
-    .OUTPUTS
-        None
-    #>
-    [void]UpdateGroupBoxesFromMappings() {
-        try {
-            $groupBoxMappings = @{
-                "ObsSettingsGroup"     = "obsSettingsGroup"
-                "PathSettingsGroup"    = "pathSettingsGroup"
-                "GeneralSettingsGroup" = "generalSettingsGroup"
-            }
-
-            foreach ($elementName in $groupBoxMappings.Keys) {
-                $element = $this.Window.FindName($elementName)
-                if ($element) {
-                    $messageKey = $groupBoxMappings[$elementName]
-                    $element.Header = $this.GetLocalizedMessage($messageKey)
-                }
-            }
-        } catch {
-            Write-Warning "Failed to update group boxes from mappings: $($_.Exception.Message)"
-        }
-    }
-
-    <#
-    .SYNOPSIS
-        Updates checkbox content from mappings.
-
-    .DESCRIPTION
-        Updates checkbox content text using centralized mappings.
-
-    .OUTPUTS
-        None
-    #>
-    [void]UpdateCheckBoxesFromMappings() {
-        try {
-            $checkBoxMappings = @{
-                "ReplayBufferCheckBox"          = "replayBufferLabel"
-                "EnableLogNotarizationCheckBox" = "enableLogNotarization"
-            }
-
-            foreach ($elementName in $checkBoxMappings.Keys) {
-                $element = $this.Window.FindName($elementName)
-                if ($element) {
-                    $messageKey = $checkBoxMappings[$elementName]
-                    $element.Content = $this.GetLocalizedMessage($messageKey)
-                }
-            }
-        } catch {
-            Write-Warning "Failed to update checkboxes from mappings: $($_.Exception.Message)"
-        }
-    }
-
-    <#
-    .SYNOPSIS
-        Updates text elements from mappings.
-
-    .DESCRIPTION
-        Updates TextBlock and other text elements using centralized mappings.
-
-    .OUTPUTS
-        None
-    #>
-    [void]UpdateTextElementsFromMappings() {
-        try {
-            $textMappings = @{
-                "VersionLabel"         = "versionLabel"
-                "LauncherWelcomeText"  = "launcherWelcomeText"
-                "LauncherSubtitleText" = "launcherSubtitleText"
-                "LauncherStatusText"   = "readyToLaunch"
-                "LauncherHintText"     = "launcherHintText"
-                "LauncherHelpText"     = "launcherHelpText"
-            }
-
-            foreach ($elementName in $textMappings.Keys) {
-                $element = $this.Window.FindName($elementName)
-                if ($element) {
-                    $messageKey = $textMappings[$elementName]
-                    $element.Text = $this.GetLocalizedMessage($messageKey)
-                }
-            }
-        } catch {
-            Write-Warning "Failed to update text elements from mappings: $($_.Exception.Message)"
-        }
-    }
-
     <#
     .SYNOPSIS
         Initializes version display in the UI.
@@ -617,13 +283,15 @@ class ConfigEditorUI {
     #>
     [void]InitializeVersionDisplay() {
         try {
-            $versionInfo = Get-ProjectVersionInfo
-            $versionText = $this.Window.FindName("VersionText")
-            if ($versionText) {
-                $versionText.Text = $versionInfo.FullVersion
+            # Version.ps1 should be loaded by the main script
+            if (Get-Command -Name Get-ProjectVersionInfo -ErrorAction SilentlyContinue) {
+                $versionInfo = Get-ProjectVersionInfo
+                $versionText = $this.Window.FindName("VersionText")
+                if ($versionText) {
+                    $versionText.Text = $versionInfo.FullVersion
+                }
+                Write-Verbose "Version display initialized: $($versionInfo.FullVersion)"
             }
-
-            Write-Verbose "Version display initialized: $($versionInfo.FullVersion)"
         } catch {
             Write-Warning "Failed to initialize version display: $($_.Exception.Message)"
         }
@@ -808,7 +476,8 @@ class ConfigEditorUI {
             $gameLauncherList.Items.Clear()
 
             # Check if games are configured
-            if (-not $ConfigData.games -or $ConfigData.games.PSObject.Properties.Count -eq 0) {
+            if (-not $ConfigData.games -or $ConfigData.games.PSObject.Properties.Count -eq 1) {
+                # checking for 1 to account for _order
                 # Show "no games" message
                 $noGamesPanel = New-Object System.Windows.Controls.StackPanel
                 $noGamesPanel.HorizontalAlignment = "Center"
@@ -833,20 +502,10 @@ class ConfigEditorUI {
             foreach ($gameId in $gameOrder) {
                 if (-not $ConfigData.games.PSObject.Properties[$gameId]) { continue }
                 $gameData = $ConfigData.games.$gameId
-                $platform = if ($gameData.platform) { $gameData.platform } else { "steam" }
 
-                Write-Verbose "Creating game card for: $gameId (Name: $($gameData.name), Platform: $platform)"
-
-                # Create game item data object
-                $gameItem = New-Object PSObject -Property @{
-                    GameId      = $gameId
-                    DisplayName = $gameData.name
-                    Platform    = $platform.ToUpper()
-                    ProcessName = $gameData.processName
-                }
-
-                # Note: Actual UI element creation should be handled externally or via callback
-                # as it involves complex UI construction
+                # This is where you would create the complex UI for the game card
+                # For now, we just add a placeholder.
+                $gameLauncherList.Items.Add("Game: " + $gameData.name)
                 $gameCount++
             }
 
@@ -868,29 +527,18 @@ class ConfigEditorUI {
     #>
     [void]InitializeLauncherTabTexts() {
         try {
-            # Initialize launcher welcome and subtitle texts
-            $launcherWelcomeText = $this.Window.FindName("LauncherWelcomeText")
-            if ($launcherWelcomeText) {
-                $launcherWelcomeText.Text = $this.GetLocalizedMessage("launcherWelcomeText")
+            # This is now handled by UpdateElementsFromMappings, but we can keep it for clarity
+            # or for elements not covered by the generic mapping.
+            $textMappings = $this.GetMappingFromScope("TextMappings")
+            $launcherKeys = @("LauncherWelcomeText", "LauncherSubtitleText", "LauncherStatusText", "LauncherHintText")
+            foreach ($key in $launcherKeys) {
+                if ($textMappings.ContainsKey($key)) {
+                    $element = $this.Window.FindName($key)
+                    if ($element) {
+                        $element.Text = $this.GetLocalizedMessage($textMappings[$key])
+                    }
+                }
             }
-
-            $launcherSubtitleText = $this.Window.FindName("LauncherSubtitleText")
-            if ($launcherSubtitleText) {
-                $launcherSubtitleText.Text = $this.GetLocalizedMessage("launcherSubtitleText")
-            }
-
-            # Initialize launcher status text
-            $launcherStatusText = $this.Window.FindName("LauncherStatusText")
-            if ($launcherStatusText) {
-                $launcherStatusText.Text = $this.GetLocalizedMessage("readyToLaunch")
-            }
-
-            # Initialize launcher hint text
-            $launcherHintText = $this.Window.FindName("LauncherHintText")
-            if ($launcherHintText) {
-                $launcherHintText.Text = $this.GetLocalizedMessage("launcherHintText")
-            }
-
             Write-Verbose "Launcher tab texts initialized"
         } catch {
             Write-Warning "Failed to initialize launcher tab texts: $($_.Exception.Message)"
@@ -952,76 +600,63 @@ class ConfigEditorUI {
         $callback.Invoke()
     #>
     [scriptblock]CreateLoadGlobalSettingsCallback([PSObject]$ConfigData) {
+        $self = $this
         return {
             try {
                 Write-Verbose "Loading global settings into UI controls"
 
-                # Load OBS settings
-                if ($ConfigData.globalSettings.obs) {
-                    $hostTextBox = $this.Window.FindName("HostTextBox")
-                    if ($hostTextBox -and $ConfigData.globalSettings.obs.host) {
-                        $hostTextBox.Text = $ConfigData.globalSettings.obs.host
-                    }
-
-                    $portTextBox = $this.Window.FindName("PortTextBox")
-                    if ($portTextBox -and $ConfigData.globalSettings.obs.port) {
-                        $portTextBox.Text = $ConfigData.globalSettings.obs.port.ToString()
-                    }
-
-                    $passwordBox = $this.Window.FindName("PasswordBox")
-                    if ($passwordBox -and $ConfigData.globalSettings.obs.password) {
-                        $passwordBox.Password = $ConfigData.globalSettings.obs.password
-                    }
-
-                    $replayBufferCheckBox = $this.Window.FindName("ReplayBufferCheckBox")
-                    if ($replayBufferCheckBox) {
-                        $replayBufferCheckBox.IsChecked = $ConfigData.globalSettings.obs.enableReplayBuffer -eq $true
-                    }
+                $obsHostTextBox = $self.Window.FindName("ObsHostTextBox")
+                if ($obsHostTextBox -and $ConfigData.obs.websocket) {
+                    $obsHostTextBox.Text = $ConfigData.obs.websocket.host
                 }
 
-                # Load path settings
-                if ($ConfigData.globalSettings.paths) {
-                    $steamPathTextBox = $this.Window.FindName("SteamPathTextBox")
-                    if ($steamPathTextBox -and $ConfigData.globalSettings.paths.steam) {
-                        $steamPathTextBox.Text = $ConfigData.globalSettings.paths.steam
-                    }
-
-                    $epicPathTextBox = $this.Window.FindName("EpicPathTextBox")
-                    if ($epicPathTextBox -and $ConfigData.globalSettings.paths.epic) {
-                        $epicPathTextBox.Text = $ConfigData.globalSettings.paths.epic
-                    }
-
-                    $riotPathTextBox = $this.Window.FindName("RiotPathTextBox")
-                    if ($riotPathTextBox -and $ConfigData.globalSettings.paths.riot) {
-                        $riotPathTextBox.Text = $ConfigData.globalSettings.paths.riot
-                    }
-
-                    $obsPathTextBox = $this.Window.FindName("ObsPathTextBox")
-                    if ($obsPathTextBox -and $ConfigData.globalSettings.paths.obs) {
-                        $obsPathTextBox.Text = $ConfigData.globalSettings.paths.obs
-                    }
+                $obsPortTextBox = $self.Window.FindName("ObsPortTextBox")
+                if ($obsPortTextBox -and $ConfigData.obs.websocket) {
+                    $obsPortTextBox.Text = $ConfigData.obs.websocket.port
                 }
 
-                # Load general settings
-                if ($ConfigData.globalSettings) {
-                    # Load language setting and update current language
-                    $languageComboBox = $this.Window.FindName("LanguageComboBox")
-                    if ($languageComboBox -and $ConfigData.globalSettings.language) {
-                        $this.CurrentLanguage = $ConfigData.globalSettings.language
-                        $languageComboBox.SelectedValue = $ConfigData.globalSettings.language
-                    }
+                $obsPasswordBox = $self.Window.FindName("ObsPasswordBox")
+                if ($obsPasswordBox -and $ConfigData.obs.websocket) {
+                    $obsPasswordBox.Password = $ConfigData.obs.websocket.password
+                }
 
-                    # Load log retention setting
-                    $logRetentionTextBox = $this.Window.FindName("LogRetentionTextBox")
-                    if ($logRetentionTextBox -and $ConfigData.globalSettings.logRetentionDays) {
-                        $logRetentionTextBox.Text = $ConfigData.globalSettings.logRetentionDays.ToString()
-                    }
+                $replayBufferCheckBox = $self.Window.FindName("ReplayBufferCheckBox")
+                if ($replayBufferCheckBox -and $ConfigData.obs) {
+                    $replayBufferCheckBox.IsChecked = [bool]$ConfigData.obs.replayBuffer
+                }
 
-                    # Load log notarization setting
-                    $enableLogNotarizationCheckBox = $this.Window.FindName("EnableLogNotarizationCheckBox")
-                    if ($enableLogNotarizationCheckBox) {
-                        $enableLogNotarizationCheckBox.IsChecked = $ConfigData.globalSettings.enableLogNotarization -eq $true
-                    }
+                if ($ConfigData.paths) {
+                    $steamPathTextBox = $self.Window.FindName("SteamPathTextBox")
+                    if ($steamPathTextBox) { $steamPathTextBox.Text = $ConfigData.paths.steam }
+
+                    $epicPathTextBox = $self.Window.FindName("EpicPathTextBox")
+                    if ($epicPathTextBox) { $epicPathTextBox.Text = $ConfigData.paths.epic }
+
+                    $riotPathTextBox = $self.Window.FindName("RiotPathTextBox")
+                    if ($riotPathTextBox) { $riotPathTextBox.Text = $ConfigData.paths.riot }
+
+                    $obsPathTextBox = $self.Window.FindName("ObsPathTextBox")
+                    if ($obsPathTextBox) { $obsPathTextBox.Text = $ConfigData.paths.obs }
+                }
+
+                $langCombo = $self.Window.FindName("LanguageCombo")
+                if ($langCombo) {
+                    # Implement selection logic based on $ConfigData.language
+                }
+
+                $launcherTypeCombo = $self.Window.FindName("LauncherTypeCombo")
+                if ($launcherTypeCombo) {
+                    # Implement selection logic
+                }
+
+                $logRetentionCombo = $self.Window.FindName("LogRetentionCombo")
+                if ($logRetentionCombo) {
+                    # Implement selection logic
+                }
+
+                $enableLogNotarizationCheckBox = $self.Window.FindName("EnableLogNotarizationCheckBox")
+                if ($enableLogNotarizationCheckBox -and $ConfigData.logging) {
+                    $enableLogNotarizationCheckBox.IsChecked = [bool]$ConfigData.logging.enableNotarization
                 }
 
                 Write-Verbose "Global settings loaded successfully"
@@ -1029,5 +664,162 @@ class ConfigEditorUI {
                 Write-Warning "Failed to load global settings: $($_.Exception.Message)"
             }
         }.GetNewClosure()
+    }
+
+    <#
+    .SYNOPSIS
+    Initializes the game action combo boxes with available actions.
+    .DESCRIPTION
+    Populates the GameStartActionCombo and GameEndActionCombo with predefined action options
+    using localized ComboBoxItems from GameActionMessageKeys mapping.
+    .OUTPUTS
+    None
+    .EXAMPLE
+    $this.InitializeGameActionCombos()
+    #>
+    [void]InitializeGameActionCombos() {
+        try {
+            $gameStartActionCombo = $this.Window.FindName("GameStartActionCombo")
+            $gameEndActionCombo = $this.Window.FindName("GameEndActionCombo")
+
+            if ($gameStartActionCombo -and $gameEndActionCombo) {
+                # Get game action mappings from script scope
+                $gameActionMappings = $this.GetMappingFromScope("GameActionMessageKeys")
+
+                if ($gameActionMappings.Count -eq 0) {
+                    Write-Warning "GameActionMessageKeys mapping not found or empty"
+                    return
+                }
+
+                # Clear existing items
+                $gameStartActionCombo.Items.Clear()
+                $gameEndActionCombo.Items.Clear()
+
+                # Add localized ComboBoxItems using the mapping
+                foreach ($kvp in $gameActionMappings.GetEnumerator()) {
+                    $actionTag = $kvp.Key
+                    $messageKey = $kvp.Value
+                    $localizedText = $this.GetLocalizedMessage($messageKey)
+
+                    # Create ComboBoxItem for start action combo
+                    $startItem = New-Object System.Windows.Controls.ComboBoxItem
+                    $startItem.Content = $localizedText
+                    $startItem.Tag = $actionTag
+                    $gameStartActionCombo.Items.Add($startItem)
+
+                    # Create ComboBoxItem for end action combo
+                    $endItem = New-Object System.Windows.Controls.ComboBoxItem
+                    $endItem.Content = $localizedText
+                    $endItem.Tag = $actionTag
+                    $gameEndActionCombo.Items.Add($endItem)
+
+                    Write-Verbose "Added game action: Tag='$actionTag', Key='$messageKey', Text='$localizedText'"
+                }
+
+                # Set default selection (first item - "none")
+                $gameStartActionCombo.SelectedIndex = 0
+                $gameEndActionCombo.SelectedIndex = 0
+
+                Write-Verbose "Game action combo boxes initialized successfully with $($gameActionMappings.Count) localized actions"
+            }
+        } catch {
+            Write-Warning "Failed to initialize game action combo boxes: $($_.Exception.Message)"
+        }
+    }
+
+    <#
+    .SYNOPSIS
+    Gets available game actions based on platform and permissions.
+    .DESCRIPTION
+    Returns an array of action objects containing Content and Tag properties
+    based on the specified platform and user permission level.
+    .PARAMETER platform
+    The gaming platform (steam, standalone, epic, riot).
+    .PARAMETER permissions
+    User permission level (Standard, Advanced).
+    .OUTPUTS
+    Array of hashtables with Content and Tag properties.
+    #>
+    [array]GetAvailableGameActions([string]$platform, [string]$permissions) {
+        # Base actions always available
+        $baseActions = @(
+            @{ Content = "[NO_ACTION]"; Tag = "none" }
+        )
+
+        # Conditional actions based on platform and permissions
+        $conditionalActions = @()
+
+        if ($platform -eq "steam" -or $platform -eq "standalone") {
+            $conditionalActions += @{ Content = "[START_PROCESS]"; Tag = "start_process" }
+            $conditionalActions += @{ Content = "[STOP_PROCESS]"; Tag = "stop_process" }
+        }
+
+        if ($permissions -eq "Advanced") {
+            $conditionalActions += @{ Content = "[Invoke_COMMAND_WITH_PARAMETERS]"; Tag = "invoke_command_with_parameters" }
+        }
+
+        return $baseActions + $conditionalActions
+    }
+
+    <#
+    .SYNOPSIS
+    Adds a ComboBoxItem to the specified ComboBox control.
+    .DESCRIPTION
+    Creates and adds a new ComboBoxItem with the specified content and tag
+    to the provided ComboBox control.
+    .PARAMETER comboBox
+    The ComboBox control to add the item to.
+    .PARAMETER content
+    The display text for the ComboBoxItem.
+    .PARAMETER tag
+    The tag value for the ComboBoxItem.
+    #>
+    [void]AddComboBoxActionItem([System.Windows.Controls.ComboBox]$comboBox, [string]$content, [string]$tag) {
+        try {
+            $item = New-Object System.Windows.Controls.ComboBoxItem
+            $item.Content = $content
+            $item.Tag = $tag
+            $comboBox.Items.Add($item) | Out-Null
+        } catch {
+            Write-host "Error adding ComboBox item: $($_.Exception.Message)" -ForegroundColor Red
+        }
+    }
+
+    <#
+    .SYNOPSIS
+    Event handler for platform selection changes.
+    .DESCRIPTION
+    Updates game action combo boxes when the platform selection changes
+    to show appropriate actions for the selected platform.
+    .PARAMETER sender
+    The ComboBox that triggered the event.
+    .PARAMETER e
+    Selection changed event arguments.
+    #>
+    [void]OnPlatformSelectionChanged([object]$sender, [System.Windows.Controls.SelectionChangedEventArgs]$e) {
+        try {
+            if ($sender.SelectedItem -and $sender.SelectedItem.Tag) {
+                $selectedPlatform = $sender.SelectedItem.Tag.ToString()
+                $currentPermissions = $this.GetCurrentUserPermissions()
+                $this.InitializeGameActionCombos($selectedPlatform, $currentPermissions)
+            }
+        } catch {
+            Write-host "Error handling platform selection change: $($_.Exception.Message)" -ForegroundColor Red
+        }
+    }
+
+    <#
+    .SYNOPSIS
+    Gets the current user permission level.
+    .DESCRIPTION
+    Determines the current user's permission level for action availability.
+    This is a placeholder function that should be implemented based on your
+    application's permission system.
+    .OUTPUTS
+    String representing permission level (Standard or Advanced).
+    #>
+    [string]GetCurrentUserPermissions() {
+        # TODO: Implement actual permission logic
+        return "Standard"
     }
 }

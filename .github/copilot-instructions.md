@@ -4,40 +4,47 @@ When generating code for this project, strictly follow the rules below.
 
 ## Essential Reference Documents
 
-- This project must follow the rules documented in the following files:
-    - `.\docs\DOCUMENTATION-INDEX.md`
-    - `.\docs\developer-guide\architecture.md`
-    - `.\docs\developer-guide\build-system.md`
-    - `.\docs\developer-guide\gui-design.md`
-    - `.\docs\developer-guide\release-process.md`
-    - `.\docs\project-info\philosophy.md`
-    - `.\docs\project-info\roadmap.md`
-    - `.\docs\project-info\version-management.md`
+This project must follow the rules documented in the following files:
+
+- `./docs/DOCUMENTATION-INDEX.md`
+- `./docs/developer-guide/architecture.md`
+- `./docs/developer-guide/build-system.md`
+- `./docs/developer-guide/gui-design.md`
+- `./docs/developer-guide/release-process.md`
+- `./docs/project-info/philosophy.md`
+- `./docs/project-info/roadmap.md`
+- `./docs/project-info/version-management.md`
 
 ## Writing paths
 
-When writing file paths or directory paths, always use a forward slash (/) regardless of the operating system. Do not use a backslash (\\).
+- When writing file paths or directory paths, always use relative paths from the project root directory whenever possible.
+- When writing file paths or directory paths, always use a forward slash (/) regardless of the operating system. Do not use a backslash (\\).
+    - This rule is important for cross-platform compatibility and to avoid issues related to escape characters.
 
 Good examples:
 
-```path
-src/components/button.js
-/api/data
-C:/Users/YourName/Documents/project (Even when dealing with Windows paths in PowerShell scripts, use forward slashes)
+```powershell
+$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath ".."
+$messagesPath = Join-Path -Path $projectRoot -ChildPath "gui/messages.json"
 ```
 
 Bad examples:
 
-```path
-src\components\button.js
-C:\Users\YourName\Documents\project
+```powershell
+$messagesPath = "gui\messages.json"
 ```
-
-This rule is important for cross-platform compatibility and to avoid issues related to escape characters.
 
 ## Attribute Wrapping in XAML
 
 When writing XAML code, if an element has multiple attributes, each attribute should be placed on a new line and indented for better readability.
+
+## Not use emoji
+
+When generating documentation, terminal output, or any other content, do not use emojis. Keep all text plain and professional without any emoji characters or symbols.
+
+## Not use "Column Alignment"
+
+Do not use "Column Alignment" in any code, documentation, or comments. Avoid aligning code or text into columns for better readability and maintainability.
 
 ## Rule Summary
 
