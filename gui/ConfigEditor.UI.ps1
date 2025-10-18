@@ -475,9 +475,9 @@ class ConfigEditorUI {
             # Clear existing items
             $gameLauncherList.Items.Clear()
 
-            # Check if games are configured
-            if (-not $ConfigData.games -or $ConfigData.games.PSObject.Properties.Count -eq 1) {
-                # checking for 1 to account for _order
+            # Check if games are configured (excluding _order property)
+            $gamePropertiesCount = @($ConfigData.games.PSObject.Properties | Where-Object { $_.Name -ne '_order' }).Count
+            if (-not $ConfigData.games -or $gamePropertiesCount -eq 0) {
                 # Show "no games" message
                 $noGamesPanel = New-Object System.Windows.Controls.StackPanel
                 $noGamesPanel.HorizontalAlignment = "Center"
@@ -497,10 +497,18 @@ class ConfigEditorUI {
 
             # Create game cards for each configured game in order
             $gameCount = 0
-            $gameOrder = if ($ConfigData.games._order) { $ConfigData.games._order } else { @($ConfigData.games.PSObject.Properties.Name | Where-Object { $_ -ne '_order' }) }
+            $gameOrder = if ($ConfigData.games._order) {
+                $ConfigData.games._order
+            } else {
+                @($ConfigData.games.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
+            }
 
             foreach ($gameId in $gameOrder) {
-                if (-not $ConfigData.games.PSObject.Properties[$gameId]) { continue }
+                if (-not $ConfigData.games.PSObject.Properties[$gameId]) {
+                    Write-Verbose "Game $gameId not found in config, skipping"
+                    continue
+                }
+
                 $gameData = $ConfigData.games.$gameId
 
                 # This is where you would create the complex UI for the game card
