@@ -243,6 +243,7 @@ class ConfigEditorUI {
                             "CheckBox" { $propToSet = "Content"; $currentValue = $element.Content }
                             "TextBlock" { $propToSet = "Text"; $currentValue = $element.Text }
                             "MenuItem" { $propToSet = "Header"; $currentValue = $element.Header }
+                            "ComboBoxItem" { $propToSet = "Content"; $currentValue = $element.Content }
                             "Button" { if ($elementType -eq "Tooltip") { $propToSet = "ToolTip"; $currentValue = $element.ToolTip } }
                             default {
                                 if ($element | Get-Member -Name "Header" -MemberType Property) { $propToSet = "Header"; $currentValue = $element.Header }
@@ -670,7 +671,7 @@ class ConfigEditorUI {
     Initializes the game action combo boxes with available actions.
     .DESCRIPTION
     Populates the GameStartActionCombo and GameEndActionCombo with predefined action options
-    using localized ComboBoxItems.
+    using localized ComboBoxItems from GameActionMessageKeys mapping.
     .OUTPUTS
     None
     .EXAMPLE
@@ -682,46 +683,44 @@ class ConfigEditorUI {
             $gameEndActionCombo = $this.Window.FindName("GameEndActionCombo")
 
             if ($gameStartActionCombo -and $gameEndActionCombo) {
-                # Define action mappings with their corresponding localization keys
-                $actionMappings = @(
-                    @{ Tag = "none"; LocalizationKey = "gameActionNone" }
-                    @{ Tag = "start-process"; LocalizationKey = "gameActionStartProcess" }
-                    @{ Tag = "stop-process"; LocalizationKey = "gameActionStopProcess" }
-                    @{ Tag = "toggle-hotkeys"; LocalizationKey = "gameActionToggleHotkeys" }
-                    @{ Tag = "start-vtube-studio"; LocalizationKey = "gameActionStartVtubeStudio" }
-                    @{ Tag = "stop-vtube-studio"; LocalizationKey = "gameActionStopVtubeStudio" }
-                    @{ Tag = "set-discord-gaming-mode"; LocalizationKey = "gameActionSetDiscordGaming" }
-                    @{ Tag = "restore-discord-normal"; LocalizationKey = "gameActionRestoreDiscord" }
-                    @{ Tag = "pause-wallpaper"; LocalizationKey = "gameActionPauseWallpaper" }
-                    @{ Tag = "play-wallpaper"; LocalizationKey = "gameActionPlayWallpaper" }
-                )
+                # Get game action mappings from script scope
+                $gameActionMappings = $this.GetMappingFromScope("GameActionMessageKeys")
+
+                if ($gameActionMappings.Count -eq 0) {
+                    Write-Warning "GameActionMessageKeys mapping not found or empty"
+                    return
+                }
 
                 # Clear existing items
                 $gameStartActionCombo.Items.Clear()
                 $gameEndActionCombo.Items.Clear()
 
-                # Add localized ComboBoxItems
-                foreach ($actionMapping in $actionMappings) {
-                    $localizedText = $this.GetLocalizedMessage($actionMapping.LocalizationKey)
+                # Add localized ComboBoxItems using the mapping
+                foreach ($kvp in $gameActionMappings.GetEnumerator()) {
+                    $actionTag = $kvp.Key
+                    $messageKey = $kvp.Value
+                    $localizedText = $this.GetLocalizedMessage($messageKey)
 
                     # Create ComboBoxItem for start action combo
                     $startItem = New-Object System.Windows.Controls.ComboBoxItem
                     $startItem.Content = $localizedText
-                    $startItem.Tag = $actionMapping.Tag
+                    $startItem.Tag = $actionTag
                     $gameStartActionCombo.Items.Add($startItem)
 
                     # Create ComboBoxItem for end action combo
                     $endItem = New-Object System.Windows.Controls.ComboBoxItem
                     $endItem.Content = $localizedText
-                    $endItem.Tag = $actionMapping.Tag
+                    $endItem.Tag = $actionTag
                     $gameEndActionCombo.Items.Add($endItem)
+
+                    Write-Verbose "Added game action: Tag='$actionTag', Key='$messageKey', Text='$localizedText'"
                 }
 
                 # Set default selection (first item - "none")
                 $gameStartActionCombo.SelectedIndex = 0
                 $gameEndActionCombo.SelectedIndex = 0
 
-                Write-Verbose "Game action combo boxes initialized successfully with localized content"
+                Write-Verbose "Game action combo boxes initialized successfully with $($gameActionMappings.Count) localized actions"
             }
         } catch {
             Write-Warning "Failed to initialize game action combo boxes: $($_.Exception.Message)"
