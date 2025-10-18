@@ -466,18 +466,26 @@ class ConfigEditorUI {
     #>
     [void]UpdateGameLauncherList([PSObject]$ConfigData) {
         try {
+            # Update launcher status
+            $statusText = $this.Window.FindName("LauncherStatusText")
+            if ($statusText) {
+                $statusText.Text = $this.GetLocalizedMessage("refreshingGameList")
+            }
+
             $gameLauncherList = $this.Window.FindName("GameLauncherList")
             if (-not $gameLauncherList) {
                 Write-Warning "GameLauncherList control not found"
+                if ($statusText) {
+                    $statusText.Text = $this.GetLocalizedMessage("gameListError")
+                }
                 return
             }
 
             # Clear existing items
             $gameLauncherList.Items.Clear()
 
-            # Check if games are configured (excluding _order property)
-            $gamePropertiesCount = @($ConfigData.games.PSObject.Properties | Where-Object { $_.Name -ne '_order' }).Count
-            if (-not $ConfigData.games -or $gamePropertiesCount -eq 0) {
+            # Check if games are configured
+            if (-not $ConfigData.games -or $ConfigData.games.PSObject.Properties.Count -eq 0) {
                 # Show "no games" message
                 $noGamesPanel = New-Object System.Windows.Controls.StackPanel
                 $noGamesPanel.HorizontalAlignment = "Center"
@@ -492,34 +500,221 @@ class ConfigEditorUI {
 
                 $noGamesPanel.Children.Add($noGamesText)
                 $gameLauncherList.Items.Add($noGamesPanel)
+
+                # Update status text for no games
+                if ($statusText) {
+                    $statusText.Text = $this.GetLocalizedMessage("noGamesFound")
+                }
                 return
             }
 
             # Create game cards for each configured game in order
             $gameCount = 0
-            $gameOrder = if ($ConfigData.games._order) {
-                $ConfigData.games._order
-            } else {
-                @($ConfigData.games.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
-            }
+            $gameOrder = if ($ConfigData.games._order) { $ConfigData.games._order } else { @($ConfigData.games.PSObject.Properties.Name | Where-Object { $_ -ne '_order' }) }
 
             foreach ($gameId in $gameOrder) {
-                if (-not $ConfigData.games.PSObject.Properties[$gameId]) {
-                    Write-Verbose "Game $gameId not found in config, skipping"
-                    continue
+                if (-not $ConfigData.games.PSObject.Properties[$gameId]) { continue }
+                $gameData = $ConfigData.games.$gameId
+                $platform = if ($gameData.platform) { $gameData.platform } else { "steam" }
+
+                Write-Verbose "Creating game card for: $gameId (Name: $($gameData.name), Platform: $platform)"
+
+                # Create game item data object
+                $gameItem = New-Object PSObject -Property @{
+                    GameId      = $gameId
+                    DisplayName = $gameData.name
+                    Platform    = $platform.ToUpper()
+                    ProcessName = $gameData.processName
                 }
 
-                $gameData = $ConfigData.games.$gameId
+                # Create the UI element for this game inline to avoid output capture issues
+                try {
+                    # Create main border
+                    $border = New-Object System.Windows.Controls.Border
+                    $border.Background = "#F8F9FA"
+                    $border.BorderBrush = "#E1E5E9"
+                    $border.BorderThickness = 1
+                    $border.CornerRadius = 8
+                    $border.Margin = "0,0,0,10"
+                    $border.Padding = 15
 
-                # This is where you would create the complex UI for the game card
-                # For now, we just add a placeholder.
-                $gameLauncherList.Items.Add("Game: " + $gameData.name)
-                $gameCount++
+                    # Add hover effect to game card
+                    $border.add_MouseEnter({
+                            $this.Background = "#F1F3F5"
+                            $this.BorderBrush = "#D1D9E0"
+                        })
+                    $border.add_MouseLeave({
+                            $this.Background = "#F8F9FA"
+                            $this.BorderBrush = "#E1E5E9"
+                        })
+
+                    # Create main grid
+                    $grid = New-Object System.Windows.Controls.Grid
+
+                    # Define columns
+                    $col1 = New-Object System.Windows.Controls.ColumnDefinition
+                    $col1.Width = "*"
+                    $col2 = New-Object System.Windows.Controls.ColumnDefinition
+                    $col2.Width = "Auto"
+                    $col3 = New-Object System.Windows.Controls.ColumnDefinition
+                    $col3.Width = "Auto"
+
+                    $grid.ColumnDefinitions.Add($col1)
+                    $grid.ColumnDefinitions.Add($col2)
+                    $grid.ColumnDefinitions.Add($col3)
+
+                    # Game info section
+                    $infoPanel = New-Object System.Windows.Controls.StackPanel
+                    $infoPanel.VerticalAlignment = "Center"
+                    [System.Windows.Controls.Grid]::SetColumn($infoPanel, 0)
+
+                    # Game name
+                    $nameText = New-Object System.Windows.Controls.TextBlock
+                    $nameText.Text = $gameItem.DisplayName
+                    $nameText.FontSize = 14
+                    $nameText.FontWeight = "SemiBold"
+                    $nameText.Foreground = "#333"
+                    $infoPanel.Children.Add($nameText)
+
+                    # Game details
+                    $detailsPanel = New-Object System.Windows.Controls.StackPanel
+                    $detailsPanel.Orientation = "Horizontal"
+                    $detailsPanel.Margin = "0,4,0,0"
+
+                    $platformLabel = New-Object System.Windows.Controls.TextBlock
+                    $platformLabel.Text = "Platform: "
+                    $platformLabel.FontSize = 11
+                    $platformLabel.Foreground = "#666"
+                    $detailsPanel.Children.Add($platformLabel)
+
+                    $platformValue = New-Object System.Windows.Controls.TextBlock
+                    $platformValue.Text = $gameItem.Platform
+                    $platformValue.FontSize = 11
+                    $platformValue.Foreground = "#0078D4"
+                    $platformValue.FontWeight = "SemiBold"
+                    $detailsPanel.Children.Add($platformValue)
+
+                    $idLabel = New-Object System.Windows.Controls.TextBlock
+                    $idLabel.Text = " | ID: "
+                    $idLabel.FontSize = 11
+                    $idLabel.Foreground = "#666"
+                    $idLabel.Margin = "10,0,0,0"
+                    $detailsPanel.Children.Add($idLabel)
+
+                    $idValue = New-Object System.Windows.Controls.TextBlock
+                    $idValue.Text = $gameItem.GameId
+                    $idValue.FontSize = 11
+                    $idValue.Foreground = "#666"
+                    $idValue.FontFamily = "Consolas"
+                    $detailsPanel.Children.Add($idValue)
+
+                    $infoPanel.Children.Add($detailsPanel)
+                    $grid.Children.Add($infoPanel)
+
+                    # Edit button
+                    $editButton = New-Object System.Windows.Controls.Button
+                    $editButton.Content = $this.GetLocalizedMessage("editButton")
+                    $editButton.Width = 70
+                    $editButton.Height = 32
+                    $editButton.Margin = "10,0"
+                    $editButton.Background = "#F1F3F4"
+                    $editButton.BorderBrush = "#D0D7DE"
+                    $editButton.FontSize = 11
+                    $editButton.Cursor = "Hand"
+                    [System.Windows.Controls.Grid]::SetColumn($editButton, 1)
+
+                    # Add hover effects to edit button
+                    $editButton.add_MouseEnter({
+                            $this.Background = "#E8EAED"
+                            $this.BorderBrush = "#C1C8CD"
+                        })
+                    $editButton.add_MouseLeave({
+                            $this.Background = "#F1F3F4"
+                            $this.BorderBrush = "#D0D7DE"
+                        })
+
+                    # Edit button click handler
+                    $editButton.Tag = @{ GameId = $gameId; FormInstance = $this }
+                    $editButton.add_Click({
+                            try {
+                                $gameId = $this.Tag.GameId
+                                $formInstance = $this.Tag.FormInstance
+                                $formInstance.SwitchToGameSettingsTab($gameId)
+                            } catch {
+                                Write-Warning "Error in edit button click: $($_.Exception.Message)"
+                            }
+                        })
+
+                    $grid.Children.Add($editButton)
+
+                    # Launch button
+                    $launchButton = New-Object System.Windows.Controls.Button
+                    $launchButton.Content = $this.GetLocalizedMessage("launchButton")
+                    $launchButton.Width = 80
+                    $launchButton.Height = 32
+                    $launchButton.Background = "#0078D4"
+                    $launchButton.Foreground = "White"
+                    $launchButton.BorderBrush = "#0078D4"
+                    $launchButton.FontWeight = "SemiBold"
+                    $launchButton.FontSize = 12
+                    $launchButton.Cursor = "Hand"
+                    [System.Windows.Controls.Grid]::SetColumn($launchButton, 2)
+
+                    # Add hover effects to launch button
+                    $launchButton.add_MouseEnter({
+                            $this.Background = "#106EBE"
+                            $this.BorderBrush = "#106EBE"
+                        })
+                    $launchButton.add_MouseLeave({
+                            $this.Background = "#0078D4"
+                            $this.BorderBrush = "#0078D4"
+                        })
+
+                    # Launch button click handler
+                    $launchButton.Tag = @{ GameId = $gameId; FormInstance = $this }
+                    $launchButton.add_Click({
+                            try {
+                                $gameId = $this.Tag.GameId
+                                $formInstance = $this.Tag.FormInstance
+                                $formInstance.StartGameFromLauncher($gameId)
+                            } catch {
+                                Write-Warning "Error in launch button click: $($_.Exception.Message)"
+                            }
+                        })
+
+                    $grid.Children.Add($launchButton)
+
+                    $border.Child = $grid
+
+                    # Add the border directly to ItemsControl
+                    Write-Verbose "Game card created successfully for: $gameId"
+                    Write-Verbose "Game card type: $($border.GetType().FullName)"
+                    $gameLauncherList.Items.Add($border)
+                    $gameCount++
+                    Write-Verbose "Game card added to list. Total items in ItemsControl: $($gameLauncherList.Items.Count)"
+
+                } catch {
+                    Write-Warning "Failed to create game card for: $gameId - $($_.Exception.Message)"
+                }
+            }
+
+            # Update status text with game count
+            if ($statusText) {
+                if ($gameCount -eq 1) {
+                    $statusText.Text = $this.GetLocalizedMessage("oneGameReady")
+                } else {
+                    $statusText.Text = $this.GetLocalizedMessage("multipleGamesReady") -f $gameCount.ToString()
+                }
             }
 
             Write-Verbose "Game launcher list updated with $gameCount games"
+
         } catch {
             Write-Warning "Failed to update game launcher list: $($_.Exception.Message)"
+            $statusText = $this.Window.FindName("LauncherStatusText")
+            if ($statusText) {
+                $statusText.Text = $this.GetLocalizedMessage("gameListUpdateError")
+            }
         }
     }
 
@@ -829,5 +1024,89 @@ class ConfigEditorUI {
     [string]GetCurrentUserPermissions() {
         # TODO: Implement actual permission logic
         return "Standard"
+    }
+
+    <#
+    .SYNOPSIS
+        Switches to the game settings tab and selects the specified game.
+
+    .DESCRIPTION
+        This method switches to the game settings tab and automatically selects the specified game for editing.
+
+    .PARAMETER GameId
+        The ID of the game to select for editing.
+    #>
+    [void]SwitchToGameSettingsTab([string]$GameId) {
+        try {
+            Write-Verbose "Switching to game settings tab for game: $GameId"
+
+            # Switch to Games tab
+            $mainTabControl = $this.Window.FindName("MainTabControl")
+            $gamesTab = $this.Window.FindName("GamesTab")
+
+            if ($mainTabControl -and $gamesTab) {
+                $mainTabControl.SelectedItem = $gamesTab
+
+                # Select the game in the games list
+                $gamesList = $this.Window.FindName("GamesList")
+                if ($gamesList) {
+                    # Find and select the game item
+                    for ($i = 0; $i -lt $gamesList.Items.Count; $i++) {
+                        $item = $gamesList.Items[$i]
+                        if ($item -and $item.Tag -eq $GameId) {
+                            $gamesList.SelectedIndex = $i
+                            break
+                        }
+                    }
+                }
+            }
+        } catch {
+            Write-Warning "Failed to switch to game settings tab: $($_.Exception.Message)"
+        }
+    }
+
+    <#
+    .SYNOPSIS
+        Starts a game from the game launcher.
+
+    .DESCRIPTION
+        This method attempts to launch the specified game using the appropriate launcher mechanism.
+
+    .PARAMETER GameId
+        The ID of the game to launch.
+    #>
+    [void]StartGameFromLauncher([string]$GameId) {
+        try {
+            Write-Verbose "Attempting to launch game: $GameId"
+
+            # Update status
+            $statusText = $this.Window.FindName("LauncherStatusText")
+            if ($statusText) {
+                $statusText.Text = $this.GetLocalizedMessage("launchingGame") -f $GameId
+            }
+
+            # Here you would implement the actual game launching logic
+            # For now, this is a placeholder that shows a message
+            $message = $this.GetLocalizedMessage("gameLaunched") -f $GameId
+            [System.Windows.MessageBox]::Show($message, $this.GetLocalizedMessage("info"), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+
+            # Reset status
+            if ($statusText) {
+                $statusText.Text = $this.GetLocalizedMessage("readyToLaunch")
+            }
+
+        } catch {
+            Write-Warning "Failed to launch game '$GameId': $($_.Exception.Message)"
+
+            # Show error message
+            $errorMessage = $this.GetLocalizedMessage("launchFailed") -f $GameId, $_.Exception.Message
+            [System.Windows.MessageBox]::Show($errorMessage, $this.GetLocalizedMessage("launchError"), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+
+            # Reset status
+            $statusText = $this.Window.FindName("LauncherStatusText")
+            if ($statusText) {
+                $statusText.Text = $this.GetLocalizedMessage("readyToLaunch")
+            }
+        }
     }
 }

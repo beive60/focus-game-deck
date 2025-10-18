@@ -612,18 +612,6 @@ class ConfigEditorEvents {
         }
     }
 
-    # Handle add new game from launcher
-    [void] HandleAddNewGameFromLauncher() {
-        # Switch to Games tab
-        $tabControl = $script:Window.FindName("MainTabControl")
-        $tabControl.SelectedIndex = 1  # Games tab
-
-        # Add a new game
-        $this.HandleAddGame()
-
-        Write-Verbose "Added new game from launcher tab and switched to Games tab"
-    }
-
     # Handle check update
     [void] HandleCheckUpdate() {
         try {
@@ -968,6 +956,50 @@ class ConfigEditorEvents {
         }
     }
 
+    # Handle refresh game list button click
+    [void] HandleRefreshGameList() {
+        try {
+            Write-Verbose "Refreshing game list"
+            $this.uiManager.UpdateGameLauncherList($this.stateManager.ConfigData)
+        } catch {
+            Write-Warning "Failed to refresh game list: $($_.Exception.Message)"
+        }
+    }
+
+    # Handle add new game from launcher
+    [void] HandleAddNewGameFromLauncher() {
+        try {
+            Write-Verbose "Adding new game from launcher"
+            # Switch to Games tab and trigger add game
+            $mainTabControl = $this.uiManager.Window.FindName("MainTabControl")
+            $gamesTab = $this.uiManager.Window.FindName("GamesTab")
+
+            if ($mainTabControl -and $gamesTab) {
+                $mainTabControl.SelectedItem = $gamesTab
+                # Trigger add game functionality
+                $this.HandleAddGame()
+            }
+        } catch {
+            Write-Warning "Failed to add new game from launcher: $($_.Exception.Message)"
+        }
+    }
+
+    # Handle open config from launcher
+    [void] HandleOpenConfigFromLauncher() {
+        try {
+            Write-Verbose "Opening config from launcher"
+            # Switch to Global Settings tab
+            $mainTabControl = $this.uiManager.Window.FindName("MainTabControl")
+            $globalSettingsTab = $this.uiManager.Window.FindName("GlobalSettingsTab")
+
+            if ($mainTabControl -and $globalSettingsTab) {
+                $mainTabControl.SelectedItem = $globalSettingsTab
+            }
+        } catch {
+            Write-Warning "Failed to open config from launcher: $($_.Exception.Message)"
+        }
+    }
+
     # Handle about dialog
     [void] HandleAbout() {
         try {
@@ -1077,6 +1109,26 @@ class ConfigEditorEvents {
                         Write-Warning "Error in window closing event: $($_.Exception.Message)"
                     }
                 }.GetNewClosure())
+
+            # --- Game Launcher Tab ---
+            $this.uiManager.Window.FindName("RefreshGameListButton").add_Click({ $self.HandleRefreshGameList() }.GetNewClosure())
+            $this.uiManager.Window.FindName("AddNewGameButton").add_Click({ $self.HandleAddNewGameFromLauncher() }.GetNewClosure())
+            $this.uiManager.Window.FindName("OpenConfigButton").add_Click({ $self.HandleOpenConfigFromLauncher() }.GetNewClosure())
+
+            # Add tab selection event to update game list when switching to launcher tab
+            $mainTabControl = $this.uiManager.Window.FindName("MainTabControl")
+            if ($mainTabControl) {
+                $mainTabControl.add_SelectionChanged({
+                        try {
+                            $selectedTab = $this.SelectedItem
+                            if ($selectedTab -and $selectedTab.Name -eq "GameLauncherTab") {
+                                $self.HandleRefreshGameList()
+                            }
+                        } catch {
+                            Write-Warning "Error in tab selection changed: $($_.Exception.Message)"
+                        }
+                    }.GetNewClosure())
+            }
 
             # --- Game Settings Tab ---
             $this.uiManager.Window.FindName("GamesList").add_SelectionChanged({ $self.HandleGameSelectionChanged() }.GetNewClosure())

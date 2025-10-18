@@ -264,6 +264,10 @@ function Initialize-ConfigEditor {
 
         # Step 7: Initialize event handler
         $eventHandler = [ConfigEditorEvents]::new($uiManager, $stateManager)
+
+        # Store UI manager in script scope for access from event handlers
+        $script:ConfigEditorForm = $uiManager
+
         $eventHandler.RegisterAll()
 
         # Step 8: Load data to UI
@@ -276,6 +280,11 @@ function Initialize-ConfigEditor {
                 throw "ConfigData is null"
             }
             $uiManager.LoadDataToUI($stateManager.ConfigData)
+
+            # Initialize game launcher list
+            Write-Host "Initializing game launcher list..." -ForegroundColor Yellow
+            $uiManager.UpdateGameLauncherList($stateManager.ConfigData)
+
             Write-Host "Data loaded to UI successfully" -ForegroundColor Green
         } catch {
             Write-Host "Failed to load data to UI: $($_.Exception.Message)" -ForegroundColor Red
