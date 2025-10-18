@@ -162,6 +162,17 @@ $script:ComboBoxItemMappings = @{
     "PlatformSteamItem"               = "steamPlatform"
     "PlatformEpicItem"                = "epicPlatform"
     "PlatformRiotItem"                = "riotPlatform"
+    # Game action mappings
+    "GameActionNoneItem"              = "gameActionNone"
+    "GameActionStartProcessItem"      = "gameActionStartProcess"
+    "GameActionStopProcessItem"       = "gameActionStopProcess"
+    "GameActionToggleHotkeysItem"     = "gameActionToggleHotkeys"
+    "GameActionStartVtubeStudioItem"  = "gameActionStartVtubeStudio"
+    "GameActionStopVtubeStudioItem"   = "gameActionStopVtubeStudio"
+    "GameActionSetDiscordGamingItem"  = "gameActionSetDiscordGaming"
+    "GameActionRestoreDiscordItem"    = "gameActionRestoreDiscord"
+    "GameActionPauseWallpaperItem"    = "gameActionPauseWallpaper"
+    "GameActionPlayWallpaperItem"     = "gameActionPlayWallpaper"
 }
 
 <#
@@ -295,6 +306,91 @@ function Get-ElementsForKey {
     } catch {
         Write-Warning "Error getting elements for localization key '$LocalizationKey': $($_.Exception.Message)"
         return @()
+    }
+}
+
+<#
+.SYNOPSIS
+    Gets the localization key for ComboBoxItem elements.
+
+.DESCRIPTION
+    This function specifically handles ComboBoxItem elements and returns
+    the appropriate localization key for their Content property.
+
+.PARAMETER ElementName
+    The x:Name of the ComboBoxItem element.
+
+.OUTPUTS
+    String
+        Returns the localization key if found, otherwise returns null.
+#>
+function Get-ComboBoxItemLocalizationKey {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ElementName
+    )
+
+    try {
+        if ($script:ComboBoxItemMappings.ContainsKey($ElementName)) {
+            return $script:ComboBoxItemMappings[$ElementName]
+        }
+        return $null
+    } catch {
+        Write-Warning "Error getting ComboBoxItem localization key for '$ElementName': $($_.Exception.Message)"
+        return $null
+    }
+}
+
+<#
+.SYNOPSIS
+    Validates that all ComboBoxItems in the mappings have corresponding message keys.
+
+.DESCRIPTION
+    This function checks if all ComboBoxItem mappings have valid message keys
+    in the provided messages hashtable.
+
+.PARAMETER Messages
+    The messages hashtable containing localized strings.
+
+.PARAMETER Language
+    The language code to validate (e.g., 'ja', 'en', 'zh-CN').
+
+.OUTPUTS
+    Array
+        Returns an array of missing message keys.
+#>
+function Test-ComboBoxItemMappings {
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable]$Messages,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Language
+    )
+
+    try {
+        $missingKeys = @()
+
+        if (-not $Messages.ContainsKey($Language)) {
+            Write-Warning "Language '$Language' not found in messages"
+            return @("Language '$Language' not found")
+        }
+
+        $languageMessages = $Messages[$Language]
+
+        foreach ($kvp in $script:ComboBoxItemMappings.GetEnumerator()) {
+            $elementName = $kvp.Key
+            $messageKey = $kvp.Value
+
+            if (-not $languageMessages.ContainsKey($messageKey)) {
+                $missingKeys += "Missing message key '$messageKey' for ComboBoxItem '$elementName'"
+            }
+        }
+
+        return $missingKeys
+    } catch {
+        Write-Warning "Error validating ComboBoxItem mappings: $($_.Exception.Message)"
+        return @("Validation error: $($_.Exception.Message)")
     }
 }
 
