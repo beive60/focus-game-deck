@@ -669,7 +669,8 @@ class ConfigEditorUI {
     .SYNOPSIS
     Initializes the game action combo boxes with available actions.
     .DESCRIPTION
-    Populates the GameStartActionCombo and GameEndActionCombo with predefined action options.
+    Populates the GameStartActionCombo and GameEndActionCombo with predefined action options
+    using localized ComboBoxItems.
     .OUTPUTS
     None
     .EXAMPLE
@@ -677,20 +678,50 @@ class ConfigEditorUI {
     #>
     [void]InitializeGameActionCombos() {
         try {
-            # Finds and adds items to GameStartActionCombo and GameEndActionCombo.
             $gameStartActionCombo = $this.Window.FindName("GameStartActionCombo")
             $gameEndActionCombo = $this.Window.FindName("GameEndActionCombo")
 
             if ($gameStartActionCombo -and $gameEndActionCombo) {
-                $actions = @("none", "start-process", "stop-process", "toggle-hotkeys", "start-vtube-studio", "stop-vtube-studio", "set-discord-gaming-mode", "restore-discord-normal", "pause-wallpaper", "play-wallpaper")
+                # Define action mappings with their corresponding localization keys
+                $actionMappings = @(
+                    @{ Tag = "none"; LocalizationKey = "gameActionNone" }
+                    @{ Tag = "start-process"; LocalizationKey = "gameActionStartProcess" }
+                    @{ Tag = "stop-process"; LocalizationKey = "gameActionStopProcess" }
+                    @{ Tag = "toggle-hotkeys"; LocalizationKey = "gameActionToggleHotkeys" }
+                    @{ Tag = "start-vtube-studio"; LocalizationKey = "gameActionStartVtubeStudio" }
+                    @{ Tag = "stop-vtube-studio"; LocalizationKey = "gameActionStopVtubeStudio" }
+                    @{ Tag = "set-discord-gaming-mode"; LocalizationKey = "gameActionSetDiscordGaming" }
+                    @{ Tag = "restore-discord-normal"; LocalizationKey = "gameActionRestoreDiscord" }
+                    @{ Tag = "pause-wallpaper"; LocalizationKey = "gameActionPauseWallpaper" }
+                    @{ Tag = "play-wallpaper"; LocalizationKey = "gameActionPlayWallpaper" }
+                )
 
-                $gameStartActionCombo.ItemsSource = $actions
-                $gameEndActionCombo.ItemsSource = $actions
+                # Clear existing items
+                $gameStartActionCombo.Items.Clear()
+                $gameEndActionCombo.Items.Clear()
 
+                # Add localized ComboBoxItems
+                foreach ($actionMapping in $actionMappings) {
+                    $localizedText = $this.GetLocalizedMessage($actionMapping.LocalizationKey)
+
+                    # Create ComboBoxItem for start action combo
+                    $startItem = New-Object System.Windows.Controls.ComboBoxItem
+                    $startItem.Content = $localizedText
+                    $startItem.Tag = $actionMapping.Tag
+                    $gameStartActionCombo.Items.Add($startItem)
+
+                    # Create ComboBoxItem for end action combo
+                    $endItem = New-Object System.Windows.Controls.ComboBoxItem
+                    $endItem.Content = $localizedText
+                    $endItem.Tag = $actionMapping.Tag
+                    $gameEndActionCombo.Items.Add($endItem)
+                }
+
+                # Set default selection (first item - "none")
                 $gameStartActionCombo.SelectedIndex = 0
                 $gameEndActionCombo.SelectedIndex = 0
 
-                Write-Verbose "Game action combo boxes initialized successfully"
+                Write-Verbose "Game action combo boxes initialized successfully with localized content"
             }
         } catch {
             Write-Warning "Failed to initialize game action combo boxes: $($_.Exception.Message)"
@@ -751,7 +782,7 @@ class ConfigEditorUI {
             $item.Tag = $tag
             $comboBox.Items.Add($item) | Out-Null
         } catch {
-            Write-Host "Error adding ComboBox item: $($_.Exception.Message)" -ForegroundColor Red
+            Write-host "Error adding ComboBox item: $($_.Exception.Message)" -ForegroundColor Red
         }
     }
 
@@ -774,7 +805,7 @@ class ConfigEditorUI {
                 $this.InitializeGameActionCombos($selectedPlatform, $currentPermissions)
             }
         } catch {
-            Write-Host "Error handling platform selection change: $($_.Exception.Message)" -ForegroundColor Red
+            Write-host "Error handling platform selection change: $($_.Exception.Message)" -ForegroundColor Red
         }
     }
 

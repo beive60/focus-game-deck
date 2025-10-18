@@ -188,7 +188,17 @@
         "autoDetectSearching": "{0}を検索中...",
         "pathNotFound": "パスが見つかりません",
         "multiplePathsFound": "複数のインストールが見つかりました。1つを選択してください:",
-        "selectPath": "パスを選択"
+        "selectPath": "パスを選択",
+        "gameActionNone": "何もしない",
+        "gameActionStartProcess": "プロセスを開始",
+        "gameActionStopProcess": "プロセスを停止",
+        "gameActionToggleHotkeys": "ホットキーを切り替え",
+        "gameActionStartVtubeStudio": "VTube Studioを開始",
+        "gameActionStopVtubeStudio": "VTube Studioを停止",
+        "gameActionSetDiscordGaming": "Discordゲーミングモード設定",
+        "gameActionRestoreDiscord": "Discord通常モード復元",
+        "gameActionPauseWallpaper": "壁紙を一時停止",
+        "gameActionPlayWallpaper": "壁紙を再生"
     },
     "en": {
         "textLabel": "Text",
@@ -379,7 +389,17 @@
         "autoDetectSearching": "Searching for {0}...",
         "pathNotFound": "Path not found",
         "multiplePathsFound": "Multiple installations found. Please select one:",
-        "selectPath": "Select Path"
+        "selectPath": "Select Path",
+        "gameActionNone": "No Action",
+        "gameActionStartProcess": "Start Process",
+        "gameActionStopProcess": "Stop Process",
+        "gameActionToggleHotkeys": "Toggle Hotkeys",
+        "gameActionStartVtubeStudio": "Start VTube Studio",
+        "gameActionStopVtubeStudio": "Stop VTube Studio",
+        "gameActionSetDiscordGaming": "Set Discord Gaming Mode",
+        "gameActionRestoreDiscord": "Restore Discord Normal",
+        "gameActionPauseWallpaper": "Pause Wallpaper",
+        "gameActionPlayWallpaper": "Play Wallpaper"
     },
     "zh-CN": {
         "textLabel": "文本",
@@ -570,6 +590,16 @@
         "autoDetectSearching": "正在搜索{0}...",
         "pathNotFound": "找不到路径",
         "multiplePathsFound": "找到多个安装。请选择一个:",
-        "selectPath": "选择路径"
+        "selectPath": "选择路径",
+        "gameActionNone": "无操作",
+        "gameActionStartProcess": "启动进程",
+        "gameActionStopProcess": "停止进程",
+        "gameActionToggleHotkeys": "切换热键",
+        "gameActionStartVtubeStudio": "启动VTube Studio",
+        "gameActionStopVtubeStudio": "停止VTube Studio",
+        "gameActionSetDiscordGaming": "设置Discord游戏模式",
+        "gameActionRestoreDiscord": "恢复Discord正常模式",
+        "gameActionPauseWallpaper": "暂停壁纸",
+        "gameActionPlayWallpaper": "播放壁纸"
     }
 }
