@@ -95,6 +95,14 @@ class ConfigEditorState {
         }
     }
 
+    [void] SetModified() {
+        $this.HasUnsavedChanges = $true
+    }
+
+    [bool] TestHasUnsavedChanges() {
+        return $this.HasUnsavedChanges
+    }
+
     # Initialize games._order array with enhanced version structure
     [void] InitializeGameOrder() {
         try {
@@ -111,8 +119,7 @@ class ConfigEditorState {
                 $gameIds = @($this.ConfigData.games.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
                 Write-Host "DEBUG: Found $($gameIds.Count) existing games" -ForegroundColor Cyan
                 $this.ConfigData.games | Add-Member -MemberType NoteProperty -Name "_order" -Value $gameIds -Force
-                Set-ConfigModified
-            } else {
+                } else {
                 Write-Host "DEBUG: games._order exists, validating..." -ForegroundColor Cyan
                 # Validate existing _order against actual games
                 $existingGames = @($this.ConfigData.games.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
@@ -137,7 +144,6 @@ class ConfigEditorState {
                     (Compare-Object $validGameOrder $this.ConfigData.games._order)) {
                     Write-Host "DEBUG: Updating games._order with validated games" -ForegroundColor Yellow
                     $this.ConfigData.games._order = $validGameOrder
-                    Set-ConfigModified
                 }
             }
             Write-Host "DEBUG: InitializeGameOrder completed" -ForegroundColor Cyan
@@ -166,8 +172,7 @@ class ConfigEditorState {
                 $appIds = @($this.ConfigData.managedApps.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
                 Write-Host "DEBUG: Found $($appIds.Count) existing apps" -ForegroundColor Cyan
                 $this.ConfigData.managedApps | Add-Member -MemberType NoteProperty -Name "_order" -Value $appIds -Force
-                Set-ConfigModified
-            } else {
+                } else {
                 Write-Host "DEBUG: managedApps._order exists, validating..." -ForegroundColor Cyan
                 # Validate existing _order against actual apps
                 $existingApps = @($this.ConfigData.managedApps.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
@@ -192,7 +197,6 @@ class ConfigEditorState {
                     (Compare-Object $validAppOrder $this.ConfigData.managedApps._order)) {
                     Write-Host "DEBUG: Updating managedApps._order with validated apps" -ForegroundColor Yellow
                     $this.ConfigData.managedApps._order = $validAppOrder
-                    Set-ConfigModified
                 }
             }
             Write-Host "DEBUG: InitializeAppOrder completed" -ForegroundColor Cyan

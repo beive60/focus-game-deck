@@ -291,21 +291,25 @@
                                         <RowDefinition Height="30"/>
                                     </Grid.RowDefinitions>
 
-                                    <StackPanel Grid.Row="0"
-                                                Grid.Column="0"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_GAME_ID]">
+                                    <StackPanel
+                                        x:Name="GameIdLabelPanel"
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        ToolTip="[TOOLTIP_GAME_ID]">
                                         <Label
                                             x:Name="GameIdLabel"
                                             Content="[GAME_ID_LABEL]"
                                             VerticalAlignment="Center"/>
-                                        <TextBlock Text="?"
-                                                   FontWeight="Bold"
-                                                   Foreground="#0078D4"
-                                                   Margin="3,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   ToolTip="[TOOLTIP_GAME_ID]"/>
+                                        <TextBlock
+                                            x:Name="GameIdTooltip"
+                                            Text="?"
+                                            FontWeight="Bold"
+                                            Foreground="#0078D4"
+                                            Margin="3,0,0,0"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_GAME_ID]"/>
                                     </StackPanel>
                                     <TextBox
                                         x:Name="GameIdTextBox"
@@ -314,21 +318,25 @@
                                         VerticalContentAlignment="Center"
                                         Margin="5"/>
 
-                                    <StackPanel Grid.Row="1"
-                                                Grid.Column="0"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_DISPLAY_NAME]">
+                                    <StackPanel
+                                        x:Name="GameNameLabelPanel"
+                                        Grid.Row="1"
+                                        Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        ToolTip="[TOOLTIP_DISPLAY_NAME]">
                                         <Label
                                             x:Name="GameNameLabel"
                                             Content="[GAME_NAME_LABEL]"
                                             VerticalAlignment="Center"/>
-                                        <TextBlock Text="?"
-                                                   FontWeight="Bold"
-                                                   Foreground="#0078D4"
-                                                   Margin="3,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   ToolTip="[TOOLTIP_DISPLAY_NAME]"/>
+                                        <TextBlock
+                                            x:Name="GameNameTooltip"
+                                            Text="?"
+                                            FontWeight="Bold"
+                                            Foreground="#0078D4"
+                                            Margin="3,0,0,0"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_DISPLAY_NAME]"/>
                                     </StackPanel>
                                     <TextBox
                                         x:Name="GameNameTextBox"
@@ -348,31 +356,43 @@
                                         Grid.Row="2"
                                         Grid.Column="1"
                                         Margin="5">
-                                        <ComboBoxItem Content="[STANDALONE_PLATFORM]"
-                                                      Tag="standalone"/>
-                                        <ComboBoxItem Content="[STEAM_PLATFORM]"
-                                                      Tag="steam"/>
-                                        <ComboBoxItem Content="[EPIC_PLATFORM]"
-                                                      Tag="epic"/>
-                                        <ComboBoxItem Content="[RIOT_PLATFORM]"
-                                                      Tag="riot"/>
+                                        <ComboBoxItem
+                                            x:Name="PlatformStandaloneItem"
+                                            Content="[STANDALONE_PLATFORM]"
+                                            Tag="standalone"/>
+                                        <ComboBoxItem
+                                            x:Name="PlatformSteamItem"
+                                            Content="[STEAM_PLATFORM]"
+                                            Tag="steam"/>
+                                        <ComboBoxItem
+                                            x:Name="PlatformEpicItem"
+                                            Content="[EPIC_PLATFORM]"
+                                            Tag="epic"/>
+                                        <ComboBoxItem
+                                            x:Name="PlatformRiotItem"
+                                            Content="[RIOT_PLATFORM]"
+                                            Tag="riot"/>
                                     </ComboBox>
 
-                                    <StackPanel Grid.Row="3"
-                                                Grid.Column="0"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_STEAM_APP_ID]">
+                                    <StackPanel
+                                        x:Name="SteamAppIdLabelPanel"
+                                        Grid.Row="3"
+                                        Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        ToolTip="[TOOLTIP_STEAM_APP_ID]">
                                         <Label
                                             x:Name="SteamAppIdLabel"
                                             Content="[STEAM_APP_ID_LABEL]"
                                             VerticalAlignment="Center"/>
-                                        <TextBlock Text="?"
-                                                   FontWeight="Bold"
-                                                   Foreground="#0078D4"
-                                                   Margin="3,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   ToolTip="[TOOLTIP_STEAM_APP_ID]"/>
+                                        <TextBlock
+                                            x:Name="SteamAppIdTooltip"
+                                            Text="?"
+                                            FontWeight="Bold"
+                                            Foreground="#0078D4"
+                                            Margin="3,0,0,0"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_STEAM_APP_ID]"/>
                                     </StackPanel>
                                     <TextBox
                                         x:Name="SteamAppIdTextBox"
@@ -381,22 +401,26 @@
                                         VerticalContentAlignment="Center"
                                         Margin="5"/>
 
-                                    <StackPanel Grid.Row="4"
-                                                Grid.Column="0"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center"
-                                                Visibility="Collapsed"
-                                                ToolTip="[TOOLTIP_EPIC_GAME_ID]">
+                                    <StackPanel
+                                        x:Name="EpicGameIdLabelPanel"
+                                        Grid.Row="4"
+                                        Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        Visibility="Collapsed"
+                                        ToolTip="[TOOLTIP_EPIC_GAME_ID]">
                                         <Label
                                             x:Name="EpicGameIdLabel"
                                             Content="[EPIC_GAME_ID_LABEL]"
                                             VerticalAlignment="Center"/>
-                                        <TextBlock Text="?"
-                                                   FontWeight="Bold"
-                                                   Foreground="#0078D4"
-                                                   Margin="3,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   ToolTip="[TOOLTIP_EPIC_GAME_ID]"/>
+                                        <TextBlock
+                                            x:Name="EpicGameIdTooltip"
+                                            Text="?"
+                                            FontWeight="Bold"
+                                            Foreground="#0078D4"
+                                            Margin="3,0,0,0"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_EPIC_GAME_ID]"/>
                                     </StackPanel>
                                     <TextBox
                                         x:Name="EpicGameIdTextBox"
@@ -406,22 +430,26 @@
                                         Margin="5"
                                         Visibility="Collapsed"/>
 
-                                    <StackPanel Grid.Row="5"
-                                                Grid.Column="0"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center"
-                                                Visibility="Collapsed"
-                                                ToolTip="[TOOLTIP_RIOT_GAME_ID]">
+                                    <StackPanel
+                                        x:Name="RiotGameIdLabelPanel"
+                                        Grid.Row="5"
+                                        Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        Visibility="Collapsed"
+                                        ToolTip="[TOOLTIP_RIOT_GAME_ID]">
                                         <Label
                                             x:Name="RiotGameIdLabel"
                                             Content="[RIOT_GAME_ID_LABEL]"
                                             VerticalAlignment="Center"/>
-                                        <TextBlock Text="?"
-                                                   FontWeight="Bold"
-                                                   Foreground="#0078D4"
-                                                   Margin="3,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   ToolTip="[TOOLTIP_RIOT_GAME_ID]"/>
+                                        <TextBlock
+                                            x:Name="RiotGameIdTooltip"
+                                            Text="?"
+                                            FontWeight="Bold"
+                                            Foreground="#0078D4"
+                                            Margin="3,0,0,0"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_RIOT_GAME_ID]"/>
                                     </StackPanel>
                                     <TextBox
                                         x:Name="RiotGameIdTextBox"
@@ -443,12 +471,14 @@
                                             x:Name="ExecutablePathLabel"
                                             Content="[EXECUTABLE_PATH_LABEL]"
                                             VerticalAlignment="Center"/>
-                                        <TextBlock Text="?"
-                                                   FontWeight="Bold"
-                                                   Foreground="#0078D4"
-                                                   Margin="3,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   ToolTip="[TOOLTIP_EXECUTABLE_PATH]"/>
+                                        <TextBlock
+                                            x:Name="ExecutablePathTooltip"
+                                            Text="?"
+                                            FontWeight="Bold"
+                                            Foreground="#0078D4"
+                                            Margin="3,0,0,0"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_EXECUTABLE_PATH]"/>
                                     </StackPanel>
                                     <Grid
                                         x:Name="ExecutablePathInputGrid"
@@ -473,21 +503,25 @@
                                             Margin="5,0,5,0"/>
                                     </Grid>
 
-                                    <StackPanel Grid.Row="7"
-                                                Grid.Column="0"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_PROCESS_NAME]">
+                                    <StackPanel
+                                        x:Name="ProcessNameLabelPanel"
+                                        Grid.Row="7"
+                                        Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        ToolTip="[TOOLTIP_PROCESS_NAME]">
                                         <Label
                                             x:Name="ProcessNameLabel"
                                             Content="[PROCESS_NAME_LABEL]"
                                             VerticalAlignment="Center"/>
-                                        <TextBlock Text="?"
-                                                   FontWeight="Bold"
-                                                   Foreground="#0078D4"
-                                                   Margin="3,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   ToolTip="[TOOLTIP_PROCESS_NAME]"/>
+                                        <TextBlock
+                                            x:Name="ProcessNameTooltip"
+                                            Text="?"
+                                            FontWeight="Bold"
+                                            Foreground="#0078D4"
+                                            Margin="3,0,0,0"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_PROCESS_NAME]"/>
                                     </StackPanel>
                                     <TextBox
                                         x:Name="ProcessNameTextBox"
@@ -520,18 +554,23 @@
                                         Content="[LAUNCHER_TYPE_LABEL]"
                                         Grid.Column="0"
                                         VerticalAlignment="Center"/>
-                                    <StackPanel Grid.Column="1"
-                                                Orientation="Horizontal"
-                                                Margin="5">
+                                    <StackPanel
+                                        Grid.Column="1"
+                                        Orientation="Horizontal"
+                                        Margin="5">
                                         <ComboBox
                                             x:Name="GameLauncherTypeCombo"
                                             Width="200"
                                             HorizontalAlignment="Left">
-                                            <ComboBoxItem Content="[ENHANCED_SHORTCUTS]"
-                                                          Tag="lnk"
-                                                          IsSelected="True"/>
-                                            <ComboBoxItem Content="[TRADITIONAL_BATCH]"
-                                                          Tag="bat"/>
+                                            <ComboBoxItem
+                                                x:Name="GameLauncherTypeEnhancedItem"
+                                                Content="[ENHANCED_SHORTCUTS]"
+                                                Tag="lnk"
+                                                IsSelected="True"/>
+                                            <ComboBoxItem
+                                                x:Name="GameLauncherTypeTraditionalItem"
+                                                Content="[TRADITIONAL_BATCH]"
+                                                Tag="bat"/>
                                         </ComboBox>
                                         <Button
                                             x:Name="GenerateLaunchersButton"
@@ -545,9 +584,10 @@
                         </ScrollViewer>
                     </Grid>
 
-                    <Grid Grid.Row="1"
-                          Background="#F8F8F8"
-                          Margin="0,5,0,0">
+                    <Grid
+                        Grid.Row="1"
+                        Background="#F8F8F8"
+                        Margin="0,5,0,0">
                         <Button
                             x:Name="SaveGameSettingsButton"
                             Content="[SAVE_BUTTON]"
@@ -698,21 +738,25 @@
                                         <RowDefinition Height="30"/>
                                     </Grid.RowDefinitions>
 
-                                    <StackPanel Grid.Row="0"
-                                                Grid.Column="0"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_APP_ID]">
+                                    <StackPanel
+                                        x:Name="AppIdLabelPanel"
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        ToolTip="[TOOLTIP_APP_ID]">
                                         <Label
                                             x:Name="AppIdLabel"
                                             Content="[APP_ID_LABEL]"
                                             VerticalAlignment="Center"/>
-                                        <TextBlock Text="?"
-                                                   FontWeight="Bold"
-                                                   Foreground="#0078D4"
-                                                   Margin="3,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   ToolTip="[TOOLTIP_APP_ID]"/>
+                                        <TextBlock
+                                            x:Name="AppIdTooltip"
+                                            Text="?"
+                                            FontWeight="Bold"
+                                            Foreground="#0078D4"
+                                            Margin="3,0,0,0"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_APP_ID]"/>
                                     </StackPanel>
                                     <TextBox
                                         x:Name="AppIdTextBox"
@@ -741,21 +785,25 @@
                                         Width="70"
                                         Height="25"/>
 
-                                    <StackPanel Grid.Row="2"
-                                                Grid.Column="0"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_PROCESS_NAME]">
+                                    <StackPanel
+                                        x:Name="AppProcessNameLabelPanel"
+                                        Grid.Row="2"
+                                        Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        ToolTip="[TOOLTIP_PROCESS_NAME]">
                                         <Label
                                             x:Name="AppProcessNameLabel"
                                             Content="[PROCESS_NAME_LABEL]"
                                             VerticalAlignment="Center"/>
-                                        <TextBlock Text="?"
-                                                   FontWeight="Bold"
-                                                   Foreground="#0078D4"
-                                                   Margin="3,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   ToolTip="[TOOLTIP_PROCESS_NAME]"/>
+                                        <TextBlock
+                                            x:Name="AppProcessNameTooltip"
+                                            Text="?"
+                                            FontWeight="Bold"
+                                            Foreground="#0078D4"
+                                            Margin="3,0,0,0"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_PROCESS_NAME]"/>
                                     </StackPanel>
                                     <TextBox
                                         x:Name="AppProcessNameTextBox"
@@ -764,65 +812,81 @@
                                         VerticalContentAlignment="Center"
                                         Margin="5"/>
 
-                                    <StackPanel Grid.Row="3"
-                                                Grid.Column="0"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_GAME_ACTIONS]">
+                                    <StackPanel
+                                        x:Name="GameStartActionLabelPanel"
+                                        Grid.Row="3"
+                                        Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        ToolTip="[TOOLTIP_GAME_ACTIONS]">
                                         <Label
                                             x:Name="GameStartActionLabel"
                                             Content="[GAME_START_ACTION_LABEL]"
                                             VerticalAlignment="Center"/>
-                                        <TextBlock Text="?"
-                                                   FontWeight="Bold"
-                                                   Foreground="#0078D4"
-                                                   Margin="3,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   ToolTip="[TOOLTIP_GAME_ACTIONS]"/>
+                                        <TextBlock
+                                            x:Name="GameStartActionTooltip"
+                                            Text="?"
+                                            FontWeight="Bold"
+                                            Foreground="#0078D4"
+                                            Margin="3,0,0,0"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_GAME_ACTIONS]"/>
                                     </StackPanel>
                                     <ComboBox
                                         x:Name="GameStartActionCombo"
                                         Grid.Row="3"
                                         Grid.Column="1"
-                                        Margin="5"/>
+                                        Margin="5">
 
-                                    <StackPanel Grid.Row="4"
-                                                Grid.Column="0"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_GAME_ACTIONS]">
+                                    </ComboBox>
+
+                                    <StackPanel
+                                        x:Name="GameEndActionLabelPanel"
+                                        Grid.Row="4"
+                                        Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        ToolTip="[TOOLTIP_GAME_ACTIONS]">
                                         <Label
                                             x:Name="GameEndActionLabel"
                                             Content="[GAME_END_ACTION_LABEL]"
                                             VerticalAlignment="Center"/>
-                                        <TextBlock Text="?"
-                                                   FontWeight="Bold"
-                                                   Foreground="#0078D4"
-                                                   Margin="3,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   ToolTip="[TOOLTIP_GAME_ACTIONS]"/>
+                                        <TextBlock
+                                            x:Name="GameEndActionTooltip"
+                                            Text="?"
+                                            FontWeight="Bold"
+                                            Foreground="#0078D4"
+                                            Margin="3,0,0,0"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_GAME_ACTIONS]"/>
                                     </StackPanel>
                                     <ComboBox
                                         x:Name="GameEndActionCombo"
                                         Grid.Row="4"
                                         Grid.Column="1"
-                                        Margin="5"/>
+                                        Margin="5">
 
-                                    <StackPanel Grid.Row="5"
-                                                Grid.Column="0"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_LAUNCH_ARGUMENTS]">
+                                    </ComboBox>
+
+                                    <StackPanel
+                                        x:Name="AppArgumentsLabelPanel"
+                                        Grid.Row="5"
+                                        Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        ToolTip="[TOOLTIP_LAUNCH_ARGUMENTS]">
                                         <Label
                                             x:Name="AppArgumentsLabel"
                                             Content="[ARGUMENTS_LABEL]"
                                             VerticalAlignment="Center"/>
-                                        <TextBlock Text="?"
-                                                   FontWeight="Bold"
-                                                   Foreground="#0078D4"
-                                                   Margin="3,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   ToolTip="[TOOLTIP_LAUNCH_ARGUMENTS]"/>
+                                        <TextBlock
+                                            x:Name="AppArgumentsTooltip"
+                                            Text="?"
+                                            FontWeight="Bold"
+                                            Foreground="#0078D4"
+                                            Margin="3,0,0,0"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_LAUNCH_ARGUMENTS]"/>
                                     </StackPanel>
                                     <TextBox
                                         x:Name="AppArgumentsTextBox"
@@ -831,21 +895,25 @@
                                         VerticalContentAlignment="Center"
                                         Margin="5"/>
 
-                                    <StackPanel Grid.Row="6"
-                                                Grid.Column="0"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_TERMINATION_METHOD]">
+                                    <StackPanel
+                                        x:Name="TerminationMethodLabelPanel"
+                                        Grid.Row="6"
+                                        Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        ToolTip="[TOOLTIP_TERMINATION_METHOD]">
                                         <Label
                                             x:Name="TerminationMethodLabel"
                                             Content="[TERMINATION_METHOD_LABEL]"
                                             VerticalAlignment="Center"/>
-                                        <TextBlock Text="?"
-                                                   FontWeight="Bold"
-                                                   Foreground="#0078D4"
-                                                   Margin="3,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   ToolTip="[TOOLTIP_TERMINATION_METHOD]"/>
+                                        <TextBlock
+                                            x:Name="TerminationMethodTooltip"
+                                            Text="?"
+                                            FontWeight="Bold"
+                                            Foreground="#0078D4"
+                                            Margin="3,0,0,0"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_TERMINATION_METHOD]"/>
                                     </StackPanel>
                                     <ComboBox
                                         x:Name="TerminationMethodCombo"
@@ -853,21 +921,25 @@
                                         Grid.Column="1"
                                         Margin="5"/>
 
-                                    <StackPanel Grid.Row="7"
-                                                Grid.Column="0"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_GRACEFUL_TIMEOUT]">
+                                    <StackPanel
+                                        x:Name="GracefulTimeoutLabelPanel"
+                                        Grid.Row="7"
+                                        Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        ToolTip="[TOOLTIP_GRACEFUL_TIMEOUT]">
                                         <Label
                                             x:Name="GracefulTimeoutLabel"
                                             Content="[GRACEFUL_TIMEOUT_LABEL]"
                                             VerticalAlignment="Center"/>
-                                        <TextBlock Text="?"
-                                                   FontWeight="Bold"
-                                                   Foreground="#0078D4"
-                                                   Margin="3,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   ToolTip="[TOOLTIP_GRACEFUL_TIMEOUT]"/>
+                                        <TextBlock
+                                            x:Name="GracefulTimeoutTooltip"
+                                            Text="?"
+                                            FontWeight="Bold"
+                                            Foreground="#0078D4"
+                                            Margin="3,0,0,0"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_GRACEFUL_TIMEOUT]"/>
                                     </StackPanel>
                                     <TextBox
                                         x:Name="GracefulTimeoutTextBox"
@@ -880,9 +952,11 @@
                         </ScrollViewer>
                     </Grid>
 
-                    <Grid Grid.Row="1"
-                          Background="#F8F8F8"
-                          Margin="0,5,0,0">
+                    <Grid
+                        x:Name="ManagedAppsBottomGrid"
+                        Grid.Row="1"
+                        Background="#F8F8F8"
+                        Margin="0,5,0,0">
                         <Button
                             x:Name="SaveManagedAppsButton"
                             Content="[SAVE_BUTTON]"
@@ -956,11 +1030,15 @@
                                         Width="200"
                                         HorizontalAlignment="Left"
                                         Margin="5">
-                                        <ComboBoxItem Content="[ENHANCED_SHORTCUTS]"
-                                                      Tag="lnk"
-                                                      IsSelected="True"/>
-                                        <ComboBoxItem Content="[TRADITIONAL_BATCH]"
-                                                      Tag="bat"/>
+                                        <ComboBoxItem
+                                            x:Name="LauncherTypeEnhancedItem"
+                                            Content="[ENHANCED_SHORTCUTS]"
+                                            Tag="lnk"
+                                            IsSelected="True"/>
+                                        <ComboBoxItem
+                                            x:Name="LauncherTypeTraditionalItem"
+                                            Content="[TRADITIONAL_BATCH]"
+                                            Tag="bat"/>
                                     </ComboBox>
 
                                     <Label
@@ -976,15 +1054,23 @@
                                         Width="200"
                                         HorizontalAlignment="Left"
                                         Margin="5">
-                                        <ComboBoxItem Content="[LOG_RETENTION_30]"
-                                                      Tag="30"/>
-                                        <ComboBoxItem Content="[LOG_RETENTION_90]"
-                                                      Tag="90"
-                                                      IsSelected="True"/>
-                                        <ComboBoxItem Content="[LOG_RETENTION_180]"
-                                                      Tag="180"/>
-                                        <ComboBoxItem Content="[LOG_RETENTION_UNLIMITED]"
-                                                      Tag="-1"/>
+                                        <ComboBoxItem
+                                            x:Name="LogRetention7Item"
+                                            Content="[LOG_RETENTION_7]"
+                                            Tag="7"/>
+                                        <ComboBoxItem
+                                            x:Name="LogRetention30Item"
+                                            Content="[LOG_RETENTION_30]"
+                                            Tag="30"
+                                            IsSelected="True"/>
+                                        <ComboBoxItem
+                                            x:Name="LogRetention180Item"
+                                            Content="[LOG_RETENTION_180]"
+                                            Tag="180"/>
+                                        <ComboBoxItem
+                                            x:Name="LogRetentionUnlimitedItem"
+                                            Content="[LOG_RETENTION_UNLIMITED]"
+                                            Tag="-1"/>
                                     </ComboBox>
 
                                     <CheckBox
@@ -1119,14 +1205,16 @@
                                         Width="70"
                                         Height="25"
                                         Margin="5,0,0,0"/>
-                                    <TextBlock Text="?"
-                                               Grid.Row="0"
-                                               Grid.Column="4"
-                                               FontWeight="Bold"
-                                               Foreground="#0078D4"
-                                               Margin="3,0,0,0"
-                                               VerticalAlignment="Center"
-                                               ToolTip="[AUTO_DETECT_STEAM_TOOLTIP]"/>
+                                    <TextBlock
+                                        x:Name="AutoDetectSteamTooltip"
+                                        Text="?"
+                                        Grid.Row="0"
+                                        Grid.Column="4"
+                                        FontWeight="Bold"
+                                        Foreground="#0078D4"
+                                        Margin="3,0,0,0"
+                                        VerticalAlignment="Center"
+                                        ToolTip="[AUTO_DETECT_STEAM_TOOLTIP]"/>
 
                                     <Label
                                         x:Name="EpicPathLabel"
@@ -1155,14 +1243,16 @@
                                         Width="70"
                                         Height="25"
                                         Margin="5,0,0,0"/>
-                                    <TextBlock Text="?"
-                                               Grid.Row="1"
-                                               Grid.Column="4"
-                                               FontWeight="Bold"
-                                               Foreground="#0078D4"
-                                               Margin="3,0,0,0"
-                                               VerticalAlignment="Center"
-                                               ToolTip="[AUTO_DETECT_EPIC_TOOLTIP]"/>
+                                    <TextBlock
+                                        x:Name="AutoDetectEpicTooltip"
+                                        Text="?"
+                                        Grid.Row="1"
+                                        Grid.Column="4"
+                                        FontWeight="Bold"
+                                        Foreground="#0078D4"
+                                        Margin="3,0,0,0"
+                                        VerticalAlignment="Center"
+                                        ToolTip="[AUTO_DETECT_EPIC_TOOLTIP]"/>
 
                                     <Label
                                         x:Name="RiotPathLabel"
@@ -1191,14 +1281,16 @@
                                         Width="70"
                                         Height="25"
                                         Margin="5,0,0,0"/>
-                                    <TextBlock Text="?"
-                                               Grid.Row="2"
-                                               Grid.Column="4"
-                                               FontWeight="Bold"
-                                               Foreground="#0078D4"
-                                               Margin="3,0,0,0"
-                                               VerticalAlignment="Center"
-                                               ToolTip="[AUTO_DETECT_RIOT_TOOLTIP]"/>
+                                    <TextBlock
+                                        x:Name="AutoDetectRiotTooltip"
+                                        Text="?"
+                                        Grid.Row="2"
+                                        Grid.Column="4"
+                                        FontWeight="Bold"
+                                        Foreground="#0078D4"
+                                        Margin="3,0,0,0"
+                                        VerticalAlignment="Center"
+                                        ToolTip="[AUTO_DETECT_RIOT_TOOLTIP]"/>
 
                                     <Label
                                         x:Name="ObsPathLabel"
@@ -1227,22 +1319,25 @@
                                         Width="70"
                                         Height="25"
                                         Margin="5,0,0,0"/>
-                                    <TextBlock Text="?"
-                                               Grid.Row="3"
-                                               Grid.Column="4"
-                                               FontWeight="Bold"
-                                               Foreground="#0078D4"
-                                               Margin="3,0,0,0"
-                                               VerticalAlignment="Center"
-                                               ToolTip="[AUTO_DETECT_OBS_TOOLTIP]"/>
+                                    <TextBlock
+                                        x:Name="AutoDetectObsTooltip"
+                                        Text="?"
+                                        Grid.Row="3"
+                                        Grid.Column="4"
+                                        FontWeight="Bold"
+                                        Foreground="#0078D4"
+                                        Margin="3,0,0,0"
+                                        VerticalAlignment="Center"
+                                        ToolTip="[AUTO_DETECT_OBS_TOOLTIP]"/>
                                 </Grid>
                             </GroupBox>
                         </StackPanel>
                     </ScrollViewer>
 
-                    <Grid Grid.Row="1"
-                          Background="#F8F8F8"
-                          Margin="0,5,0,0">
+                    <Grid
+                        Grid.Row="1"
+                        Background="#F8F8F8"
+                        Margin="0,5,0,0">
                         <Button
                             x:Name="SaveGlobalSettingsButton"
                             Content="[SAVE_BUTTON]"

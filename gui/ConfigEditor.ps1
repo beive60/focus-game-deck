@@ -125,7 +125,8 @@ function Test-UIMappings {
 
         $missingMappings = @()
         foreach ($varName in $mappingVariables) {
-            if (-not (Get-Variable -Name $varName -Scope Global -ErrorAction SilentlyContinue)) {
+            # [修正] ScopeをGlobalからScriptに変更
+            if (-not (Get-Variable -Name $varName -Scope Script -ErrorAction SilentlyContinue)) {
                 $missingMappings += $varName
             }
         }
@@ -136,7 +137,8 @@ function Test-UIMappings {
         }
 
         # Validate mapping structure
-        if ((Get-Variable -Name 'ButtonMappings' -Scope Global -ErrorAction SilentlyContinue).Value.Count -eq 0) {
+        # [修正] ScopeをGlobalからScriptに変更
+        if ((Get-Variable -Name 'ButtonMappings' -Scope Script -ErrorAction SilentlyContinue).Value.Count -eq 0) {
             Write-Warning "ButtonMappings is empty"
             return $false
         }
@@ -202,7 +204,19 @@ function Initialize-ConfigEditor {
             }
 
             Write-Host "DEBUG: Creating ConfigEditorUI instance..." -ForegroundColor Cyan
-            $uiManager = [ConfigEditorUI]::new($stateManager)
+
+            $allMappings = @{
+                Button       = $ButtonMappings
+                Label        = $LabelMappings
+                Tab          = $TabMappings
+                Text         = $TextMappings
+                CheckBox     = $CheckBoxMappings
+                MenuItem     = $MenuItemMappings
+                Tooltip      = $TooltipMappings
+                ComboBoxItem = $ComboBoxItemMappings
+            }
+            $uiManager = [ConfigEditorUI]::new($stateManager, $allMappings, $localization)
+
             Write-Host "DEBUG: ConfigEditorUI instance created: $($null -ne $uiManager)" -ForegroundColor Cyan
 
             if ($null -eq $uiManager) {
@@ -228,7 +242,8 @@ function Initialize-ConfigEditor {
                 Write-Host "DEBUG: uiManager.Window type: $($uiManager.Window.GetType().Name)" -ForegroundColor Cyan
             }
 
-            $window = $uiManager.Window
+            $script:Window = $uiManager.Window
+
             Write-Host "UI manager initialized successfully" -ForegroundColor Green
         } catch {
             Write-Host "DEBUG: UI Manager initialization error details:" -ForegroundColor Red
@@ -279,6 +294,14 @@ function Initialize-ConfigEditor {
             Write-Host "DEBUG: Window show/close error: $($_.Exception.Message)" -ForegroundColor Red
         } finally {
             # Ensure proper cleanup
+            if ($uiManager) {
+                try {
+                    Write-Host "DEBUG: Final UI manager cleanup" -ForegroundColor Yellow
+                    $uiManager.Cleanup()
+                } catch {
+                    Write-Warning "Error in final UI manager cleanup: $($_.Exception.Message)"
+                }
+            }
             if ($window) {
                 try {
                     Write-Host "DEBUG: Final window cleanup" -ForegroundColor Yellow
