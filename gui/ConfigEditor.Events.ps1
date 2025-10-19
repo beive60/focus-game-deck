@@ -1071,10 +1071,11 @@ class ConfigEditorEvents {
         try {
             Write-Host "=== Handle-About DEBUG START ===" -ForegroundColor Cyan
 
-            # Get version information - use global function if available
-            $version = if (Get-Command -Name Get-ProjectVersion -ErrorAction SilentlyContinue) {
-                Get-ProjectVersion
+            # Get version information - use global function reference
+            $version = if ($global:GetProjectVersionFunc) {
+                & $global:GetProjectVersionFunc
             } else {
+                Write-Warning "Get-ProjectVersion not available"
                 "Unknown"
             }
             $buildDate = Get-Date -Format "yyyy-MM-dd"
