@@ -388,7 +388,7 @@ function Import-AdditionalModules {
             # Dot-source in current scope
             . $VersionModulePath
             Write-Verbose "Loaded: Version.ps1"
-            
+
             # Store function reference in global scope for class access
             if (Test-Path function:Get-ProjectVersion) {
                 Write-Host "Get-ProjectVersion function loaded successfully" -ForegroundColor Green
@@ -407,7 +407,7 @@ function Import-AdditionalModules {
                 # Dot-source in current scope (UpdateChecker.ps1 will internally load Version.ps1 again)
                 . $UpdateCheckerPath
                 Write-Verbose "Loaded: UpdateChecker.ps1"
-                
+
                 # Store function reference in global scope for class access
                 if (Test-Path function:Test-UpdateAvailable) {
                     Write-Host "Test-UpdateAvailable function loaded successfully" -ForegroundColor Green
