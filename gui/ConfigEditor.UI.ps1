@@ -48,15 +48,16 @@ class ConfigEditorUI {
 
             # Set up proper window closing behavior
             Write-Host "DEBUG: [5/6] Adding window event handlers..." -ForegroundColor Cyan
+            $selfRef = $this
             $this.Window.add_Closed({
                     param($sender, $e)
                     Write-Host "DEBUG: Window closed event triggered" -ForegroundColor Yellow
                     try {
-                        $this.Cleanup()
+                        $selfRef.Cleanup()
                     } catch {
                         Write-Warning "Error during cleanup: $($_.Exception.Message)"
                     }
-                })
+                }.GetNewClosure())
 
             # Initialize other components
             Write-Host "DEBUG: [6/6] Initializing other components..." -ForegroundColor Cyan
