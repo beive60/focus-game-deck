@@ -27,8 +27,8 @@ class ConfigEditorEvents {
 
             if ($gameData) {
                 # Load game details into form
-                $script:Window.FindName("GameDisplayNameTextBox").Text = if ($gameData.displayName) { $gameData.displayName } else { "" }
-                $script:Window.FindName("GameAppIdTextBox").Text = if ($gameData.appId) { $gameData.appId } else { "" }
+                $script:Window.FindName("GameNameTextBox").Text = if ($gameData.displayName) { $gameData.displayName } else { "" }
+                $script:Window.FindName("GameIdTextBox").Text = if ($gameData.appId) { $gameData.appId } else { "" }
                 $script:Window.FindName("SteamAppIdTextBox").Text = if ($gameData.steamAppId) { $gameData.steamAppId } else { "" }
                 $script:Window.FindName("EpicGameIdTextBox").Text = if ($gameData.epicGameId) { $gameData.epicGameId } else { "" }
                 $script:Window.FindName("RiotGameIdTextBox").Text = if ($gameData.riotGameId) { $gameData.riotGameId } else { "" }
@@ -81,8 +81,8 @@ class ConfigEditorEvents {
         } else {
             # No game selected, clear the form
             $script:CurrentGameId = ""
-            $script:Window.FindName("GameDisplayNameTextBox").Text = ""
-            $script:Window.FindName("GameAppIdTextBox").Text = ""
+            $script:Window.FindName("GameNameTextBox").Text = ""
+            $script:Window.FindName("GameIdTextBox").Text = ""
             $script:Window.FindName("SteamAppIdTextBox").Text = ""
             $script:Window.FindName("EpicGameIdTextBox").Text = ""
             $script:Window.FindName("RiotGameIdTextBox").Text = ""
@@ -128,8 +128,8 @@ class ConfigEditorEvents {
 
             if ($appData) {
                 # Load app details into form
-                $script:Window.FindName("AppDisplayNameTextBox").Text = if ($appData.displayName) { $appData.displayName } else { "" }
-                $script:Window.FindName("AppProcessNamesTextBox").Text = if ($appData.processNames) {
+                $script:Window.FindName("AppIdTextBox").Text = if ($appData.displayName) { $appData.displayName } else { $selectedApp }
+                $script:Window.FindName("AppProcessNameTextBox").Text = if ($appData.processNames) {
                     if ($appData.processNames -is [array]) {
                         $appData.processNames -join "|"
                     } else {
@@ -138,7 +138,7 @@ class ConfigEditorEvents {
                 } else { "" }
                 $script:Window.FindName("AppStartActionCombo").SelectedItem = if ($appData.startAction) { $appData.startAction } else { "start-process" }
                 $script:Window.FindName("AppEndActionCombo").SelectedItem = if ($appData.endAction) { $appData.endAction } else { "stop-process" }
-                $script:Window.FindName("AppExecutablePathTextBox").Text = if ($appData.executablePath) { $appData.executablePath } else { "" }
+                $script:Window.FindName("AppPathTextBox").Text = if ($appData.executablePath) { $appData.executablePath } else { "" }
 
                 # Load termination settings
                 $script:Window.FindName("AppTerminationMethodCombo").SelectedItem = if ($appData.terminationMethod) { $appData.terminationMethod } else { "auto" }
@@ -156,11 +156,11 @@ class ConfigEditorEvents {
         } else {
             # No app selected, clear the form
             $script:CurrentAppId = ""
-            $script:Window.FindName("AppDisplayNameTextBox").Text = ""
-            $script:Window.FindName("AppProcessNamesTextBox").Text = ""
+            $script:Window.FindName("AppIdTextBox").Text = ""
+            $script:Window.FindName("AppProcessNameTextBox").Text = ""
             $script:Window.FindName("AppStartActionCombo").SelectedItem = "start-process"
             $script:Window.FindName("AppEndActionCombo").SelectedItem = "stop-process"
-            $script:Window.FindName("AppExecutablePathTextBox").Text = ""
+            $script:Window.FindName("AppPathTextBox").Text = ""
             $script:Window.FindName("AppTerminationMethodCombo").SelectedItem = "auto"
             $script:Window.FindName("AppGracefulTimeoutTextBox").Text = "5"
 
@@ -197,10 +197,10 @@ class ConfigEditorEvents {
         $this.stateManager.ConfigData.games | Add-Member -NotePropertyName $newGameId -NotePropertyValue $newGame
 
         # Initialize/update games order
-        Initialize-GameOrder
+        $this.stateManager.InitializeGameOrder()
 
         # Refresh games list
-        $this.uiManager.UpdateGamesList()
+        $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
 
         # Select the new game
         $gamesList = $script:Window.FindName("GamesList")
@@ -246,10 +246,10 @@ class ConfigEditorEvents {
             $this.stateManager.ConfigData.games | Add-Member -NotePropertyName $newGameId -NotePropertyValue $duplicatedGameData
 
             # Initialize/update games order
-            Initialize-GameOrder
+            $this.stateManager.InitializeGameOrder()
 
             # Refresh games list and apps to manage panel
-            $this.uiManager.UpdateGamesList()
+            $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
             Update-AppsToManagePanel
 
             # Select the new duplicated game
@@ -299,7 +299,7 @@ class ConfigEditorEvents {
             }
 
             # Refresh games list and apps to manage panel
-            $this.uiManager.UpdateGamesList()
+            $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
             Update-AppsToManagePanel
 
 
@@ -321,7 +321,7 @@ class ConfigEditorEvents {
 
         # Ensure games order exists
         if (-not $this.stateManager.ConfigData.games._order) {
-            Initialize-GameOrder
+            $this.stateManager.InitializeGameOrder()
         }
 
         $currentOrder = $this.stateManager.ConfigData.games._order
@@ -362,7 +362,7 @@ class ConfigEditorEvents {
             $this.stateManager.ConfigData.games._order = $newOrder
 
             # Refresh the games list
-            $this.uiManager.UpdateGamesList()
+            $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
 
             # Restore selection
             $gamesList = $script:Window.FindName("GamesList")
@@ -400,10 +400,10 @@ class ConfigEditorEvents {
         $this.stateManager.ConfigData.managedApps | Add-Member -NotePropertyName $newAppId -NotePropertyValue $newApp
 
         # Initialize/update apps order
-        Initialize-AppOrder
+        $this.stateManager.InitializeAppOrder()
 
         # Refresh managed apps list and apps to manage panel
-        $this.uiManager.UpdateManagedAppsList()
+        $this.uiManager.UpdateManagedAppsList($this.stateManager.ConfigData)
         Update-AppsToManagePanel
 
         # Select the new app
@@ -447,10 +447,10 @@ class ConfigEditorEvents {
             $this.stateManager.ConfigData.managedApps | Add-Member -NotePropertyName $newAppId -NotePropertyValue $duplicatedAppData
 
             # Initialize/update apps order
-            Initialize-AppOrder
+            $this.stateManager.InitializeAppOrder()
 
             # Refresh managed apps list and apps to manage panel
-            $this.uiManager.UpdateManagedAppsList()
+            $this.uiManager.UpdateManagedAppsList($this.stateManager.ConfigData)
             Update-AppsToManagePanel
 
             # Select the new duplicated app
@@ -500,7 +500,7 @@ class ConfigEditorEvents {
             }
 
             # Refresh managed apps list and apps to manage panel
-            $this.uiManager.UpdateManagedAppsList()
+            $this.uiManager.UpdateManagedAppsList($this.stateManager.ConfigData)
             Update-AppsToManagePanel
 
 
@@ -522,7 +522,7 @@ class ConfigEditorEvents {
 
         # Ensure apps order exists
         if (-not $this.stateManager.ConfigData.managedApps._order) {
-            Initialize-AppOrder
+            $this.stateManager.InitializeAppOrder()
         }
 
         $currentOrder = $this.stateManager.ConfigData.managedApps._order
@@ -563,7 +563,7 @@ class ConfigEditorEvents {
             $this.stateManager.ConfigData.managedApps._order = $newOrder
 
             # Refresh the managed apps list
-            $this.uiManager.UpdateManagedAppsList()
+            $this.uiManager.UpdateManagedAppsList($this.stateManager.ConfigData)
 
             # Restore selection
             $managedAppsList = $script:Window.FindName("ManagedAppsList")
@@ -600,7 +600,7 @@ class ConfigEditorEvents {
         }
     }
 
-    # Handle browse executable path
+    # Handle browse executable path (for Games tab)
     [void] HandleBrowseExecutablePath() {
         $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
         $openFileDialog.Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*"
@@ -608,7 +608,19 @@ class ConfigEditorEvents {
 
         if ($openFileDialog.ShowDialog()) {
             $script:Window.FindName("ExecutablePathTextBox").Text = $openFileDialog.FileName
-            Write-Verbose "Selected executable path: $($openFileDialog.FileName)"
+            Write-Verbose "Selected game executable path: $($openFileDialog.FileName)"
+        }
+    }
+
+    # Handle browse app path (for Managed Apps tab)
+    [void] HandleBrowseAppPath() {
+        $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $openFileDialog.Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*"
+        $openFileDialog.Title = Get-LocalizedMessage -Key "selectExecutable"
+
+        if ($openFileDialog.ShowDialog()) {
+            $script:Window.FindName("AppPathTextBox").Text = $openFileDialog.FileName
+            Write-Verbose "Selected app executable path: $($openFileDialog.FileName)"
         }
     }
 
@@ -800,49 +812,6 @@ class ConfigEditorEvents {
         Write-Verbose "Language changed to: $selectedLanguageCode"
     }
 
-    # Handle apply config (legacy function)
-    [void] HandleApplyConfig() {
-        try {
-            $this.HandleSaveConfig()
-        } catch {
-            Write-Error "Failed to apply configuration: $_"
-            Show-SafeMessage -Key "configSaveFailed" -MessageType "Error"
-        }
-    }
-
-    # Handle OK config (legacy function)
-    [void] HandleOKConfig() {
-        try {
-            if (Test-HasUnsavedChanges) {
-                $this.HandleSaveConfig()
-            }
-
-            # Close the window
-            if ($script:Window) {
-                $script:Window.Close()
-            }
-        } catch {
-            Write-Error "Failed to save and close: $_"
-            Show-SafeMessage -Key "configSaveFailed" -MessageType "Error"
-        }
-    }
-
-    # Handle cancel config (legacy function)
-    [void] HandleCancelConfig() {
-        if (Test-HasUnsavedChanges) {
-            $result = Show-SafeMessage -Key "confirmDiscardChanges" -MessageType "Question" -Button "YesNoCancel" -DefaultResult "Cancel"
-
-            if ($result -ne "Yes") {
-                return  # User cancelled or chose No
-            }
-        }
-
-        # Close the window without saving
-        if ($script:Window) {
-            $script:Window.Close()
-        }
-    }
-
     # Handle window closing
     [void] HandleWindowClosing([System.ComponentModel.CancelEventArgs]$Event) {
         try {
@@ -880,7 +849,7 @@ class ConfigEditorEvents {
             $script:HasUnsavedChanges = $false
 
             # Refresh games list to reflect any changes
-            $this.uiManager.UpdateGamesList()
+            $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
 
             Show-SafeMessage -Key "gameSettingsSaved" -MessageType "Information"
             Write-Verbose "Game settings saved"
@@ -922,7 +891,7 @@ class ConfigEditorEvents {
             $script:HasUnsavedChanges = $false
 
             # Refresh managed apps list to reflect any changes
-            $this.uiManager.UpdateManagedAppsList()
+            $this.uiManager.UpdateManagedAppsList($this.stateManager.ConfigData)
 
             Show-SafeMessage -Key "managedAppsSaved" -MessageType "Information"
             Write-Verbose "Managed apps settings saved"
@@ -1000,6 +969,90 @@ class ConfigEditorEvents {
         }
     }
 
+    # Handle launch game from launcher tab
+    [void] HandleLaunchGame([string]$GameId) {
+        try {
+            # Update status immediately for responsive feedback
+            $statusText = $this.uiManager.Window.FindName("LauncherStatusText")
+            if ($statusText) {
+                $launchingMessage = $this.uiManager.GetLocalizedMessage("launchingGame")
+                $statusText.Text = $launchingMessage -f $GameId
+                $statusText.Foreground = "#0066CC"
+            }
+
+            # Validate game exists in configuration
+            if (-not $this.stateManager.ConfigData.games -or -not $this.stateManager.ConfigData.games.PSObject.Properties[$GameId]) {
+                Show-SafeMessage -Key "gameNotFound" -MessageType "Error" -FormatArgs @($GameId)
+                if ($statusText) {
+                    $statusText.Text = $this.uiManager.GetLocalizedMessage("launchError")
+                    $statusText.Foreground = "#CC0000"
+                }
+                return
+            }
+
+            # Use the direct game launcher to avoid recursive ConfigEditor launches
+            $gameLauncherPath = Join-Path (Split-Path $PSScriptRoot) "src/Invoke-FocusGameDeck.ps1"
+
+            if (-not (Test-Path $gameLauncherPath)) {
+                Show-SafeMessage -Key "launcherNotFound" -MessageType "Error"
+                if ($statusText) {
+                    $statusText.Text = $this.uiManager.GetLocalizedMessage("launchError")
+                    $statusText.Foreground = "#CC0000"
+                }
+                return
+            }
+
+            Write-Host "Launching game from GUI: $GameId" -ForegroundColor Cyan
+
+            # Launch the game using PowerShell - bypass Main.ps1 to prevent recursive ConfigEditor launch
+            $process = Start-Process -FilePath "powershell.exe" -ArgumentList @(
+                "-ExecutionPolicy", "Bypass",
+                "-File", $gameLauncherPath,
+                "-GameId", $GameId
+            ) -WindowStyle Minimized -PassThru
+
+            # Provide immediate non-intrusive feedback
+            if ($process) {
+                Write-Verbose "Game launch process started with PID: $($process.Id)"
+
+                # Update status with success message - no modal dialog
+                if ($statusText) {
+                    $launchedMessage = $this.uiManager.GetLocalizedMessage("gameLaunched")
+                    $statusText.Text = $launchedMessage -f $GameId
+                    $statusText.Foreground = "#009900"
+                }
+            }
+
+            # Reset status after delay without interrupting user workflow
+            $uiManagerRef = $this.uiManager
+            $timer = New-Object System.Windows.Threading.DispatcherTimer
+            $timer.Interval = [TimeSpan]::FromSeconds(5)
+            $timer.add_Tick({
+                    param($sender, $e)
+                    $statusText = $uiManagerRef.Window.FindName("LauncherStatusText")
+                    if ($statusText) {
+                        $statusText.Text = $uiManagerRef.GetLocalizedMessage("readyToLaunch")
+                        $statusText.Foreground = "#333333"
+                    }
+                    $sender.Stop()
+                }.GetNewClosure())
+            $timer.Start()
+
+        } catch {
+            Write-Warning "Failed to launch game '$GameId': $($_.Exception.Message)"
+
+            # Only show modal dialog for actual errors that need user attention
+            Show-SafeMessage -Key "launchFailed" -MessageType "Error" -FormatArgs @($GameId, $_.Exception.Message)
+
+            # Update status for error
+            $statusText = $this.uiManager.Window.FindName("LauncherStatusText")
+            if ($statusText) {
+                $statusText.Text = $this.uiManager.GetLocalizedMessage("launchError")
+                $statusText.Foreground = "#CC0000"
+            }
+        }
+    }
+
     # Handle about dialog
     [void] HandleAbout() {
         try {
@@ -1027,13 +1080,6 @@ class ConfigEditorEvents {
         } catch {
             Write-Error "About dialog failed: $_"
             Write-Host "About dialog error: $_" -ForegroundColor Red
-        }
-    }
-
-    # Handle close window (legacy function)
-    [void] HandleCloseWindow() {
-        if ($script:Window) {
-            $script:Window.Close()
         }
     }
 
@@ -1114,6 +1160,7 @@ class ConfigEditorEvents {
             $this.uiManager.Window.FindName("RefreshGameListButton").add_Click({ $self.HandleRefreshGameList() }.GetNewClosure())
             $this.uiManager.Window.FindName("AddNewGameButton").add_Click({ $self.HandleAddNewGameFromLauncher() }.GetNewClosure())
             $this.uiManager.Window.FindName("OpenConfigButton").add_Click({ $self.HandleOpenConfigFromLauncher() }.GetNewClosure())
+            $this.uiManager.Window.FindName("GenerateLaunchersButton").add_Click({ $self.HandleGenerateLaunchers() }.GetNewClosure())
 
             # Add tab selection event to update game list when switching to launcher tab
             $mainTabControl = $this.uiManager.Window.FindName("MainTabControl")
@@ -1148,7 +1195,7 @@ class ConfigEditorEvents {
             $this.uiManager.Window.FindName("AddAppButton").add_Click({ $self.HandleAddApp() }.GetNewClosure())
             $this.uiManager.Window.FindName("DuplicateAppButton").add_Click({ $self.HandleDuplicateApp() }.GetNewClosure())
             $this.uiManager.Window.FindName("DeleteAppButton").add_Click({ $self.HandleDeleteApp() }.GetNewClosure())
-            $this.uiManager.Window.FindName("BrowseAppPathButton").add_Click({ $self.HandleBrowseExecutablePath() }.GetNewClosure())
+            $this.uiManager.Window.FindName("BrowseAppPathButton").add_Click({ $self.HandleBrowseAppPath() }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveManagedAppsButton").add_Click({ $self.HandleSaveManagedApps() }.GetNewClosure())
             $this.uiManager.Window.FindName("MoveAppTopButton").add_Click({ $self.HandleMoveApp("Top") }.GetNewClosure())
             $this.uiManager.Window.FindName("MoveAppUpButton").add_Click({ $self.HandleMoveApp("Up") }.GetNewClosure())

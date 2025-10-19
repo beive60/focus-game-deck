@@ -265,6 +265,9 @@ function Initialize-ConfigEditor {
         # Step 7: Initialize event handler
         $eventHandler = [ConfigEditorEvents]::new($uiManager, $stateManager)
 
+        # Connect event handler to UI manager
+        $uiManager.EventHandler = $eventHandler
+
         # Store UI manager in script scope for access from event handlers
         $script:ConfigEditorForm = $uiManager
 
@@ -385,6 +388,259 @@ function Import-AdditionalModules {
         }
     } catch {
         Write-Warning "Failed to import additional modules: $($_.Exception.Message)"
+    }
+}
+
+# Helper function stubs for backward compatibility with global functions
+# These will be properly implemented or removed in a future refactoring
+
+function Update-AppsToManagePanel {
+    Write-Verbose "Update-AppsToManagePanel called (stub)"
+    # TODO: Implement or remove in future refactoring
+}
+
+function Update-PlatformFields {
+    param([string]$Platform)
+    Write-Verbose "Update-PlatformFields called for platform: $Platform (stub)"
+    # TODO: Implement or remove in future refactoring
+}
+
+function Update-MoveButtonStates {
+    Write-Verbose "Update-MoveButtonStates called (stub)"
+    # TODO: Implement or remove in future refactoring
+}
+
+function Update-MoveAppButtonStates {
+    Write-Verbose "Update-MoveAppButtonStates called (stub)"
+    # TODO: Implement or remove in future refactoring
+}
+
+function Update-ActionComboBoxes {
+    param([string]$AppId, [string]$ExecutablePath)
+    Write-Verbose "Update-ActionComboBoxes called (stub)"
+    # TODO: Implement or remove in future refactoring
+}
+
+function Update-TerminationSettingsVisibility {
+    Write-Verbose "Update-TerminationSettingsVisibility called (stub)"
+    # TODO: Implement or remove in future refactoring
+}
+
+function Save-CurrentGameData {
+    Write-Verbose "Save-CurrentGameData called (stub)"
+    # TODO: Implement or remove in future refactoring
+}
+
+function Save-CurrentAppData {
+    Write-Verbose "Save-CurrentAppData called (stub)"
+    # TODO: Implement or remove in future refactoring
+}
+
+function Save-GlobalSettingsData {
+    Write-Verbose "Save-GlobalSettingsData called (stub)"
+    # TODO: Implement or remove in future refactoring
+}
+
+function Save-OriginalConfig {
+    Write-Verbose "Save-OriginalConfig called (stub)"
+    # TODO: Implement or remove in future refactoring
+}
+
+function Set-ConfigModified {
+    Write-Verbose "Set-ConfigModified called (stub)"
+    # TODO: Implement or remove in future refactoring
+}
+
+function Show-LanguageChangeRestartMessage {
+    Write-Verbose "Show-LanguageChangeRestartMessage called (stub)"
+    # TODO: Implement or remove in future refactoring
+}
+
+function Show-PathSelectionDialog {
+    param([array]$Paths, [string]$Platform)
+    Write-Verbose "Show-PathSelectionDialog called (stub)"
+    # TODO: Implement or remove in future refactoring
+    return $Paths[0]
+}
+
+# Shows a localized message dialog
+#
+# Displays a message box using localized messages from the messages.json file.
+# Supports multiple parameter styles for backward compatibility.
+#
+# @param Key - Message key for localization (new style)
+# @param MessageType - Type of message: Information, Warning, Error, Question (new style)
+# @param FormatArgs - Arguments for string formatting (new style)
+# @param Button - Button type (e.g., "YesNo", "YesNoCancel")
+# @param DefaultResult - Default button result
+# @param Message - Direct message text (alternative style)
+# @param MessageKey - Message key (old style, for compatibility)
+# @param TitleKey - Title key (old style, for compatibility)
+# @param Arguments - Format arguments (old style, for compatibility)
+# @param Icon - Icon type (old style, for compatibility)
+# @return MessageBoxResult if button is specified, otherwise void
+function Show-SafeMessage {
+    param(
+        [string]$Key,
+        [string]$MessageType = "Information",
+        [array]$FormatArgs = @(),
+        [string]$Button = "OK",
+        [string]$DefaultResult = "OK",
+        [string]$Message,
+        [string]$MessageKey,
+        [string]$TitleKey,
+        [array]$Arguments = @(),
+        [string]$Icon
+    )
+
+    try {
+        # Handle old style parameters
+        if ($MessageKey) { $Key = $MessageKey }
+        if ($TitleKey) { $titleKeyToUse = $TitleKey } else { $titleKeyToUse = $MessageType.ToLower() }
+        if ($Arguments -and $Arguments.Count -gt 0) { $FormatArgs = $Arguments }
+        if ($Icon) { $MessageType = $Icon }
+
+        # Get localized message
+        if ($Message) {
+            $messageText = $Message
+        } else {
+            if ($script:ConfigEditorForm -and $script:ConfigEditorForm.localization) {
+                $messageText = $script:ConfigEditorForm.localization.GetMessage($Key, $FormatArgs)
+            } else {
+                Write-Warning "Localization not available, using key as message: $Key"
+                $messageText = $Key
+            }
+        }
+
+        # Get localized title
+        if ($script:ConfigEditorForm -and $script:ConfigEditorForm.localization) {
+            $titleText = $script:ConfigEditorForm.localization.GetMessage($titleKeyToUse, @())
+        } else {
+            $titleText = $titleKeyToUse
+        }
+
+        # Map MessageType to icon
+        $iconType = switch ($MessageType) {
+            "Information" { [System.Windows.MessageBoxImage]::Information }
+            "Warning" { [System.Windows.MessageBoxImage]::Warning }
+            "Error" { [System.Windows.MessageBoxImage]::Error }
+            "Question" { [System.Windows.MessageBoxImage]::Question }
+            default { [System.Windows.MessageBoxImage]::Information }
+        }
+
+        # Map Button string to MessageBoxButton
+        $buttonType = switch ($Button) {
+            "OK" { [System.Windows.MessageBoxButton]::OK }
+            "OKCancel" { [System.Windows.MessageBoxButton]::OKCancel }
+            "YesNo" { [System.Windows.MessageBoxButton]::YesNo }
+            "YesNoCancel" { [System.Windows.MessageBoxButton]::YesNoCancel }
+            default { [System.Windows.MessageBoxButton]::OK }
+        }
+
+        # Map DefaultResult to MessageBoxResult
+        $defaultResultType = switch ($DefaultResult) {
+            "OK" { [System.Windows.MessageBoxResult]::OK }
+            "Cancel" { [System.Windows.MessageBoxResult]::Cancel }
+            "Yes" { [System.Windows.MessageBoxResult]::Yes }
+            "No" { [System.Windows.MessageBoxResult]::No }
+            default { [System.Windows.MessageBoxResult]::OK }
+        }
+
+        # Show message box
+        return [System.Windows.MessageBox]::Show($messageText, $titleText, $buttonType, $iconType, $defaultResultType)
+
+    } catch {
+        Write-Warning "Show-SafeMessage failed: $($_.Exception.Message)"
+        # Fallback to simple message box
+        return [System.Windows.MessageBox]::Show($Key, "Message", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+    }
+}
+
+# Generates a unique ID for configuration items
+#
+# Creates a unique identifier with the specified prefix, ensuring no collision
+# with existing items in the provided collection. Uses random number generation
+# with collision detection for uniqueness.
+#
+# @param Collection - The collection to check for existing IDs
+# @param Prefix - The prefix for the new ID (default: "new")
+# @param MinRandom - Minimum random number (default: 1000)
+# @param MaxRandom - Maximum random number (default: 9999)
+# @return string - A unique identifier
+function New-UniqueConfigId {
+    param(
+        [Parameter(Mandatory)]
+        [object]$Collection,
+        [string]$Prefix = "new",
+        [int]$MinRandom = 1000,
+        [int]$MaxRandom = 9999
+    )
+
+    do {
+        $newId = "${Prefix}$(Get-Random -Minimum $MinRandom -Maximum $MaxRandom)"
+    } while ($Collection.PSObject.Properties[$newId])
+
+    return $newId
+}
+
+# Validates the selected item for duplication operations
+#
+# Checks if an item is selected and if its source data exists in the configuration.
+# Returns validation result and displays appropriate error messages.
+#
+# @param SelectedItem - The ID of the selected item
+# @param SourceData - The source data object
+# @param ItemType - The type of item ("Game" or "App")
+# @return bool - True if validation passes, false otherwise
+function Test-DuplicateSource {
+    param(
+        [string]$SelectedItem,
+        [object]$SourceData,
+        [string]$ItemType
+    )
+
+    if (-not $SelectedItem) {
+        $messageKey = "no${ItemType}Selected"
+        Show-SafeMessage -Key $messageKey -MessageType "Warning"
+        return $false
+    }
+
+    if (-not $SourceData) {
+        $messageKey = "${ItemType}DuplicateError"
+        Show-SafeMessage -Key $messageKey -MessageType "Error"
+        return $false
+    }
+
+    return $true
+}
+
+# Shows duplication result messages
+#
+# Displays success or error messages for duplication operations with proper
+# localization and error handling.
+#
+# @param OriginalId - The ID of the original item
+# @param NewId - The ID of the new duplicated item
+# @param ItemType - The type of item ("Game" or "App")
+# @param Success - Whether the duplication was successful
+# @param ErrorMessage - Optional error message if duplication failed
+function Show-DuplicateResult {
+    param(
+        [string]$OriginalId,
+        [string]$NewId,
+        [string]$ItemType,
+        [bool]$Success,
+        [string]$ErrorMessage = ""
+    )
+
+    if ($Success) {
+        $messageKey = "${ItemType.ToLower()}Duplicated"
+        Show-SafeMessage -Key $messageKey -MessageType "Information" -FormatArgs @($OriginalId, $NewId)
+        Write-Verbose "Successfully duplicated ${ItemType.ToLower()} '$OriginalId' to '$NewId'"
+    } else {
+        Write-Error "Failed to duplicate ${ItemType.ToLower()}: $ErrorMessage"
+        $messageKey = "${ItemType.ToLower()}DuplicateError"
+        Show-SafeMessage -Key $messageKey -MessageType "Error" -FormatArgs @($ErrorMessage)
     }
 }
 

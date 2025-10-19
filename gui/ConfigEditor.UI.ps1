@@ -14,6 +14,7 @@ class ConfigEditorUI {
     [PSObject]$Messages
     [string]$CurrentLanguage
     [bool]$HasUnsavedChanges
+    [PSObject]$EventHandler
 
     # Constructor
     ConfigEditorUI([ConfigEditorState]$stateManager, [hashtable]$allMappings, [ConfigEditorLocalization]$localization) {
@@ -60,7 +61,7 @@ class ConfigEditorUI {
             # Initialize other components
             Write-Host "DEBUG: [6/6] Initializing other components..." -ForegroundColor Cyan
             $this.InitializeComponents()
-            $this.InitializeGameActionCombos()
+            # NOTE: InitializeGameActionCombos moved to LoadDataToUI to avoid premature SelectedIndex setting
             Write-Host "DEBUG: ConfigEditorUI constructor completed successfully" -ForegroundColor Cyan
 
         } catch {
@@ -313,6 +314,9 @@ class ConfigEditorUI {
     #>
     [void]LoadDataToUI([PSObject]$ConfigData) {
         try {
+            # Initialize game action combos FIRST before loading data
+            $this.InitializeGameActionCombos()
+
             # Load global settings
             $this.LoadGlobalSettings($ConfigData)
 
@@ -370,7 +374,17 @@ class ConfigEditorUI {
     #>
     [void]UpdateGamesList([PSObject]$ConfigData) {
         $gamesList = $this.Window.FindName("GamesList")
-        $gamesList.Items.Clear()
+        if (-not $gamesList) {
+            Write-Verbose "GamesList control not found, skipping update"
+            return
+        }
+
+        try {
+            $gamesList.Items.Clear()
+        } catch {
+            Write-Verbose "Failed to clear GamesList items: $($_.Exception.Message)"
+            return
+        }
 
         if ($ConfigData.games) {
             # Use games._order for ordering if available
@@ -390,15 +404,8 @@ class ConfigEditorUI {
                 }
             }
 
-            # Auto-select the first game if games exist - but don't trigger events manually
-            if ($gamesList.Items.Count -gt 0) {
-                try {
-                    $gamesList.SelectedIndex = 0
-                    # Let the event handler system handle the selection change
-                } catch {
-                    Write-Verbose "Failed to set initial game selection: $($_.Exception.Message)"
-                }
-            }
+            # Don't auto-select during initial load - let user select or event handlers manage it
+            # This prevents issues with window initialization
         }
     }
 
@@ -418,7 +425,17 @@ class ConfigEditorUI {
     #>
     [void]UpdateManagedAppsList([PSObject]$ConfigData) {
         $managedAppsList = $this.Window.FindName("ManagedAppsList")
-        $managedAppsList.Items.Clear()
+        if (-not $managedAppsList) {
+            Write-Verbose "ManagedAppsList control not found, skipping update"
+            return
+        }
+
+        try {
+            $managedAppsList.Items.Clear()
+        } catch {
+            Write-Verbose "Failed to clear ManagedAppsList items: $($_.Exception.Message)"
+            return
+        }
 
         if ($ConfigData.managedApps) {
             # Use managedApps._order for ordering if available
@@ -438,15 +455,8 @@ class ConfigEditorUI {
                 }
             }
 
-            # Auto-select the first app if apps exist - but don't trigger events manually
-            if ($managedAppsList.Items.Count -gt 0) {
-                try {
-                    $managedAppsList.SelectedIndex = 0
-                    # Let the event handler system handle the selection change
-                } catch {
-                    Write-Verbose "Failed to set initial app selection: $($_.Exception.Message)"
-                }
-            }
+            # Don't auto-select during initial load - let user select or event handlers manage it
+            # This prevents issues with window initialization
         }
     }
 
@@ -482,7 +492,15 @@ class ConfigEditorUI {
             }
 
             # Clear existing items
-            $gameLauncherList.Items.Clear()
+            try {
+                $gameLauncherList.Items.Clear()
+            } catch {
+                Write-Verbose "Failed to clear GameLauncherList items: $($_.Exception.Message)"
+                if ($statusText) {
+                    $statusText.Text = $this.GetLocalizedMessage("gameListError")
+                }
+                return
+            }
 
             # Check if games are configured
             if (-not $ConfigData.games -or $ConfigData.games.PSObject.Properties.Count -eq 0) {
@@ -882,51 +900,63 @@ class ConfigEditorUI {
     #>
     [void]InitializeGameActionCombos() {
         try {
+            Write-Verbose "InitializeGameActionCombos: Starting initialization"
             $gameStartActionCombo = $this.Window.FindName("GameStartActionCombo")
             $gameEndActionCombo = $this.Window.FindName("GameEndActionCombo")
 
-            if ($gameStartActionCombo -and $gameEndActionCombo) {
-                # Get game action mappings from script scope
-                $gameActionMappings = $this.GetMappingFromScope("GameActionMessageKeys")
+            if (-not $gameStartActionCombo) {
+                Write-Warning "GameStartActionCombo not found"
+                return
+            }
+            if (-not $gameEndActionCombo) {
+                Write-Warning "GameEndActionCombo not found"
+                return
+            }
 
-                if ($gameActionMappings.Count -eq 0) {
-                    Write-Warning "GameActionMessageKeys mapping not found or empty"
-                    return
-                }
+            # Get game action mappings from script scope
+            $gameActionMappings = $this.GetMappingFromScope("GameActionMessageKeys")
 
-                # Clear existing items
+            if ($gameActionMappings.Count -eq 0) {
+                Write-Warning "GameActionMessageKeys mapping not found or empty"
+                return
+            }
+
+            # Clear existing items safely
+            try {
                 $gameStartActionCombo.Items.Clear()
                 $gameEndActionCombo.Items.Clear()
-
-                # Add localized ComboBoxItems using the mapping
-                foreach ($kvp in $gameActionMappings.GetEnumerator()) {
-                    $actionTag = $kvp.Key
-                    $messageKey = $kvp.Value
-                    $localizedText = $this.GetLocalizedMessage($messageKey)
-
-                    # Create ComboBoxItem for start action combo
-                    $startItem = New-Object System.Windows.Controls.ComboBoxItem
-                    $startItem.Content = $localizedText
-                    $startItem.Tag = $actionTag
-                    $gameStartActionCombo.Items.Add($startItem)
-
-                    # Create ComboBoxItem for end action combo
-                    $endItem = New-Object System.Windows.Controls.ComboBoxItem
-                    $endItem.Content = $localizedText
-                    $endItem.Tag = $actionTag
-                    $gameEndActionCombo.Items.Add($endItem)
-
-                    Write-Verbose "Added game action: Tag='$actionTag', Key='$messageKey', Text='$localizedText'"
-                }
-
-                # Set default selection (first item - "none")
-                $gameStartActionCombo.SelectedIndex = 0
-                $gameEndActionCombo.SelectedIndex = 0
-
-                Write-Verbose "Game action combo boxes initialized successfully with $($gameActionMappings.Count) localized actions"
+            } catch {
+                Write-Warning "Failed to clear combo box items: $($_.Exception.Message)"
+                return
             }
+
+            # Add localized ComboBoxItems using the mapping
+            foreach ($kvp in $gameActionMappings.GetEnumerator()) {
+                $actionTag = $kvp.Key
+                $messageKey = $kvp.Value
+                $localizedText = $this.GetLocalizedMessage($messageKey)
+
+                # Create ComboBoxItem for start action combo
+                $startItem = New-Object System.Windows.Controls.ComboBoxItem
+                $startItem.Content = $localizedText
+                $startItem.Tag = $actionTag
+                $gameStartActionCombo.Items.Add($startItem) | Out-Null
+
+                # Create ComboBoxItem for end action combo
+                $endItem = New-Object System.Windows.Controls.ComboBoxItem
+                $endItem.Content = $localizedText
+                $endItem.Tag = $actionTag
+                $gameEndActionCombo.Items.Add($endItem) | Out-Null
+
+                Write-Verbose "Added game action: Tag='$actionTag', Key='$messageKey', Text='$localizedText'"
+            }
+
+            # DO NOT set default selection - let it be unselected initially
+            # This prevents SelectedItem property issues during window initialization
+            Write-Verbose "Game action combo boxes initialized successfully with $($gameActionMappings.Count) localized actions (no default selection)"
         } catch {
             Write-Warning "Failed to initialize game action combo boxes: $($_.Exception.Message)"
+            Write-Warning "Stack trace: $($_.Exception.StackTrace)"
         }
     }
 
@@ -1079,20 +1109,13 @@ class ConfigEditorUI {
         try {
             Write-Verbose "Attempting to launch game: $GameId"
 
-            # Update status
-            $statusText = $this.Window.FindName("LauncherStatusText")
-            if ($statusText) {
-                $statusText.Text = $this.GetLocalizedMessage("launchingGame") -f $GameId
-            }
-
-            # Here you would implement the actual game launching logic
-            # For now, this is a placeholder that shows a message
-            $message = $this.GetLocalizedMessage("gameLaunched") -f $GameId
-            [System.Windows.MessageBox]::Show($message, $this.GetLocalizedMessage("info"), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
-
-            # Reset status
-            if ($statusText) {
-                $statusText.Text = $this.GetLocalizedMessage("readyToLaunch")
+            # Delegate to event handler if available
+            if ($this.EventHandler) {
+                $this.EventHandler.HandleLaunchGame($GameId)
+            } else {
+                Write-Warning "Event handler not initialized, cannot launch game"
+                $message = $this.GetLocalizedMessage("launchError")
+                [System.Windows.MessageBox]::Show($message, $this.GetLocalizedMessage("error"), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
             }
 
         } catch {
@@ -1101,12 +1124,6 @@ class ConfigEditorUI {
             # Show error message
             $errorMessage = $this.GetLocalizedMessage("launchFailed") -f $GameId, $_.Exception.Message
             [System.Windows.MessageBox]::Show($errorMessage, $this.GetLocalizedMessage("launchError"), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
-
-            # Reset status
-            $statusText = $this.Window.FindName("LauncherStatusText")
-            if ($statusText) {
-                $statusText.Text = $this.GetLocalizedMessage("readyToLaunch")
-            }
         }
     }
 }
