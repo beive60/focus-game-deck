@@ -604,7 +604,7 @@ class ConfigEditorEvents {
     [void] HandleBrowseExecutablePath() {
         $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
         $openFileDialog.Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*"
-        $openFileDialog.Title = Get-LocalizedMessage -Key "selectExecutable"
+        $openFileDialog.Title = $this.uiManager.GetLocalizedMessage("selectExecutable")
 
         if ($openFileDialog.ShowDialog()) {
             $script:Window.FindName("ExecutablePathTextBox").Text = $openFileDialog.FileName
@@ -616,7 +616,7 @@ class ConfigEditorEvents {
     [void] HandleBrowseAppPath() {
         $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
         $openFileDialog.Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*"
-        $openFileDialog.Title = Get-LocalizedMessage -Key "selectExecutable"
+        $openFileDialog.Title = $this.uiManager.GetLocalizedMessage("selectExecutable")
 
         if ($openFileDialog.ShowDialog()) {
             $script:Window.FindName("AppPathTextBox").Text = $openFileDialog.FileName
@@ -629,13 +629,26 @@ class ConfigEditorEvents {
         try {
             Write-Host "=== Update Check DEBUG START ===" -ForegroundColor Cyan
 
-            # Get current version
-            $currentVersion = Get-ProjectVersion
+            # Get current version - use global function reference
+            $currentVersion = if ($global:GetProjectVersionFunc) {
+                & $global:GetProjectVersionFunc
+            } else {
+                Write-Warning "Get-ProjectVersion not available"
+                "Unknown"
+            }
             Write-Host "Current version: $currentVersion" -ForegroundColor Yellow
 
-            # Check for updates
+            # Check for updates - use global function reference
+            if (-not $global:TestUpdateAvailableFunc) {
+                Write-Warning "Update checker not available"
+                $message = $this.uiManager.GetLocalizedMessage("updateCheckFailed")
+                $title = $this.uiManager.GetLocalizedMessage("updateCheckTitle")
+                [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
+                return
+            }
+
             Write-Host "Checking for updates..." -ForegroundColor Green
-            $updateInfo = Test-UpdateAvailable -CurrentVersion $currentVersion
+            $updateInfo = & $global:TestUpdateAvailableFunc -CurrentVersion $currentVersion
 
             if ($updateInfo) {
                 Write-Host "Update info received:" -ForegroundColor Magenta
@@ -643,8 +656,8 @@ class ConfigEditorEvents {
 
                 if ($updateInfo.UpdateAvailable) {
                     # Show update available dialog
-                    $message = Get-LocalizedMessage -Key "updateAvailable" -FormatArgs @($updateInfo.LatestVersion, $currentVersion)
-                    $title = Get-LocalizedMessage -Key "updateCheckTitle"
+                    $message = $this.uiManager.GetLocalizedMessage("updateAvailable") -f $updateInfo.LatestVersion, $currentVersion
+                    $title = $this.uiManager.GetLocalizedMessage("updateCheckTitle")
 
                     $result = [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::YesNo, [System.Windows.MessageBoxImage]::Question)
 
@@ -659,16 +672,16 @@ class ConfigEditorEvents {
                     }
                 } else {
                     # No update available
-                    $message = Get-LocalizedMessage -Key "noUpdateAvailable" -FormatArgs @($currentVersion)
-                    $title = Get-LocalizedMessage -Key "updateCheckTitle"
+                    $message = $this.uiManager.GetLocalizedMessage("noUpdateAvailable") -f $currentVersion
+                    $title = $this.uiManager.GetLocalizedMessage("updateCheckTitle")
 
                     [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
                 }
             } else {
                 Write-Warning "No update info received"
                 # Handle case where update check failed
-                $message = Get-LocalizedMessage -Key "updateCheckFailed"
-                $title = Get-LocalizedMessage -Key "updateCheckTitle"
+                $message = $this.uiManager.GetLocalizedMessage("updateCheckFailed")
+                $title = $this.uiManager.GetLocalizedMessage("updateCheckTitle")
 
                 [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
             }
@@ -680,8 +693,8 @@ class ConfigEditorEvents {
             Write-Host "Update check error: $_" -ForegroundColor Red
 
             # Show error message
-            $message = Get-LocalizedMessage -Key "updateCheckError" -FormatArgs @($_.Exception.Message)
-            $title = Get-LocalizedMessage -Key "updateCheckTitle"
+            $message = $this.uiManager.GetLocalizedMessage("updateCheckError") -f $_.Exception.Message
+            $title = $this.uiManager.GetLocalizedMessage("updateCheckTitle")
 
             [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
         }
@@ -748,7 +761,7 @@ class ConfigEditorEvents {
             }
 
             if ($detectedPaths.Count -eq 0) {
-                $message = Get-LocalizedMessage -Key "noPathDetected" -FormatArgs @($Platform)
+                $message = $this.uiManager.GetLocalizedMessage("noPathDetected") -f $Platform
                 Show-SafeMessage -Message $message -MessageType "Information"
                 return
             }
@@ -770,14 +783,14 @@ class ConfigEditorEvents {
                     "Obs" { $script:Window.FindName("ObsPathTextBox").Text = $selectedPath }
                 }
 
-                $message = Get-LocalizedMessage -Key "pathDetected" -FormatArgs @($Platform, $selectedPath)
+                $message = $this.uiManager.GetLocalizedMessage("pathDetected") -f $Platform, $selectedPath
                 Show-SafeMessage -Message $message -MessageType "Information"
                 Write-Verbose "Auto-detected $Platform path: $selectedPath"
             }
 
         } catch {
             Write-Error "Auto-detection failed for ${Platform}: $_"
-            $message = Get-LocalizedMessage -Key "autoDetectError" -FormatArgs @($Platform, $_.Exception.Message)
+            $message = $this.uiManager.GetLocalizedMessage("autoDetectError") -f $Platform, $_.Exception.Message
             Show-SafeMessage -Message $message -MessageType "Error"
         }
     }
@@ -1058,16 +1071,20 @@ class ConfigEditorEvents {
         try {
             Write-Host "=== Handle-About DEBUG START ===" -ForegroundColor Cyan
 
-            # Get version information
-            $version = Get-ProjectVersion
+            # Get version information - use global function if available
+            $version = if (Get-Command -Name Get-ProjectVersion -ErrorAction SilentlyContinue) {
+                Get-ProjectVersion
+            } else {
+                "Unknown"
+            }
             $buildDate = Get-Date -Format "yyyy-MM-dd"
 
             Write-Host "Version: $version" -ForegroundColor Yellow
             Write-Host "Build Date: $buildDate" -ForegroundColor Yellow
 
             # Create about message
-            $aboutMessage = Get-LocalizedMessage -Key "aboutMessage" -FormatArgs @($version, $buildDate)
-            $aboutTitle = Get-LocalizedMessage -Key "aboutTitle"
+            $aboutMessage = $this.uiManager.GetLocalizedMessage("aboutMessage") -f $version, $buildDate
+            $aboutTitle = $this.uiManager.GetLocalizedMessage("aboutTitle")
 
             Write-Host "About Message: $aboutMessage" -ForegroundColor Green
             Write-Host "About Title: $aboutTitle" -ForegroundColor Green

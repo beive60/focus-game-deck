@@ -178,6 +178,11 @@ function Initialize-ConfigEditor {
             Write-Warning "UI mappings validation failed - some features may not work properly"
         }
 
+        # Step 3.6: Import additional modules (Version, UpdateChecker, etc.)
+        Write-Host "Importing additional modules..." -ForegroundColor Yellow
+        Import-AdditionalModules
+        Write-Host "Additional modules imported" -ForegroundColor Green
+
         # Step 4: Initialize localization
         $localization = [ConfigEditorLocalization]::new()
 
@@ -364,25 +369,55 @@ function Initialize-ConfigEditor {
 # Import additional modules after WPF assemblies are loaded
 function Import-AdditionalModules {
     try {
+        # Get project root directory (parent of gui folder)
+        $projectRoot = Split-Path $PSScriptRoot -Parent
+        Write-Verbose "Project root: $projectRoot"
+
         # Import language helper functions
-        $LanguageHelperPath = Join-Path (Split-Path $PSScriptRoot) "scripts/LanguageHelper.ps1"
+        $LanguageHelperPath = Join-Path $projectRoot "scripts/LanguageHelper.ps1"
         if (Test-Path $LanguageHelperPath) {
             . $LanguageHelperPath
+            Write-Verbose "Loaded: LanguageHelper.ps1"
         } else {
             Write-Warning "Language helper not found: $LanguageHelperPath"
         }
 
-        # Import version and update checker modules
-        $VersionModulePath = Join-Path (Split-Path $PSScriptRoot -Parent) "Version.ps1"
+        # Import version module
+        $VersionModulePath = Join-Path $projectRoot "Version.ps1"
         if (Test-Path $VersionModulePath) {
+            # Dot-source in current scope
             . $VersionModulePath
+            Write-Verbose "Loaded: Version.ps1"
+            
+            # Store function reference in global scope for class access
+            if (Test-Path function:Get-ProjectVersion) {
+                Write-Host "Get-ProjectVersion function loaded successfully" -ForegroundColor Green
+                $global:GetProjectVersionFunc = ${function:Get-ProjectVersion}
+            } else {
+                Write-Warning "Get-ProjectVersion function not available after loading Version.ps1"
+            }
         } else {
             Write-Warning "Version module not found: $VersionModulePath"
         }
 
-        $UpdateCheckerPath = Join-Path (Split-Path $PSScriptRoot -Parent) "src/modules/UpdateChecker.ps1"
+        # Import update checker module
+        $UpdateCheckerPath = Join-Path $projectRoot "src/modules/UpdateChecker.ps1"
         if (Test-Path $UpdateCheckerPath) {
-            . $UpdateCheckerPath
+            try {
+                # Dot-source in current scope (UpdateChecker.ps1 will internally load Version.ps1 again)
+                . $UpdateCheckerPath
+                Write-Verbose "Loaded: UpdateChecker.ps1"
+                
+                # Store function reference in global scope for class access
+                if (Test-Path function:Test-UpdateAvailable) {
+                    Write-Host "Test-UpdateAvailable function loaded successfully" -ForegroundColor Green
+                    $global:TestUpdateAvailableFunc = ${function:Test-UpdateAvailable}
+                } else {
+                    Write-Warning "Test-UpdateAvailable function not available after loading UpdateChecker.ps1"
+                }
+            } catch {
+                Write-Warning "Error loading UpdateChecker.ps1: $($_.Exception.Message)"
+            }
         } else {
             Write-Warning "Update checker module not found: $UpdateCheckerPath"
         }
