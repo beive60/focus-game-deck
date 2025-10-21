@@ -25,7 +25,7 @@
             "arguments": "",
             "terminationMethod": "force",
             "gracefulTimeoutMs": 1000,
-            "_comment_termination": "terminationMethod: 'graceful'=正常終了のみ(ダイアログ表示時はユーザー判断を待つ), 'force'=強制終了のみ, 'auto'=正常終了を試行後、失敗時のみ強制終了 (デフォルト)"
+            "_comment_termination": "terminationMethod: 'graceful'=waits for graceful exit (if a dialog appears, it waits for user action), 'force'=forces termination, 'auto'=tries graceful exit, then forces if it fails (default)"
         },
         "autoHotkey": {
             "path": "",
@@ -44,7 +44,7 @@
             "arguments": "/hs",
             "terminationMethod": "graceful",
             "gracefulTimeoutMs": 5000,
-            "_comment": "Cliborは設定保存ダイアログが表示される可能性があるため、gracefulモードを推奨"
+            "_comment": "Clibor may show a settings save dialog, so 'graceful' mode is recommended"
         },
         "luna": {
             "path": "",
@@ -74,7 +74,7 @@
             "arguments": "",
             "terminationMethod": "graceful",
             "gracefulTimeoutMs": 8000,
-            "_comment": "Discordは通話中や設定保存の可能性があるため、gracefulモードで長めのタイムアウトを設定",
+            "_comment": "Discord might be in a call or saving settings, so a longer timeout with 'graceful' mode is recommended",
             "discord": {
                 "statusOnGameStart": "dnd",
                 "statusOnGameEnd": "online",
@@ -99,7 +99,7 @@
             "valorant"
         ],
         "mock-calc": {
-            "name": "テスト用ゲーム (Calculator)",
+            "name": "Test Game (Calculator)",
             "platform": "standalone",
             "executablePath": "%SystemRoot%/System32/calc.exe",
             "processName": "Calculator|CalculatorApp",
@@ -108,7 +108,7 @@
                 "clibor",
                 "discord"
             ],
-            "_comment": "開発・テスト用の軽量モックゲーム。実際のゲームの代わりに計算機を使用"
+            "_comment": "A lightweight mock game for development and testing. Uses the calculator instead of a real game"
         },
         "apex": {
             "name": "Apex Legends",
@@ -138,7 +138,7 @@
             ]
         },
         "genshin": {
-            "name": "原神 (Genshin Impact)",
+            "name": "Genshin Impact",
             "platform": "epic",
             "epicGameId": "ac2c3d6632504c6b9b0503d8b6c41227",
             "processName": "YuanShen*",
