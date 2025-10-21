@@ -99,6 +99,19 @@ class ConfigEditorState {
         $this.HasUnsavedChanges = $true
     }
 
+    <#
+    .SYNOPSIS
+        Clears the modified flag.
+
+    .DESCRIPTION
+        Marks the configuration as not having unsaved changes.
+        Useful when saving configuration or when intentionally discarding changes.
+    #>
+    [void] ClearModified() {
+        $this.HasUnsavedChanges = $false
+        Write-Verbose "Configuration marked as not modified"
+    }
+
     [bool] TestHasUnsavedChanges() {
         return $this.HasUnsavedChanges
     }

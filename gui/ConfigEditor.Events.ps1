@@ -797,7 +797,13 @@ class ConfigEditorEvents {
 
     # Handle language selection changed
     [void] HandleLanguageSelectionChanged() {
-        $languageCombo = $script:Window.FindName("LanguageCombo")
+        # Skip if still initializing to avoid triggering restart during startup
+        if (-not $script:IsInitializationComplete) {
+            Write-Verbose "Skipping language change handler - initialization not complete"
+            return
+        }
+
+        $languageCombo = $this.uiManager.Window.FindName("LanguageCombo")
         if (-not $languageCombo.SelectedItem) {
             return
         }
@@ -805,9 +811,12 @@ class ConfigEditorEvents {
         $selectedLanguageCode = $languageCombo.SelectedItem.Tag
 
         # Check if language actually changed
-        if ($selectedLanguageCode -eq $script:CurrentLanguage) {
+        if ($selectedLanguageCode -eq $this.uiManager.CurrentLanguage) {
+            Write-Verbose "Language not changed, skipping restart prompt"
             return
         }
+
+        Write-Host "Language changed from '$($this.uiManager.CurrentLanguage)' to '$selectedLanguageCode'" -ForegroundColor Cyan
 
         # Save the language setting to configuration
         if (-not $this.stateManager.ConfigData.PSObject.Properties["language"]) {
@@ -816,8 +825,9 @@ class ConfigEditorEvents {
             $this.stateManager.ConfigData.language = $selectedLanguageCode
         }
 
-        # Mark configuration as modified
-        Set-ConfigModified
+        # DO NOT mark as modified here - the restart process will save the configuration
+        # This prevents the "unsaved changes" dialog from appearing during restart
+        # $this.stateManager.SetModified()
 
         # Show restart message and restart if user agrees
         Show-LanguageChangeRestartMessage
