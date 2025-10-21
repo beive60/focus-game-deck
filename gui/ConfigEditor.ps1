@@ -166,11 +166,25 @@ function Initialize-ConfigEditor {
 
         # Step 3: NOW we can safely dot-source files that contain WPF types
         Write-Host "Loading script modules..." -ForegroundColor Yellow
-        . "$PSScriptRoot/ConfigEditor.Mappings.ps1"      # Load mappings first
-        . "$PSScriptRoot/ConfigEditor.State.ps1"
-        . "$PSScriptRoot/ConfigEditor.Localization.ps1"
-        . "$PSScriptRoot/ConfigEditor.UI.ps1"            # UI depends on mappings
-        . "$PSScriptRoot/ConfigEditor.Events.ps1"
+
+        $modulePaths = @(
+            (Join-Path $PSScriptRoot "ConfigEditor.Mappings.ps1"),      # Load mappings first
+            (Join-Path $PSScriptRoot "ConfigEditor.State.ps1"),
+            (Join-Path $PSScriptRoot "ConfigEditor.Localization.ps1"),
+            (Join-Path $PSScriptRoot "ConfigEditor.UI.ps1"),            # UI depends on mappings
+            (Join-Path $PSScriptRoot "ConfigEditor.Events.ps1")
+        )
+
+        foreach ($modulePath in $modulePaths) {
+            if (Test-Path $modulePath) {
+                . $modulePath
+                Write-Verbose "Loaded: $(Split-Path $modulePath -Leaf)"
+            } else {
+                Write-Error "Required module not found: $modulePath"
+                throw "Missing required module: $(Split-Path $modulePath -Leaf)"
+            }
+        }
+
         Write-Host "Script modules loaded successfully" -ForegroundColor Green
 
         # Step 3.5: Validate UI mappings
@@ -199,6 +213,9 @@ function Initialize-ConfigEditor {
 
         $stateManager.SaveOriginalConfig()
         Write-Host "State manager initialized successfully" -ForegroundColor Green
+
+        # Store state manager in script scope for access from functions
+        $script:StateManager = $stateManager
 
         # Step 6: Initialize UI manager
         Write-Host "Initializing UI manager..." -ForegroundColor Yellow
@@ -248,6 +265,9 @@ function Initialize-ConfigEditor {
             }
 
             $script:Window = $uiManager.Window
+
+            # Store UI manager in script scope for access from functions
+            $script:UIManager = $uiManager
 
             Write-Host "UI manager initialized successfully" -ForegroundColor Green
         } catch {
@@ -300,6 +320,10 @@ function Initialize-ConfigEditor {
             Write-Host "ConfigData exists: $($null -ne $stateManager.ConfigData)" -ForegroundColor Yellow
             throw
         }
+
+        # Mark initialization as complete - event handlers can now process user changes
+        $script:IsInitializationComplete = $true
+        Write-Host "Initialization completed - UI is now ready for user interaction" -ForegroundColor Green
 
         # Step 9: Show window
         Write-Host "Showing window..." -ForegroundColor Yellow
@@ -373,53 +397,51 @@ function Import-AdditionalModules {
         $projectRoot = Split-Path $PSScriptRoot -Parent
         Write-Verbose "Project root: $projectRoot"
 
-        # Import language helper functions
-        $LanguageHelperPath = Join-Path $projectRoot "scripts/LanguageHelper.ps1"
-        if (Test-Path $LanguageHelperPath) {
-            . $LanguageHelperPath
-            Write-Verbose "Loaded: LanguageHelper.ps1"
-        } else {
-            Write-Warning "Language helper not found: $LanguageHelperPath"
-        }
-
-        # Import version module
-        $VersionModulePath = Join-Path $projectRoot "Version.ps1"
-        if (Test-Path $VersionModulePath) {
-            # Dot-source in current scope
-            . $VersionModulePath
-            Write-Verbose "Loaded: Version.ps1"
-
-            # Store function reference in global scope for class access
-            if (Test-Path function:Get-ProjectVersion) {
-                Write-Host "Get-ProjectVersion function loaded successfully" -ForegroundColor Green
-                $global:GetProjectVersionFunc = ${function:Get-ProjectVersion}
-            } else {
-                Write-Warning "Get-ProjectVersion function not available after loading Version.ps1"
+        # Define modules to load and their configurations
+        $modulesToLoad = @(
+            @{
+                Path = "scripts/LanguageHelper.ps1"
+                GlobalFunctions = @{}
+            },
+            @{
+                Path = "Version.ps1"
+                GlobalFunctions = @{ "Get-ProjectVersion" = "GetProjectVersionFunc" }
+            },
+            @{
+                Path = "src/modules/UpdateChecker.ps1"
+                GlobalFunctions = @{ "Test-UpdateAvailable" = "TestUpdateAvailableFunc" }
             }
-        } else {
-            Write-Warning "Version module not found: $VersionModulePath"
-        }
+        )
 
-        # Import update checker module
-        $UpdateCheckerPath = Join-Path $projectRoot "src/modules/UpdateChecker.ps1"
-        if (Test-Path $UpdateCheckerPath) {
+        # Load modules in a loop
+        foreach ($moduleInfo in $modulesToLoad) {
+            $modulePath = Join-Path $projectRoot $moduleInfo.Path
+            $moduleName = Split-Path $modulePath -Leaf
+
+            if (-not (Test-Path $modulePath)) {
+                Write-Warning "Module not found: $modulePath"
+                continue
+            }
+
+            # Load the module with error handling
             try {
-                # Dot-source in current scope (UpdateChecker.ps1 will internally load Version.ps1 again)
-                . $UpdateCheckerPath
-                Write-Verbose "Loaded: UpdateChecker.ps1"
-
-                # Store function reference in global scope for class access
-                if (Test-Path function:Test-UpdateAvailable) {
-                    Write-Host "Test-UpdateAvailable function loaded successfully" -ForegroundColor Green
-                    $global:TestUpdateAvailableFunc = ${function:Test-UpdateAvailable}
-                } else {
-                    Write-Warning "Test-UpdateAvailable function not available after loading UpdateChecker.ps1"
-                }
+                . $modulePath
+                Write-Verbose "Loaded: $moduleName"
             } catch {
-                Write-Warning "Error loading UpdateChecker.ps1: $($_.Exception.Message)"
+                Write-Warning "Error loading $moduleName: $($_.Exception.Message)"
+                continue # Skip to next module if loading failed
             }
-        } else {
-            Write-Warning "Update checker module not found: $UpdateCheckerPath"
+
+            # Check for and store global function references if specified
+            foreach ($functionName in $moduleInfo.GlobalFunctions.Keys) {
+                $globalVarName = $moduleInfo.GlobalFunctions[$functionName]
+                if (Test-Path "function:$functionName") {
+                    Write-Host "$functionName function loaded successfully" -ForegroundColor Green
+                    Set-Variable -Name $globalVarName -Value (Get-Item "function:$functionName") -Scope Global
+                } else {
+                    Write-Warning "$functionName function not available after loading $moduleName"
+                }
+            }
         }
     } catch {
         Write-Warning "Failed to import additional modules: $($_.Exception.Message)"
@@ -482,13 +504,158 @@ function Save-OriginalConfig {
 }
 
 function Set-ConfigModified {
-    Write-Verbose "Set-ConfigModified called (stub)"
-    # TODO: Implement or remove in future refactoring
+    param()
+    if ($script:StateManager) {
+        $script:StateManager.SetModified()
+        Write-Verbose "Configuration marked as modified"
+    } else {
+        Write-Warning "StateManager not available, cannot mark configuration as modified"
+    }
 }
 
+<#
+.SYNOPSIS
+    Shows a message prompting the user to restart the application after changing language.
+
+.DESCRIPTION
+    Displays a confirmation dialog asking if the user wants to restart the application
+    to apply language changes. If the user agrees, saves the configuration and restarts
+    the application.
+
+.OUTPUTS
+    None
+#>
 function Show-LanguageChangeRestartMessage {
-    Write-Verbose "Show-LanguageChangeRestartMessage called (stub)"
-    # TODO: Implement or remove in future refactoring
+    try {
+        # Check if localization system is available
+        if (-not $script:ConfigEditorForm -and -not $script:UIManager) {
+            Write-Warning "Localization system not initialized, cannot show language change dialog"
+            return
+        }
+
+        # Get the localized message
+        $message = Get-SafeLocalizedMessage -Key "languageChangeRestart"
+        $title = Get-SafeLocalizedMessage -Key "languageChanged"
+
+        # If localization failed, use fallback English messages
+        if ($message -eq "languageChangeRestart") {
+            $message = "To fully apply the language setting change, please restart the configuration editor.`n`n※ All current configuration changes will be saved when restarting.`n`nWould you like to restart now?"
+            $title = "Language Setting Changed"
+        }
+
+        # Show confirmation dialog
+        $result = [System.Windows.MessageBox]::Show(
+            $message,
+            $title,
+            [System.Windows.MessageBoxButton]::YesNo,
+            [System.Windows.MessageBoxImage]::Question
+        )
+
+        if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
+            # Save configuration before restarting
+            try {
+                Write-Verbose "Saving configuration before restart"
+
+                if (-not $script:StateManager -or -not $script:StateManager.ConfigData) {
+                    throw "StateManager or ConfigData not available"
+                }
+
+                $configJson = $script:StateManager.ConfigData | ConvertTo-Json -Depth 10
+
+                if ([string]::IsNullOrWhiteSpace($configJson) -or $configJson -eq "null") {
+                    throw "Configuration data is empty or null"
+                }
+
+                Set-Content -Path $script:ConfigPath -Value $configJson -Encoding UTF8
+                Write-Verbose "Configuration saved successfully"
+            } catch {
+                Write-Error "Failed to save configuration before restart: $($_.Exception.Message)"
+
+                # Ask if user wants to continue with restart anyway
+                $errorMessage = Get-SafeLocalizedMessage -Key "saveBeforeRestartError" -FormatArgs @($_.Exception.Message)
+                $errorTitle = Get-SafeLocalizedMessage -Key "saveBeforeRestartErrorTitle"
+                $continueMessage = Get-SafeLocalizedMessage -Key "continueRestartConfirm"
+
+                # Fallback messages if localization fails
+                if ($errorMessage -eq "saveBeforeRestartError") {
+                    $errorMessage = "Failed to save configuration before restart: $($_.Exception.Message)"
+                }
+                if ($errorTitle -eq "saveBeforeRestartErrorTitle") {
+                    $errorTitle = "Save Error"
+                }
+                if ($continueMessage -eq "continueRestartConfirm") {
+                    $continueMessage = "Failed to save configuration before restart. Continue with restart anyway?"
+                }
+
+                $continueResult = [System.Windows.MessageBox]::Show(
+                    "$errorMessage`n`n$continueMessage",
+                    $errorTitle,
+                    [System.Windows.MessageBoxButton]::YesNo,
+                    [System.Windows.MessageBoxImage]::Warning
+                )
+
+                if ($continueResult -ne [System.Windows.MessageBoxResult]::Yes) {
+                    Write-Verbose "User cancelled restart due to save error"
+                    return
+                }
+            }
+
+            # Restart the application
+            Write-Host "Restarting application to apply language changes..." -ForegroundColor Cyan
+
+            # Get the current script path
+            $currentScript = $PSCommandPath
+            if (-not $currentScript) {
+                $currentScript = Join-Path $PSScriptRoot "ConfigEditor.ps1"
+            }
+
+            # Start new instance FIRST with proper encoding
+            $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+            $startInfo.FileName = "powershell.exe"
+            $startInfo.Arguments = "-ExecutionPolicy Bypass -NoProfile -Command `"& { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; & '$currentScript' }`""
+            $startInfo.UseShellExecute = $false
+            $startInfo.CreateNoWindow = $false
+            $startInfo.StandardOutputEncoding = [System.Text.Encoding]::UTF8
+
+            try {
+                $newProcess = [System.Diagnostics.Process]::Start($startInfo)
+                Write-Host "New instance started successfully (PID: $($newProcess.Id))" -ForegroundColor Green
+            } catch {
+                Write-Warning "Failed to start new instance: $($_.Exception.Message)"
+                return
+            }
+
+            # Set a flag to bypass the "unsaved changes" dialog during restart
+            if ($script:StateManager) {
+                # Clear the modified flag to prevent "unsaved changes" dialog
+                $script:StateManager.ClearModified()
+            }
+
+            # Close the current window gracefully
+            if ($script:UIManager -and $script:UIManager.Window) {
+                try {
+                    # Force close without triggering the closing event dialog
+                    $script:UIManager.Window.DialogResult = $false
+                    $script:UIManager.Window.Close()
+                } catch {
+                    Write-Verbose "Window close warning: $($_.Exception.Message)"
+                }
+            }
+
+            # Exit current process
+            try {
+                [System.Windows.Application]::Current.Shutdown()
+            } catch {
+                Write-Verbose "Shutdown warning: $($_.Exception.Message)"
+                # Force exit if graceful shutdown fails
+                [System.Environment]::Exit(0)
+            }
+        } else {
+            Write-Verbose "User chose to restart later"
+        }
+    } catch {
+        Write-Error "Failed to show language change restart message: $($_.Exception.Message)"
+    }
 }
 
 function Show-PathSelectionDialog {
@@ -496,6 +663,51 @@ function Show-PathSelectionDialog {
     Write-Verbose "Show-PathSelectionDialog called (stub)"
     # TODO: Implement or remove in future refactoring
     return $Paths[0]
+}
+
+<#
+.SYNOPSIS
+    Gets a localized message for the specified key.
+
+.DESCRIPTION
+    Retrieves a localized message from the loaded messages using the current language.
+    Supports optional format arguments for string formatting.
+
+.PARAMETER Key
+    The message key to retrieve.
+
+.PARAMETER FormatArgs
+    Optional array of arguments for string formatting.
+
+.OUTPUTS
+    String - The localized message.
+#>
+function Get-SafeLocalizedMessage {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Key,
+
+        [Parameter(Mandatory = $false)]
+        [array]$FormatArgs = @()
+    )
+
+    try {
+        if ($script:ConfigEditorForm -and $script:ConfigEditorForm.localization) {
+            return $script:ConfigEditorForm.localization.GetMessage($Key, $FormatArgs)
+        } elseif ($script:UIManager) {
+            $message = $script:UIManager.GetLocalizedMessage($Key)
+            if ($FormatArgs -and $FormatArgs.Count -gt 0) {
+                return $message -f $FormatArgs
+            }
+            return $message
+        } else {
+            Write-Warning "Localization not available, using key as message: $Key"
+            return $Key
+        }
+    } catch {
+        Write-Warning "Failed to get localized message for key '$Key': $($_.Exception.Message)"
+        return $Key
+    }
 }
 
 # Shows a localized message dialog
@@ -689,6 +901,7 @@ $script:Messages = $null
 $script:CurrentLanguage = "en"
 $script:HasUnsavedChanges = $false
 $script:OriginalConfigData = $null
+$script:IsInitializationComplete = $false
 
 # Start the application
 if (-not $NoAutoStart) {

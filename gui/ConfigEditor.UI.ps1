@@ -863,7 +863,42 @@ class ConfigEditorUI {
 
                 $langCombo = $self.Window.FindName("LanguageCombo")
                 if ($langCombo) {
-                    # Implement selection logic based on $ConfigData.language
+                    # Temporarily disable SelectionChanged event during initialization
+                    # This prevents HandleLanguageSelectionChanged from triggering during UI setup
+                    $langCombo.IsEnabled = $false
+
+                    # Clear existing items
+                    $langCombo.Items.Clear()
+
+                    # Add language options as ComboBoxItems
+                    $languages = @(
+                        @{ Code = "en"; Name = "English" }
+                        @{ Code = "ja"; Name = "日本語" }
+                        @{ Code = "zh-CN"; Name = "简体中文" }
+                    )
+
+                    $selectedIndex = 0
+                    $currentIndex = 0
+                    foreach ($lang in $languages) {
+                        $item = New-Object System.Windows.Controls.ComboBoxItem
+                        $item.Content = $lang.Name
+                        $item.Tag = $lang.Code
+                        $langCombo.Items.Add($item) | Out-Null
+
+                        # Track which item should be selected
+                        if ($ConfigData.language -eq $lang.Code) {
+                            $selectedIndex = $currentIndex
+                        }
+                        $currentIndex++
+                    }
+
+                    # Set selection by index to avoid triggering SelectionChanged multiple times
+                    if ($langCombo.Items.Count -gt 0) {
+                        $langCombo.SelectedIndex = $selectedIndex
+                    }
+
+                    # Re-enable the ComboBox after initialization
+                    $langCombo.IsEnabled = $true
                 }
 
                 $launcherTypeCombo = $self.Window.FindName("LauncherTypeCombo")
