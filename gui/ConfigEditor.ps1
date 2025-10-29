@@ -46,7 +46,7 @@ function Test-Prerequisites {
     # Check essential files
     $requiredFiles = @(
         (Join-Path $PSScriptRoot "MainWindow.xaml"),
-        (Join-Path $PSScriptRoot "messages.json"),
+        (Join-Path $PSScriptRoot "../localization/messages.json"),
         (Join-Path $PSScriptRoot "ConfigEditor.Mappings.ps1"),
         (Join-Path (Split-Path $PSScriptRoot) "config/config.json")
     )
@@ -228,13 +228,13 @@ function Initialize-ConfigEditor {
             Write-Host "DEBUG: Creating ConfigEditorUI instance..." -ForegroundColor Cyan
 
             $allMappings = @{
-                Button       = $ButtonMappings
-                Label        = $LabelMappings
-                Tab          = $TabMappings
-                Text         = $TextMappings
-                CheckBox     = $CheckBoxMappings
-                MenuItem     = $MenuItemMappings
-                Tooltip      = $TooltipMappings
+                Button = $ButtonMappings
+                Label = $LabelMappings
+                Tab = $TabMappings
+                Text = $TextMappings
+                CheckBox = $CheckBoxMappings
+                MenuItem = $MenuItemMappings
+                Tooltip = $TooltipMappings
                 ComboBoxItem = $ComboBoxItemMappings
             }
             $uiManager = [ConfigEditorUI]::new($stateManager, $allMappings, $localization)
