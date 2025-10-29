@@ -428,7 +428,7 @@ function Import-AdditionalModules {
                 . $modulePath
                 Write-Verbose "Loaded: $moduleName"
             } catch {
-                Write-Warning "Error loading $moduleName: $($_.Exception.Message)"
+                Write-Warning "Error loading $($moduleName): $($_.Exception.Message)"
                 continue # Skip to next module if loading failed
             }
 
