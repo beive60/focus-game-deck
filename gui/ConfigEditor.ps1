@@ -84,7 +84,7 @@ function Initialize-WpfAssemblies {
 }
 
 # Load configuration function
-function Load-Configuration {
+function Import-Configuration {
     try {
         $configPath = Join-Path (Split-Path $PSScriptRoot -Parent) "config/config.json"
 
@@ -162,7 +162,7 @@ function Initialize-ConfigEditor {
         }
 
         # Step 2: Load configuration
-        Load-Configuration
+        Import-Configuration
 
         # Step 3: NOW we can safely dot-source files that contain WPF types
         Write-Host "Loading script modules..." -ForegroundColor Yellow
