@@ -106,6 +106,24 @@ For the complete project manifesto, see [Project Philosophy](docs/project-info/p
 
 5. **Submit Pull Request**
 
+### Updating the Application Icon
+
+The application icon's source file is `assets/icon.svg`. To update the icon used in the executable, you must modify this SVG file and then generate the corresponding `.ico` file.
+
+**Prerequisites:**
+- **ImageMagick**: You must have ImageMagick installed and accessible in your system's PATH. You can download it from [https://imagemagick.org/](https://imagemagick.org/).
+
+**Steps:**
+
+1.  Modify `assets/icon.svg` with your desired changes.
+2.  Run the icon generation script from the project root:
+    ```powershell
+    ./build-tools/Update-Icon.ps1
+    ```
+3.  This script will create a new `assets/icon.ico` file with multiple resolutions.
+4.  Verify the new icon looks correct.
+5.  Commit both `assets/icon.svg` and the newly generated `assets/icon.ico` to your branch.
+
 ## Coding Standards
 
 ### PowerShell Guidelines

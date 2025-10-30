@@ -49,24 +49,24 @@ class PlatformManager {
             Name           = "Epic Games"
             DetectPath     = { $this.DetectEpicPath() }
             LaunchCommand  = { param($gamePath, $gameId)
-                # Try multiple Epic Games Launcher launch methods
-                try {
-                    # Method 1: Direct executable launch (recommended)
-                    if ($gamePath -and (Test-Path $gamePath)) {
-                        $process = Start-Process -FilePath $gamePath -ArgumentList "-epicapp=$gameId" -PassThru
-                        if ($this.Logger) { $this.Logger.Info("Launched via Epic Games executable: GameID $gameId", "PLATFORM") }
-                        return $process
+                $epicUri = $gameId
+                if ($gameId -notlike "com.epicgames.launcher://*") {
+                    if ($gameId -notlike "apps/*") {
+                        $epicUri = "com.epicgames.launcher://apps/$gameId`?action=launch`&silent=true"
                     } else {
-                        throw "Epic Games executable not found"
+                        $epicUri = "com.epicgames.launcher://$gameId"
                     }
-                } catch {
-                    # Method 2: Epic Games URI (fixed version)
-                    $epicUri = "com.epicgames.launcher://apps/$gameId`?action=launch`&silent=true"
-                    $tempBat = "$env:TEMP/launch_epic_$gameId.bat"
-                    "@echo off`nstart `"Epic Games`" `"$epicUri`"" | Out-File -FilePath $tempBat -Encoding ASCII
-                    $process = Start-Process -FilePath $tempBat -WindowStyle Hidden -PassThru
+                }
+                
+                try {
+                    # URI-based launch is the standard for Epic Games.
+                    $process = Start-Process -FilePath $epicUri -PassThru
                     if ($this.Logger) { $this.Logger.Info("Launched via Epic Games URI: GameID $gameId", "PLATFORM") }
                     return $process
+                } catch {
+                    if ($this.Logger) { $this.Logger.Error("Failed to launch Epic Games URI '$epicUri': $_", "PLATFORM") }
+                    # Provide a more informative error message to the user.
+                    throw "Failed to launch Epic game. Ensure the Epic Games Launcher is installed and the URI protocol is registered."
                 }
             }
             GameIdProperty = "epicGameId"
