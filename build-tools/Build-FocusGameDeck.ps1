@@ -93,6 +93,14 @@ if ($Build) {
                 noConsole    = $false
             }
 
+            # Add icon if it exists
+            $iconFile = Join-Path (Split-Path $PSScriptRoot -Parent) "assets/icon.ico"
+            if (Test-Path $iconFile) {
+                $ps2exeParams.Add("iconFile", $iconFile)
+            } else {
+                Write-Warning "Icon file not found: $iconFile. Building without an icon."
+            }
+
             ps2exe @ps2exeParams
 
             if (Test-Path $mainOutputPath) {
@@ -126,6 +134,12 @@ if ($Build) {
                     requireAdmin = $false
                     STA          = $true
                     noConsole    = $true
+                }
+
+                # Add icon if it exists
+                $iconFile = Join-Path (Split-Path $PSScriptRoot -Parent) "assets/icon.ico"
+                if (Test-Path $iconFile) {
+                    $ps2exeParams.Add("iconFile", $iconFile)
                 }
 
                 ps2exe @ps2exeParams
