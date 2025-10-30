@@ -17,8 +17,6 @@ if (-not (Get-Module -Name Microsoft.PowerShell.Security)) {
 # Initialize script variables
 $scriptDir = $PSScriptRoot
 $configPath = Join-Path $scriptDir "../config/config.json"
-$languageHelperPath = Join-Path $scriptDir "../scripts/LanguageHelper.ps1"
-$messagesPath = Join-Path $scriptDir "../config/messages.json"
 
 # Import modules
 $modulePaths = @(
@@ -38,30 +36,19 @@ foreach ($modulePath in $modulePaths) {
     }
 }
 
-# Import language helper functions
-if (Test-Path $languageHelperPath) {
-    . $languageHelperPath
-} else {
-    Write-Warning "Language helper not found: $languageHelperPath"
-}
-
 # Load and validate configuration
 try {
     Write-Host "Loading configuration..." -ForegroundColor Cyan
     $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
-
-    # Detect language and load messages
-    $langCode = Get-DetectedLanguage -ConfigData $config
-    Set-CultureByLanguage -LanguageCode $langCode
-    $msg = Get-LocalizedMessages -MessagesPath $messagesPath -LanguageCode $langCode
-
-    Write-Host "Configuration loaded successfully. Language: $langCode" -ForegroundColor Green
+    Write-Host "Configuration loaded successfully." -ForegroundColor Green
 } catch {
     Write-Error "Failed to load configuration: $_"
     exit 1
 }
 
 # Initialize logger
+# Note: Passing an empty messages object as i18n is disabled for this debug script.
+$msg = @{}
 try {
     $logger = Initialize-Logger -Config $config -Messages $msg
     $logger.Info("Focus Game Deck started (Multi-Platform)", "MAIN")
@@ -119,9 +106,9 @@ if ($logger) { $logger.Info("Configuration validation passed", "CONFIG") }
 # Get game configuration
 $gameConfig = $config.games.$GameId
 if (-not $gameConfig) {
-    $errorMsg = $msg.error_game_id_not_found -f $GameId
+    $errorMsg = "Error: Game ID '{0}' not found in configuration." -f $GameId
     Write-Host $errorMsg -ForegroundColor Red
-    Write-Host ($msg.available_game_ids -f ($config.games.PSObject.Properties.Name -join ', '))
+    Write-Host ("Available game IDs: {0}" -f ($config.games.PSObject.Properties.Name -join ', '))
     if ($logger) { $logger.Error($errorMsg, "MAIN") }
     exit 1
 }
@@ -166,7 +153,7 @@ function Invoke-GameCleanup {
     )
 
     if ($IsInterrupted) {
-        Write-Host $msg.cleanup_initiated_interrupted
+        Write-Host "Cleanup initiated due to user interruption (Ctrl+C)."
         if ($logger) { $logger.Warning("Cleanup initiated due to interruption", "CLEANUP") }
     } else {
         if ($logger) { $logger.Info("Starting game cleanup", "CLEANUP") }
@@ -251,7 +238,7 @@ try {
     Write-Host "Launching game via $($detectedPlatforms[$gamePlatform].Name)..." -ForegroundColor Cyan
     try {
         $launcherProcess = $platformManager.LaunchGame($gamePlatform, $gameConfig)
-        Write-Host ($msg.starting_game -f $gameConfig.name) -ForegroundColor Green
+        Write-Host ("Starting game: {0}" -f $gameConfig.name) -ForegroundColor Green
         if ($logger) { $logger.Info("Game launch command sent to $($detectedPlatforms[$gamePlatform].Name): $($gameConfig.name)", "GAME") }
     } catch {
         $errorMsg = "Failed to launch game via $($detectedPlatforms[$gamePlatform].Name): $_"
@@ -276,13 +263,31 @@ try {
     } while (-not $gameProcess -and $elapsed.TotalSeconds -lt $processStartTimeout)
 
     if ($gameProcess) {
-        Write-Host "`n$($msg.monitoring_process -f $gameConfig.name)" -ForegroundColor Green
+        Write-Host ("`nNow monitoring process: {0}. The script will continue after the game exits." -f $gameConfig.name) -ForegroundColor Green
         if ($logger) { $logger.Info("Game process detected and monitoring started: $($gameConfig.processName)", "GAME") }
 
-        # Wait for game process to end
-        Wait-Process -InputObject $gameProcess
+        # Wait for the game process to end.
+        # If direct Wait-Process fails (e.g., due to admin privilege issues),
+        # fall back to polling the process status.
+        try {
+            if ($logger) { $logger.Debug("Attempting to wait for process directly: $($gameProcess.Name) (PID: $($gameProcess.Id))", "GAME") }
+            Wait-Process -InputObject $gameProcess -ErrorAction Stop
+        }
+        catch {
+            if ($logger) { $logger.Warning("Direct wait failed. Falling back to polling for process exit: $($gameProcess.Name) (PID: $($gameProcess.Id)). This can happen with admin-level processes.", "GAME") }
+            Write-Host "`nDirect process wait failed. Monitoring process in fallback mode (polling every 3s). This can happen with admin-level processes." -ForegroundColor Yellow
 
-        Write-Host ($msg.game_exited -f $gameConfig.name) -ForegroundColor Yellow
+            while ($true) {
+                $processCheck = Get-Process -Id $gameProcess.Id -ErrorAction SilentlyContinue
+                if (-not $processCheck) {
+                    if ($logger) { $logger.Info("Process has exited (detected by polling): $($gameProcess.Name) (PID: $($gameProcess.Id))", "GAME") }
+                    break # Exit the loop
+                }
+                Start-Sleep -Seconds 3
+            }
+        }
+
+        Write-Host ("Game has exited: {0}" -f $gameConfig.name) -ForegroundColor Yellow
         if ($logger) { $logger.Info("Game process ended: $($gameConfig.name)", "GAME") }
     } else {
         Write-Warning "Game process '$($gameConfig.processName)' was not detected within timeout period"
