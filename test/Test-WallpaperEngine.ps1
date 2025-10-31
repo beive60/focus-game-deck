@@ -22,7 +22,7 @@ $rootPath = Split-Path $PSScriptRoot -Parent
 $configPath = Join-Path $rootPath "config/config.json"
 $appManagerPath = Join-Path $rootPath "src/modules/AppManager.ps1"
 $configValidatorPath = Join-Path $rootPath "src/modules/ConfigValidator.ps1"
-$messagesPath = Join-Path $rootPath "config/messages.json"
+$messagesPath = Join-Path $rootPath "localization/messages.json"
 
 # Load modules
 if (Test-Path $appManagerPath) {

@@ -68,7 +68,7 @@ if ($configEditorContent -match 'function Handle-BrowseExecutablePath') {
 Write-Host ""
 Write-Host "Test 8: Checking messages.json for localization..." -ForegroundColor Yellow
 
-$messagesPath = "gui/messages.json"
+$messagesPath = "../localization/messages.json"
 $messagesContent = Get-Content $messagesPath -Raw
 
 if ($messagesContent -match 'standalonePlatform') {

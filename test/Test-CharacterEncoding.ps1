@@ -64,7 +64,7 @@ try {
 
 # Test messages.json
 try {
-    $messagesPath = Join-Path $projectRoot "../gui/messages.json"
+    $messagesPath = Join-Path $projectRoot "../localization/messages.json"
     $messagesContent = Get-Content $messagesPath -Raw -Encoding UTF8
     $messages = $messagesContent | ConvertFrom-Json
     Test-Result "messages.json UTF-8 parsing" $true
@@ -108,7 +108,7 @@ try {
                 . $languageHelperPath
 
                 # Load messages using proper LanguageHelper method
-                $messagesPath = Join-Path $projectRoot "config/messages.json"
+                $messagesPath = Join-Path $projectRoot "localization/messages.json"
                 $langCode = Get-DetectedLanguage -ConfigData $config
                 $msg = Get-LocalizedMessages -MessagesPath $messagesPath -LanguageCode $langCode
 

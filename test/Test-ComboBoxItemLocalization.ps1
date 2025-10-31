@@ -20,7 +20,7 @@ $VerbosePreference = "Continue"
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $GuiPath = Join-Path $ProjectRoot "gui"
 $MappingsPath = Join-Path $GuiPath "ConfigEditor.Mappings.ps1"
-$MessagesPath = Join-Path $GuiPath "messages.json"
+$MessagesPath = Join-Path $GuiPath "../localization/messages.json"
 $XamlPath = Join-Path $GuiPath "MainWindow.xaml"
 
 Write-Host "=== ComboBoxItem Localization Test ===" -ForegroundColor Cyan

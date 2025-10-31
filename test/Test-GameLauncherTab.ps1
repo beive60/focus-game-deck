@@ -102,7 +102,7 @@ function New-MockConfigData {
 # Helper function to load actual messages from messages.json
 function New-MockMessages {
     try {
-        $messagesPath = Join-Path $PSScriptRoot "../gui/messages.json"
+        $messagesPath = Join-Path $PSScriptRoot "../localization/messages.json"
         if (Test-Path $messagesPath) {
             $messagesData = Get-Content $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
             Write-Verbose "Loaded messages from: $messagesPath"
