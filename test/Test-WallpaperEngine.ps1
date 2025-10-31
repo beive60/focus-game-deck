@@ -19,7 +19,6 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
 # Import required modules
 $rootPath = Split-Path $PSScriptRoot -Parent
-$configPath = Join-Path $rootPath "config/config.json"
 $appManagerPath = Join-Path $rootPath "src/modules/AppManager.ps1"
 $configValidatorPath = Join-Path $rootPath "src/modules/ConfigValidator.ps1"
 $messagesPath = Join-Path $rootPath "localization/messages.json"
@@ -54,21 +53,21 @@ try {
 $testConfig = @{
     managedApps = @{
         wallpaperEngine = @{
-            path            = "C:/Program Files (x86)/Steam/steamapps/common/wallpaper_engine/wallpaper32.exe"
-            processName     = "wallpaper32|wallpaper64"
+            path = "C:/Program Files (x86)/Steam/steamapps/common/wallpaper_engine/wallpaper32.exe"
+            processName = "wallpaper32|wallpaper64"
             gameStartAction = "pause-wallpaper"
-            gameEndAction   = "play-wallpaper"
-            arguments       = ""
+            gameEndAction = "play-wallpaper"
+            arguments = ""
         }
     }
-    games       = @{
+    games = @{
         testGame = @{
-            name         = "Test Game"
-            processName  = "testgame.exe"
+            name = "Test Game"
+            processName = "testgame.exe"
             appsToManage = @("wallpaperEngine")
         }
     }
-    paths       = @{
+    paths = @{
         steam = "C:/Program Files (x86)/Steam/steam.exe"
     }
 } | ConvertTo-Json -Depth 10 | ConvertFrom-Json
@@ -190,11 +189,11 @@ Write-Host "└─ Testing invalid path handling..."
 $invalidConfig = @{
     managedApps = @{
         wallpaperEngine = @{
-            path            = "C:\NonExistent/wallpaper32.exe"
-            processName     = "wallpaper32"
+            path = "C:\NonExistent/wallpaper32.exe"
+            processName = "wallpaper32"
             gameStartAction = "pause-wallpaper"
-            gameEndAction   = "play-wallpaper"
-            arguments       = ""
+            gameEndAction = "play-wallpaper"
+            arguments = ""
         }
     }
 } | ConvertTo-Json -Depth 10 | ConvertFrom-Json
