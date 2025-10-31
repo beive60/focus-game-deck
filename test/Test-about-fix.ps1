@@ -23,7 +23,7 @@ try {
     . "$PSScriptRoot/Version.ps1"
 
     # Load messages
-    $messagesPath = Join-Path $PSScriptRoot "../gui/messages.json"
+    $messagesPath = Join-Path $PSScriptRoot "../localization/messages.json"
     $messagesContent = Get-Content $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
     # Get version info
