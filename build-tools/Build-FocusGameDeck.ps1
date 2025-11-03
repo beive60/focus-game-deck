@@ -41,9 +41,16 @@ if ($Clean) {
     Write-Host "Cleaning build artifacts..." -ForegroundColor Yellow
 
     $buildDir = Join-Path $PSScriptRoot "build"
+    $signedDir = Join-Path $PSScriptRoot "signed"
+
     if (Test-Path $buildDir) {
         Remove-Item $buildDir -Recurse -Force
         Write-Host "Build directory cleaned." -ForegroundColor Green
+    }
+
+    if (Test-Path $signedDir) {
+        Remove-Item $signedDir -Recurse -Force
+        Write-Host "Signed directory cleaned." -ForegroundColor Green
     }
 
     $exeFiles = Get-ChildItem -Path $PSScriptRoot -Filter "*.exe" -Recurse
@@ -116,11 +123,12 @@ if ($Build) {
 
         # Build Config Editor if not already built
         $configEditorPath = Join-Path (Split-Path $PSScriptRoot -Parent) "gui/Focus-Game-Deck-Config-Editor.exe"
+        $configEditorOutput = Join-Path $buildDir "Focus-Game-Deck-Config-Editor.exe"
+
         if (-not (Test-Path $configEditorPath)) {
             Write-Host "Building Config Editor..." -ForegroundColor Cyan
 
             $configEditorScript = Join-Path (Split-Path $PSScriptRoot -Parent) "gui/ConfigEditor.ps1"
-            $configEditorOutput = Join-Path $buildDir "Focus-Game-Deck-Config-Editor.exe"
 
             if (Test-Path $configEditorScript) {
                 $ps2exeParams = @{
@@ -152,9 +160,8 @@ if ($Build) {
             }
         } else {
             # Copy existing Config Editor to build directory
-            $configEditorBuildPath = Join-Path $buildDir "Focus-Game-Deck-Config-Editor.exe"
-            Copy-Item $configEditorPath $configEditorBuildPath -Force
-            Write-Host "Config Editor copied to build directory: $configEditorBuildPath" -ForegroundColor Green
+            Copy-Item $configEditorPath $configEditorOutput -Force
+            Write-Host "Config Editor copied to build directory: $configEditorOutput" -ForegroundColor Green
         }
 
         # Copy necessary files to build directory
@@ -203,6 +210,42 @@ pause
             $signingScript = Join-Path $PSScriptRoot "Sign-Executables.ps1"
             if (Test-Path $signingScript) {
                 & $signingScript -SignAll
+
+                # Move signed executables to signed directory
+                $signedDir = Join-Path $PSScriptRoot "signed"
+                if (Test-Path $signedDir) {
+                    Write-Host "Moving signed executables to signed directory..." -ForegroundColor Cyan
+
+                    # Move executables from build to signed directory
+                    Get-ChildItem $buildDir -Filter "*.exe" | ForEach-Object {
+                        $destinationPath = Join-Path $signedDir $_.Name
+                        Move-Item $_.FullName $destinationPath -Force
+                        Write-Host "Moved: $($_.Name) to signed directory" -ForegroundColor Green
+                    }
+
+                    # Copy configuration files and other assets to signed directory as well
+                    if (Test-Path $configDir) {
+                        $signedConfigDir = Join-Path $signedDir "config"
+                        if (-not (Test-Path $signedConfigDir)) {
+                            New-Item -ItemType Directory -Path $signedConfigDir -Force | Out-Null
+                        }
+                        Copy-Item "$configDir/*" $signedConfigDir -Recurse -Force
+                    }
+
+                    # Copy launcher script
+                    if (Test-Path $launcherPath) {
+                        Copy-Item $launcherPath $signedDir -Force
+                    }
+
+                    Write-Host "Signed build completed! Files are located in: $signedDir" -ForegroundColor Green
+
+                    # Clean up build directory after successful signing
+                    Write-Host "Cleaning up intermediate build directory..." -ForegroundColor Cyan
+                    Remove-Item $buildDir -Recurse -Force
+                    Write-Host "Build directory cleaned up." -ForegroundColor Green
+                } else {
+                    Write-Warning "Signed directory was not created by the signing process."
+                }
             } else {
                 Write-Warning "Code signing script not found: $signingScript"
             }
@@ -220,6 +263,41 @@ if ($Sign -and -not $Build) {
     $signingScript = Join-Path $PSScriptRoot "Sign-Executables.ps1"
     if (Test-Path $signingScript) {
         & $signingScript -SignAll
+
+        # Move signed executables to signed directory
+        $buildDir = Join-Path $PSScriptRoot "build"
+        $signedDir = Join-Path $PSScriptRoot "signed"
+
+        if ((Test-Path $buildDir) -and (Test-Path $signedDir)) {
+            Write-Host "Moving signed executables to signed directory..." -ForegroundColor Cyan
+
+            # Move executables from build to signed directory
+            Get-ChildItem $buildDir -Filter "*.exe" | ForEach-Object {
+                $destinationPath = Join-Path $signedDir $_.Name
+                Move-Item $_.FullName $destinationPath -Force
+                Write-Host "Moved: $($_.Name) to signed directory" -ForegroundColor Green
+            }
+
+            # Copy other files to signed directory
+            Get-ChildItem $buildDir -Recurse | Where-Object { -not $_.PSIsContainer -and $_.Extension -ne ".exe" } | ForEach-Object {
+                $relativePath = $_.FullName.Replace($buildDir, "").TrimStart('\')
+                $destinationPath = Join-Path $signedDir $relativePath
+                $destinationDir = Split-Path $destinationPath -Parent
+
+                if (-not (Test-Path $destinationDir)) {
+                    New-Item -ItemType Directory -Path $destinationDir -Force | Out-Null
+                }
+
+                Copy-Item $_.FullName $destinationPath -Force
+            }
+
+            Write-Host "Signed build completed! Files are located in: $signedDir" -ForegroundColor Green
+
+            # Clean up build directory after successful signing
+            Write-Host "Cleaning up intermediate build directory..." -ForegroundColor Cyan
+            Remove-Item $buildDir -Recurse -Force
+            Write-Host "Build directory cleaned up." -ForegroundColor Green
+        }
     } else {
         Write-Error "Code signing script not found: $signingScript"
         exit 1
@@ -244,6 +322,7 @@ if (-not $Install -and -not $Build -and -not $Clean -and -not $Sign -and -not $A
     Write-Host ""
     Write-Host "This script will create executable versions of:"
     Write-Host "  - Focus-Game-Deck.exe (main application)"
-    Write-Host "  - Focus-Game-Deck.exe (with built-in multi-platform support)"
     Write-Host "  - Focus-Game-Deck-Config-Editor.exe (GUI configuration editor)"
+    Write-Host ""
+    Write-Host "Signed executables will be placed in the 'signed' directory."
 }

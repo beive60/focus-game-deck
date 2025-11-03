@@ -1,13 +1,13 @@
 # Build artifacts and executable files (should not be in version control)
 build/
 build-tools/build/
+build-tools/signed/
 release/
 *.exe
+build-tools/signing-config/signing-config.json
 
 # User-specific configuration files
 config/config.json
-config/config.json.backup-*
-config/signing-config.json
 
 # PowerShell history file
 *.history
