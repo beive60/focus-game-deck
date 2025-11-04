@@ -21,7 +21,7 @@ The build system consists of three tiers, each with specific responsibilities:
 3. **Master Build Orchestration** - Complete workflow management
 
 ```text
-Master-Build.ps1 (Tier 3: Orchestration)
+Release-Manager.ps1 (Tier 3: Orchestration)
 ├── build-tools/
 │   ├── Build-FocusGameDeck.ps1 (Tier 2: Integration)
 │   │   ├── ps2exe compilation for main applications
@@ -39,27 +39,29 @@ Master-Build.ps1 (Tier 3: Orchestration)
 
 ## Build Scripts Reference
 
-### Master-Build.ps1
+### Release-Manager.ps1
 
-**Purpose**: Complete build workflow orchestration for development and production releases.
+**Purpose**: Complete release workflow orchestration including build, signing, and distribution packaging for development and production releases.
+
+**Note**: Despite the name suggesting only build functionality, this script orchestrates the entire release pipeline from compilation to distribution-ready packages.
 
 **Usage**:
 
 ```powershell
 # Development build (no signing)
-./Master-Build.ps1 -Development
+./Release-Manager.ps1 -Development
 
 # Production build (with signing)
-./Master-Build.ps1 -Production
+./Release-Manager.ps1 -Production
 
 # Setup dependencies only
-./Master-Build.ps1 -SetupOnly
+./Release-Manager.ps1 -SetupOnly
 
 # Clean all build artifacts
-./Master-Build.ps1 -Clean
+./Release-Manager.ps1 -Clean
 
 # Enable verbose logging
-./Master-Build.ps1 -Development -Verbose
+./Release-Manager.ps1 -Development -Verbose
 ```
 
 **Features**:
@@ -136,14 +138,12 @@ Master-Build.ps1 (Tier 3: Orchestration)
 
 ## Digital Signature Infrastructure
 
-
 ### Certificate Requirements
 
 - **Type**: Code Signing Certificate (EV or OV)
 - **Recommended Providers**: DigiCert, Sectigo, GlobalSign, Entrust
 - **Key Usage**: Digital Signature, Key Encipherment
 - **Extended Key Usage**: Code Signing
-
 
 ### Certificate Setup Process
 
@@ -167,20 +167,28 @@ Master-Build.ps1 (Tier 3: Orchestration)
 
 ```text
 focus-game-deck/
-├── build/                           # Build artifacts (unsigned)
-│   ├── Focus-Game-Deck.exe
-│   ├── Focus-Game-Deck-MultiPlatform.exe
-│   ├── Focus-Game-Deck-Config-Editor.exe
-│   ├── launcher.bat
-│   └── config/
-│       ├── config.json
-│       ├── messages.json
-│       └── config.sample.json
-├── signed/                          # Signed executables (production)
-│   ├── [same structure as build/]
-│   └── signature-info.json         # Signature metadata
+├── build-tools/
+│   ├── build/                       # Temporary build artifacts (auto-deleted)
+│   │   ├── Focus-Game-Deck.exe
+│   │   ├── Focus-Game-Deck-MultiPlatform.exe
+│   │   ├── Focus-Game-Deck-Config-Editor.exe
+│   │   ├── launcher.bat
+│   │   └── config/
+│   │       ├── config.json
+│   │       ├── messages.json
+│   │       └── config.sample.json
+│   └── dist/                        # Distribution-ready executables (signed/unsigned)
+│       ├── Focus-Game-Deck.exe
+│       ├── Focus-Game-Deck-MultiPlatform.exe
+│       ├── Focus-Game-Deck-Config-Editor.exe
+│       ├── launcher.bat
+│       ├── config/
+│       │   ├── config.json
+│       │   ├── messages.json
+│       │   └── config.sample.json
+│       └── signature-info.json     # Signature metadata (if signed)
 └── release/                         # Final distribution package
-    ├── [executable files]
+    ├── [executable files copied from dist/]
     ├── README.txt                   # Release documentation
     └── version-info.json            # Version and build metadata
 ```
@@ -191,7 +199,7 @@ focus-game-deck/
 
 ```powershell
 # Quick development build
-./Master-Build.ps1 -Development
+./Release-Manager.ps1 -Development
 
 # This will:
 # 1. Install ps2exe if needed
@@ -204,7 +212,7 @@ focus-game-deck/
 
 ```powershell
 # Complete production build
-./Master-Build.ps1 -Production
+./Release-Manager.ps1 -Production
 
 # This will:
 # 1. Install ps2exe if needed
@@ -261,8 +269,8 @@ Install-Module -Name ps2exe -Scope CurrentUser -Force
 
 ```powershell
 # Clean and rebuild:
-./Master-Build.ps1 -Clean
-./Master-Build.ps1 -Development
+./Release-Manager.ps1 -Clean
+./Release-Manager.ps1 -Development
 ```
 
 ### Debug Mode
@@ -270,7 +278,7 @@ Install-Module -Name ps2exe -Scope CurrentUser -Force
 Enable verbose logging for detailed troubleshooting:
 
 ```powershell
-./Master-Build.ps1 -Development -Verbose
+./Release-Manager.ps1 -Development -Verbose
 ```
 
 This provides:
