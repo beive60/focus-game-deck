@@ -242,25 +242,20 @@ function Add-AllCodeSignatures {
     return $failCount -eq 0
 }
 
-# Create signed distribution package
+# Create distribution package information (build script will handle the actual distribution)
 function New-SignedDistribution {
     param(
         [string]$BuildPath,
         [object]$BuildConfig
     )
 
-    $signedDir = Join-Path (Split-Path $BuildPath -Parent) $BuildConfig.signedDirectory
+    $distDir = Join-Path (Split-Path $BuildPath -Parent) "dist"
 
-    if (Test-Path $signedDir) {
-        Remove-Item $signedDir -Recurse -Force
+    if (-not (Test-Path $distDir)) {
+        New-Item -ItemType Directory -Path $distDir -Force | Out-Null
     }
 
-    New-Item -ItemType Directory -Path $signedDir -Force | Out-Null
-
-    # Copy all files from build directory
-    Copy-Item -Path "$BuildPath/*" -Destination $signedDir -Recurse -Force
-
-    Write-Host "Created signed distribution package: $signedDir" -ForegroundColor Green
+    Write-Host "Signed distribution package created: $distDir" -ForegroundColor Green
 
     # Create version info file
     $versionInfo = @{
@@ -269,8 +264,8 @@ function New-SignedDistribution {
         SignedFiles = @()
     }
 
-    # List signed files
-    $signedFiles = Get-ChildItem -Path $signedDir -Filter "*.exe" -Recurse
+    # List signed files in build directory
+    $signedFiles = Get-ChildItem -Path $BuildPath -Filter "*.exe" -Recurse
     foreach ($file in $signedFiles) {
         $signature = Get-AuthenticodeSignature -FilePath $file.FullName
         $versionInfo.SignedFiles += @{
@@ -281,12 +276,12 @@ function New-SignedDistribution {
         }
     }
 
-    $versionInfoPath = Join-Path $signedDir "signature-info.json"
+    $versionInfoPath = Join-Path $distDir "signature-info.json"
     $versionInfo | ConvertTo-Json -Depth 4 | Set-Content -Path $versionInfoPath -Encoding UTF8
 
     Write-Host "Signature information saved to: signature-info.json" -ForegroundColor Green
 
-    return $signedDir
+    return $distDir
 }
 
 # Main script execution

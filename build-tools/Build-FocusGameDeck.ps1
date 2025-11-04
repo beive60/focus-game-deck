@@ -41,19 +41,17 @@ if ($Clean) {
     Write-Host "Cleaning build artifacts..." -ForegroundColor Yellow
 
     $buildDir = Join-Path $PSScriptRoot "build"
-    $signedDir = Join-Path $PSScriptRoot "signed"
+    $distDir = Join-Path $PSScriptRoot "dist"
 
     if (Test-Path $buildDir) {
         Remove-Item $buildDir -Recurse -Force
         Write-Host "Build directory cleaned." -ForegroundColor Green
     }
 
-    if (Test-Path $signedDir) {
-        Remove-Item $signedDir -Recurse -Force
-        Write-Host "Signed directory cleaned." -ForegroundColor Green
-    }
-
-    $exeFiles = Get-ChildItem -Path $PSScriptRoot -Filter "*.exe" -Recurse
+    if (Test-Path $distDir) {
+        Remove-Item $distDir -Recurse -Force
+        Write-Host "Distribution directory cleaned." -ForegroundColor Green
+    }    $exeFiles = Get-ChildItem -Path $PSScriptRoot -Filter "*.exe" -Recurse
     foreach ($exeFile in $exeFiles) {
         if ($exeFile.Name -like "*Focus-Game-Deck*") {
             Remove-Item $exeFile.FullName -Force
@@ -210,48 +208,57 @@ pause
             $signingScript = Join-Path $PSScriptRoot "Sign-Executables.ps1"
             if (Test-Path $signingScript) {
                 & $signingScript -SignAll
-
-                # Move signed executables to signed directory
-                $signedDir = Join-Path $PSScriptRoot "signed"
-                if (Test-Path $signedDir) {
-                    Write-Host "Moving signed executables to signed directory..." -ForegroundColor Cyan
-
-                    # Move executables from build to signed directory
-                    Get-ChildItem $buildDir -Filter "*.exe" | ForEach-Object {
-                        $destinationPath = Join-Path $signedDir $_.Name
-                        Move-Item $_.FullName $destinationPath -Force
-                        Write-Host "Moved: $($_.Name) to signed directory" -ForegroundColor Green
-                    }
-
-                    # Copy configuration files and other assets to signed directory as well
-                    if (Test-Path $configDir) {
-                        $signedConfigDir = Join-Path $signedDir "config"
-                        if (-not (Test-Path $signedConfigDir)) {
-                            New-Item -ItemType Directory -Path $signedConfigDir -Force | Out-Null
-                        }
-                        Copy-Item "$configDir/*" $signedConfigDir -Recurse -Force
-                    }
-
-                    # Copy launcher script
-                    if (Test-Path $launcherPath) {
-                        Copy-Item $launcherPath $signedDir -Force
-                    }
-
-                    Write-Host "Signed build completed! Files are located in: $signedDir" -ForegroundColor Green
-
-                    # Clean up build directory after successful signing
-                    Write-Host "Cleaning up intermediate build directory..." -ForegroundColor Cyan
-                    Remove-Item $buildDir -Recurse -Force
-                    Write-Host "Build directory cleaned up." -ForegroundColor Green
-                } else {
-                    Write-Warning "Signed directory was not created by the signing process."
-                }
             } else {
                 Write-Warning "Code signing script not found: $signingScript"
             }
         }
 
-    } catch {
+        # Create distribution directory and move final files
+        $distDir = Join-Path $PSScriptRoot "dist"
+        if (-not (Test-Path $distDir)) {
+            New-Item -ItemType Directory -Path $distDir -Force | Out-Null
+        }
+
+        Write-Host "Creating distribution package..." -ForegroundColor Cyan
+
+        # Move executables to dist directory
+        Get-ChildItem $buildDir -Filter "*.exe" | ForEach-Object {
+            $destinationPath = Join-Path $distDir $_.Name
+            Move-Item $_.FullName $destinationPath -Force
+
+            # Check if executable is signed
+            $isSigned = $false
+            try {
+                $signature = Get-AuthenticodeSignature $destinationPath
+                $isSigned = $signature.Status -ne "NotSigned"
+            } catch {
+                $isSigned = $false
+            }
+
+            $signStatus = if ($isSigned) { "(signed)" } else { "(unsigned)" }
+            Write-Host "Moved: $($_.Name) to distribution directory $signStatus" -ForegroundColor Green
+        }
+
+        # Copy configuration files and other assets to dist directory
+        if (Test-Path $configDir) {
+            $distConfigDir = Join-Path $distDir "config"
+            if (-not (Test-Path $distConfigDir)) {
+                New-Item -ItemType Directory -Path $distConfigDir -Force | Out-Null
+            }
+            Copy-Item "$configDir/*" $distConfigDir -Recurse -Force
+        }
+
+        # Copy launcher script
+        if (Test-Path $launcherPath) {
+            Copy-Item $launcherPath $distDir -Force
+        }
+
+        # Clean up intermediate build directory
+        Write-Host "Cleaning up intermediate build directory..." -ForegroundColor Cyan
+        Remove-Item $buildDir -Recurse -Force
+        Write-Host "Build directory cleaned up." -ForegroundColor Green
+
+        Write-Host "Distribution package completed! Files are located in: $distDir" -ForegroundColor Green    } catch {
         Write-Host "Failed to build executables: $($_.Exception.Message)" -ForegroundColor Red
         exit 1
     }
@@ -260,51 +267,67 @@ pause
 # Sign existing build if requested
 if ($Sign -and -not $Build) {
     Write-Host "Signing existing build..." -ForegroundColor Yellow
+    $buildDir = Join-Path $PSScriptRoot "build"
+    $distDir = Join-Path $PSScriptRoot "dist"
+
+    if (-not (Test-Path $buildDir)) {
+        Write-Error "Build directory not found. Please run with -Build first."
+        exit 1
+    }
+
     $signingScript = Join-Path $PSScriptRoot "Sign-Executables.ps1"
     if (Test-Path $signingScript) {
         & $signingScript -SignAll
 
-        # Move signed executables to signed directory
-        $buildDir = Join-Path $PSScriptRoot "build"
-        $signedDir = Join-Path $PSScriptRoot "signed"
-
-        if ((Test-Path $buildDir) -and (Test-Path $signedDir)) {
-            Write-Host "Moving signed executables to signed directory..." -ForegroundColor Cyan
-
-            # Move executables from build to signed directory
-            Get-ChildItem $buildDir -Filter "*.exe" | ForEach-Object {
-                $destinationPath = Join-Path $signedDir $_.Name
-                Move-Item $_.FullName $destinationPath -Force
-                Write-Host "Moved: $($_.Name) to signed directory" -ForegroundColor Green
-            }
-
-            # Copy other files to signed directory
-            Get-ChildItem $buildDir -Recurse | Where-Object { -not $_.PSIsContainer -and $_.Extension -ne ".exe" } | ForEach-Object {
-                $relativePath = $_.FullName.Replace($buildDir, "").TrimStart('\')
-                $destinationPath = Join-Path $signedDir $relativePath
-                $destinationDir = Split-Path $destinationPath -Parent
-
-                if (-not (Test-Path $destinationDir)) {
-                    New-Item -ItemType Directory -Path $destinationDir -Force | Out-Null
-                }
-
-                Copy-Item $_.FullName $destinationPath -Force
-            }
-
-            Write-Host "Signed build completed! Files are located in: $signedDir" -ForegroundColor Green
-
-            # Clean up build directory after successful signing
-            Write-Host "Cleaning up intermediate build directory..." -ForegroundColor Cyan
-            Remove-Item $buildDir -Recurse -Force
-            Write-Host "Build directory cleaned up." -ForegroundColor Green
+        # Create distribution directory
+        if (-not (Test-Path $distDir)) {
+            New-Item -ItemType Directory -Path $distDir -Force | Out-Null
         }
+
+        Write-Host "Creating distribution package..." -ForegroundColor Cyan
+
+        # Move executables to dist directory
+        Get-ChildItem $buildDir -Filter "*.exe" | ForEach-Object {
+            $destinationPath = Join-Path $distDir $_.Name
+            Move-Item $_.FullName $destinationPath -Force
+
+            # Check if executable is signed
+            $isSigned = $false
+            try {
+                $signature = Get-AuthenticodeSignature $destinationPath
+                $isSigned = $signature.Status -ne "NotSigned"
+            } catch {
+                $isSigned = $false
+            }
+
+            $signStatus = if ($isSigned) { "(signed)" } else { "(unsigned)" }
+            Write-Host "Moved: $($_.Name) to distribution directory $signStatus" -ForegroundColor Green
+        }
+
+        # Copy other files to dist directory
+        Get-ChildItem $buildDir -Recurse | Where-Object { -not $_.PSIsContainer -and $_.Extension -ne ".exe" } | ForEach-Object {
+            $relativePath = $_.FullName.Replace($buildDir, "").TrimStart('\')
+            $destinationPath = Join-Path $distDir $relativePath
+            $destinationDir = Split-Path $destinationPath -Parent
+
+            if (-not (Test-Path $destinationDir)) {
+                New-Item -ItemType Directory -Path $destinationDir -Force | Out-Null
+            }
+
+            Copy-Item $_.FullName $destinationPath -Force
+        }
+
+        # Clean up intermediate build directory
+        Write-Host "Cleaning up intermediate build directory..." -ForegroundColor Cyan
+        Remove-Item $buildDir -Recurse -Force
+        Write-Host "Build directory cleaned up." -ForegroundColor Green
+
+        Write-Host "Distribution package completed! Files are located in: $distDir" -ForegroundColor Green
     } else {
         Write-Error "Code signing script not found: $signingScript"
         exit 1
     }
-}
-
-# Show usage if no parameters
+}# Show usage if no parameters
 if (-not $Install -and -not $Build -and -not $Clean -and -not $Sign -and -not $All) {
     Write-Host "Focus Game Deck - Main Application Build Script" -ForegroundColor Cyan
     Write-Host ""
@@ -324,5 +347,6 @@ if (-not $Install -and -not $Build -and -not $Clean -and -not $Sign -and -not $A
     Write-Host "  - Focus-Game-Deck.exe (main application)"
     Write-Host "  - Focus-Game-Deck-Config-Editor.exe (GUI configuration editor)"
     Write-Host ""
-    Write-Host "Signed executables will be placed in the 'signed' directory."
+    Write-Host "Final distribution files will be placed in the 'dist' directory."
+    Write-Host "Digital signature status can be verified via Windows Properties."
 }
