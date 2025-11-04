@@ -163,10 +163,10 @@ code release-notes-1.0.2-alpha.md
 
 ```powershell
 # Development build (unsigned)
-./Master-Build.ps1 -Development
+./Release-Manager.ps1 -Development
 
 # Production build (signed) *Requires certificate setup
-./Master-Build.ps1 -Production
+./Release-Manager.ps1 -Production
 
 # Individual build operations
 ./build-tools/Build-FocusGameDeck.ps1 -Install    # Install ps2exe module
@@ -202,11 +202,13 @@ code release-notes-1.0.2-alpha.md
    - <https://github.com/beive60/focus-game-deck/releases>
 2. Click "Create a new release"
 3. Enter Release Information
+
    ```text
    Tag: v1.0.2-alpha.1
    Release title: Focus Game Deck v1.0.2-alpha.1 - Alpha Test Release
    Description: [Copy content from generated release notes]
    ```
+
 4. Upload Assets
    - `FocusGameDeck-v1.0.2-alpha.1-Setup.exe`
    - `FocusGameDeck-v1.0.2-alpha.1-Portable.zip`

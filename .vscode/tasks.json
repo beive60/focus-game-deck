@@ -35,7 +35,7 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\\Master-Build.ps1",
+                ".\\Release-Manager.ps1",
                 "-Development",
                 "-Verbose"
             ],
@@ -65,7 +65,7 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\\Master-Build.ps1",
+                ".\\Release-Manager.ps1",
                 "-Production",
                 "-Verbose"
             ],
@@ -92,7 +92,7 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\\Master-Build.ps1",
+                ".\\Release-Manager.ps1",
                 "-Clean"
             ],
             "group": "build",
