@@ -1,6 +1,104 @@
 # Focus Game Deck - Master Build Script
 # This script orchestrates the complete build and signing process for all components
 
+<#
+.SYNOPSIS
+    Focus Game Deck master build script for complete release management
+
+.DESCRIPTION
+    This script orchestrates the complete build and signing process for all Focus Game Deck components.
+    It handles environment setup, dependency installation, executable building, code signing,
+    and release package creation. Supports both development and production build workflows.
+
+.PARAMETER Development
+    Executes the development build workflow (no code signing).
+    This workflow includes:
+    - Environment setup and dependency installation
+    - Building all executable files
+    - Creating unsigned release package
+    Use this for development, testing, and debugging purposes.
+
+.PARAMETER Production
+    Executes the production build workflow (with code signing).
+    This workflow includes:
+    - Environment setup and dependency installation
+    - Building all executable files
+    - Code signing with Extended Validation certificate
+    - Recording signature hashes for log authentication
+    - Creating signed release package
+    Use this for official releases and distribution.
+
+.PARAMETER Clean
+    Removes all build artifacts and cache files.
+    Deletes the following directories and files:
+    - build-tools/build/
+    - build-tools/dist/
+    - release/
+    - gui/*.exe
+    Use this to clean up the workspace before a fresh build.
+
+.PARAMETER SetupOnly
+    Only sets up the build environment without building.
+    This includes:
+    - Installing required PowerShell modules (ps2exe)
+    - Validating build environment
+    Use this to prepare the environment before manual builds.
+
+.PARAMETER Verbose
+    Enables verbose logging throughout the build process.
+    Provides detailed information about each step, including:
+    - Detailed progress messages
+    - Command execution details
+    - File operations
+    - Error diagnostics
+
+.EXAMPLE
+    .\Release-Manager.ps1 -Development
+    Builds all components for development without code signing.
+
+.EXAMPLE
+    .\Release-Manager.ps1 -Production
+    Builds all components for production with code signing and creates release package.
+
+.EXAMPLE
+    .\Release-Manager.ps1 -Clean
+    Removes all build artifacts and cleans the workspace.
+
+.EXAMPLE
+    .\Release-Manager.ps1 -SetupOnly
+    Only installs dependencies and sets up the build environment.
+
+.EXAMPLE
+    .\Release-Manager.ps1 -Development -Verbose
+    Builds for development with detailed verbose logging.
+
+.NOTES
+    Version: 1.0.0
+    Author: Focus Game Deck Development Team
+
+    Requirements:
+    - Windows PowerShell 5.1 or later
+    - Internet connection for module installation
+    - For production builds: Extended Validation certificate
+
+    Build Artifacts:
+    - Focus-Game-Deck.exe: Main application executable
+    - Focus-Game-Deck-Config-Editor.exe: GUI configuration editor
+    - Focus-Game-Deck-MultiPlatform.exe: Multi-platform version
+
+    Output Locations:
+    - build-tools/build/: Intermediate build files
+    - build-tools/dist/: Distribution files
+    - release/: Final release package
+
+    Workflow Overview:
+    1. Environment setup (install ps2exe module)
+    2. Build all executable files from PowerShell scripts
+    3. Apply code signing (production builds only)
+    4. Record signature hashes for authentication
+    5. Create release package with documentation
+#>
+
 param(
     [switch]$Development,  # Build for development (no signing)
     [switch]$Production,   # Build for production (with signing)
