@@ -439,15 +439,15 @@ try {
     # Show usage if no workflow specified
     else {
         Write-Host "`nUsage:" -ForegroundColor Yellow
-        Write-Host "  ./Master-Build.ps1 -Development   # Build for development (no signing)"
-        Write-Host "  ./Master-Build.ps1 -Production    # Build for production (with signing)"
-        Write-Host "  ./Master-Build.ps1 -SetupOnly     # Only setup build environment"
-        Write-Host "  ./Master-Build.ps1 -Clean         # Clean all build artifacts"
-        Write-Host "  ./Master-Build.ps1 -Verbose       # Enable verbose logging"
+        Write-Host "  ./Release-Manager.ps1 -Development   # Build for development (no signing)"
+        Write-Host "  ./Release-Manager.ps1 -Production    # Build for production (with signing)"
+        Write-Host "  ./Release-Manager.ps1 -SetupOnly     # Only setup build environment"
+        Write-Host "  ./Release-Manager.ps1 -Clean         # Clean all build artifacts"
+        Write-Host "  ./Release-Manager.ps1 -Verbose       # Enable verbose logging"
         Write-Host ""
         Write-Host "Examples:" -ForegroundColor Cyan
-        Write-Host "  ./Master-Build.ps1 -Development -Verbose"
-        Write-Host "  ./Master-Build.ps1 -Production"
+        Write-Host "  ./Release-Manager.ps1 -Development -Verbose"
+        Write-Host "  ./Release-Manager.ps1 -Production"
         Write-Host ""
         Write-Host "This script will:" -ForegroundColor White
         Write-Host "  1. Install required modules (ps2exe)"
