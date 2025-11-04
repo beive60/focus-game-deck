@@ -82,9 +82,7 @@
     - For production builds: Extended Validation certificate
 
     Build Artifacts:
-    - Focus-Game-Deck.exe: Main application executable
-    - Focus-Game-Deck-Config-Editor.exe: GUI configuration editor
-    - Focus-Game-Deck-MultiPlatform.exe: Multi-platform version
+    - Focus-Game-Deck.exe: Unified application executable (includes GUI configuration editor and multi-platform support)
 
     Output Locations:
     - build-tools/build/: Intermediate build files
@@ -272,9 +270,7 @@ function Record-SignatureHashes {
         # Define paths for signed executables
         $releaseDir = Join-Path $PSScriptRoot "release"
         $executables = @{
-            "Focus-Game-Deck.exe"               = "Main application executable"
-            "Focus-Game-Deck-MultiPlatform.exe" = "Multi-platform version with extended game support"
-            "Focus-Game-Deck-Config-Editor.exe" = "GUI configuration editor"
+            "Focus-Game-Deck.exe" = "Unified application executable with integrated GUI configuration editor and multi-platform support"
         }
 
         # Load existing signature hash registry
@@ -312,9 +308,9 @@ function Record-SignatureHashes {
                         # Update registry entry
                         $executableInfo = @{
                             signatureHash = $signatureHash
-                            fileSize      = $fileInfo.Length
-                            buildDate     = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
-                            description   = $executables[$exeName]
+                            fileSize = $fileInfo.Length
+                            buildDate = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                            description = $executables[$exeName]
                         }
 
                         $registry.releases.$currentVersion.executables | Add-Member -MemberType NoteProperty -Name $exeName -Value $executableInfo -Force
@@ -387,15 +383,14 @@ function New-ReleasePackage {
 
 ## Files Included
 
-- **Focus-Game-Deck.exe**: Main application (Multi-platform support included)
-- **Focus-Game-Deck-Config-Editor.exe**: GUI configuration editor
+- **Focus-Game-Deck.exe**: Unified application executable (includes GUI configuration editor and multi-platform support)
 - **config/**: Configuration files and templates
 - **launcher.bat**: Quick launcher script
 
 ## Installation
 
 1. Extract all files to a directory of your choice
-2. Run Focus-Game-Deck-Config-Editor.exe to configure your settings
+2. Run Focus-Game-Deck.exe (without arguments) to open the configuration editor
 3. Use Focus-Game-Deck.exe [GameId] to launch games with optimized settings
 
 ## Documentation
@@ -412,16 +407,16 @@ This software is released under the MIT License.
 
         # Create version info
         $versionInfo = @{
-            Version   = $script:Version
+            Version = $script:Version
             BuildDate = $script:BuildDate
-            IsSigned  = $IsSigned
-            Files     = @()
+            IsSigned = $IsSigned
+            Files = @()
         }
 
         Get-ChildItem $releaseDir -Recurse -File | ForEach-Object {
             $versionInfo.Files += @{
-                Path         = $_.FullName.Replace($releaseDir, "").TrimStart('\')
-                Size         = $_.Length
+                Path = $_.FullName.Replace($releaseDir, "").TrimStart('\')
+                Size = $_.Length
                 LastModified = $_.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
             }
         }

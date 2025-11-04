@@ -540,9 +540,9 @@ class ConfigEditorUI {
 
                 # Create game item data object
                 $gameItem = New-Object PSObject -Property @{
-                    GameId      = $gameId
+                    GameId = $gameId
                     DisplayName = $gameData.name
-                    Platform    = $platform.ToUpper()
+                    Platform = $platform.ToUpper()
                     ProcessName = $gameData.processName
                 }
 
@@ -873,8 +873,8 @@ class ConfigEditorUI {
                     # Add language options as ComboBoxItems
                     $languages = @(
                         @{ Code = "en"; Name = "English" }
-                        @{ Code = "ja"; Name = "日本語" }
-                        @{ Code = "zh-CN"; Name = "简体中文" }
+                        @{ Code = "ja"; Name = "Japanese" }
+                        @{ Code = "zh-CN"; Name = "Chinese (Simplified)" }
                     )
 
                     $selectedIndex = 0

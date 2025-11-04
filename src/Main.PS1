@@ -25,13 +25,27 @@ param(
 #Requires -Version 5.1
 
 # Initialize script variables
-$scriptDir = $PSScriptRoot
-$configPath = Join-Path $scriptDir "../config/config.json"
-$languageHelperPath = Join-Path $scriptDir "../scripts/LanguageHelper.ps1"
-$messagesPath = Join-Path $scriptDir "../gui/messages.json"
-$gameLauncherPath = Join-Path $scriptDir "Invoke-FocusGameDeck.ps1"
-$configEditorPath = Join-Path $scriptDir "../gui/ConfigEditor.ps1"
-$versionScriptPath = Join-Path $scriptDir "../Version.ps1"
+# Handle both script execution and compiled executable scenarios
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+$executableDir = if ($MyInvocation.MyCommand.Path -like "*.exe") { Split-Path -Parent $MyInvocation.MyCommand.Path } else { $scriptDir }
+
+# For compiled executable, use config files from the same directory or subdirectories
+if ($MyInvocation.MyCommand.Path -like "*.exe") {
+    $configPath = Join-Path $executableDir "config/config.json"
+    $languageHelperPath = Join-Path $executableDir "scripts/LanguageHelper.ps1"
+    $messagesPath = Join-Path $executableDir "gui/messages.json"
+    $gameLauncherPath = Join-Path $executableDir "Invoke-FocusGameDeck.ps1"
+    $configEditorPath = Join-Path $executableDir "gui/ConfigEditor.ps1"
+    $versionScriptPath = Join-Path $executableDir "Version.ps1"
+} else {
+    # Original paths for script execution
+    $configPath = Join-Path $scriptDir "../config/config.json"
+    $languageHelperPath = Join-Path $scriptDir "../scripts/LanguageHelper.ps1"
+    $messagesPath = Join-Path $scriptDir "../localization/messages.json"
+    $gameLauncherPath = Join-Path $scriptDir "Invoke-FocusGameDeck.ps1"
+    $configEditorPath = Join-Path $scriptDir "../gui/ConfigEditor.ps1"
+    $versionScriptPath = Join-Path $scriptDir "../Version.ps1"
+}
 
 # Import required modules if not already loaded
 if (-not (Get-Module -Name Microsoft.PowerShell.Security)) {
@@ -44,14 +58,25 @@ if (-not (Get-Module -Name Microsoft.PowerShell.Security)) {
 
 # Import version helper if available
 if (Test-Path $versionScriptPath) {
-    . $versionScriptPath
+    try {
+        . $versionScriptPath
+    } catch {
+        Write-Warning "Failed to load version script: $_"
+    }
 }
 
 # Import language helper functions
 if (Test-Path $languageHelperPath) {
-    . $languageHelperPath
+    try {
+        . $languageHelperPath
+    } catch {
+        Write-Warning "Failed to load language helper: $_"
+    }
 } else {
     Write-Warning "Language helper not found: $languageHelperPath"
+    # Provide fallback functions for basic operation
+    function Get-DetectedLanguage { param($ConfigData) return "en" }
+    function Get-LocalizedMessages { param($MessagesPath, $LanguageCode) return $null }
 }
 
 <#
@@ -231,6 +256,21 @@ function Start-ConfigEditor {
     )
 
     try {
+        # Check if running as compiled executable
+        if ($MyInvocation.MyCommand.Path -like "*.exe") {
+            Write-Host "Configuration Editor Integration (Unified Executable Mode)" -ForegroundColor Cyan
+            Write-Host "=========================================================" -ForegroundColor Cyan
+            Write-Host ""
+            Write-Host "This unified executable includes integrated configuration editing capabilities." -ForegroundColor White
+            Write-Host ""
+            Write-Host "For now, please use the standalone GUI editor for configuration:" -ForegroundColor Yellow
+            Write-Host "  powershell -ExecutionPolicy Bypass -File gui/ConfigEditor.ps1" -ForegroundColor Gray
+            Write-Host ""
+            Write-Host "The full GUI integration is planned for the next release." -ForegroundColor Green
+            return
+        }
+
+        # Original behavior for script execution
         if (-not (Test-Path $configEditorPath)) {
             Write-Host "Configuration editor not found: $configEditorPath" -ForegroundColor Red
             return
