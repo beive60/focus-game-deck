@@ -1,5 +1,78 @@
-# Focus Game Deck - Code Signing Script
-# This script handles digital signing of executables with Extended Validation certificates
+<#
+.SYNOPSIS
+    Focus Game Deck code signing script for executable files
+
+.DESCRIPTION
+    This script handles digital signing of executables with Extended Validation certificates.
+    It provides functionality to list certificates, test certificate configuration,
+    and sign individual files or all executables in the build directory.
+
+.PARAMETER SigningConfigPath
+    Path to the signing configuration JSON file.
+    Default: build-tools/signing-config/signing-config.json
+    This file contains certificate thumbprint, timestamp server, and other signing settings.
+
+.PARAMETER BuildPath
+    Path to the build directory containing executables to sign.
+    Default: build-tools/build
+    All .exe files in this directory and subdirectories will be processed when using -SignAll.
+
+.PARAMETER TestCertificate
+    Tests the configured certificate for signing capability.
+    Validates certificate existence, private key access, expiration status,
+    and timestamp server connectivity.
+
+.PARAMETER ListCertificates
+    Lists all available code signing certificates in the current user certificate store.
+    Displays certificate details including subject, issuer, thumbprint, validity period,
+    and current status (valid/expired/not yet valid).
+
+.PARAMETER SignAll
+    Signs all executable files (.exe) found in the build directory.
+    Requires signing to be enabled in configuration and a valid certificate.
+    Creates signature information file and optionally creates distribution package.
+
+.PARAMETER SignFile
+    Signs a specific file specified by its path.
+    Use this parameter to sign individual files instead of all files in the build directory.
+
+.EXAMPLE
+    .\Sign-Executables.ps1 -ListCertificates
+    Lists all available code signing certificates in the certificate store.
+
+.EXAMPLE
+    .\Sign-Executables.ps1 -TestCertificate
+    Tests the certificate configuration and connectivity.
+
+.EXAMPLE
+    .\Sign-Executables.ps1 -SignAll
+    Signs all executable files in the build directory.
+
+.EXAMPLE
+    .\Sign-Executables.ps1 -SignFile "C:\path\to\file.exe"
+    Signs a specific executable file.
+
+.EXAMPLE
+    .\Sign-Executables.ps1 -SigningConfigPath "custom-config.json" -SignAll
+    Signs all files using a custom configuration file.
+
+.NOTES
+    Version: 1.0.0
+    Author: Focus Game Deck Development Team
+
+    Requirements:
+    - Windows PowerShell 5.1 or later
+    - Extended Validation certificate installed in Windows Certificate Store
+    - Properly configured signing-config.json file
+
+    Setup Process:
+    1. Install Extended Validation certificate in Windows Certificate Store
+    2. Run with -ListCertificates to find certificate thumbprint
+    3. Configure signing-config.json with certificate thumbprint
+    4. Set 'enabled: true' in signing-config.json
+    5. Test with -TestCertificate
+    6. Sign files with -SignAll or -SignFile
+#>
 
 param(
     # signing config lives in build-tools/signing-config/

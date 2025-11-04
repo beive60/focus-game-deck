@@ -1,5 +1,49 @@
-# Focus Game Deck - Main Application Build Script
-# This script creates an executable version of the main Focus Game Deck application
+<#
+.SYNOPSIS
+    Focus Game Deck application build script
+
+.DESCRIPTION
+    This script creates an executable version of the main Focus Game Deck application.
+    It uses the ps2exe module to convert PowerShell scripts into EXE files and
+    applies digital signatures when required.
+
+.PARAMETER Install
+    Installs the ps2exe module.
+    Use this on first run or when the ps2exe module is not found.
+
+.PARAMETER Build
+    Builds the main application executable.
+    Creates Focus-Game-Deck.exe from src/Main.PS1.
+
+.PARAMETER Clean
+    Removes build artifacts and cache files.
+    Completely deletes build and dist directories to clean up the environment.
+
+.PARAMETER Sign
+    Applies digital signature to the created executable files.
+    Signing configuration must be set up in build-tools/signing-config/signing-config.json.
+
+.PARAMETER All
+    Executes all operations (Install, Clean, Build, Sign) sequentially.
+    Use this when you want to run the complete build process at once.
+
+.EXAMPLE
+    .\Build-FocusGameDeck.ps1 -Install
+    Installs the ps2exe module.
+
+.EXAMPLE
+    .\Build-FocusGameDeck.ps1 -Build
+    Builds the main application.
+
+.EXAMPLE
+    .\Build-FocusGameDeck.ps1 -All
+    Executes all operations (install, cleanup, build, sign).
+
+.NOTES
+    Version: 1.0.0
+    Author: Focus Game Deck Development Team
+    This script requires Windows PowerShell 5.1 or later.
+#>
 
 param(
     [switch]$Install,
