@@ -76,8 +76,9 @@ function Clear-BuildArtifacts {
     Write-BuildLog "Cleaning build artifacts..." "INFO" "Yellow"
 
     $pathsToClean = @(
-        (Join-Path $PSScriptRoot "build"),
-        (Join-Path $PSScriptRoot "signed"),
+        (Join-Path $PSScriptRoot "build-tools/build"),
+        (Join-Path $PSScriptRoot "build-tools/dist"),
+        (Join-Path $PSScriptRoot "release"),
         (Join-Path $PSScriptRoot "gui/*.exe")
     )
 
@@ -261,7 +262,7 @@ function New-ReleasePackage {
     Write-BuildLog "Creating release package..." "INFO" "Yellow"
 
     $releaseDir = Join-Path $PSScriptRoot "release"
-    $sourceDir = if ($IsSigned) { Join-Path $PSScriptRoot "signed" } else { Join-Path $PSScriptRoot "build" }
+    $sourceDir = Join-Path $PSScriptRoot "build-tools/dist"
 
     if (-not (Test-Path $sourceDir)) {
         Write-BuildLog "Source directory not found: $sourceDir" "ERROR" "Red"
@@ -362,9 +363,9 @@ function Show-BuildSummary {
 
     if ($Success) {
         Write-Host "`nBuilt executables:" -ForegroundColor Yellow
-        $buildDir = Join-Path $PSScriptRoot "build"
-        if (Test-Path $buildDir) {
-            Get-ChildItem $buildDir -Filter "*.exe" | ForEach-Object {
+        $distDir = Join-Path $PSScriptRoot "build-tools/dist"
+        if (Test-Path $distDir) {
+            Get-ChildItem $distDir -Filter "*.exe" | ForEach-Object {
                 Write-Host "  $($_.Name) ($([math]::Round($_.Length / 1KB, 1)) KB)" -ForegroundColor White
             }
         }
