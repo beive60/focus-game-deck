@@ -221,21 +221,6 @@ if ($Build) {
             }
         }
 
-        # Create launcher scripts in build directory
-        $launcherContent = @"
-@echo off
-echo Focus Game Deck Launcher
-echo.
-echo Usage: Focus-Game-Deck.exe [GameId]
-echo.
-echo Available GameIds can be found in config/config.json
-echo.
-pause
-"@
-
-        $launcherPath = Join-Path $buildDir "launcher.bat"
-        Set-Content -Path $launcherPath -Value $launcherContent -Encoding ASCII
-
         Write-Host "Build completed successfully!" -ForegroundColor Green
         Write-Host "Built files are located in: $buildDir" -ForegroundColor Cyan
 
@@ -290,11 +275,6 @@ pause
                 New-Item -ItemType Directory -Path $distConfigDir -Force | Out-Null
             }
             Copy-Item "$configDir/*" $distConfigDir -Recurse -Force
-        }
-
-        # Copy launcher script
-        if (Test-Path $launcherPath) {
-            Copy-Item $launcherPath $distDir -Force
         }
 
         # Clean up intermediate build directory
