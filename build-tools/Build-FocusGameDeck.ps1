@@ -130,16 +130,16 @@ if ($Build) {
             Write-Host "Building main application..." -ForegroundColor Cyan
 
             $ps2exeParams = @{
-                inputFile    = $mainScriptPath
-                outputFile   = $mainOutputPath
-                title        = "Focus Game Deck"
-                description  = "Gaming environment optimization tool (Multi-Platform)"
-                company      = "Focus Game Deck Project"
-                version      = "1.0.0.0"
-                copyright    = "MIT License"
+                inputFile = $mainScriptPath
+                outputFile = $mainOutputPath
+                title = "Focus Game Deck"
+                description = "Gaming environment optimization tool (Multi-Platform)"
+                company = "Focus Game Deck Project"
+                version = "1.0.0.0"
+                copyright = "MIT License"
                 requireAdmin = $false
-                STA          = $false
-                noConsole    = $false
+                STA = $false
+                noConsole = $false
             }
 
             # Add icon if it exists
@@ -163,48 +163,9 @@ if ($Build) {
 
         # Main executable now includes multi-platform support
 
-        # Build Config Editor if not already built
-        $configEditorPath = Join-Path (Split-Path $PSScriptRoot -Parent) "gui/Focus-Game-Deck-Config-Editor.exe"
-        $configEditorOutput = Join-Path $buildDir "Focus-Game-Deck-Config-Editor.exe"
-
-        if (-not (Test-Path $configEditorPath)) {
-            Write-Host "Building Config Editor..." -ForegroundColor Cyan
-
-            $configEditorScript = Join-Path (Split-Path $PSScriptRoot -Parent) "gui/ConfigEditor.ps1"
-
-            if (Test-Path $configEditorScript) {
-                $ps2exeParams = @{
-                    inputFile    = $configEditorScript
-                    outputFile   = $configEditorOutput
-                    title        = "Focus Game Deck - Configuration Editor"
-                    description  = "GUI configuration editor for Focus Game Deck"
-                    company      = "Focus Game Deck Project"
-                    version      = "1.0.0.0"
-                    copyright    = "MIT License"
-                    requireAdmin = $false
-                    STA          = $true
-                    noConsole    = $true
-                }
-
-                # Add icon if it exists
-                $iconFile = Join-Path (Split-Path $PSScriptRoot -Parent) "assets/icon.ico"
-                if (Test-Path $iconFile) {
-                    $ps2exeParams.Add("iconFile", $iconFile)
-                }
-
-                ps2exe @ps2exeParams
-
-                if (Test-Path $configEditorOutput) {
-                    Write-Host "Config Editor executable created: $configEditorOutput" -ForegroundColor Green
-                } else {
-                    Write-Host "Failed to create Config Editor executable." -ForegroundColor Red
-                }
-            }
-        } else {
-            # Copy existing Config Editor to build directory
-            Copy-Item $configEditorPath $configEditorOutput -Force
-            Write-Host "Config Editor copied to build directory: $configEditorOutput" -ForegroundColor Green
-        }
+        # Note: Config Editor functionality is now integrated into the main executable
+        # Users can access it by running Focus-Game-Deck.exe without arguments or with --config
+        Write-Host "Config Editor functionality integrated into main executable." -ForegroundColor Green
 
         # Copy necessary files to build directory
         Write-Host "Copying configuration files..." -ForegroundColor Cyan
@@ -282,7 +243,8 @@ if ($Build) {
         Remove-Item $buildDir -Recurse -Force
         Write-Host "Build directory cleaned up." -ForegroundColor Green
 
-        Write-Host "Distribution package completed! Files are located in: $distDir" -ForegroundColor Green    } catch {
+        Write-Host "Distribution package completed! Files are located in: $distDir" -ForegroundColor Green    
+    } catch {
         Write-Host "Failed to build executables: $($_.Exception.Message)" -ForegroundColor Red
         exit 1
     }
@@ -368,8 +330,7 @@ if (-not $Install -and -not $Build -and -not $Clean -and -not $Sign -and -not $A
     Write-Host "  Production:  ./Build-FocusGameDeck.ps1 -All"
     Write-Host ""
     Write-Host "This script will create executable versions of:"
-    Write-Host "  - Focus-Game-Deck.exe (main application)"
-    Write-Host "  - Focus-Game-Deck-Config-Editor.exe (GUI configuration editor)"
+    Write-Host "  - Focus-Game-Deck.exe (unified application with integrated GUI configuration editor)"
     Write-Host ""
     Write-Host "Final distribution files will be placed in the 'dist' directory."
     Write-Host "Digital signature status can be verified via Windows Properties."

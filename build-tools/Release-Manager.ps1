@@ -24,7 +24,7 @@
     - Environment setup and dependency installation
     - Building all executable files
     - Code signing with Extended Validation certificate
-    - Recording signature hashes for log authentication
+    - Registering signature hashes for log authentication
     - Creating signed release package
     Use this for official releases and distribution.
 
@@ -82,9 +82,7 @@
     - For production builds: Extended Validation certificate
 
     Build Artifacts:
-    - Focus-Game-Deck.exe: Main application executable
-    - Focus-Game-Deck-Config-Editor.exe: GUI configuration editor
-    - Focus-Game-Deck-MultiPlatform.exe: Multi-platform version
+    - Focus-Game-Deck.exe: Unified application executable (includes GUI configuration editor and multi-platform support)
 
     Output Locations:
     - build-tools/build/: Intermediate build files
@@ -95,7 +93,7 @@
     1. Environment setup (install ps2exe module)
     2. Build all executable files from PowerShell scripts
     3. Apply code signing (production builds only)
-    4. Record signature hashes for authentication
+    4. Register signature hashes for authentication
     5. Create release package with documentation
 #>
 
@@ -173,11 +171,14 @@ function Invoke-BuildScript {
 function Clear-BuildArtifacts {
     Write-BuildLog "Cleaning build artifacts..." "INFO" "Yellow"
 
+    # Get project root directory (parent of build-tools)
+    $projectRoot = Split-Path $PSScriptRoot -Parent
+
     $pathsToClean = @(
-        (Join-Path $PSScriptRoot "build-tools/build"),
-        (Join-Path $PSScriptRoot "build-tools/dist"),
-        (Join-Path $PSScriptRoot "release"),
-        (Join-Path $PSScriptRoot "gui/*.exe")
+        (Join-Path $PSScriptRoot "build"),
+        (Join-Path $PSScriptRoot "dist"),
+        (Join-Path $projectRoot "release"),
+        (Join-Path $projectRoot "gui/*.exe")
     )
 
     foreach ($path in $pathsToClean) {
@@ -202,7 +203,7 @@ function Initialize-BuildEnvironment {
     Write-BuildLog "Setting up build environment..." "INFO" "Yellow"
 
     # Install ps2exe module
-    $buildScript = Join-Path $PSScriptRoot "build-tools/Build-FocusGameDeck.ps1"
+    $buildScript = Join-Path $PSScriptRoot "Build-FocusGameDeck.ps1"
     return Invoke-BuildScript -ScriptPath $buildScript -Arguments @("-Install") -Description "Installing ps2exe module"
 }
 
@@ -210,7 +211,7 @@ function Initialize-BuildEnvironment {
 function Build-AllExecutables {
     Write-BuildLog "Building all executables..." "INFO" "Yellow"
 
-    $buildScript = Join-Path $PSScriptRoot "build-tools/Build-FocusGameDeck.ps1"
+    $buildScript = Join-Path $PSScriptRoot "Build-FocusGameDeck.ps1"
     return Invoke-BuildScript -ScriptPath $buildScript -Arguments @("-Build") -Description "Building all executables"
 }
 
@@ -218,10 +219,11 @@ function Build-AllExecutables {
 function Add-CodeSignatures {
     Write-BuildLog "Signing all executables..." "INFO" "Yellow"
 
-    $signingScript = Join-Path $PSScriptRoot "build-tools/Sign-Executables.ps1"
+    $signingScript = Join-Path $PSScriptRoot "Sign-Executables.ps1"
+    $projectRoot = Split-Path $PSScriptRoot -Parent
 
     # Check if signing is configured
-    $signingConfigPath = Join-Path $PSScriptRoot "config/signing-config.json"
+    $signingConfigPath = Join-Path $projectRoot "config/signing-config.json"
     if (Test-Path $signingConfigPath) {
         try {
             $signingConfig = Get-Content $signingConfigPath -Raw | ConvertFrom-Json
@@ -238,17 +240,17 @@ function Add-CodeSignatures {
 
     $signingResult = Invoke-BuildScript -ScriptPath $signingScript -Arguments @("-SignAll") -Description "Code signing process"
 
-    # If signing was successful, record signature hashes for log authentication
+    # If signing was successful, register signature hashes for log authentication
     if ($signingResult) {
-        Record-SignatureHashes
+        Register-SignatureHashes
     }
 
     return $signingResult
 }
 
-# Function to record signature hashes in official registry for log authentication
-function Record-SignatureHashes {
-    Write-BuildLog "Recording signature hashes for log authentication..." "INFO" "Yellow"
+# Function to register signature hashes in official registry for log authentication
+function Register-SignatureHashes {
+    Write-BuildLog "Registering signature hashes for log authentication..." "INFO" "Yellow"
 
     try {
         # Load version information
@@ -270,15 +272,14 @@ function Record-SignatureHashes {
         }
 
         # Define paths for signed executables
-        $releaseDir = Join-Path $PSScriptRoot "release"
+        $projectRoot = Split-Path $PSScriptRoot -Parent
+        $releaseDir = Join-Path $projectRoot "release"
         $executables = @{
-            "Focus-Game-Deck.exe"               = "Main application executable"
-            "Focus-Game-Deck-MultiPlatform.exe" = "Multi-platform version with extended game support"
-            "Focus-Game-Deck-Config-Editor.exe" = "GUI configuration editor"
+            "Focus-Game-Deck.exe" = "Unified application executable with integrated GUI configuration editor and multi-platform support"
         }
 
         # Load existing signature hash registry
-        $registryPath = Join-Path $PSScriptRoot "docs/official_signature_hashes.json"
+        $registryPath = Join-Path $projectRoot "docs/official_signature_hashes.json"
         if (-not (Test-Path $registryPath)) {
             Write-BuildLog "Signature hash registry not found: $registryPath" "ERROR" "Red"
             return $false
@@ -295,7 +296,7 @@ function Record-SignatureHashes {
             }
         }
 
-        # Record signature hash for each executable
+        # Register signature hash for each executable
         $allSuccessful = $true
         foreach ($exeName in $executables.Keys) {
             $exePath = Join-Path $releaseDir $exeName
@@ -312,14 +313,14 @@ function Record-SignatureHashes {
                         # Update registry entry
                         $executableInfo = @{
                             signatureHash = $signatureHash
-                            fileSize      = $fileInfo.Length
-                            buildDate     = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
-                            description   = $executables[$exeName]
+                            fileSize = $fileInfo.Length
+                            buildDate = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                            description = $executables[$exeName]
                         }
 
                         $registry.releases.$currentVersion.executables | Add-Member -MemberType NoteProperty -Name $exeName -Value $executableInfo -Force
 
-                        Write-BuildLog "Recorded signature for $exeName : $signatureHash" "SUCCESS" "Green"
+                        Write-BuildLog "Registered signature for $exeName : $signatureHash" "SUCCESS" "Green"
                     } else {
                         Write-BuildLog "Invalid signature for $exeName (Status: $($signature.Status))" "ERROR" "Red"
                         $allSuccessful = $false
@@ -342,13 +343,13 @@ function Record-SignatureHashes {
             $registry | ConvertTo-Json -Depth 10 | Set-Content -Path $registryPath -Encoding UTF8
             Write-BuildLog "Signature hash registry updated successfully for version $currentVersion" "SUCCESS" "Green"
         } else {
-            Write-BuildLog "Some signature recordings failed, registry not updated" "ERROR" "Red"
+            Write-BuildLog "Some signature registrations failed, registry not updated" "ERROR" "Red"
         }
 
         return $allSuccessful
 
     } catch {
-        Write-BuildLog "Failed to record signature hashes: $($_.Exception.Message)" "ERROR" "Red"
+        Write-BuildLog "Failed to register signature hashes: $($_.Exception.Message)" "ERROR" "Red"
         return $false
     }
 }
@@ -359,8 +360,9 @@ function New-ReleasePackage {
 
     Write-BuildLog "Creating release package..." "INFO" "Yellow"
 
-    $releaseDir = Join-Path $PSScriptRoot "release"
-    $sourceDir = Join-Path $PSScriptRoot "build-tools/dist"
+    $projectRoot = Split-Path $PSScriptRoot -Parent
+    $releaseDir = Join-Path $projectRoot "release"
+    $sourceDir = Join-Path $PSScriptRoot "dist"
 
     if (-not (Test-Path $sourceDir)) {
         Write-BuildLog "Source directory not found: $sourceDir" "ERROR" "Red"
@@ -387,15 +389,14 @@ function New-ReleasePackage {
 
 ## Files Included
 
-- **Focus-Game-Deck.exe**: Main application (Multi-platform support included)
-- **Focus-Game-Deck-Config-Editor.exe**: GUI configuration editor
+- **Focus-Game-Deck.exe**: Unified application executable (includes GUI configuration editor and multi-platform support)
 - **config/**: Configuration files and templates
 - **launcher.bat**: Quick launcher script
 
 ## Installation
 
 1. Extract all files to a directory of your choice
-2. Run Focus-Game-Deck-Config-Editor.exe to configure your settings
+2. Run Focus-Game-Deck.exe (without arguments) to open the configuration editor
 3. Use Focus-Game-Deck.exe [GameId] to launch games with optimized settings
 
 ## Documentation
@@ -412,16 +413,16 @@ This software is released under the MIT License.
 
         # Create version info
         $versionInfo = @{
-            Version   = $script:Version
+            Version = $script:Version
             BuildDate = $script:BuildDate
-            IsSigned  = $IsSigned
-            Files     = @()
+            IsSigned = $IsSigned
+            Files = @()
         }
 
         Get-ChildItem $releaseDir -Recurse -File | ForEach-Object {
             $versionInfo.Files += @{
-                Path         = $_.FullName.Replace($releaseDir, "").TrimStart('\')
-                Size         = $_.Length
+                Path = $_.FullName.Replace($releaseDir, "").TrimStart('\')
+                Size = $_.Length
                 LastModified = $_.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
             }
         }
@@ -456,19 +457,20 @@ function Show-BuildSummary {
     }
 
     Write-Host "Version: $script:Version" -ForegroundColor White
-    Write-Host "Build Time: $($duration.ToString('mm/:ss'))" -ForegroundColor White
+    Write-Host "Build Time: $($duration.ToString('mm\:ss'))" -ForegroundColor White
     Write-Host "Signed: $(if ($IsSigned) { 'Yes' } else { 'No' })" -ForegroundColor White
 
     if ($Success) {
         Write-Host "`nBuilt executables:" -ForegroundColor Yellow
-        $distDir = Join-Path $PSScriptRoot "build-tools/dist"
+        $distDir = Join-Path $PSScriptRoot "dist"
         if (Test-Path $distDir) {
             Get-ChildItem $distDir -Filter "*.exe" | ForEach-Object {
                 Write-Host "  $($_.Name) ($([math]::Round($_.Length / 1KB, 1)) KB)" -ForegroundColor White
             }
         }
 
-        $releaseDir = Join-Path $PSScriptRoot "release"
+        $projectRoot = Split-Path $PSScriptRoot -Parent
+        $releaseDir = Join-Path $projectRoot "release"
         if (Test-Path $releaseDir) {
             Write-Host "`nRelease package created: $releaseDir" -ForegroundColor Green
         }
