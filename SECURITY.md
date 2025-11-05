@@ -149,7 +149,6 @@ The Log Notarization System is particularly valuable in scenarios such as:
 - **Competitive gaming verification**: Showing unmodified session data
 - **Legal proceedings**: Providing cryptographically verifiable evidence
 
-
 ## Enhanced Chain-of-Trust Authentication (v1.0.1+)
 
 Starting from version 1.0.1, Focus Game Deck implements an **Enhanced Chain-of-Trust Authentication System** that not only proves log integrity but also verifies the **authenticity of the application** that generated the logs.
@@ -199,7 +198,6 @@ Each notarized record now contains:
 }
 ```
 
-
 ### Official Signature Registry
 
 All official releases are signed with a code signing certificate (EV or OV) and maintain a registry of authentic signature hashes in [`docs/official_signature_hashes.json`](docs/official_signature_hashes.json):
@@ -227,7 +225,6 @@ All official releases are signed with a code signing certificate (EV or OV) and 
 }
 ```
 
-
 ### Verification Process (Enhanced)
 
 To verify a log file with chain-of-trust authentication:
@@ -235,18 +232,23 @@ To verify a log file with chain-of-trust authentication:
 1. **Obtain Certificate ID** from user
 2. **Query Firebase record** using Certificate ID
 3. **Extract authentication data**:
-  - `logHash`: Used for log integrity verification
-  - `appSignatureHash`: Used for application authenticity verification
-  - `appVersion`: Used to locate official registry entry
+
+- `logHash`: Used for log integrity verification
+- `appSignatureHash`: Used for application authenticity verification
+- `appVersion`: Used to locate official registry entry
+
 4. **Verify log integrity**: Calculate SHA256 of log file, compare with `logHash`
 5. **Verify application authenticity**:
-  - Look up `appVersion` in `docs/official_signature_hashes.json`
-  - Find the matching executable entry
-  - Compare `appSignatureHash` with registry entry (EV or OV certificate)
+
+- Look up `appVersion` in `docs/official_signature_hashes.json`
+- Find the matching executable entry
+- Compare `appSignatureHash` with registry entry (EV or OV certificate)
+
 6. **Assessment**:
-  - **Fully Authentic**: Both hashes match official registry
-  - **Content Valid, Source Unknown**: Log hash valid but app signature not in registry
-  - **Invalid**: Log hash doesn't match file content
+
+- **Fully Authentic**: Both hashes match official registry
+- **Content Valid, Source Unknown**: Log hash valid but app signature not in registry
+- **Invalid**: Log hash doesn't match file content
 
 ### Development vs Production Signatures
 
@@ -261,7 +263,7 @@ The system handles different build types appropriately:
 
 The official signature registry is automatically maintained:
 
-1. **During production builds**: `Master-Build.ps1` with `-Production` flag
+1. **During production builds**: `Release-Manager.ps1` with `-Production` flag
 2. **After code signing**: `Sign-Executables.ps1` completes successfully
 3. **Automatic recording**: Signature hashes are extracted and recorded
 4. **Git tracking**: Registry changes are committed to version control

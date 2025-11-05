@@ -48,6 +48,9 @@ For the complete project manifesto, see [Project Philosophy](docs/project-info/p
 
    ```powershell
    # Install ps2exe for building executables
+   ./build-tools/Release-Manager.ps1 -SetupOnly
+
+   # Or install directly
    ./build-tools/Build-FocusGameDeck.ps1 -Install
    ```
 
@@ -101,7 +104,7 @@ For the complete project manifesto, see [Project Philosophy](docs/project-info/p
 
    ```powershell
    # Development build
-   ./Master-Build.ps1 -Development -Verbose
+   ./build-tools/Release-Manager.ps1 -Development -Verbose
    ```
 
 5. **Submit Pull Request**

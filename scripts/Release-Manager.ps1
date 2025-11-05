@@ -9,33 +9,33 @@
 # Date: 2025-09-24
 
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [ValidateSet("major", "minor", "patch", "prerelease")]
     [string]$UpdateType,
 
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet("alpha", "beta", "rc")]
     [string]$PreReleaseType = "alpha",
 
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$DryRun,
 
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$CreateTag,
 
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$GenerateReleaseNotes,
 
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet("ja", "en", "both")]
     [string]$Language = "ja",
 
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$ReleaseMessage = ""
 )
 
 # Import version module
-$VersionModulePath = Join-Path $PSScriptRoot "Version.ps1"
+$VersionModulePath = Join-Path (Split-Path $PSScriptRoot -Parent) "build-tools/Version.ps1"
 if (Test-Path $VersionModulePath) {
     . $VersionModulePath
 } else {
@@ -67,8 +67,7 @@ function Get-CurrentGitBranch {
     try {
         $branch = git rev-parse --abbrev-ref HEAD 2>$null
         return $branch
-    }
-    catch {
+    } catch {
         return $null
     }
 }
@@ -77,8 +76,7 @@ function Get-GitStatus {
     try {
         $status = git status --porcelain 2>$null
         return $status
-    }
-    catch {
+    } catch {
         return $null
     }
 }
@@ -112,8 +110,7 @@ function Test-GitRepository {
         Write-StatusMessage "Current branch: $branch" "INFO"
 
         return $true
-    }
-    finally {
+    } finally {
         Set-Location $currentDir
     }
 }
@@ -234,8 +231,7 @@ function New-GitTag {
                 Write-StatusMessage "Failed to push tag to remote" "ERROR"
             }
         }
-    }
-    finally {
+    } finally {
         Set-Location $currentDir
     }
 }
@@ -472,8 +468,7 @@ function Invoke-ReleaseProcess {
 # Main execution
 try {
     Invoke-ReleaseProcess
-}
-catch {
+} catch {
     Write-StatusMessage "Error: $($_.Exception.Message)" "ERROR"
     exit 1
 }
