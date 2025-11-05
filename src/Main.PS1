@@ -49,7 +49,7 @@ if ($isExecutable) {
     $messagesPath = Join-Path $workingDir "localization/messages.json"
     $gameLauncherPath = Join-Path $workingDir "src/Invoke-FocusGameDeck.ps1"
     $configEditorPath = Join-Path $workingDir "gui/ConfigEditor.ps1"
-    $versionScriptPath = Join-Path $workingDir "Version.ps1"
+    $versionScriptPath = Join-Path $workingDir "build-tools/Version.ps1"
 } else {
     # For script execution, use paths relative to project root
     $projectRoot = if ($scriptDir -like "*\src") { Split-Path $scriptDir -Parent } else { $workingDir }
@@ -58,7 +58,7 @@ if ($isExecutable) {
     $messagesPath = Join-Path $projectRoot "localization/messages.json"
     $gameLauncherPath = Join-Path $projectRoot "src/Invoke-FocusGameDeck.ps1"
     $configEditorPath = Join-Path $projectRoot "gui/ConfigEditor.ps1"
-    $versionScriptPath = Join-Path $projectRoot "Version.ps1"
+    $versionScriptPath = Join-Path $projectRoot "build-tools/Version.ps1"
 }
 
 # Import required modules if not already loaded
