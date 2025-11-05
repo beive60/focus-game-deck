@@ -21,7 +21,7 @@ The build system consists of three tiers, each with specific responsibilities:
 3. **Master Build Orchestration** - Complete workflow management
 
 ```text
-Release-Manager.ps1 (Tier 3: Orchestration)
+build-tools/Release-Manager.ps1 (Tier 3: Orchestration)
 ├── build-tools/
 │   ├── Build-FocusGameDeck.ps1 (Tier 2: Integration)
 │   │   ├── ps2exe compilation for main applications
@@ -39,29 +39,31 @@ Release-Manager.ps1 (Tier 3: Orchestration)
 
 ## Build Scripts Reference
 
-### Release-Manager.ps1
+### build-tools/Release-Manager.ps1
 
 **Purpose**: Complete release workflow orchestration including build, signing, and distribution packaging for development and production releases.
 
 **Note**: Despite the name suggesting only build functionality, this script orchestrates the entire release pipeline from compilation to distribution-ready packages.
 
+**Location**: Moved to `build-tools/` directory for better organization of build-related scripts.
+
 **Usage**:
 
 ```powershell
 # Development build (no signing)
-./Release-Manager.ps1 -Development
+./build-tools/Release-Manager.ps1 -Development
 
 # Production build (with signing)
-./Release-Manager.ps1 -Production
+./build-tools/Release-Manager.ps1 -Production
 
 # Setup dependencies only
-./Release-Manager.ps1 -SetupOnly
+./build-tools/Release-Manager.ps1 -SetupOnly
 
 # Clean all build artifacts
-./Release-Manager.ps1 -Clean
+./build-tools/Release-Manager.ps1 -Clean
 
 # Enable verbose logging
-./Release-Manager.ps1 -Development -Verbose
+./build-tools/Release-Manager.ps1 -Development -Verbose
 ```
 
 **Features**:
@@ -199,7 +201,7 @@ focus-game-deck/
 
 ```powershell
 # Quick development build
-./Release-Manager.ps1 -Development
+./build-tools/Release-Manager.ps1 -Development
 
 # This will:
 # 1. Install ps2exe if needed
@@ -212,7 +214,7 @@ focus-game-deck/
 
 ```powershell
 # Complete production build
-./Release-Manager.ps1 -Production
+./build-tools/Release-Manager.ps1 -Production
 
 # This will:
 # 1. Install ps2exe if needed
@@ -269,8 +271,8 @@ Install-Module -Name ps2exe -Scope CurrentUser -Force
 
 ```powershell
 # Clean and rebuild:
-./Release-Manager.ps1 -Clean
-./Release-Manager.ps1 -Development
+./build-tools/Release-Manager.ps1 -Clean
+./build-tools/Release-Manager.ps1 -Development
 ```
 
 ### Debug Mode
@@ -278,7 +280,7 @@ Install-Module -Name ps2exe -Scope CurrentUser -Force
 Enable verbose logging for detailed troubleshooting:
 
 ```powershell
-./Release-Manager.ps1 -Development -Verbose
+./build-tools/Release-Manager.ps1 -Development -Verbose
 ```
 
 This provides:
