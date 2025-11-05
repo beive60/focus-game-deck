@@ -163,10 +163,10 @@ code release-notes-1.0.2-alpha.md
 
 ```powershell
 # Development build (unsigned)
-./Release-Manager.ps1 -Development
+./build-tools/Release-Manager.ps1 -Development
 
 # Production build (signed) *Requires certificate setup
-./Release-Manager.ps1 -Production
+./build-tools/Release-Manager.ps1 -Production
 
 # Individual build operations
 ./build-tools/Build-FocusGameDeck.ps1 -Install    # Install ps2exe module
