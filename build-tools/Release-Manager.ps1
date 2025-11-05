@@ -24,7 +24,7 @@
     - Environment setup and dependency installation
     - Building all executable files
     - Code signing with Extended Validation certificate
-    - Recording signature hashes for log authentication
+    - Registering signature hashes for log authentication
     - Creating signed release package
     Use this for official releases and distribution.
 
@@ -93,7 +93,7 @@
     1. Environment setup (install ps2exe module)
     2. Build all executable files from PowerShell scripts
     3. Apply code signing (production builds only)
-    4. Record signature hashes for authentication
+    4. Register signature hashes for authentication
     5. Create release package with documentation
 #>
 
@@ -240,17 +240,17 @@ function Add-CodeSignatures {
 
     $signingResult = Invoke-BuildScript -ScriptPath $signingScript -Arguments @("-SignAll") -Description "Code signing process"
 
-    # If signing was successful, record signature hashes for log authentication
+    # If signing was successful, register signature hashes for log authentication
     if ($signingResult) {
-        Record-SignatureHashes
+        Register-SignatureHashes
     }
 
     return $signingResult
 }
 
-# Function to record signature hashes in official registry for log authentication
-function Record-SignatureHashes {
-    Write-BuildLog "Recording signature hashes for log authentication..." "INFO" "Yellow"
+# Function to register signature hashes in official registry for log authentication
+function Register-SignatureHashes {
+    Write-BuildLog "Registering signature hashes for log authentication..." "INFO" "Yellow"
 
     try {
         # Load version information
@@ -296,7 +296,7 @@ function Record-SignatureHashes {
             }
         }
 
-        # Record signature hash for each executable
+        # Register signature hash for each executable
         $allSuccessful = $true
         foreach ($exeName in $executables.Keys) {
             $exePath = Join-Path $releaseDir $exeName
@@ -320,7 +320,7 @@ function Record-SignatureHashes {
 
                         $registry.releases.$currentVersion.executables | Add-Member -MemberType NoteProperty -Name $exeName -Value $executableInfo -Force
 
-                        Write-BuildLog "Recorded signature for $exeName : $signatureHash" "SUCCESS" "Green"
+                        Write-BuildLog "Registered signature for $exeName : $signatureHash" "SUCCESS" "Green"
                     } else {
                         Write-BuildLog "Invalid signature for $exeName (Status: $($signature.Status))" "ERROR" "Red"
                         $allSuccessful = $false
@@ -343,13 +343,13 @@ function Record-SignatureHashes {
             $registry | ConvertTo-Json -Depth 10 | Set-Content -Path $registryPath -Encoding UTF8
             Write-BuildLog "Signature hash registry updated successfully for version $currentVersion" "SUCCESS" "Green"
         } else {
-            Write-BuildLog "Some signature recordings failed, registry not updated" "ERROR" "Red"
+            Write-BuildLog "Some signature registrations failed, registry not updated" "ERROR" "Red"
         }
 
         return $allSuccessful
 
     } catch {
-        Write-BuildLog "Failed to record signature hashes: $($_.Exception.Message)" "ERROR" "Red"
+        Write-BuildLog "Failed to register signature hashes: $($_.Exception.Message)" "ERROR" "Red"
         return $false
     }
 }
@@ -457,7 +457,7 @@ function Show-BuildSummary {
     }
 
     Write-Host "Version: $script:Version" -ForegroundColor White
-    Write-Host "Build Time: $($duration.ToString('mm/:ss'))" -ForegroundColor White
+    Write-Host "Build Time: $($duration.ToString('mm\:ss'))" -ForegroundColor White
     Write-Host "Signed: $(if ($IsSigned) { 'Yes' } else { 'No' })" -ForegroundColor White
 
     if ($Success) {
