@@ -68,9 +68,9 @@ The Focus Game Deck architecture consists of five main layers, each serving dist
 
 #### 5. Build & Distribution System
 
-- **Primary Location**: `build-tools/`, root-level build scripts
+- **Primary Location**: `build-tools/` directory
 - **Key Components**:
-  - `Release-Manager.ps1` - Build orchestration
+  - `build-tools/Release-Manager.ps1` - Build orchestration
   - `build-tools/Build-FocusGameDeck.ps1` - ps2exe compilation
   - `build-tools/Sign-Executables.ps1` - Digital signature workflow
 - **Responsibility**: Executable generation, code signing, release packaging
@@ -84,7 +84,7 @@ The Focus Game Deck architecture consists of five main layers, each serving dist
 | **Module System** | `src/modules/*.ps1` | Specialized service management | External APIs (OBS, VTube Studio) |
 | **Configuration** | `config/*.json` | Settings and localization | User preferences, defaults |
 | **User Interface** | `gui/ConfigEditor.ps1`, `gui/MainWindow.xaml` | Configuration and game launcher | Core engine, configuration |
-| **Build System** | `Release-Manager.ps1`, `build-tools/*.ps1` | Compilation and distribution | ps2exe, signing certificates |
+| **Build System** | `build-tools/Release-Manager.ps1`, `build-tools/*.ps1` | Compilation and distribution | ps2exe, signing certificates |
 | **Documentation** | `docs/**/*.md` | Architecture and usage guides | Project knowledge base |
 | **Testing** | `test/*.ps1` | Validation and integration testing | All components |
 
