@@ -26,25 +26,39 @@ param(
 
 # Initialize script variables
 # Handle both script execution and compiled executable scenarios
-$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
-$executableDir = if ($MyInvocation.MyCommand.Path -like "*.exe") { Split-Path -Parent $MyInvocation.MyCommand.Path } else { $scriptDir }
 
-# For compiled executable, use config files from the same directory or subdirectories
-if ($MyInvocation.MyCommand.Path -like "*.exe") {
-    $configPath = Join-Path $executableDir "config/config.json"
-    $languageHelperPath = Join-Path $executableDir "scripts/LanguageHelper.ps1"
-    $messagesPath = Join-Path $executableDir "gui/messages.json"
-    $gameLauncherPath = Join-Path $executableDir "Invoke-FocusGameDeck.ps1"
-    $configEditorPath = Join-Path $executableDir "gui/ConfigEditor.ps1"
-    $versionScriptPath = Join-Path $executableDir "Version.ps1"
+# Reliable method to detect execution environment and get paths
+$currentProcess = Get-Process -Id $PID
+$isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
+
+if ($isExecutable) {
+    # Running as compiled executable - use process path
+    $workingDir = Split-Path -Parent $currentProcess.Path
+    $scriptDir = $workingDir
 } else {
-    # Original paths for script execution
-    $configPath = Join-Path $scriptDir "../config/config.json"
-    $languageHelperPath = Join-Path $scriptDir "../scripts/LanguageHelper.ps1"
-    $messagesPath = Join-Path $scriptDir "../localization/messages.json"
-    $gameLauncherPath = Join-Path $scriptDir "Invoke-FocusGameDeck.ps1"
-    $configEditorPath = Join-Path $scriptDir "../gui/ConfigEditor.ps1"
-    $versionScriptPath = Join-Path $scriptDir "../Version.ps1"
+    # Running as PowerShell script - use traditional methods
+    $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
+    $workingDir = (Get-Location).Path
+}
+
+# Set up paths based on execution mode
+if ($isExecutable) {
+    # For compiled executable, use relative paths from executable location
+    $configPath = Join-Path $workingDir "config/config.json"
+    $languageHelperPath = Join-Path $workingDir "scripts/LanguageHelper.ps1"
+    $messagesPath = Join-Path $workingDir "localization/messages.json"
+    $gameLauncherPath = Join-Path $workingDir "src/Invoke-FocusGameDeck.ps1"
+    $configEditorPath = Join-Path $workingDir "gui/ConfigEditor.ps1"
+    $versionScriptPath = Join-Path $workingDir "Version.ps1"
+} else {
+    # For script execution, use paths relative to project root
+    $projectRoot = if ($scriptDir -like "*\src") { Split-Path $scriptDir -Parent } else { $workingDir }
+    $configPath = Join-Path $projectRoot "config/config.json"
+    $languageHelperPath = Join-Path $projectRoot "scripts/LanguageHelper.ps1"
+    $messagesPath = Join-Path $projectRoot "localization/messages.json"
+    $gameLauncherPath = Join-Path $projectRoot "src/Invoke-FocusGameDeck.ps1"
+    $configEditorPath = Join-Path $projectRoot "gui/ConfigEditor.ps1"
+    $versionScriptPath = Join-Path $projectRoot "Version.ps1"
 }
 
 # Import required modules if not already loaded
@@ -57,7 +71,7 @@ if (-not (Get-Module -Name Microsoft.PowerShell.Security)) {
 }
 
 # Import version helper if available
-if (Test-Path $versionScriptPath) {
+if ($versionScriptPath -and (Test-Path $versionScriptPath)) {
     try {
         . $versionScriptPath
     } catch {
@@ -66,14 +80,16 @@ if (Test-Path $versionScriptPath) {
 }
 
 # Import language helper functions
-if (Test-Path $languageHelperPath) {
+if ($languageHelperPath -and (Test-Path $languageHelperPath)) {
     try {
         . $languageHelperPath
     } catch {
         Write-Warning "Failed to load language helper: $_"
     }
 } else {
-    Write-Warning "Language helper not found: $languageHelperPath"
+    if ($languageHelperPath) {
+        Write-Warning "Language helper not found: $languageHelperPath"
+    }
     # Provide fallback functions for basic operation
     function Get-DetectedLanguage { param($ConfigData) return "en" }
     function Get-LocalizedMessages { param($MessagesPath, $LanguageCode) return $null }
@@ -257,7 +273,7 @@ function Start-ConfigEditor {
 
     try {
         # Check if running as compiled executable
-        if ($MyInvocation.MyCommand.Path -like "*.exe") {
+        if ($isExecutable) {
             Write-Host "Configuration Editor Integration (Unified Executable Mode)" -ForegroundColor Cyan
             Write-Host "=========================================================" -ForegroundColor Cyan
             Write-Host ""
@@ -345,13 +361,7 @@ function Start-Game {
 #>
 function Main {
     try {
-        # Debug: Show received parameters
-        Write-Host "Main.ps1 Debug: Received parameters:" -ForegroundColor Yellow
-        Write-Host "  GameId: '$GameId'" -ForegroundColor Cyan
-        Write-Host "  Config: $Config" -ForegroundColor Cyan
-        Write-Host "  List: $List" -ForegroundColor Cyan
-        Write-Host "  Help: $Help" -ForegroundColor Cyan
-        Write-Host "  Version: $Version" -ForegroundColor Cyan
+
 
         # Handle help and version first (these don't require config)
         if ($Help) {
