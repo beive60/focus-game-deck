@@ -185,6 +185,19 @@ function Get-ExampleFunction {
 }
 ```
 
+### Console Output Guidelines
+
+**Avoid using `Write-Host` with color parameters** (`-ForegroundColor`, `-BackgroundColor`) to respect users' console customization.
+
+```powershell
+# Preferred: Use clear text indicators without forced colors
+Write-Host "[OK] Success message"
+Write-Host "[ERROR] Error message"
+Write-Host "[WARNING] Warning message"
+```
+
+For detailed guidelines and rationale, see [Character Encoding and Console Compatibility Guidelines](docs/developer-guide/architecture.md#character-encoding-and-console-compatibility-guidelines).
+
 ### Configuration Management
 
 - All behavior must be configurable through `config.json`
@@ -212,7 +225,7 @@ Tests are located in the `test/` directory:
 ```powershell
 # test/Test-YourFeature.ps1
 try {
-    Write-Host "Testing Your Feature..." -ForegroundColor Cyan
+    Write-Host "[INFO] Testing Your Feature..."
 
     # Test setup
     $testConfig = @{
@@ -224,13 +237,13 @@ try {
 
     # Validate result
     if ($result -eq "expected") {
-        Write-Host "[OK] Test passed" -ForegroundColor Green
+        Write-Host "[OK] Test passed"
     } else {
         throw "Test failed: Expected 'expected', got '$result'"
     }
 }
 catch {
-    Write-Host "[ERROR] Test failed: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "[ERROR] Test failed: $($_.Exception.Message)"
     exit 1
 }
 ```
