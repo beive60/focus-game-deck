@@ -30,7 +30,7 @@ This directory contains the source code for the GUI configuration editor.
 
 ```powershell
 # Use unified build system
-../Master-Build.ps1 -Development
+../build-tools/Release-Manager.ps1 -Development
 ```
 
 ## Detailed Usage
