@@ -9,16 +9,16 @@
 # Date: 2025-09-24
 
 param(
-    [Parameter(Position=0)]
+    [Parameter(Position = 0)]
     [ValidateSet("info", "check", "list-tags", "validate", "next", "help")]
     [string]$Action = "help",
 
-    [Parameter(Position=1)]
+    [Parameter(Position = 1)]
     [string]$Parameter = ""
 )
 
 # Import version module
-$VersionModulePath = Join-Path (Split-Path $PSScriptRoot -Parent) "Version.ps1"
+$VersionModulePath = Join-Path (Split-Path $PSScriptRoot -Parent) "build-tools/Version.ps1"
 if (Test-Path $VersionModulePath) {
     . $VersionModulePath
 } else {
@@ -76,8 +76,7 @@ function Test-ReleaseValidation {
         } else {
             $errors += "Not a git repository"
         }
-    }
-    catch {
+    } catch {
         $errors += "Git validation failed: $($_.Exception.Message)"
     }
 
@@ -86,8 +85,7 @@ function Test-ReleaseValidation {
         $versionInfo = Get-ProjectVersionInfo
         Write-Host "[OK] Version file is valid" -ForegroundColor Green
         Write-Host "  Current version: $($versionInfo.FullVersion)" -ForegroundColor Gray
-    }
-    catch {
+    } catch {
         $errors += "Version file validation failed: $($_.Exception.Message)"
     }
 
@@ -167,8 +165,7 @@ function Get-GitTags {
         } else {
             Write-Host "No tags found in repository" -ForegroundColor Yellow
         }
-    }
-    catch {
+    } catch {
         Write-Host "Error retrieving git tags: $($_.Exception.Message)" -ForegroundColor Red
     }
 }

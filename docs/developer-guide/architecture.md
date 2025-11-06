@@ -68,9 +68,9 @@ The Focus Game Deck architecture consists of five main layers, each serving dist
 
 #### 5. Build & Distribution System
 
-- **Primary Location**: `build-tools/`, root-level build scripts
+- **Primary Location**: `build-tools/` directory
 - **Key Components**:
-  - `Master-Build.ps1` - Build orchestration
+  - `build-tools/Release-Manager.ps1` - Build orchestration
   - `build-tools/Build-FocusGameDeck.ps1` - ps2exe compilation
   - `build-tools/Sign-Executables.ps1` - Digital signature workflow
 - **Responsibility**: Executable generation, code signing, release packaging
@@ -84,7 +84,7 @@ The Focus Game Deck architecture consists of five main layers, each serving dist
 | **Module System** | `src/modules/*.ps1` | Specialized service management | External APIs (OBS, VTube Studio) |
 | **Configuration** | `config/*.json` | Settings and localization | User preferences, defaults |
 | **User Interface** | `gui/ConfigEditor.ps1`, `gui/MainWindow.xaml` | Configuration and game launcher | Core engine, configuration |
-| **Build System** | `Master-Build.ps1`, `build-tools/*.ps1` | Compilation and distribution | ps2exe, signing certificates |
+| **Build System** | `build-tools/Release-Manager.ps1`, `build-tools/*.ps1` | Compilation and distribution | ps2exe, signing certificates |
 | **Documentation** | `docs/**/*.md` | Architecture and usage guides | Project knowledge base |
 | **Testing** | `test/*.ps1` | Validation and integration testing | All components |
 
@@ -210,7 +210,6 @@ The Focus Game Deck architecture consists of five main layers, each serving dist
 - **Consistency**: Follows established OBSManager architectural patterns
 - **Extensibility**: WebSocket API integration foundation for future model control features
 - **Platform Agnostic**: Supports both Steam and standalone VTube Studio installations
-
 
 #### 7. Code Signing Certificate Selection
 
@@ -396,7 +395,40 @@ Write-Host "[ERROR] Failed" -ForegroundColor Red
 Write-Host "[WARNING] Warning" -ForegroundColor Yellow
 ```
 
-##### 2. Safe Character Alternatives
+##### 2. Avoid Write-Host with Color Parameters
+
+**Do NOT use Write-Host with -ForegroundColor or -BackgroundColor parameters:**
+
+```powershell
+# Problematic: Forces specific colors that may conflict with user's console theme
+Write-Host "Success message" -ForegroundColor Green
+Write-Host "Error message" -ForegroundColor Red -BackgroundColor Yellow
+Write-Host "Warning" -ForegroundColor Yellow
+
+# Recommended: Use Write-Host without color parameters or alternative output methods
+Write-Host "[OK] Success message"
+Write-Host "[ERROR] Error message"
+Write-Host "[WARNING] Warning message"
+
+# Alternative: Use Write-Output for pipeline compatibility
+Write-Output "[INFO] Information message"
+
+# For error reporting: Use Write-Error for proper error stream handling
+Write-Error "This is an error message"
+
+# For verbose output: Use Write-Verbose with preference variables
+Write-Verbose "Detailed operation information" -Verbose
+```
+
+**Rationale:**
+
+- **User Experience**: Users who customize their console color schemes find forced colors disruptive and inconsistent with their preferred environment
+- **Accessibility**: Color-blind users may not be able to distinguish forced color combinations
+- **Professional Consideration**: Respecting user's personalized environment demonstrates thoughtful development practices
+- **Consistency**: Messages should rely on clear text indicators (like `[OK]`, `[ERROR]`) rather than color coding
+- **Cross-Platform**: Console color support varies across different PowerShell hosts and operating systems
+
+##### 3. Safe Character Alternatives
 
 | UTF-8 Character | ASCII Alternative | Usage Context |
 |-----------------|-------------------|---------------|
@@ -407,7 +439,7 @@ Write-Host "[WARNING] Warning" -ForegroundColor Yellow
 | → (U+2192) | `->` | Direction indicators |
 | • (U+2022) | `-` | List bullets |
 
-##### 3. File Encoding Consistency Rules
+##### 4. File Encoding Consistency Rules
 
 > **Critical**: Character encoding issues have been a recurring source of bugs in this project. Strict adherence to these rules is essential.
 
@@ -416,7 +448,7 @@ Write-Host "[WARNING] Warning" -ForegroundColor Yellow
 - **Documentation Files (.md)**: UTF-8 with BOM for proper GitHub display
 - **Text Log Files (.log, .txt)**: UTF-8 without BOM for cross-platform compatibility
 
-##### 4. JSON File Handling Best Practices
+##### 5. JSON File Handling Best Practices
 
 **Critical for avoiding parsing errors:**
 
@@ -433,7 +465,7 @@ $jsonString = $config | ConvertTo-Json -Depth 10
 $config = Get-Content -Path $jsonPath | ConvertFrom-Json
 ```
 
-##### 5. Multi-Language Content Validation
+##### 6. Multi-Language Content Validation
 
 **Verification process for messages.json integrity:**
 
@@ -448,13 +480,13 @@ try {
         throw "Key count mismatch: EN=$enCount, JA=$jaCount"
     }
 
-    Write-Host "[OK] Messages file validated: $enCount keys each language" -ForegroundColor Green
+    Write-Host "[OK] Messages file validated: $enCount keys each language"
 } catch {
-    Write-Host "[ERROR] Messages file validation failed: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "[ERROR] Messages file validation failed: $($_.Exception.Message)"
 }
 ```
 
-##### 6. Testing Console Output
+##### 7. Testing Console Output
 
 Always test console output in multiple PowerShell environments:
 
@@ -464,7 +496,7 @@ Always test console output in multiple PowerShell environments:
 - Windows Terminal
 - Command Prompt with PowerShell
 
-##### 7. Internationalization Implementation
+##### 8. Internationalization Implementation
 
 ```powershell
 # For GUI components: Use JSON external resources
@@ -483,7 +515,7 @@ function Write-SafeMessage {
     param([string]$MessageKey, [string]$Severity = "Info")
 
     # Console: ASCII-safe
-    Write-Host "[$Severity] Operation completed" -ForegroundColor Green
+    Write-Host "[$Severity] Operation completed"
 
     # Log: Full localized message (if logger available)
     if ($global:Logger) {
@@ -493,7 +525,7 @@ function Write-SafeMessage {
 }
 ```
 
-##### 8. Character Encoding Troubleshooting
+##### 9. Character Encoding Troubleshooting
 
 **Common issues and solutions:**
 
@@ -505,14 +537,14 @@ function Write-SafeMessage {
 | Logger initialization fails | Malformed messages.json | Validate JSON structure and encoding |
 | Build process creates corrupted files | Mixed encoding in pipeline | Ensure consistent UTF-8 throughout |
 
-##### 9. Development Workflow for Character Safety
+##### 10. Development Workflow for Character Safety
 
 1. **Before committing**: Validate all JSON files with encoding test
 2. **During development**: Use ASCII-safe console output for immediate feedback
 3. **For production**: Store full Unicode content in properly encoded JSON
 4. **Testing phase**: Verify functionality across different PowerShell environments
 
-##### 10. Practical Character Encoding Checklist
+##### 11. Practical Character Encoding Checklist
 
 **Pre-development Setup:**
 
@@ -557,7 +589,7 @@ if (Test-Path "./config/messages.json.sample") {
 
 # 3. Validate the restored file
 $test = Get-Content "./config/messages.json" -Raw -Encoding UTF8 | ConvertFrom-Json
-Write-Host "Messages file restored successfully" -ForegroundColor Green
+Write-Host "[OK] Messages file restored successfully"
 ```
 
 ### GUI Development Guidelines
@@ -676,6 +708,7 @@ To maintain this design philosophy, please prioritize the following:
 | 1.5.0 | 2025-09-26 | Enhanced launcher format implementation: Windows shortcuts over batch files for improved UX |
 | 1.6.0 | 2025-09-26 | Comprehensive character encoding best practices: Extended implementation guidelines with practical troubleshooting, validation procedures, and emergency recovery protocols |
 | 2.0.0 | 2025-10-01 | Unified architecture implementation: Main.PS1 entry point with integrated GUI and game launcher, obsolete file cleanup, English documentation standardization |
+| 2.1.0 | 2025-11-03 | Console output guidelines: Added prohibition of Write-Host color parameters to respect user console customization and improve accessibility |
 
 ---
 
