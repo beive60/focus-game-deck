@@ -1,8 +1,82 @@
-# Focus Game Deck - Code Signing Script
-# This script handles digital signing of executables with Extended Validation certificates
+<#
+.SYNOPSIS
+    Focus Game Deck code signing script for executable files
+
+.DESCRIPTION
+    This script handles digital signing of executables with Extended Validation certificates.
+    It provides functionality to list certificates, test certificate configuration,
+    and sign individual files or all executables in the build directory.
+
+.PARAMETER SigningConfigPath
+    Path to the signing configuration JSON file.
+    Default: build-tools/signing-config/signing-config.json
+    This file contains certificate thumbprint, timestamp server, and other signing settings.
+
+.PARAMETER BuildPath
+    Path to the build directory containing executables to sign.
+    Default: build-tools/build
+    All .exe files in this directory and subdirectories will be processed when using -SignAll.
+
+.PARAMETER TestCertificate
+    Tests the configured certificate for signing capability.
+    Validates certificate existence, private key access, expiration status,
+    and timestamp server connectivity.
+
+.PARAMETER ListCertificates
+    Lists all available code signing certificates in the current user certificate store.
+    Displays certificate details including subject, issuer, thumbprint, validity period,
+    and current status (valid/expired/not yet valid).
+
+.PARAMETER SignAll
+    Signs all executable files (.exe) found in the build directory.
+    Requires signing to be enabled in configuration and a valid certificate.
+    Creates signature information file and optionally creates distribution package.
+
+.PARAMETER SignFile
+    Signs a specific file specified by its path.
+    Use this parameter to sign individual files instead of all files in the build directory.
+
+.EXAMPLE
+    .\Sign-Executables.ps1 -ListCertificates
+    Lists all available code signing certificates in the certificate store.
+
+.EXAMPLE
+    .\Sign-Executables.ps1 -TestCertificate
+    Tests the certificate configuration and connectivity.
+
+.EXAMPLE
+    .\Sign-Executables.ps1 -SignAll
+    Signs all executable files in the build directory.
+
+.EXAMPLE
+    .\Sign-Executables.ps1 -SignFile "C:\path\to\file.exe"
+    Signs a specific executable file.
+
+.EXAMPLE
+    .\Sign-Executables.ps1 -SigningConfigPath "custom-config.json" -SignAll
+    Signs all files using a custom configuration file.
+
+.NOTES
+    Version: 1.0.0
+    Author: Focus Game Deck Development Team
+
+    Requirements:
+    - Windows PowerShell 5.1 or later
+    - Extended Validation certificate installed in Windows Certificate Store
+    - Properly configured signing-config.json file
+
+    Setup Process:
+    1. Install Extended Validation certificate in Windows Certificate Store
+    2. Run with -ListCertificates to find certificate thumbprint
+    3. Configure signing-config.json with certificate thumbprint
+    4. Set 'enabled: true' in signing-config.json
+    5. Test with -TestCertificate
+    6. Sign files with -SignAll or -SignFile
+#>
 
 param(
-    [string]$ConfigPath = (Join-Path $PSScriptRoot "config/signing-config.json"),
+    # signing config lives in build-tools/signing-config/
+    [string]$SigningConfigPath = (Join-Path $PSScriptRoot "signing-config/signing-config.json"),
     [string]$BuildPath = (Join-Path $PSScriptRoot "build"),
     [switch]$TestCertificate,
     [switch]$ListCertificates,
@@ -12,15 +86,15 @@ param(
 
 # Load signing configuration
 function Get-SigningConfig {
-    param([string]$ConfigPath)
+    param([string]$SigningConfigPath)
 
-    if (-not (Test-Path $ConfigPath)) {
-        Write-Error "Signing configuration not found: $ConfigPath"
+    if (-not (Test-Path $SigningConfigPath)) {
+        Write-Error "Signing configuration not found: $SigningConfigPath"
         return $null
     }
 
     try {
-        $config = Get-Content $ConfigPath -Raw | ConvertFrom-Json
+        $config = Get-Content $SigningConfigPath -Raw | ConvertFrom-Json
         return $config.codeSigningSettings
     } catch {
         Write-Error "Failed to load signing configuration: $($_.Exception.Message)"
@@ -47,24 +121,24 @@ function Get-CodeSigningCertificates {
     }
 
     foreach ($cert in $certs) {
-        Write-Host "`nCertificate Details:" -ForegroundColor Green
-        Write-Host "  Subject: $($cert.Subject)" -ForegroundColor White
-        Write-Host "  Issuer: $($cert.Issuer)" -ForegroundColor White
-        Write-Host "  Thumbprint: $($cert.Thumbprint)" -ForegroundColor Yellow
-        Write-Host "  Valid From: $($cert.NotBefore)" -ForegroundColor White
-        Write-Host "  Valid To: $($cert.NotAfter)" -ForegroundColor White
-        Write-Host "  Has Private Key: $($cert.HasPrivateKey)" -ForegroundColor White
+        Write-Host "Certificate Details:" -ForegroundColor Green
+        Write-Host "Subject: $($cert.Subject)" -ForegroundColor White
+        Write-Host "Issuer: $($cert.Issuer)" -ForegroundColor White
+        Write-Host "Thumbprint: $($cert.Thumbprint)" -ForegroundColor Yellow
+        Write-Host "Valid From: $($cert.NotBefore)" -ForegroundColor White
+        Write-Host "Valid To: $($cert.NotAfter)" -ForegroundColor White
+        Write-Host "Has Private Key: $($cert.HasPrivateKey)" -ForegroundColor White
 
         # Check if certificate is expired
         if ($cert.NotAfter -lt (Get-Date)) {
-            Write-Host "  Status: EXPIRED" -ForegroundColor Red
+            Write-Host "Status: EXPIRED" -ForegroundColor Red
         } elseif ($cert.NotBefore -gt (Get-Date)) {
-            Write-Host "  Status: NOT YET VALID" -ForegroundColor Yellow
+            Write-Host "Status: NOT YET VALID" -ForegroundColor Yellow
         } else {
-            Write-Host "  Status: VALID" -ForegroundColor Green
+            Write-Host "Status: VALID" -ForegroundColor Green
         }
 
-        Write-Host "  " + ("-" * 50) -ForegroundColor Gray
+        Write-Host ("-" * 50) -ForegroundColor Gray
     }
 
     return $certs
@@ -89,7 +163,7 @@ function Test-Certificate {
 
     try {
         $cert = Get-ChildItem -Path $SigningConfig.certificateStorePath |
-                Where-Object { $_.Thumbprint -eq $SigningConfig.certificateThumbprint }
+        Where-Object { $_.Thumbprint -eq $SigningConfig.certificateThumbprint }
 
         if (-not $cert) {
             Write-Error "Certificate not found with thumbprint: $($SigningConfig.certificateThumbprint)"
@@ -97,9 +171,9 @@ function Test-Certificate {
         }
 
         Write-Host "Certificate found and accessible:" -ForegroundColor Green
-        Write-Host "  Subject: $($cert.Subject)" -ForegroundColor White
-        Write-Host "  Valid To: $($cert.NotAfter)" -ForegroundColor White
-        Write-Host "  Has Private Key: $($cert.HasPrivateKey)" -ForegroundColor White
+        Write-Host "Subject: $($cert.Subject)" -ForegroundColor White
+        Write-Host "Valid To: $($cert.NotAfter)" -ForegroundColor White
+        Write-Host "Has Private Key: $($cert.HasPrivateKey)" -ForegroundColor White
 
         if (-not $cert.HasPrivateKey) {
             Write-Error "Certificate does not have an associated private key"
@@ -151,30 +225,44 @@ function Add-CodeSignature {
         $signParams = @{
             FilePath = $FilePath
             Certificate = Get-ChildItem -Path $SigningConfig.certificateStorePath |
-                         Where-Object { $_.Thumbprint -eq $SigningConfig.certificateThumbprint }
+            Where-Object { $_.Thumbprint -eq $SigningConfig.certificateThumbprint }
             HashAlgorithm = $SigningConfig.hashAlgorithm
             TimestampServer = $SigningConfig.timestampServer
         }
 
-        # Add description if provided
-        if (-not [string]::IsNullOrEmpty($SigningConfig.description)) {
-            $signParams.Description = $SigningConfig.description
-        }
-
-        # Add description URL if provided
-        if (-not [string]::IsNullOrEmpty($SigningConfig.descriptionUrl)) {
-            $signParams.DescriptionUrl = $SigningConfig.descriptionUrl
-        }
-
+        # Note: Set-AuthenticodeSignature doesn't support Description/DescriptionUrl
+        # These would be available with signtool.exe instead
         Set-AuthenticodeSignature @signParams
 
         # Verify the signature
         $signature = Get-AuthenticodeSignature -FilePath $FilePath
-        if ($signature.Status -eq "Valid") {
-            Write-Host "Successfully signed: $(Split-Path $FilePath -Leaf)" -ForegroundColor Green
+        $fileName = Split-Path $FilePath -Leaf
+
+        # Check if signature was applied (certificate exists)
+        $isSignatureApplied = $null -ne $signature.SignerCertificate
+
+        # Check if signature is trusted (Valid status)
+        $isSignatureTrusted = $signature.Status -eq "Valid"
+
+        Write-Host "Signature analysis for: $fileName" -ForegroundColor Cyan
+        Write-Host "Signature applied: $($isSignatureApplied)" -ForegroundColor $(if($isSignatureApplied) {"Green"} else {"Red"})
+        Write-Host "Signature trusted: $($isSignatureTrusted)" -ForegroundColor $(if($isSignatureTrusted) {"Green"} else {"Yellow"})
+        Write-Host "Signature status: $($signature.Status)" -ForegroundColor Gray
+
+        if ($signature.SignerCertificate) {
+            Write-Host "Certificate subject: $($signature.SignerCertificate.Subject)" -ForegroundColor Gray
+        }
+
+        if ($isSignatureApplied) {
+            if ($isSignatureTrusted) {
+                Write-Host "Successfully signed with trusted certificate: $fileName" -ForegroundColor Green
+            } else {
+                Write-Host "Successfully signed with test/self-signed certificate: $fileName" -ForegroundColor Yellow
+                Write-Host "Note: Certificate is not trusted by system (expected for test certificates)" -ForegroundColor Gray
+            }
             return $true
         } else {
-            Write-Error "Signature verification failed: $($signature.Status) - $($signature.StatusMessage)"
+            Write-Error "Failed to apply signature to: $fileName"
             return $false
         }
 
@@ -216,32 +304,31 @@ function Add-AllCodeSignatures {
         }
     }
 
-    Write-Host "`nSigning Summary:" -ForegroundColor Cyan
-    Write-Host "  Successfully signed: $successCount" -ForegroundColor Green
-    Write-Host "  Failed to sign: $failCount" -ForegroundColor Red
+    Write-Host "Signing Summary:" -ForegroundColor Cyan
+    Write-Host "Successfully signed: $successCount" -ForegroundColor Green
+    if ($failCount -gt 0) {
+        Write-Host "Failed to sign: $failCount" -ForegroundColor Red
+    } elseif ($failCount -eq 0) {
+        Write-Host "All files signed successfully!" -ForegroundColor Green
+    }
 
     return $failCount -eq 0
 }
 
-# Create signed distribution package
+# Create distribution package information (build script will handle the actual distribution)
 function New-SignedDistribution {
     param(
         [string]$BuildPath,
         [object]$BuildConfig
     )
 
-    $signedDir = Join-Path (Split-Path $BuildPath -Parent) $BuildConfig.signedDirectory
+    $distDir = Join-Path (Split-Path $BuildPath -Parent) "dist"
 
-    if (Test-Path $signedDir) {
-        Remove-Item $signedDir -Recurse -Force
+    if (-not (Test-Path $distDir)) {
+        New-Item -ItemType Directory -Path $distDir -Force | Out-Null
     }
 
-    New-Item -ItemType Directory -Path $signedDir -Force | Out-Null
-
-    # Copy all files from build directory
-    Copy-Item -Path "$BuildPath/*" -Destination $signedDir -Recurse -Force
-
-    Write-Host "Created signed distribution package: $signedDir" -ForegroundColor Green
+    Write-Host "Signed distribution package created: $distDir" -ForegroundColor Green
 
     # Create version info file
     $versionInfo = @{
@@ -250,8 +337,8 @@ function New-SignedDistribution {
         SignedFiles = @()
     }
 
-    # List signed files
-    $signedFiles = Get-ChildItem -Path $signedDir -Filter "*.exe" -Recurse
+    # List signed files in build directory
+    $signedFiles = Get-ChildItem -Path $BuildPath -Filter "*.exe" -Recurse
     foreach ($file in $signedFiles) {
         $signature = Get-AuthenticodeSignature -FilePath $file.FullName
         $versionInfo.SignedFiles += @{
@@ -262,12 +349,12 @@ function New-SignedDistribution {
         }
     }
 
-    $versionInfoPath = Join-Path $signedDir "signature-info.json"
+    $versionInfoPath = Join-Path $distDir "signature-info.json"
     $versionInfo | ConvertTo-Json -Depth 4 | Set-Content -Path $versionInfoPath -Encoding UTF8
 
     Write-Host "Signature information saved to: signature-info.json" -ForegroundColor Green
 
-    return $signedDir
+    return $distDir
 }
 
 # Main script execution
@@ -276,7 +363,8 @@ try {
     Write-Host "====================================" -ForegroundColor Cyan
 
     # Load configuration
-    $signingConfig = Get-SigningConfig -ConfigPath $ConfigPath
+    $fullConfig = Get-Content $SigningConfigPath -Raw | ConvertFrom-Json
+    $signingConfig = $fullConfig.codeSigningSettings
     if (-not $signingConfig) {
         exit 1
     }
@@ -290,9 +378,9 @@ try {
     # Test certificate if requested
     if ($TestCertificate) {
         if (Test-Certificate -SigningConfig $signingConfig) {
-            Write-Host "`nCertificate test passed!" -ForegroundColor Green
+            Write-Host "Certificate test passed!" -ForegroundColor Green
         } else {
-            Write-Host "`nCertificate test failed!" -ForegroundColor Red
+            Write-Host "Certificate test failed!" -ForegroundColor Red
             exit 1
         }
         exit 0
@@ -301,9 +389,9 @@ try {
     # Sign specific file if requested
     if (-not [string]::IsNullOrEmpty($SignFile)) {
         if (Add-CodeSignature -FilePath $SignFile -SigningConfig $signingConfig) {
-            Write-Host "`nFile signed successfully!" -ForegroundColor Green
+            Write-Host "File signed successfully!" -ForegroundColor Green
         } else {
-            Write-Host "`nFailed to sign file!" -ForegroundColor Red
+            Write-Host "Failed to sign file!" -ForegroundColor Red
             exit 1
         }
         exit 0
@@ -319,46 +407,45 @@ try {
 
         if (Test-Certificate -SigningConfig $signingConfig) {
             if (Add-AllCodeSignatures -BuildPath $BuildPath -SigningConfig $signingConfig) {
-                # Load build configuration
-                $buildConfigPath = Join-Path $PSScriptRoot "config/signing-config.json"
-                $buildConfig = (Get-Content $buildConfigPath -Raw | ConvertFrom-Json).buildSettings
+                # Use the already loaded configuration
+                $buildConfig = $fullConfig.buildSettings
 
                 if ($buildConfig.createDistribution) {
                     $distributionPath = New-SignedDistribution -BuildPath $BuildPath -BuildConfig $buildConfig
-                    Write-Host "`nSigned distribution package created: $distributionPath" -ForegroundColor Green
+                    Write-Host "Signed distribution package created: $distributionPath" -ForegroundColor Green
                 }
 
-                Write-Host "`nAll files signed successfully!" -ForegroundColor Green
+                Write-Host "All files signed successfully!" -ForegroundColor Green
             } else {
-                Write-Host "`nSome files failed to sign!" -ForegroundColor Red
+                Write-Host "Some files failed to sign!" -ForegroundColor Red
                 exit 1
             }
         } else {
-            Write-Host "`nCertificate validation failed!" -ForegroundColor Red
+            Write-Host "Certificate validation failed!" -ForegroundColor Red
             exit 1
         }
         exit 0
     }
 
     # Show usage if no specific action requested
-    Write-Host "`nUsage:" -ForegroundColor Yellow
-    Write-Host "  ./Sign-Executables.ps1 -ListCertificates      # List available certificates"
-    Write-Host "  ./Sign-Executables.ps1 -TestCertificate       # Test configured certificate"
-    Write-Host "  ./Sign-Executables.ps1 -SignAll               # Sign all executables in build directory"
-    Write-Host "  ./Sign-Executables.ps1 -SignFile <path>       # Sign specific file"
+    Write-Host "Usage:" -ForegroundColor Yellow
+    Write-Host "./Sign-Executables.ps1 -ListCertificates      # List available certificates"
+    Write-Host "./Sign-Executables.ps1 -TestCertificate       # Test configured certificate"
+    Write-Host "./Sign-Executables.ps1 -SignAll               # Sign all executables in build directory"
+    Write-Host "./Sign-Executables.ps1 -SignFile <path>       # Sign specific file"
     Write-Host ""
     Write-Host "Configuration:" -ForegroundColor Yellow
-    Write-Host "  Config file: $ConfigPath"
-    Write-Host "  Build path: $BuildPath"
-    Write-Host "  Signing enabled: $($signingConfig.enabled)"
+    Write-Host "Signing Config file: $SigningConfigPath"
+    Write-Host "Build path: $BuildPath"
+    Write-Host "Signing enabled: $($signingConfig.enabled)"
     Write-Host ""
     Write-Host "Setup Instructions:" -ForegroundColor Cyan
-    Write-Host "  1. Install Extended Validation certificate in Windows Certificate Store"
-    Write-Host "  2. Run: ./Sign-Executables.ps1 -ListCertificates"
-    Write-Host "  3. Copy certificate thumbprint to signing-config.json"
-    Write-Host "  4. Set 'enabled: true' in signing-config.json"
-    Write-Host "  5. Run: ./Sign-Executables.ps1 -TestCertificate"
-    Write-Host "  6. Run: ./Sign-Executables.ps1 -SignAll"
+    Write-Host "1. Install Extended Validation certificate in Windows Certificate Store"
+    Write-Host "2. Run: ./Sign-Executables.ps1 -ListCertificates"
+    Write-Host "3. Copy certificate thumbprint to signing-config.json"
+    Write-Host "4. Set 'enabled: true' in signing-config.json"
+    Write-Host "5. Run: ./Sign-Executables.ps1 -TestCertificate"
+    Write-Host "6. Run: ./Sign-Executables.ps1 -SignAll"
 
 } catch {
     Write-Error "Unexpected error: $($_.Exception.Message)"

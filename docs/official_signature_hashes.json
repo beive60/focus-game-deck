@@ -31,7 +31,7 @@
         }
     },
     "notes": {
-        "usage": "This file is automatically updated by the Master-Build.ps1 script during production builds.",
+        "usage": "This file is automatically updated by the Release-Manager.ps1 script during production builds.",
         "verification": "To verify log authenticity, compare the appSignatureHash field in Firebase log_hashes collection with the corresponding hash in this registry for the reported appVersion.",
         "security": "Any log entries with appSignatureHash values not present in this registry should be considered potentially forged.",
         "development": "Development builds will show 'UNSIGNED_DEVELOPMENT_BUILD' as the appSignatureHash and should not be used for production logging."
