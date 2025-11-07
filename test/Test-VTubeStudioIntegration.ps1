@@ -22,7 +22,7 @@ try {
 
 # Load configuration
 try {
-    $config = Get-Content "$PSScriptRoot/../config/config.json" -Encoding UTF8 | ConvertFrom-Json
+    $config = Get-Content "$PSScriptRoot/../config/config.json" -Raw -Encoding UTF8 | ConvertFrom-Json
     Write-Host "[OK] Configuration loaded"
 } catch {
     Write-Host "[ERROR] Failed to load configuration: $_"

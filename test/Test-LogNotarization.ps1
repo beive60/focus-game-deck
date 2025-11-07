@@ -143,7 +143,7 @@ function Test-ConfigurationLoading {
 
     try {
         # Load configuration
-        $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
+        $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
         Write-TestResult "Configuration JSON parsing" $true
 
         # Check if logging section exists

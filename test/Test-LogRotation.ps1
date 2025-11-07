@@ -144,7 +144,7 @@ function Test-LogRetention {
         New-TestConfig -ConfigPath $TestConfigPath -RetentionDays $RetentionDays
 
         # Load test config
-        $config = Get-Content -Path $TestConfigPath -Raw | ConvertFrom-Json
+        $config = Get-Content -Path $TestConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json
         $messages = @{} # Empty messages for test
 
         # Get file count before cleanup
@@ -238,7 +238,7 @@ function Invoke-LogRotationTests {
         }
 
         $invalidConfig | ConvertTo-Json -Depth 3 | Set-Content -Path $TestConfigPath -Encoding UTF8
-        $config = Get-Content -Path $TestConfigPath -Raw | ConvertFrom-Json
+        $config = Get-Content -Path $TestConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
         $filesBefore = (Get-ChildItem -Path $TestLogDir -Filter "*.log").Count
         $null = [Logger]::new($config, @{})
@@ -272,7 +272,7 @@ function Invoke-LogRotationTests {
         }
 
         $minimalConfig | ConvertTo-Json -Depth 3 | Set-Content -Path $TestConfigPath -Encoding UTF8
-        $config = Get-Content -Path $TestConfigPath -Raw | ConvertFrom-Json
+        $config = Get-Content -Path $TestConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
         # This should not crash and should use default behavior
         $null = [Logger]::new($config, @{})
