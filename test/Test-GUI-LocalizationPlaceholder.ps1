@@ -1,4 +1,4 @@
-# Test About Dialog Placeholder Replacement
+﻿# Test About Dialog Placeholder Replacement
 # このスクリプトは Get-LocalizedMessage 関数のプレースホルダー置換機能をテストします
 
 param(
@@ -16,14 +16,14 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
-Write-Host "=== About Dialog Placeholder Replacement Test ===" -ForegroundColor Cyan
+Write-Host "=== About Dialog Placeholder Replacement Test ==="
 
 try {
     # Import required modules
     $VersionModulePath = Join-Path $PSScriptRoot "Version.ps1"
     if (Test-Path $VersionModulePath) {
         . $VersionModulePath
-        Write-Host "✓ Version module loaded successfully" -ForegroundColor Green
+        Write-Host "✓ Version module loaded successfully"
     } else {
         throw "Version module not found: $VersionModulePath"
     }
@@ -31,33 +31,33 @@ try {
     $LanguageHelperPath = Join-Path $PSScriptRoot "scripts/LanguageHelper.ps1"
     if (Test-Path $LanguageHelperPath) {
         . $LanguageHelperPath
-        Write-Host "✓ Language helper loaded successfully" -ForegroundColor Green
+        Write-Host "✓ Language helper loaded successfully"
     } else {
         throw "Language helper not found: $LanguageHelperPath"
     }
 
     # Test version information retrieval
-    Write-Host "--- Step 1: Testing version information ---" -ForegroundColor Yellow
+    Write-Host "--- Step 1: Testing version information ---"
     $versionInfo = Get-ProjectVersionInfo
-    Write-Host "Version Info Type: $($versionInfo.GetType().Name)" -ForegroundColor Cyan
-    Write-Host "Full Version: '$($versionInfo.FullVersion)'" -ForegroundColor Cyan
-    Write-Host "Version String Length: $($versionInfo.FullVersion.Length)" -ForegroundColor Cyan
+    Write-Host "Version Info Type: $($versionInfo.GetType().Name)"
+    Write-Host "Full Version: '$($versionInfo.FullVersion)'"
+    Write-Host "Version String Length: $($versionInfo.FullVersion.Length)"
 
     # Test message loading
-    Write-Host "--- Step 2: Testing message loading ---" -ForegroundColor Yellow
+    Write-Host "--- Step 2: Testing message loading ---"
     $messagesPath = Join-Path $PSScriptRoot "../localization/messages.json"
     if (-not (Test-Path $messagesPath)) {
         throw "Messages file not found: $messagesPath"
     }
 
     $messagesContent = Get-Content $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    Write-Host "✓ Messages loaded successfully" -ForegroundColor Green
+    Write-Host "✓ Messages loaded successfully"
 
     # Test for each supported language
     $languages = @("ja", "en", "zh-CN")
 
     foreach ($lang in $languages) {
-        Write-Host "--- Step 3: Testing language '$lang' ---" -ForegroundColor Yellow
+        Write-Host "--- Step 3: Testing language '$lang' ---"
 
         if (-not $messagesContent.$lang) {
             Write-Warning "Language '$lang' not found in messages"
@@ -72,30 +72,30 @@ try {
             continue
         }
 
-        Write-Host "Original template: '$aboutTemplate'" -ForegroundColor Cyan
-        Write-Host "Contains {0}: $($aboutTemplate -like '*{0}*')" -ForegroundColor Cyan
+        Write-Host "Original template: '$aboutTemplate'"
+        Write-Host "Contains {0}: $($aboutTemplate -like '*{0}*')"
 
         # Test manual replacement
         $testVersion = $versionInfo.FullVersion
         $replacedMessage = $aboutTemplate -replace '\{0\}', $testVersion
 
-        Write-Host "Test version: '$testVersion'" -ForegroundColor Magenta
-        Write-Host "Manual replacement result: '$replacedMessage'" -ForegroundColor Green
+        Write-Host "Test version: '$testVersion'"
+        Write-Host "Manual replacement result: '$replacedMessage'"
 
         # Verify replacement worked
         $replacementWorked = $replacedMessage -ne $aboutTemplate -and -not ($replacedMessage -like '*{0}*')
         Write-Host "Replacement successful: $replacementWorked" -ForegroundColor $(if ($replacementWorked) { "Green" } else { "Red" })
 
         if ($replacementWorked) {
-            Write-Host "✓ Language '$lang': SUCCESS" -ForegroundColor Green
+            Write-Host "✓ Language '$lang': SUCCESS"
         } else {
-            Write-Host "✗ Language '$lang': FAILED" -ForegroundColor Red
+            Write-Host "✗ Language '$lang': FAILED"
         }
         Write-Host ""
     }
 
     # Test the actual Get-LocalizedMessage function from ConfigEditor
-    Write-Host "--- Step 4: Testing Get-LocalizedMessage function ---" -ForegroundColor Yellow
+    Write-Host "--- Step 4: Testing Get-LocalizedMessage function ---"
 
     # Import the ConfigEditor script to access its functions
     $configEditorPath = Join-Path $PSScriptRoot "../gui/ConfigEditor.ps1"
@@ -116,9 +116,9 @@ try {
             Invoke-Expression $functionCode
 
             # Test the function
-            Write-Host "Testing Get-LocalizedMessage function..." -ForegroundColor Cyan
+            Write-Host "Testing Get-LocalizedMessage function..."
             $testResult = Get-LocalizedMessage -Key "aboutMessage" -Args @($versionInfo.FullVersion)
-            Write-Host "Function result: '$testResult'" -ForegroundColor Green
+            Write-Host "Function result: '$testResult'"
 
             $functionWorked = $testResult -ne "aboutMessage" -and -not ($testResult -like '*{0}*')
             Write-Host "Function test successful: $functionWorked" -ForegroundColor $(if ($functionWorked) { "Green" } else { "Red" })
@@ -128,11 +128,11 @@ try {
         }
     }
 
-    Write-Host "=== Test Complete ===" -ForegroundColor Cyan
+    Write-Host "=== Test Complete ==="
 
 } catch {
-    Write-Host "❌ Test failed: $($_.Exception.Message)" -ForegroundColor Red
-    Write-Host "Exception details:" -ForegroundColor Red
-    Write-Host $_.Exception -ForegroundColor Red
+    Write-Host "❌ Test failed: $($_.Exception.Message)"
+    Write-Host "Exception details:"
+    Write-Host $_.Exception
     exit 1
 }

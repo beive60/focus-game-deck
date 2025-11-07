@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 
 <#
 .SYNOPSIS
@@ -25,28 +25,52 @@ if ($Verbose) { $VerbosePreference = "Continue" }
 # Initialize project root path
 $projectRoot = Split-Path $PSScriptRoot -Parent
 
-Write-Host "Focus Game Deck - Character Encoding Validation Test" -ForegroundColor Cyan
-Write-Host "Validating implementation guidelines from ARCHITECTURE.md" -ForegroundColor Cyan
-Write-Host "Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Gray
+Write-Host "Focus Game Deck - Character Encoding Validation Test"
+Write-Host "Validating implementation guidelines from ARCHITECTURE.md"
+Write-Host "Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 Write-Host ""
 
 $results = @{ Total = 0; Passed = 0; Failed = 0 }
 
+<#
+.SYNOPSIS
+    Records test result and displays formatted output.
+
+.DESCRIPTION
+    Increments test counters and displays test results with appropriate status indicators.
+    Updates the global $results hashtable with test outcomes.
+
+.PARAMETER Name
+    The name of the test being executed.
+
+.PARAMETER Pass
+    Boolean indicating whether the test passed (true) or failed (false).
+
+.PARAMETER Message
+    Optional additional message to display with the test result.
+
+.EXAMPLE
+    Test-Result "config.json UTF-8 parsing" $true
+    Test-Result "BOM detection" $false "BOM detected in file"
+
+.NOTES
+    This function updates the script-scoped $results variable.
+#>
 function Test-Result {
     param([string]$Name, [bool]$Pass, [string]$Message = "")
     $results.Total++
     if ($Pass) {
         $results.Passed++
-        Write-Host "[OK] $Name" -ForegroundColor Green
-        if ($Message) { Write-Host "  $Message" -ForegroundColor Gray }
+        Write-Host "[OK] $Name"
+        if ($Message) { Write-Host "  $Message" }
     } else {
         $results.Failed++
-        Write-Host "[ERROR] $Name" -ForegroundColor Red
-        if ($Message) { Write-Host "  Error: $Message" -ForegroundColor Red }
+        Write-Host "[ERROR] $Name"
+        if ($Message) { Write-Host "  Error: $Message" }
     }
 }
 
-Write-Host "Testing JSON File Encoding..." -ForegroundColor Yellow
+Write-Host "Testing JSON File Encoding..."
 
 # Test config.json
 try {
@@ -88,10 +112,10 @@ try {
     Test-Result "messages.json validation" $false $_.Exception.Message
 }
 
-Write-Host "Testing Console Output Safety..." -ForegroundColor Yellow
+Write-Host "Testing Console Output Safety..."
 Test-Result "ASCII-safe console output" $true "Using [OK]/[ERROR] instead of UTF-8 symbols"
 
-Write-Host "Testing Logger Compatibility..." -ForegroundColor Yellow
+Write-Host "Testing Logger Compatibility..."
 try {
     $loggerPath = Join-Path $projectRoot "src/modules/Logger.ps1"
     if (Test-Path $loggerPath) {
@@ -136,22 +160,28 @@ try {
 }
 
 Write-Host ""
-Write-Host "=" * 60 -ForegroundColor Cyan
-Write-Host " Test Summary" -ForegroundColor Cyan
-Write-Host "=" * 60 -ForegroundColor Cyan
-Write-Host "Total Tests: $($results.Total)" -ForegroundColor White
-Write-Host "Passed: $($results.Passed)" -ForegroundColor Green
-Write-Host "Failed: $($results.Failed)" -ForegroundColor Red
+Write-Host "=" * 60
+Write-Host " Test Summary"
+Write-Host "=" * 60
+Write-Host "Total Tests: $($results.Total)"
+Write-Host "Passed: $($results.Passed)"
+Write-Host "Failed: $($results.Failed)"
 
 $successRate = [math]::Round(($results.Passed / $results.Total) * 100, 1)
-Write-Host "Success Rate: $successRate%" -ForegroundColor $(if ($successRate -gt 90) { "Green" } elseif ($successRate -gt 70) { "Yellow" } else { "Red" })
+if ($successRate -gt 90) {
+    Write-Host "[OK] Success Rate: $successRate%"
+} elseif ($successRate -gt 70) {
+    Write-Host "[WARNING] Success Rate: $successRate%"
+} else {
+    Write-Host "[ERROR] Success Rate: $successRate%"
+}
 
 if ($results.Failed -eq 0) {
     Write-Host ""
-    Write-Host "All character encoding tests passed! Project follows ARCHITECTURE.md guidelines." -ForegroundColor Green
+    Write-Host "All character encoding tests passed! Project follows ARCHITECTURE.md guidelines."
 } else {
     Write-Host ""
-    Write-Host "Some tests failed. Please review character encoding guidelines in ARCHITECTURE.md" -ForegroundColor Yellow
+    Write-Host "Some tests failed. Please review character encoding guidelines in ARCHITECTURE.md"
 }
 
 if ($results.Failed -gt 0) { exit 1 }
