@@ -1,5 +1,49 @@
-# Focus Game Deck - Main Application Build Script
-# This script creates an executable version of the main Focus Game Deck application
+<#
+.SYNOPSIS
+    Focus Game Deck application build script
+
+.DESCRIPTION
+    This script creates an executable version of the main Focus Game Deck application.
+    It uses the ps2exe module to convert PowerShell scripts into EXE files and
+    applies digital signatures when required.
+
+.PARAMETER Install
+    Installs the ps2exe module.
+    Use this on first run or when the ps2exe module is not found.
+
+.PARAMETER Build
+    Builds the main application executable.
+    Creates Focus-Game-Deck.exe from src/Main.PS1.
+
+.PARAMETER Clean
+    Removes build artifacts and cache files.
+    Completely deletes build and dist directories to clean up the environment.
+
+.PARAMETER Sign
+    Applies digital signature to the created executable files.
+    Signing configuration must be set up in build-tools/signing-config/signing-config.json.
+
+.PARAMETER All
+    Executes all operations (Install, Clean, Build, Sign) sequentially.
+    Use this when you want to run the complete build process at once.
+
+.EXAMPLE
+    .\Build-FocusGameDeck.ps1 -Install
+    Installs the ps2exe module.
+
+.EXAMPLE
+    .\Build-FocusGameDeck.ps1 -Build
+    Builds the main application.
+
+.EXAMPLE
+    .\Build-FocusGameDeck.ps1 -All
+    Executes all operations (install, cleanup, build, sign).
+
+.NOTES
+    Version: 1.0.0
+    Author: Focus Game Deck Development Team
+    This script requires Windows PowerShell 5.1 or later.
+#>
 
 param(
     [switch]$Install,
@@ -41,12 +85,17 @@ if ($Clean) {
     Write-Host "Cleaning build artifacts..." -ForegroundColor Yellow
 
     $buildDir = Join-Path $PSScriptRoot "build"
+    $distDir = Join-Path $PSScriptRoot "dist"
+
     if (Test-Path $buildDir) {
         Remove-Item $buildDir -Recurse -Force
         Write-Host "Build directory cleaned." -ForegroundColor Green
     }
 
-    $exeFiles = Get-ChildItem -Path $PSScriptRoot -Filter "*.exe" -Recurse
+    if (Test-Path $distDir) {
+        Remove-Item $distDir -Recurse -Force
+        Write-Host "Distribution directory cleaned." -ForegroundColor Green
+    }    $exeFiles = Get-ChildItem -Path $PSScriptRoot -Filter "*.exe" -Recurse
     foreach ($exeFile in $exeFiles) {
         if ($exeFile.Name -like "*Focus-Game-Deck*") {
             Remove-Item $exeFile.FullName -Force
@@ -81,16 +130,16 @@ if ($Build) {
             Write-Host "Building main application..." -ForegroundColor Cyan
 
             $ps2exeParams = @{
-                inputFile    = $mainScriptPath
-                outputFile   = $mainOutputPath
-                title        = "Focus Game Deck"
-                description  = "Gaming environment optimization tool (Multi-Platform)"
-                company      = "Focus Game Deck Project"
-                version      = "1.0.0.0"
-                copyright    = "MIT License"
+                inputFile = $mainScriptPath
+                outputFile = $mainOutputPath
+                title = "Focus Game Deck"
+                description = "Gaming environment optimization tool (Multi-Platform)"
+                company = "Focus Game Deck Project"
+                version = "1.0.0.0"
+                copyright = "MIT License"
                 requireAdmin = $false
-                STA          = $false
-                noConsole    = $false
+                STA = $false
+                noConsole = $false
             }
 
             # Add icon if it exists
@@ -114,48 +163,9 @@ if ($Build) {
 
         # Main executable now includes multi-platform support
 
-        # Build Config Editor if not already built
-        $configEditorPath = Join-Path (Split-Path $PSScriptRoot -Parent) "gui/Focus-Game-Deck-Config-Editor.exe"
-        if (-not (Test-Path $configEditorPath)) {
-            Write-Host "Building Config Editor..." -ForegroundColor Cyan
-
-            $configEditorScript = Join-Path (Split-Path $PSScriptRoot -Parent) "gui/ConfigEditor.ps1"
-            $configEditorOutput = Join-Path $buildDir "Focus-Game-Deck-Config-Editor.exe"
-
-            if (Test-Path $configEditorScript) {
-                $ps2exeParams = @{
-                    inputFile    = $configEditorScript
-                    outputFile   = $configEditorOutput
-                    title        = "Focus Game Deck - Configuration Editor"
-                    description  = "GUI configuration editor for Focus Game Deck"
-                    company      = "Focus Game Deck Project"
-                    version      = "1.0.0.0"
-                    copyright    = "MIT License"
-                    requireAdmin = $false
-                    STA          = $true
-                    noConsole    = $true
-                }
-
-                # Add icon if it exists
-                $iconFile = Join-Path (Split-Path $PSScriptRoot -Parent) "assets/icon.ico"
-                if (Test-Path $iconFile) {
-                    $ps2exeParams.Add("iconFile", $iconFile)
-                }
-
-                ps2exe @ps2exeParams
-
-                if (Test-Path $configEditorOutput) {
-                    Write-Host "Config Editor executable created: $configEditorOutput" -ForegroundColor Green
-                } else {
-                    Write-Host "Failed to create Config Editor executable." -ForegroundColor Red
-                }
-            }
-        } else {
-            # Copy existing Config Editor to build directory
-            $configEditorBuildPath = Join-Path $buildDir "Focus-Game-Deck-Config-Editor.exe"
-            Copy-Item $configEditorPath $configEditorBuildPath -Force
-            Write-Host "Config Editor copied to build directory: $configEditorBuildPath" -ForegroundColor Green
-        }
+        # Note: Config Editor functionality is now integrated into the main executable
+        # Users can access it by running Focus-Game-Deck.exe without arguments or with --config
+        Write-Host "Config Editor functionality integrated into main executable." -ForegroundColor Green
 
         # Copy necessary files to build directory
         Write-Host "Copying configuration files..." -ForegroundColor Cyan
@@ -171,21 +181,6 @@ if ($Build) {
                 Copy-Item $_.FullName $configDir -Force
             }
         }
-
-        # Create launcher scripts in build directory
-        $launcherContent = @"
-@echo off
-echo Focus Game Deck Launcher
-echo.
-echo Usage: Focus-Game-Deck.exe [GameId]
-echo.
-echo Available GameIds can be found in config/config.json
-echo.
-pause
-"@
-
-        $launcherPath = Join-Path $buildDir "launcher.bat"
-        Set-Content -Path $launcherPath -Value $launcherContent -Encoding ASCII
 
         Write-Host "Build completed successfully!" -ForegroundColor Green
         Write-Host "Built files are located in: $buildDir" -ForegroundColor Cyan
@@ -208,6 +203,47 @@ pause
             }
         }
 
+        # Create distribution directory and move final files
+        $distDir = Join-Path $PSScriptRoot "dist"
+        if (-not (Test-Path $distDir)) {
+            New-Item -ItemType Directory -Path $distDir -Force | Out-Null
+        }
+
+        Write-Host "Creating distribution package..." -ForegroundColor Cyan
+
+        # Move executables to dist directory
+        Get-ChildItem $buildDir -Filter "*.exe" | ForEach-Object {
+            $destinationPath = Join-Path $distDir $_.Name
+            Move-Item $_.FullName $destinationPath -Force
+
+            # Check if executable is signed
+            $isSigned = $false
+            try {
+                $signature = Get-AuthenticodeSignature $destinationPath
+                $isSigned = $signature.Status -ne "NotSigned"
+            } catch {
+                $isSigned = $false
+            }
+
+            $signStatus = if ($isSigned) { "(signed)" } else { "(unsigned)" }
+            Write-Host "Moved: $($_.Name) to distribution directory $signStatus" -ForegroundColor Green
+        }
+
+        # Copy configuration files and other assets to dist directory
+        if (Test-Path $configDir) {
+            $distConfigDir = Join-Path $distDir "config"
+            if (-not (Test-Path $distConfigDir)) {
+                New-Item -ItemType Directory -Path $distConfigDir -Force | Out-Null
+            }
+            Copy-Item "$configDir/*" $distConfigDir -Recurse -Force
+        }
+
+        # Clean up intermediate build directory
+        Write-Host "Cleaning up intermediate build directory..." -ForegroundColor Cyan
+        Remove-Item $buildDir -Recurse -Force
+        Write-Host "Build directory cleaned up." -ForegroundColor Green
+
+        Write-Host "Distribution package completed! Files are located in: $distDir" -ForegroundColor Green    
     } catch {
         Write-Host "Failed to build executables: $($_.Exception.Message)" -ForegroundColor Red
         exit 1
@@ -217,16 +253,67 @@ pause
 # Sign existing build if requested
 if ($Sign -and -not $Build) {
     Write-Host "Signing existing build..." -ForegroundColor Yellow
+    $buildDir = Join-Path $PSScriptRoot "build"
+    $distDir = Join-Path $PSScriptRoot "dist"
+
+    if (-not (Test-Path $buildDir)) {
+        Write-Error "Build directory not found. Please run with -Build first."
+        exit 1
+    }
+
     $signingScript = Join-Path $PSScriptRoot "Sign-Executables.ps1"
     if (Test-Path $signingScript) {
         & $signingScript -SignAll
+
+        # Create distribution directory
+        if (-not (Test-Path $distDir)) {
+            New-Item -ItemType Directory -Path $distDir -Force | Out-Null
+        }
+
+        Write-Host "Creating distribution package..." -ForegroundColor Cyan
+
+        # Move executables to dist directory
+        Get-ChildItem $buildDir -Filter "*.exe" | ForEach-Object {
+            $destinationPath = Join-Path $distDir $_.Name
+            Move-Item $_.FullName $destinationPath -Force
+
+            # Check if executable is signed
+            $isSigned = $false
+            try {
+                $signature = Get-AuthenticodeSignature $destinationPath
+                $isSigned = $signature.Status -ne "NotSigned"
+            } catch {
+                $isSigned = $false
+            }
+
+            $signStatus = if ($isSigned) { "(signed)" } else { "(unsigned)" }
+            Write-Host "Moved: $($_.Name) to distribution directory $signStatus" -ForegroundColor Green
+        }
+
+        # Copy other files to dist directory
+        Get-ChildItem $buildDir -Recurse | Where-Object { -not $_.PSIsContainer -and $_.Extension -ne ".exe" } | ForEach-Object {
+            $relativePath = $_.FullName.Replace($buildDir, "").TrimStart('\')
+            $destinationPath = Join-Path $distDir $relativePath
+            $destinationDir = Split-Path $destinationPath -Parent
+
+            if (-not (Test-Path $destinationDir)) {
+                New-Item -ItemType Directory -Path $destinationDir -Force | Out-Null
+            }
+
+            Copy-Item $_.FullName $destinationPath -Force
+        }
+
+        # Clean up intermediate build directory
+        Write-Host "Cleaning up intermediate build directory..." -ForegroundColor Cyan
+        Remove-Item $buildDir -Recurse -Force
+        Write-Host "Build directory cleaned up." -ForegroundColor Green
+
+        Write-Host "Distribution package completed! Files are located in: $distDir" -ForegroundColor Green
     } else {
         Write-Error "Code signing script not found: $signingScript"
         exit 1
     }
-}
-
-# Show usage if no parameters
+}# Show usage if no parameters
 if (-not $Install -and -not $Build -and -not $Clean -and -not $Sign -and -not $All) {
     Write-Host "Focus Game Deck - Main Application Build Script" -ForegroundColor Cyan
     Write-Host ""
@@ -243,7 +330,8 @@ if (-not $Install -and -not $Build -and -not $Clean -and -not $Sign -and -not $A
     Write-Host "  Production:  ./Build-FocusGameDeck.ps1 -All"
     Write-Host ""
     Write-Host "This script will create executable versions of:"
-    Write-Host "  - Focus-Game-Deck.exe (main application)"
-    Write-Host "  - Focus-Game-Deck.exe (with built-in multi-platform support)"
-    Write-Host "  - Focus-Game-Deck-Config-Editor.exe (GUI configuration editor)"
+    Write-Host "  - Focus-Game-Deck.exe (unified application with integrated GUI configuration editor)"
+    Write-Host ""
+    Write-Host "Final distribution files will be placed in the 'dist' directory."
+    Write-Host "Digital signature status can be verified via Windows Properties."
 }

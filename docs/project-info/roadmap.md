@@ -35,7 +35,7 @@
 
 * **Complete Build System Implementation**: ps2exe-based executable generation for all components
 * **Digital Signature Ready**: Extended Validation certificate infrastructure with automated signing workflow
-* **Production Distribution Pipeline**: Master-Build.ps1 orchestrating development and production builds
+* **Production Distribution Pipeline**: Release-Manager.ps1 orchestrating development and production builds
 * **Security-First Packaging**: Signed executable distribution with integrity verification
 
 **Strategic Milestones:**
@@ -70,7 +70,7 @@ Focus Game Deck, as a tool that particularly affects gaming environments, requir
 * **Implementation Strategy**: [COMPLETED] Comprehensive code signing infrastructure for executable files implemented
 * **Technical Requirements**: [COMPLETED] Extended Validation certificate support with RFC 3161 timestamped signatures
 * **Distribution Chain**: [COMPLETED] GitHub Releases → Automated Build → Signed Binaries → End User Execution
-* **Build System**: [COMPLETED] Master-Build.ps1 provides complete development and production build workflows
+* **Build System**: [COMPLETED] Release-Manager.ps1 provides complete development and production build workflows
 * **Certificate Management**: [COMPLETED] Automated certificate discovery, validation, and signing process
 
 #### **Transparency Assurance Mechanisms**

@@ -1,12 +1,90 @@
-# Focus Game Deck - Version Information
-# Centralized version management for the project
-#
-# This file serves as the single source of truth for version information
-# across all components of Focus Game Deck.
-#
-# Author: GitHub Copilot Assistant
-# Version: 1.0.0
-# Date: 2025-09-24
+<#
+.SYNOPSIS
+    Focus Game Deck centralized version management system
+
+.DESCRIPTION
+    This script serves as the single source of truth for version information
+    across all components of Focus Game Deck. It provides functions for version
+    retrieval, comparison, and GitHub repository information management.
+
+    The script follows semantic versioning (SemVer) principles and supports
+    pre-release and build metadata for comprehensive version tracking.
+
+.FUNCTIONALITY
+    Version Management:
+    - Get-ProjectVersion: Retrieves formatted version strings
+    - Get-ProjectVersionInfo: Returns complete version information object
+    - Compare-Version: Compares two semantic version strings
+
+    Repository Information:
+    - Get-GitHubRepositoryInfo: Returns GitHub repository details
+
+    Version Format:
+    - Standard: MAJOR.MINOR.PATCH (e.g., "1.0.1")
+    - Pre-release: MAJOR.MINOR.PATCH-PRERELEASE (e.g., "1.0.1-alpha")
+    - Build: MAJOR.MINOR.PATCH-PRERELEASE+BUILD (e.g., "1.0.1-alpha+20241104")
+
+.EXAMPLE
+    . .\Version.ps1
+    $version = Get-ProjectVersion
+    Write-Host "Current version: $version"
+
+    Dot-sources the script and gets the current project version.
+
+.EXAMPLE
+    . .\Version.ps1
+    $fullVersion = Get-ProjectVersion -IncludePreRelease -IncludeBuild
+    Write-Host "Full version: $fullVersion"
+
+    Gets the complete version string including pre-release and build information.
+
+.EXAMPLE
+    . .\Version.ps1
+    $versionInfo = Get-ProjectVersionInfo
+    Write-Host "Is pre-release: $($versionInfo.IsPreRelease)"
+
+    Gets detailed version information including pre-release status.
+
+.EXAMPLE
+    . .\Version.ps1
+    $comparison = Compare-Version "1.0.0" "1.0.1"
+    # Returns -1 (first version is lower)
+
+    Compares two version strings using semantic versioning rules.
+
+.EXAMPLE
+    . .\Version.ps1
+    $repoInfo = Get-GitHubRepositoryInfo
+    Write-Host "Repository: $($repoInfo.Owner)/$($repoInfo.Name)"
+
+    Gets GitHub repository information for API calls and integrations.
+
+.NOTES
+    Version: 1.0.0
+    Author: Focus Game Deck Development Team
+    Date: 2025-09-24
+
+    Usage Pattern:
+    This script is designed to be dot-sourced by other scripts that need
+    version information. All functions become available in the calling scope.
+
+    Semantic Versioning Rules:
+    - MAJOR: Incompatible API changes
+    - MINOR: Backwards-compatible functionality additions
+    - PATCH: Backwards-compatible bug fixes
+    - PRERELEASE: Optional pre-release identifier (alpha, beta, rc1, etc.)
+    - BUILD: Optional build metadata
+
+    Version Comparison:
+    - Returns -1 if Version1 < Version2
+    - Returns 0 if Version1 = Version2
+    - Returns 1 if Version1 > Version2
+    - Pre-release versions are considered lower than release versions
+
+    Integration:
+    This script integrates with build systems, release management,
+    and GitHub API interactions throughout the project.
+#>
 
 # Project version information
 $script:ProjectVersion = @{

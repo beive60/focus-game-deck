@@ -404,7 +404,7 @@ function Import-AdditionalModules {
                 GlobalFunctions = @{}
             },
             @{
-                Path = "Version.ps1"
+                Path = "build-tools/Version.ps1"
                 GlobalFunctions = @{ "Get-ProjectVersion" = "GetProjectVersionFunc" }
             },
             @{
