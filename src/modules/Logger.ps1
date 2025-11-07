@@ -105,8 +105,7 @@ class Logger {
         if ($this.EnableFileLogging) {
             try {
                 Add-Content -Path $this.LogFilePath -Value $logEntry -Encoding UTF8
-            }
-            catch {
+            } catch {
                 Write-Warning "Failed to write to log file: $_"
             }
         }
@@ -239,7 +238,12 @@ class Logger {
 
             if ($deletedCount -gt 0) {
                 $totalSizeMB = [math]::Round($totalSize / 1MB, 2)
-                $this.Info("Cleaned up $deletedCount old log file(s), freed $totalSizeMB MB of disk space", "CLEANUP")
+                if ($this.Messages -and $this.Messages.loggerCleanupCompleted) {
+                    $msg = $this.Messages.loggerCleanupCompleted -f $deletedCount, $totalSizeMB
+                    $this.Info($msg, "CLEANUP")
+                } else {
+                    $this.Info("Cleaned up $deletedCount old log file(s), freed $totalSizeMB MB of disk space", "CLEANUP")
+                }
             } else {
                 $this.Debug("No old log files found for cleanup", "CLEANUP")
             }
@@ -348,7 +352,12 @@ class Logger {
         if ($fileSizeMB -gt $maxSizeMB) {
             $backupPath = $this.LogFilePath -replace '/.log$', "-backup-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
             Move-Item -Path $this.LogFilePath -Destination $backupPath
-            $this.Info("Log file rotated. Backup created: $backupPath", "LOGGER")
+            if ($this.Messages -and $this.Messages.loggerLogRotated) {
+                $msg = $this.Messages.loggerLogRotated -f $backupPath
+                $this.Info($msg, "LOGGER")
+            } else {
+                $this.Info("Log file rotated. Backup created: $backupPath", "LOGGER")
+            }
         }
     }
 
@@ -361,8 +370,7 @@ class Logger {
         try {
             $hash = Get-FileHash -Path $this.LogFilePath -Algorithm SHA256
             return $hash.Hash
-        }
-        catch {
+        } catch {
             $this.Error("Failed to calculate log file hash: $_", "NOTARY")
             return $null
         }
@@ -407,8 +415,7 @@ class Logger {
         try {
             $response = Invoke-RestMethod -Uri $firestoreUrl -Method POST -Body $body -Headers $headers -TimeoutSec 30
             return $response
-        }
-        catch {
+        } catch {
             # Re-throw with more context
             throw "Failed to send hash to Firebase: $($_.Exception.Message)"
         }
@@ -450,13 +457,17 @@ class Logger {
             }
 
             if ($documentId) {
-                $this.Info("Log successfully notarized. Certificate ID: $documentId", "NOTARY")
+                if ($this.Messages -and $this.Messages.loggerNotarizationSuccess) {
+                    $msg = $this.Messages.loggerNotarizationSuccess -f $documentId
+                    $this.Info($msg, "NOTARY")
+                } else {
+                    $this.Info("Log successfully notarized. Certificate ID: $documentId", "NOTARY")
+                }
                 return $documentId
             } else {
                 throw "Failed to extract document ID from Firebase response"
             }
-        }
-        catch {
+        } catch {
             $this.Error("Log notarization failed: $($_.Exception.Message)", "NOTARY")
             return $null
         }

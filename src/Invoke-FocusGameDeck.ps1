@@ -36,19 +36,41 @@ foreach ($modulePath in $modulePaths) {
     }
 }
 
-# Load and validate configuration
+# Load configuration and messages
 try {
-    Write-Host "Loading configuration..." -ForegroundColor Cyan
+    # Load configuration
     $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
-    Write-Host "Configuration loaded successfully." -ForegroundColor Green
+
+    # Load messages for localization
+    $languageHelperPath = Join-Path $scriptDir "../scripts/LanguageHelper.ps1"
+    $messagesPath = Join-Path $scriptDir "../localization/messages.json"
+
+    if (Test-Path $languageHelperPath) {
+        . $languageHelperPath
+        $langCode = Get-DetectedLanguage -ConfigData $config
+        $msg = Get-LocalizedMessages -MessagesPath $messagesPath -LanguageCode $langCode
+    } else {
+        $msg = @{}
+    }
+
+    # Display localized loading messages
+    if ($msg.mainLoadingConfig) {
+        Write-Host $msg.mainLoadingConfig -ForegroundColor Cyan
+    } else {
+        Write-Host "Loading configuration..." -ForegroundColor Cyan
+    }
+
+    if ($msg.mainConfigLoaded) {
+        Write-Host $msg.mainConfigLoaded -ForegroundColor Green
+    } else {
+        Write-Host "Configuration loaded successfully." -ForegroundColor Green
+    }
 } catch {
     Write-Error "Failed to load configuration: $_"
     exit 1
 }
 
 # Initialize logger
-# Note: Passing an empty messages object as i18n is disabled for this debug script.
-$msg = @{}
 try {
     $logger = Initialize-Logger -Config $config -Messages $msg
     $logger.Info("Focus Game Deck started (Multi-Platform)", "MAIN")
@@ -93,7 +115,11 @@ try {
 }
 
 # Validate configuration
-Write-Host "Validating configuration..." -ForegroundColor Cyan
+if ($msg.mainValidatingConfig) {
+    Write-Host $msg.mainValidatingConfig -ForegroundColor Cyan
+} else {
+    Write-Host "Validating configuration..." -ForegroundColor Cyan
+}
 $validator = New-ConfigValidator -Config $config -Messages $msg
 if (-not $validator.ValidateConfiguration($GameId)) {
     $validator.DisplayResults()
@@ -106,9 +132,18 @@ if ($logger) { $logger.Info("Configuration validation passed", "CONFIG") }
 # Get game configuration
 $gameConfig = $config.games.$GameId
 if (-not $gameConfig) {
-    $errorMsg = "Error: Game ID '{0}' not found in configuration." -f $GameId
+    if ($msg.mainGameNotFound) {
+        $errorMsg = $msg.mainGameNotFound -f $GameId
+    } else {
+        $errorMsg = "Error: Game ID '{0}' not found in configuration." -f $GameId
+    }
     Write-Host $errorMsg -ForegroundColor Red
-    Write-Host ("Available game IDs: {0}" -f ($config.games.PSObject.Properties.Name -join ', '))
+
+    if ($msg.mainAvailableGameIds) {
+        Write-Host ($msg.mainAvailableGameIds -f ($config.games.PSObject.Properties.Name -join ', '))
+    } else {
+        Write-Host ("Available game IDs: {0}" -f ($config.games.PSObject.Properties.Name -join ', '))
+    }
     if ($logger) { $logger.Error($errorMsg, "MAIN") }
     exit 1
 }
@@ -235,7 +270,11 @@ try {
     }
 
     # Launch game via appropriate platform
-    Write-Host "Launching game via $($detectedPlatforms[$gamePlatform].Name)..." -ForegroundColor Cyan
+    if ($msg.mainLaunchingGame) {
+        Write-Host ($msg.mainLaunchingGame -f $detectedPlatforms[$gamePlatform].Name) -ForegroundColor Cyan
+    } else {
+        Write-Host "Launching game via $($detectedPlatforms[$gamePlatform].Name)..." -ForegroundColor Cyan
+    }
     try {
         $launcherProcess = $platformManager.LaunchGame($gamePlatform, $gameConfig)
         Write-Host ("Starting game: {0}" -f $gameConfig.name) -ForegroundColor Green
@@ -248,7 +287,11 @@ try {
     }
 
     # Wait for actual game process to start (not the launcher)
-    Write-Host "Waiting for game process to start..." -ForegroundColor Yellow
+    if ($msg.mainWaitingForProcess) {
+        Write-Host $msg.mainWaitingForProcess -ForegroundColor Yellow
+    } else {
+        Write-Host "Waiting for game process to start..." -ForegroundColor Yellow
+    }
     $gameProcess = $null
     $processStartTimeout = 300  # 5 minutes timeout
     $startTime = Get-Date
@@ -272,8 +315,7 @@ try {
         try {
             if ($logger) { $logger.Debug("Attempting to wait for process directly: $($gameProcess.Name) (PID: $($gameProcess.Id))", "GAME") }
             Wait-Process -InputObject $gameProcess -ErrorAction Stop
-        }
-        catch {
+        } catch {
             if ($logger) { $logger.Warning("Direct wait failed. Falling back to polling for process exit: $($gameProcess.Name) (PID: $($gameProcess.Id)). This can happen with admin-level processes.", "GAME") }
             Write-Host "`nDirect process wait failed. Monitoring process in fallback mode (polling every 3s). This can happen with admin-level processes." -ForegroundColor Yellow
 
@@ -287,7 +329,11 @@ try {
             }
         }
 
-        Write-Host ("Game has exited: {0}" -f $gameConfig.name) -ForegroundColor Yellow
+        if ($msg.mainGameExited) {
+            Write-Host ($msg.mainGameExited -f $gameConfig.name) -ForegroundColor Yellow
+        } else {
+            Write-Host ("Game has exited: {0}" -f $gameConfig.name) -ForegroundColor Yellow
+        }
         if ($logger) { $logger.Info("Game process ended: $($gameConfig.name)", "GAME") }
     } else {
         Write-Warning "Game process '$($gameConfig.processName)' was not detected within timeout period"
@@ -302,7 +348,11 @@ try {
         $logger.Info("Focus Game Deck session completed successfully", "MAIN")
     }
 
-    Write-Host "Focus Game Deck session completed." -ForegroundColor Green
+    if ($msg.mainSessionCompletedMessage) {
+        Write-Host $msg.mainSessionCompletedMessage -ForegroundColor Green
+    } else {
+        Write-Host "Focus Game Deck session completed." -ForegroundColor Green
+    }
 } catch {
     $errorMsg = "Unexpected error during execution: $_"
     Write-Error $errorMsg
@@ -323,16 +373,32 @@ try {
     # Finalize and notarize log file if logging is enabled
     if ($logger) {
         try {
-            Write-Host "Finalizing session log..." -ForegroundColor Cyan
+            if ($msg.mainFinalizingLog) {
+                Write-Host $msg.mainFinalizingLog -ForegroundColor Cyan
+            } else {
+                Write-Host "Finalizing session log..." -ForegroundColor Cyan
+            }
             $certificateId = $logger.FinalizeAndNotarizeLogAsync()
 
             if ($certificateId) {
-                Write-Host "[OK] " -NoNewline -ForegroundColor Green
-                Write-Host "Log successfully notarized. Certificate ID: " -NoNewline -ForegroundColor White
-                Write-Host $certificateId -ForegroundColor Yellow
-                Write-Host "  This certificate can be used to verify log integrity if needed." -ForegroundColor Gray
+                if ($msg.mainLogNotarizedSuccess) {
+                    Write-Host ($msg.mainLogNotarizedSuccess -f $certificateId)
+                } else {
+                    Write-Host "[OK] " -NoNewline -ForegroundColor Green
+                    Write-Host "Log successfully notarized. Certificate ID: " -NoNewline -ForegroundColor White
+                    Write-Host $certificateId -ForegroundColor Yellow
+                }
+                if ($msg.mainLogNotarizationInfo) {
+                    Write-Host $msg.mainLogNotarizationInfo -ForegroundColor Gray
+                } else {
+                    Write-Host "  This certificate can be used to verify log integrity if needed." -ForegroundColor Gray
+                }
             } else {
-                Write-Host "Log finalized (notarization disabled or failed)" -ForegroundColor Gray
+                if ($msg.mainLogFinalized) {
+                    Write-Host $msg.mainLogFinalized -ForegroundColor Gray
+                } else {
+                    Write-Host "Log finalized (notarization disabled or failed)" -ForegroundColor Gray
+                }
             }
         } catch {
             Write-Warning "Failed to notarize log: $_"
