@@ -1,4 +1,55 @@
-﻿# Simple Config Test Check
+﻿<#
+.SYNOPSIS
+    Simple configuration file validation and change detection test.
+
+.DESCRIPTION
+    This test script provides a quick verification of the configuration file (config.json) state.
+    It checks file modification timestamps, file size, and validates key configuration values
+    to ensure the Config Editor or other tools are properly updating the configuration.
+
+    The test performs the following checks:
+    - File metadata (modification time, size)
+    - Time since last modification (recent update detection)
+    - OBS WebSocket configuration (host, port)
+    - Language settings
+    - Game entries (total count, test game detection)
+
+    Test Categories:
+    1. File Info - Checks modification time and file size
+    2. Config Values - Validates OBS host, port, and language settings
+    3. Test Results - Compares current values against expected test values
+    4. Games - Counts total games and identifies test game entries
+
+.EXAMPLE
+    .\Test-ConfigSimple.ps1
+    Runs basic configuration file checks and displays current values.
+
+.EXAMPLE
+    .\Test-ConfigSimple.ps1 | Tee-Object -FilePath test-results.log
+    Runs checks and saves output to a log file.
+
+.NOTES
+    Author: Focus Game Deck Team
+    Version: 1.0.0
+
+    Purpose:
+    - Quick validation of config.json integrity
+    - Detection of recent configuration changes
+    - Verification of Config Editor functionality
+
+    Dependencies:
+    - config/config.json (main configuration file)
+
+    Expected Values for Test Mode:
+    - OBS Host: "testhost" (test) or "localhost" (default)
+    - OBS Port: 4456 (test) or 4455 (default)
+    - Language: "ja" (test) or "" (auto/default)
+
+    Recovery:
+    If configuration needs to be restored, use:
+    Copy-Item config/config.json.backup-* config/config.json
+#>
+
 Write-Host "Config Editor Test Results"
 
 # Check file modification time

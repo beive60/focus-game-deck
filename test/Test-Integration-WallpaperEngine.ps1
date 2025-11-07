@@ -1,12 +1,62 @@
-﻿# Focus Game Deck - Wallpaper Engine Integration Test
-# Tests Wallpaper Engine pause/play functionality through AppManager
-#
-# This test validates the Wallpaper Engine integration feature that allows
-# automatic wallpaper pause during gaming sessions for better performance.
-#
-# Author: GitHub Copilot Assistant
-# Version: 1.0.0
-# Date: 2025-09-27
+﻿<#
+.SYNOPSIS
+    Wallpaper Engine integration test suite for Focus Game Deck.
+
+.DESCRIPTION
+    This test script validates the Wallpaper Engine integration functionality in the AppManager module.
+    It verifies automatic wallpaper pause/play actions during gaming sessions for improved performance.
+
+    The test suite covers:
+    - Configuration validation for Wallpaper Engine settings
+    - AppManager initialization with wallpaper actions
+    - pause-wallpaper and play-wallpaper action execution
+    - System architecture detection (32-bit vs 64-bit executable selection)
+    - Error handling for invalid paths and configurations
+
+    Test Categories:
+    1. Configuration Validation - Verifies wallpaper action configuration schema
+    2. AppManager Initialization - Tests AppManager creation with Wallpaper Engine config
+    3. Action Method Validation - Executes pause-wallpaper and play-wallpaper actions
+    4. Architecture Detection - Tests automatic executable selection based on system architecture
+    5. Error Handling - Validates proper handling of invalid paths and configurations
+
+.PARAMETER Verbose
+    Enables verbose output for detailed test execution information.
+
+.PARAMETER TestMode
+    Runs tests in simulation mode without actually executing Wallpaper Engine actions.
+    Useful for CI/CD environments or systems without Wallpaper Engine installed.
+
+.EXAMPLE
+    .\Test-WallpaperEngine.ps1
+    Runs all Wallpaper Engine integration tests with default settings.
+
+.EXAMPLE
+    .\Test-WallpaperEngine.ps1 -TestMode
+    Runs tests in simulation mode without executing actual Wallpaper Engine actions.
+
+.EXAMPLE
+    .\Test-WallpaperEngine.ps1 -Verbose
+    Runs tests with detailed verbose output.
+
+.NOTES
+    Author: GitHub Copilot Assistant
+    Version: 1.0.0
+    Date: 2025-09-27
+
+    Requirements:
+    - AppManager.ps1 module
+    - ConfigValidator.ps1 module
+    - localization/messages.json
+
+    Exit Codes:
+    0 - All tests passed
+    1 - One or more tests failed or module loading error
+
+    Dependencies:
+    - Wallpaper Engine installation (optional for TestMode)
+    - Steam installation path (for common Wallpaper Engine paths)
+#>
 
 param(
     [switch]$Verbose,
@@ -221,12 +271,12 @@ if ($pauseResult) { $passedTests++ }
 if ($playResult) { $passedTests++ }
 if (-not $errorResult) { $passedTests++ }  # Error handling test passes when it returns false
 
-Write-Host "Tests Passed: $passedTests / $totalTests" -ForegroundColor $(if ($passedTests -eq $totalTests) { "Green" } else { "Yellow" })
-
 if ($passedTests -eq $totalTests) {
+    Write-Host "[OK] Tests Passed: $passedTests / $totalTests"
     Write-Host "[OK] All Wallpaper Engine integration tests passed!"
     exit 0
 } else {
-    Write-Host " Some tests failed or require attention"
+    Write-Host "[WARNING] Tests Passed: $passedTests / $totalTests"
+    Write-Host "[WARNING] Some tests failed or require attention"
     exit 1
 }

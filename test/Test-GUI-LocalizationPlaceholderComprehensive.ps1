@@ -1,5 +1,48 @@
-﻿# Comprehensive test for the fixed Get-LocalizedMessage function
-# このスクリプトは修正されたGet-LocalizedMessage関数の動作を包括的にテストします
+﻿<#
+.SYNOPSIS
+    Comprehensive test for the fixed Get-LocalizedMessage function.
+
+.DESCRIPTION
+    This script performs comprehensive testing of the corrected Get-LocalizedMessage function's
+    placeholder replacement functionality. It validates that version information is correctly
+    inserted into localized About dialog messages across all supported languages (Japanese,
+    English, Chinese Simplified). The test extracts the actual Get-LocalizedMessage function
+    from ConfigEditor.ps1 and validates its behavior in a controlled environment.
+
+.PARAMETER Interactive
+    Enables interactive test mode. When specified, the script will prompt to launch the
+    ConfigEditor GUI after successful test completion, allowing manual verification of
+    the About dialog display.
+
+.EXAMPLE
+    .\Test-about-fix.ps1
+    Runs the comprehensive placeholder replacement test in automated mode.
+
+.EXAMPLE
+    .\Test-about-fix.ps1 -Interactive
+    Runs the test and prompts to launch ConfigEditor for manual verification.
+
+.NOTES
+    Author: Focus Game Deck Team
+    Version: 1.0.0
+
+    Test Coverage:
+    - Version information retrieval from Version.ps1
+    - Message template loading from messages.json
+    - Placeholder replacement for Japanese (ja)
+    - Placeholder replacement for English (en)
+    - Placeholder replacement for Chinese Simplified (zh-CN)
+    - Actual Get-LocalizedMessage function extraction and validation
+
+    Exit Codes:
+    - 0: All tests passed successfully
+    - 1: One or more tests failed
+
+    Dependencies:
+    - Version.ps1 module for version information
+    - localization/messages.json for message templates
+    - gui/ConfigEditor.ps1 for Get-LocalizedMessage function source
+#>
 
 param(
     [switch]$Interactive
@@ -68,12 +111,12 @@ try {
             $success = (-not $hasPlaceholder) -and $hasVersion
 
             Write-Host "Verification:"
-            Write-Host "  Contains {0}: $hasPlaceholder $(if ($hasPlaceholder) { '[❌ FAIL]' } else { '[✅ PASS]' })" -ForegroundColor $(if ($hasPlaceholder) { "Red" } else { "Green" })
-            Write-Host "  Contains version: $hasVersion $(if ($hasVersion) { '[✅ PASS]' } else { '[❌ FAIL]' })" -ForegroundColor $(if ($hasVersion) { "Green" } else { "Red" })
-            Write-Host "  Overall: $success $(if ($success) { '[✅ SUCCESS]' } else { '[❌ FAILED]' })" -ForegroundColor $(if ($success) { "Green" } else { "Red" })
+            Write-Host "  Contains {0}: $hasPlaceholder $(if ($hasPlaceholder) { '[ERROR]' } else { '[OK]' })"
+            Write-Host "  Contains version: $hasVersion $(if ($hasVersion) { '[OK]' } else { '[ERROR]' })"
+            Write-Host "  Overall: $success $(if ($success) { '[OK] SUCCESS' } else { '[ERROR] FAILED' })"
 
             if (-not $success) {
-                Write-Host "❌ Test failed for language $lang"
+                Write-Host "[ERROR] Test failed for language $lang"
                 exit 1
             }
         } else {
@@ -84,7 +127,7 @@ try {
         Write-Host ""
     }
 
-    Write-Host "✅ All tests passed! The About dialog placeholder replacement has been fixed."
+    Write-Host "[OK] All tests passed! The About dialog placeholder replacement has been fixed."
     Write-Host ""
 
     if ($Interactive) {
@@ -102,7 +145,7 @@ try {
     Write-Host "=== Test Complete ==="
 
 } catch {
-    Write-Host "❌ Test failed with error: $($_.Exception.Message)"
+    Write-Host "[ERROR] Test failed with error: $($_.Exception.Message)"
     Write-Host $_.Exception
     exit 1
 }

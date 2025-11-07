@@ -3,11 +3,70 @@
     Test script to verify that all UI element mappings are complete and consistent.
 
 .DESCRIPTION
-    This script validates that:
-    1. All mappings defined in ConfigEditor.Mappings.ps1 are included in $allMappings
-    2. All mapped elements exist in MainWindow.xaml
-    3. All message keys referenced in mappings exist in messages.json
-    4. No UI elements with x:Name in XAML are missing from mappings (with exceptions)
+    This comprehensive test script validates the integrity and completeness of the
+    ConfigEditor localization mapping system. It ensures that all UI elements in
+    MainWindow.xaml have corresponding mappings to localized message keys, and that
+    all message keys exist in messages.json.
+
+    The test performs six major validation checks:
+    1. Mappings file loading and structure validation
+    2. All mapping categories are included in $allMappings collection
+    3. All mapped UI element names exist in MainWindow.xaml
+    4. All message keys referenced in mappings exist in messages.json
+    5. ConfigEditor.ps1 uses the correct $allMappings variable
+    6. No UI elements in XAML are missing from mappings (excluding known exceptions)
+
+    This test is critical for maintaining the internationalization (i18n) system
+    integrity as it catches:
+    - Orphaned mappings (pointing to non-existent UI elements)
+    - Missing mappings (UI elements without localization)
+    - Invalid message keys (references to non-existent messages)
+    - Inconsistencies between mapping definitions and usage
+
+.PARAMETER ShowDetails
+    When specified, enables verbose output showing detailed information about
+    each mapping category, successfully mapped elements, and mapping statistics
+    by type (Label, Button, TextBlock, etc.).
+
+.EXAMPLE
+    .\Test-MappingCompleteness.ps1
+    Runs the mapping completeness test with standard output showing pass/fail results.
+
+.EXAMPLE
+    .\Test-MappingCompleteness.ps1 -ShowDetails
+    Runs the test with detailed output including all successfully mapped elements
+    and statistics by UI element type.
+
+.NOTES
+    Author: Focus Game Deck Team
+    Version: 1.0.0
+
+    Test Categories:
+    - LabelMappings: Label elements in the UI
+    - TextBlockMappings: TextBlock elements for static text
+    - ButtonMappings: Button elements and their Content
+    - GroupBoxMappings: GroupBox headers
+    - CheckBoxMappings: CheckBox labels
+    - ComboBoxItemMappings: ComboBox item options
+    - TabItemMappings: Tab headers in TabControl
+    - MenuItemMappings: Menu items in the application menu
+    - ToolTipMappings: Tooltip text for UI elements
+
+    Excluded Elements:
+    - Dynamic elements (lists, input fields)
+    - Elements without localization needs (containers, panels)
+    - Tooltip TextBlocks (mapped separately via ToolTipMappings)
+    - StackPanels used for label/tooltip combinations
+
+    Exit Codes:
+    - 0: All tests passed (warnings allowed)
+    - 1: One or more tests failed
+
+    Dependencies:
+    - gui/ConfigEditor.Mappings.ps1 (mapping definitions)
+    - gui/messages.json (localized message strings)
+    - gui/MainWindow.xaml (UI layout definition)
+    - gui/ConfigEditor.ps1 (main application code)
 #>
 
 param(
@@ -41,6 +100,46 @@ $testResults = @{
     WarningMessages = @()
 }
 
+<#
+.SYNOPSIS
+    Records a test result and updates the test results structure.
+
+.DESCRIPTION
+    Adds a test result to the global test results tracking structure and displays
+    formatted output to the console. Supports three result types: PASS, FAIL, and WARN.
+
+    Test results are categorized as:
+    - PASS: Test succeeded, increments Passed counter
+    - FAIL: Test failed, increments Failed counter and records details
+    - WARN: Non-critical issue detected, increments Warnings counter
+
+    Failed tests and warnings are stored with their messages for detailed reporting
+    in the test summary.
+
+.PARAMETER TestName
+    The name or description of the test being reported.
+
+.PARAMETER Passed
+    Boolean indicating whether the test passed (true) or failed (false).
+    Ignored when IsWarning is true.
+
+.PARAMETER Message
+    Optional detailed message providing context about the test result,
+    error details, or warning information.
+
+.PARAMETER IsWarning
+    When true, records the result as a warning instead of a pass/fail.
+    Warnings indicate potential issues that don't cause test failure.
+
+.EXAMPLE
+    Add-TestResult -TestName "All mappings loaded" -Passed $true
+    Add-TestResult -TestName "Element exists" -Passed $false -Message "Element 'MyButton' not found"
+    Add-TestResult -TestName "Unused mapping" -Passed $false -Message "Element never referenced" -IsWarning $true
+
+.NOTES
+    Updates the script-scoped $testResults hashtable with counters and details.
+    Output format: [PASS], [FAIL], or [WARN] prefix with test name and optional message.
+#>
 function Add-TestResult {
     param(
         [string]$TestName,
@@ -341,7 +440,11 @@ Write-Host "Test Summary"
 Write-Host "==================="
 Write-Host "Total Tests: $($testResults.Total)"
 Write-Host "Passed: $($testResults.Passed)"
-Write-Host "Failed: $($testResults.Failed)" -ForegroundColor $(if ($testResults.Failed -eq 0) { "Green" } else { "Red" })
+if ($testResults.Failed -eq 0) {
+    Write-Host "[OK] Failed: $($testResults.Failed)"
+} else {
+    Write-Host "[ERROR] Failed: $($testResults.Failed)"
+}
 Write-Host "Warnings: $($testResults.Warnings)"
 
 if ($testResults.Failed -gt 0) {
