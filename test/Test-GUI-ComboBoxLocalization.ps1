@@ -5,6 +5,55 @@
 .DESCRIPTION
     This script tests that ComboBoxItem elements in MainWindow.xaml are properly
     localized using the mappings in ConfigEditor.Mappings.ps1 and messages in messages.json.
+
+    The test performs the following validations:
+    - Loads WPF assemblies and XAML definitions
+    - Reads ComboBoxItem mappings from ConfigEditor.Mappings.ps1
+    - Loads localized messages for the specified language
+    - Verifies each ComboBoxItem can be found in XAML
+    - Validates message keys exist in messages.json
+    - Tests that Content property updates correctly with localized text
+
+    This ensures the ConfigEditor GUI displays properly localized ComboBox options
+    for all supported languages.
+
+.PARAMETER Language
+    The language code to test. Valid values are "ja" (Japanese), "en" (English),
+    or "zh-CN" (Chinese Simplified). Defaults to "ja".
+
+.EXAMPLE
+    .\Test-ComboBoxItemLocalization.ps1
+    Tests ComboBoxItem localization using Japanese language (default).
+
+.EXAMPLE
+    .\Test-ComboBoxItemLocalization.ps1 -Language en
+    Tests ComboBoxItem localization using English language.
+
+.EXAMPLE
+    .\Test-ComboBoxItemLocalization.ps1 -Language zh-CN
+    Tests ComboBoxItem localization using Chinese Simplified language.
+
+.NOTES
+    Author: Focus Game Deck Team
+    Version: 1.0.0
+
+    Test Steps:
+    1. Load WPF assemblies (PresentationFramework, PresentationCore, WindowsBase)
+    2. Load ComboBoxItem mappings from ConfigEditor.Mappings.ps1
+    3. Load localized messages from messages.json
+    4. Parse MainWindow.xaml
+    5. Validate each ComboBoxItem element and its localization
+    6. Generate test summary report
+
+    Exit Codes:
+    - 0: All ComboBoxItem localization tests passed
+    - 1: One or more tests failed
+
+    Dependencies:
+    - gui/ConfigEditor.Mappings.ps1 (ComboBoxItem mapping definitions)
+    - localization/messages.json (localized message strings)
+    - gui/MainWindow.xaml (GUI layout definition)
+    - .NET WPF assemblies
 #>
 
 param(
@@ -118,7 +167,11 @@ Write-Host "[6/6] Test Summary"
 Write-Host "=================="
 Write-Host "Total ComboBoxItems tested: $($testResults.Total)"
 Write-Host "Successful: $($testResults.Success)"
-Write-Host "Failed: $($testResults.Failed)" -ForegroundColor $(if ($testResults.Failed -eq 0) { "Green" } else { "Red" })
+if ($testResults.Failed -eq 0) {
+    Write-Host "[OK] Failed: $($testResults.Failed)"
+} else {
+    Write-Host "[ERROR] Failed: $($testResults.Failed)"
+}
 
 if ($testResults.Failed -gt 0) {
     Write-Host ""
@@ -137,9 +190,9 @@ if ($testResults.Failed -gt 0) {
 
 Write-Host ""
 if ($testResults.Failed -eq 0) {
-    Write-Host "All ComboBoxItem localization tests passed!"
+    Write-Host "[OK] All ComboBoxItem localization tests passed!"
     exit 0
 } else {
-    Write-Host "Some ComboBoxItem localization tests failed."
+    Write-Host "[ERROR] Some ComboBoxItem localization tests failed."
     exit 1
 }

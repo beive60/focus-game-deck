@@ -137,7 +137,11 @@ try {
     Write-Host "Mapping Analysis Results:"
     Write-Host "- Total UI elements: $($uiElementsCount)"
     Write-Host "- Mapped elements:   $($foundMappingsCount)"
-    Write-Host "- Missing mappings:  $($missingMappingsCount)" -ForegroundColor $(if ($missingMappingsCount -eq 0) { "Green" } else { "Red" })
+    if ($missingMappingsCount -eq 0) {
+        Write-Host "[OK] - Missing mappings:  $($missingMappingsCount)"
+    } else {
+        Write-Host "[ERROR] - Missing mappings:  $($missingMappingsCount)"
+    }
     Write-Host ""
 
     if ($ShowDetails -and $foundMappingsCount -gt 0) {
@@ -159,12 +163,12 @@ try {
 
     # Final result
     if ($missingMappingsCount -eq 0) {
-        Write-Host "TEST PASSED: All UI elements have corresponding mappings!"
-        Write-Host "- ConfigEditor localization system is consistent"
+        Write-Host "[OK] TEST PASSED: All UI elements have corresponding mappings!"
+        Write-Host "[OK] - ConfigEditor localization system is consistent"
         exit 0
     } else {
-        Write-Host "[NG] TEST FAILED: Missing mappings detected!"
-        Write-Host "Elements requiring mappings:"
+        Write-Host "[ERROR] TEST FAILED: Missing mappings detected!"
+        Write-Host "[ERROR] Elements requiring mappings:"
         $missingMappings | Sort-Object ElementName | ForEach-Object {
             Write-Host "   - $($_.ElementName) [Placeholder: $($_.Placeholder)]"
         }

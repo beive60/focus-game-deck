@@ -32,6 +32,30 @@ Write-Host ""
 
 $results = @{ Total = 0; Passed = 0; Failed = 0 }
 
+<#
+.SYNOPSIS
+    Records test result and displays formatted output.
+
+.DESCRIPTION
+    Increments test counters and displays test results with appropriate status indicators.
+    Updates the global $results hashtable with test outcomes.
+
+.PARAMETER Name
+    The name of the test being executed.
+
+.PARAMETER Pass
+    Boolean indicating whether the test passed (true) or failed (false).
+
+.PARAMETER Message
+    Optional additional message to display with the test result.
+
+.EXAMPLE
+    Test-Result "config.json UTF-8 parsing" $true
+    Test-Result "BOM detection" $false "BOM detected in file"
+
+.NOTES
+    This function updates the script-scoped $results variable.
+#>
 function Test-Result {
     param([string]$Name, [bool]$Pass, [string]$Message = "")
     $results.Total++
@@ -144,7 +168,13 @@ Write-Host "Passed: $($results.Passed)"
 Write-Host "Failed: $($results.Failed)"
 
 $successRate = [math]::Round(($results.Passed / $results.Total) * 100, 1)
-Write-Host "Success Rate: $successRate%" -ForegroundColor $(if ($successRate -gt 90) { "Green" } elseif ($successRate -gt 70) { "Yellow" } else { "Red" })
+if ($successRate -gt 90) {
+    Write-Host "[OK] Success Rate: $successRate%"
+} elseif ($successRate -gt 70) {
+    Write-Host "[WARNING] Success Rate: $successRate%"
+} else {
+    Write-Host "[ERROR] Success Rate: $successRate%"
+}
 
 if ($results.Failed -eq 0) {
     Write-Host ""

@@ -421,14 +421,20 @@ function Show-TestSummary {
     }
 
     Write-Host "Success Rate: " -NoNewline
-    Write-Host "$successRate%" -ForegroundColor $(if ($successRate -ge 80) { "Green" } elseif ($successRate -ge 60) { "Yellow" } else { "Red" })
+    if ($successRate -ge 80) {
+        Write-Host "[OK] $successRate%"
+    } elseif ($successRate -ge 60) {
+        Write-Host "[WARNING] $successRate%"
+    } else {
+        Write-Host "[ERROR] $successRate%"
+    }
 
     if ($testResults.Failed -eq 0 -and $testResults.Passed -gt 0) {
         Write-Host ""
-        Write-Host "All tests passed! Log notarization system is working correctly."
+        Write-Host "[OK] All tests passed! Log notarization system is working correctly."
     } elseif ($testResults.Failed -gt 0) {
         Write-Host ""
-        Write-Host "Some tests failed. Please check the configuration and Firebase setup."
+        Write-Host "[WARNING] Some tests failed. Please check the configuration and Firebase setup."
     }
 }
 

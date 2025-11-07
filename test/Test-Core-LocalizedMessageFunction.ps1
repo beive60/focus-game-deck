@@ -1,5 +1,63 @@
-﻿# Direct test of Get-LocalizedMessage function
-# このスクリプトは Get-LocalizedMessage 関数を直接テストします
+﻿<#
+.SYNOPSIS
+    Direct test of Get-LocalizedMessage function placeholder replacement.
+
+.DESCRIPTION
+    This script performs a direct test of the Get-LocalizedMessage function by recreating
+    the exact function definition from ConfigEditor.ps1 and testing its placeholder
+    replacement functionality in an isolated environment.
+
+    The test validates:
+    - Version information retrieval and format
+    - Message template loading from messages.json
+    - Placeholder pattern detection ({0}, {1}, etc.)
+    - String replacement using regex with proper escaping
+    - Verbose logging of the replacement process
+    - Final result validation (no remaining placeholders, version present)
+
+    This is a low-level test that provides detailed debugging output through verbose
+    mode, making it useful for troubleshooting localization issues.
+
+.PARAMETER Verbose
+    Enables verbose output showing detailed debugging information about the
+    placeholder replacement process, including intermediate states and pattern matching.
+
+.EXAMPLE
+    .\Test-LocalizedMessage.ps1
+    Runs the direct Get-LocalizedMessage function test with verbose output enabled.
+
+.EXAMPLE
+    .\Test-LocalizedMessage.ps1 -Verbose
+    Runs the test with explicit verbose flag (verbose is enabled by default in this script).
+
+.NOTES
+    Author: Focus Game Deck Team
+    Version: 1.0.0
+
+    Test Process:
+    1. Load Version.ps1 module for version information
+    2. Load messages.json and extract Japanese messages
+    3. Set up script-scope variables (Messages, CurrentLanguage)
+    4. Define Get-LocalizedMessage function (exact copy from ConfigEditor.ps1)
+    5. Create test arguments array with version information
+    6. Call function and analyze results
+    7. Validate placeholder replacement success
+
+    Validation Checks:
+    - Arguments array structure and type
+    - Message template format
+    - Placeholder detection and replacement
+    - No remaining placeholders in result
+    - Version number presence in result
+
+    Exit Behavior:
+    - Does not exit with error codes (displays results only)
+    - Useful for interactive debugging sessions
+
+    Dependencies:
+    - Version.ps1 module for Get-ProjectVersionInfo function
+    - localization/messages.json for message templates
+#>
 
 param(
     [switch]$Verbose
@@ -121,9 +179,23 @@ try {
     $hasVersionNumber = $result -like "*$($versionInfo.FullVersion)*"
 
     Write-Host "Analysis:"
-    Write-Host "  - Result contains {0}: $hasPlaceholder" -ForegroundColor $(if ($hasPlaceholder) { "Red" } else { "Green" })
-    Write-Host "  - Result contains version: $hasVersionNumber" -ForegroundColor $(if ($hasVersionNumber) { "Green" } else { "Red" })
-    Write-Host "  - Replacement successful: $((-not $hasPlaceholder) -and $hasVersionNumber)" -ForegroundColor $(if ((-not $hasPlaceholder) -and $hasVersionNumber) { "Green" } else { "Red" })
+    if ($hasPlaceholder) {
+        Write-Host "  [ERROR] - Result contains {0}: $hasPlaceholder"
+    } else {
+        Write-Host "  [OK] - Result contains {0}: $hasPlaceholder"
+    }
+
+    if ($hasVersionNumber) {
+        Write-Host "  [OK] - Result contains version: $hasVersionNumber"
+    } else {
+        Write-Host "  [ERROR] - Result contains version: $hasVersionNumber"
+    }
+
+    if ((-not $hasPlaceholder) -and $hasVersionNumber) {
+        Write-Host "  [OK] - Replacement successful: True"
+    } else {
+        Write-Host "  [ERROR] - Replacement successful: False"
+    }
 
 } catch {
     Write-Host "[ERROR] Test failed: $($_.Exception.Message)"
