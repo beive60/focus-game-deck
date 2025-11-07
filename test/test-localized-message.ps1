@@ -24,7 +24,7 @@ try {
     }
 
     # Load messages
-    $messagesPath = Join-Path $PSScriptRoot "../gui/messages.json"
+    $messagesPath = Join-Path $PSScriptRoot "../localization/messages.json"
     $messagesContent = Get-Content $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
     # Set up script variables as they would be in ConfigEditor

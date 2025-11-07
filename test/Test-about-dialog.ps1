@@ -45,7 +45,7 @@ try {
 
     # Test message loading
     Write-Host "--- Step 2: Testing message loading ---" -ForegroundColor Yellow
-    $messagesPath = Join-Path $PSScriptRoot "../gui/messages.json"
+    $messagesPath = Join-Path $PSScriptRoot "../localization/messages.json"
     if (-not (Test-Path $messagesPath)) {
         throw "Messages file not found: $messagesPath"
     }

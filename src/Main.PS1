@@ -223,8 +223,10 @@ function Show-GameList {
         }
 
         Write-Host ""
-        if ($msg -and $msg.available_games) {
-            Write-Host $msg.available_games -ForegroundColor Cyan
+        if ($msg -and $msg.mainGameListTitle) {
+            Write-Host $msg.mainGameListTitle -ForegroundColor Cyan
+        } elseif ($msg -and $msg.availableGames) {
+            Write-Host $msg.availableGames -ForegroundColor Cyan
         } else {
             Write-Host "Available Games:" -ForegroundColor Cyan
         }
@@ -237,20 +239,26 @@ function Show-GameList {
             $gameData = $_.Value
             $platform = if ($gameData.platform) { $gameData.platform } else { "steam" }
 
-            Write-Host "Game ID: " -NoNewline -ForegroundColor White
+            $gameIdLabel = if ($msg -and $msg.mainGameListGameId) { $msg.mainGameListGameId } else { "Game ID: " }
+            $nameLabel = if ($msg -and $msg.mainGameListName) { $msg.mainGameListName } else { "  Name: " }
+            $platformLabel = if ($msg -and $msg.mainGameListPlatform) { $msg.mainGameListPlatform } else { "  Platform: " }
+            $processLabel = if ($msg -and $msg.mainGameListProcess) { $msg.mainGameListProcess } else { "  Process: " }
+
+            Write-Host $gameIdLabel -NoNewline -ForegroundColor White
             Write-Host $gameId -ForegroundColor Green
-            Write-Host "  Name: " -NoNewline -ForegroundColor Gray
+            Write-Host $nameLabel -NoNewline -ForegroundColor Gray
             Write-Host $gameData.name -ForegroundColor White
-            Write-Host "  Platform: " -NoNewline -ForegroundColor Gray
+            Write-Host $platformLabel -NoNewline -ForegroundColor Gray
             Write-Host $platform -ForegroundColor Cyan
             if ($gameData.processName) {
-                Write-Host "  Process: " -NoNewline -ForegroundColor Gray
+                Write-Host $processLabel -NoNewline -ForegroundColor Gray
                 Write-Host $gameData.processName -ForegroundColor Yellow
             }
             Write-Host ""
         }
 
-        Write-Host "Usage: Focus-Game-Deck.exe <GameId>" -ForegroundColor Gray
+        $usageText = if ($msg -and $msg.mainGameListUsage) { $msg.mainGameListUsage } else { "Usage: Focus-Game-Deck.exe <GameId>" }
+        Write-Host $usageText -ForegroundColor Gray
         Write-Host ""
 
     } catch {
