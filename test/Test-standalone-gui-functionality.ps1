@@ -96,7 +96,7 @@ Write-Host "Test 9: Testing config.json compatibility..." -ForegroundColor Yello
 $configPath = "config/config.json"
 if (Test-Path $configPath) {
     try {
-        $config = Get-Content $configPath -Raw | ConvertFrom-Json
+        $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
         # Create a test standalone game entry
         $testStandaloneGame = @{
