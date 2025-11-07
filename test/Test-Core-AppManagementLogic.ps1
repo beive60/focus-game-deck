@@ -1,4 +1,4 @@
-# =============================================================================
+﻿# =============================================================================
 # Test-AppActions.ps1
 #
 # This script tests the application management logic from the FocusGameDeck
@@ -50,22 +50,22 @@ function Invoke-AppAction {
 
     # Validate app exists in managedApps
     if (-not $config.managedApps.$AppId) {
-        Write-Host "WARNING: Application '$AppId' is not defined in managedApps" -ForegroundColor Yellow
+        Write-Host "WARNING: Application '$AppId' is not defined in managedApps"
         return
     }
 
     $appConfig = $config.managedApps.$AppId
 
-    Write-Host "  Testing action '$Action' for app '$AppId'..." -ForegroundColor Cyan
+    Write-Host "  Testing action '$Action' for app '$AppId'..."
 
     # Handle different action types
     switch ($Action) {
         "start-process" {
             if ($appConfig.path -and $appConfig.path -ne "") {
                 $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") { $appConfig.arguments } else { "no arguments" }
-                Write-Host "    [SIMULATE] Would start process: $($appConfig.path) $arguments" -ForegroundColor Green
+                Write-Host "    [SIMULATE] Would start process: $($appConfig.path) $arguments"
             } else {
-                Write-Host "    [WARNING] No path specified for app '$AppId'" -ForegroundColor Yellow
+                Write-Host "    [WARNING] No path specified for app '$AppId'"
             }
         }
         "stop-process" {
@@ -78,23 +78,23 @@ function Invoke-AppAction {
                     try {
                         $processes = Get-Process -Name $processName -ErrorAction Stop
                         if ($processes) {
-                            Write-Host "    [SIMULATE] Would stop process: $processName (Currently running with PID: $($processes[0].Id))" -ForegroundColor Green
+                            Write-Host "    [SIMULATE] Would stop process: $processName (Currently running with PID: $($processes[0].Id))"
                         }
                     } catch {
-                        Write-Host "    [INFO] Process '$processName' is not currently running" -ForegroundColor Gray
+                        Write-Host "    [INFO] Process '$processName' is not currently running"
                     }
                 }
             } else {
-                Write-Host "    [WARNING] No process name specified for app '$AppId'" -ForegroundColor Yellow
+                Write-Host "    [WARNING] No process name specified for app '$AppId'"
             }
         }
         "toggle-hotkeys" {
             # Special handling for applications that need hotkey toggling (like Clibor)
             if ($appConfig.path -and $appConfig.path -ne "") {
                 $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") { $appConfig.arguments } else { "/hs" }
-                Write-Host "    [SIMULATE] Would toggle hotkeys: $($appConfig.path) $arguments" -ForegroundColor Green
+                Write-Host "    [SIMULATE] Would toggle hotkeys: $($appConfig.path) $arguments"
             } else {
-                Write-Host "    [WARNING] No path specified for app '$AppId'" -ForegroundColor Yellow
+                Write-Host "    [WARNING] No path specified for app '$AppId'"
             }
         }
         "pause-wallpaper" {
@@ -109,13 +109,13 @@ function Invoke-AppAction {
                     $wallpaper64Path = Join-Path ([System.IO.Path]::GetDirectoryName($executablePath)) "wallpaper64.exe"
                     if (Test-Path $wallpaper64Path) {
                         $executablePath = $wallpaper64Path
-                        Write-Host "    [INFO] Auto-selected 64-bit version: $executablePath" -ForegroundColor Cyan
+                        Write-Host "    [INFO] Auto-selected 64-bit version: $executablePath"
                     }
                 }
 
-                Write-Host "    [SIMULATE] Would pause Wallpaper Engine: $executablePath -control pause" -ForegroundColor Green
+                Write-Host "    [SIMULATE] Would pause Wallpaper Engine: $executablePath -control pause"
             } else {
-                Write-Host "    [WARNING] No path specified for Wallpaper Engine app '$AppId'" -ForegroundColor Yellow
+                Write-Host "    [WARNING] No path specified for Wallpaper Engine app '$AppId'"
             }
         }
         "play-wallpaper" {
@@ -130,32 +130,32 @@ function Invoke-AppAction {
                     $wallpaper64Path = Join-Path ([System.IO.Path]::GetDirectoryName($executablePath)) "wallpaper64.exe"
                     if (Test-Path $wallpaper64Path) {
                         $executablePath = $wallpaper64Path
-                        Write-Host "    [INFO] Auto-selected 64-bit version: $executablePath" -ForegroundColor Cyan
+                        Write-Host "    [INFO] Auto-selected 64-bit version: $executablePath"
                     }
                 }
 
-                Write-Host "    [SIMULATE] Would resume Wallpaper Engine: $executablePath -control play" -ForegroundColor Green
+                Write-Host "    [SIMULATE] Would resume Wallpaper Engine: $executablePath -control play"
             } else {
-                Write-Host "    [WARNING] No path specified for Wallpaper Engine app '$AppId'" -ForegroundColor Yellow
+                Write-Host "    [WARNING] No path specified for Wallpaper Engine app '$AppId'"
             }
         }
         "start-vtube-studio" {
-            Write-Host "    [SIMULATE] Would start VTube Studio integration" -ForegroundColor Green
+            Write-Host "    [SIMULATE] Would start VTube Studio integration"
         }
         "stop-vtube-studio" {
-            Write-Host "    [SIMULATE] Would stop VTube Studio integration" -ForegroundColor Green
+            Write-Host "    [SIMULATE] Would stop VTube Studio integration"
         }
         "set-discord-gaming-mode" {
-            Write-Host "    [SIMULATE] Would set Discord to gaming mode" -ForegroundColor Green
+            Write-Host "    [SIMULATE] Would set Discord to gaming mode"
         }
         "restore-discord-normal" {
-            Write-Host "    [SIMULATE] Would restore Discord to normal mode" -ForegroundColor Green
+            Write-Host "    [SIMULATE] Would restore Discord to normal mode"
         }
         "none" {
-            Write-Host "    [INFO] No action specified - skipping" -ForegroundColor Gray
+            Write-Host "    [INFO] No action specified - skipping"
         }
         default {
-            Write-Host "    [ERROR] Unknown action: $Action for app: $AppId" -ForegroundColor Red
+            Write-Host "    [ERROR] Unknown action: $Action for app: $AppId"
         }
     }
 }
@@ -166,23 +166,23 @@ function Test-OBSActions {
         [string]$Action  # "start" or "stop"
     )
 
-    Write-Host "  Testing OBS $Action..." -ForegroundColor Cyan
+    Write-Host "  Testing OBS $Action..."
 
     if ($Action -eq "start") {
         $obsProcessName = "obs64"
         $obsProcess = Get-Process -Name $obsProcessName -ErrorAction SilentlyContinue
         if ($obsProcess) {
-            Write-Host "    [INFO] OBS is already running (PID: $($obsProcess[0].Id))" -ForegroundColor Gray
+            Write-Host "    [INFO] OBS is already running (PID: $($obsProcess[0].Id))"
         } else {
-            Write-Host "    [SIMULATE] Would start OBS: $($config.paths.obs)" -ForegroundColor Green
+            Write-Host "    [SIMULATE] Would start OBS: $($config.paths.obs)"
         }
 
         if ($config.obs.replayBuffer) {
-            Write-Host "    [SIMULATE] Would start OBS replay buffer via WebSocket" -ForegroundColor Green
+            Write-Host "    [SIMULATE] Would start OBS replay buffer via WebSocket"
         }
     } elseif ($Action -eq "stop") {
         if ($config.obs.replayBuffer) {
-            Write-Host "    [SIMULATE] Would stop OBS replay buffer via WebSocket" -ForegroundColor Green
+            Write-Host "    [SIMULATE] Would stop OBS replay buffer via WebSocket"
         }
     }
 }
@@ -191,7 +191,7 @@ function Test-OBSActions {
 
 # --- Main Test Logic ---
 
-Write-Host "=== FocusGameDeck App Actions Test ===" -ForegroundColor White -BackgroundColor Blue
+Write-Host "=== FocusGameDeck App Actions Test ==="
 Write-Host ""
 
 # Load configuration file
@@ -199,33 +199,33 @@ $scriptDir = $PSScriptRoot
 $configPath = Join-Path $scriptDir "../config/config.json"
 
 if (-not (Test-Path $configPath)) {
-    Write-Host "Error: config.json not found at $configPath" -ForegroundColor Red
-    Write-Host "Please create it from config.json.sample." -ForegroundColor Red
+    Write-Host "Error: config.json not found at $configPath"
+    Write-Host "Please create it from config.json.sample."
     exit 1
 }
 
 try {
     $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    Write-Host "Configuration loaded successfully" -ForegroundColor Green
+    Write-Host "Configuration loaded successfully"
 } catch {
-    Write-Host "Error loading configuration: $_" -ForegroundColor Red
+    Write-Host "Error loading configuration: $_"
     exit 1
 }
 
 # Get game configuration
 $gameConfig = $config.games.$GameId
 if (-not $gameConfig) {
-    Write-Host "Error: Game ID '$GameId' not found in configuration" -ForegroundColor Red
-    Write-Host "Available game IDs: $($config.games.PSObject.Properties.Name -join ', ')" -ForegroundColor Yellow
+    Write-Host "Error: Game ID '$GameId' not found in configuration"
+    Write-Host "Available game IDs: $($config.games.PSObject.Properties.Name -join ', ')"
     exit 1
 }
 
-Write-Host "Testing game: $($gameConfig.name)" -ForegroundColor Green
-Write-Host "Apps to manage: $($gameConfig.appsToManage -join ', ')" -ForegroundColor Green
+Write-Host "Testing game: $($gameConfig.name)"
+Write-Host "Apps to manage: $($gameConfig.appsToManage -join ', ')"
 Write-Host ""
 
 # Test game start scenario
-Write-Host "--- SIMULATING GAME START ---" -ForegroundColor White -BackgroundColor DarkGreen
+Write-Host "--- SIMULATING GAME START ---"
 Write-Host ""
 
 foreach ($appId in $gameConfig.appsToManage) {
@@ -246,12 +246,12 @@ foreach ($appId in $gameConfig.appsToManage) {
 
         Invoke-AppAction -AppId $appId -Action $action
     } else {
-        Write-Host "  WARNING: App '$appId' not defined in managedApps" -ForegroundColor Yellow
+        Write-Host "  WARNING: App '$appId' not defined in managedApps"
     }
 }
 
 Write-Host ""
-Write-Host "--- SIMULATING GAME END ---" -ForegroundColor White -BackgroundColor DarkRed
+Write-Host "--- SIMULATING GAME END ---"
 Write-Host ""
 
 # Test Clibor first (special handling)
@@ -281,7 +281,7 @@ foreach ($appId in $gameConfig.appsToManage) {
 }
 
 Write-Host ""
-Write-Host "=== Test Complete ===" -ForegroundColor White -BackgroundColor Blue
+Write-Host "=== Test Complete ==="
 Write-Host ""
-Write-Host "This test simulated the app management actions without actually executing them." -ForegroundColor Gray
-Write-Host "Review the output above to verify the expected behavior matches your configuration." -ForegroundColor Gray
+Write-Host "This test simulated the app management actions without actually executing them."
+Write-Host "Review the output above to verify the expected behavior matches your configuration."

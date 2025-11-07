@@ -1,4 +1,4 @@
-# =============================================================================
+﻿# =============================================================================
 # Test-ConfigValidation.ps1
 #
 # This script tests the configuration validation logic from the FocusGameDeck
@@ -33,7 +33,7 @@ function Test-ConfigStructure {
     $errors = @()
     $gameConfig = $Config.games.$GameId
 
-    Write-Host "Validating configuration structure for game: $GameId" -ForegroundColor Cyan
+    Write-Host "Validating configuration structure for game: $GameId"
 
     # Use the updated ConfigValidator for validation
     $messages = @{
@@ -47,18 +47,18 @@ function Test-ConfigStructure {
 
     # Show validation details
     if ($report.Errors.Count -gt 0) {
-        Write-Host "Game '$GameId' has $($report.Errors.Count) error(s):" -ForegroundColor Red
+        Write-Host "Game '$GameId' has $($report.Errors.Count) error(s):"
         foreach ($error in $report.Errors) {
-            Write-Host "  - $error" -ForegroundColor Red
+            Write-Host "  - $error"
         }
     } else {
-        Write-Host "  [OK] Game '$GameId' configuration is valid" -ForegroundColor Green
+        Write-Host "  [OK] Game '$GameId' configuration is valid"
     }
 
     if ($report.Warnings.Count -gt 0) {
-        Write-Host "Game '$GameId' has $($report.Warnings.Count) warning(s):" -ForegroundColor Yellow
+        Write-Host "Game '$GameId' has $($report.Warnings.Count) warning(s):"
         foreach ($warning in $report.Warnings) {
-            Write-Host "  - $warning" -ForegroundColor Yellow
+            Write-Host "  - $warning"
         }
     }
 
@@ -70,7 +70,7 @@ function Test-ConfigStructure {
 
 # --- Main Test Logic ---
 
-Write-Host "=== FocusGameDeck Configuration Validation Test ===" -ForegroundColor White -BackgroundColor Blue
+Write-Host "=== FocusGameDeck Configuration Validation Test ==="
 Write-Host ""
 
 # Load configuration file
@@ -78,28 +78,28 @@ $scriptDir = $PSScriptRoot
 $configPath = Join-Path $scriptDir "../config/config.json"
 
 if (-not (Test-Path $configPath)) {
-    Write-Host "Error: config.json not found at $configPath" -ForegroundColor Red
-    Write-Host "Please create it from config.json.sample." -ForegroundColor Red
+    Write-Host "Error: config.json not found at $configPath"
+    Write-Host "Please create it from config.json.sample."
     exit 1
 }
 
 try {
     $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    Write-Host "Configuration loaded successfully" -ForegroundColor Green
+    Write-Host "Configuration loaded successfully"
 } catch {
-    Write-Host "Error loading configuration: $_" -ForegroundColor Red
+    Write-Host "Error loading configuration: $_"
     exit 1
 }
 
 Write-Host ""
-Write-Host "Available games:" -ForegroundColor Yellow
+Write-Host "Available games:"
 foreach ($gameId in $config.games.PSObject.Properties.Name) {
     $gameName = $config.games.$gameId.name
-    Write-Host "  - $gameId ($gameName)" -ForegroundColor Gray
+    Write-Host "  - $gameId ($gameName)"
 }
 
 Write-Host ""
-Write-Host "--- VALIDATING ALL GAME CONFIGURATIONS ---" -ForegroundColor White -BackgroundColor DarkBlue
+Write-Host "--- VALIDATING ALL GAME CONFIGURATIONS ---"
 Write-Host ""
 
 $allErrors = @()
@@ -108,26 +108,26 @@ foreach ($gameId in $config.games.PSObject.Properties.Name) {
     $gameErrors = Test-ConfigStructure -Config $config -GameId $gameId
     if ($gameErrors.Count -gt 0) {
         $allErrors += $gameErrors
-        Write-Host "Game '$gameId' has $($gameErrors.Count) error(s):" -ForegroundColor Red
+        Write-Host "Game '$gameId' has $($gameErrors.Count) error(s):"
         foreach ($errorMsg in $gameErrors) {
-            Write-Host "  - $errorMsg" -ForegroundColor Red
+            Write-Host "  - $errorMsg"
         }
     } else {
-        Write-Host "Game '$gameId' configuration is valid" -ForegroundColor Green
+        Write-Host "Game '$gameId' configuration is valid"
     }
     Write-Host ""
 }
 
-Write-Host "--- VALIDATION SUMMARY ---" -ForegroundColor White -BackgroundColor DarkBlue
+Write-Host "--- VALIDATION SUMMARY ---"
 if ($allErrors.Count -eq 0) {
-    Write-Host "All configurations are valid!" -ForegroundColor Green
+    Write-Host "All configurations are valid!"
     Write-Host ""
-    Write-Host "Your configuration is ready to use." -ForegroundColor Green
+    Write-Host "Your configuration is ready to use."
 } else {
-    Write-Host "Found $($allErrors.Count) validation error(s)" -ForegroundColor Red
+    Write-Host "Found $($allErrors.Count) validation error(s)"
     Write-Host ""
-    Write-Host "Please fix the errors above before using the script." -ForegroundColor Red
+    Write-Host "Please fix the errors above before using the script."
 }
 
 Write-Host ""
-Write-Host "=== Validation Complete ===" -ForegroundColor White -BackgroundColor Blue
+Write-Host "=== Validation Complete ==="

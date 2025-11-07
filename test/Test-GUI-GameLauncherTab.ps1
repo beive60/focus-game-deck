@@ -1,4 +1,4 @@
-# Game Launcher Tab Unit Tests
+﻿# Game Launcher Tab Unit Tests
 # Tests for the newly implemented Game Launcher Tab functionality
 #
 # Author: GitHub Copilot Assistant
@@ -15,8 +15,8 @@ Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
 
-Write-Host "=== Game Launcher Tab Unit Tests ===" -ForegroundColor Cyan
-Write-Host "Testing Game Launcher Tab functionality..." -ForegroundColor Yellow
+Write-Host "=== Game Launcher Tab Unit Tests ==="
+Write-Host "Testing Game Launcher Tab functionality..."
 Write-Host ""
 
 # Test counters
@@ -32,7 +32,7 @@ function Invoke-Test {
         [string]$Description = ""
     )
 
-    Write-Host "Running Test: $TestName" -ForegroundColor White
+    Write-Host "Running Test: $TestName"
     if ($Description) {
         Write-Host "  Description: $Description" -[\p { Emoji_Presentation }\p { Extended_Pictographic }]\u { FE0F }?\sForegroundColor Gray
     }
@@ -40,7 +40,7 @@ function Invoke-Test {
     try {
         $result = & $TestCode
         if ($result -eq $true -or $null -eq $result) {
-            Write-Host "  PASSED" -ForegroundColor Green
+            Write-Host "  PASSED"
             $script:TestsPassed++
             $script:TestResults += [PSCustomObject]@{
                 TestName    = $TestName
@@ -49,7 +49,7 @@ function Invoke-Test {
                 Description = $Description
             }
         } else {
-            Write-Host "  FAILED: $result" -ForegroundColor Red
+            Write-Host "  FAILED: $result"
             $script:TestsFailed++
             $script:TestResults += [PSCustomObject]@{
                 TestName    = $TestName
@@ -59,7 +59,7 @@ function Invoke-Test {
             }
         }
     } catch {
-        Write-Host "  FAILED: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  FAILED: $($_.Exception.Message)"
         $script:TestsFailed++
         $script:TestResults += [PSCustomObject]@{
             TestName    = $TestName
@@ -164,11 +164,11 @@ try {
         }
     }
 
-    Write-Host "Extracted functions for testing environment" -ForegroundColor Green
+    Write-Host "Extracted functions for testing environment"
 
 } catch {
     Write-Warning "Could not load ConfigEditor.ps1 for testing: $($_.Exception.Message)"
-    Write-Host "Running tests with mock implementations..." -ForegroundColor Yellow
+    Write-Host "Running tests with mock implementations..."
 }
 
 # Mock global variables for testing
@@ -616,35 +616,35 @@ Invoke-Test -TestName "ConfigEditor-Integration" -Description "Test integration 
 #endregion
 
 # Run all tests
-Write-Host "Starting Game Launcher Tab unit tests..." -ForegroundColor Cyan
-Write-Host ("=" * 60) -ForegroundColor Cyan
+Write-Host "Starting Game Launcher Tab unit tests..."
+Write-Host ("=" * 60)
 
 # Execute the tests (they are already defined above with Invoke-Test calls)
 
 # Display test summary
-Write-Host ("=" * 60) -ForegroundColor Cyan
-Write-Host "Test Results Summary:" -ForegroundColor White
-Write-Host "  Passed: $script:TestsPassed" -ForegroundColor Green
-Write-Host "  Failed: $script:TestsFailed" -ForegroundColor Red
-Write-Host "  Total:  $($script:TestsPassed + $script:TestsFailed)" -ForegroundColor Yellow
+Write-Host ("=" * 60)
+Write-Host "Test Results Summary:"
+Write-Host "  Passed: $script:TestsPassed"
+Write-Host "  Failed: $script:TestsFailed"
+Write-Host "  Total:  $($script:TestsPassed + $script:TestsFailed)"
 
 if ($script:TestsFailed -eq 0) {
-    Write-Host "`nAll tests passed! Game Launcher Tab functionality is working correctly." -ForegroundColor Green
+    Write-Host "`nAll tests passed! Game Launcher Tab functionality is working correctly."
 } else {
-    Write-Host "`n Some tests failed. Please review the results above." -ForegroundColor Yellow
+    Write-Host "`n Some tests failed. Please review the results above."
 
     # Show failed tests details
     $failedTests = $script:TestResults | Where-Object { $_.Status -eq "FAILED" }
     if ($failedTests) {
-        Write-Host "`nFailed Tests Details:" -ForegroundColor Red
+        Write-Host "`nFailed Tests Details:"
         foreach ($test in $failedTests) {
-            Write-Host "  - $($test.TestName): $($test.Error)" -ForegroundColor Red
+            Write-Host "  - $($test.TestName): $($test.Error)"
         }
     }
 }
 
-Write-Host "`nGame Launcher Tab Unit Tests Completed." -ForegroundColor Cyan
-Write-Host ("=" * 60) -ForegroundColor Cyan
+Write-Host "`nGame Launcher Tab Unit Tests Completed."
+Write-Host ("=" * 60)
 
 # Return results for CI/automation
 return @{
