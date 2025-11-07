@@ -245,7 +245,7 @@ function Test-ConfigurationLoading {
 
     # Test main config.json loading
     try {
-        $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
+        $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
         Test-Assert "Main Config Loading" ($null -ne $config) "Successfully loaded main configuration"
         Test-Assert "Config Has Games" ($null -ne $config.games) "Configuration should have games section"
         Test-Assert "Config Has Paths" ($null -ne $config.paths) "Configuration should have paths section"
