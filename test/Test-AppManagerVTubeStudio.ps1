@@ -8,7 +8,7 @@ Write-Host "=== AppManager VTube Studio Integration Test ===" -ForegroundColor C
 . "$PSScriptRoot/../src/modules/VTubeStudioManager.ps1"
 
 # Load configuration
-$config = Get-Content "$PSScriptRoot/../config/config.json" | ConvertFrom-Json
+$config = Get-Content "$PSScriptRoot/../config/config.json" -Raw -Encoding UTF8 | ConvertFrom-Json
 
 # Create AppManager instance
 $appManager = New-AppManager -Config $config -Messages @{}

@@ -108,7 +108,7 @@ function Show-Help {
 
     try {
         # Try to load messages for help display
-        $config = Get-Content -Path $configPath -Raw -ErrorAction SilentlyContinue | ConvertFrom-Json -ErrorAction SilentlyContinue
+        $config = Get-Content -Path $configPath -Raw -Encoding UTF8 -ErrorAction SilentlyContinue | ConvertFrom-Json -ErrorAction SilentlyContinue
         $langCode = if ($config) { Get-DetectedLanguage -ConfigData $config } else { "en" }
         $msg = if (Test-Path $messagesPath) { Get-LocalizedMessages -MessagesPath $messagesPath -LanguageCode $langCode } else { $null }
 
@@ -207,7 +207,7 @@ function Show-GameList {
             return
         }
 
-        $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
+        $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
         # Load messages for localization
         $langCode = Get-DetectedLanguage -ConfigData $config
@@ -337,7 +337,7 @@ function Start-Game {
 
         # Validate GameId exists in configuration
         if (Test-Path $configPath) {
-            $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
+            $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
             if (-not $config.games.$GameId) {
                 Write-Host "Game ID '$GameId' not found in configuration." -ForegroundColor Red
                 Write-Host "Use --list to see available games or --config to add new ones." -ForegroundColor Yellow

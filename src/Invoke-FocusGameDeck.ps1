@@ -39,7 +39,7 @@ foreach ($modulePath in $modulePaths) {
 # Load configuration and messages
 try {
     # Load configuration
-    $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
+    $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
     # Load messages for localization
     $languageHelperPath = Join-Path $scriptDir "../scripts/LanguageHelper.ps1"
