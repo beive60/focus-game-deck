@@ -1,4 +1,4 @@
-# Focus Game Deck - Multi-Platform Support Unit Tests
+﻿# Focus Game Deck - Multi-Platform Support Unit Tests
 # v1.0 Epic Games & Riot Client Support Testing
 
 param(
@@ -62,7 +62,7 @@ function Test-Assert {
 }
 
 function Test-PlatformManager {
-    Write-Host "`n=== PlatformManager Tests ===" -ForegroundColor Cyan
+    Write-Host "`n=== PlatformManager Tests ==="
 
     # Create test configuration
     $testConfig = @{
@@ -142,7 +142,7 @@ function Test-PlatformManager {
 }
 
 function Test-ConfigValidator {
-    Write-Host "`n=== ConfigValidator Multi-Platform Tests ===" -ForegroundColor Cyan
+    Write-Host "`n=== ConfigValidator Multi-Platform Tests ==="
 
     # Test configuration with multi-platform games
     $testConfig = @{
@@ -232,14 +232,14 @@ function Test-ConfigValidator {
         }
 
         if ($Verbose -and ($validator.Errors.Count -gt 0 -or $validator.Warnings.Count -gt 0)) {
-            Write-Host "  Errors: $($validator.Errors -join '; ')" -ForegroundColor Yellow
-            Write-Host "  Warnings: $($validator.Warnings -join '; ')" -ForegroundColor Yellow
+            Write-Host "  Errors: $($validator.Errors -join '; ')"
+            Write-Host "  Warnings: $($validator.Warnings -join '; ')"
         }
     }
 }
 
 function Test-ConfigurationLoading {
-    Write-Host "`n=== Configuration Loading Tests ===" -ForegroundColor Cyan
+    Write-Host "`n=== Configuration Loading Tests ==="
 
     $configPath = Join-Path $projectRoot "config/config.json"
 
@@ -276,29 +276,29 @@ function Test-ConfigurationLoading {
 }
 
 # Execute Tests
-Write-Host "Focus Game Deck - Multi-Platform Support Unit Tests" -ForegroundColor Green
-Write-Host "Testing Epic Games & Riot Client Integration (v1.0)" -ForegroundColor Green
-Write-Host "======================================================" -ForegroundColor Green
+Write-Host "Focus Game Deck - Multi-Platform Support Unit Tests"
+Write-Host "Testing Epic Games & Riot Client Integration (v1.0)"
+Write-Host "======================================================"
 
 Test-ConfigurationLoading
 Test-PlatformManager
 Test-ConfigValidator
 
 # Display Results
-Write-Host "`n======================================================" -ForegroundColor Green
-Write-Host "Test Results Summary" -ForegroundColor Green
-Write-Host "======================================================" -ForegroundColor Green
-Write-Host "Tests Passed: $($global:TestResults.Passed)" -ForegroundColor Green
-Write-Host "Tests Failed: $($global:TestResults.Failed)" -ForegroundColor Red
+Write-Host "`n======================================================"
+Write-Host "Test Results Summary"
+Write-Host "======================================================"
+Write-Host "Tests Passed: $($global:TestResults.Passed)"
+Write-Host "Tests Failed: $($global:TestResults.Failed)"
 Write-Host "Total Tests: $($global:TestResults.Passed + $global:TestResults.Failed)"
 
 if ($global:TestResults.Failed -gt 0) {
-    Write-Host "`nFailed Tests:" -ForegroundColor Red
+    Write-Host "`nFailed Tests:"
     $global:TestResults.Details | Where-Object { $_ -like "FAIL*" } | ForEach-Object {
-        Write-Host "  $_" -ForegroundColor Red
+        Write-Host "  $_"
     }
     exit 1
 } else {
-    Write-Host "`nAll tests passed!" -ForegroundColor Green
+    Write-Host "`nAll tests passed!"
     exit 0
 }
