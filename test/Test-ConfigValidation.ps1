@@ -84,7 +84,7 @@ if (-not (Test-Path $configPath)) {
 }
 
 try {
-    $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
+    $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
     Write-Host "Configuration loaded successfully"
 } catch {
     Write-Host "Error loading configuration: $_"

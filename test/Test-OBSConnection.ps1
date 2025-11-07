@@ -148,7 +148,7 @@ if (-not (Test-Path $configPath)) {
     Write-Host "Please ensure config.json exists in the config/ directory."
     exit 1
 }
-$config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
+$config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
 # Check for OBS configuration
 if (-not $config.obs.websocket) {
