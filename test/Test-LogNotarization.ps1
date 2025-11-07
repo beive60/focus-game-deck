@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 
 <#
 .SYNOPSIS
@@ -49,9 +49,9 @@ function Write-TestHeader {
     param([string]$Title)
 
     Write-Host ""
-    Write-Host "=" * 60 -ForegroundColor Cyan
-    Write-Host " $Title" -ForegroundColor Cyan
-    Write-Host "=" * 60 -ForegroundColor Cyan
+    Write-Host "=" * 60
+    Write-Host " $Title"
+    Write-Host "=" * 60
 }
 
 function Write-TestResult {
@@ -65,17 +65,17 @@ function Write-TestResult {
 
     if ($Passed) {
         $testResults.Passed++
-        Write-Host "[OK] " -NoNewline -ForegroundColor Green
-        Write-Host "$TestName" -ForegroundColor White
+        Write-Host "[OK] " -NoNewline
+        Write-Host "$TestName"
         if ($Message) {
-            Write-Host "  $Message" -ForegroundColor Gray
+            Write-Host "  $Message"
         }
     } else {
         $testResults.Failed++
-        Write-Host "[ERROR] " -NoNewline -ForegroundColor Red
-        Write-Host "$TestName" -ForegroundColor White
+        Write-Host "[ERROR] " -NoNewline
+        Write-Host "$TestName"
         if ($Message) {
-            Write-Host "  Error: $Message" -ForegroundColor Red
+            Write-Host "  Error: $Message"
         }
     }
 }
@@ -88,9 +88,9 @@ function Write-TestSkipped {
 
     $testResults.Total++
     $testResults.Skipped++
-    Write-Host "- " -NoNewline -ForegroundColor Yellow
-    Write-Host "$TestName" -ForegroundColor White
-    Write-Host "  Skipped: $Reason" -ForegroundColor Yellow
+    Write-Host "- " -NoNewline
+    Write-Host "$TestName"
+    Write-Host "  Skipped: $Reason"
 }
 
 function Test-Prerequisites {
@@ -356,20 +356,20 @@ function Test-FirebaseIntegration {
 
     try {
         # Test the full notarization process
-        Write-Host "Attempting to notarize log file with self-authentication data..." -ForegroundColor Yellow
+        Write-Host "Attempting to notarize log file with self-authentication data..."
 
         $certificateId = $Logger.FinalizeAndNotarizeLogAsync()
 
         if ($certificateId) {
             Write-TestResult "Firebase log notarization with authentication data" $true "Certificate ID: $certificateId"
-            Write-Host "  You can verify this record in your Firebase Console" -ForegroundColor Gray
-            Write-Host "  The record should include:" -ForegroundColor Gray
-            Write-Host "    - logHash: SHA256 hash of the log file" -ForegroundColor Gray
-            Write-Host "    - appSignatureHash: Digital signature hash of the executable" -ForegroundColor Gray
-            Write-Host "    - appVersion: Application version from Version.ps1" -ForegroundColor Gray
-            Write-Host "    - executablePath: Path to the running executable" -ForegroundColor Gray
-            Write-Host "    - clientTimestamp: Client-side timestamp" -ForegroundColor Gray
-            Write-Host "    - serverTimestamp: Server-side timestamp" -ForegroundColor Gray
+            Write-Host "  You can verify this record in your Firebase Console"
+            Write-Host "  The record should include:"
+            Write-Host "    - logHash: SHA256 hash of the log file"
+            Write-Host "    - appSignatureHash: Digital signature hash of the executable"
+            Write-Host "    - appVersion: Application version from Version.ps1"
+            Write-Host "    - executablePath: Path to the running executable"
+            Write-Host "    - clientTimestamp: Client-side timestamp"
+            Write-Host "    - serverTimestamp: Server-side timestamp"
             return $certificateId
         } else {
             Write-TestResult "Firebase log notarization with authentication data" $false "No certificate ID returned"
@@ -394,8 +394,8 @@ function Test-Cleanup {
             Write-TestResult "Test files cleanup" $false $_.Exception.Message
         }
     } else {
-        Write-Host "Cleanup skipped due to -NoCleanup flag" -ForegroundColor Yellow
-        Write-Host "Test files location: $testLogDir" -ForegroundColor Gray
+        Write-Host "Cleanup skipped due to -NoCleanup flag"
+        Write-Host "Test files location: $testLogDir"
     }
 }
 
@@ -403,16 +403,16 @@ function Show-TestSummary {
     Write-TestHeader "Test Summary"
 
     Write-Host "Total Tests: " -NoNewline
-    Write-Host $testResults.Total -ForegroundColor White
+    Write-Host $testResults.Total
 
     Write-Host "Passed: " -NoNewline
-    Write-Host $testResults.Passed -ForegroundColor Green
+    Write-Host $testResults.Passed
 
     Write-Host "Failed: " -NoNewline
-    Write-Host $testResults.Failed -ForegroundColor Red
+    Write-Host $testResults.Failed
 
     Write-Host "Skipped: " -NoNewline
-    Write-Host $testResults.Skipped -ForegroundColor Yellow
+    Write-Host $testResults.Skipped
 
     $successRate = if ($testResults.Total -gt 0) {
         [math]::Round(($testResults.Passed / $testResults.Total) * 100, 1)
@@ -425,44 +425,44 @@ function Show-TestSummary {
 
     if ($testResults.Failed -eq 0 -and $testResults.Passed -gt 0) {
         Write-Host ""
-        Write-Host "All tests passed! Log notarization system is working correctly." -ForegroundColor Green
+        Write-Host "All tests passed! Log notarization system is working correctly."
     } elseif ($testResults.Failed -gt 0) {
         Write-Host ""
-        Write-Host "Some tests failed. Please check the configuration and Firebase setup." -ForegroundColor Red
+        Write-Host "Some tests failed. Please check the configuration and Firebase setup."
     }
 }
 
 # Main test execution
 try {
-    Write-Host "Focus Game Deck - Log Notarization Test" -ForegroundColor Cyan
-    Write-Host "Testing Firebase integration and log integrity verification" -ForegroundColor Gray
-    Write-Host "Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Gray
+    Write-Host "Focus Game Deck - Log Notarization Test"
+    Write-Host "Testing Firebase integration and log integrity verification"
+    Write-Host "Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 
     # Run test sequence
     $prerequisitesOk = Test-Prerequisites
     if (-not $prerequisitesOk) {
-        Write-Host "Prerequisites test failed. Aborting remaining tests." -ForegroundColor Red
+        Write-Host "Prerequisites test failed. Aborting remaining tests."
         Show-TestSummary
         exit 1
     }
 
     $config = Test-ConfigurationLoading
     if (-not $config) {
-        Write-Host "Configuration test failed. Aborting remaining tests." -ForegroundColor Red
+        Write-Host "Configuration test failed. Aborting remaining tests."
         Show-TestSummary
         exit 1
     }
 
     $logger = Test-LoggerInitialization -Config $config
     if (-not $logger) {
-        Write-Host "Logger initialization failed. Aborting remaining tests." -ForegroundColor Red
+        Write-Host "Logger initialization failed. Aborting remaining tests."
         Show-TestSummary
         exit 1
     }
 
     $logFileOk = Test-LogFileCreation -Logger $logger
     if (-not $logFileOk) {
-        Write-Host "Log file creation failed. Aborting remaining tests." -ForegroundColor Red
+        Write-Host "Log file creation failed. Aborting remaining tests."
         Show-TestSummary
         exit 1
     }
@@ -487,9 +487,9 @@ try {
 
 } catch {
     Write-Host ""
-    Write-Host "Unexpected error during test execution:" -ForegroundColor Red
-    Write-Host $_.Exception.Message -ForegroundColor Red
-    Write-Host $_.ScriptStackTrace -ForegroundColor DarkRed
+    Write-Host "Unexpected error during test execution:"
+    Write-Host $_.Exception.Message
+    Write-Host $_.ScriptStackTrace
 
     Test-Cleanup
     Show-TestSummary

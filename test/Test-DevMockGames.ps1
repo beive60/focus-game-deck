@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 
 <#
 .SYNOPSIS
@@ -72,53 +72,53 @@ $configPath = Join-Path $projectRoot "config/config.json"
 $configSamplePath = Join-Path $projectRoot "config/config.json.sample"
 $mainScriptPath = Join-Path $projectRoot "src/Invoke-FocusGameDeck.ps1"
 
-Write-Host "=== Focus Game Deck - Development Mock Game Test ===" -ForegroundColor Cyan
-Write-Host "Mock Game ID: $MockGameId" -ForegroundColor Green
+Write-Host "=== Focus Game Deck - Development Mock Game Test ==="
+Write-Host "Mock Game ID: $MockGameId"
 Write-Host ""
 
 # Determine which config file to use
 $actualConfigPath = $configPath
 if (-not (Test-Path $configPath)) {
-    Write-Host "[INFO] config.json not found, using sample configuration" -ForegroundColor Yellow
+    Write-Host "[INFO] config.json not found, using sample configuration"
     $actualConfigPath = $configSamplePath
 }
 
-Write-Host "Config File: $actualConfigPath" -ForegroundColor Gray
+Write-Host "Config File: $actualConfigPath"
 Write-Host ""
 
 # Validate configuration exists
 if (-not (Test-Path $actualConfigPath)) {
-    Write-Host "[ERROR] Configuration file not found: $actualConfigPath" -ForegroundColor Red
-    Write-Host "Please ensure config.json or config.json.sample exists in the config directory." -ForegroundColor Yellow
+    Write-Host "[ERROR] Configuration file not found: $actualConfigPath"
+    Write-Host "Please ensure config.json or config.json.sample exists in the config directory."
     exit 1
 }
 
 # Load configuration
 try {
     $config = Get-Content -Path $actualConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    Write-Host "[OK] Configuration loaded successfully" -ForegroundColor Green
+    Write-Host "[OK] Configuration loaded successfully"
 } catch {
-    Write-Host "[ERROR] Failed to load configuration: $_" -ForegroundColor Red
+    Write-Host "[ERROR] Failed to load configuration: $_"
     exit 1
 }
 
 # Validate mock game exists in config
 if (-not $config.games.$MockGameId) {
-    Write-Host "[ERROR] Mock game '$MockGameId' not found in configuration" -ForegroundColor Red
+    Write-Host "[ERROR] Mock game '$MockGameId' not found in configuration"
     $availableGames = $config.games.PSObject.Properties | Where-Object { $_.Name -like "mock-*" } | Select-Object -ExpandProperty Name
-    Write-Host "Available mock games: $($availableGames -join ', ')" -ForegroundColor Yellow
+    Write-Host "Available mock games: $($availableGames -join ', ')"
     exit 1
 }
 
 $mockGame = $config.games.$MockGameId
-Write-Host "[INFO] Mock Game: $($mockGame.name)" -ForegroundColor Cyan
-Write-Host "[INFO] Target Process: $($mockGame.processName)" -ForegroundColor Cyan
-Write-Host "[INFO] Apps to Manage: $($mockGame.appsToManage -join ', ')" -ForegroundColor Cyan
+Write-Host "[INFO] Mock Game: $($mockGame.name)"
+Write-Host "[INFO] Target Process: $($mockGame.processName)"
+Write-Host "[INFO] Apps to Manage: $($mockGame.appsToManage -join ', ')"
 
 if ($DryRun) {
     Write-Host ""
-    Write-Host "=== DRY RUN MODE - No actual execution ===" -ForegroundColor Yellow
-    Write-Host "Would execute: $mainScriptPath -GameId $MockGameId" -ForegroundColor Gray
+    Write-Host "=== DRY RUN MODE - No actual execution ==="
+    Write-Host "Would execute: $mainScriptPath -GameId $MockGameId"
     Write-Host ""
     Write-Host "Mock game details:"
     Write-Host "- Name: $($mockGame.name)"
@@ -135,7 +135,7 @@ if ($DryRun) {
 }
 
 Write-Host ""
-Write-Host "=== Starting Mock Game Test ===" -ForegroundColor Green
+Write-Host "=== Starting Mock Game Test ==="
 Write-Host "Press Ctrl+C to abort before game launch..."
 Start-Sleep -Seconds 2
 
@@ -152,30 +152,30 @@ try {
         $arguments += "-Verbose"
     }
 
-    Write-Host "[INFO] Executing: powershell.exe $($arguments -join ' ')" -ForegroundColor Gray
+    Write-Host "[INFO] Executing: powershell.exe $($arguments -join ' ')"
     Write-Host ""
 
     & powershell.exe @arguments
 
     Write-Host ""
-    Write-Host "[OK] Mock game test completed" -ForegroundColor Green
+    Write-Host "[OK] Mock game test completed"
 
 } catch {
     Write-Host ""
-    Write-Host "[ERROR] Mock game test failed: $_" -ForegroundColor Red
+    Write-Host "[ERROR] Mock game test failed: $_"
     exit 1
 }
 
 Write-Host ""
-Write-Host "=== Test Summary ===" -ForegroundColor Cyan
-Write-Host "Mock Game: $($mockGame.name)" -ForegroundColor White
-Write-Host "Benefits demonstrated:" -ForegroundColor White
-Write-Host "  [OK] Fast startup (< 5 seconds)" -ForegroundColor Green
-Write-Host "  [OK] No display occupation" -ForegroundColor Green
-Write-Host "  [OK] Minimal resource usage" -ForegroundColor Green
-Write-Host "  [OK] Real app management testing" -ForegroundColor Green
+Write-Host "=== Test Summary ==="
+Write-Host "Mock Game: $($mockGame.name)"
+Write-Host "Benefits demonstrated:"
+Write-Host "  [OK] Fast startup (< 5 seconds)"
+Write-Host "  [OK] No display occupation"
+Write-Host "  [OK] Minimal resource usage"
+Write-Host "  [OK] Real app management testing"
 Write-Host ""
-Write-Host "For production testing, use actual game IDs (apex, dbd, genshin, valorant, etc.)" -ForegroundColor Yellow
-Write-Host "Mock games are now integrated into the main config.json for easier maintenance." -ForegroundColor Cyan
-Write-Host "Press any key to continue..." -ForegroundColor Gray
+Write-Host "For production testing, use actual game IDs (apex, dbd, genshin, valorant, etc.)"
+Write-Host "Mock games are now integrated into the main config.json for easier maintenance."
+Write-Host "Press any key to continue..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

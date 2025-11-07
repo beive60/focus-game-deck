@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Test script to verify that all UI element mappings are complete and consistent.
 
@@ -28,7 +28,7 @@ $MessagesPath = Join-Path $GuiPath "messages.json"
 $XamlPath = Join-Path $GuiPath "MainWindow.xaml"
 $ConfigEditorPath = Join-Path $GuiPath "ConfigEditor.ps1"
 
-Write-Host "=== Mapping Completeness Test ===" -ForegroundColor Cyan
+Write-Host "=== Mapping Completeness Test ==="
 Write-Host ""
 
 # Test results structure
@@ -57,28 +57,28 @@ function Add-TestResult {
             TestName = $TestName
             Message  = $Message
         }
-        Write-Host "  [WARN] $TestName" -ForegroundColor Yellow
+        Write-Host "  [WARN] $TestName"
         if ($Message) {
-            Write-Host "         $Message" -ForegroundColor DarkYellow
+            Write-Host "         $Message"
         }
     } elseif ($Passed) {
         $testResults.Passed++
-        Write-Host "  [PASS] $TestName" -ForegroundColor Green
+        Write-Host "  [PASS] $TestName"
     } else {
         $testResults.Failed++
         $testResults.FailedTests += @{
             TestName = $TestName
             Message  = $Message
         }
-        Write-Host "  [FAIL] $TestName" -ForegroundColor Red
+        Write-Host "  [FAIL] $TestName"
         if ($Message) {
-            Write-Host "         $Message" -ForegroundColor DarkRed
+            Write-Host "         $Message"
         }
     }
 }
 
 # Test 1: Load mappings
-Write-Host "[1/6] Loading mappings from ConfigEditor.Mappings.ps1..." -ForegroundColor Cyan
+Write-Host "[1/6] Loading mappings from ConfigEditor.Mappings.ps1..."
 try {
     . $MappingsPath
     Add-TestResult "Load ConfigEditor.Mappings.ps1" $true
@@ -89,7 +89,7 @@ try {
 
 # Test 2: Verify all mapping variables exist
 Write-Host ""
-Write-Host "[2/6] Verifying mapping variables exist..." -ForegroundColor Cyan
+Write-Host "[2/6] Verifying mapping variables exist..."
 
 $expectedMappings = @(
     "ButtonMappings",
@@ -115,7 +115,7 @@ foreach ($mappingName in $expectedMappings) {
 
 # Test 3: Verify ConfigEditor.ps1 includes all mappings in $allMappings
 Write-Host ""
-Write-Host "[3/6] Verifying $allMappings completeness in ConfigEditor.ps1..." -ForegroundColor Cyan
+Write-Host "[3/6] Verifying $allMappings completeness in ConfigEditor.ps1..."
 
 $configEditorContent = Get-Content $ConfigEditorPath -Raw
 $allMappingsPattern = '\$allMappings\s*=\s*@\{([^}]+)\}'
@@ -147,7 +147,7 @@ if ($configEditorContent -match $allMappingsPattern) {
 
 # Test 4: Load XAML and verify mapped elements exist
 Write-Host ""
-Write-Host "[4/6] Verifying mapped elements exist in XAML..." -ForegroundColor Cyan
+Write-Host "[4/6] Verifying mapped elements exist in XAML..."
 
 Add-Type -AssemblyName PresentationFramework -ErrorAction SilentlyContinue
 $xamlContent = Get-Content $XamlPath -Raw -Encoding UTF8
@@ -187,7 +187,7 @@ if ($missingElements.Count -eq 0) {
 
 # Test 5: Verify all message keys exist in messages.json
 Write-Host ""
-Write-Host "[5/6] Verifying message keys exist in messages.json..." -ForegroundColor Cyan
+Write-Host "[5/6] Verifying message keys exist in messages.json..."
 
 $messagesJson = Get-Content $MessagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $languages = @("ja", "en", "zh-CN")
@@ -235,7 +235,7 @@ if ($missingKeys.Count -eq 0) {
 
 # Test 6: Find potentially unmapped elements in XAML
 Write-Host ""
-Write-Host "[6/6] Checking for potentially unmapped elements in XAML..." -ForegroundColor Cyan
+Write-Host "[6/6] Checking for potentially unmapped elements in XAML..."
 
 # Elements that are dynamically created or don't need localization
 $excludedElements = @(
@@ -336,44 +336,44 @@ if ($unmappedElements.Count -eq 0) {
 
 # Summary
 Write-Host ""
-Write-Host "===================" -ForegroundColor Cyan
-Write-Host "Test Summary" -ForegroundColor Cyan
-Write-Host "===================" -ForegroundColor Cyan
-Write-Host "Total Tests: $($testResults.Total)" -ForegroundColor White
-Write-Host "Passed: $($testResults.Passed)" -ForegroundColor Green
+Write-Host "==================="
+Write-Host "Test Summary"
+Write-Host "==================="
+Write-Host "Total Tests: $($testResults.Total)"
+Write-Host "Passed: $($testResults.Passed)"
 Write-Host "Failed: $($testResults.Failed)" -ForegroundColor $(if ($testResults.Failed -eq 0) { "Green" } else { "Red" })
-Write-Host "Warnings: $($testResults.Warnings)" -ForegroundColor Yellow
+Write-Host "Warnings: $($testResults.Warnings)"
 
 if ($testResults.Failed -gt 0) {
     Write-Host ""
-    Write-Host "Failed Tests:" -ForegroundColor Red
+    Write-Host "Failed Tests:"
     foreach ($failed in $testResults.FailedTests) {
-        Write-Host "  - $($failed.TestName)" -ForegroundColor Red
+        Write-Host "  - $($failed.TestName)"
         if ($failed.Message) {
-            Write-Host "    $($failed.Message)" -ForegroundColor DarkRed
+            Write-Host "    $($failed.Message)"
         }
     }
 }
 
 if ($testResults.Warnings -gt 0) {
     Write-Host ""
-    Write-Host "Warnings:" -ForegroundColor Yellow
+    Write-Host "Warnings:"
     foreach ($warning in $testResults.WarningMessages) {
-        Write-Host "  - $($warning.TestName)" -ForegroundColor Yellow
+        Write-Host "  - $($warning.TestName)"
         if ($warning.Message) {
-            Write-Host "    $($warning.Message)" -ForegroundColor DarkYellow
+            Write-Host "    $($warning.Message)"
         }
     }
 }
 
 Write-Host ""
 if ($testResults.Failed -eq 0) {
-    Write-Host "All critical tests passed!" -ForegroundColor Green
+    Write-Host "All critical tests passed!"
     if ($testResults.Warnings -gt 0) {
-        Write-Host "Note: There are $($testResults.Warnings) warning(s) that may need attention." -ForegroundColor Yellow
+        Write-Host "Note: There are $($testResults.Warnings) warning(s) that may need attention."
     }
     exit 0
 } else {
-    Write-Host "Some tests failed. Please review and fix the issues." -ForegroundColor Red
+    Write-Host "Some tests failed. Please review and fix the issues."
     exit 1
 }

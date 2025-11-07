@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Test script to verify ComboBoxItem localization functionality.
 
@@ -23,40 +23,40 @@ $MappingsPath = Join-Path $GuiPath "ConfigEditor.Mappings.ps1"
 $MessagesPath = Join-Path $GuiPath "../localization/messages.json"
 $XamlPath = Join-Path $GuiPath "MainWindow.xaml"
 
-Write-Host "=== ComboBoxItem Localization Test ===" -ForegroundColor Cyan
-Write-Host "Testing language: $Language" -ForegroundColor Yellow
+Write-Host "=== ComboBoxItem Localization Test ==="
+Write-Host "Testing language: $Language"
 Write-Host ""
 
 # Load WPF assemblies
-Write-Host "[1/6] Loading WPF assemblies..." -ForegroundColor Cyan
+Write-Host "[1/6] Loading WPF assemblies..."
 Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
 
 # Load mappings
-Write-Host "[2/6] Loading mappings..." -ForegroundColor Cyan
+Write-Host "[2/6] Loading mappings..."
 . $MappingsPath
 
 # Load messages
-Write-Host "[3/6] Loading messages..." -ForegroundColor Cyan
+Write-Host "[3/6] Loading messages..."
 $messagesJson = Get-Content $MessagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $messages = $messagesJson.$Language
 
-Write-Host "Messages loaded for '$Language'. Total message count: $($messages.PSObject.Properties.Count)" -ForegroundColor Green
+Write-Host "Messages loaded for '$Language'. Total message count: $($messages.PSObject.Properties.Count)"
 Write-Host ""
 
 # Load XAML
-Write-Host "[4/6] Loading and parsing XAML..." -ForegroundColor Cyan
+Write-Host "[4/6] Loading and parsing XAML..."
 $xamlContent = Get-Content $XamlPath -Raw -Encoding UTF8
 $xmlReader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
 $window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
 $xmlReader.Close()
 
-Write-Host "XAML parsed successfully" -ForegroundColor Green
+Write-Host "XAML parsed successfully"
 Write-Host ""
 
 # Test ComboBoxItem localization
-Write-Host "[5/6] Testing ComboBoxItem localization..." -ForegroundColor Cyan
+Write-Host "[5/6] Testing ComboBoxItem localization..."
 $comboBoxItemMappings = $script:ComboBoxItemMappings
 
 $testResults = @{
@@ -94,52 +94,52 @@ foreach ($itemName in $comboBoxItemMappings.Keys) {
             if ($element.Content -eq $localizedText) {
                 $result.Success = $true
                 $testResults.Success++
-                Write-Host "  [OK] $itemName" -ForegroundColor Green
-                Write-Host "       Before: '$($result.BeforeContent)'" -ForegroundColor DarkGray
-                Write-Host "       After : '$($result.AfterContent)'" -ForegroundColor DarkGray
+                Write-Host "  [OK] $itemName"
+                Write-Host "       Before: '$($result.BeforeContent)'"
+                Write-Host "       After : '$($result.AfterContent)'"
             } else {
                 $testResults.Failed++
-                Write-Host "  [FAIL] $itemName - Content not updated correctly" -ForegroundColor Red
+                Write-Host "  [FAIL] $itemName - Content not updated correctly"
             }
         } else {
             $testResults.Failed++
-            Write-Host "  [FAIL] $itemName - Message key '$messageKey' not found in messages" -ForegroundColor Red
+            Write-Host "  [FAIL] $itemName - Message key '$messageKey' not found in messages"
         }
     } else {
         $testResults.Failed++
-        Write-Host "  [FAIL] $itemName - Element not found in XAML" -ForegroundColor Red
+        Write-Host "  [FAIL] $itemName - Element not found in XAML"
     }
 
     $testResults.Details += $result
 }
 
 Write-Host ""
-Write-Host "[6/6] Test Summary" -ForegroundColor Cyan
-Write-Host "==================" -ForegroundColor Cyan
-Write-Host "Total ComboBoxItems tested: $($testResults.Total)" -ForegroundColor White
-Write-Host "Successful: $($testResults.Success)" -ForegroundColor Green
+Write-Host "[6/6] Test Summary"
+Write-Host "=================="
+Write-Host "Total ComboBoxItems tested: $($testResults.Total)"
+Write-Host "Successful: $($testResults.Success)"
 Write-Host "Failed: $($testResults.Failed)" -ForegroundColor $(if ($testResults.Failed -eq 0) { "Green" } else { "Red" })
 
 if ($testResults.Failed -gt 0) {
     Write-Host ""
-    Write-Host "Failed items:" -ForegroundColor Red
+    Write-Host "Failed items:"
     foreach ($detail in $testResults.Details | Where-Object { -not $_.Success }) {
-        Write-Host "  - $($detail.ItemName)" -ForegroundColor Red
+        Write-Host "  - $($detail.ItemName)"
         if (-not $detail.Found) {
-            Write-Host "    Reason: Element not found in XAML" -ForegroundColor DarkRed
+            Write-Host "    Reason: Element not found in XAML"
         } elseif (-not $detail.HasMessage) {
-            Write-Host "    Reason: Message key '$($detail.MessageKey)' not found" -ForegroundColor DarkRed
+            Write-Host "    Reason: Message key '$($detail.MessageKey)' not found"
         } else {
-            Write-Host "    Reason: Content update failed" -ForegroundColor DarkRed
+            Write-Host "    Reason: Content update failed"
         }
     }
 }
 
 Write-Host ""
 if ($testResults.Failed -eq 0) {
-    Write-Host "All ComboBoxItem localization tests passed!" -ForegroundColor Green
+    Write-Host "All ComboBoxItem localization tests passed!"
     exit 0
 } else {
-    Write-Host "Some ComboBoxItem localization tests failed." -ForegroundColor Red
+    Write-Host "Some ComboBoxItem localization tests failed."
     exit 1
 }

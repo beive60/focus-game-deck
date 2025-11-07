@@ -1,119 +1,119 @@
-# VTube Studio Integration Test Script
+﻿# VTube Studio Integration Test Script
 # Test the VTubeStudioManager functionality
 
-Write-Host "=== VTube Studio Integration Test ===" -ForegroundColor Cyan
+Write-Host "=== VTube Studio Integration Test ==="
 
 # Load required modules
 try {
     . "$PSScriptRoot/../src/modules/VTubeStudioManager.ps1"
-    Write-Host "[OK] VTubeStudioManager module loaded" -ForegroundColor Green
+    Write-Host "[OK] VTubeStudioManager module loaded"
 } catch {
-    Write-Host "[ERROR] Failed to load VTubeStudioManager: $_" -ForegroundColor Red
+    Write-Host "[ERROR] Failed to load VTubeStudioManager: $_"
     exit 1
 }
 
 try {
     . "$PSScriptRoot/../src/modules/AppManager.ps1"
-    Write-Host "[OK] AppManager module loaded" -ForegroundColor Green
+    Write-Host "[OK] AppManager module loaded"
 } catch {
-    Write-Host "[ERROR] Failed to load AppManager: $_" -ForegroundColor Red
+    Write-Host "[ERROR] Failed to load AppManager: $_"
     exit 1
 }
 
 # Load configuration
 try {
-    $config = Get-Content "$PSScriptRoot/../config/config.json" | ConvertFrom-Json
-    Write-Host "[OK] Configuration loaded" -ForegroundColor Green
+    $config = Get-Content "$PSScriptRoot/../config/config.json" -Encoding UTF8 | ConvertFrom-Json
+    Write-Host "[OK] Configuration loaded"
 } catch {
-    Write-Host "[ERROR] Failed to load configuration: $_" -ForegroundColor Red
+    Write-Host "[ERROR] Failed to load configuration: $_"
     exit 1
 }
 
 # Test VTubeStudioManager
-Write-Host "`n=== Testing VTubeStudioManager ===" -ForegroundColor Yellow
+Write-Host "`n=== Testing VTubeStudioManager ==="
 
 try {
     $vtubeManager = New-VTubeStudioManager -VTubeConfig $config.managedApps.vtubeStudio -Messages @{}
-    Write-Host "[OK] VTubeStudioManager instance created" -ForegroundColor Green
+    Write-Host "[OK] VTubeStudioManager instance created"
 
     # Test installation detection
-    Write-Host "`nTesting VTube Studio installation detection..." -ForegroundColor Cyan
+    Write-Host "`nTesting VTube Studio installation detection..."
     $status = $vtubeManager.GetStatus()
 
-    Write-Host "Current Status:" -ForegroundColor White
-    Write-Host "  - Is Running: $($status.IsRunning)" -ForegroundColor White
-    Write-Host "  - Installation Available: $($status.Installation.Available)" -ForegroundColor White
-    Write-Host "  - Installation Type: $($status.Installation.Type)" -ForegroundColor White
-    Write-Host "  - Installation Path: $($status.Installation.Path)" -ForegroundColor White
-    Write-Host "  - WebSocket Connected: $($status.WebSocketConnected)" -ForegroundColor White
+    Write-Host "Current Status:"
+    Write-Host "  - Is Running: $($status.IsRunning)"
+    Write-Host "  - Installation Available: $($status.Installation.Available)"
+    Write-Host "  - Installation Type: $($status.Installation.Type)"
+    Write-Host "  - Installation Path: $($status.Installation.Path)"
+    Write-Host "  - WebSocket Connected: $($status.WebSocketConnected)"
 
     if ($status.Installation.Available) {
-        Write-Host "[OK] VTube Studio installation detected" -ForegroundColor Green
+        Write-Host "[OK] VTube Studio installation detected"
     } else {
-        Write-Host "[WARNING] VTube Studio installation not found" -ForegroundColor Yellow
+        Write-Host "[WARNING] VTube Studio installation not found"
     }
 
 } catch {
-    Write-Host "[ERROR] VTubeStudioManager test failed: $_" -ForegroundColor Red
+    Write-Host "[ERROR] VTubeStudioManager test failed: $_"
 }
 
 # Test AppManager integration
-Write-Host "`n=== Testing AppManager Integration ===" -ForegroundColor Yellow
+Write-Host "`n=== Testing AppManager Integration ==="
 
 try {
     $appManager = New-AppManager -Config $config -Messages @{}
-    Write-Host "[OK] AppManager instance created" -ForegroundColor Green
+    Write-Host "[OK] AppManager instance created"
 
     # Test configuration validation
-    Write-Host "`nTesting VTube Studio configuration validation..." -ForegroundColor Cyan
+    Write-Host "`nTesting VTube Studio configuration validation..."
     if ($appManager.ValidateAppConfig("vtubeStudio")) {
-        Write-Host "[OK] VTube Studio configuration valid" -ForegroundColor Green
+        Write-Host "[OK] VTube Studio configuration valid"
     } else {
-        Write-Host "[ERROR] VTube Studio configuration invalid" -ForegroundColor Red
+        Write-Host "[ERROR] VTube Studio configuration invalid"
     }
 
 } catch {
-    Write-Host "[ERROR] AppManager integration test failed: $_" -ForegroundColor Red
+    Write-Host "[ERROR] AppManager integration test failed: $_"
 }
 
 # Test Configuration Validator
-Write-Host "`n=== Testing Configuration Validator ===" -ForegroundColor Yellow
+Write-Host "`n=== Testing Configuration Validator ==="
 
 try {
     . "$PSScriptRoot/../src/modules/ConfigValidator.ps1"
-    Write-Host "[OK] ConfigValidator module loaded" -ForegroundColor Green
+    Write-Host "[OK] ConfigValidator module loaded"
 
     $validator = New-ConfigValidator -Config $config -Messages @{}
     $validationResult = $validator.ValidateConfiguration($null)
 
     if ($validationResult) {
-        Write-Host "[OK] Configuration validation passed" -ForegroundColor Green
+        Write-Host "[OK] Configuration validation passed"
     } else {
-        Write-Host "[WARNING] Configuration validation has issues" -ForegroundColor Yellow
+        Write-Host "[WARNING] Configuration validation has issues"
     }
 
     $report = $validator.GetValidationReport()
-    Write-Host "Validation Report:" -ForegroundColor White
-    Write-Host "  - Is Valid: $($report.IsValid)" -ForegroundColor White
-    Write-Host "  - Error Count: $($report.ErrorCount)" -ForegroundColor White
-    Write-Host "  - Warning Count: $($report.WarningCount)" -ForegroundColor White
+    Write-Host "Validation Report:"
+    Write-Host "  - Is Valid: $($report.IsValid)"
+    Write-Host "  - Error Count: $($report.ErrorCount)"
+    Write-Host "  - Warning Count: $($report.WarningCount)"
 
     if ($report.ErrorCount -gt 0) {
-        Write-Host "Errors:" -ForegroundColor Red
+        Write-Host "Errors:"
         foreach ($errorMsg in $report.Errors) {
-            Write-Host "  - $errorMsg" -ForegroundColor Red
+            Write-Host "  - $errorMsg"
         }
     }
 
     if ($report.WarningCount -gt 0) {
-        Write-Host "Warnings:" -ForegroundColor Yellow
+        Write-Host "Warnings:"
         foreach ($warningMsg in $report.Warnings) {
-            Write-Host "  - $warningMsg" -ForegroundColor Yellow
+            Write-Host "  - $warningMsg"
         }
     }
 
 } catch {
-    Write-Host "[ERROR] Configuration validator test failed: $_" -ForegroundColor Red
+    Write-Host "[ERROR] Configuration validator test failed: $_"
 }
 
-Write-Host "`n=== VTube Studio Integration Test Complete ===" -ForegroundColor Cyan
+Write-Host "`n=== VTube Studio Integration Test Complete ==="

@@ -1,4 +1,4 @@
-# Direct test of Get-LocalizedMessage function
+﻿# Direct test of Get-LocalizedMessage function
 # このスクリプトは Get-LocalizedMessage 関数を直接テストします
 
 param(
@@ -14,7 +14,7 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
-Write-Host "=== Direct Get-LocalizedMessage Function Test ===" -ForegroundColor Cyan
+Write-Host "=== Direct Get-LocalizedMessage Function Test ==="
 
 try {
     # Import required modules
@@ -33,7 +33,7 @@ try {
 
     # Get version info
     $versionInfo = Get-ProjectVersionInfo
-    Write-Host "Version to use: '$($versionInfo.FullVersion)'" -ForegroundColor Yellow
+    Write-Host "Version to use: '$($versionInfo.FullVersion)'"
 
     # Define the Get-LocalizedMessage function exactly as it is in ConfigEditor.ps1
     function Get-LocalizedMessage {
@@ -93,39 +93,39 @@ try {
     }
 
     # Test the function
-    Write-Host "--- Testing Get-LocalizedMessage function ---" -ForegroundColor Yellow
-    Write-Host "Message template before calling function:" -ForegroundColor Cyan
-    Write-Host "'$($script:Messages.aboutMessage)'" -ForegroundColor Cyan
+    Write-Host "--- Testing Get-LocalizedMessage function ---"
+    Write-Host "Message template before calling function:"
+    Write-Host "'$($script:Messages.aboutMessage)'"
     Write-Host ""
 
     # Create args array and examine it
     $argsArray = @($versionInfo.FullVersion)
-    Write-Host "Args Array Details:" -ForegroundColor Magenta
-    Write-Host "  - Array type: $($argsArray.GetType().Name)" -ForegroundColor Cyan
-    Write-Host "  - Array length: $($argsArray.Length)" -ForegroundColor Cyan
-    Write-Host "  - Array count: $($argsArray.Count)" -ForegroundColor Cyan
-    Write-Host "  - First element: '$($argsArray[0])'" -ForegroundColor Cyan
-    Write-Host "  - First element type: $($argsArray[0].GetType().Name)" -ForegroundColor Cyan
+    Write-Host "Args Array Details:"
+    Write-Host "  - Array type: $($argsArray.GetType().Name)"
+    Write-Host "  - Array length: $($argsArray.Length)"
+    Write-Host "  - Array count: $($argsArray.Count)"
+    Write-Host "  - First element: '$($argsArray[0])'"
+    Write-Host "  - First element type: $($argsArray[0].GetType().Name)"
     Write-Host ""
 
-    Write-Host "Calling function with args..." -ForegroundColor Magenta
+    Write-Host "Calling function with args..."
     $result = Get-LocalizedMessage -Key "aboutMessage" -Arguments $argsArray
 
     Write-Host ""
-    Write-Host "Final result:" -ForegroundColor Green
-    Write-Host "'$result'" -ForegroundColor Green
+    Write-Host "Final result:"
+    Write-Host "'$result'"
     Write-Host ""
 
     # Check if replacement worked
     $hasPlaceholder = $result -like '*{0}*'
     $hasVersionNumber = $result -like "*$($versionInfo.FullVersion)*"
 
-    Write-Host "Analysis:" -ForegroundColor Yellow
+    Write-Host "Analysis:"
     Write-Host "  - Result contains {0}: $hasPlaceholder" -ForegroundColor $(if ($hasPlaceholder) { "Red" } else { "Green" })
     Write-Host "  - Result contains version: $hasVersionNumber" -ForegroundColor $(if ($hasVersionNumber) { "Green" } else { "Red" })
     Write-Host "  - Replacement successful: $((-not $hasPlaceholder) -and $hasVersionNumber)" -ForegroundColor $(if ((-not $hasPlaceholder) -and $hasVersionNumber) { "Green" } else { "Red" })
 
 } catch {
-    Write-Host "❌ Test failed: $($_.Exception.Message)" -ForegroundColor Red
-    Write-Host $_.Exception -ForegroundColor Red
+    Write-Host "[ERROR] Test failed: $($_.Exception.Message)"
+    Write-Host $_.Exception
 }

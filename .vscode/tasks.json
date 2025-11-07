@@ -189,7 +189,7 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\\test\\Simple-Check.ps1"
+                ".\\test\\Test-ConfigSimple.ps1"
             ],
             "group": "test",
             "presentation": {

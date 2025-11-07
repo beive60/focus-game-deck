@@ -1,4 +1,4 @@
-# Test-LogRotation.ps1
+﻿# Test-LogRotation.ps1
 # ログファイル自動削除機能のテストスクリプト
 #
 # このスクリプトは、Logger.ps1 のログ自動削除機能をテストします。
@@ -42,12 +42,12 @@ function Write-TestResult {
     )
 
     if ($Passed) {
-        Write-Host "PASS: $TestName" -ForegroundColor Green
-        if ($Message) { Write-Host "   $Message" -ForegroundColor Gray }
+        Write-Host "PASS: $TestName"
+        if ($Message) { Write-Host "   $Message" }
         $script:TestsPassed++
     } else {
-        Write-Host "FAIL: $TestName" -ForegroundColor Red
-        if ($Message) { Write-Host "   $Message" -ForegroundColor Yellow }
+        Write-Host "FAIL: $TestName"
+        if ($Message) { Write-Host "   $Message" }
         $script:TestsFailed++
     }
 }
@@ -100,7 +100,7 @@ function New-TestLogFiles {
         (Get-Item $filePath).LastWriteTime = $oldDate
 
         if ($Verbose) {
-            Write-Host "Created test file: $($file.Name) (Age: $($file.DaysOld) days)" -ForegroundColor Cyan
+            Write-Host "Created test file: $($file.Name) (Age: $($file.DaysOld) days)"
         }
     }
 
@@ -136,7 +136,7 @@ function Test-LogRetention {
     )
 
     try {
-        Write-Host "`Testing: $TestDescription" -ForegroundColor Cyan
+        Write-Host "`Testing: $TestDescription"
 
         # Create fresh test environment
         Clear-TestEnvironment
@@ -158,7 +158,7 @@ function Test-LogRetention {
         $filesDeleted = $filesBefore - $filesAfter
 
         if ($Verbose) {
-            Write-Host "Files before: $filesBefore, Files after: $filesAfter, Deleted: $filesDeleted" -ForegroundColor Gray
+            Write-Host "Files before: $filesBefore, Files after: $filesAfter, Deleted: $filesDeleted"
         }
 
         # Calculate expected deletions based on retention period
@@ -203,8 +203,8 @@ function Test-LogRetention {
 function Invoke-LogRotationTests {
     param()
 
-    Write-Host "Starting Log Rotation Tests" -ForegroundColor Yellow
-    Write-Host "=" * 50 -ForegroundColor Yellow
+    Write-Host "Starting Log Rotation Tests"
+    Write-Host "=" * 50
 
     # Test 1: 30-day retention
     Test-LogRetention -RetentionDays 30 -TestDescription "30-day retention policy"
@@ -220,7 +220,7 @@ function Invoke-LogRotationTests {
 
     # Test 5: Invalid configuration (should default to 90 days)
     try {
-        Write-Host "`Testing: Invalid configuration handling" -ForegroundColor Cyan
+        Write-Host "`Testing: Invalid configuration handling"
 
         Clear-TestEnvironment
         New-TestLogFiles -LogDirectory $TestLogDir
@@ -256,7 +256,7 @@ function Invoke-LogRotationTests {
 
     # Test 6: Missing logging configuration
     try {
-        Write-Host "`Testing: Missing logging configuration" -ForegroundColor Cyan
+        Write-Host "`Testing: Missing logging configuration"
 
         Clear-TestEnvironment
         New-TestLogFiles -LogDirectory $TestLogDir
@@ -291,22 +291,22 @@ try {
     Clear-TestEnvironment
 
     # Summary
-    Write-Host "`n" + "=" * 50 -ForegroundColor Yellow
-    Write-Host "Test Summary:" -ForegroundColor Yellow
-    Write-Host "Passed: $TestsPassed" -ForegroundColor Green
-    Write-Host "Failed: $TestsFailed" -ForegroundColor Red
+    Write-Host "`n" + "=" * 50
+    Write-Host "Test Summary:"
+    Write-Host "Passed: $TestsPassed"
+    Write-Host "Failed: $TestsFailed"
     Write-Host "Success Rate: $([math]::Round(($TestsPassed / ($TestsPassed + $TestsFailed)) * 100, 1))%" -ForegroundColor $(if ($TestsFailed -eq 0) { "Green" } else { "Yellow" })
 
     if ($TestsFailed -eq 0) {
-        Write-Host "`All tests passed! Log rotation feature is working correctly." -ForegroundColor Green
+        Write-Host "`All tests passed! Log rotation feature is working correctly."
         exit 0
     } else {
-        Write-Host "` Some tests failed. Please review the implementation." -ForegroundColor Yellow
+        Write-Host "` Some tests failed. Please review the implementation."
         exit 1
     }
 
 } catch {
-    Write-Host "`Test execution failed: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "`Test execution failed: $($_.Exception.Message)"
     Clear-TestEnvironment
     exit 1
 }
