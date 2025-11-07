@@ -7,7 +7,7 @@ Write-Host "=== VTube Studio Startup/Shutdown Test ===" -ForegroundColor Cyan
 . "$PSScriptRoot/../src/modules/VTubeStudioManager.ps1"
 
 # Load configuration
-$config = Get-Content "$PSScriptRoot/../config/config.json" | ConvertFrom-Json
+$config = Get-Content "$PSScriptRoot/../config/config.json" -Raw -Encoding UTF8 | ConvertFrom-Json
 
 # Create VTubeStudioManager instance
 $vtubeManager = New-VTubeStudioManager -VTubeConfig $config.managedApps.vtubeStudio -Messages @{}
