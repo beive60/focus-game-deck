@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Diagnostic script to identify specific localization control issues.
 
@@ -32,27 +32,27 @@ function Test-LocalizationControlFlow {
         }
 
         # 1. Test mapping table integrity
-        Write-Host "=== Testing Mapping Table Integrity ===" -ForegroundColor Cyan
+        Write-Host "=== Testing Mapping Table Integrity ==="
 
         $analysis.MappingIntegrity = Test-MappingTableIntegrity
 
         # 2. Validate JSON key structure
-        Write-Host "=== Validating JSON Key Structure ===" -ForegroundColor Cyan
+        Write-Host "=== Validating JSON Key Structure ==="
 
         $analysis.JsonKeyValidation = Test-JsonKeyStructure
 
         # 3. Test XAML element access
-        Write-Host "=== Testing XAML Element Access ===" -ForegroundColor Cyan
+        Write-Host "=== Testing XAML Element Access ==="
 
         $analysis.XamlElementAccess = Test-XamlElementAccess
 
         # 4. Analyze string replacement flow
-        Write-Host "=== Analyzing String Replacement Flow ===" -ForegroundColor Cyan
+        Write-Host "=== Analyzing String Replacement Flow ==="
 
         $analysis.StringReplacementFlow = Test-StringReplacementFlow
 
         # 5. Assess modularization impact
-        Write-Host "=== Assessing Modularization Impact ===" -ForegroundColor Cyan
+        Write-Host "=== Assessing Modularization Impact ==="
 
         $analysis.ModularizationImpact = Test-ModularizationImpact
 
@@ -511,9 +511,9 @@ function Write-LocalizationDiagnosticReport {
         [hashtable]$Analysis
     )
 
-    Write-Host "`n" + "="*80 -ForegroundColor Green
-    Write-Host "LOCALIZATION DIAGNOSTIC REPORT" -ForegroundColor Green
-    Write-Host "="*80 -ForegroundColor Green
+    Write-Host "`n" + "="*80
+    Write-Host "LOCALIZATION DIAGNOSTIC REPORT"
+    Write-Host "="*80
 
     # Summary
     $totalIssues = 0
@@ -523,46 +523,46 @@ function Write-LocalizationDiagnosticReport {
         }
     }
 
-    Write-Host "`nSUMMARY:" -ForegroundColor Yellow
-    Write-Host "Total Issues Found: $totalIssues" -ForegroundColor $(if ($totalIssues -gt 0) { "Red" } else { "Green" })
+    Write-Host "`nSUMMARY:"
+    Write-Host "Total Issues Found: $totalIssues"
 
     # Detailed sections
     foreach ($sectionName in $Analysis.Keys) {
         $section = $Analysis[$sectionName]
 
-        Write-Host "`n$($sectionName.ToUpper()):" -ForegroundColor Cyan
+        Write-Host "`n$($sectionName.ToUpper()):"
 
         if ($section.Issues.Count -gt 0) {
-            Write-Host "Issues ($($section.Issues.Count)):" -ForegroundColor Red
+            Write-Host "Issues ($($section.Issues.Count)):"
             foreach ($issue in $section.Issues) {
-                Write-Host "  - $issue" -ForegroundColor Red
+                Write-Host "  - $issue"
             }
         } else {
-            Write-Host "  No issues found" -ForegroundColor Green
+            Write-Host "  No issues found"
         }
 
         # Additional details for each section
         foreach ($key in $section.Keys) {
             if ($key -ne 'Issues' -and $section[$key]) {
-                Write-Host "$key :" -ForegroundColor White
+                Write-Host "$key :"
                 if ($section[$key] -is [hashtable]) {
                     foreach ($subKey in $section[$key].Keys) {
-                        Write-Host "  $subKey`: $($section[$key][$subKey])" -ForegroundColor Gray
+                        Write-Host "  $subKey`: $($section[$key][$subKey])"
                     }
                 } elseif ($section[$key] -is [array]) {
                     foreach ($item in $section[$key]) {
-                        Write-Host "  - $item" -ForegroundColor Gray
+                        Write-Host "  - $item"
                     }
                 }
             }
         }
     }
 
-    Write-Host "`n" + "="*80 -ForegroundColor Green
+    Write-Host "`n" + "="*80
 }
 
 # Run the diagnostic if script is executed directly
-Write-Host "Starting localization diagnostic..." -ForegroundColor Green
+Write-Host "Starting localization diagnostic..."
 $analysis = Test-LocalizationControlFlow
 
 if ($analysis) {
@@ -571,7 +571,7 @@ if ($analysis) {
     # Output analysis to file for further review
     $outputPath = "$PSScriptRoot/localization-diagnostic-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
     $analysis | ConvertTo-Json -Depth 5 | Out-File -Path $outputPath -Encoding UTF8
-    Write-Host "`nDetailed analysis saved to: $outputPath" -ForegroundColor Green
+    Write-Host "`nDetailed analysis saved to: $outputPath"
 } else {
-    Write-Host "Diagnostic failed to complete" -ForegroundColor Red
+    Write-Host "Diagnostic failed to complete"
 }

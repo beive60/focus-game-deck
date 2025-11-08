@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Configuration mappings for ConfigEditor UI components, organized by functionality.
 

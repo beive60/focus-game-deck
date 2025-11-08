@@ -1,4 +1,4 @@
-class ConfigEditorEvents {
+﻿class ConfigEditorEvents {
     $uiManager
     $stateManager
 
@@ -925,7 +925,7 @@ class ConfigEditorEvents {
     # Handle check update
     [void] HandleCheckUpdate() {
         try {
-            Write-Host "=== Update Check DEBUG START ===" -ForegroundColor Cyan
+            Write-Host "=== Update Check DEBUG START ==="
 
             # Get current version - use global function reference
             $currentVersion = if ($global:GetProjectVersionFunc) {
@@ -934,7 +934,7 @@ class ConfigEditorEvents {
                 Write-Warning "Get-ProjectVersion not available"
                 "Unknown"
             }
-            Write-Host "Current version: $currentVersion" -ForegroundColor Yellow
+            Write-Host "Current version: $currentVersion"
 
             # Check for updates - use global function reference
             if (-not $global:TestUpdateAvailableFunc) {
@@ -945,12 +945,12 @@ class ConfigEditorEvents {
                 return
             }
 
-            Write-Host "Checking for updates..." -ForegroundColor Green
+            Write-Host "Checking for updates..."
             $updateInfo = & $global:TestUpdateAvailableFunc -CurrentVersion $currentVersion
 
             if ($updateInfo) {
-                Write-Host "Update info received:" -ForegroundColor Magenta
-                Write-Host ($updateInfo | ConvertTo-Json -Depth 3) -ForegroundColor Magenta
+                Write-Host "Update info received:"
+                Write-Host ($updateInfo | ConvertTo-Json -Depth 3)
 
                 if ($updateInfo.UpdateAvailable) {
                     # Show update available dialog
@@ -962,7 +962,7 @@ class ConfigEditorEvents {
                     if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
                         # Open the release page
                         if ($updateInfo.ReleaseUrl) {
-                            Write-Host "Opening release page: $($updateInfo.ReleaseUrl)" -ForegroundColor Green
+                            Write-Host "Opening release page: $($updateInfo.ReleaseUrl)"
                             Start-Process $updateInfo.ReleaseUrl
                         } else {
                             Write-Warning "No release URL provided in update info"
@@ -984,11 +984,11 @@ class ConfigEditorEvents {
                 [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
             }
 
-            Write-Host "=== Update Check DEBUG END ===" -ForegroundColor Cyan
+            Write-Host "=== Update Check DEBUG END ==="
 
         } catch {
             Write-Error "Update check failed: $_"
-            Write-Host "Update check error: $_" -ForegroundColor Red
+            Write-Host "Update check error: $_"
 
             # Show error message
             $message = $this.uiManager.GetLocalizedMessage("updateCheckError") -f $_.Exception.Message
@@ -1114,7 +1114,7 @@ class ConfigEditorEvents {
             return
         }
 
-        Write-Host "Language changed from '$($this.uiManager.CurrentLanguage)' to '$selectedLanguageCode'" -ForegroundColor Cyan
+        Write-Host "Language changed from '$($this.uiManager.CurrentLanguage)' to '$selectedLanguageCode'"
 
         # Save the language setting to configuration
         if (-not $this.stateManager.ConfigData.PSObject.Properties["language"]) {
@@ -1136,19 +1136,19 @@ class ConfigEditorEvents {
     # Handle window closing
     [void] HandleWindowClosing([System.ComponentModel.CancelEventArgs]$Event) {
         try {
-            Write-Host "DEBUG: HandleWindowClosing called" -ForegroundColor Cyan
+            Write-Host "DEBUG: HandleWindowClosing called"
 
             if ($this.stateManager.TestHasUnsavedChanges()) {
                 $result = Show-SafeMessage -Key "confirmDiscardChanges" -MessageType "Question" -Button "YesNoCancel" -DefaultResult "Cancel"
 
                 if ($result -ne "Yes") {
-                    Write-Host "DEBUG: User cancelled window closing" -ForegroundColor Yellow
+                    Write-Host "DEBUG: User cancelled window closing"
                     $Event.Cancel = $true
                     return
                 }
             }
 
-            Write-Host "DEBUG: Window closing approved" -ForegroundColor Green
+            Write-Host "DEBUG: Window closing approved"
         } catch {
             Write-Warning "Error in HandleWindowClosing: $($_.Exception.Message)"
             # Don't cancel on error - allow window to close
@@ -1323,7 +1323,7 @@ class ConfigEditorEvents {
                 return
             }
 
-            Write-Host "Launching game from GUI: $GameId" -ForegroundColor Cyan
+            Write-Host "Launching game from GUI: $GameId"
 
             # Launch the game using PowerShell - bypass Main.ps1 to prevent recursive ConfigEditor launch
             $process = Start-Process -FilePath "powershell.exe" -ArgumentList @(
@@ -1377,7 +1377,7 @@ class ConfigEditorEvents {
     # Handle about dialog
     [void] HandleAbout() {
         try {
-            Write-Host "=== Handle-About DEBUG START ===" -ForegroundColor Cyan
+            Write-Host "=== Handle-About DEBUG START ==="
 
             # Get version information - use global function reference
             $version = if ($global:GetProjectVersionFunc) {
@@ -1388,24 +1388,24 @@ class ConfigEditorEvents {
             }
             $buildDate = Get-Date -Format "yyyy-MM-dd"
 
-            Write-Host "Version: $version" -ForegroundColor Yellow
-            Write-Host "Build Date: $buildDate" -ForegroundColor Yellow
+            Write-Host "Version: $version"
+            Write-Host "Build Date: $buildDate"
 
             # Create about message
             $aboutMessage = $this.uiManager.GetLocalizedMessage("aboutMessage") -f $version, $buildDate
             $aboutTitle = $this.uiManager.GetLocalizedMessage("aboutTitle")
 
-            Write-Host "About Message: $aboutMessage" -ForegroundColor Green
-            Write-Host "About Title: $aboutTitle" -ForegroundColor Green
+            Write-Host "About Message: $aboutMessage"
+            Write-Host "About Title: $aboutTitle"
 
             # Show the about dialog
             [System.Windows.MessageBox]::Show($aboutMessage, $aboutTitle, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
 
-            Write-Host "=== Handle-About DEBUG END ===" -ForegroundColor Cyan
+            Write-Host "=== Handle-About DEBUG END ==="
 
         } catch {
             Write-Error "About dialog failed: $_"
-            Write-Host "About dialog error: $_" -ForegroundColor Red
+            Write-Host "About dialog error: $_"
         }
     }
 
@@ -1447,7 +1447,7 @@ class ConfigEditorEvents {
 
             # Execute the launcher creation script
             $gameIds = $selectedGames -join ","
-            Write-Host "Creating launchers for games: $gameIds" -ForegroundColor Green
+            Write-Host "Creating launchers for games: $gameIds"
 
             try {
                 & $launcherScriptPath -GameIds $gameIds -ConfigPath $script:ConfigPath
@@ -1467,7 +1467,7 @@ class ConfigEditorEvents {
     # Register all UI event handlers
     [void] RegisterAll() {
         try {
-            Write-Host "Registering all UI event handlers..." -ForegroundColor Yellow
+            Write-Host "Registering all UI event handlers..."
 
             $self = $this
 
@@ -1475,7 +1475,7 @@ class ConfigEditorEvents {
             $this.uiManager.Window.add_Closing({
                     param($sender, $e)
                     try {
-                        Write-Host "DEBUG: Window Closing event fired" -ForegroundColor Cyan
+                        Write-Host "DEBUG: Window Closing event fired"
                         $self.HandleWindowClosing($e)
                     } catch {
                         Write-Warning "Error in window closing event: $($_.Exception.Message)"
@@ -1542,7 +1542,7 @@ class ConfigEditorEvents {
             $this.uiManager.Window.FindName("CheckUpdateMenuItem").add_Click({ $self.HandleCheckUpdate() }.GetNewClosure())
             $this.uiManager.Window.FindName("AboutMenuItem").add_Click({ $self.HandleAbout() }.GetNewClosure())
 
-            Write-Host "All UI event handlers registered successfully." -ForegroundColor Green
+            Write-Host "All UI event handlers registered successfully."
         } catch {
             Write-Error "Failed to register event handlers: $($_.Exception.Message)"
             throw $_
