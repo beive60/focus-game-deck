@@ -1,4 +1,4 @@
-class ConfigEditorState {
+﻿class ConfigEditorState {
     # Properties
     [string]$ConfigPath
     [PSCustomObject]$ConfigData
@@ -14,7 +14,7 @@ class ConfigEditorState {
 
     # Constructor
     ConfigEditorState([string]$configPath) {
-        Write-Host "DEBUG: ConfigEditorState constructor called with configPath: '$configPath'" -ForegroundColor Cyan
+        Write-Host "DEBUG: ConfigEditorState constructor called with configPath: '$configPath'"
 
         if ([string]::IsNullOrEmpty($configPath)) {
             Write-Warning "DEBUG: ConfigPath is null or empty in constructor"
@@ -32,23 +32,23 @@ class ConfigEditorState {
         $this.CurrentLanguage = "en"  # Default language
         $this.HasUnsavedChanges = $false
 
-        Write-Host "DEBUG: ConfigEditorState constructor completed successfully" -ForegroundColor Cyan
+        Write-Host "DEBUG: ConfigEditorState constructor completed successfully"
     }
 
     # Load configuration from file
     [void] LoadConfiguration() {
         try {
-            Write-Host "DEBUG: LoadConfiguration started. ConfigPath: '$($this.ConfigPath)'" -ForegroundColor Cyan
+            Write-Host "DEBUG: LoadConfiguration started. ConfigPath: '$($this.ConfigPath)'"
 
             if (Test-Path $this.ConfigPath) {
                 $jsonContent = Get-Content $this.ConfigPath -Raw -Encoding UTF8
                 $this.ConfigData = $jsonContent | ConvertFrom-Json
                 Write-Host "Loaded config from: $($this.ConfigPath)"
             } else {
-                Write-Host "DEBUG: Config file not found, loading from sample" -ForegroundColor Yellow
+                Write-Host "DEBUG: Config file not found, loading from sample"
                 # Load from sample if config doesn't exist
                 $configSamplePath = Join-Path (Split-Path $PSScriptRoot) "config/config.json.sample"
-                Write-Host "DEBUG: Sample path: '$configSamplePath'" -ForegroundColor Yellow
+                Write-Host "DEBUG: Sample path: '$configSamplePath'"
 
                 if (Test-Path $configSamplePath) {
                     $jsonContent = Get-Content $configSamplePath -Raw -Encoding UTF8
@@ -60,7 +60,7 @@ class ConfigEditorState {
                 }
             }
 
-            Write-Host "DEBUG: Config data loaded, initializing order arrays" -ForegroundColor Cyan
+            Write-Host "DEBUG: Config data loaded, initializing order arrays"
 
             # Initialize games._order array for improved version
             $this.InitializeGameOrder()
@@ -68,7 +68,7 @@ class ConfigEditorState {
             # Initialize managedApps._order array for improved version
             $this.InitializeAppOrder()
 
-            Write-Host "DEBUG: LoadConfiguration completed successfully" -ForegroundColor Cyan
+            Write-Host "DEBUG: LoadConfiguration completed successfully"
 
         } catch {
             Write-Error "DEBUG: LoadConfiguration failed with error: $($_.Exception.Message)"
@@ -91,7 +91,7 @@ class ConfigEditorState {
                     obs   = ""
                 }
             }
-            Write-Host "DEBUG: Default config created" -ForegroundColor Yellow
+            Write-Host "DEBUG: Default config created"
         }
     }
 
@@ -119,21 +119,21 @@ class ConfigEditorState {
     # Initialize games._order array with enhanced version structure
     [void] InitializeGameOrder() {
         try {
-            Write-Host "DEBUG: InitializeGameOrder started" -ForegroundColor Cyan
+            Write-Host "DEBUG: InitializeGameOrder started"
 
             if (-not $this.ConfigData.games) {
                 $this.ConfigData.games = [PSCustomObject]@{}
-                Write-Host "DEBUG: Created empty games object" -ForegroundColor Yellow
+                Write-Host "DEBUG: Created empty games object"
             }
 
             # Check if _order exists and is valid
             if (-not $this.ConfigData.games.PSObject.Properties['_order'] -or -not $this.ConfigData.games._order) {
-                Write-Host "games._order not found in config. Initializing." -ForegroundColor Yellow
+                Write-Host "games._order not found in config. Initializing."
                 $gameIds = @($this.ConfigData.games.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
-                Write-Host "DEBUG: Found $($gameIds.Count) existing games" -ForegroundColor Cyan
+                Write-Host "DEBUG: Found $($gameIds.Count) existing games"
                 $this.ConfigData.games | Add-Member -MemberType NoteProperty -Name "_order" -Value $gameIds -Force
                 } else {
-                Write-Host "DEBUG: games._order exists, validating..." -ForegroundColor Cyan
+                Write-Host "DEBUG: games._order exists, validating..."
                 # Validate existing _order against actual games
                 $existingGames = @($this.ConfigData.games.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
                 $validGameOrder = @()
@@ -155,11 +155,11 @@ class ConfigEditorState {
                 # Update _order if changes were made
                 if ($validGameOrder.Count -ne $this.ConfigData.games._order.Count -or
                     (Compare-Object $validGameOrder $this.ConfigData.games._order)) {
-                    Write-Host "DEBUG: Updating games._order with validated games" -ForegroundColor Yellow
+                    Write-Host "DEBUG: Updating games._order with validated games"
                     $this.ConfigData.games._order = $validGameOrder
                 }
             }
-            Write-Host "DEBUG: InitializeGameOrder completed" -ForegroundColor Cyan
+            Write-Host "DEBUG: InitializeGameOrder completed"
         } catch {
             Write-Error "Failed to initialize game order: $($_.Exception.Message)"
             Write-Error "DEBUG: InitializeGameOrder exception details: $($_.Exception.ToString())"
@@ -172,21 +172,21 @@ class ConfigEditorState {
     # Initialize managedApps._order array with enhanced version structure
     [void] InitializeAppOrder() {
         try {
-            Write-Host "DEBUG: InitializeAppOrder started" -ForegroundColor Cyan
+            Write-Host "DEBUG: InitializeAppOrder started"
 
             if (-not $this.ConfigData.managedApps) {
                 $this.ConfigData.managedApps = [PSCustomObject]@{}
-                Write-Host "DEBUG: Created empty managedApps object" -ForegroundColor Yellow
+                Write-Host "DEBUG: Created empty managedApps object"
             }
 
             # Check if _order exists and is valid
             if (-not $this.ConfigData.managedApps.PSObject.Properties['_order'] -or -not $this.ConfigData.managedApps._order) {
-                Write-Host "managedApps._order not found in config. Initializing." -ForegroundColor Yellow
+                Write-Host "managedApps._order not found in config. Initializing."
                 $appIds = @($this.ConfigData.managedApps.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
-                Write-Host "DEBUG: Found $($appIds.Count) existing apps" -ForegroundColor Cyan
+                Write-Host "DEBUG: Found $($appIds.Count) existing apps"
                 $this.ConfigData.managedApps | Add-Member -MemberType NoteProperty -Name "_order" -Value $appIds -Force
                 } else {
-                Write-Host "DEBUG: managedApps._order exists, validating..." -ForegroundColor Cyan
+                Write-Host "DEBUG: managedApps._order exists, validating..."
                 # Validate existing _order against actual apps
                 $existingApps = @($this.ConfigData.managedApps.PSObject.Properties.Name | Where-Object { $_ -ne '_order' })
                 $validAppOrder = @()
@@ -208,11 +208,11 @@ class ConfigEditorState {
                 # Update _order if changes were made
                 if ($validAppOrder.Count -ne $this.ConfigData.managedApps._order.Count -or
                     (Compare-Object $validAppOrder $this.ConfigData.managedApps._order)) {
-                    Write-Host "DEBUG: Updating managedApps._order with validated apps" -ForegroundColor Yellow
+                    Write-Host "DEBUG: Updating managedApps._order with validated apps"
                     $this.ConfigData.managedApps._order = $validAppOrder
                 }
             }
-            Write-Host "DEBUG: InitializeAppOrder completed" -ForegroundColor Cyan
+            Write-Host "DEBUG: InitializeAppOrder completed"
         } catch {
             Write-Error "Failed to initialize app order: $($_.Exception.Message)"
             Write-Error "DEBUG: InitializeAppOrder exception details: $($_.Exception.ToString())"
@@ -225,15 +225,15 @@ class ConfigEditorState {
     # Store original configuration for comparison
     [void] SaveOriginalConfig() {
         try {
-            Write-Host "DEBUG: SaveOriginalConfig started" -ForegroundColor Cyan
+            Write-Host "DEBUG: SaveOriginalConfig started"
 
             if ($this.ConfigData) {
                 $this.OriginalConfigData = $this.ConfigData | ConvertTo-Json -Depth 10
                 Write-Verbose "Original configuration saved for change tracking"
-                Write-Host "DEBUG: Original config saved successfully" -ForegroundColor Cyan
+                Write-Host "DEBUG: Original config saved successfully"
             } else {
                 Write-Verbose "No configuration data to save for change tracking"
-                Write-Host "DEBUG: No config data to save" -ForegroundColor Yellow
+                Write-Host "DEBUG: No config data to save"
                 $this.OriginalConfigData = $null
             }
         } catch {

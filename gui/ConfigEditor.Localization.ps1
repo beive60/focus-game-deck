@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     ConfigEditor Localization Module
 .DESCRIPTION

@@ -1,4 +1,4 @@
-# Focus Game Deck - Configuration Editor
+﻿# Focus Game Deck - Configuration Editor
 # PowerShell + WPF GUI for editing config.json
 #
 # Design Philosophy:
@@ -60,24 +60,24 @@ function Test-Prerequisites {
     }
 
     if ($issues.Count -gt 0) {
-        Write-Host "=== PREREQUISITES CHECK FAILED ===" -ForegroundColor Red
-        $issues | ForEach-Object { Write-Host "- $_" -ForegroundColor Red }
+        Write-Host "=== PREREQUISITES CHECK FAILED ==="
+        $issues | ForEach-Object { Write-Host "- $_" }
         return $false
     }
 
-    Write-Host "Prerequisites check passed" -ForegroundColor Green
+    Write-Host "Prerequisites check passed"
     return $true
 }
 
 # Load WPF assemblies FIRST before any dot-sourcing
 function Initialize-WpfAssemblies {
     try {
-        Write-Host "Loading WPF assemblies..." -ForegroundColor Yellow
+        Write-Host "Loading WPF assemblies..."
         Add-Type -AssemblyName PresentationFramework
         Add-Type -AssemblyName PresentationCore
         Add-Type -AssemblyName WindowsBase
         Add-Type -AssemblyName System.Windows.Forms
-        Write-Host "WPF assemblies loaded successfully" -ForegroundColor Green
+        Write-Host "WPF assemblies loaded successfully"
         return $true
     } catch {
         Write-Error "Failed to load WPF assemblies: $($_.Exception.Message)"
@@ -95,7 +95,7 @@ function Import-Configuration {
             $samplePath = "$configPath.sample"
             if (Test-Path $samplePath) {
                 Copy-Item $samplePath $configPath
-                Write-Host "Created config.json from sample" -ForegroundColor Yellow
+                Write-Host "Created config.json from sample"
             } else {
                 throw "Configuration file not found: $configPath"
             }
@@ -103,7 +103,7 @@ function Import-Configuration {
 
         $script:ConfigData = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
         $script:ConfigPath = $configPath
-        Write-Host "Configuration loaded successfully" -ForegroundColor Green
+        Write-Host "Configuration loaded successfully"
 
     } catch {
         Write-Error "Failed to load configuration: $($_.Exception.Message)"
@@ -145,7 +145,7 @@ function Test-UIMappings {
             return $false
         }
 
-        Write-Host "UI mappings validated successfully" -ForegroundColor Green
+        Write-Host "UI mappings validated successfully"
         return $true
     } catch {
         Write-Warning "Failed to validate UI mappings: $($_.Exception.Message)"
@@ -158,16 +158,16 @@ function Initialize-ConfigEditor {
     try {
         # Debug mode information
         if ($DebugMode) {
-            Write-Host "=== DEBUG MODE ENABLED ===" -ForegroundColor Magenta
+            Write-Host "=== DEBUG MODE ENABLED ==="
             if ($AutoCloseSeconds -gt 0) {
-                Write-Host "Auto-close timer: $AutoCloseSeconds seconds" -ForegroundColor Magenta
+                Write-Host "Auto-close timer: $AutoCloseSeconds seconds"
             } else {
-                Write-Host "Manual close required" -ForegroundColor Magenta
+                Write-Host "Manual close required"
             }
-            Write-Host "=============================" -ForegroundColor Magenta
+            Write-Host "============================="
         }
         
-        Write-Host "=== ConfigEditor initialization started ===" -ForegroundColor Green
+        Write-Host "=== ConfigEditor initialization started ==="
 
         # Step 1: Load WPF assemblies FIRST
         if (-not (Initialize-WpfAssemblies)) {
@@ -178,7 +178,7 @@ function Initialize-ConfigEditor {
         Import-Configuration
 
         # Step 3: NOW we can safely dot-source files that contain WPF types
-        Write-Host "Loading script modules..." -ForegroundColor Yellow
+        Write-Host "Loading script modules..."
 
         $modulePaths = @(
             (Join-Path $PSScriptRoot "ConfigEditor.Mappings.ps1"),      # Load mappings first
@@ -198,7 +198,7 @@ function Initialize-ConfigEditor {
             }
         }
 
-        Write-Host "Script modules loaded successfully" -ForegroundColor Green
+        Write-Host "Script modules loaded successfully"
 
         # Step 3.5: Validate UI mappings
         if (-not (Test-UIMappings)) {
@@ -206,22 +206,22 @@ function Initialize-ConfigEditor {
         }
 
         # Step 3.6: Import additional modules (Version, UpdateChecker, etc.)
-        Write-Host "Importing additional modules..." -ForegroundColor Yellow
+        Write-Host "Importing additional modules..."
         Import-AdditionalModules
-        Write-Host "Additional modules imported" -ForegroundColor Green
+        Write-Host "Additional modules imported"
 
         # Step 4: Initialize localization
-        Write-Host "Initializing localization..." -ForegroundColor Yellow
+        Write-Host "Initializing localization..."
         try {
             $script:Localization = [ConfigEditorLocalization]::new()
-            Write-Host "Localization initialized for language: $($script:Localization.CurrentLanguage)" -ForegroundColor Green
+            Write-Host "Localization initialized for language: $($script:Localization.CurrentLanguage)"
         } catch {
             Write-Error "Failed to initialize localization: $($_.Exception.Message)"
             throw
         }
 
         # Step 5: Initialize state manager with config path
-        Write-Host "Initializing state manager..." -ForegroundColor Yellow
+        Write-Host "Initializing state manager..."
         $stateManager = [ConfigEditorState]::new($script:ConfigPath)
         $stateManager.LoadConfiguration()
 
@@ -229,23 +229,23 @@ function Initialize-ConfigEditor {
         if ($null -eq $stateManager.ConfigData) {
             throw "Configuration data is null after loading"
         }
-        Write-Host "Configuration data structure: $($stateManager.ConfigData.GetType().Name)" -ForegroundColor Yellow
+        Write-Host "Configuration data structure: $($stateManager.ConfigData.GetType().Name)"
 
         $stateManager.SaveOriginalConfig()
-        Write-Host "State manager initialized successfully" -ForegroundColor Green
+        Write-Host "State manager initialized successfully"
 
         # Store state manager in script scope for access from functions
         $script:StateManager = $stateManager
 
         # Step 6: Initialize UI manager
-        Write-Host "Initializing UI manager..." -ForegroundColor Yellow
+        Write-Host "Initializing UI manager..."
         try {
             # Validate mappings are available before creating UI
             if (-not (Get-Variable -Name "ButtonMappings" -Scope Script -ErrorAction SilentlyContinue)) {
                 Write-Warning "Button mappings not loaded - UI functionality may be limited"
             }
 
-            Write-Host "DEBUG: Creating ConfigEditorUI instance..." -ForegroundColor Cyan
+            Write-Host "DEBUG: Creating ConfigEditorUI instance..."
 
             $allMappings = @{
                 Button = $ButtonMappings
@@ -259,29 +259,29 @@ function Initialize-ConfigEditor {
             }
             $uiManager = [ConfigEditorUI]::new($stateManager, $allMappings, $script:Localization)
 
-            Write-Host "DEBUG: ConfigEditorUI instance created: $($null -ne $uiManager)" -ForegroundColor Cyan
+            Write-Host "DEBUG: ConfigEditorUI instance created: $($null -ne $uiManager)"
 
             if ($null -eq $uiManager) {
                 throw "Failed to create UI manager"
             }
 
-            Write-Host "DEBUG: Checking uiManager.Window..." -ForegroundColor Cyan
+            Write-Host "DEBUG: Checking uiManager.Window..."
 
             if ($null -eq $uiManager.Window) {
-                Write-Host "DEBUG: uiManager.Window is null" -ForegroundColor Red
-                Write-Host "DEBUG: Available uiManager properties:" -ForegroundColor Cyan
+                Write-Host "DEBUG: uiManager.Window is null"
+                Write-Host "DEBUG: Available uiManager properties:"
                 $uiManager | Get-Member -MemberType Property | ForEach-Object {
                     $propName = $_.Name
                     try {
                         $propValue = $uiManager.$propName
-                        Write-Host "  - $propName : $propValue" -ForegroundColor Cyan
+                        Write-Host "  - $propName : $propValue"
                     } catch {
-                        Write-Host "  - $propName : <Error accessing property>" -ForegroundColor Yellow
+                        Write-Host "  - $propName : <Error accessing property>"
                     }
                 }
                 throw "UI manager Window is null"
             } else {
-                Write-Host "DEBUG: uiManager.Window type: $($uiManager.Window.GetType().Name)" -ForegroundColor Cyan
+                Write-Host "DEBUG: uiManager.Window type: $($uiManager.Window.GetType().Name)"
             }
 
             $script:Window = $uiManager.Window
@@ -289,19 +289,19 @@ function Initialize-ConfigEditor {
             # Store UI manager in script scope for access from functions
             $script:UIManager = $uiManager
 
-            Write-Host "UI manager initialized successfully" -ForegroundColor Green
+            Write-Host "UI manager initialized successfully"
         } catch {
-            Write-Host "DEBUG: UI Manager initialization error details:" -ForegroundColor Red
-            Write-Host "DEBUG: Error type: $($_.Exception.GetType().Name)" -ForegroundColor Red
-            Write-Host "DEBUG: Error message: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "DEBUG: UI Manager initialization error details:"
+            Write-Host "DEBUG: Error type: $($_.Exception.GetType().Name)"
+            Write-Host "DEBUG: Error message: $($_.Exception.Message)"
             if ($_.Exception.InnerException) {
-                Write-Host "DEBUG: Inner exception: $($_.Exception.InnerException.Message)" -ForegroundColor Red
+                Write-Host "DEBUG: Inner exception: $($_.Exception.InnerException.Message)"
             }
 
             # Check if mapping-related error
             if ($_.Exception.Message -match "ButtonMappings|Mappings|mapping") {
-                Write-Host "DEBUG: This appears to be a mapping-related error" -ForegroundColor Yellow
-                Write-Host "DEBUG: Verify ConfigEditor.Mappings.ps1 is properly loaded" -ForegroundColor Yellow
+                Write-Host "DEBUG: This appears to be a mapping-related error"
+                Write-Host "DEBUG: Verify ConfigEditor.Mappings.ps1 is properly loaded"
             }
 
             throw
@@ -319,7 +319,7 @@ function Initialize-ConfigEditor {
         $eventHandler.RegisterAll()
 
         # Step 8: Load data to UI
-        Write-Host "Loading data to UI..." -ForegroundColor Yellow
+        Write-Host "Loading data to UI..."
         try {
             if ($null -eq $uiManager) {
                 throw "UIManager is null"
@@ -330,33 +330,33 @@ function Initialize-ConfigEditor {
             $uiManager.LoadDataToUI($stateManager.ConfigData)
 
             # Initialize game launcher list
-            Write-Host "Initializing game launcher list..." -ForegroundColor Yellow
+            Write-Host "Initializing game launcher list..."
             $uiManager.UpdateGameLauncherList($stateManager.ConfigData)
 
-            Write-Host "Data loaded to UI successfully" -ForegroundColor Green
+            Write-Host "Data loaded to UI successfully"
         } catch {
-            Write-Host "Failed to load data to UI: $($_.Exception.Message)" -ForegroundColor Red
-            Write-Host "UIManager exists: $($null -ne $uiManager)" -ForegroundColor Yellow
-            Write-Host "ConfigData exists: $($null -ne $stateManager.ConfigData)" -ForegroundColor Yellow
+            Write-Host "Failed to load data to UI: $($_.Exception.Message)"
+            Write-Host "UIManager exists: $($null -ne $uiManager)"
+            Write-Host "ConfigData exists: $($null -ne $stateManager.ConfigData)"
             throw
         }
 
         # Mark initialization as complete - event handlers can now process user changes
         $script:IsInitializationComplete = $true
-        Write-Host "Initialization completed - UI is now ready for user interaction" -ForegroundColor Green
+        Write-Host "Initialization completed - UI is now ready for user interaction"
 
         # Step 9: Show window
-        Write-Host "Showing window..." -ForegroundColor Yellow
+        Write-Host "Showing window..."
         try {
             # Debug mode: Auto-close after specified seconds
             if ($DebugMode -and $AutoCloseSeconds -gt 0) {
-                Write-Host "DEBUG MODE: Window will auto-close in $AutoCloseSeconds seconds" -ForegroundColor Cyan
+                Write-Host "DEBUG MODE: Window will auto-close in $AutoCloseSeconds seconds"
                 
                 # Create a timer to auto-close the window
                 $timer = New-Object System.Windows.Threading.DispatcherTimer
                 $timer.Interval = [TimeSpan]::FromSeconds($AutoCloseSeconds)
                 $timer.Add_Tick({
-                    Write-Host "DEBUG MODE: Auto-closing window..." -ForegroundColor Cyan
+                    Write-Host "DEBUG MODE: Auto-closing window..."
                     $window.Close()
                     $timer.Stop()
                 })
@@ -364,25 +364,25 @@ function Initialize-ConfigEditor {
                 
                 # Show window and wait
                 $dialogResult = $window.ShowDialog()
-                Write-Host "DEBUG: Window closed with result: $dialogResult" -ForegroundColor Cyan
+                Write-Host "DEBUG: Window closed with result: $dialogResult"
             }
             elseif ($DebugMode) {
-                Write-Host "DEBUG MODE: Showing window (manual close required)" -ForegroundColor Cyan
+                Write-Host "DEBUG MODE: Showing window (manual close required)"
                 $dialogResult = $window.ShowDialog()
-                Write-Host "DEBUG: Window closed with result: $dialogResult" -ForegroundColor Cyan
+                Write-Host "DEBUG: Window closed with result: $dialogResult"
             }
             else {
                 # Normal mode: Use ShowDialog() which properly handles the window lifecycle
                 $dialogResult = $window.ShowDialog()
-                Write-Host "DEBUG: Window closed with result: $dialogResult" -ForegroundColor Cyan
+                Write-Host "DEBUG: Window closed with result: $dialogResult"
             }
         } catch {
-            Write-Host "DEBUG: Window show/close error: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "DEBUG: Window show/close error: $($_.Exception.Message)"
         } finally {
             # Ensure proper cleanup
             if ($uiManager) {
                 try {
-                    Write-Host "DEBUG: Final UI manager cleanup" -ForegroundColor Yellow
+                    Write-Host "DEBUG: Final UI manager cleanup"
                     $uiManager.Cleanup()
                 } catch {
                     Write-Warning "Error in final UI manager cleanup: $($_.Exception.Message)"
@@ -390,7 +390,7 @@ function Initialize-ConfigEditor {
             }
             if ($window) {
                 try {
-                    Write-Host "DEBUG: Final window cleanup" -ForegroundColor Yellow
+                    Write-Host "DEBUG: Final window cleanup"
                     $window = $null
                 } catch {
                     Write-Warning "Error in final window cleanup: $($_.Exception.Message)"
@@ -407,20 +407,20 @@ function Initialize-ConfigEditor {
             [System.GC]::Collect()
         }
 
-        Write-Host "=== ConfigEditor initialization completed ===" -ForegroundColor Green
+        Write-Host "=== ConfigEditor initialization completed ==="
 
     } catch {
-        Write-Host "=== INITIALIZATION FAILED ===" -ForegroundColor Red
-        Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "=== INITIALIZATION FAILED ==="
+        Write-Host "Error: $($_.Exception.Message)"
         if ($_.InvocationInfo.ScriptName) {
             $projectRoot = Split-Path $PSScriptRoot -Parent
             $relativePath = $_.InvocationInfo.ScriptName -replace [regex]::Escape($projectRoot), "."
             $relativePath = $relativePath -replace "\\", "/"  # Convert to forward slashes
-            Write-Host "Module: $relativePath" -ForegroundColor Red
+            Write-Host "Module: $relativePath"
         } else {
-            Write-Host "Module: <Main Script>" -ForegroundColor Red
+            Write-Host "Module: <Main Script>"
         }
-        Write-Host "Location: Line $($_.InvocationInfo.ScriptLineNumber)" -ForegroundColor Red
+        Write-Host "Location: Line $($_.InvocationInfo.ScriptLineNumber)"
 
         try {
             [System.Windows.MessageBox]::Show(
@@ -430,7 +430,7 @@ function Initialize-ConfigEditor {
                 [System.Windows.MessageBoxImage]::Error
             )
         } catch {
-            Write-Host "Failed to show error dialog: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "Failed to show error dialog: $($_.Exception.Message)"
         }
     }
 }
@@ -481,7 +481,7 @@ function Import-AdditionalModules {
             foreach ($functionName in $moduleInfo.GlobalFunctions.Keys) {
                 $globalVarName = $moduleInfo.GlobalFunctions[$functionName]
                 if (Test-Path "function:$functionName") {
-                    Write-Host "$functionName function loaded successfully" -ForegroundColor Green
+                    Write-Host "$functionName function loaded successfully"
                     Set-Variable -Name $globalVarName -Value (Get-Item "function:$functionName") -Scope Global
                 } else {
                     Write-Warning "$functionName function not available after loading $moduleName"
@@ -856,7 +856,7 @@ function Show-LanguageChangeRestartMessage {
             }
 
             # Restart the application
-            Write-Host "Restarting application to apply language changes..." -ForegroundColor Cyan
+            Write-Host "Restarting application to apply language changes..."
 
             # Get the current script path
             $currentScript = $PSCommandPath
@@ -874,7 +874,7 @@ function Show-LanguageChangeRestartMessage {
 
             try {
                 $newProcess = [System.Diagnostics.Process]::Start($startInfo)
-                Write-Host "New instance started successfully (PID: $($newProcess.Id))" -ForegroundColor Green
+                Write-Host "New instance started successfully (PID: $($newProcess.Id))"
             } catch {
                 Write-Warning "Failed to start new instance: $($_.Exception.Message)"
                 return
@@ -1161,25 +1161,25 @@ $script:IsInitializationComplete = $false
 # Debug helper function to show usage information
 function Show-DebugHelp {
     Write-Host ""
-    Write-Host "=== ConfigEditor Debug Mode Usage ===" -ForegroundColor Cyan
+    Write-Host "=== ConfigEditor Debug Mode Usage ==="
     Write-Host ""
-    Write-Host "Start with debug mode (manual close):" -ForegroundColor Yellow
-    Write-Host "  gui\ConfigEditor.ps1 -DebugMode" -ForegroundColor White
+    Write-Host "Start with debug mode (manual close):"
+    Write-Host "  gui\ConfigEditor.ps1 -DebugMode"
     Write-Host ""
-    Write-Host "Start with auto-close (3 seconds):" -ForegroundColor Yellow
-    Write-Host "  gui\ConfigEditor.ps1 -DebugMode -AutoCloseSeconds 3" -ForegroundColor White
+    Write-Host "Start with auto-close (3 seconds):"
+    Write-Host "  gui\ConfigEditor.ps1 -DebugMode -AutoCloseSeconds 3"
     Write-Host ""
-    Write-Host "Start with auto-close (10 seconds):" -ForegroundColor Yellow
-    Write-Host "  gui\ConfigEditor.ps1 -DebugMode -AutoCloseSeconds 10" -ForegroundColor White
+    Write-Host "Start with auto-close (10 seconds):"
+    Write-Host "  gui\ConfigEditor.ps1 -DebugMode -AutoCloseSeconds 10"
     Write-Host ""
-    Write-Host "Normal mode (no debug output):" -ForegroundColor Yellow
-    Write-Host "  gui\ConfigEditor.ps1" -ForegroundColor White
+    Write-Host "Normal mode (no debug output):"
+    Write-Host "  gui\ConfigEditor.ps1"
     Write-Host ""
-    Write-Host "Show this help:" -ForegroundColor Yellow
-    Write-Host "  gui\ConfigEditor.ps1 -NoAutoStart" -ForegroundColor White
-    Write-Host "  Then call: Show-DebugHelp" -ForegroundColor White
+    Write-Host "Show this help:"
+    Write-Host "  gui\ConfigEditor.ps1 -NoAutoStart"
+    Write-Host "  Then call: Show-DebugHelp"
     Write-Host ""
-    Write-Host "================================" -ForegroundColor Cyan
+    Write-Host "================================"
     Write-Host ""
 }
 
@@ -1188,7 +1188,7 @@ if (-not $NoAutoStart) {
     if (Test-Prerequisites) {
         Initialize-ConfigEditor
     } else {
-        Write-Host "Cannot start ConfigEditor due to missing prerequisites" -ForegroundColor Red
+        Write-Host "Cannot start ConfigEditor due to missing prerequisites"
         exit 1
     }
 }
