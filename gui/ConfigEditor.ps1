@@ -1,26 +1,58 @@
-﻿# Focus Game Deck - Configuration Editor
-# PowerShell + WPF GUI for editing config.json
-#
-# Design Philosophy:
-# 1. Lightweight & Simple - Uses Windows native WPF, no additional runtime required
-# 2. Maintainable & Extensible - Configuration-driven design with modular structure
-# 3. User-Friendly - Intuitive 3-tab GUI with proper internationalization support
-#
-# Technical Architecture:
-# - PowerShell + WPF: Windows-native GUI technology for lightweight implementation
-# - Dynamic Language Detection: Automatic language detection based on config.json and OS settings
-# - Configuration-Driven: All behavior controlled through config.json
-# - Event-Driven: UI operations handled through PowerShell event handlers
-#
-# Language Support:
-# This implementation uses dynamic language detection following the priority:
-# 1. config.json language setting (if exists and valid)
-# 2. OS display language (if supported)
-# 3. English fallback (default)
-#
-# Author: GitHub Copilot Assistant
-# Version: 1.1.0 - Dynamic Language Detection and English Support
-# Date: 2025-09-23
+﻿<#
+.SYNOPSIS
+    Focus Game Deck - Configuration Editor GUI application.
+
+.DESCRIPTION
+    PowerShell + WPF based GUI application for editing config.json with multi-language support.
+    Provides an intuitive 3-tab interface for managing game configurations, managed applications,
+    and global settings.
+
+    Design Philosophy:
+    1. Lightweight & Simple - Uses Windows native WPF, no additional runtime required
+    2. Maintainable & Extensible - Configuration-driven design with modular structure
+    3. User-Friendly - Intuitive 3-tab GUI with proper internationalization support
+
+    Technical Architecture:
+    - PowerShell + WPF: Windows-native GUI technology for lightweight implementation
+    - Dynamic Language Detection: Automatic language detection based on config.json and OS settings
+    - Configuration-Driven: All behavior controlled through config.json
+    - Event-Driven: UI operations handled through PowerShell event handlers
+
+    Language Support Priority:
+    1. config.json language setting (if exists and valid)
+    2. OS display language (if supported)
+    3. English fallback (default)
+
+.PARAMETER NoAutoStart
+    Prevents automatic startup of the configuration editor. Used for loading functions only.
+
+.PARAMETER DebugMode
+    Enables debug mode with verbose output for troubleshooting.
+
+.PARAMETER AutoCloseSeconds
+    Automatically closes the window after the specified number of seconds (debug mode only).
+
+.EXAMPLE
+    .\ConfigEditor.ps1
+    Starts the configuration editor in normal mode.
+
+.EXAMPLE
+    .\ConfigEditor.ps1 -DebugMode
+    Starts the configuration editor in debug mode with verbose output.
+
+.EXAMPLE
+    .\ConfigEditor.ps1 -DebugMode -AutoCloseSeconds 10
+    Starts the configuration editor in debug mode and auto-closes after 10 seconds.
+
+.NOTES
+    Author: Focus Game Deck Development Team
+    Version: 1.1.0 - Dynamic Language Detection and English Support
+    Last Updated: 2025-09-23
+    Requires: PowerShell 5.1 or higher, Windows 10/11
+
+.LINK
+    https://github.com/beive60/focus-game-deck
+#>
 
 param(
     [switch]$NoAutoStart,
