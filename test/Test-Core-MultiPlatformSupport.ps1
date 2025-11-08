@@ -1,5 +1,87 @@
-# Focus Game Deck - Multi-Platform Support Unit Tests
-# v1.0 Epic Games & Riot Client Support Testing
+﻿<#
+.SYNOPSIS
+    Multi-platform support unit tests for Focus Game Deck.
+
+.DESCRIPTION
+    This test suite validates the multi-platform game launcher functionality,
+    specifically testing Epic Games Store and Riot Client integration alongside
+    the existing Steam platform support.
+
+    The test suite performs comprehensive validation of:
+    - PlatformManager class functionality and platform detection
+    - Configuration validation for multi-platform game entries
+    - Platform-specific game ID properties (steamAppId, epicGameId, riotGameId)
+    - Platform availability detection logic
+    - Game launch configuration validation (without actual launch)
+    - Configuration file structure for multi-platform games
+
+    Test Categories:
+    1. Configuration Loading Tests
+        - Main config.json structure validation
+        - Multi-platform game entries verification
+        - Platform paths configuration check
+
+    2. PlatformManager Tests
+        - Instance creation and initialization
+        - Supported platforms enumeration
+        - Platform availability detection (Steam, Epic, Riot)
+        - Platform detection methods and results structure
+        - Game configuration validation for each platform
+
+    3. ConfigValidator Multi-Platform Tests
+        - Steam game configuration validation
+        - Epic Games game configuration validation
+        - Riot Client game configuration validation
+        - Invalid platform handling
+        - Missing platform property handling (defaults)
+        - Error and warning reporting
+
+.PARAMETER Verbose
+    Enables verbose output showing detailed validation errors, warnings,
+    and intermediate test results for debugging purposes.
+
+.EXAMPLE
+    .\Test-MultiPlatform.ps1
+    Runs all multi-platform support tests with standard output.
+
+.EXAMPLE
+    .\Test-MultiPlatform.ps1 -Verbose
+    Runs tests with detailed verbose output including validation errors and warnings.
+
+.NOTES
+    Author: Focus Game Deck Team
+    Version: 1.0.0
+    Purpose: Epic Games & Riot Client Support Testing
+
+    Supported Platforms:
+    - Steam (steamAppId property)
+    - Epic Games Store (epicGameId property)
+    - Riot Client (riotGameId property)
+
+    Test Configuration:
+    The test creates synthetic game configurations for each platform to validate
+    the ConfigValidator and PlatformManager without requiring actual game installations.
+
+    Expected Test Cases:
+    - steamGame: Should pass (all required properties present)
+    - epicGame: May warn (Epic path might not be configured)
+    - riotGame: May warn (Riot path might not be configured)
+    - invalidGame: Should fail (unsupported platform)
+    - missingPlatform: Should pass (defaults to Steam)
+
+    Exit Codes:
+    - 0: All tests passed successfully
+    - 1: One or more tests failed
+
+    Dependencies:
+    - src/modules/Logger.ps1 (logging functionality)
+    - src/modules/ConfigValidator.ps1 (configuration validation)
+    - src/modules/PlatformManager.ps1 (platform detection and management)
+    - config/config.json (main configuration file)
+
+    Requirements:
+    - PowerShell 5.1 or higher
+#>
 
 param(
     [switch]$Verbose
@@ -35,6 +117,32 @@ $global:TestResults = @{
     Details = @()
 }
 
+<#
+.SYNOPSIS
+    Asserts a test condition and records the result.
+
+.DESCRIPTION
+    Evaluates a test condition and records the result in the global test results
+    structure. Displays formatted output with PASS or FAIL status and optional
+    detailed message.
+
+.PARAMETER TestName
+    The name or description of the test being asserted.
+
+.PARAMETER Condition
+    Boolean condition to evaluate. True indicates test passed, false indicates failure.
+
+.PARAMETER Message
+    Optional detailed message providing context about the test result or failure reason.
+
+.EXAMPLE
+    Test-Assert "Platform Creation" ($platformManager -ne $null) "PlatformManager created successfully"
+    Test-Assert "Steam Support" ("steam" -in $platforms) "Steam should be in supported platforms"
+
+.NOTES
+    Updates the global $TestResults hashtable with passed/failed counters and details.
+    Output format: [OK] PASS or [ERROR] FAIL with test name and optional message.
+#>
 function Test-Assert {
     param(
         [string]$TestName,
@@ -44,12 +152,10 @@ function Test-Assert {
 
     if ($Condition) {
         $global:TestResults.Passed++
-        $status = "PASS"
-        $color = "Green"
+        $status = "[OK] PASS"
     } else {
         $global:TestResults.Failed++
-        $status = "FAIL"
-        $color = "Red"
+        $status = "[ERROR] FAIL"
     }
 
     $result = "$status - $TestName"
@@ -58,11 +164,35 @@ function Test-Assert {
     }
 
     $global:TestResults.Details += $result
-    Write-Host $result -ForegroundColor $color
+    Write-Host $result
 }
 
+<#
+.SYNOPSIS
+    Tests PlatformManager functionality for multi-platform support.
+
+.DESCRIPTION
+    Comprehensive test function that validates the PlatformManager class implementation.
+    Tests platform detection, availability checking, game configuration validation,
+    and platform-specific properties for Steam, Epic Games, and Riot Client.
+
+    Test Scenarios:
+    - PlatformManager instance creation
+    - Supported platforms enumeration (expects 3: steam, epic, riot)
+    - Platform availability detection logic
+    - Platform detection results structure
+    - Game configuration validation for each platform
+
+.EXAMPLE
+    Test-PlatformManager
+
+.NOTES
+    Creates a test configuration with paths for all three platforms.
+    Does not actually launch games, only validates configuration structure.
+    Updates global $TestResults with all test outcomes.
+#>
 function Test-PlatformManager {
-    Write-Host "`n=== PlatformManager Tests ===" -ForegroundColor Cyan
+    Write-Host "`n=== PlatformManager Tests ==="
 
     # Create test configuration
     $testConfig = @{
@@ -141,8 +271,36 @@ function Test-PlatformManager {
     }
 }
 
+<#
+.SYNOPSIS
+    Tests ConfigValidator with multi-platform game configurations.
+
+.DESCRIPTION
+    Validates the ConfigValidator class's ability to properly validate game
+    configurations for different platforms (Steam, Epic Games, Riot Client).
+
+    Tests multiple scenarios:
+    - Valid Steam game configuration
+    - Epic Games game configuration (may have path warnings)
+    - Riot Client game configuration (may have path warnings)
+    - Invalid platform handling
+    - Missing platform property (defaults to Steam)
+
+    Each test case validates error and warning reporting, ensuring that the
+    ConfigValidator correctly identifies configuration issues and provides
+    appropriate feedback.
+
+.EXAMPLE
+    Test-ConfigValidator
+
+.NOTES
+    Creates synthetic test configurations to validate all scenarios.
+    Checks both error and warning counts in validation results.
+    If -Verbose is enabled, displays detailed error and warning messages.
+    Updates global $TestResults with all test outcomes.
+#>
 function Test-ConfigValidator {
-    Write-Host "`n=== ConfigValidator Multi-Platform Tests ===" -ForegroundColor Cyan
+    Write-Host "`n=== ConfigValidator Multi-Platform Tests ==="
 
     # Test configuration with multi-platform games
     $testConfig = @{
@@ -232,14 +390,40 @@ function Test-ConfigValidator {
         }
 
         if ($Verbose -and ($validator.Errors.Count -gt 0 -or $validator.Warnings.Count -gt 0)) {
-            Write-Host "  Errors: $($validator.Errors -join '; ')" -ForegroundColor Yellow
-            Write-Host "  Warnings: $($validator.Warnings -join '; ')" -ForegroundColor Yellow
+            Write-Host "  Errors: $($validator.Errors -join '; ')"
+            Write-Host "  Warnings: $($validator.Warnings -join '; ')"
         }
     }
 }
 
+<#
+.SYNOPSIS
+    Tests loading and validation of the main configuration file.
+
+.DESCRIPTION
+    Validates the actual config.json file in the project, ensuring it contains
+    proper multi-platform game configurations and platform paths.
+
+    Test Validations:
+    - Main configuration file loads successfully
+    - Configuration has required sections (games, paths)
+    - At least one multi-platform (non-Steam) game is configured
+    - All three platform paths are configured (steam, epic, riot)
+
+    This test ensures that the project's actual configuration file supports
+    multi-platform functionality and has the necessary structure for all
+    supported game launchers.
+
+.EXAMPLE
+    Test-ConfigurationLoading
+
+.NOTES
+    Reads the actual config/config.json file from the project.
+    Uses UTF-8 encoding for proper character support.
+    Updates global $TestResults with all test outcomes.
+#>
 function Test-ConfigurationLoading {
-    Write-Host "`n=== Configuration Loading Tests ===" -ForegroundColor Cyan
+    Write-Host "`n=== Configuration Loading Tests ==="
 
     $configPath = Join-Path $projectRoot "config/config.json"
 
@@ -276,29 +460,29 @@ function Test-ConfigurationLoading {
 }
 
 # Execute Tests
-Write-Host "Focus Game Deck - Multi-Platform Support Unit Tests" -ForegroundColor Green
-Write-Host "Testing Epic Games & Riot Client Integration (v1.0)" -ForegroundColor Green
-Write-Host "======================================================" -ForegroundColor Green
+Write-Host "Focus Game Deck - Multi-Platform Support Unit Tests"
+Write-Host "Testing Epic Games & Riot Client Integration (v1.0)"
+Write-Host "======================================================"
 
 Test-ConfigurationLoading
 Test-PlatformManager
 Test-ConfigValidator
 
 # Display Results
-Write-Host "`n======================================================" -ForegroundColor Green
-Write-Host "Test Results Summary" -ForegroundColor Green
-Write-Host "======================================================" -ForegroundColor Green
-Write-Host "Tests Passed: $($global:TestResults.Passed)" -ForegroundColor Green
-Write-Host "Tests Failed: $($global:TestResults.Failed)" -ForegroundColor Red
+Write-Host "`n======================================================"
+Write-Host "Test Results Summary"
+Write-Host "======================================================"
+Write-Host "Tests Passed: $($global:TestResults.Passed)"
+Write-Host "Tests Failed: $($global:TestResults.Failed)"
 Write-Host "Total Tests: $($global:TestResults.Passed + $global:TestResults.Failed)"
 
 if ($global:TestResults.Failed -gt 0) {
-    Write-Host "`nFailed Tests:" -ForegroundColor Red
+    Write-Host "`nFailed Tests:"
     $global:TestResults.Details | Where-Object { $_ -like "FAIL*" } | ForEach-Object {
-        Write-Host "  $_" -ForegroundColor Red
+        Write-Host "  $_"
     }
     exit 1
 } else {
-    Write-Host "`nAll tests passed!" -ForegroundColor Green
+    Write-Host "`nAll tests passed!"
     exit 0
 }

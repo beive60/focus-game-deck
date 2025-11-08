@@ -1,4 +1,4 @@
-# =============================================================================
+﻿# =============================================================================
 # Test-OBSConnection.ps1
 #
 # This script is a standalone test for the OBS WebSocket connection and
@@ -121,15 +121,15 @@ function Connect-OBSWebSocket {
         # Wait for Identified message (Op 2) from server
         $identified = Receive-OBSWebSocketResponse -WebSocket $ws
         if (-not $identified -or $identified.op -ne 2) {
-            Write-Host "Error: WebSocket authentication failed." -ForegroundColor Red
+            Write-Host "Error: WebSocket authentication failed."
             $ws.Dispose()
             return $null
         }
 
-        Write-Host "OBS WebSocket authentication successful." -ForegroundColor Green
+        Write-Host "OBS WebSocket authentication successful."
         return $ws
     } catch {
-        Write-Host "OBS WebSocket connection/authentication error: $_" -ForegroundColor Red
+        Write-Host "OBS WebSocket connection/authentication error: $_"
         return $null
     }
 }
@@ -144,7 +144,7 @@ $projectRoot = Split-Path $PSScriptRoot -Parent
 $configPath = Join-Path $projectRoot "config/config.json"
 
 if (-not (Test-Path $configPath)) {
-    Write-Host "Error: config.json not found at $configPath" -ForegroundColor Red
+    Write-Host "Error: config.json not found at $configPath"
     Write-Host "Please ensure config.json exists in the config/ directory."
     exit 1
 }
@@ -152,7 +152,7 @@ $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
 # Check for OBS configuration
 if (-not $config.obs.websocket) {
-    Write-Host "Error: 'obs.websocket' configuration is missing in config.json" -ForegroundColor Red
+    Write-Host "Error: 'obs.websocket' configuration is missing in config.json"
     exit 1
 }
 
@@ -165,10 +165,10 @@ $securePassword = ConvertTo-SecureString -String ($obsConfig.password -as [strin
 $ws = Connect-OBSWebSocket -HostName $obsConfig.host -Port $obsConfig.port -Password $securePassword
 
 if ($ws) {
-    Write-Host "`nTest Result: SUCCESS" -ForegroundColor Green
+    Write-Host "`nTest Result: SUCCESS"
     $ws.Dispose()
 } else {
-    Write-Host "`nTest Result: FAILED" -ForegroundColor Red
+    Write-Host "`nTest Result: FAILED"
 }
 
 Write-Host "--- Test Finished ---"
