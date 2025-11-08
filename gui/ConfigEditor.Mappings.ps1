@@ -181,6 +181,13 @@ $script:GameActionMessageKeys = @{
     "play-wallpaper"          = "gameActionPlayWallpaper"
 }
 
+# Termination method options mapping
+$script:TerminationMethodMessageKeys = @{
+    "auto"     = "terminationMethodAuto"
+    "graceful" = "terminationMethodGraceful"
+    "force"    = "terminationMethodForce"
+}
+
 <#
 .SYNOPSIS
     Gets button mappings by functionality category.

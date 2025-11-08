@@ -314,6 +314,9 @@ class ConfigEditorUI {
         try {
             # Initialize game action combos FIRST before loading data
             $this.InitializeGameActionCombos()
+            
+            # Initialize managed app action combos
+            $this.InitializeManagedAppActionCombos()
 
             # Load global settings
             $this.LoadGlobalSettings($ConfigData)
@@ -936,6 +939,7 @@ class ConfigEditorUI {
             Write-Verbose "InitializeGameActionCombos: Starting initialization"
             $gameStartActionCombo = $this.Window.FindName("GameStartActionCombo")
             $gameEndActionCombo = $this.Window.FindName("GameEndActionCombo")
+            $terminationMethodCombo = $this.Window.FindName("TerminationMethodCombo")
 
             if (-not $gameStartActionCombo) {
                 Write-Warning "GameStartActionCombo not found"
@@ -945,9 +949,13 @@ class ConfigEditorUI {
                 Write-Warning "GameEndActionCombo not found"
                 return
             }
+            if (-not $terminationMethodCombo) {
+                Write-Warning "TerminationMethodCombo not found"
+            }
 
             # Get game action mappings from script scope
             $gameActionMappings = $this.GetMappingFromScope("GameActionMessageKeys")
+            $terminationMethodMappings = $this.GetMappingFromScope("TerminationMethodMessageKeys")
 
             if ($gameActionMappings.Count -eq 0) {
                 Write-Warning "GameActionMessageKeys mapping not found or empty"
@@ -958,6 +966,9 @@ class ConfigEditorUI {
             try {
                 $gameStartActionCombo.Items.Clear()
                 $gameEndActionCombo.Items.Clear()
+                if ($terminationMethodCombo) {
+                    $terminationMethodCombo.Items.Clear()
+                }
             } catch {
                 Write-Warning "Failed to clear combo box items: $($_.Exception.Message)"
                 return
@@ -984,11 +995,54 @@ class ConfigEditorUI {
                 Write-Verbose "Added game action: Tag='$actionTag', Key='$messageKey', Text='$localizedText'"
             }
 
+            # Add termination method options
+            if ($terminationMethodCombo -and $terminationMethodMappings.Count -gt 0) {
+                foreach ($kvp in $terminationMethodMappings.GetEnumerator()) {
+                    $methodTag = $kvp.Key
+                    $messageKey = $kvp.Value
+                    $localizedText = $this.GetLocalizedMessage($messageKey)
+
+                    $methodItem = New-Object System.Windows.Controls.ComboBoxItem
+                    $methodItem.Content = $localizedText
+                    $methodItem.Tag = $methodTag
+                    $terminationMethodCombo.Items.Add($methodItem) | Out-Null
+
+                    Write-Verbose "Added termination method: Tag='$methodTag', Key='$messageKey', Text='$localizedText'"
+                }
+            }
+
             # DO NOT set default selection - let it be unselected initially
             # This prevents SelectedItem property issues during window initialization
             Write-Verbose "Game action combo boxes initialized successfully with $($gameActionMappings.Count) localized actions (no default selection)"
         } catch {
             Write-Warning "Failed to initialize game action combo boxes: $($_.Exception.Message)"
+            Write-Warning "Stack trace: $($_.Exception.StackTrace)"
+        }
+    }
+
+    <#
+    .SYNOPSIS
+    Initializes the managed app action combo boxes with available actions.
+    .DESCRIPTION
+    Populates the AppStartActionCombo, AppEndActionCombo, and AppTerminationMethodCombo 
+    with predefined action options using localized ComboBoxItems.
+    .OUTPUTS
+    None
+    .EXAMPLE
+    $this.InitializeManagedAppActionCombos()
+    #>
+    [void]InitializeManagedAppActionCombos() {
+        try {
+            Write-Verbose "InitializeManagedAppActionCombos: Starting initialization"
+            
+            # NOTE: Managed Apps tab uses the same ComboBox names as Game tab
+            # GameStartActionCombo, GameEndActionCombo, TerminationMethodCombo
+            # These are already initialized by InitializeGameActionCombos()
+            # So this method is actually redundant but kept for clarity and future extensibility
+            
+            Write-Verbose "Managed app action combo boxes use same controls as game tab - already initialized"
+        } catch {
+            Write-Warning "Failed to initialize managed app action combo boxes: $($_.Exception.Message)"
             Write-Warning "Stack trace: $($_.Exception.StackTrace)"
         }
     }
