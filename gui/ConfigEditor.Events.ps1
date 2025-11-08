@@ -7,6 +7,90 @@ class ConfigEditorEvents {
         $this.stateManager = $state
     }
 
+    # Helper method to set ComboBox selection by matching Tag property
+    [void] SetComboBoxSelectionByTag([System.Windows.Controls.ComboBox]$ComboBox, [string]$TagValue) {
+        if (-not $ComboBox) {
+            Write-Warning "ComboBox is null, cannot set selection"
+            return
+        }
+
+        try {
+            # Find the ComboBoxItem with matching Tag
+            $matchingItem = $null
+            foreach ($item in $ComboBox.Items) {
+                if ($item -is [System.Windows.Controls.ComboBoxItem] -and $item.Tag -eq $TagValue) {
+                    $matchingItem = $item
+                    break
+                }
+            }
+
+            if ($matchingItem) {
+                $ComboBox.SelectedItem = $matchingItem
+                Write-Verbose "Set ComboBox selection to Tag: $TagValue"
+            } else {
+                Write-Verbose "No ComboBoxItem found with Tag: $TagValue in ComboBox: $($ComboBox.Name)"
+                $ComboBox.SelectedIndex = -1
+            }
+        } catch {
+            Write-Warning "Failed to set ComboBox selection: $($_.Exception.Message)"
+        }
+    }
+
+    # Helper method to update TerminationMethod ComboBox enabled state
+    # Should be enabled only when either start or end action is "stop-process"
+    [void] UpdateTerminationMethodState() {
+        $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
+        $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
+        $terminationMethodCombo = $script:Window.FindName("TerminationMethodCombo")
+        $gracefulTimeoutTextBox = $script:Window.FindName("GracefulTimeoutTextBox")
+
+        if (-not $terminationMethodCombo) {
+            Write-Verbose "TerminationMethodCombo not found"
+            return
+        }
+
+        # Get selected actions
+        $startAction = if ($gameStartActionCombo -and $gameStartActionCombo.SelectedItem) {
+            $gameStartActionCombo.SelectedItem.Tag
+        } else {
+            "none"
+        }
+
+        $endAction = if ($gameEndActionCombo -and $gameEndActionCombo.SelectedItem) {
+            $gameEndActionCombo.SelectedItem.Tag
+        } else {
+            "none"
+        }
+
+        # Enable only if either action is "stop-process"
+        $shouldEnable = ($startAction -eq "stop-process") -or ($endAction -eq "stop-process")
+        
+        # Store current selection before disabling
+        if (-not $shouldEnable -and $terminationMethodCombo.SelectedItem) {
+            # Save the current selection
+            if (-not $script:SavedTerminationMethod) {
+                $script:SavedTerminationMethod = $terminationMethodCombo.SelectedItem.Tag
+            }
+            # Clear selection when disabled
+            $terminationMethodCombo.SelectedIndex = -1
+        } elseif ($shouldEnable -and $terminationMethodCombo.SelectedIndex -eq -1) {
+            # Restore saved selection when re-enabled, or use default
+            $savedValue = if ($script:SavedTerminationMethod) { 
+                $script:SavedTerminationMethod 
+            } else { 
+                "auto" 
+            }
+            $this.SetComboBoxSelectionByTag($terminationMethodCombo, $savedValue)
+        }
+        
+        $terminationMethodCombo.IsEnabled = $shouldEnable
+        if ($gracefulTimeoutTextBox) {
+            $gracefulTimeoutTextBox.IsEnabled = $shouldEnable
+        }
+
+        Write-Verbose "TerminationMethod enabled: $shouldEnable (StartAction: $startAction, EndAction: $endAction)"
+    }
+
     # Handle platform selection changed
     [void] HandlePlatformSelectionChanged() {
         $platformCombo = $script:Window.FindName("PlatformComboBox")
@@ -27,12 +111,23 @@ class ConfigEditorEvents {
 
             if ($gameData) {
                 # Load game details into form
-                $script:Window.FindName("GameNameTextBox").Text = if ($gameData.displayName) { $gameData.displayName } else { "" }
-                $script:Window.FindName("GameIdTextBox").Text = if ($gameData.appId) { $gameData.appId } else { "" }
-                $script:Window.FindName("SteamAppIdTextBox").Text = if ($gameData.steamAppId) { $gameData.steamAppId } else { "" }
-                $script:Window.FindName("EpicGameIdTextBox").Text = if ($gameData.epicGameId) { $gameData.epicGameId } else { "" }
-                $script:Window.FindName("RiotGameIdTextBox").Text = if ($gameData.riotGameId) { $gameData.riotGameId } else { "" }
-                $script:Window.FindName("ExecutablePathTextBox").Text = if ($gameData.executablePath) { $gameData.executablePath } else { "" }
+                $gameNameTextBox = $script:Window.FindName("GameNameTextBox")
+                if ($gameNameTextBox) { $gameNameTextBox.Text = if ($gameData.displayName) { $gameData.displayName } else { "" } }
+                
+                $gameIdTextBox = $script:Window.FindName("GameIdTextBox")
+                if ($gameIdTextBox) { $gameIdTextBox.Text = if ($gameData.appId) { $gameData.appId } else { "" } }
+                
+                $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
+                if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = if ($gameData.steamAppId) { $gameData.steamAppId } else { "" } }
+                
+                $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
+                if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = if ($gameData.epicGameId) { $gameData.epicGameId } else { "" } }
+                
+                $riotGameIdTextBox = $script:Window.FindName("RiotGameIdTextBox")
+                if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = if ($gameData.riotGameId) { $gameData.riotGameId } else { "" } }
+                
+                $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
+                if ($executablePathTextBox) { $executablePathTextBox.Text = if ($gameData.executablePath) { $gameData.executablePath } else { "" } }
 
                 # Set platform
                 $platformCombo = $script:Window.FindName("PlatformComboBox")
@@ -56,22 +151,38 @@ class ConfigEditorEvents {
                 $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
                 $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
 
-                $gameStartActionCombo.SelectedItem = if ($gameData.managedApps.gameStartAction) { $gameData.managedApps.gameStartAction } else { "none" }
-                $gameEndActionCombo.SelectedItem = if ($gameData.managedApps.gameEndAction) { $gameData.managedApps.gameEndAction } else { "none" }
+                $gameStartAction = if ($gameData.managedApps.gameStartAction) { $gameData.managedApps.gameStartAction } else { "none" }
+                $gameEndAction = if ($gameData.managedApps.gameEndAction) { $gameData.managedApps.gameEndAction } else { "none" }
+                $this.SetComboBoxSelectionByTag($gameStartActionCombo, $gameStartAction)
+                $this.SetComboBoxSelectionByTag($gameEndActionCombo, $gameEndAction)
 
                 # Load termination settings
                 $terminationMethodCombo = $script:Window.FindName("TerminationMethodCombo")
                 $gracefulTimeoutTextBox = $script:Window.FindName("GracefulTimeoutTextBox")
 
-                $terminationMethodCombo.SelectedItem = if ($gameData.managedApps.terminationMethod) { $gameData.managedApps.terminationMethod } else { "auto" }
-                $gracefulTimeoutTextBox.Text = if ($gameData.managedApps.gracefulTimeout) { $gameData.managedApps.gracefulTimeout.ToString() } else { "5" }
+                if ($terminationMethodCombo) {
+                    $terminationMethod = if ($gameData.managedApps.terminationMethod) { $gameData.managedApps.terminationMethod } else { "auto" }
+                    # Clear saved value and set the actual value from config
+                    $script:SavedTerminationMethod = $terminationMethod
+                    $this.SetComboBoxSelectionByTag($terminationMethodCombo, $terminationMethod)
+                }
+                
+                if ($gracefulTimeoutTextBox) {
+                    $gracefulTimeoutTextBox.Text = if ($gameData.managedApps.gracefulTimeout) { $gameData.managedApps.gracefulTimeout.ToString() } else { "5" }
+                }
 
                 # Update termination settings visibility
                 Update-TerminationSettingsVisibility
 
+                # Update termination method enabled state based on selected actions
+                $this.UpdateTerminationMethodState()
+
                 # Enable buttons
-                $script:Window.FindName("DuplicateGameButton").IsEnabled = $true
-                $script:Window.FindName("DeleteGameButton").IsEnabled = $true
+                $duplicateGameButton = $script:Window.FindName("DuplicateGameButton")
+                if ($duplicateGameButton) { $duplicateGameButton.IsEnabled = $true }
+                
+                $deleteGameButton = $script:Window.FindName("DeleteGameButton")
+                if ($deleteGameButton) { $deleteGameButton.IsEnabled = $true }
 
                 # Update move button states
                 Update-MoveButtonStates
@@ -81,36 +192,53 @@ class ConfigEditorEvents {
         } else {
             # No game selected, clear the form
             $script:CurrentGameId = ""
-            $script:Window.FindName("GameNameTextBox").Text = ""
-            $script:Window.FindName("GameIdTextBox").Text = ""
-            $script:Window.FindName("SteamAppIdTextBox").Text = ""
-            $script:Window.FindName("EpicGameIdTextBox").Text = ""
-            $script:Window.FindName("RiotGameIdTextBox").Text = ""
-            $script:Window.FindName("ExecutablePathTextBox").Text = ""
+            
+            $gameNameTextBox = $script:Window.FindName("GameNameTextBox")
+            if ($gameNameTextBox) { $gameNameTextBox.Text = "" }
+            
+            $gameIdTextBox = $script:Window.FindName("GameIdTextBox")
+            if ($gameIdTextBox) { $gameIdTextBox.Text = "" }
+            
+            $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
+            if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = "" }
+            
+            $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
+            if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
+            
+            $riotGameIdTextBox = $script:Window.FindName("RiotGameIdTextBox")
+            if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
+            
+            $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
+            if ($executablePathTextBox) { $executablePathTextBox.Text = "" }
 
             # Reset platform to standalone
             $platformCombo = $script:Window.FindName("PlatformComboBox")
-            $platformCombo.SelectedIndex = 0
-            Update-PlatformFields -Platform "standalone"
+            if ($platformCombo) {
+                $platformCombo.SelectedIndex = 0
+                Update-PlatformFields -Platform "standalone"
+            }
 
             # Reset action combos
             $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
             $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
-            $gameStartActionCombo.SelectedItem = "none"
-            $gameEndActionCombo.SelectedItem = "none"
+            if ($gameStartActionCombo) { $this.SetComboBoxSelectionByTag($gameStartActionCombo, "none") }
+            if ($gameEndActionCombo) { $this.SetComboBoxSelectionByTag($gameEndActionCombo, "none") }
 
             # Reset termination settings
             $terminationMethodCombo = $script:Window.FindName("TerminationMethodCombo")
             $gracefulTimeoutTextBox = $script:Window.FindName("GracefulTimeoutTextBox")
-            $terminationMethodCombo.SelectedItem = "auto"
-            $gracefulTimeoutTextBox.Text = "5"
+            if ($terminationMethodCombo) { $this.SetComboBoxSelectionByTag($terminationMethodCombo, "auto") }
+            if ($gracefulTimeoutTextBox) { $gracefulTimeoutTextBox.Text = "5" }
 
             # Update termination settings visibility
             Update-TerminationSettingsVisibility
 
             # Disable buttons
-            $script:Window.FindName("DuplicateGameButton").IsEnabled = $false
-            $script:Window.FindName("DeleteGameButton").IsEnabled = $false
+            $duplicateGameButton = $script:Window.FindName("DuplicateGameButton")
+            if ($duplicateGameButton) { $duplicateGameButton.IsEnabled = $false }
+            
+            $deleteGameButton = $script:Window.FindName("DeleteGameButton")
+            if ($deleteGameButton) { $deleteGameButton.IsEnabled = $false }
 
             # Update move button states
             Update-MoveButtonStates
@@ -126,47 +254,158 @@ class ConfigEditorEvents {
             $script:CurrentAppId = $selectedApp
             $appData = $this.stateManager.ConfigData.managedApps.$selectedApp
 
+            Write-Verbose "HandleAppSelectionChanged: Selected app = $selectedApp"
+            
             if ($appData) {
+                Write-Verbose "HandleAppSelectionChanged: App data found for $selectedApp"
+                Write-Verbose "  - displayName: $($appData.displayName)"
+                Write-Verbose "  - processName: $($appData.processName)"
+                Write-Verbose "  - path: $($appData.path)"
+                Write-Verbose "  - gameStartAction: $($appData.gameStartAction)"
+                Write-Verbose "  - gameEndAction: $($appData.gameEndAction)"
+                Write-Verbose "  - terminationMethod: $($appData.terminationMethod)"
+                Write-Verbose "  - gracefulTimeoutMs: $($appData.gracefulTimeoutMs)"
+                
                 # Load app details into form
-                $script:Window.FindName("AppIdTextBox").Text = if ($appData.displayName) { $appData.displayName } else { $selectedApp }
-                $script:Window.FindName("AppProcessNameTextBox").Text = if ($appData.processNames) {
-                    if ($appData.processNames -is [array]) {
-                        $appData.processNames -join "|"
+                $appIdTextBox = $script:Window.FindName("AppIdTextBox")
+                if ($appIdTextBox) {
+                    $appIdTextBox.Text = if ($appData.displayName) { $appData.displayName } else { $selectedApp }
+                }
+                
+                $appProcessNameTextBox = $script:Window.FindName("AppProcessNameTextBox")
+                if ($appProcessNameTextBox) {
+                    # Check for both processName (singular) and processNames (plural) for compatibility
+                    $processNameValue = if ($appData.processNames) {
+                        if ($appData.processNames -is [array]) {
+                            $appData.processNames -join "|"
+                        } else {
+                            $appData.processNames
+                        }
+                    } elseif ($appData.processName) {
+                        $appData.processName
                     } else {
-                        $appData.processNames
+                        ""
                     }
-                } else { "" }
-                $script:Window.FindName("AppStartActionCombo").SelectedItem = if ($appData.startAction) { $appData.startAction } else { "start-process" }
-                $script:Window.FindName("AppEndActionCombo").SelectedItem = if ($appData.endAction) { $appData.endAction } else { "stop-process" }
-                $script:Window.FindName("AppPathTextBox").Text = if ($appData.executablePath) { $appData.executablePath } else { "" }
+                    $appProcessNameTextBox.Text = $processNameValue
+                }
+
+                # Set ComboBox selections using helper function to find matching ComboBoxItem by Tag
+                # NOTE: Managed Apps tab uses same ComboBox controls as Game tab
+                $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
+                $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
+                
+                if ($gameStartActionCombo) {
+                    # Check for both startAction and gameStartAction for compatibility
+                    $appStartAction = if ($appData.startAction) { 
+                        $appData.startAction 
+                    } elseif ($appData.gameStartAction) { 
+                        $appData.gameStartAction 
+                    } else { 
+                        "start-process" 
+                    }
+                    $this.SetComboBoxSelectionByTag($gameStartActionCombo, $appStartAction)
+                }
+                
+                if ($gameEndActionCombo) {
+                    # Check for both endAction and gameEndAction for compatibility
+                    $appEndAction = if ($appData.endAction) { 
+                        $appData.endAction 
+                    } elseif ($appData.gameEndAction) { 
+                        $appData.gameEndAction 
+                    } else { 
+                        "stop-process" 
+                    }
+                    $this.SetComboBoxSelectionByTag($gameEndActionCombo, $appEndAction)
+                }
+                
+                $appPathTextBox = $script:Window.FindName("AppPathTextBox")
+                if ($appPathTextBox) {
+                    # Check for both executablePath and path for compatibility
+                    $pathValue = if ($appData.executablePath) { 
+                        $appData.executablePath 
+                    } elseif ($appData.path) { 
+                        $appData.path 
+                    } else { 
+                        "" 
+                    }
+                    $appPathTextBox.Text = $pathValue
+                }
+
+                # Load arguments
+                $appArgumentsTextBox = $script:Window.FindName("AppArgumentsTextBox")
+                if ($appArgumentsTextBox) {
+                    $appArgumentsTextBox.Text = if ($appData.arguments) { $appData.arguments } else { "" }
+                }
 
                 # Load termination settings
-                $script:Window.FindName("AppTerminationMethodCombo").SelectedItem = if ($appData.terminationMethod) { $appData.terminationMethod } else { "auto" }
-                $script:Window.FindName("AppGracefulTimeoutTextBox").Text = if ($appData.gracefulTimeout) { $appData.gracefulTimeout.ToString() } else { "5" }
+                $terminationMethodCombo = $script:Window.FindName("TerminationMethodCombo")
+                if ($terminationMethodCombo) {
+                    $appTerminationMethod = if ($appData.terminationMethod) { $appData.terminationMethod } else { "auto" }
+                    # Clear saved value and set the actual value from config
+                    $script:SavedTerminationMethod = $appTerminationMethod
+                    $this.SetComboBoxSelectionByTag($terminationMethodCombo, $appTerminationMethod)
+                }
+                
+                $gracefulTimeoutTextBox = $script:Window.FindName("GracefulTimeoutTextBox")
+                if ($gracefulTimeoutTextBox) {
+                    # Check for both gracefulTimeout and gracefulTimeoutMs for compatibility
+                    $timeoutValue = if ($appData.gracefulTimeout) { 
+                        $appData.gracefulTimeout.ToString() 
+                    } elseif ($appData.gracefulTimeoutMs) { 
+                        # Convert milliseconds to seconds for display
+                        ([int]($appData.gracefulTimeoutMs / 1000)).ToString()
+                    } else { 
+                        "5" 
+                    }
+                    $gracefulTimeoutTextBox.Text = $timeoutValue
+                }
 
                 # Enable buttons
-                $script:Window.FindName("DuplicateAppButton").IsEnabled = $true
-                $script:Window.FindName("DeleteAppButton").IsEnabled = $true
+                $duplicateAppButton = $script:Window.FindName("DuplicateAppButton")
+                if ($duplicateAppButton) { $duplicateAppButton.IsEnabled = $true }
+                
+                $deleteAppButton = $script:Window.FindName("DeleteAppButton")
+                if ($deleteAppButton) { $deleteAppButton.IsEnabled = $true }
 
                 # Update move button states
                 Update-MoveAppButtonStates
+
+                # Update termination method enabled state based on selected actions
+                $this.UpdateTerminationMethodState()
 
                 Write-Verbose "Loaded app data for: $selectedApp"
             }
         } else {
             # No app selected, clear the form
             $script:CurrentAppId = ""
-            $script:Window.FindName("AppIdTextBox").Text = ""
-            $script:Window.FindName("AppProcessNameTextBox").Text = ""
-            $script:Window.FindName("AppStartActionCombo").SelectedItem = "start-process"
-            $script:Window.FindName("AppEndActionCombo").SelectedItem = "stop-process"
-            $script:Window.FindName("AppPathTextBox").Text = ""
-            $script:Window.FindName("AppTerminationMethodCombo").SelectedItem = "auto"
-            $script:Window.FindName("AppGracefulTimeoutTextBox").Text = "5"
+            
+            $appIdTextBox = $script:Window.FindName("AppIdTextBox")
+            if ($appIdTextBox) { $appIdTextBox.Text = "" }
+            
+            $appProcessNameTextBox = $script:Window.FindName("AppProcessNameTextBox")
+            if ($appProcessNameTextBox) { $appProcessNameTextBox.Text = "" }
+            
+            $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
+            if ($gameStartActionCombo) { $this.SetComboBoxSelectionByTag($gameStartActionCombo, "start-process") }
+            
+            $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
+            if ($gameEndActionCombo) { $this.SetComboBoxSelectionByTag($gameEndActionCombo, "stop-process") }
+            
+            $appPathTextBox = $script:Window.FindName("AppPathTextBox")
+            if ($appPathTextBox) { $appPathTextBox.Text = "" }
+            
+            $terminationMethodCombo = $script:Window.FindName("TerminationMethodCombo")
+            if ($terminationMethodCombo) { $this.SetComboBoxSelectionByTag($terminationMethodCombo, "auto") }
+            
+            $gracefulTimeoutTextBox = $script:Window.FindName("GracefulTimeoutTextBox")
+            if ($gracefulTimeoutTextBox) { $gracefulTimeoutTextBox.Text = "5" }
 
             # Disable buttons
-            $script:Window.FindName("DuplicateAppButton").IsEnabled = $false
-            $script:Window.FindName("DeleteAppButton").IsEnabled = $false
+            $duplicateAppButton = $script:Window.FindName("DuplicateAppButton")
+            if ($duplicateAppButton) { $duplicateAppButton.IsEnabled = $false }
+            
+            $deleteAppButton = $script:Window.FindName("DeleteAppButton")
+            if ($deleteAppButton) { $deleteAppButton.IsEnabled = $false }
 
             # Update move button states
             Update-MoveAppButtonStates
@@ -1208,6 +1447,8 @@ class ConfigEditorEvents {
             # --- Game Settings Tab ---
             $this.uiManager.Window.FindName("GamesList").add_SelectionChanged({ $self.HandleGameSelectionChanged() }.GetNewClosure())
             $this.uiManager.Window.FindName("PlatformComboBox").add_SelectionChanged({ $self.HandlePlatformSelectionChanged() }.GetNewClosure())
+            $this.uiManager.Window.FindName("GameStartActionCombo").add_SelectionChanged({ $self.UpdateTerminationMethodState() }.GetNewClosure())
+            $this.uiManager.Window.FindName("GameEndActionCombo").add_SelectionChanged({ $self.UpdateTerminationMethodState() }.GetNewClosure())
             $this.uiManager.Window.FindName("AddGameButton").add_Click({ $self.HandleAddGame() }.GetNewClosure())
             $this.uiManager.Window.FindName("DuplicateGameButton").add_Click({ $self.HandleDuplicateGame() }.GetNewClosure())
             $this.uiManager.Window.FindName("DeleteGameButton").add_Click({ $self.HandleDeleteGame() }.GetNewClosure())

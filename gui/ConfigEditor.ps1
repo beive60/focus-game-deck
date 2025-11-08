@@ -534,8 +534,83 @@ function Save-CurrentGameData {
 }
 
 function Save-CurrentAppData {
-    Write-Verbose "Save-CurrentAppData called (stub)"
-    # TODO: Implement or remove in future refactoring
+    if (-not $script:CurrentAppId) {
+        Write-Verbose "No app selected, skipping save"
+        return
+    }
+
+    if (-not $script:StateManager -or -not $script:StateManager.ConfigData.managedApps) {
+        Write-Warning "StateManager or managedApps not available"
+        return
+    }
+
+    $appData = $script:StateManager.ConfigData.managedApps.$script:CurrentAppId
+    if (-not $appData) {
+        Write-Warning "App data not found for: $script:CurrentAppId"
+        return
+    }
+
+    Write-Verbose "Saving app data for: $script:CurrentAppId"
+
+    # Save display name
+    $appIdTextBox = $script:Window.FindName("AppIdTextBox")
+    if ($appIdTextBox) {
+        $appData.displayName = $appIdTextBox.Text
+    }
+
+    # Save process name
+    $appProcessNameTextBox = $script:Window.FindName("AppProcessNameTextBox")
+    if ($appProcessNameTextBox) {
+        $processNameValue = $appProcessNameTextBox.Text
+        if ($processNameValue -match '\|') {
+            $appData.processName = $processNameValue -split '\|' | ForEach-Object { $_.Trim() }
+        } else {
+            $appData.processName = $processNameValue
+        }
+    }
+
+    # Save path
+    $appPathTextBox = $script:Window.FindName("AppPathTextBox")
+    if ($appPathTextBox) {
+        $appData.path = $appPathTextBox.Text
+    }
+
+    # Save arguments
+    $appArgumentsTextBox = $script:Window.FindName("AppArgumentsTextBox")
+    if ($appArgumentsTextBox) {
+        $appData.arguments = $appArgumentsTextBox.Text
+    }
+
+    # Save start action
+    $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
+    if ($gameStartActionCombo -and $gameStartActionCombo.SelectedItem) {
+        $appData.gameStartAction = $gameStartActionCombo.SelectedItem.Tag
+    }
+
+    # Save end action
+    $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
+    if ($gameEndActionCombo -and $gameEndActionCombo.SelectedItem) {
+        $appData.gameEndAction = $gameEndActionCombo.SelectedItem.Tag
+    }
+
+    # Save termination method
+    $terminationMethodCombo = $script:Window.FindName("TerminationMethodCombo")
+    if ($terminationMethodCombo -and $terminationMethodCombo.SelectedItem) {
+        $appData.terminationMethod = $terminationMethodCombo.SelectedItem.Tag
+    }
+
+    # Save graceful timeout
+    $gracefulTimeoutTextBox = $script:Window.FindName("GracefulTimeoutTextBox")
+    if ($gracefulTimeoutTextBox) {
+        $timeoutSeconds = 5
+        if ([int]::TryParse($gracefulTimeoutTextBox.Text, [ref]$timeoutSeconds)) {
+            $appData.gracefulTimeoutMs = $timeoutSeconds * 1000
+        } else {
+            $appData.gracefulTimeoutMs = 5000
+        }
+    }
+
+    Write-Verbose "App data saved for: $script:CurrentAppId"
 }
 
 function Save-GlobalSettingsData {
