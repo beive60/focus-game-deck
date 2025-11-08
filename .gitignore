@@ -36,7 +36,7 @@ launcher-debug.txt
 
 # VSCode user settings (but keep workspace config)
 .vscode/settings.json
-.vscode/launch.json
+.vscode/keybindings.json
 
 # User logs
 src/logs/*.log
