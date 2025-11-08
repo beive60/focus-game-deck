@@ -23,7 +23,9 @@
 # Date: 2025-09-23
 
 param(
-    [switch]$NoAutoStart
+    [switch]$NoAutoStart,
+    [switch]$DebugMode,
+    [int]$AutoCloseSeconds = 0
 )
 
 # Set system-level encoding settings for proper character display
@@ -154,6 +156,17 @@ function Test-UIMappings {
 # Initialize the application
 function Initialize-ConfigEditor {
     try {
+        # Debug mode information
+        if ($DebugMode) {
+            Write-Host "=== DEBUG MODE ENABLED ===" -ForegroundColor Magenta
+            if ($AutoCloseSeconds -gt 0) {
+                Write-Host "Auto-close timer: $AutoCloseSeconds seconds" -ForegroundColor Magenta
+            } else {
+                Write-Host "Manual close required" -ForegroundColor Magenta
+            }
+            Write-Host "=============================" -ForegroundColor Magenta
+        }
+        
         Write-Host "=== ConfigEditor initialization started ===" -ForegroundColor Green
 
         # Step 1: Load WPF assemblies FIRST
@@ -328,9 +341,34 @@ function Initialize-ConfigEditor {
         # Step 9: Show window
         Write-Host "Showing window..." -ForegroundColor Yellow
         try {
-            # Use ShowDialog() which properly handles the window lifecycle
-            $dialogResult = $window.ShowDialog()
-            Write-Host "DEBUG: Window closed with result: $dialogResult" -ForegroundColor Cyan
+            # Debug mode: Auto-close after specified seconds
+            if ($DebugMode -and $AutoCloseSeconds -gt 0) {
+                Write-Host "DEBUG MODE: Window will auto-close in $AutoCloseSeconds seconds" -ForegroundColor Cyan
+                
+                # Create a timer to auto-close the window
+                $timer = New-Object System.Windows.Threading.DispatcherTimer
+                $timer.Interval = [TimeSpan]::FromSeconds($AutoCloseSeconds)
+                $timer.Add_Tick({
+                    Write-Host "DEBUG MODE: Auto-closing window..." -ForegroundColor Cyan
+                    $window.Close()
+                    $timer.Stop()
+                })
+                $timer.Start()
+                
+                # Show window and wait
+                $dialogResult = $window.ShowDialog()
+                Write-Host "DEBUG: Window closed with result: $dialogResult" -ForegroundColor Cyan
+            }
+            elseif ($DebugMode) {
+                Write-Host "DEBUG MODE: Showing window (manual close required)" -ForegroundColor Cyan
+                $dialogResult = $window.ShowDialog()
+                Write-Host "DEBUG: Window closed with result: $dialogResult" -ForegroundColor Cyan
+            }
+            else {
+                # Normal mode: Use ShowDialog() which properly handles the window lifecycle
+                $dialogResult = $window.ShowDialog()
+                Write-Host "DEBUG: Window closed with result: $dialogResult" -ForegroundColor Cyan
+            }
         } catch {
             Write-Host "DEBUG: Window show/close error: $($_.Exception.Message)" -ForegroundColor Red
         } finally {
@@ -902,6 +940,31 @@ $script:CurrentLanguage = "en"
 $script:HasUnsavedChanges = $false
 $script:OriginalConfigData = $null
 $script:IsInitializationComplete = $false
+
+# Debug helper function to show usage information
+function Show-DebugHelp {
+    Write-Host ""
+    Write-Host "=== ConfigEditor Debug Mode Usage ===" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "Start with debug mode (manual close):" -ForegroundColor Yellow
+    Write-Host "  gui\ConfigEditor.ps1 -DebugMode" -ForegroundColor White
+    Write-Host ""
+    Write-Host "Start with auto-close (3 seconds):" -ForegroundColor Yellow
+    Write-Host "  gui\ConfigEditor.ps1 -DebugMode -AutoCloseSeconds 3" -ForegroundColor White
+    Write-Host ""
+    Write-Host "Start with auto-close (10 seconds):" -ForegroundColor Yellow
+    Write-Host "  gui\ConfigEditor.ps1 -DebugMode -AutoCloseSeconds 10" -ForegroundColor White
+    Write-Host ""
+    Write-Host "Normal mode (no debug output):" -ForegroundColor Yellow
+    Write-Host "  gui\ConfigEditor.ps1" -ForegroundColor White
+    Write-Host ""
+    Write-Host "Show this help:" -ForegroundColor Yellow
+    Write-Host "  gui\ConfigEditor.ps1 -NoAutoStart" -ForegroundColor White
+    Write-Host "  Then call: Show-DebugHelp" -ForegroundColor White
+    Write-Host ""
+    Write-Host "================================" -ForegroundColor Cyan
+    Write-Host ""
+}
 
 # Start the application
 if (-not $NoAutoStart) {
