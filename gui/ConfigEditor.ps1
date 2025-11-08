@@ -497,14 +497,149 @@ function Import-AdditionalModules {
 # These will be properly implemented or removed in a future refactoring
 
 function Update-AppsToManagePanel {
-    Write-Verbose "Update-AppsToManagePanel called (stub)"
-    # TODO: Implement or remove in future refactoring
+    try {
+        $appsToManagePanel = $script:Window.FindName("AppsToManagePanel")
+        if (-not $appsToManagePanel) {
+            Write-Warning "AppsToManagePanel not found"
+            return
+        }
+
+        # Clear existing checkboxes
+        $appsToManagePanel.Children.Clear()
+
+        # Get current game data
+        if (-not $script:CurrentGameId) {
+            Write-Verbose "No game selected, clearing AppsToManagePanel"
+            return
+        }
+
+        $gameData = $script:StateManager.ConfigData.games.$script:CurrentGameId
+        if (-not $gameData) {
+            Write-Warning "Game data not found for: $script:CurrentGameId"
+            return
+        }
+
+        # Get list of apps to manage for this game
+        $appsToManage = if ($gameData.appsToManage) { $gameData.appsToManage } else { @() }
+        Write-Verbose "AppsToManage for $script:CurrentGameId`: $($appsToManage -join ', ')"
+
+        # Get all available managed apps
+        $managedApps = $script:StateManager.ConfigData.managedApps
+        if (-not $managedApps) {
+            Write-Warning "No managed apps found in configuration"
+            return
+        }
+
+        # Get order if available
+        $appOrder = if ($managedApps._order) { $managedApps._order } else { @() }
+        
+        # Create checkboxes for each managed app
+        $appsToDisplay = if ($appOrder.Count -gt 0) {
+            $appOrder | Where-Object { $_ -ne "_order" -and $managedApps.PSObject.Properties[$_] }
+        } else {
+            $managedApps.PSObject.Properties.Name | Where-Object { $_ -ne "_order" }
+        }
+
+        foreach ($appId in $appsToDisplay) {
+            $appData = $managedApps.$appId
+            if (-not $appData) { continue }
+
+            $checkbox = New-Object System.Windows.Controls.CheckBox
+            $checkbox.Content = if ($appData.displayName) { $appData.displayName } else { $appId }
+            $checkbox.Tag = $appId
+            $checkbox.IsChecked = $appsToManage -contains $appId
+            $checkbox.Margin = "0,2"
+            
+            # Add event handler for checkbox state changes
+            $checkbox.add_Checked({
+                param($sender, $e)
+                Set-ConfigModified
+            }.GetNewClosure())
+            
+            $checkbox.add_Unchecked({
+                param($sender, $e)
+                Set-ConfigModified
+            }.GetNewClosure())
+
+            $appsToManagePanel.Children.Add($checkbox) | Out-Null
+            Write-Verbose "Added checkbox for app: $appId (checked: $($checkbox.IsChecked))"
+        }
+
+        Write-Verbose "Updated AppsToManagePanel with $($appsToManagePanel.Children.Count) apps"
+    } catch {
+        Write-Warning "Failed to update AppsToManagePanel: $($_.Exception.Message)"
+    }
 }
 
 function Update-PlatformFields {
     param([string]$Platform)
-    Write-Verbose "Update-PlatformFields called for platform: $Platform (stub)"
-    # TODO: Implement or remove in future refactoring
+    
+    try {
+        Write-Verbose "Update-PlatformFields called for platform: $Platform"
+        
+        # Get all platform-specific UI elements
+        $steamAppIdLabelPanel = $script:Window.FindName("SteamAppIdLabelPanel")
+        $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
+        
+        $epicGameIdLabelPanel = $script:Window.FindName("EpicGameIdLabelPanel")
+        $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
+        
+        $riotGameIdLabelPanel = $script:Window.FindName("RiotGameIdLabelPanel")
+        $riotGameIdTextBox = $script:Window.FindName("RiotGameIdTextBox")
+        
+        $executablePathLabelPanel = $script:Window.FindName("ExecutablePathLabelPanel")
+        $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
+        $browseExecutablePathButton = $script:Window.FindName("BrowseExecutablePathButton")
+        
+        # Hide all platform-specific fields first
+        if ($steamAppIdLabelPanel) { $steamAppIdLabelPanel.Visibility = [System.Windows.Visibility]::Collapsed }
+        if ($steamAppIdTextBox) { $steamAppIdTextBox.Visibility = [System.Windows.Visibility]::Collapsed }
+        
+        if ($epicGameIdLabelPanel) { $epicGameIdLabelPanel.Visibility = [System.Windows.Visibility]::Collapsed }
+        if ($epicGameIdTextBox) { $epicGameIdTextBox.Visibility = [System.Windows.Visibility]::Collapsed }
+        
+        if ($riotGameIdLabelPanel) { $riotGameIdLabelPanel.Visibility = [System.Windows.Visibility]::Collapsed }
+        if ($riotGameIdTextBox) { $riotGameIdTextBox.Visibility = [System.Windows.Visibility]::Collapsed }
+        
+        if ($executablePathLabelPanel) { $executablePathLabelPanel.Visibility = [System.Windows.Visibility]::Collapsed }
+        if ($executablePathTextBox) { $executablePathTextBox.Visibility = [System.Windows.Visibility]::Collapsed }
+        if ($browseExecutablePathButton) { $browseExecutablePathButton.Visibility = [System.Windows.Visibility]::Collapsed }
+        
+        # Show fields based on platform
+        switch ($Platform) {
+            "steam" {
+                if ($steamAppIdLabelPanel) { $steamAppIdLabelPanel.Visibility = [System.Windows.Visibility]::Visible }
+                if ($steamAppIdTextBox) { $steamAppIdTextBox.Visibility = [System.Windows.Visibility]::Visible }
+                Write-Verbose "  Showing Steam AppID fields"
+            }
+            "epic" {
+                if ($epicGameIdLabelPanel) { $epicGameIdLabelPanel.Visibility = [System.Windows.Visibility]::Visible }
+                if ($epicGameIdTextBox) { $epicGameIdTextBox.Visibility = [System.Windows.Visibility]::Visible }
+                Write-Verbose "  Showing Epic GameID fields"
+            }
+            "riot" {
+                if ($riotGameIdLabelPanel) { $riotGameIdLabelPanel.Visibility = [System.Windows.Visibility]::Visible }
+                if ($riotGameIdTextBox) { $riotGameIdTextBox.Visibility = [System.Windows.Visibility]::Visible }
+                Write-Verbose "  Showing Riot GameID fields"
+            }
+            "standalone" {
+                if ($executablePathLabelPanel) { $executablePathLabelPanel.Visibility = [System.Windows.Visibility]::Visible }
+                if ($executablePathTextBox) { $executablePathTextBox.Visibility = [System.Windows.Visibility]::Visible }
+                if ($browseExecutablePathButton) { $browseExecutablePathButton.Visibility = [System.Windows.Visibility]::Visible }
+                Write-Verbose "  Showing Executable Path fields"
+            }
+            default {
+                Write-Warning "Unknown platform: $Platform, defaulting to standalone"
+                if ($executablePathLabelPanel) { $executablePathLabelPanel.Visibility = [System.Windows.Visibility]::Visible }
+                if ($executablePathTextBox) { $executablePathTextBox.Visibility = [System.Windows.Visibility]::Visible }
+                if ($browseExecutablePathButton) { $browseExecutablePathButton.Visibility = [System.Windows.Visibility]::Visible }
+            }
+        }
+        
+        Write-Verbose "Platform fields updated successfully for: $Platform"
+    } catch {
+        Write-Warning "Failed to update platform fields: $($_.Exception.Message)"
+    }
 }
 
 function Update-MoveButtonStates {

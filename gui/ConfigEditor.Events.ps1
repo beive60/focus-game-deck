@@ -109,34 +109,86 @@ class ConfigEditorEvents {
             $script:CurrentGameId = $selectedGame
             $gameData = $this.stateManager.ConfigData.games.$selectedGame
 
+            Write-Verbose "HandleGameSelectionChanged: Selected game = $selectedGame"
+            
             if ($gameData) {
+                Write-Verbose "HandleGameSelectionChanged: Game data found for $selectedGame"
+                Write-Verbose "  - name: $($gameData.name)"
+                Write-Verbose "  - platform: $($gameData.platform)"
+                Write-Verbose "  - steamAppId: $($gameData.steamAppId)"
+                Write-Verbose "  - executablePath: $($gameData.executablePath)"
+                
                 # Load game details into form
                 $gameNameTextBox = $script:Window.FindName("GameNameTextBox")
-                if ($gameNameTextBox) { $gameNameTextBox.Text = if ($gameData.displayName) { $gameData.displayName } else { "" } }
+                if ($gameNameTextBox) { 
+                    # Check for both 'name' and 'displayName' for compatibility
+                    $displayName = if ($gameData.name) { $gameData.name } elseif ($gameData.displayName) { $gameData.displayName } else { "" }
+                    $gameNameTextBox.Text = $displayName
+                    Write-Verbose "  Set GameNameTextBox: $displayName"
+                }
                 
                 $gameIdTextBox = $script:Window.FindName("GameIdTextBox")
-                if ($gameIdTextBox) { $gameIdTextBox.Text = if ($gameData.appId) { $gameData.appId } else { "" } }
+                if ($gameIdTextBox) { 
+                    $appId = if ($gameData.appId) { $gameData.appId } else { $selectedGame }
+                    $gameIdTextBox.Text = $appId
+                    Write-Verbose "  Set GameIdTextBox: $appId"
+                }
                 
                 $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
-                if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = if ($gameData.steamAppId) { $gameData.steamAppId } else { "" } }
+                if ($steamAppIdTextBox) { 
+                    $steamAppIdTextBox.Text = if ($gameData.steamAppId) { $gameData.steamAppId } else { "" } 
+                    Write-Verbose "  Set SteamAppIdTextBox: $($gameData.steamAppId)"
+                }
                 
                 $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
-                if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = if ($gameData.epicGameId) { $gameData.epicGameId } else { "" } }
+                if ($epicGameIdTextBox) { 
+                    $epicGameIdTextBox.Text = if ($gameData.epicGameId) { $gameData.epicGameId } else { "" }
+                    Write-Verbose "  Set EpicGameIdTextBox: $($gameData.epicGameId)"
+                }
                 
                 $riotGameIdTextBox = $script:Window.FindName("RiotGameIdTextBox")
-                if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = if ($gameData.riotGameId) { $gameData.riotGameId } else { "" } }
+                if ($riotGameIdTextBox) { 
+                    $riotGameIdTextBox.Text = if ($gameData.riotGameId) { $gameData.riotGameId } else { "" }
+                    Write-Verbose "  Set RiotGameIdTextBox: $($gameData.riotGameId)"
+                }
                 
                 $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
-                if ($executablePathTextBox) { $executablePathTextBox.Text = if ($gameData.executablePath) { $gameData.executablePath } else { "" } }
+                if ($executablePathTextBox) { 
+                    $executablePathTextBox.Text = if ($gameData.executablePath) { $gameData.executablePath } else { "" }
+                    Write-Verbose "  Set ExecutablePathTextBox: $($gameData.executablePath)"
+                }
+
+                # Set process name
+                $processNameTextBox = $script:Window.FindName("ProcessNameTextBox")
+                if ($processNameTextBox) {
+                    $processNameTextBox.Text = if ($gameData.processName) { $gameData.processName } else { "" }
+                    Write-Verbose "  Set ProcessNameTextBox: $($gameData.processName)"
+                }
 
                 # Set platform
                 $platformCombo = $script:Window.FindName("PlatformComboBox")
-                $platform = if ($gameData.platform) { $gameData.platform } else { "standalone" }
+                # Normalize platform value: "direct" is an alias for "standalone"
+                $platform = if ($gameData.platform) { 
+                    if ($gameData.platform -eq "direct") { "standalone" } else { $gameData.platform }
+                } else { 
+                    "standalone" 
+                }
+                
+                Write-Verbose "  Platform: $platform (original: $($gameData.platform))"
+                
+                $platformFound = $false
                 for ($i = 0; $i -lt $platformCombo.Items.Count; $i++) {
                     if ($platformCombo.Items[$i].Tag -eq $platform) {
                         $platformCombo.SelectedIndex = $i
+                        $platformFound = $true
+                        Write-Verbose "  Set PlatformComboBox to index $i ($platform)"
                         break
                     }
+                }
+                
+                if (-not $platformFound) {
+                    Write-Warning "Platform '$platform' not found in ComboBox, defaulting to standalone (index 0)"
+                    $platformCombo.SelectedIndex = 0
                 }
 
                 # Update platform-specific fields
@@ -177,6 +229,9 @@ class ConfigEditorEvents {
                 # Update termination method enabled state based on selected actions
                 $this.UpdateTerminationMethodState()
 
+                # Update apps to manage panel with current game's app list
+                Update-AppsToManagePanel
+
                 # Enable buttons
                 $duplicateGameButton = $script:Window.FindName("DuplicateGameButton")
                 if ($duplicateGameButton) { $duplicateGameButton.IsEnabled = $true }
@@ -210,6 +265,10 @@ class ConfigEditorEvents {
             
             $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
             if ($executablePathTextBox) { $executablePathTextBox.Text = "" }
+
+            # Reset process name
+            $processNameTextBox = $script:Window.FindName("ProcessNameTextBox")
+            if ($processNameTextBox) { $processNameTextBox.Text = "" }
 
             # Reset platform to standalone
             $platformCombo = $script:Window.FindName("PlatformComboBox")
