@@ -1,6 +1,5 @@
 {
     "version": "2.0.0",
-    "label": "[BUILD] Development (unsigned)",
     "tasks": [
         {
             "label": "[SETUP] Install ps2exe Module",
@@ -10,7 +9,7 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\\build-tools\\Build-FocusGameDeck.ps1",
+                "./build-tools/Build-FocusGameDeck.ps1",
                 "-Install"
             ],
             "group": "build",
@@ -25,17 +24,43 @@
             "runOptions": {
                 "runOn": "default"
             },
-            "detail": "Install required modules (ps2exe)"
+            "detail": "Install required ps2exe module for building executables"
         },
         {
-            "label": "Build - Development (unsigned)",
+            "label": "[SETUP] Build Environment Only",
             "type": "shell",
             "command": "powershell",
             "args": [
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\\build-tools\\Release-Manager.ps1",
+                "./build-tools/Release-Manager.ps1",
+                "-SetupOnly",
+                "-Verbose"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Setup build environment without building executables"
+        },
+        {
+            "label": "[BUILD] Development Build (unsigned)",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./build-tools/Release-Manager.ps1",
                 "-Development",
                 "-Verbose"
             ],
@@ -55,17 +80,17 @@
             "runOptions": {
                 "runOn": "default"
             },
-            "detail": "Build all executables as development version (unsigned)"
+            "detail": "Complete development build workflow (install, build, package) - unsigned"
         },
         {
-            "label": "[BUILD] Production (signed)",
+            "label": "[BUILD] Production Build (signed)",
             "type": "shell",
             "command": "powershell",
             "args": [
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\\build-tools\\Release-Manager.ps1",
+                "./build-tools/Release-Manager.ps1",
                 "-Production",
                 "-Verbose"
             ],
@@ -82,17 +107,43 @@
             "runOptions": {
                 "runOn": "default"
             },
-            "detail": "Build and sign all executables as production version"
+            "detail": "Complete production build workflow (install, build, sign, package)"
         },
         {
-            "label": "[CLEAN] Delete Build Artifacts",
+            "label": "[BUILD] Executable Only",
             "type": "shell",
             "command": "powershell",
             "args": [
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\\build-tools\\Release-Manager.ps1",
+                "./build-tools/Build-FocusGameDeck.ps1",
+                "-Build"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Build executables only without full release workflow"
+        },
+        {
+            "label": "[CLEAN] Delete All Build Artifacts",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./build-tools/Release-Manager.ps1",
                 "-Clean"
             ],
             "group": "build",
@@ -107,7 +158,32 @@
             "runOptions": {
                 "runOn": "default"
             },
-            "detail": "Delete all build artifacts and cache files"
+            "detail": "Clean all build artifacts (build/, dist/, release/)"
+        },
+        {
+            "label": "[SIGN] Sign Existing Build",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./build-tools/Sign-Executables.ps1",
+                "-SignAll"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Apply digital signatures to existing build artifacts"
         },
         {
             "label": "[RUN] Focus Game Deck (Unified)",
@@ -117,7 +193,7 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\\src\\Main.PS1"
+                "./src/Main.PS1"
             ],
             "group": "test",
             "presentation": {
@@ -131,43 +207,19 @@
             "runOptions": {
                 "runOn": "default"
             },
-            "detail": "Run unified main application (GUI + Game Launcher)"
+            "detail": "Run unified main application (includes GUI config editor and game launcher)"
         },
         {
-            "label": "[RUN] Legacy Game Launcher",
+            "label": "[RUN] Config Editor (Standalone)",
             "type": "shell",
             "command": "powershell",
             "args": [
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\\src\\Invoke-FocusGameDeck.ps1"
+                "./gui/ConfigEditor.ps1"
             ],
             "group": "test",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false
-            },
-            "runOptions": {
-                "runOn": "default"
-            },
-            "detail": "Run legacy game launcher directly (requires GameId parameter)"
-        },
-        {
-            "label": "[GUI] Config Editor (Standalone)",
-            "type": "shell",
-            "command": "powershell",
-            "args": [
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                ".\\gui\\ConfigEditor.ps1"
-            ],
-            "group": "build",
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -182,6 +234,25 @@
             "detail": "Launch standalone GUI configuration editor"
         },
         {
+            "label": "[RUN] Built Executable (Release)",
+            "type": "shell",
+            "command": "./release/Focus-Game-Deck.exe",
+            "args": [],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Launch built executable from release directory"
+        },
+        {
             "label": "[TEST] Simple Check",
             "type": "shell",
             "command": "powershell",
@@ -189,7 +260,7 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\\test\\Test-ConfigSimple.ps1"
+                "./test/Simple-Check.ps1"
             ],
             "group": "test",
             "presentation": {
@@ -213,7 +284,7 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\\test\\Test-ConfigValidation.ps1"
+                "./test/Test-ConfigValidation.ps1"
             ],
             "group": "test",
             "presentation": {
@@ -227,17 +298,17 @@
             "runOptions": {
                 "runOn": "default"
             },
-            "detail": "Run detailed configuration file validation tests"
+            "detail": "Validate configuration file structure and integrity"
         },
         {
-            "label": "[TEST] Discord Functions",
+            "label": "[TEST] Config Editor Consistency",
             "type": "shell",
             "command": "powershell",
             "args": [
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\\test\\Test-DiscordMVP.ps1"
+                "./test/Test-ConfigEditorConsistency.ps1"
             ],
             "group": "test",
             "presentation": {
@@ -251,17 +322,17 @@
             "runOptions": {
                 "runOn": "default"
             },
-            "detail": "Test Discord integration features"
+            "detail": "Test GUI configuration editor consistency"
         },
         {
-            "label": "[TEST] OBS Connection",
+            "label": "[TEST] Mapping Completeness",
             "type": "shell",
             "command": "powershell",
             "args": [
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\\test\\Test-OBSConnection.ps1"
+                "./test/Test-MappingCompleteness.ps1"
             ],
             "group": "test",
             "presentation": {
@@ -275,7 +346,55 @@
             "runOptions": {
                 "runOn": "default"
             },
-            "detail": "Test OBS Studio WebSocket connection"
+            "detail": "Verify UI element mapping completeness"
+        },
+        {
+            "label": "[TEST] Discord Integration",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/Test-DiscordMVP.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test Discord Rich Presence integration"
+        },
+        {
+            "label": "[TEST] OBS Studio Connection",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/Test-OBSConnection.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test OBS Studio WebSocket connection and commands"
         },
         {
             "label": "[TEST] VTube Studio Integration",
@@ -285,7 +404,7 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\\test\\Test-VTubeStudioIntegration.ps1"
+                "./test/Test-VTubeStudioIntegration.ps1"
             ],
             "group": "test",
             "presentation": {
@@ -299,13 +418,18 @@
             "runOptions": {
                 "runOn": "default"
             },
-            "detail": "Test VTube Studio integration features"
+            "detail": "Test VTube Studio WebSocket integration features"
         },
         {
-            "label": "[LAUNCH] Release Version Executable",
+            "label": "[TEST] VTube Studio Startup/Shutdown",
             "type": "shell",
-            "command": ".\\release\\Focus-Game-Deck.exe",
-            "args": [],
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/Test-VTubeStudioStartupShutdown.ps1"
+            ],
             "group": "test",
             "presentation": {
                 "echo": true,
@@ -318,7 +442,367 @@
             "runOptions": {
                 "runOn": "default"
             },
-            "detail": "Launch built release version executable"
+            "detail": "Test VTube Studio startup and shutdown behavior"
+        },
+        {
+            "label": "[TEST] Wallpaper Engine",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/Test-WallpaperEngine.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test Wallpaper Engine integration"
+        },
+        {
+            "label": "[TEST] Multi-Platform Support",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/Test-MultiPlatform.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test multi-platform game launcher support"
+        },
+        {
+            "label": "[TEST] App Manager (VTube Studio)",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/Test-AppManagerVTubeStudio.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test AppManager module with VTube Studio"
+        },
+        {
+            "label": "[TEST] App Actions",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/Test-AppActions.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test application action handling"
+        },
+        {
+            "label": "[TEST] Log Rotation",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/Test-LogRotation.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test log rotation functionality"
+        },
+        {
+            "label": "[TEST] Log Notarization",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/Test-LogNotarization.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test log authentication and notarization"
+        },
+        {
+            "label": "[TEST] Localization",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/test-localized-message.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test localization message handling"
+        },
+        {
+            "label": "[TEST] Character Encoding",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/Test-CharacterEncoding.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test character encoding handling (UTF-8, multibyte)"
+        },
+        {
+            "label": "[TEST] ComboBox Item Localization",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/Test-ComboBoxItemLocalization.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test ComboBox item localization in GUI"
+        },
+        {
+            "label": "[TEST] Game Launcher Tab",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/Test-GameLauncherTab.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test game launcher tab functionality"
+        },
+        {
+            "label": "[TEST] Standalone GUI Functionality",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/Test-standalone-gui-functionality.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test standalone GUI functionality"
+        },
+        {
+            "label": "[TEST] About Dialog",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/Test-about-dialog.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test about dialog display and functionality"
+        },
+        {
+            "label": "[TEST] Development Mock Games",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/Test-DevMockGames.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Test with mock game configurations for development"
+        },
+        {
+            "label": "[TEST] Pester Unit Tests",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./test/Pester.Tests.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Run Pester unit tests"
+        },
+        {
+            "label": "[TEST] Run All Tests (Sequential)",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                "Get-ChildItem -Path './test/Test-*.ps1' | ForEach-Object { Write-Host \"`n=== $($_.Name) ===\" -ForegroundColor Cyan; & $_.FullName; Write-Host \"\" }"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Run all test scripts sequentially with output"
         },
         {
             "label": "[INFO] Show Version Information",
@@ -328,9 +812,9 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\\build-tools\\Version.ps1"
+                "./build-tools/Version.ps1"
             ],
-            "group": "build",
+            "group": "none",
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -345,16 +829,16 @@
             "detail": "Display current project version information"
         },
         {
-            "label": "[DEBUG] Run All Tests",
+            "label": "[INFO] Project Statistics",
             "type": "shell",
             "command": "powershell",
             "args": [
                 "-ExecutionPolicy",
                 "Bypass",
                 "-Command",
-                "Get-ChildItem -Path '.\\test\\Test-*.ps1' | ForEach-Object { Write-Host \"=== `$(`$_.Name) ===\" -ForegroundColor Cyan; & `$_.FullName; Write-Host \"\" }"
+                "$ps1Files = Get-ChildItem -Path . -Include *.ps1 -Recurse; $totalLines = 0; $ps1Files | ForEach-Object { $totalLines += (Get-Content $_.FullName | Measure-Object -Line).Lines }; Write-Host 'Focus Game Deck Project Statistics' -ForegroundColor Cyan; Write-Host ('=' * 40) -ForegroundColor Cyan; Write-Host \"PowerShell Files: $($ps1Files.Count)\" -ForegroundColor Green; Write-Host \"Total Lines: $totalLines\" -ForegroundColor Green; Write-Host \"Config Files: $((Get-ChildItem -Path ./config -Filter *.json | Measure-Object).Count)\" -ForegroundColor Yellow; Write-Host \"Test Files: $((Get-ChildItem -Path ./test -Filter Test-*.ps1 | Measure-Object).Count)\" -ForegroundColor Cyan; Write-Host \"Modules: $((Get-ChildItem -Path ./src/modules -Filter *.ps1 | Measure-Object).Count)\" -ForegroundColor Magenta"
             ],
-            "group": "test",
+            "group": "none",
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -366,19 +850,19 @@
             "runOptions": {
                 "runOn": "default"
             },
-            "detail": "Run all test scripts sequentially (for developers)"
+            "detail": "Display project code statistics and metrics"
         },
         {
-            "label": "[STATS] Project Statistics",
+            "label": "[DEBUG] Check Build Environment",
             "type": "shell",
             "command": "powershell",
             "args": [
                 "-ExecutionPolicy",
                 "Bypass",
                 "-Command",
-                "`$ps1Files = Get-ChildItem -Path . -Include *.ps1 -Recurse; `$totalLines = 0; `$ps1Files | ForEach-Object { `$totalLines += (Get-Content `$_.FullName | Measure-Object -Line).Lines }; Write-Host 'Focus Game Deck Project Statistics' -ForegroundColor Cyan; Write-Host ('=' * 40) -ForegroundColor Cyan; Write-Host \"PowerShell Files: `$(`$ps1Files.Count)\" -ForegroundColor Green; Write-Host \"Total Lines: `$totalLines\" -ForegroundColor Green; Write-Host \"Config Files: `$((Get-ChildItem -Path .\\config -Filter *.json | Measure-Object).Count)\" -ForegroundColor Yellow; Write-Host \"Test Files: `$((Get-ChildItem -Path .\\test -Filter Test-*.ps1 | Measure-Object).Count)\" -ForegroundColor Cyan; Write-Host \"Modules: `$((Get-ChildItem -Path .\\src\\modules -Filter *.ps1 | Measure-Object).Count)\" -ForegroundColor Magenta"
+                "Write-Host 'Build Environment Check' -ForegroundColor Cyan; Write-Host ('=' * 40) -ForegroundColor Cyan; Write-Host \"PowerShell Version: $($PSVersionTable.PSVersion)\" -ForegroundColor Green; $ps2exe = Get-Module -ListAvailable -Name ps2exe; if ($ps2exe) { Write-Host 'ps2exe Module: Installed' -ForegroundColor Green } else { Write-Host 'ps2exe Module: Not Installed' -ForegroundColor Red }; $buildScript = Test-Path './build-tools/Build-FocusGameDeck.ps1'; Write-Host \"Build Script: $(if ($buildScript) { 'Found' } else { 'Missing' })\" -ForegroundColor $(if ($buildScript) { 'Green' } else { 'Red' }); $signingScript = Test-Path './build-tools/Sign-Executables.ps1'; Write-Host \"Signing Script: $(if ($signingScript) { 'Found' } else { 'Missing' })\" -ForegroundColor $(if ($signingScript) { 'Green' } else { 'Red' })"
             ],
-            "group": "build",
+            "group": "none",
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -390,7 +874,31 @@
             "runOptions": {
                 "runOn": "default"
             },
-            "detail": "Display project statistics"
+            "detail": "Check build environment and dependencies"
+        },
+        {
+            "label": "[DEBUG] Validate Project Structure",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                "Write-Host 'Project Structure Validation' -ForegroundColor Cyan; Write-Host ('=' * 40) -ForegroundColor Cyan; $requiredPaths = @('./src/Main.PS1', './gui/ConfigEditor.ps1', './config/config.json', './build-tools/Build-FocusGameDeck.ps1', './build-tools/Release-Manager.ps1'); foreach ($path in $requiredPaths) { $exists = Test-Path $path; $status = if ($exists) { 'OK' } else { 'MISSING' }; $color = if ($exists) { 'Green' } else { 'Red' }; Write-Host \"$status : $path\" -ForegroundColor $color }"
+            ],
+            "group": "none",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Validate essential project files and directories"
         }
     ]
 }
