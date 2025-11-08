@@ -211,7 +211,14 @@ function Initialize-ConfigEditor {
         Write-Host "Additional modules imported" -ForegroundColor Green
 
         # Step 4: Initialize localization
-        $localization = [ConfigEditorLocalization]::new()
+        Write-Host "Initializing localization..." -ForegroundColor Yellow
+        try {
+            $script:Localization = [ConfigEditorLocalization]::new()
+            Write-Host "Localization initialized for language: $($script:Localization.CurrentLanguage)" -ForegroundColor Green
+        } catch {
+            Write-Error "Failed to initialize localization: $($_.Exception.Message)"
+            throw
+        }
 
         # Step 5: Initialize state manager with config path
         Write-Host "Initializing state manager..." -ForegroundColor Yellow
@@ -250,7 +257,7 @@ function Initialize-ConfigEditor {
                 Tooltip = $TooltipMappings
                 ComboBoxItem = $ComboBoxItemMappings
             }
-            $uiManager = [ConfigEditorUI]::new($stateManager, $allMappings, $localization)
+            $uiManager = [ConfigEditorUI]::new($stateManager, $allMappings, $script:Localization)
 
             Write-Host "DEBUG: ConfigEditorUI instance created: $($null -ne $uiManager)" -ForegroundColor Cyan
 
