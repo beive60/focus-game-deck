@@ -21,7 +21,8 @@ class ConfigEditorLocalization {
         Sets the MessagesPath, detects language, and loads messages.
     #>
     ConfigEditorLocalization() {
-        $this.MessagesPath = Join-Path $PSScriptRoot "messages.json"
+        $projectRoot = Split-Path -Parent $PSScriptRoot
+        $this.MessagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
         $this.DetectLanguage()
         $this.LoadMessages()
     }

@@ -1,8 +1,5 @@
-# Import mappings at the top of the file
-$ProjectRoot = Split-Path -Parent $PSScriptRoot
-$MappingsPath = Join-Path $ProjectRoot "gui/ConfigEditor.Mappings.ps1"
-
-. $MappingsPath
+# ConfigEditor.UI.ps1
+# UI Manager class for Focus Game Deck Configuration Editor
 
 class ConfigEditorUI {
     # Properties
