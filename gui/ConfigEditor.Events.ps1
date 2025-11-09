@@ -1185,26 +1185,105 @@
             if ($this.stateManager.TestHasUnsavedChanges()) {
                 Write-Host "[DEBUG] ConfigEditorEvents: Unsaved changes detected"
 
-                # Create custom dialog with three buttons
+                # Get localized messages
                 $message = $this.uiManager.GetLocalizedMessage("saveBeforeClosePrompt")
                 $title = $this.uiManager.GetLocalizedMessage("unsavedChangesTitle")
                 $saveAndClose = $this.uiManager.GetLocalizedMessage("saveAndClose")
                 $discardAndClose = $this.uiManager.GetLocalizedMessage("discardAndClose")
                 $cancel = $this.uiManager.GetLocalizedMessage("cancelButton")
 
-                # Create custom message box
-                $result = [System.Windows.MessageBox]::Show(
-                    $message,
-                    $title,
-                    [System.Windows.MessageBoxButton]::YesNoCancel,
-                    [System.Windows.MessageBoxImage]::Question,
-                    [System.Windows.MessageBoxResult]::Cancel
-                )
+                # Create custom dialog window
+                Add-Type -AssemblyName PresentationFramework
+                $dialogXaml = @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="$title"
+        Width="480" Height="180"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-                Write-Host "[DEBUG] ConfigEditorEvents: User choice - $result"
+        <TextBlock Grid.Row="0"
+                   Text="$message"
+                   TextWrapping="Wrap"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Left"
+                   MaxWidth="440"
+                   FontSize="14"/>
 
-                switch ($result) {
-                    "Yes" {
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Margin="0,20,0,0">
+            <Button Name="SaveButton"
+                    Content="$saveAndClose"
+                    Width="130"
+                    Height="32"
+                    Margin="5"
+                    IsDefault="True"/>
+            <Button Name="DiscardButton"
+                    Content="$discardAndClose"
+                    Width="130"
+                    Height="32"
+                    Margin="5"/>
+            <Button Name="CancelButton"
+                    Content="$cancel"
+                    Width="100"
+                    Height="32"
+                    Margin="5"
+                    IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>
+"@
+
+                $reader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($dialogXaml))
+                $dialogWindow = [Windows.Markup.XamlReader]::Load($reader)
+                $reader.Close()
+
+                # Set owner for modal behavior
+                $dialogWindow.Owner = $this.Window
+
+                # Get buttons
+                $saveButton = $dialogWindow.FindName("SaveButton")
+                $discardButton = $dialogWindow.FindName("DiscardButton")
+                $cancelButton = $dialogWindow.FindName("CancelButton")
+
+                # Store result
+                $dialogResult = $null
+
+                # Add event handlers
+                $saveButton.Add_Click({
+                    $dialogWindow.Tag = "Save"
+                    $dialogWindow.DialogResult = $true
+                    $dialogWindow.Close()
+                })
+
+                $discardButton.Add_Click({
+                    $dialogWindow.Tag = "Discard"
+                    $dialogWindow.DialogResult = $true
+                    $dialogWindow.Close()
+                })
+
+                $cancelButton.Add_Click({
+                    $dialogWindow.Tag = "Cancel"
+                    $dialogWindow.DialogResult = $false
+                    $dialogWindow.Close()
+                })
+
+                # Show dialog
+                $result = $dialogWindow.ShowDialog()
+                $userChoice = $dialogWindow.Tag
+
+                Write-Host "[DEBUG] ConfigEditorEvents: User choice - $userChoice"
+
+                switch ($userChoice) {
+                    "Save" {
                         # Save and close
                         Write-Host "[DEBUG] ConfigEditorEvents: Saving changes before closing"
                         try {
@@ -1218,12 +1297,12 @@
                             return
                         }
                     }
-                    "No" {
+                    "Discard" {
                         # Discard and close
                         Write-Host "[DEBUG] ConfigEditorEvents: Discarding changes and closing"
                     }
-                    "Cancel" {
-                        # Cancel closing
+                    default {
+                        # Cancel closing (includes "Cancel" and null)
                         Write-Host "[DEBUG] ConfigEditorEvents: User cancelled window closing"
                         $Event.Cancel = $true
                         return
