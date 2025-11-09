@@ -405,8 +405,11 @@ class ConfigEditorUI {
                 }
             }
 
-            # Don't auto-select during initial load - let user select or event handlers manage it
-            # This prevents issues with window initialization
+            # Auto-select first item if list is not empty to prevent "no selection" state
+            # This ensures users always have context and prevents saving to fail
+            if ($gamesList.Items.Count -gt 0) {
+                $gamesList.SelectedIndex = 0
+            }
         }
     }
 
@@ -456,8 +459,11 @@ class ConfigEditorUI {
                 }
             }
 
-            # Don't auto-select during initial load - let user select or event handlers manage it
-            # This prevents issues with window initialization
+            # Auto-select first item if list is not empty to prevent "no selection" state
+            # This ensures users always have context and prevents saving to fail
+            if ($managedAppsList.Items.Count -gt 0) {
+                $managedAppsList.SelectedIndex = 0
+            }
         }
     }
 
