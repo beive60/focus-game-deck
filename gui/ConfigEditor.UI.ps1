@@ -920,10 +920,11 @@ class ConfigEditorUI {
                     $langCombo.Items.Clear()
 
                     # Add language options as ComboBoxItems
+                    # Each language is displayed in its native language
                     $languages = @(
                         @{ Code = "en"; Name = "English" }
-                        @{ Code = "ja"; Name = "Japanese" }
-                        @{ Code = "zh-CN"; Name = "Chinese (Simplified)" }
+                        @{ Code = "ja"; Name = "日本語" }
+                        @{ Code = "zh-CN"; Name = "中文（简体）" }
                     )
 
                     $selectedIndex = 0
