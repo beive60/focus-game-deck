@@ -15,7 +15,6 @@ $script:CrudButtonMappings = @{
     "AddAppButton"        = "addButton"
     "DuplicateAppButton"  = "duplicateButton"
     "DeleteAppButton"     = "deleteButton"
-    "AddNewGameButton"    = "addGameButton"
 }
 
 # File browser buttons
@@ -43,7 +42,6 @@ $script:ActionButtonMappings = @{
     "SaveGlobalSettingsButton" = "saveButton"
     "GenerateLaunchersButton"  = "generateLaunchers"
     "RefreshGameListButton"    = "refreshButton"
-    "OpenConfigButton"         = "openConfigButton"
 }
 
 # List movement buttons

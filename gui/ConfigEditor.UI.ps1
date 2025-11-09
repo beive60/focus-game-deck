@@ -581,12 +581,9 @@ class ConfigEditorUI {
                     $col1.Width = "*"
                     $col2 = New-Object System.Windows.Controls.ColumnDefinition
                     $col2.Width = "Auto"
-                    $col3 = New-Object System.Windows.Controls.ColumnDefinition
-                    $col3.Width = "Auto"
 
                     $grid.ColumnDefinitions.Add($col1)
                     $grid.ColumnDefinitions.Add($col2)
-                    $grid.ColumnDefinitions.Add($col3)
 
                     # Game info section
                     $infoPanel = New-Object System.Windows.Controls.StackPanel
@@ -636,42 +633,6 @@ class ConfigEditorUI {
                     $infoPanel.Children.Add($detailsPanel)
                     $grid.Children.Add($infoPanel)
 
-                    # Edit button
-                    $editButton = New-Object System.Windows.Controls.Button
-                    $editButton.Content = $this.GetLocalizedMessage("editButton")
-                    $editButton.Width = 70
-                    $editButton.Height = 32
-                    $editButton.Margin = "10,0"
-                    $editButton.Background = "#F1F3F4"
-                    $editButton.BorderBrush = "#D0D7DE"
-                    $editButton.FontSize = 11
-                    $editButton.Cursor = "Hand"
-                    [System.Windows.Controls.Grid]::SetColumn($editButton, 1)
-
-                    # Add hover effects to edit button
-                    $editButton.add_MouseEnter({
-                            $this.Background = "#E8EAED"
-                            $this.BorderBrush = "#C1C8CD"
-                        })
-                    $editButton.add_MouseLeave({
-                            $this.Background = "#F1F3F4"
-                            $this.BorderBrush = "#D0D7DE"
-                        })
-
-                    # Edit button click handler
-                    $editButton.Tag = @{ GameId = $gameId; FormInstance = $this }
-                    $editButton.add_Click({
-                            try {
-                                $gameId = $this.Tag.GameId
-                                $formInstance = $this.Tag.FormInstance
-                                $formInstance.SwitchToGameSettingsTab($gameId)
-                            } catch {
-                                Write-Warning "Error in edit button click: $($_.Exception.Message)"
-                            }
-                        })
-
-                    $grid.Children.Add($editButton)
-
                     # Launch button
                     $launchButton = New-Object System.Windows.Controls.Button
                     $launchButton.Content = $this.GetLocalizedMessage("launchButton")
@@ -683,7 +644,7 @@ class ConfigEditorUI {
                     $launchButton.FontWeight = "SemiBold"
                     $launchButton.FontSize = 12
                     $launchButton.Cursor = "Hand"
-                    [System.Windows.Controls.Grid]::SetColumn($launchButton, 2)
+                    [System.Windows.Controls.Grid]::SetColumn($launchButton, 1)
 
                     # Add hover effects to launch button
                     $launchButton.add_MouseEnter({
@@ -1209,35 +1170,6 @@ class ConfigEditorUI {
     .PARAMETER GameId
         The ID of the game to select for editing.
     #>
-    [void]SwitchToGameSettingsTab([string]$GameId) {
-        try {
-            Write-Verbose "Switching to game settings tab for game: $GameId"
-
-            # Switch to Games tab
-            $mainTabControl = $this.Window.FindName("MainTabControl")
-            $gamesTab = $this.Window.FindName("GamesTab")
-
-            if ($mainTabControl -and $gamesTab) {
-                $mainTabControl.SelectedItem = $gamesTab
-
-                # Select the game in the games list
-                $gamesList = $this.Window.FindName("GamesList")
-                if ($gamesList) {
-                    # Find and select the game item
-                    for ($i = 0; $i -lt $gamesList.Items.Count; $i++) {
-                        $item = $gamesList.Items[$i]
-                        if ($item -and $item.Tag -eq $GameId) {
-                            $gamesList.SelectedIndex = $i
-                            break
-                        }
-                    }
-                }
-            }
-        } catch {
-            Write-Warning "Failed to switch to game settings tab: $($_.Exception.Message)"
-        }
-    }
-
     <#
     .SYNOPSIS
         Starts a game from the game launcher.

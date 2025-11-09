@@ -1471,40 +1471,6 @@
         }
     }
 
-    # Handle add new game from launcher
-    [void] HandleAddNewGameFromLauncher() {
-        try {
-            Write-Verbose "Adding new game from launcher"
-            # Switch to Games tab and trigger add game
-            $mainTabControl = $this.uiManager.Window.FindName("MainTabControl")
-            $gamesTab = $this.uiManager.Window.FindName("GamesTab")
-
-            if ($mainTabControl -and $gamesTab) {
-                $mainTabControl.SelectedItem = $gamesTab
-                # Trigger add game functionality
-                $this.HandleAddGame()
-            }
-        } catch {
-            Write-Warning "Failed to add new game from launcher: $($_.Exception.Message)"
-        }
-    }
-
-    # Handle open config from launcher
-    [void] HandleOpenConfigFromLauncher() {
-        try {
-            Write-Verbose "Opening config from launcher"
-            # Switch to Global Settings tab
-            $mainTabControl = $this.uiManager.Window.FindName("MainTabControl")
-            $globalSettingsTab = $this.uiManager.Window.FindName("GlobalSettingsTab")
-
-            if ($mainTabControl -and $globalSettingsTab) {
-                $mainTabControl.SelectedItem = $globalSettingsTab
-            }
-        } catch {
-            Write-Warning "Failed to open config from launcher: $($_.Exception.Message)"
-        }
-    }
-
     # Handle launch game from launcher tab
     [void] HandleLaunchGame([string]$GameId) {
         try {
@@ -1698,8 +1664,6 @@
 
             # --- Game Launcher Tab ---
             $this.uiManager.Window.FindName("RefreshGameListButton").add_Click({ $self.HandleRefreshGameList() }.GetNewClosure())
-            $this.uiManager.Window.FindName("AddNewGameButton").add_Click({ $self.HandleAddNewGameFromLauncher() }.GetNewClosure())
-            $this.uiManager.Window.FindName("OpenConfigButton").add_Click({ $self.HandleOpenConfigFromLauncher() }.GetNewClosure())
             $this.uiManager.Window.FindName("GenerateLaunchersButton").add_Click({ $self.HandleGenerateLaunchers() }.GetNewClosure())
 
             # Add tab selection event to update game list when switching to launcher tab
