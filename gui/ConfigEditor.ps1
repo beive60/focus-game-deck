@@ -1241,6 +1241,147 @@ function Save-GlobalSettingsData {
     }
 }
 
+function Save-OBSSettingsData {
+    Write-Verbose "Save-OBSSettingsData: Starting to save OBS settings"
+
+    try {
+        # Get references to UI controls from OBS tab
+        $obsHostTextBox = $script:Window.FindName("ObsHostTextBox")
+        $obsPortTextBox = $script:Window.FindName("ObsPortTextBox")
+        $obsPasswordBox = $script:Window.FindName("ObsPasswordBox")
+        $replayBufferCheckBox = $script:Window.FindName("ReplayBufferCheckBox")
+        $obsPathTextBox = $script:Window.FindName("ObsPathTextBox")
+
+        # Ensure obs section exists
+        if (-not $script:StateManager.ConfigData.obs) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "obs" -NotePropertyValue @{} -Force
+        }
+
+        # Ensure obs.websocket section exists
+        if (-not $script:StateManager.ConfigData.obs.websocket) {
+            $script:StateManager.ConfigData.obs | Add-Member -NotePropertyName "websocket" -NotePropertyValue @{} -Force
+        }
+
+        # Save OBS websocket settings
+        if ($obsHostTextBox) {
+            if (-not $script:StateManager.ConfigData.obs.websocket.PSObject.Properties["host"]) {
+                $script:StateManager.ConfigData.obs.websocket | Add-Member -NotePropertyName "host" -NotePropertyValue $obsHostTextBox.Text -Force
+            } else {
+                $script:StateManager.ConfigData.obs.websocket.host = $obsHostTextBox.Text
+            }
+            Write-Verbose "Saved OBS host: $($obsHostTextBox.Text)"
+        }
+
+        if ($obsPortTextBox) {
+            $portValue = if ($obsPortTextBox.Text) { [int]$obsPortTextBox.Text } else { 4455 }
+            if (-not $script:StateManager.ConfigData.obs.websocket.PSObject.Properties["port"]) {
+                $script:StateManager.ConfigData.obs.websocket | Add-Member -NotePropertyName "port" -NotePropertyValue $portValue -Force
+            } else {
+                $script:StateManager.ConfigData.obs.websocket.port = $portValue
+            }
+            Write-Verbose "Saved OBS port: $portValue"
+        }
+
+        if ($obsPasswordBox) {
+            if ($obsPasswordBox.Password.Length -gt 0) {
+                $encryptedPassword = Protect-Password -PlainTextPassword $obsPasswordBox.Password
+                if (-not $script:StateManager.ConfigData.obs.websocket.PSObject.Properties["password"]) {
+                    $script:StateManager.ConfigData.obs.websocket | Add-Member -NotePropertyName "password" -NotePropertyValue $encryptedPassword -Force
+                } else {
+                    $script:StateManager.ConfigData.obs.websocket.password = $encryptedPassword
+                }
+                Write-Verbose "Saved OBS password (encrypted)"
+            } elseif ($obsPasswordBox.Tag -eq "SAVED") {
+                Write-Verbose "OBS password unchanged (keeping existing encrypted password)"
+            } else {
+                if ($script:StateManager.ConfigData.obs.websocket.PSObject.Properties["password"]) {
+                    $script:StateManager.ConfigData.obs.websocket.password = ""
+                }
+                Write-Verbose "OBS password cleared"
+            }
+        }
+
+        # Save OBS replay buffer setting
+        if ($replayBufferCheckBox) {
+            if (-not $script:StateManager.ConfigData.obs.PSObject.Properties["replayBuffer"]) {
+                $script:StateManager.ConfigData.obs | Add-Member -NotePropertyName "replayBuffer" -NotePropertyValue ([bool]$replayBufferCheckBox.IsChecked) -Force
+            } else {
+                $script:StateManager.ConfigData.obs.replayBuffer = [bool]$replayBufferCheckBox.IsChecked
+            }
+            Write-Verbose "Saved replay buffer: $($replayBufferCheckBox.IsChecked)"
+        }
+
+        # Save OBS executable path
+        if ($obsPathTextBox) {
+            if (-not $script:StateManager.ConfigData.paths) {
+                $script:StateManager.ConfigData | Add-Member -NotePropertyName "paths" -NotePropertyValue @{} -Force
+            }
+            $normalizedPath = $obsPathTextBox.Text -replace '\\', '/'
+            if (-not $script:StateManager.ConfigData.paths.PSObject.Properties["obs"]) {
+                $script:StateManager.ConfigData.paths | Add-Member -NotePropertyName "obs" -NotePropertyValue $normalizedPath -Force
+            } else {
+                $script:StateManager.ConfigData.paths.obs = $normalizedPath
+            }
+            Write-Verbose "Saved OBS path: $normalizedPath"
+        }
+
+        # Mark configuration as modified
+        $script:StateManager.SetModified()
+
+        Write-Verbose "Save-OBSSettingsData: OBS settings saved successfully"
+
+    } catch {
+        Write-Error "Failed to save OBS settings data: $($_.Exception.Message)"
+        throw
+    }
+}
+
+function Save-DiscordSettingsData {
+    Write-Verbose "Save-DiscordSettingsData: Starting to save Discord settings"
+
+    try {
+        # TODO: Implement Discord settings save logic once UI controls are defined
+        # Placeholder for Discord-specific settings
+
+        # Ensure discord section exists
+        if (-not $script:StateManager.ConfigData.discord) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "discord" -NotePropertyValue @{} -Force
+        }
+
+        # Mark configuration as modified
+        $script:StateManager.SetModified()
+
+        Write-Verbose "Save-DiscordSettingsData: Discord settings saved successfully"
+
+    } catch {
+        Write-Error "Failed to save Discord settings data: $($_.Exception.Message)"
+        throw
+    }
+}
+
+function Save-VTubeStudioSettingsData {
+    Write-Verbose "Save-VTubeStudioSettingsData: Starting to save VTube Studio settings"
+
+    try {
+        # TODO: Implement VTube Studio settings save logic once UI controls are defined
+        # Placeholder for VTube Studio-specific settings
+
+        # Ensure vtubeStudio section exists
+        if (-not $script:StateManager.ConfigData.vtubeStudio) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "vtubeStudio" -NotePropertyValue @{} -Force
+        }
+
+        # Mark configuration as modified
+        $script:StateManager.SetModified()
+
+        Write-Verbose "Save-VTubeStudioSettingsData: VTube Studio settings saved successfully"
+
+    } catch {
+        Write-Error "Failed to save VTube Studio settings data: $($_.Exception.Message)"
+        throw
+    }
+}
+
 function Save-OriginalConfig {
     if ($script:StateManager) {
         $script:StateManager.SaveOriginalConfig()

@@ -38,11 +38,13 @@
 
     # Helper method to update TerminationMethod ComboBox enabled state
     # Should be enabled only when either start or end action is "stop-process"
+    # Also updates AppArgumentsTextBox state (enabled only when either action is "start-process")
     [void] UpdateTerminationMethodState() {
         $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
         $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
         $terminationMethodCombo = $script:Window.FindName("TerminationMethodCombo")
         $gracefulTimeoutTextBox = $script:Window.FindName("GracefulTimeoutTextBox")
+        $appArgumentsTextBox = $script:Window.FindName("AppArgumentsTextBox")
 
         if (-not $terminationMethodCombo) {
             Write-Verbose "TerminationMethodCombo not found"
@@ -62,18 +64,18 @@
             "none"
         }
 
-        # Enable only if either action is "stop-process"
-        $shouldEnable = ($startAction -eq "stop-process") -or ($endAction -eq "stop-process")
+        # Enable termination method only if either action is "stop-process"
+        $shouldEnableTermination = ($startAction -eq "stop-process") -or ($endAction -eq "stop-process")
 
         # Store current selection before disabling
-        if (-not $shouldEnable -and $terminationMethodCombo.SelectedItem) {
+        if (-not $shouldEnableTermination -and $terminationMethodCombo.SelectedItem) {
             # Save the current selection
             if (-not $script:SavedTerminationMethod) {
                 $script:SavedTerminationMethod = $terminationMethodCombo.SelectedItem.Tag
             }
             # Clear selection when disabled
             $terminationMethodCombo.SelectedIndex = -1
-        } elseif ($shouldEnable -and $terminationMethodCombo.SelectedIndex -eq -1) {
+        } elseif ($shouldEnableTermination -and $terminationMethodCombo.SelectedIndex -eq -1) {
             # Restore saved selection when re-enabled, or use default
             $savedValue = if ($script:SavedTerminationMethod) {
                 $script:SavedTerminationMethod
@@ -83,12 +85,19 @@
             $this.SetComboBoxSelectionByTag($terminationMethodCombo, $savedValue)
         }
 
-        $terminationMethodCombo.IsEnabled = $shouldEnable
+        $terminationMethodCombo.IsEnabled = $shouldEnableTermination
         if ($gracefulTimeoutTextBox) {
-            $gracefulTimeoutTextBox.IsEnabled = $shouldEnable
+            $gracefulTimeoutTextBox.IsEnabled = $shouldEnableTermination
         }
 
-        Write-Verbose "TerminationMethod enabled: $shouldEnable (StartAction: $startAction, EndAction: $endAction)"
+        # Enable arguments textbox only if either action is "start-process"
+        if ($appArgumentsTextBox) {
+            $shouldEnableArguments = ($startAction -eq "start-process") -or ($endAction -eq "start-process")
+            $appArgumentsTextBox.IsEnabled = $shouldEnableArguments
+            Write-Verbose "AppArguments enabled: $shouldEnableArguments (StartAction: $startAction, EndAction: $endAction)"
+        }
+
+        Write-Verbose "TerminationMethod enabled: $shouldEnableTermination (StartAction: $startAction, EndAction: $endAction)"
     }
 
     # Handle platform selection changed
@@ -1461,6 +1470,100 @@
         }
     }
 
+    # Handle save OBS settings
+    [void] HandleSaveOBSSettings() {
+        try {
+            # Save OBS settings data
+            Save-OBSSettingsData
+
+            # Write to file with 4-space indentation
+            Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
+
+            # Update original config and clear modified flag
+            Save-OriginalConfig
+            $this.stateManager.ClearModified()
+
+            Show-SafeMessage -Key "obsSettingsSaved" -MessageType "Information"
+            Write-Verbose "OBS settings saved"
+
+        } catch {
+            Write-Error "Failed to save OBS settings: $_"
+            Show-SafeMessage -Key "obsSettingsSaveFailed" -MessageType "Error"
+        }
+    }
+
+    # Handle save Discord settings
+    [void] HandleSaveDiscordSettings() {
+        try {
+            # Save Discord settings data
+            Save-DiscordSettingsData
+
+            # Write to file with 4-space indentation
+            Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
+
+            # Update original config and clear modified flag
+            Save-OriginalConfig
+            $this.stateManager.ClearModified()
+
+            Show-SafeMessage -Key "discordSettingsSaved" -MessageType "Information"
+            Write-Verbose "Discord settings saved"
+
+        } catch {
+            Write-Error "Failed to save Discord settings: $_"
+            Show-SafeMessage -Key "discordSettingsSaveFailed" -MessageType "Error"
+        }
+    }
+
+    # Handle save VTube Studio settings
+    [void] HandleSaveVTubeStudioSettings() {
+        try {
+            # Save VTube Studio settings data
+            Save-VTubeStudioSettingsData
+
+            # Write to file with 4-space indentation
+            Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
+
+            # Update original config and clear modified flag
+            Save-OriginalConfig
+            $this.stateManager.ClearModified()
+
+            Show-SafeMessage -Key "vtubeStudioSettingsSaved" -MessageType "Information"
+            Write-Verbose "VTube Studio settings saved"
+
+        } catch {
+            Write-Error "Failed to save VTube Studio settings: $_"
+            Show-SafeMessage -Key "vtubeStudioSettingsSaveFailed" -MessageType "Error"
+        }
+    }
+
+    # Handle opening integration tab from game settings
+    [void] HandleOpenIntegrationTab([string]$TabName) {
+        try {
+            $tabControl = $script:Window.FindName("MainTabControl")
+            if (-not $tabControl) {
+                Write-Warning "TabControl not found"
+                return
+            }
+
+            $targetTab = $null
+            switch ($TabName) {
+                "OBS" { $targetTab = $script:Window.FindName("OBSTab") }
+                "Discord" { $targetTab = $script:Window.FindName("DiscordTab") }
+                "VTubeStudio" { $targetTab = $script:Window.FindName("VTubeStudioTab") }
+            }
+
+            if ($targetTab) {
+                $tabControl.SelectedItem = $targetTab
+                Write-Verbose "Switched to $TabName tab"
+            } else {
+                Write-Warning "$TabName tab not found"
+            }
+
+        } catch {
+            Write-Error "Failed to open $TabName tab: $_"
+        }
+    }
+
     # Handle refresh game list button click
     [void] HandleRefreshGameList() {
         try {
@@ -1732,6 +1835,9 @@
             $this.uiManager.Window.FindName("MoveGameUpButton").add_Click({ $self.HandleMoveGame("Up") }.GetNewClosure())
             $this.uiManager.Window.FindName("MoveGameDownButton").add_Click({ $self.HandleMoveGame("Down") }.GetNewClosure())
             $this.uiManager.Window.FindName("MoveGameBottomButton").add_Click({ $self.HandleMoveGame("Bottom") }.GetNewClosure())
+            $this.uiManager.Window.FindName("OpenOBSTabButton").add_Click({ $self.HandleOpenIntegrationTab("OBS") }.GetNewClosure())
+            $this.uiManager.Window.FindName("OpenDiscordTabButton").add_Click({ $self.HandleOpenIntegrationTab("Discord") }.GetNewClosure())
+            $this.uiManager.Window.FindName("OpenVTubeStudioTabButton").add_Click({ $self.HandleOpenIntegrationTab("VTubeStudio") }.GetNewClosure())
 
             # --- Managed Apps Tab ---
             $this.uiManager.Window.FindName("ManagedAppsList").add_SelectionChanged({ $self.HandleAppSelectionChanged() }.GetNewClosure())
@@ -1744,6 +1850,15 @@
             $this.uiManager.Window.FindName("MoveAppUpButton").add_Click({ $self.HandleMoveApp("Up") }.GetNewClosure())
             $this.uiManager.Window.FindName("MoveAppDownButton").add_Click({ $self.HandleMoveApp("Down") }.GetNewClosure())
             $this.uiManager.Window.FindName("MoveAppBottomButton").add_Click({ $self.HandleMoveApp("Bottom") }.GetNewClosure())
+
+            # --- OBS Tab ---
+            $this.uiManager.Window.FindName("SaveOBSSettingsButton").add_Click({ $self.HandleSaveOBSSettings() }.GetNewClosure())
+
+            # --- Discord Tab ---
+            $this.uiManager.Window.FindName("SaveDiscordSettingsButton").add_Click({ $self.HandleSaveDiscordSettings() }.GetNewClosure())
+
+            # --- VTube Studio Tab ---
+            $this.uiManager.Window.FindName("SaveVTubeStudioSettingsButton").add_Click({ $self.HandleSaveVTubeStudioSettings() }.GetNewClosure())
 
             # --- Global Settings Tab ---
             $this.uiManager.Window.FindName("LanguageCombo").add_SelectionChanged({ $self.HandleLanguageSelectionChanged() }.GetNewClosure())

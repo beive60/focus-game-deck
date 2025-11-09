@@ -169,17 +169,12 @@ $script:ComboBoxItemMappings = @{
 
 # Game action message key mappings (used for dynamic ComboBoxItem creation)
 # These are not x:Name values but message keys used in InitializeGameActionCombos()
+# Simplified to core actions only: none, start-process, stop-process
+# Application-specific integrations (OBS, Discord, VTube Studio) are configured in dedicated tabs
 $script:GameActionMessageKeys = @{
-    "none"                    = "gameActionNone"
-    "start-process"           = "gameActionStartProcess"
-    "stop-process"            = "gameActionStopProcess"
-    "toggle-hotkeys"          = "gameActionToggleHotkeys"
-    "start-vtube-studio"      = "gameActionStartVtubeStudio"
-    "stop-vtube-studio"       = "gameActionStopVtubeStudio"
-    "set-discord-gaming-mode" = "gameActionSetDiscordGaming"
-    "restore-discord-normal"  = "gameActionRestoreDiscord"
-    "pause-wallpaper"         = "gameActionPauseWallpaper"
-    "play-wallpaper"          = "gameActionPlayWallpaper"
+    "none"          = "gameActionNone"
+    "start-process" = "gameActionStartProcess"
+    "stop-process"  = "gameActionStopProcess"
 }
 
 # Termination method options mapping

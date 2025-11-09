@@ -210,6 +210,54 @@ class ConfigEditorUI {
             Write-Verbose "Updating other UI elements (Labels, Tabs, etc.)..."
             $this.UpdateElementsFromMappings()
 
+            # Set placeholder for AppArgumentsTextBox
+            Write-Verbose "Setting placeholder for AppArgumentsTextBox..."
+            $appArgumentsTextBox = $this.Window.FindName("AppArgumentsTextBox")
+            if ($appArgumentsTextBox -and $appArgumentsTextBox.Tag) {
+                $placeholderKey = $appArgumentsTextBox.Tag -replace '^\[|\]$', ''
+                $placeholderText = $this.GetLocalizedMessage($placeholderKey)
+                if ($placeholderText -and $placeholderText -ne $placeholderKey) {
+                    # Use a TextBlock as watermark/placeholder
+                    Add-Type -AssemblyName PresentationFramework
+                    $watermark = New-Object System.Windows.Controls.TextBlock
+                    $watermark.Text = $placeholderText
+                    $watermark.Foreground = [System.Windows.Media.Brushes]::Gray
+                    $watermark.FontStyle = [System.Windows.FontStyles]::Italic
+                    $watermark.Margin = New-Object System.Windows.Thickness(5, 0, 0, 0)
+                    $watermark.VerticalAlignment = [System.Windows.VerticalAlignment]::Center
+                    $watermark.IsHitTestVisible = $false
+
+                    # Set watermark visibility based on text content
+                    $appArgumentsTextBox.add_TextChanged({
+                        param($sender, $e)
+                        $watermark.Visibility = if ([string]::IsNullOrEmpty($sender.Text)) {
+                            [System.Windows.Visibility]::Visible
+                        } else {
+                            [System.Windows.Visibility]::Hidden
+                        }
+                    }.GetNewClosure())
+
+                    # Add watermark to parent grid
+                    $parent = $appArgumentsTextBox.Parent
+                    if ($parent -is [System.Windows.Controls.Grid]) {
+                        $row = [System.Windows.Controls.Grid]::GetRow($appArgumentsTextBox)
+                        $col = [System.Windows.Controls.Grid]::GetColumn($appArgumentsTextBox)
+                        [System.Windows.Controls.Grid]::SetRow($watermark, $row)
+                        [System.Windows.Controls.Grid]::SetColumn($watermark, $col)
+                        $parent.Children.Add($watermark) | Out-Null
+
+                        # Set initial visibility
+                        $watermark.Visibility = if ([string]::IsNullOrEmpty($appArgumentsTextBox.Text)) {
+                            [System.Windows.Visibility]::Visible
+                        } else {
+                            [System.Windows.Visibility]::Hidden
+                        }
+
+                        Write-Verbose "Placeholder set for AppArgumentsTextBox: '$placeholderText'"
+                    }
+                }
+            }
+
             Write-Verbose "--- UI Text Update Completed ---"
         } catch {
             Write-Warning "Failed to update UI texts: $($_.Exception.Message)"
