@@ -842,19 +842,19 @@ class ConfigEditorUI {
             try {
                 Write-Verbose "Loading global settings into UI controls"
 
-                $obsHostTextBox = $self.Window.FindName("ObsHostTextBox")
-                if ($obsHostTextBox -and $ConfigData.obs.websocket) {
-                    $obsHostTextBox.Text = $ConfigData.obs.websocket.host
+                $obsHostTextBox = $self.Window.FindName("OBSHostTextBox")
+                if ($obsHostTextBox -and $ConfigData.integrations.obs.websocket) {
+                    $obsHostTextBox.Text = $ConfigData.integrations.obs.websocket.host
                 }
 
-                $obsPortTextBox = $self.Window.FindName("ObsPortTextBox")
-                if ($obsPortTextBox -and $ConfigData.obs.websocket) {
-                    $obsPortTextBox.Text = $ConfigData.obs.websocket.port
+                $obsPortTextBox = $self.Window.FindName("OBSPortTextBox")
+                if ($obsPortTextBox -and $ConfigData.integrations.obs.websocket) {
+                    $obsPortTextBox.Text = $ConfigData.integrations.obs.websocket.port
                 }
 
-                $obsPasswordBox = $self.Window.FindName("ObsPasswordBox")
-                if ($obsPasswordBox -and $ConfigData.obs.websocket) {
-                    if ($ConfigData.obs.websocket.password) {
+                $obsPasswordBox = $self.Window.FindName("OBSPasswordBox")
+                if ($obsPasswordBox -and $ConfigData.integrations.obs.websocket) {
+                    if ($ConfigData.integrations.obs.websocket.password) {
                         # Password is saved - show placeholder text using a helper TextBlock
                         # Set Tag to indicate password exists (will be used during save)
                         $obsPasswordBox.Tag = "SAVED"
@@ -906,9 +906,9 @@ class ConfigEditorUI {
                     }
                 }
 
-                $replayBufferCheckBox = $self.Window.FindName("ReplayBufferCheckBox")
-                if ($replayBufferCheckBox -and $ConfigData.obs) {
-                    $replayBufferCheckBox.IsChecked = [bool]$ConfigData.obs.replayBuffer
+                $replayBufferCheckBox = $self.Window.FindName("OBSReplayBufferCheckBox")
+                if ($replayBufferCheckBox -and $ConfigData.integrations.obs) {
+                    $replayBufferCheckBox.IsChecked = [bool]$ConfigData.integrations.obs.replayBuffer
                 }
 
                 if ($ConfigData.paths) {
@@ -920,9 +920,11 @@ class ConfigEditorUI {
 
                     $riotPathTextBox = $self.Window.FindName("RiotPathTextBox")
                     if ($riotPathTextBox) { $riotPathTextBox.Text = $ConfigData.paths.riot }
+                }
 
-                    $obsPathTextBox = $self.Window.FindName("ObsPathTextBox")
-                    if ($obsPathTextBox) { $obsPathTextBox.Text = $ConfigData.paths.obs }
+                if ($ConfigData.integrations.obs) {
+                    $obsPathTextBox = $self.Window.FindName("OBSPathTextBox")
+                    if ($obsPathTextBox) { $obsPathTextBox.Text = $ConfigData.integrations.obs.path }
                 }
 
                 $langCombo = $self.Window.FindName("LanguageCombo")

@@ -1075,43 +1075,48 @@ function Save-GlobalSettingsData {
 
     try {
         # Get references to UI controls
-        $obsHostTextBox = $script:Window.FindName("ObsHostTextBox")
-        $obsPortTextBox = $script:Window.FindName("ObsPortTextBox")
-        $obsPasswordBox = $script:Window.FindName("ObsPasswordBox")
-        $replayBufferCheckBox = $script:Window.FindName("ReplayBufferCheckBox")
+        $obsHostTextBox = $script:Window.FindName("OBSHostTextBox")
+        $obsPortTextBox = $script:Window.FindName("OBSPortTextBox")
+        $obsPasswordBox = $script:Window.FindName("OBSPasswordBox")
+        $replayBufferCheckBox = $script:Window.FindName("OBSReplayBufferCheckBox")
         $steamPathTextBox = $script:Window.FindName("SteamPathTextBox")
         $epicPathTextBox = $script:Window.FindName("EpicPathTextBox")
         $riotPathTextBox = $script:Window.FindName("RiotPathTextBox")
-        $obsPathTextBox = $script:Window.FindName("ObsPathTextBox")
+        $obsPathTextBox = $script:Window.FindName("OBSPathTextBox")
         $logRetentionCombo = $script:Window.FindName("LogRetentionCombo")
         $enableLogNotarizationCheckBox = $script:Window.FindName("EnableLogNotarizationCheckBox")
 
-        # Ensure obs section exists
-        if (-not $script:StateManager.ConfigData.obs) {
-            $script:StateManager.ConfigData | Add-Member -NotePropertyName "obs" -NotePropertyValue @{} -Force
+        # Ensure integrations section exists
+        if (-not $script:StateManager.ConfigData.integrations) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "integrations" -NotePropertyValue @{} -Force
         }
 
-        # Ensure obs.websocket section exists
-        if (-not $script:StateManager.ConfigData.obs.websocket) {
-            $script:StateManager.ConfigData.obs | Add-Member -NotePropertyName "websocket" -NotePropertyValue @{} -Force
+        # Ensure integrations.obs section exists
+        if (-not $script:StateManager.ConfigData.integrations.obs) {
+            $script:StateManager.ConfigData.integrations | Add-Member -NotePropertyName "obs" -NotePropertyValue @{} -Force
+        }
+
+        # Ensure integrations.obs.websocket section exists
+        if (-not $script:StateManager.ConfigData.integrations.obs.websocket) {
+            $script:StateManager.ConfigData.integrations.obs | Add-Member -NotePropertyName "websocket" -NotePropertyValue @{} -Force
         }
 
         # Save OBS websocket settings
         if ($obsHostTextBox) {
-            if (-not $script:StateManager.ConfigData.obs.websocket.PSObject.Properties["host"]) {
-                $script:StateManager.ConfigData.obs.websocket | Add-Member -NotePropertyName "host" -NotePropertyValue $obsHostTextBox.Text -Force
+            if (-not $script:StateManager.ConfigData.integrations.obs.websocket.PSObject.Properties["host"]) {
+                $script:StateManager.ConfigData.integrations.obs.websocket | Add-Member -NotePropertyName "host" -NotePropertyValue $obsHostTextBox.Text -Force
             } else {
-                $script:StateManager.ConfigData.obs.websocket.host = $obsHostTextBox.Text
+                $script:StateManager.ConfigData.integrations.obs.websocket.host = $obsHostTextBox.Text
             }
             Write-Verbose "Saved OBS host: $($obsHostTextBox.Text)"
         }
 
         if ($obsPortTextBox) {
             $portValue = if ($obsPortTextBox.Text) { [int]$obsPortTextBox.Text } else { 4455 }
-            if (-not $script:StateManager.ConfigData.obs.websocket.PSObject.Properties["port"]) {
-                $script:StateManager.ConfigData.obs.websocket | Add-Member -NotePropertyName "port" -NotePropertyValue $portValue -Force
+            if (-not $script:StateManager.ConfigData.integrations.obs.websocket.PSObject.Properties["port"]) {
+                $script:StateManager.ConfigData.integrations.obs.websocket | Add-Member -NotePropertyName "port" -NotePropertyValue $portValue -Force
             } else {
-                $script:StateManager.ConfigData.obs.websocket.port = $portValue
+                $script:StateManager.ConfigData.integrations.obs.websocket.port = $portValue
             }
             Write-Verbose "Saved OBS port: $portValue"
         }
@@ -1122,10 +1127,10 @@ function Save-GlobalSettingsData {
                 # User entered a new password - encrypt and save it
                 $encryptedPassword = Protect-Password -PlainTextPassword $obsPasswordBox.Password
 
-                if (-not $script:StateManager.ConfigData.obs.websocket.PSObject.Properties["password"]) {
-                    $script:StateManager.ConfigData.obs.websocket | Add-Member -NotePropertyName "password" -NotePropertyValue $encryptedPassword -Force
+                if (-not $script:StateManager.ConfigData.integrations.obs.websocket.PSObject.Properties["password"]) {
+                    $script:StateManager.ConfigData.integrations.obs.websocket | Add-Member -NotePropertyName "password" -NotePropertyValue $encryptedPassword -Force
                 } else {
-                    $script:StateManager.ConfigData.obs.websocket.password = $encryptedPassword
+                    $script:StateManager.ConfigData.integrations.obs.websocket.password = $encryptedPassword
                 }
                 Write-Verbose "Saved OBS password (encrypted): $('*' * $obsPasswordBox.Password.Length)"
             } elseif ($obsPasswordBox.Tag -eq "SAVED") {
@@ -1134,8 +1139,8 @@ function Save-GlobalSettingsData {
                 # No action needed - existing password in config is preserved
             } else {
                 # Password field is empty and no saved password - clear password
-                if ($script:StateManager.ConfigData.obs.websocket.PSObject.Properties["password"]) {
-                    $script:StateManager.ConfigData.obs.websocket.password = ""
+                if ($script:StateManager.ConfigData.integrations.obs.websocket.PSObject.Properties["password"]) {
+                    $script:StateManager.ConfigData.integrations.obs.websocket.password = ""
                 }
                 Write-Verbose "OBS password cleared"
             }
@@ -1143,10 +1148,10 @@ function Save-GlobalSettingsData {
 
         # Save OBS replay buffer setting
         if ($replayBufferCheckBox) {
-            if (-not $script:StateManager.ConfigData.obs.PSObject.Properties["replayBuffer"]) {
-                $script:StateManager.ConfigData.obs | Add-Member -NotePropertyName "replayBuffer" -NotePropertyValue ([bool]$replayBufferCheckBox.IsChecked) -Force
+            if (-not $script:StateManager.ConfigData.integrations.obs.PSObject.Properties["replayBuffer"]) {
+                $script:StateManager.ConfigData.integrations.obs | Add-Member -NotePropertyName "replayBuffer" -NotePropertyValue ([bool]$replayBufferCheckBox.IsChecked) -Force
             } else {
-                $script:StateManager.ConfigData.obs.replayBuffer = [bool]$replayBufferCheckBox.IsChecked
+                $script:StateManager.ConfigData.integrations.obs.replayBuffer = [bool]$replayBufferCheckBox.IsChecked
             }
             Write-Verbose "Saved replay buffer: $($replayBufferCheckBox.IsChecked)"
         }
@@ -1189,10 +1194,10 @@ function Save-GlobalSettingsData {
 
         if ($obsPathTextBox) {
             $normalizedPath = $obsPathTextBox.Text -replace '\\', '/'
-            if (-not $script:StateManager.ConfigData.paths.PSObject.Properties["obs"]) {
-                $script:StateManager.ConfigData.paths | Add-Member -NotePropertyName "obs" -NotePropertyValue $normalizedPath -Force
+            if (-not $script:StateManager.ConfigData.integrations.obs.PSObject.Properties["path"]) {
+                $script:StateManager.ConfigData.integrations.obs | Add-Member -NotePropertyName "path" -NotePropertyValue $normalizedPath -Force
             } else {
-                $script:StateManager.ConfigData.paths.obs = $normalizedPath
+                $script:StateManager.ConfigData.integrations.obs.path = $normalizedPath
             }
             Write-Verbose "Saved OBS path: $normalizedPath"
         }
@@ -1246,38 +1251,43 @@ function Save-OBSSettingsData {
 
     try {
         # Get references to UI controls from OBS tab
-        $obsHostTextBox = $script:Window.FindName("ObsHostTextBox")
-        $obsPortTextBox = $script:Window.FindName("ObsPortTextBox")
-        $obsPasswordBox = $script:Window.FindName("ObsPasswordBox")
-        $replayBufferCheckBox = $script:Window.FindName("ReplayBufferCheckBox")
-        $obsPathTextBox = $script:Window.FindName("ObsPathTextBox")
+        $obsHostTextBox = $script:Window.FindName("OBSHostTextBox")
+        $obsPortTextBox = $script:Window.FindName("OBSPortTextBox")
+        $obsPasswordBox = $script:Window.FindName("OBSPasswordBox")
+        $replayBufferCheckBox = $script:Window.FindName("OBSReplayBufferCheckBox")
+        $obsPathTextBox = $script:Window.FindName("OBSPathTextBox")
 
-        # Ensure obs section exists
-        if (-not $script:StateManager.ConfigData.obs) {
-            $script:StateManager.ConfigData | Add-Member -NotePropertyName "obs" -NotePropertyValue @{} -Force
+        # Ensure integrations section exists
+        if (-not $script:StateManager.ConfigData.integrations) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "integrations" -NotePropertyValue @{} -Force
         }
 
-        # Ensure obs.websocket section exists
-        if (-not $script:StateManager.ConfigData.obs.websocket) {
-            $script:StateManager.ConfigData.obs | Add-Member -NotePropertyName "websocket" -NotePropertyValue @{} -Force
+        # Ensure integrations.obs section exists
+        if (-not $script:StateManager.ConfigData.integrations.obs) {
+            $script:StateManager.ConfigData.integrations | Add-Member -NotePropertyName "obs" -NotePropertyValue @{} -Force
+        }
+
+        # Ensure integrations.obs.websocket section exists
+        if (-not $script:StateManager.ConfigData.integrations.obs.websocket) {
+            $script:StateManager.ConfigData.integrations.obs | Add-Member -NotePropertyName "websocket" -NotePropertyValue @{} -Force
         }
 
         # Save OBS websocket settings
         if ($obsHostTextBox) {
-            if (-not $script:StateManager.ConfigData.obs.websocket.PSObject.Properties["host"]) {
-                $script:StateManager.ConfigData.obs.websocket | Add-Member -NotePropertyName "host" -NotePropertyValue $obsHostTextBox.Text -Force
+            if (-not $script:StateManager.ConfigData.integrations.obs.websocket.PSObject.Properties["host"]) {
+                $script:StateManager.ConfigData.integrations.obs.websocket | Add-Member -NotePropertyName "host" -NotePropertyValue $obsHostTextBox.Text -Force
             } else {
-                $script:StateManager.ConfigData.obs.websocket.host = $obsHostTextBox.Text
+                $script:StateManager.ConfigData.integrations.obs.websocket.host = $obsHostTextBox.Text
             }
             Write-Verbose "Saved OBS host: $($obsHostTextBox.Text)"
         }
 
         if ($obsPortTextBox) {
             $portValue = if ($obsPortTextBox.Text) { [int]$obsPortTextBox.Text } else { 4455 }
-            if (-not $script:StateManager.ConfigData.obs.websocket.PSObject.Properties["port"]) {
-                $script:StateManager.ConfigData.obs.websocket | Add-Member -NotePropertyName "port" -NotePropertyValue $portValue -Force
+            if (-not $script:StateManager.ConfigData.integrations.obs.websocket.PSObject.Properties["port"]) {
+                $script:StateManager.ConfigData.integrations.obs.websocket | Add-Member -NotePropertyName "port" -NotePropertyValue $portValue -Force
             } else {
-                $script:StateManager.ConfigData.obs.websocket.port = $portValue
+                $script:StateManager.ConfigData.integrations.obs.websocket.port = $portValue
             }
             Write-Verbose "Saved OBS port: $portValue"
         }
@@ -1285,17 +1295,17 @@ function Save-OBSSettingsData {
         if ($obsPasswordBox) {
             if ($obsPasswordBox.Password.Length -gt 0) {
                 $encryptedPassword = Protect-Password -PlainTextPassword $obsPasswordBox.Password
-                if (-not $script:StateManager.ConfigData.obs.websocket.PSObject.Properties["password"]) {
-                    $script:StateManager.ConfigData.obs.websocket | Add-Member -NotePropertyName "password" -NotePropertyValue $encryptedPassword -Force
+                if (-not $script:StateManager.ConfigData.integrations.obs.websocket.PSObject.Properties["password"]) {
+                    $script:StateManager.ConfigData.integrations.obs.websocket | Add-Member -NotePropertyName "password" -NotePropertyValue $encryptedPassword -Force
                 } else {
-                    $script:StateManager.ConfigData.obs.websocket.password = $encryptedPassword
+                    $script:StateManager.ConfigData.integrations.obs.websocket.password = $encryptedPassword
                 }
                 Write-Verbose "Saved OBS password (encrypted)"
             } elseif ($obsPasswordBox.Tag -eq "SAVED") {
                 Write-Verbose "OBS password unchanged (keeping existing encrypted password)"
             } else {
-                if ($script:StateManager.ConfigData.obs.websocket.PSObject.Properties["password"]) {
-                    $script:StateManager.ConfigData.obs.websocket.password = ""
+                if ($script:StateManager.ConfigData.integrations.obs.websocket.PSObject.Properties["password"]) {
+                    $script:StateManager.ConfigData.integrations.obs.websocket.password = ""
                 }
                 Write-Verbose "OBS password cleared"
             }
@@ -1303,24 +1313,21 @@ function Save-OBSSettingsData {
 
         # Save OBS replay buffer setting
         if ($replayBufferCheckBox) {
-            if (-not $script:StateManager.ConfigData.obs.PSObject.Properties["replayBuffer"]) {
-                $script:StateManager.ConfigData.obs | Add-Member -NotePropertyName "replayBuffer" -NotePropertyValue ([bool]$replayBufferCheckBox.IsChecked) -Force
+            if (-not $script:StateManager.ConfigData.integrations.obs.PSObject.Properties["replayBuffer"]) {
+                $script:StateManager.ConfigData.integrations.obs | Add-Member -NotePropertyName "replayBuffer" -NotePropertyValue ([bool]$replayBufferCheckBox.IsChecked) -Force
             } else {
-                $script:StateManager.ConfigData.obs.replayBuffer = [bool]$replayBufferCheckBox.IsChecked
+                $script:StateManager.ConfigData.integrations.obs.replayBuffer = [bool]$replayBufferCheckBox.IsChecked
             }
             Write-Verbose "Saved replay buffer: $($replayBufferCheckBox.IsChecked)"
         }
 
         # Save OBS executable path
         if ($obsPathTextBox) {
-            if (-not $script:StateManager.ConfigData.paths) {
-                $script:StateManager.ConfigData | Add-Member -NotePropertyName "paths" -NotePropertyValue @{} -Force
-            }
             $normalizedPath = $obsPathTextBox.Text -replace '\\', '/'
-            if (-not $script:StateManager.ConfigData.paths.PSObject.Properties["obs"]) {
-                $script:StateManager.ConfigData.paths | Add-Member -NotePropertyName "obs" -NotePropertyValue $normalizedPath -Force
+            if (-not $script:StateManager.ConfigData.integrations.obs.PSObject.Properties["path"]) {
+                $script:StateManager.ConfigData.integrations.obs | Add-Member -NotePropertyName "path" -NotePropertyValue $normalizedPath -Force
             } else {
-                $script:StateManager.ConfigData.paths.obs = $normalizedPath
+                $script:StateManager.ConfigData.integrations.obs.path = $normalizedPath
             }
             Write-Verbose "Saved OBS path: $normalizedPath"
         }

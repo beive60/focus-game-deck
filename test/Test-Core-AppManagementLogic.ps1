@@ -174,14 +174,14 @@ function Test-OBSActions {
         if ($obsProcess) {
             Write-Host "    [INFO] OBS is already running (PID: $($obsProcess[0].Id))"
         } else {
-            Write-Host "    [SIMULATE] Would start OBS: $($config.paths.obs)"
+            Write-Host "    [SIMULATE] Would start OBS: $($config.integrations.obs.path)"
         }
 
-        if ($config.obs.replayBuffer) {
+        if ($config.integrations.obs.replayBuffer) {
             Write-Host "    [SIMULATE] Would start OBS replay buffer via WebSocket"
         }
     } elseif ($Action -eq "stop") {
-        if ($config.obs.replayBuffer) {
+        if ($config.integrations.obs.replayBuffer) {
             Write-Host "    [SIMULATE] Would stop OBS replay buffer via WebSocket"
         }
     }

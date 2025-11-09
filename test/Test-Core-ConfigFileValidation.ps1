@@ -72,26 +72,26 @@ if ($timeDiff.TotalMinutes -lt 10) {
 Write-Host "`nConfig Values:"
 $config = Get-Content config/config.json -Raw -Encoding UTF8 | ConvertFrom-Json
 
-Write-Host "OBS Host: '$($config.obs.websocket.host)'"
-Write-Host "OBS Port: $($config.obs.websocket.port)"
+Write-Host "OBS Host: '$($config.integrations.obs.websocket.host)'"
+Write-Host "OBS Port: $($config.integrations.obs.websocket.port)"
 Write-Host "Language: '$($config.language)'"
 
 # Check for test changes
 Write-Host "`nTest Results:"
-if ($config.obs.websocket.host -eq "testhost") {
+if ($config.integrations.obs.websocket.host -eq "testhost") {
     Write-Host "[OK] OBS Host changed to testhost"
-} elseif ($config.obs.websocket.host -eq "localhost") {
+} elseif ($config.integrations.obs.websocket.host -eq "localhost") {
     Write-Host "- OBS Host unchanged (localhost)"
 } else {
-    Write-Host "? OBS Host set to: $($config.obs.websocket.host)"
+    Write-Host "? OBS Host set to: $($config.integrations.obs.websocket.host)"
 }
 
-if ($config.obs.websocket.port -eq 4456) {
+if ($config.integrations.obs.websocket.port -eq 4456) {
     Write-Host "[OK] OBS Port changed to 4456"
-} elseif ($config.obs.websocket.port -eq 4455) {
+} elseif ($config.integrations.obs.websocket.port -eq 4455) {
     Write-Host "- OBS Port unchanged (4455)"
 } else {
-    Write-Host "? OBS Port set to: $($config.obs.websocket.port)"
+    Write-Host "? OBS Port set to: $($config.integrations.obs.websocket.port)"
 }
 
 if ($config.language -eq "ja") {

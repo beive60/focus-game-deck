@@ -1585,7 +1585,6 @@
                                         <RowDefinition Height="35"/>
                                         <RowDefinition Height="35"/>
                                         <RowDefinition Height="35"/>
-                                        <RowDefinition Height="35"/>
                                     </Grid.RowDefinitions>
 
                                     <Label
@@ -1701,44 +1700,6 @@
                                         Margin="3,0,0,0"
                                         VerticalAlignment="Center"
                                         ToolTip="[AUTO_DETECT_RIOT_TOOLTIP]"/>
-
-                                    <Label
-                                        x:Name="ObsPathLabel"
-                                        Content="[OBS_PATH_LABEL]"
-                                        Grid.Row="3"
-                                        Grid.Column="0"
-                                        VerticalAlignment="Center"/>
-                                    <TextBox
-                                        x:Name="ObsPathTextBox"
-                                        Grid.Row="3"
-                                        Grid.Column="1"
-                                        VerticalContentAlignment="Center"
-                                        Margin="5"/>
-                                    <Button
-                                        x:Name="BrowseObsPathButton"
-                                        Content="[BROWSE_BUTTON]"
-                                        Grid.Row="3"
-                                        Grid.Column="2"
-                                        Width="70"
-                                        Height="25"/>
-                                    <Button
-                                        x:Name="AutoDetectObsButton"
-                                        Content="[AUTO_DETECT_BUTTON]"
-                                        Grid.Row="3"
-                                        Grid.Column="3"
-                                        Width="70"
-                                        Height="25"
-                                        Margin="5,0,0,0"/>
-                                    <TextBlock
-                                        x:Name="AutoDetectObsTooltip"
-                                        Text="?"
-                                        Grid.Row="3"
-                                        Grid.Column="4"
-                                        FontWeight="Bold"
-                                        Foreground="#0078D4"
-                                        Margin="3,0,0,0"
-                                        VerticalAlignment="Center"
-                                        ToolTip="[AUTO_DETECT_OBS_TOOLTIP]"/>
                                 </Grid>
                             </GroupBox>
                         </StackPanel>

@@ -1095,7 +1095,7 @@
                         }
                     }
                 }
-                "Obs" {
+                "OBS" {
                     $commonPaths = @(
                         "${env:ProgramFiles}/obs-studio/bin/64bit/obs64.exe",
                         "${env:ProgramFiles(x86)}/obs-studio/bin/64bit/obs64.exe",
@@ -1130,7 +1130,7 @@
                     "Steam" { $script:Window.FindName("SteamPathTextBox").Text = $selectedPath }
                     "Epic" { $script:Window.FindName("EpicPathTextBox").Text = $selectedPath }
                     "Riot" { $script:Window.FindName("RiotPathTextBox").Text = $selectedPath }
-                    "Obs" { $script:Window.FindName("ObsPathTextBox").Text = $selectedPath }
+                    "OBS" { $script:Window.FindName("OBSPathTextBox").Text = $selectedPath }
                 }
 
                 $message = $this.uiManager.GetLocalizedMessage("pathDetected") -f $Platform, $selectedPath
@@ -1860,13 +1860,15 @@
             # --- VTube Studio Tab ---
             $this.uiManager.Window.FindName("SaveVTubeStudioSettingsButton").add_Click({ $self.HandleSaveVTubeStudioSettings() }.GetNewClosure())
 
+            # --- OBS Tab ---
+            $this.uiManager.Window.FindName("AutoDetectOBSButton").add_Click({ $self.HandleAutoDetectPath("OBS") }.GetNewClosure())
+
             # --- Global Settings Tab ---
             $this.uiManager.Window.FindName("LanguageCombo").add_SelectionChanged({ $self.HandleLanguageSelectionChanged() }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveGlobalSettingsButton").add_Click({ $self.HandleSaveGlobalSettings() }.GetNewClosure())
             $this.uiManager.Window.FindName("AutoDetectSteamButton").add_Click({ $self.HandleAutoDetectPath("Steam") }.GetNewClosure())
             $this.uiManager.Window.FindName("AutoDetectEpicButton").add_Click({ $self.HandleAutoDetectPath("Epic") }.GetNewClosure())
             $this.uiManager.Window.FindName("AutoDetectRiotButton").add_Click({ $self.HandleAutoDetectPath("Riot") }.GetNewClosure())
-            $this.uiManager.Window.FindName("AutoDetectObsButton").add_Click({ $self.HandleAutoDetectPath("Obs") }.GetNewClosure())
 
             # --- Menu Items ---
             $this.uiManager.Window.FindName("RefreshGameListMenuItem").add_Click({ $self.HandleRefreshGameList() }.GetNewClosure())

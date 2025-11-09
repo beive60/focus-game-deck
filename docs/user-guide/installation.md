@@ -39,12 +39,14 @@ This is the easiest method for most users.
    - Verify the signature is from the official publisher
 
 3. **First Run Setup**
+
    ```cmd
    # Run from Command Prompt or PowerShell
    Focus-Game-Deck.exe --setup
    ```
 
 4. **Test Installation**
+
    ```cmd
    # Verify the application works
    Focus-Game-Deck.exe --version
@@ -55,22 +57,26 @@ This is the easiest method for most users.
 This method is for developers and advanced users who want full source code access.
 
 1. **Clone Repository**
+
    ```powershell
    git clone https://github.com/beive60/focus-game-deck.git
    cd focus-game-deck
    ```
 
 2. **Set Execution Policy** (if needed)
+
    ```powershell
    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
    ```
 
 3. **Install Dependencies**
+
    ```powershell
    ./build-tools/Build-FocusGameDeck.ps1 -Install
    ```
 
 4. **Test Installation**
+
    ```powershell
    ./src/Invoke-FocusGameDeck.ps1 --version
    ```
@@ -80,6 +86,7 @@ This method is for developers and advanced users who want full source code acces
 ### Quick Setup with GUI (Recommended)
 
 1. **Launch Configuration Editor**
+
    ```cmd
    Focus-Game-Deck-Config-Editor.exe
    ```
@@ -102,6 +109,7 @@ If you prefer to edit configuration files directly:
    - Script version: `config/config.json`
 
 2. **Edit Configuration**
+
    ```json
    {
      "language": "en-US",
@@ -116,6 +124,7 @@ If you prefer to edit configuration files directly:
    ```
 
 3. **Validate Configuration**
+
    ```powershell
    .\test\Test-ConfigValidation.ps1
    ```
@@ -145,13 +154,18 @@ If you prefer to edit configuration files directly:
    - Default port: 4455
 
 3. **Update Focus Game Deck Configuration**
+
    ```json
    "integrations": {
      "obs": {
-       "enabled": true,
-       "host": "localhost",
-       "port": 4455,
-       "password": "your-password"
+       "path": "C:/Program Files/obs-studio/bin/64bit/obs64.exe",
+       "processName": "obs64",
+       "websocket": {
+         "host": "localhost",
+         "port": 4455,
+         "password": "your-password"
+       },
+       "replayBuffer": true
      }
    }
    ```
@@ -162,6 +176,7 @@ If you prefer to edit configuration files directly:
    - Discord Settings → Advanced → Developer Mode: ON
 
 2. **Configure Rich Presence**
+
    ```json
    "integrations": {
      "discord": {
@@ -181,6 +196,7 @@ If you prefer to edit configuration files directly:
 **Problem**: "Execution of scripts is disabled on this system"
 
 **Solution**:
+
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
@@ -190,6 +206,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 **Problem**: Antivirus software blocks the executable
 
 **Solution**:
+
 1. Add Focus Game Deck folder to antivirus exclusions
 2. Verify digital signature to confirm authenticity
 3. Download from official GitHub releases only
@@ -199,6 +216,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 **Problem**: Application cannot find config.json
 
 **Solution**:
+
 1. Ensure config.json is in the same directory as the executable
 2. Run the configuration editor to generate a new config file
 3. Check file permissions
@@ -208,6 +226,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 **Problem**: Steam games are not automatically detected
 
 **Solution**:
+
 1. Verify Steam is installed and running
 2. Check Steam library paths in configuration
 3. Ensure games are installed and visible in Steam library

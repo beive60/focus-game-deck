@@ -78,10 +78,10 @@ class ConfigValidator {
             $this.Errors += "Steam path is required in 'paths.steam'"
         }
 
-        # Validate OBS path if present
-        if ($this.Config.paths.obs) {
-            if (-not (Test-Path $this.Config.paths.obs)) {
-                $this.Warnings += "OBS path does not exist: '$($this.Config.paths.obs)'"
+        # Validate OBS path if present (now in integrations.obs.path)
+        if ($this.Config.integrations.obs.path) {
+            if (-not (Test-Path $this.Config.integrations.obs.path)) {
+                $this.Warnings += "OBS path does not exist: '$($this.Config.integrations.obs.path)'"
             }
         }
     }
@@ -239,33 +239,33 @@ class ConfigValidator {
             return
         }
 
-        # Validate OBS path
-        if (-not $this.Config.paths.obs) {
-            $this.Errors += "OBS is used but 'paths.obs' is not configured"
-        }
-
-        # Validate OBS configuration section
-        if (-not $this.Config.obs) {
-            $this.Errors += "OBS is used but 'obs' configuration section is missing"
+        # Validate OBS integration exists
+        if (-not $this.Config.integrations.obs) {
+            $this.Errors += "OBS is used but 'integrations.obs' configuration section is missing"
             return
         }
 
+        # Validate OBS path
+        if (-not $this.Config.integrations.obs.path) {
+            $this.Errors += "OBS is used but 'integrations.obs.path' is not configured"
+        }
+
         # Validate WebSocket configuration
-        if (-not $this.Config.obs.websocket) {
+        if (-not $this.Config.integrations.obs.websocket) {
             $this.Errors += "OBS WebSocket configuration is missing"
         } else {
-            if (-not $this.Config.obs.websocket.host) {
+            if (-not $this.Config.integrations.obs.websocket.host) {
                 $this.Warnings += "OBS WebSocket host not specified, using default 'localhost'"
             }
 
-            if (-not $this.Config.obs.websocket.port) {
+            if (-not $this.Config.integrations.obs.websocket.port) {
                 $this.Warnings += "OBS WebSocket port not specified, using default 4455"
             }
         }
 
         # Validate replay buffer setting
-        if ($this.Config.obs.PSObject.Properties.Name -contains "replayBuffer") {
-            if ($this.Config.obs.replayBuffer -isnot [bool]) {
+        if ($this.Config.integrations.obs.PSObject.Properties.Name -contains "replayBuffer") {
+            if ($this.Config.integrations.obs.replayBuffer -isnot [bool]) {
                 $this.Warnings += "OBS replayBuffer should be a boolean value (true/false)"
             }
         }

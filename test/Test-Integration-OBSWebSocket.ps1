@@ -58,8 +58,8 @@ if (-not (Test-Path $configPath)) {
 $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
 # Check for OBS configuration
-if (-not $config.obs) {
-    Write-Host "Error: 'obs' configuration is missing in config.json"
+if (-not $config.integrations.obs) {
+    Write-Host "Error: 'integrations.obs' configuration is missing in config.json"
     exit 1
 }
 
@@ -95,15 +95,15 @@ Write-Host "Loading OBSManager module from: $obsManagerPath"
 Write-Host "`n--- Starting OBS WebSocket Connection Test ---"
 Write-Host "Testing OBSManager module functionality"
 Write-Host "OBS Config:"
-Write-Host "  Host: $($config.obs.websocket.host)"
-Write-Host "  Port: $($config.obs.websocket.port)"
-Write-Host "  Password: $(if ($config.obs.websocket.password) { '***' } else { '(not set)' })"
+Write-Host "  Host: $($config.integrations.obs.websocket.host)"
+Write-Host "  Port: $($config.integrations.obs.websocket.port)"
+Write-Host "  Password: $(if ($config.integrations.obs.websocket.password) { '***' } else { '(not set)' })"
 Write-Host ""
 
 try {
     # Create OBSManager instance
     Write-Host "Creating OBSManager instance..."
-    $obsManager = New-OBSManager -OBSConfig $config.obs -Messages $messages
+    $obsManager = New-OBSManager -OBSConfig $config.integrations.obs -Messages $messages
 
     if (-not $obsManager) {
         Write-Host "Error: Failed to create OBSManager instance"
@@ -122,7 +122,7 @@ try {
         Write-Host "OBS WebSocket connection and authentication successful!"
 
         # Optional: Test replay buffer commands if enabled
-        if ($config.obs.replayBuffer) {
+        if ($config.integrations.obs.replayBuffer) {
             Write-Host "`nTesting Replay Buffer commands..."
 
             Write-Host "  Starting Replay Buffer..."

@@ -1,21 +1,11 @@
 {
     "language": "",
-    "obs": {
-        "websocket": {
-            "host": "127.0.0.1",
-            "port": 4455,
-            "password": ""
-        },
-        "replayBuffer": true
-    },
     "managedApps": {
         "_order": [
             "noWinKey",
             "autoHotkey",
             "clibor",
-            "luna",
-            "vtubeStudio",
-            "discord"
+            "luna"
         ],
         "noWinKey": {
             "path": "C:/Apps/NoWinKey/NoWinKey.exe",
@@ -52,42 +42,6 @@
             "gameStartAction": "stop-process",
             "gameEndAction": "none",
             "arguments": ""
-        },
-        "vtubeStudio": {
-            "path": "",
-            "processName": "VTube Studio",
-            "gameStartAction": "start-vtube-studio",
-            "gameEndAction": "stop-vtube-studio",
-            "arguments": "",
-            "steamPath": "",
-            "websocket": {
-                "host": "localhost",
-                "port": 8001,
-                "enabled": false
-            }
-        },
-        "discord": {
-            "path": "%LOCALAPPDATA%/Discord/app-*/Discord.exe",
-            "processName": "Discord",
-            "gameStartAction": "set-discord-gaming-mode",
-            "gameEndAction": "restore-discord-normal",
-            "arguments": "",
-            "terminationMethod": "graceful",
-            "gracefulTimeoutMs": 8000,
-            "_comment": "Discord might be in a call or saving settings, so a longer timeout with 'graceful' mode is recommended",
-            "discord": {
-                "statusOnGameStart": "dnd",
-                "statusOnGameEnd": "online",
-                "disableOverlay": true,
-                "customPresence": {
-                    "enabled": false,
-                    "state": "Focus Gaming Mode"
-                },
-                "rpc": {
-                    "enabled": true,
-                    "applicationId": ""
-                }
-            }
         }
     },
     "games": {
@@ -164,8 +118,61 @@
     "paths": {
         "steam": "C:/Program Files (x86)/Steam/steam.exe",
         "epic": "C:/Program Files (x86)/Epic Games/Launcher/Portal/Binaries/Win32/EpicGamesLauncher.exe",
-        "riot": "C:/Riot Games/Riot Client/RiotClientServices.exe",
-        "obs": "C:/Program Files/obs-studio/bin/64bit/obs64.exe"
+        "riot": "C:/Riot Games/Riot Client/RiotClientServices.exe"
+    },
+    "integrations": {
+        "obs": {
+            "path": "C:/Program Files/obs-studio/bin/64bit/obs64.exe",
+            "processName": "obs64",
+            "gameStartAction": "none",
+            "gameEndAction": "none",
+            "arguments": "",
+            "terminationMethod": "graceful",
+            "gracefulTimeoutMs": 5000,
+            "websocket": {
+                "host": "127.0.0.1",
+                "port": 4455,
+                "password": ""
+            },
+            "replayBuffer": true,
+            "_comment": "OBS Studio integration settings"
+        },
+        "discord": {
+            "path": "%LOCALAPPDATA%/Discord/app-*/Discord.exe",
+            "processName": "Discord",
+            "gameStartAction": "none",
+            "gameEndAction": "none",
+            "arguments": "",
+            "terminationMethod": "graceful",
+            "gracefulTimeoutMs": 8000,
+            "_comment": "Discord might be in a call or saving settings, so a longer timeout with 'graceful' mode is recommended",
+            "discord": {
+                "statusOnGameStart": "dnd",
+                "statusOnGameEnd": "online",
+                "disableOverlay": true,
+                "customPresence": {
+                    "enabled": false,
+                    "state": "Focus Gaming Mode"
+                },
+                "rpc": {
+                    "enabled": true,
+                    "applicationId": ""
+                }
+            }
+        },
+        "vtubeStudio": {
+            "path": "",
+            "processName": "VTube Studio",
+            "gameStartAction": "none",
+            "gameEndAction": "none",
+            "arguments": "",
+            "steamPath": "",
+            "websocket": {
+                "host": "localhost",
+                "port": 8001,
+                "enabled": false
+            }
+        }
     },
     "logging": {
         "level": "Info",
