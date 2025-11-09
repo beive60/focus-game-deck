@@ -881,9 +881,8 @@
             # Save current data to config object
             Save-UIDataToConfig
 
-            # Write to file
-            $configJson = $this.stateManager.ConfigData | ConvertTo-Json -Depth 10
-            Set-Content -Path $script:ConfigPath -Value $configJson -Encoding UTF8
+            # Write to file with 4-space indentation
+            Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
 
             # Update original config and clear modified flag
             Save-OriginalConfig
@@ -1160,9 +1159,8 @@
             # Save current game data
             Save-CurrentGameData
 
-            # Write to file
-            $configJson = $this.stateManager.ConfigData | ConvertTo-Json -Depth 10
-            Set-Content -Path $script:ConfigPath -Value $configJson -Encoding UTF8
+            # Write to file with 4-space indentation
+            Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
 
             # Update original config and clear modified flag
             Save-OriginalConfig
@@ -1202,9 +1200,8 @@
                 $this.stateManager.ConfigData.appsToManage = $appsToManage
             }
 
-            # Write to file
-            $configJson = $this.stateManager.ConfigData | ConvertTo-Json -Depth 10
-            Set-Content -Path $script:ConfigPath -Value $configJson -Encoding UTF8
+            # Write to file with 4-space indentation
+            Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
 
             # Update original config and clear modified flag
             Save-OriginalConfig
@@ -1228,9 +1225,8 @@
             # Save global settings data
             Save-GlobalSettingsData
 
-            # Write to file
-            $configJson = $this.stateManager.ConfigData | ConvertTo-Json -Depth 10
-            Set-Content -Path $script:ConfigPath -Value $configJson -Encoding UTF8
+            # Write to file with 4-space indentation
+            Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
 
             # Update original config and clear modified flag
             Save-OriginalConfig

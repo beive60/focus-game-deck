@@ -228,7 +228,7 @@
             Write-Host "DEBUG: SaveOriginalConfig started"
 
             if ($this.ConfigData) {
-                $this.OriginalConfigData = $this.ConfigData | ConvertTo-Json -Depth 10
+                $this.OriginalConfigData = ConvertTo-Json4Space -InputObject $this.ConfigData -Depth 10
                 Write-Verbose "Original configuration saved for change tracking"
                 Write-Host "DEBUG: Original config saved successfully"
             } else {
