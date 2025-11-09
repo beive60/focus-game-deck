@@ -37,10 +37,13 @@ $script:AutoDetectButtonMappings = @{
 
 # Save and action buttons
 $script:ActionButtonMappings = @{
-    "SaveGameSettingsButton"   = "saveButton"
-    "SaveManagedAppsButton"    = "saveButton"
-    "SaveGlobalSettingsButton" = "saveButton"
-    "GenerateLaunchersButton"  = "generateLaunchers"
+    "SaveGameSettingsButton"        = "saveButton"
+    "SaveManagedAppsButton"         = "saveButton"
+    "SaveGlobalSettingsButton"      = "saveButton"
+    "SaveOBSSettingsButton"         = "saveButton"
+    "SaveDiscordSettingsButton"     = "saveButton"
+    "SaveVTubeStudioSettingsButton" = "saveButton"
+    "GenerateLaunchersButton"       = "generateLaunchers"
 }
 
 # List movement buttons
@@ -107,6 +110,9 @@ $script:TabMappings = @{
     "GameLauncherTab"   = "gameLauncherTabHeader"
     "GamesTab"          = "gamesTabHeader"
     "ManagedAppsTab"    = "managedAppsTabHeader"
+    "OBSTab"            = "obsTabHeader"
+    "DiscordTab"        = "discordTabHeader"
+    "VTubeStudioTab"    = "vtubestudioTabHeader"
     "GlobalSettingsTab" = "globalSettingsTabHeader"
 }
 

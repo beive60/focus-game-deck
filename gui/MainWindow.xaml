@@ -534,7 +534,7 @@
                                         Margin="0,0,0,10"/>
 
                                     <StackPanel Orientation="Horizontal"
-                                            Margin="0,5">
+                                                Margin="0,5">
                                         <CheckBox
                                             x:Name="UseOBSIntegrationCheckBox"
                                             Content="OBS Studio"
@@ -552,7 +552,7 @@
                                     </StackPanel>
 
                                     <StackPanel Orientation="Horizontal"
-                                            Margin="0,5">
+                                                Margin="0,5">
                                         <CheckBox
                                             x:Name="UseDiscordIntegrationCheckBox"
                                             Content="Discord"
@@ -570,7 +570,7 @@
                                     </StackPanel>
 
                                     <StackPanel Orientation="Horizontal"
-                                            Margin="0,5">
+                                                Margin="0,5">
                                         <CheckBox
                                             x:Name="UseVTubeStudioIntegrationCheckBox"
                                             Content="VTube Studio"
@@ -1199,38 +1199,38 @@
                                         Margin="0,5"/>
 
                                     <StackPanel Orientation="Horizontal"
-                                            Margin="0,10,0,5">
+                                                Margin="0,10,0,5">
                                         <Label Content="ゲーム開始時:"
-                                                Width="120"/>
+                                               Width="120"/>
                                         <ComboBox x:Name="DiscordStatusOnStartCombo"
-                                                Width="200">
+                                                  Width="200">
                                             <ComboBoxItem Content="オンライン"
-                                                    Tag="online"/>
+                                                          Tag="online"/>
                                             <ComboBoxItem Content="取り込み中 (DND)"
-                                                    Tag="dnd"
-                                                    IsSelected="True"/>
+                                                          Tag="dnd"
+                                                          IsSelected="True"/>
                                             <ComboBoxItem Content="退席中"
-                                                    Tag="idle"/>
+                                                          Tag="idle"/>
                                             <ComboBoxItem Content="オフライン表示"
-                                                    Tag="invisible"/>
+                                                          Tag="invisible"/>
                                         </ComboBox>
                                     </StackPanel>
 
                                     <StackPanel Orientation="Horizontal"
-                                            Margin="0,5">
+                                                Margin="0,5">
                                         <Label Content="ゲーム終了時:"
-                                                Width="120"/>
+                                               Width="120"/>
                                         <ComboBox x:Name="DiscordStatusOnEndCombo"
-                                                Width="200">
+                                                  Width="200">
                                             <ComboBoxItem Content="オンライン"
-                                                    Tag="online"
-                                                    IsSelected="True"/>
+                                                          Tag="online"
+                                                          IsSelected="True"/>
                                             <ComboBoxItem Content="取り込み中 (DND)"
-                                                    Tag="dnd"/>
+                                                          Tag="dnd"/>
                                             <ComboBoxItem Content="退席中"
-                                                    Tag="idle"/>
+                                                          Tag="idle"/>
                                             <ComboBoxItem Content="オフライン表示"
-                                                    Tag="invisible"/>
+                                                          Tag="invisible"/>
                                         </ComboBox>
                                     </StackPanel>
 
@@ -1251,9 +1251,9 @@
                                         Content="Rich Presenceを有効化"
                                         Margin="0,5"/>
                                     <StackPanel Orientation="Horizontal"
-                                            Margin="0,10,0,5">
+                                                Margin="0,10,0,5">
                                         <Label Content="Application ID:"
-                                                Width="120"/>
+                                               Width="120"/>
                                         <TextBox
                                             x:Name="DiscordRPCAppIdTextBox"
                                             Width="300"
@@ -1312,7 +1312,7 @@
             <!-- =============================================== -->
             <TabItem
                 x:Name="VTubeStudioTab"
-                Header="[VTUBE_STUDIO_TAB_HEADER]">
+                Header="[VTUBESTUDIOTAB_HEADER]">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
@@ -1356,9 +1356,9 @@
                                         Margin="0,5"/>
 
                                     <StackPanel Orientation="Horizontal"
-                                            Margin="0,10,0,5">
+                                                Margin="0,10,0,5">
                                         <Label Content="ホスト:"
-                                                Width="80"/>
+                                               Width="80"/>
                                         <TextBox
                                             x:Name="VTubeHostTextBox"
                                             Width="200"
@@ -1367,9 +1367,9 @@
                                     </StackPanel>
 
                                     <StackPanel Orientation="Horizontal"
-                                            Margin="0,5">
+                                                Margin="0,5">
                                         <Label Content="ポート:"
-                                                Width="80"/>
+                                               Width="80"/>
                                         <TextBox
                                             x:Name="VTubePortTextBox"
                                             Width="100"
@@ -1391,9 +1391,9 @@
                                         IsChecked="True"
                                         Margin="0,5"/>
                                     <StackPanel Orientation="Horizontal"
-                                            Margin="20,5,0,5">
+                                                Margin="20,5,0,5">
                                         <Label Content="Steam AppID:"
-                                                Width="100"/>
+                                               Width="100"/>
                                         <TextBox
                                             x:Name="VTubeSteamAppIdTextBox"
                                             Width="150"

@@ -273,7 +273,7 @@
 <!-- =============================================== -->
 <TabItem
     x:Name="VTubeStudioTab"
-    Header="[VTUBE_STUDIO_TAB_HEADER]">
+    Header="[VTUBESTUDIOTAB_HEADER]">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
