@@ -15,14 +15,15 @@ class OBSManager {
         $this.Messages = $messages
         $this.HostName = $obsConfig.websocket.host
         $this.Port = $obsConfig.websocket.port
-        
+
         if ($obsConfig.websocket.password) {
             try {
-                # Try to convert from encrypted string (new format)
-                $this.Password = $obsConfig.websocket.password | ConvertTo-SecureString
-            }
-            catch {
+                # Try to decrypt DPAPI-encrypted password (new format)
+                $this.Password = ConvertTo-SecureString -String $obsConfig.websocket.password
+                Write-Verbose "OBSManager: Loaded encrypted password from config"
+            } catch {
                 # Fall back to plain text conversion (old format for backward compatibility)
+                Write-Verbose "OBSManager: Password is not encrypted, treating as plain text"
                 $this.Password = $this.ConvertToSecureStringSafe($obsConfig.websocket.password)
                 Write-Warning "Plain text password detected in config - consider using the GUI to re-save with encryption"
             }
@@ -33,8 +34,7 @@ class OBSManager {
     [System.Security.SecureString] ConvertToSecureStringSafe([string] $PlainText) {
         try {
             return ConvertTo-SecureString -String $PlainText -AsPlainText -Force
-        }
-        catch {
+        } catch {
             Write-Warning "ConvertTo-SecureString failed, attempting alternative method: $_"
             $secureString = New-Object System.Security.SecureString
             foreach ($char in $PlainText.ToCharArray()) {
@@ -52,22 +52,21 @@ class OBSManager {
         $buffer = New-Object byte[] 8192
         $segment = New-Object ArraySegment[byte](, $buffer)
         $resultText = ""
-        
+
         try {
             while ($this.WebSocket.State -eq "Open") {
                 $receiveTask = $this.WebSocket.ReceiveAsync($segment, $cts.Token)
                 $receiveTask.Wait()
                 $result = $receiveTask.Result
-                
+
                 $resultText += [System.Text.Encoding]::UTF8.GetString($buffer, 0, $result.Count)
-                
+
                 if ($result.EndOfMessage) {
                     break
                 }
             }
             return $resultText | ConvertFrom-Json
-        }
-        catch {
+        } catch {
             Write-Host ($this.Messages.error_receive_websocket -f $_)
             return $null
         }
@@ -79,10 +78,10 @@ class OBSManager {
             $this.WebSocket = New-Object System.Net.WebSockets.ClientWebSocket
             $cts = New-Object System.Threading.CancellationTokenSource
             $cts.CancelAfter(5000)
-            
+
             $uri = "ws://$($this.HostName):$($this.Port)"
             $this.WebSocket.ConnectAsync($uri, $cts.Token).Wait()
-            
+
             if ($this.WebSocket.State -ne [System.Net.WebSockets.WebSocketState]::Open) {
                 Write-Host $this.Messages.failed_connect_obs
                 return $false
@@ -130,8 +129,7 @@ class OBSManager {
 
             Write-Host $this.Messages.obs_auth_successful
             return $true
-        }
-        catch {
+        } catch {
             Write-Host ($this.Messages.obs_connection_error -f $_)
             return $false
         }
@@ -151,16 +149,15 @@ class OBSManager {
                 $plainTextPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
                 [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
             }
-            
+
             # Calculate secret = base64(sha256(password + salt))
             $secretBytes = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($plainTextPassword + $salt))
             $secret = [System.Convert]::ToBase64String($secretBytes)
-            
+
             # Calculate authResponse = base64(sha256(secret + challenge))
             $authResponseBytes = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($secret + $challenge))
             return [System.Convert]::ToBase64String($authResponseBytes)
-        }
-        catch {
+        } catch {
             Write-Warning "Authentication calculation failed: $_"
             return $null
         }
@@ -185,12 +182,11 @@ class OBSManager {
                     requestId = $requestId
                 }
             }
-            
+
             $this.SendMessage($command)
             Write-Host $this.Messages.obs_replay_buffer_started
             return $true
-        }
-        catch {
+        } catch {
             Write-Host ($this.Messages.replay_buffer_start_error -f $_)
             return $false
         }
@@ -211,8 +207,7 @@ class OBSManager {
             $this.SendMessage($command)
             Write-Host $this.Messages.obs_replay_buffer_stopped
             return $true
-        }
-        catch {
+        } catch {
             Write-Host ($this.Messages.replay_buffer_stop_error -f $_)
             return $false
         }
@@ -223,11 +218,9 @@ class OBSManager {
         if ($this.WebSocket) {
             try {
                 $this.WebSocket.CloseAsync([System.Net.WebSockets.WebSocketCloseStatus]::NormalClosure, "Disconnecting", [System.Threading.CancellationToken]::None).Wait()
-            }
-            catch {
+            } catch {
                 # Ignore errors during disconnect
-            }
-            finally {
+            } finally {
                 $this.WebSocket.Dispose()
                 $this.WebSocket = $null
             }
@@ -254,7 +247,7 @@ class OBSManager {
         try {
             Start-Process -FilePath $obsPath
             Write-Host $this.Messages.starting_obs
-            
+
             # Wait for OBS startup
             $retryCount = 0
             $maxRetries = 10
@@ -262,18 +255,16 @@ class OBSManager {
                 Start-Sleep -Seconds 2
                 $retryCount++
             }
-            
+
             if ($this.IsOBSRunning()) {
                 Write-Host $this.Messages.obs_startup_complete
                 Start-Sleep -Seconds 5  # Wait for WebSocket server startup
                 return $true
-            }
-            else {
+            } else {
                 Write-Host $this.Messages.obs_startup_failed
                 return $false
             }
-        }
-        catch {
+        } catch {
             Write-Host "Failed to start OBS: $_"
             return $false
         }
@@ -285,11 +276,11 @@ function New-OBSManager {
     param(
         [Parameter(Mandatory = $true)]
         [object] $OBSConfig,
-        
+
         [Parameter(Mandatory = $true)]
         [object] $Messages
     )
-    
+
     return [OBSManager]::new($OBSConfig, $Messages)
 }
 

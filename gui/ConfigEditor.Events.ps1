@@ -64,7 +64,7 @@
 
         # Enable only if either action is "stop-process"
         $shouldEnable = ($startAction -eq "stop-process") -or ($endAction -eq "stop-process")
-        
+
         # Store current selection before disabling
         if (-not $shouldEnable -and $terminationMethodCombo.SelectedItem) {
             # Save the current selection
@@ -75,14 +75,14 @@
             $terminationMethodCombo.SelectedIndex = -1
         } elseif ($shouldEnable -and $terminationMethodCombo.SelectedIndex -eq -1) {
             # Restore saved selection when re-enabled, or use default
-            $savedValue = if ($script:SavedTerminationMethod) { 
-                $script:SavedTerminationMethod 
-            } else { 
-                "auto" 
+            $savedValue = if ($script:SavedTerminationMethod) {
+                $script:SavedTerminationMethod
+            } else {
+                "auto"
             }
             $this.SetComboBoxSelectionByTag($terminationMethodCombo, $savedValue)
         }
-        
+
         $terminationMethodCombo.IsEnabled = $shouldEnable
         if ($gracefulTimeoutTextBox) {
             $gracefulTimeoutTextBox.IsEnabled = $shouldEnable
@@ -110,50 +110,50 @@
             $gameData = $this.stateManager.ConfigData.games.$selectedGame
 
             Write-Verbose "HandleGameSelectionChanged: Selected game = $selectedGame"
-            
+
             if ($gameData) {
                 Write-Verbose "HandleGameSelectionChanged: Game data found for $selectedGame"
                 Write-Verbose "  - name: $($gameData.name)"
                 Write-Verbose "  - platform: $($gameData.platform)"
                 Write-Verbose "  - steamAppId: $($gameData.steamAppId)"
                 Write-Verbose "  - executablePath: $($gameData.executablePath)"
-                
+
                 # Load game details into form
                 $gameNameTextBox = $script:Window.FindName("GameNameTextBox")
-                if ($gameNameTextBox) { 
+                if ($gameNameTextBox) {
                     # Check for both 'name' and 'displayName' for compatibility
                     $displayName = if ($gameData.name) { $gameData.name } elseif ($gameData.displayName) { $gameData.displayName } else { "" }
                     $gameNameTextBox.Text = $displayName
                     Write-Verbose "  Set GameNameTextBox: $displayName"
                 }
-                
+
                 $gameIdTextBox = $script:Window.FindName("GameIdTextBox")
-                if ($gameIdTextBox) { 
+                if ($gameIdTextBox) {
                     $appId = if ($gameData.appId) { $gameData.appId } else { $selectedGame }
                     $gameIdTextBox.Text = $appId
                     Write-Verbose "  Set GameIdTextBox: $appId"
                 }
-                
+
                 $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
-                if ($steamAppIdTextBox) { 
-                    $steamAppIdTextBox.Text = if ($gameData.steamAppId) { $gameData.steamAppId } else { "" } 
+                if ($steamAppIdTextBox) {
+                    $steamAppIdTextBox.Text = if ($gameData.steamAppId) { $gameData.steamAppId } else { "" }
                     Write-Verbose "  Set SteamAppIdTextBox: $($gameData.steamAppId)"
                 }
-                
+
                 $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
-                if ($epicGameIdTextBox) { 
+                if ($epicGameIdTextBox) {
                     $epicGameIdTextBox.Text = if ($gameData.epicGameId) { $gameData.epicGameId } else { "" }
                     Write-Verbose "  Set EpicGameIdTextBox: $($gameData.epicGameId)"
                 }
-                
+
                 $riotGameIdTextBox = $script:Window.FindName("RiotGameIdTextBox")
-                if ($riotGameIdTextBox) { 
+                if ($riotGameIdTextBox) {
                     $riotGameIdTextBox.Text = if ($gameData.riotGameId) { $gameData.riotGameId } else { "" }
                     Write-Verbose "  Set RiotGameIdTextBox: $($gameData.riotGameId)"
                 }
-                
+
                 $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
-                if ($executablePathTextBox) { 
+                if ($executablePathTextBox) {
                     $executablePathTextBox.Text = if ($gameData.executablePath) { $gameData.executablePath } else { "" }
                     Write-Verbose "  Set ExecutablePathTextBox: $($gameData.executablePath)"
                 }
@@ -168,14 +168,14 @@
                 # Set platform
                 $platformCombo = $script:Window.FindName("PlatformComboBox")
                 # Normalize platform value: "direct" is an alias for "standalone"
-                $platform = if ($gameData.platform) { 
+                $platform = if ($gameData.platform) {
                     if ($gameData.platform -eq "direct") { "standalone" } else { $gameData.platform }
-                } else { 
-                    "standalone" 
+                } else {
+                    "standalone"
                 }
-                
+
                 Write-Verbose "  Platform: $platform (original: $($gameData.platform))"
-                
+
                 $platformFound = $false
                 for ($i = 0; $i -lt $platformCombo.Items.Count; $i++) {
                     if ($platformCombo.Items[$i].Tag -eq $platform) {
@@ -185,7 +185,7 @@
                         break
                     }
                 }
-                
+
                 if (-not $platformFound) {
                     Write-Warning "Platform '$platform' not found in ComboBox, defaulting to standalone (index 0)"
                     $platformCombo.SelectedIndex = 0
@@ -218,7 +218,7 @@
                     $script:SavedTerminationMethod = $terminationMethod
                     $this.SetComboBoxSelectionByTag($terminationMethodCombo, $terminationMethod)
                 }
-                
+
                 if ($gracefulTimeoutTextBox) {
                     $gracefulTimeoutTextBox.Text = if ($gameData.managedApps.gracefulTimeout) { $gameData.managedApps.gracefulTimeout.ToString() } else { "5" }
                 }
@@ -235,7 +235,7 @@
                 # Enable buttons
                 $duplicateGameButton = $script:Window.FindName("DuplicateGameButton")
                 if ($duplicateGameButton) { $duplicateGameButton.IsEnabled = $true }
-                
+
                 $deleteGameButton = $script:Window.FindName("DeleteGameButton")
                 if ($deleteGameButton) { $deleteGameButton.IsEnabled = $true }
 
@@ -247,22 +247,22 @@
         } else {
             # No game selected, clear the form
             $script:CurrentGameId = ""
-            
+
             $gameNameTextBox = $script:Window.FindName("GameNameTextBox")
             if ($gameNameTextBox) { $gameNameTextBox.Text = "" }
-            
+
             $gameIdTextBox = $script:Window.FindName("GameIdTextBox")
             if ($gameIdTextBox) { $gameIdTextBox.Text = "" }
-            
+
             $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
             if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = "" }
-            
+
             $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
             if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
-            
+
             $riotGameIdTextBox = $script:Window.FindName("RiotGameIdTextBox")
             if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
-            
+
             $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
             if ($executablePathTextBox) { $executablePathTextBox.Text = "" }
 
@@ -295,7 +295,7 @@
             # Disable buttons
             $duplicateGameButton = $script:Window.FindName("DuplicateGameButton")
             if ($duplicateGameButton) { $duplicateGameButton.IsEnabled = $false }
-            
+
             $deleteGameButton = $script:Window.FindName("DeleteGameButton")
             if ($deleteGameButton) { $deleteGameButton.IsEnabled = $false }
 
@@ -314,7 +314,7 @@
             $appData = $this.stateManager.ConfigData.managedApps.$selectedApp
 
             Write-Verbose "HandleAppSelectionChanged: Selected app = $selectedApp"
-            
+
             if ($appData) {
                 Write-Verbose "HandleAppSelectionChanged: App data found for $selectedApp"
                 Write-Verbose "  - displayName: $($appData.displayName)"
@@ -324,13 +324,14 @@
                 Write-Verbose "  - gameEndAction: $($appData.gameEndAction)"
                 Write-Verbose "  - terminationMethod: $($appData.terminationMethod)"
                 Write-Verbose "  - gracefulTimeoutMs: $($appData.gracefulTimeoutMs)"
-                
+
                 # Load app details into form
                 $appIdTextBox = $script:Window.FindName("AppIdTextBox")
                 if ($appIdTextBox) {
-                    $appIdTextBox.Text = if ($appData.displayName) { $appData.displayName } else { $selectedApp }
+                    # Display the actual app ID (config key), not the display name
+                    $appIdTextBox.Text = $selectedApp
                 }
-                
+
                 $appProcessNameTextBox = $script:Window.FindName("AppProcessNameTextBox")
                 if ($appProcessNameTextBox) {
                     # Check for both processName (singular) and processNames (plural) for compatibility
@@ -352,40 +353,40 @@
                 # NOTE: Managed Apps tab uses same ComboBox controls as Game tab
                 $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
                 $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
-                
+
                 if ($gameStartActionCombo) {
                     # Check for both startAction and gameStartAction for compatibility
-                    $appStartAction = if ($appData.startAction) { 
-                        $appData.startAction 
-                    } elseif ($appData.gameStartAction) { 
-                        $appData.gameStartAction 
-                    } else { 
-                        "start-process" 
+                    $appStartAction = if ($appData.startAction) {
+                        $appData.startAction
+                    } elseif ($appData.gameStartAction) {
+                        $appData.gameStartAction
+                    } else {
+                        "start-process"
                     }
                     $this.SetComboBoxSelectionByTag($gameStartActionCombo, $appStartAction)
                 }
-                
+
                 if ($gameEndActionCombo) {
                     # Check for both endAction and gameEndAction for compatibility
-                    $appEndAction = if ($appData.endAction) { 
-                        $appData.endAction 
-                    } elseif ($appData.gameEndAction) { 
-                        $appData.gameEndAction 
-                    } else { 
-                        "stop-process" 
+                    $appEndAction = if ($appData.endAction) {
+                        $appData.endAction
+                    } elseif ($appData.gameEndAction) {
+                        $appData.gameEndAction
+                    } else {
+                        "stop-process"
                     }
                     $this.SetComboBoxSelectionByTag($gameEndActionCombo, $appEndAction)
                 }
-                
+
                 $appPathTextBox = $script:Window.FindName("AppPathTextBox")
                 if ($appPathTextBox) {
                     # Check for both executablePath and path for compatibility
-                    $pathValue = if ($appData.executablePath) { 
-                        $appData.executablePath 
-                    } elseif ($appData.path) { 
-                        $appData.path 
-                    } else { 
-                        "" 
+                    $pathValue = if ($appData.executablePath) {
+                        $appData.executablePath
+                    } elseif ($appData.path) {
+                        $appData.path
+                    } else {
+                        ""
                     }
                     $appPathTextBox.Text = $pathValue
                 }
@@ -404,17 +405,17 @@
                     $script:SavedTerminationMethod = $appTerminationMethod
                     $this.SetComboBoxSelectionByTag($terminationMethodCombo, $appTerminationMethod)
                 }
-                
+
                 $gracefulTimeoutTextBox = $script:Window.FindName("GracefulTimeoutTextBox")
                 if ($gracefulTimeoutTextBox) {
                     # Check for both gracefulTimeout and gracefulTimeoutMs for compatibility
-                    $timeoutValue = if ($appData.gracefulTimeout) { 
-                        $appData.gracefulTimeout.ToString() 
-                    } elseif ($appData.gracefulTimeoutMs) { 
+                    $timeoutValue = if ($appData.gracefulTimeout) {
+                        $appData.gracefulTimeout.ToString()
+                    } elseif ($appData.gracefulTimeoutMs) {
                         # Convert milliseconds to seconds for display
                         ([int]($appData.gracefulTimeoutMs / 1000)).ToString()
-                    } else { 
-                        "5" 
+                    } else {
+                        "5"
                     }
                     $gracefulTimeoutTextBox.Text = $timeoutValue
                 }
@@ -422,7 +423,7 @@
                 # Enable buttons
                 $duplicateAppButton = $script:Window.FindName("DuplicateAppButton")
                 if ($duplicateAppButton) { $duplicateAppButton.IsEnabled = $true }
-                
+
                 $deleteAppButton = $script:Window.FindName("DeleteAppButton")
                 if ($deleteAppButton) { $deleteAppButton.IsEnabled = $true }
 
@@ -437,32 +438,32 @@
         } else {
             # No app selected, clear the form
             $script:CurrentAppId = ""
-            
+
             $appIdTextBox = $script:Window.FindName("AppIdTextBox")
             if ($appIdTextBox) { $appIdTextBox.Text = "" }
-            
+
             $appProcessNameTextBox = $script:Window.FindName("AppProcessNameTextBox")
             if ($appProcessNameTextBox) { $appProcessNameTextBox.Text = "" }
-            
+
             $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
             if ($gameStartActionCombo) { $this.SetComboBoxSelectionByTag($gameStartActionCombo, "start-process") }
-            
+
             $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
             if ($gameEndActionCombo) { $this.SetComboBoxSelectionByTag($gameEndActionCombo, "stop-process") }
-            
+
             $appPathTextBox = $script:Window.FindName("AppPathTextBox")
             if ($appPathTextBox) { $appPathTextBox.Text = "" }
-            
+
             $terminationMethodCombo = $script:Window.FindName("TerminationMethodCombo")
             if ($terminationMethodCombo) { $this.SetComboBoxSelectionByTag($terminationMethodCombo, "auto") }
-            
+
             $gracefulTimeoutTextBox = $script:Window.FindName("GracefulTimeoutTextBox")
             if ($gracefulTimeoutTextBox) { $gracefulTimeoutTextBox.Text = "5" }
 
             # Disable buttons
             $duplicateAppButton = $script:Window.FindName("DuplicateAppButton")
             if ($duplicateAppButton) { $duplicateAppButton.IsEnabled = $false }
-            
+
             $deleteAppButton = $script:Window.FindName("DeleteAppButton")
             if ($deleteAppButton) { $deleteAppButton.IsEnabled = $false }
 
@@ -1181,8 +1182,14 @@
     # Handle save managed apps
     [void] HandleSaveManagedApps() {
         try {
+            # Store the current app ID before saving (it might change during save)
+            $currentAppId = $script:CurrentAppId
+
             # Save current app data
             Save-CurrentAppData
+
+            # Get the potentially updated app ID after save
+            $updatedAppId = $script:CurrentAppId
 
             # Save global apps to manage settings
             $appsToManagePanel = $script:Window.FindName("AppsToManagePanel")
@@ -1207,8 +1214,22 @@
             Save-OriginalConfig
             $script:HasUnsavedChanges = $false
 
-            # Refresh managed apps list to reflect any changes
+            # Refresh managed apps list to reflect any changes (including ID changes)
             $this.uiManager.UpdateManagedAppsList($this.stateManager.ConfigData)
+
+            # Restore selection to the updated app ID
+            if ($updatedAppId) {
+                $managedAppsList = $script:Window.FindName("ManagedAppsList")
+                if ($managedAppsList) {
+                    for ($i = 0; $i -lt $managedAppsList.Items.Count; $i++) {
+                        if ($managedAppsList.Items[$i] -eq $updatedAppId) {
+                            $managedAppsList.SelectedIndex = $i
+                            Write-Verbose "Restored selection to app: $updatedAppId"
+                            break
+                        }
+                    }
+                }
+            }
 
             Show-SafeMessage -Key "managedAppsSaved" -MessageType "Information"
             Write-Verbose "Managed apps settings saved"

@@ -314,7 +314,7 @@ class ConfigEditorUI {
         try {
             # Initialize game action combos FIRST before loading data
             $this.InitializeGameActionCombos()
-            
+
             # Initialize managed app action combos
             $this.InitializeManagedAppActionCombos()
 
@@ -839,7 +839,56 @@ class ConfigEditorUI {
 
                 $obsPasswordBox = $self.Window.FindName("ObsPasswordBox")
                 if ($obsPasswordBox -and $ConfigData.obs.websocket) {
-                    $obsPasswordBox.Password = $ConfigData.obs.websocket.password
+                    if ($ConfigData.obs.websocket.password) {
+                        # Password is saved - show placeholder text using a helper TextBlock
+                        # Set Tag to indicate password exists (will be used during save)
+                        $obsPasswordBox.Tag = "SAVED"
+
+                        # Clear the PasswordBox but mark it as having a saved password
+                        $obsPasswordBox.Password = ""
+
+                        # Create helper TextBlock for placeholder effect if it doesn't exist
+                        $passwordPanel = $obsPasswordBox.Parent
+                        if ($passwordPanel) {
+                            $existingPlaceholder = $passwordPanel.Children | Where-Object { $_.Name -eq "ObsPasswordPlaceholder" }
+                            if (-not $existingPlaceholder) {
+                                $placeholderText = New-Object System.Windows.Controls.TextBlock
+                                $placeholderText.Name = "ObsPasswordPlaceholder"
+                                $placeholderText.Text = $self.Messages.passwordSavedPlaceholder
+                                $placeholderText.Foreground = [System.Windows.Media.Brushes]::Gray
+                                $placeholderText.IsHitTestVisible = $false
+                                $placeholderText.Margin = New-Object System.Windows.Thickness(10, 0, 0, 0)
+                                $placeholderText.VerticalAlignment = [System.Windows.VerticalAlignment]::Center
+
+                                # Set Grid position to match PasswordBox
+                                [System.Windows.Controls.Grid]::SetRow($placeholderText, [System.Windows.Controls.Grid]::GetRow($obsPasswordBox))
+                                [System.Windows.Controls.Grid]::SetColumn($placeholderText, [System.Windows.Controls.Grid]::GetColumn($obsPasswordBox))
+
+                                $passwordPanel.Children.Add($placeholderText) | Out-Null
+
+                                # Add event handler to hide placeholder when user types
+                                $obsPasswordBox.add_PasswordChanged({
+                                        param($sender, $e)
+                                        $placeholder = $sender.Parent.Children | Where-Object { $_.Name -eq "ObsPasswordPlaceholder" }
+                                        if ($placeholder) {
+                                            $placeholder.Visibility = if ($sender.Password.Length -eq 0) {
+                                                [System.Windows.Visibility]::Visible
+                                            } else {
+                                                [System.Windows.Visibility]::Collapsed
+                                            }
+                                        }
+                                        # Clear SAVED tag when user starts typing
+                                        if ($sender.Password.Length -gt 0) {
+                                            $sender.Tag = $null
+                                        }
+                                    }.GetNewClosure())
+                            }
+                        }
+                    } else {
+                        # No password saved
+                        $obsPasswordBox.Password = ""
+                        $obsPasswordBox.Tag = $null
+                    }
                 }
 
                 $replayBufferCheckBox = $self.Window.FindName("ReplayBufferCheckBox")
@@ -1024,7 +1073,7 @@ class ConfigEditorUI {
     .SYNOPSIS
     Initializes the managed app action combo boxes with available actions.
     .DESCRIPTION
-    Populates the AppStartActionCombo, AppEndActionCombo, and AppTerminationMethodCombo 
+    Populates the AppStartActionCombo, AppEndActionCombo, and AppTerminationMethodCombo
     with predefined action options using localized ComboBoxItems.
     .OUTPUTS
     None
@@ -1034,12 +1083,12 @@ class ConfigEditorUI {
     [void]InitializeManagedAppActionCombos() {
         try {
             Write-Verbose "InitializeManagedAppActionCombos: Starting initialization"
-            
+
             # NOTE: Managed Apps tab uses the same ComboBox names as Game tab
             # GameStartActionCombo, GameEndActionCombo, TerminationMethodCombo
             # These are already initialized by InitializeGameActionCombos()
             # So this method is actually redundant but kept for clarity and future extensibility
-            
+
             Write-Verbose "Managed app action combo boxes use same controls as game tab - already initialized"
         } catch {
             Write-Warning "Failed to initialize managed app action combo boxes: $($_.Exception.Message)"

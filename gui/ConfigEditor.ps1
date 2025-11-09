@@ -197,7 +197,7 @@ function Initialize-ConfigEditor {
                 Write-Host "[DEBUG] ConfigEditor: Manual close required"
             }
         }
-        
+
         Write-Host "[INFO] ConfigEditor: Initialization started"
 
         # Step 1: Load WPF assemblies FIRST
@@ -383,27 +383,25 @@ function Initialize-ConfigEditor {
             # Debug mode: Auto-close after specified seconds
             if ($DebugMode -and $AutoCloseSeconds -gt 0) {
                 Write-Host "[DEBUG] ConfigEditor: Window will auto-close in $AutoCloseSeconds seconds"
-                
+
                 # Create a timer to auto-close the window
                 $timer = New-Object System.Windows.Threading.DispatcherTimer
                 $timer.Interval = [TimeSpan]::FromSeconds($AutoCloseSeconds)
                 $timer.Add_Tick({
-                    Write-Host "[DEBUG] ConfigEditor: Auto-closing window"
-                    $window.Close()
-                    $timer.Stop()
-                })
+                        Write-Host "[DEBUG] ConfigEditor: Auto-closing window"
+                        $window.Close()
+                        $timer.Stop()
+                    })
                 $timer.Start()
-                
+
                 # Show window and wait
                 $dialogResult = $window.ShowDialog()
                 Write-Host "[DEBUG] ConfigEditor: Window closed with result - $dialogResult"
-            }
-            elseif ($DebugMode) {
+            } elseif ($DebugMode) {
                 Write-Host "[DEBUG] ConfigEditor: Showing window - Manual close required"
                 $dialogResult = $window.ShowDialog()
                 Write-Host "[DEBUG] ConfigEditor: Window closed with result - $dialogResult"
-            }
-            else {
+            } else {
                 # Normal mode: Use ShowDialog() which properly handles the window lifecycle
                 $dialogResult = $window.ShowDialog()
                 Write-Host "[DEBUG] ConfigEditor: Window closed with result - $dialogResult"
@@ -563,7 +561,7 @@ function Update-AppsToManagePanel {
 
         # Get order if available
         $appOrder = if ($managedApps._order) { $managedApps._order } else { @() }
-        
+
         # Create checkboxes for each managed app
         $appsToDisplay = if ($appOrder.Count -gt 0) {
             $appOrder | Where-Object { $_ -ne "_order" -and $managedApps.PSObject.Properties[$_] }
@@ -580,17 +578,17 @@ function Update-AppsToManagePanel {
             $checkbox.Tag = $appId
             $checkbox.IsChecked = $appsToManage -contains $appId
             $checkbox.Margin = "0,2"
-            
+
             # Add event handler for checkbox state changes
             $checkbox.add_Checked({
-                param($sender, $e)
-                Set-ConfigModified
-            }.GetNewClosure())
-            
+                    param($sender, $e)
+                    Set-ConfigModified
+                }.GetNewClosure())
+
             $checkbox.add_Unchecked({
-                param($sender, $e)
-                Set-ConfigModified
-            }.GetNewClosure())
+                    param($sender, $e)
+                    Set-ConfigModified
+                }.GetNewClosure())
 
             $appsToManagePanel.Children.Add($checkbox) | Out-Null
             Write-Verbose "Added checkbox for app: $appId (checked: $($checkbox.IsChecked))"
@@ -604,38 +602,38 @@ function Update-AppsToManagePanel {
 
 function Update-PlatformFields {
     param([string]$Platform)
-    
+
     try {
         Write-Verbose "Update-PlatformFields called for platform: $Platform"
-        
+
         # Get all platform-specific UI elements
         $steamAppIdLabelPanel = $script:Window.FindName("SteamAppIdLabelPanel")
         $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
-        
+
         $epicGameIdLabelPanel = $script:Window.FindName("EpicGameIdLabelPanel")
         $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
-        
+
         $riotGameIdLabelPanel = $script:Window.FindName("RiotGameIdLabelPanel")
         $riotGameIdTextBox = $script:Window.FindName("RiotGameIdTextBox")
-        
+
         $executablePathLabelPanel = $script:Window.FindName("ExecutablePathLabelPanel")
         $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
         $browseExecutablePathButton = $script:Window.FindName("BrowseExecutablePathButton")
-        
+
         # Hide all platform-specific fields first
         if ($steamAppIdLabelPanel) { $steamAppIdLabelPanel.Visibility = [System.Windows.Visibility]::Collapsed }
         if ($steamAppIdTextBox) { $steamAppIdTextBox.Visibility = [System.Windows.Visibility]::Collapsed }
-        
+
         if ($epicGameIdLabelPanel) { $epicGameIdLabelPanel.Visibility = [System.Windows.Visibility]::Collapsed }
         if ($epicGameIdTextBox) { $epicGameIdTextBox.Visibility = [System.Windows.Visibility]::Collapsed }
-        
+
         if ($riotGameIdLabelPanel) { $riotGameIdLabelPanel.Visibility = [System.Windows.Visibility]::Collapsed }
         if ($riotGameIdTextBox) { $riotGameIdTextBox.Visibility = [System.Windows.Visibility]::Collapsed }
-        
+
         if ($executablePathLabelPanel) { $executablePathLabelPanel.Visibility = [System.Windows.Visibility]::Collapsed }
         if ($executablePathTextBox) { $executablePathTextBox.Visibility = [System.Windows.Visibility]::Collapsed }
         if ($browseExecutablePathButton) { $browseExecutablePathButton.Visibility = [System.Windows.Visibility]::Collapsed }
-        
+
         # Show fields based on platform
         switch ($Platform) {
             "steam" {
@@ -666,7 +664,7 @@ function Update-PlatformFields {
                 if ($browseExecutablePathButton) { $browseExecutablePathButton.Visibility = [System.Windows.Visibility]::Visible }
             }
         }
-        
+
         Write-Verbose "Platform fields updated successfully for: $Platform"
     } catch {
         Write-Warning "Failed to update platform fields: $($_.Exception.Message)"
@@ -695,8 +693,80 @@ function Update-TerminationSettingsVisibility {
 }
 
 function Save-CurrentGameData {
-    Write-Verbose "Save-CurrentGameData called (stub)"
-    # TODO: Implement or remove in future refactoring
+    if (-not $script:CurrentGameId) {
+        Write-Verbose "No game selected, skipping save"
+        return
+    }
+
+    if (-not $script:StateManager -or -not $script:StateManager.ConfigData.games) {
+        Write-Warning "StateManager or games not available"
+        return
+    }
+
+    # Get the current game data
+    $gameData = $script:StateManager.ConfigData.games.$script:CurrentGameId
+    if (-not $gameData) {
+        Write-Warning "Game data not found for: $script:CurrentGameId"
+        return
+    }
+
+    Write-Verbose "Saving game data for: $script:CurrentGameId"
+
+    # Save game name
+    $gameNameTextBox = $script:Window.FindName("GameNameTextBox")
+    if ($gameNameTextBox) {
+        $gameData.name = $gameNameTextBox.Text
+    }
+
+    # Save process name
+    $processNameTextBox = $script:Window.FindName("ProcessNameTextBox")
+    if ($processNameTextBox) {
+        $gameData.processName = $processNameTextBox.Text
+    }
+
+    # Save platform
+    $platformCombo = $script:Window.FindName("PlatformComboBox")
+    if ($platformCombo -and $platformCombo.SelectedItem) {
+        $gameData.platform = $platformCombo.SelectedItem.Tag
+    }
+
+    # Save Steam AppID
+    $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
+    if ($steamAppIdTextBox) {
+        $gameData.steamAppId = $steamAppIdTextBox.Text
+    }
+
+    # Save Epic GameID
+    $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
+    if ($epicGameIdTextBox) {
+        $gameData.epicGameId = $epicGameIdTextBox.Text
+    }
+
+    # Save Riot GameID
+    $riotGameIdTextBox = $script:Window.FindName("RiotGameIdTextBox")
+    if ($riotGameIdTextBox) {
+        $gameData.riotGameId = $riotGameIdTextBox.Text
+    }
+
+    # Save executable path (normalize backslashes to forward slashes)
+    $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
+    if ($executablePathTextBox) {
+        $gameData.executablePath = $executablePathTextBox.Text -replace '\\', '/'
+    }
+
+    # Save managed apps list
+    $appsToManagePanel = $script:Window.FindName("AppsToManagePanel")
+    if ($appsToManagePanel) {
+        $appsToManage = @()
+        foreach ($child in $appsToManagePanel.Children) {
+            if ($child -is [System.Windows.Controls.CheckBox] -and $child.IsChecked) {
+                $appsToManage += $child.Tag
+            }
+        }
+        $gameData.appsToManage = $appsToManage
+    }
+
+    Write-Verbose "Game data saved successfully for: $script:CurrentGameId"
 }
 
 function Save-CurrentAppData {
@@ -710,19 +780,43 @@ function Save-CurrentAppData {
         return
     }
 
+    # Get the user-entered app ID from the text box
+    # This is the actual config key, not the display name
+    $appIdTextBox = $script:Window.FindName("AppIdTextBox")
+    $newAppId = if ($appIdTextBox -and $appIdTextBox.Text) {
+        $appIdTextBox.Text.Trim()
+    } else {
+        $script:CurrentAppId
+    }
+
+    # Validate the new app ID
+    if ([string]::IsNullOrWhiteSpace($newAppId)) {
+        Write-Warning "App ID cannot be empty"
+        Show-SafeMessage -Key "appIdCannotBeEmpty" -MessageType "Warning"
+        return
+    }
+
+    # Check if the app ID has changed
+    $idChanged = ($newAppId -ne $script:CurrentAppId)
+
+    # If ID changed, validate that the new ID is not already in use
+    if ($idChanged) {
+        if ($script:StateManager.ConfigData.managedApps.PSObject.Properties.Name -contains $newAppId) {
+            Write-Warning "App ID '$newAppId' is already in use. Cannot rename."
+            Show-SafeMessage -Key "appIdAlreadyExists" -MessageType "Warning" -FormatArgs @($newAppId)
+            return
+        }
+        Write-Verbose "App ID changed from '$script:CurrentAppId' to '$newAppId'"
+    }
+
+    # Get the existing app data
     $appData = $script:StateManager.ConfigData.managedApps.$script:CurrentAppId
     if (-not $appData) {
         Write-Warning "App data not found for: $script:CurrentAppId"
         return
     }
 
-    Write-Verbose "Saving app data for: $script:CurrentAppId"
-
-    # Save display name
-    $appIdTextBox = $script:Window.FindName("AppIdTextBox")
-    if ($appIdTextBox) {
-        $appData.displayName = $appIdTextBox.Text
-    }
+    Write-Verbose "Saving app data for: $script:CurrentAppId $(if ($idChanged) { "-> $newAppId" })"
 
     # Save process name
     $appProcessNameTextBox = $script:Window.FindName("AppProcessNameTextBox")
@@ -735,10 +829,10 @@ function Save-CurrentAppData {
         }
     }
 
-    # Save path
+    # Save path (normalize backslashes to forward slashes)
     $appPathTextBox = $script:Window.FindName("AppPathTextBox")
     if ($appPathTextBox) {
-        $appData.path = $appPathTextBox.Text
+        $appData.path = $appPathTextBox.Text -replace '\\', '/'
     }
 
     # Save arguments
@@ -776,17 +870,315 @@ function Save-CurrentAppData {
         }
     }
 
+    # If the app ID changed, we need to:
+    # 1. Add the data under the new ID
+    # 2. Remove the old ID entry
+    # 3. Update the _order array
+    # 4. Update references in games that use this app
+    if ($idChanged) {
+        Write-Verbose "Performing app ID rename operation"
+
+        # Add data under new ID
+        $script:StateManager.ConfigData.managedApps | Add-Member -NotePropertyName $newAppId -NotePropertyValue $appData -Force
+
+        # Remove old ID entry
+        $script:StateManager.ConfigData.managedApps.PSObject.Properties.Remove($script:CurrentAppId)
+
+        # Update the _order array
+        if ($script:StateManager.ConfigData.managedApps._order) {
+            $orderIndex = $script:StateManager.ConfigData.managedApps._order.IndexOf($script:CurrentAppId)
+            if ($orderIndex -ge 0) {
+                $script:StateManager.ConfigData.managedApps._order[$orderIndex] = $newAppId
+            }
+        }
+
+        # Update references in games' appsToManage arrays
+        if ($script:StateManager.ConfigData.games) {
+            foreach ($gameId in $script:StateManager.ConfigData.games.PSObject.Properties.Name) {
+                if ($gameId -eq '_order') { continue }
+
+                $game = $script:StateManager.ConfigData.games.$gameId
+                if ($game.appsToManage -and ($game.appsToManage -contains $script:CurrentAppId)) {
+                    $appIndex = $game.appsToManage.IndexOf($script:CurrentAppId)
+                    if ($appIndex -ge 0) {
+                        $game.appsToManage[$appIndex] = $newAppId
+                        Write-Verbose "Updated app reference in game '$gameId'"
+                    }
+                }
+            }
+        }
+
+        # Update the current app ID reference
+        $script:CurrentAppId = $newAppId
+
+        Write-Verbose "App ID renamed successfully to: $newAppId"
+    }
+
+    # Mark as modified
+    $script:StateManager.SetModified()
+
     Write-Verbose "App data saved for: $script:CurrentAppId"
 }
 
+<#
+.SYNOPSIS
+    Encrypts a plain text password using Windows Data Protection API (DPAPI).
+
+.DESCRIPTION
+    Uses ConvertTo-SecureString and ConvertFrom-SecureString to encrypt passwords
+    with DPAPI. The encrypted string can only be decrypted by the same user on
+    the same machine.
+
+.PARAMETER PlainTextPassword
+    The plain text password to encrypt.
+
+.OUTPUTS
+    String - The encrypted password string.
+#>
+function Protect-Password {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$PlainTextPassword
+    )
+
+    try {
+        if ([string]::IsNullOrEmpty($PlainTextPassword)) {
+            return ""
+        }
+
+        # Convert to SecureString, then to encrypted string using DPAPI
+        $secureString = ConvertTo-SecureString -String $PlainTextPassword -AsPlainText -Force
+        $encryptedString = ConvertFrom-SecureString -SecureString $secureString
+
+        return $encryptedString
+    } catch {
+        Write-Warning "Failed to encrypt password: $($_.Exception.Message)"
+        return $PlainTextPassword  # Fallback to plain text if encryption fails
+    }
+}
+
+<#
+.SYNOPSIS
+    Decrypts a DPAPI-encrypted password string.
+
+.DESCRIPTION
+    Uses ConvertTo-SecureString to decrypt DPAPI-encrypted passwords.
+    Supports both encrypted strings and plain text (for backward compatibility).
+
+.PARAMETER EncryptedPassword
+    The encrypted password string to decrypt.
+
+.OUTPUTS
+    String - The decrypted plain text password.
+#>
+function Unprotect-Password {
+    param(
+        [Parameter(Mandatory = $false)]
+        [string]$EncryptedPassword
+    )
+
+    try {
+        if ([string]::IsNullOrEmpty($EncryptedPassword)) {
+            return ""
+        }
+
+        # Try to decrypt as DPAPI-encrypted string
+        try {
+            $secureString = ConvertTo-SecureString -String $EncryptedPassword
+            $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureString)
+            $plainText = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
+            [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+
+            return $plainText
+        } catch {
+            # If decryption fails, assume it's plain text (backward compatibility)
+            Write-Verbose "Password is not encrypted, treating as plain text"
+            return $EncryptedPassword
+        }
+    } catch {
+        Write-Warning "Failed to decrypt password: $($_.Exception.Message)"
+        return ""
+    }
+}
+
 function Save-GlobalSettingsData {
-    Write-Verbose "Save-GlobalSettingsData called (stub)"
-    # TODO: Implement or remove in future refactoring
+    Write-Verbose "Save-GlobalSettingsData: Starting to save global settings"
+
+    try {
+        # Get references to UI controls
+        $obsHostTextBox = $script:Window.FindName("ObsHostTextBox")
+        $obsPortTextBox = $script:Window.FindName("ObsPortTextBox")
+        $obsPasswordBox = $script:Window.FindName("ObsPasswordBox")
+        $replayBufferCheckBox = $script:Window.FindName("ReplayBufferCheckBox")
+        $steamPathTextBox = $script:Window.FindName("SteamPathTextBox")
+        $epicPathTextBox = $script:Window.FindName("EpicPathTextBox")
+        $riotPathTextBox = $script:Window.FindName("RiotPathTextBox")
+        $obsPathTextBox = $script:Window.FindName("ObsPathTextBox")
+        $logRetentionCombo = $script:Window.FindName("LogRetentionCombo")
+        $enableLogNotarizationCheckBox = $script:Window.FindName("EnableLogNotarizationCheckBox")
+
+        # Ensure obs section exists
+        if (-not $script:StateManager.ConfigData.obs) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "obs" -NotePropertyValue @{} -Force
+        }
+
+        # Ensure obs.websocket section exists
+        if (-not $script:StateManager.ConfigData.obs.websocket) {
+            $script:StateManager.ConfigData.obs | Add-Member -NotePropertyName "websocket" -NotePropertyValue @{} -Force
+        }
+
+        # Save OBS websocket settings
+        if ($obsHostTextBox) {
+            if (-not $script:StateManager.ConfigData.obs.websocket.PSObject.Properties["host"]) {
+                $script:StateManager.ConfigData.obs.websocket | Add-Member -NotePropertyName "host" -NotePropertyValue $obsHostTextBox.Text -Force
+            } else {
+                $script:StateManager.ConfigData.obs.websocket.host = $obsHostTextBox.Text
+            }
+            Write-Verbose "Saved OBS host: $($obsHostTextBox.Text)"
+        }
+
+        if ($obsPortTextBox) {
+            $portValue = if ($obsPortTextBox.Text) { [int]$obsPortTextBox.Text } else { 4455 }
+            if (-not $script:StateManager.ConfigData.obs.websocket.PSObject.Properties["port"]) {
+                $script:StateManager.ConfigData.obs.websocket | Add-Member -NotePropertyName "port" -NotePropertyValue $portValue -Force
+            } else {
+                $script:StateManager.ConfigData.obs.websocket.port = $portValue
+            }
+            Write-Verbose "Saved OBS port: $portValue"
+        }
+
+        if ($obsPasswordBox) {
+            # Check if user entered a new password or if we should keep the existing one
+            if ($obsPasswordBox.Password.Length -gt 0) {
+                # User entered a new password - encrypt and save it
+                $encryptedPassword = Protect-Password -PlainTextPassword $obsPasswordBox.Password
+
+                if (-not $script:StateManager.ConfigData.obs.websocket.PSObject.Properties["password"]) {
+                    $script:StateManager.ConfigData.obs.websocket | Add-Member -NotePropertyName "password" -NotePropertyValue $encryptedPassword -Force
+                } else {
+                    $script:StateManager.ConfigData.obs.websocket.password = $encryptedPassword
+                }
+                Write-Verbose "Saved OBS password (encrypted): $('*' * $obsPasswordBox.Password.Length)"
+            } elseif ($obsPasswordBox.Tag -eq "SAVED") {
+                # Password field is empty but Tag indicates password exists - keep existing password
+                Write-Verbose "OBS password unchanged (keeping existing encrypted password)"
+                # No action needed - existing password in config is preserved
+            } else {
+                # Password field is empty and no saved password - clear password
+                if ($script:StateManager.ConfigData.obs.websocket.PSObject.Properties["password"]) {
+                    $script:StateManager.ConfigData.obs.websocket.password = ""
+                }
+                Write-Verbose "OBS password cleared"
+            }
+        }
+
+        # Save OBS replay buffer setting
+        if ($replayBufferCheckBox) {
+            if (-not $script:StateManager.ConfigData.obs.PSObject.Properties["replayBuffer"]) {
+                $script:StateManager.ConfigData.obs | Add-Member -NotePropertyName "replayBuffer" -NotePropertyValue ([bool]$replayBufferCheckBox.IsChecked) -Force
+            } else {
+                $script:StateManager.ConfigData.obs.replayBuffer = [bool]$replayBufferCheckBox.IsChecked
+            }
+            Write-Verbose "Saved replay buffer: $($replayBufferCheckBox.IsChecked)"
+        }
+
+        # Ensure paths section exists
+        if (-not $script:StateManager.ConfigData.paths) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "paths" -NotePropertyValue @{} -Force
+        }
+
+        # Save platform paths (normalize backslashes to forward slashes)
+        if ($steamPathTextBox) {
+            $normalizedPath = $steamPathTextBox.Text -replace '\\', '/'
+            if (-not $script:StateManager.ConfigData.paths.PSObject.Properties["steam"]) {
+                $script:StateManager.ConfigData.paths | Add-Member -NotePropertyName "steam" -NotePropertyValue $normalizedPath -Force
+            } else {
+                $script:StateManager.ConfigData.paths.steam = $normalizedPath
+            }
+            Write-Verbose "Saved Steam path: $normalizedPath"
+        }
+
+        if ($epicPathTextBox) {
+            $normalizedPath = $epicPathTextBox.Text -replace '\\', '/'
+            if (-not $script:StateManager.ConfigData.paths.PSObject.Properties["epic"]) {
+                $script:StateManager.ConfigData.paths | Add-Member -NotePropertyName "epic" -NotePropertyValue $normalizedPath -Force
+            } else {
+                $script:StateManager.ConfigData.paths.epic = $normalizedPath
+            }
+            Write-Verbose "Saved Epic path: $normalizedPath"
+        }
+
+        if ($riotPathTextBox) {
+            $normalizedPath = $riotPathTextBox.Text -replace '\\', '/'
+            if (-not $script:StateManager.ConfigData.paths.PSObject.Properties["riot"]) {
+                $script:StateManager.ConfigData.paths | Add-Member -NotePropertyName "riot" -NotePropertyValue $normalizedPath -Force
+            } else {
+                $script:StateManager.ConfigData.paths.riot = $normalizedPath
+            }
+            Write-Verbose "Saved Riot path: $normalizedPath"
+        }
+
+        if ($obsPathTextBox) {
+            $normalizedPath = $obsPathTextBox.Text -replace '\\', '/'
+            if (-not $script:StateManager.ConfigData.paths.PSObject.Properties["obs"]) {
+                $script:StateManager.ConfigData.paths | Add-Member -NotePropertyName "obs" -NotePropertyValue $normalizedPath -Force
+            } else {
+                $script:StateManager.ConfigData.paths.obs = $normalizedPath
+            }
+            Write-Verbose "Saved OBS path: $normalizedPath"
+        }
+
+        # Ensure logging section exists
+        if (-not $script:StateManager.ConfigData.logging) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "logging" -NotePropertyValue @{} -Force
+        }
+
+        # Save log retention setting
+        if ($logRetentionCombo -and $logRetentionCombo.SelectedItem) {
+            $retentionDays = switch ($logRetentionCombo.SelectedItem.Tag) {
+                "7" { 7 }
+                "30" { 30 }
+                "180" { 180 }
+                "unlimited" { 0 }
+                default { 90 }
+            }
+
+            if (-not $script:StateManager.ConfigData.logging.PSObject.Properties["logRetentionDays"]) {
+                $script:StateManager.ConfigData.logging | Add-Member -NotePropertyName "logRetentionDays" -NotePropertyValue $retentionDays -Force
+            } else {
+                $script:StateManager.ConfigData.logging.logRetentionDays = $retentionDays
+            }
+            Write-Verbose "Saved log retention days: $retentionDays"
+        }
+
+        # Save log notarization setting
+        if ($enableLogNotarizationCheckBox) {
+            if (-not $script:StateManager.ConfigData.logging.PSObject.Properties["enableNotarization"]) {
+                $script:StateManager.ConfigData.logging | Add-Member -NotePropertyName "enableNotarization" -NotePropertyValue ([bool]$enableLogNotarizationCheckBox.IsChecked) -Force
+            } else {
+                $script:StateManager.ConfigData.logging.enableNotarization = [bool]$enableLogNotarizationCheckBox.IsChecked
+            }
+            Write-Verbose "Saved log notarization: $($enableLogNotarizationCheckBox.IsChecked)"
+        }
+
+        # Mark configuration as modified
+        $script:StateManager.SetModified()
+
+        Write-Verbose "Save-GlobalSettingsData: Global settings saved successfully"
+
+    } catch {
+        Write-Error "Failed to save global settings data: $($_.Exception.Message)"
+        throw
+    }
 }
 
 function Save-OriginalConfig {
-    Write-Verbose "Save-OriginalConfig called (stub)"
-    # TODO: Implement or remove in future refactoring
+    if ($script:StateManager) {
+        $script:StateManager.SaveOriginalConfig()
+        Write-Verbose "Original configuration saved"
+    } else {
+        Write-Warning "StateManager not available, cannot save original configuration"
+    }
 }
 
 function Set-ConfigModified {
