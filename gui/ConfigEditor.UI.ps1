@@ -16,59 +16,59 @@ class ConfigEditorUI {
     # Constructor
     ConfigEditorUI([ConfigEditorState]$stateManager, [hashtable]$allMappings, [ConfigEditorLocalization]$localization) {
         try {
-            Write-Host "DEBUG: ConfigEditorUI constructor started"
+            Write-Host "[DEBUG] ConfigEditorUI: Constructor started"
             $this.State = $stateManager
             $this.Mappings = $allMappings
             $this.Messages = $localization.Messages
             $this.CurrentLanguage = $localization.CurrentLanguage
-            Write-Host "DEBUG: State manager, Mappings, and Localization assigned successfully"
+            Write-Host "[DEBUG] ConfigEditorUI: State manager, mappings, and localization assigned"
 
             # Load XAML
-            Write-Host "DEBUG: [1/6] Loading XAML file..."
+            Write-Host "[DEBUG] ConfigEditorUI: Step 1/6 - Loading XAML file"
             $xamlPath = Join-Path $PSScriptRoot "MainWindow.xaml"
             if (-not (Test-Path $xamlPath)) {
                 throw "XAML file not found: $xamlPath"
             }
             $xamlContent = Get-Content $xamlPath -Raw -Encoding UTF8
-            Write-Host "DEBUG: [2/6] XAML content loaded, length: $($xamlContent.Length)"
+            Write-Host "[DEBUG] ConfigEditorUI: Step 2/6 - XAML content loaded - Length: $($xamlContent.Length)"
 
             # Parse XAML
-            Write-Host "DEBUG: [3/6] Parsing XAML..."
+            Write-Host "[DEBUG] ConfigEditorUI: Step 3/6 - Parsing XAML"
             $xmlReader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
             $this.Window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
             $xmlReader.Close()
-            Write-Host "DEBUG: [4/6] XAML parsed successfully"
+            Write-Host "[DEBUG] ConfigEditorUI: Step 4/6 - XAML parsed successfully"
 
             if ($null -eq $this.Window) {
                 throw "Failed to create Window from XAML"
             }
 
             # Set up proper window closing behavior
-            Write-Host "DEBUG: [5/6] Adding window event handlers..."
+            Write-Host "[DEBUG] ConfigEditorUI: Step 5/6 - Adding window event handlers"
             $selfRef = $this
             $this.Window.add_Closed({
                     param($sender, $e)
-                    Write-Host "DEBUG: Window closed event triggered"
+                    Write-Host "[DEBUG] ConfigEditorUI: Window closed event triggered"
                     try {
                         $selfRef.Cleanup()
                     } catch {
-                        Write-Warning "Error during cleanup: $($_.Exception.Message)"
+                        Write-Host "[WARNING] ConfigEditorUI: Error during cleanup - $($_.Exception.Message)"
                     }
                 }.GetNewClosure())
 
             # Initialize other components
-            Write-Host "DEBUG: [6/6] Initializing other components..."
+            Write-Host "[DEBUG] ConfigEditorUI: Step 6/6 - Initializing other components"
             $this.InitializeComponents()
             # NOTE: InitializeGameActionCombos moved to LoadDataToUI to avoid premature SelectedIndex setting
-            Write-Host "DEBUG: ConfigEditorUI constructor completed successfully"
+            Write-Host "[OK] ConfigEditorUI: Constructor completed successfully"
 
         } catch {
-            Write-Host "DEBUG: ConfigEditorUI constructor failed: $($_.Exception.Message)"
-            Write-Host "DEBUG: Exception type: $($_.Exception.GetType().Name)"
+            Write-Host "[ERROR] ConfigEditorUI: Constructor failed - $($_.Exception.Message)"
+            Write-Host "[DEBUG] ConfigEditorUI: Exception type - $($_.Exception.GetType().Name)"
             if ($_.Exception.InnerException) {
-                Write-Host "DEBUG: Inner exception: $($_.Exception.InnerException.Message)"
+                Write-Host "[DEBUG] ConfigEditorUI: Inner exception - $($_.Exception.InnerException.Message)"
             }
-            Write-Host "DEBUG: Stack trace: $($_.Exception.StackTrace)"
+            Write-Host "[DEBUG] ConfigEditorUI: Stack trace - $($_.Exception.StackTrace)"
             throw
         }
     }
@@ -79,16 +79,16 @@ class ConfigEditorUI {
     #>
     [void]InitializeComponents() {
         try {
-            Write-Host "DEBUG: InitializeComponents started"
+            Write-Host "[DEBUG] ConfigEditorUI: InitializeComponents started"
             $this.CurrentGameId = ""
             $this.CurrentAppId = ""
             $this.CurrentLanguage = "en"
             $this.HasUnsavedChanges = $false
             # messages are now passed in constructor
             $this.Window.DataContext = $this
-            Write-Host "DEBUG: InitializeComponents completed"
+            Write-Host "[OK] ConfigEditorUI: InitializeComponents completed"
         } catch {
-            Write-Host "DEBUG: InitializeComponents failed: $($_.Exception.Message)"
+            Write-Host "[ERROR] ConfigEditorUI: InitializeComponents failed - $($_.Exception.Message)"
             throw
         }
     }
@@ -780,7 +780,7 @@ class ConfigEditorUI {
     #>
     [void]Cleanup() {
         try {
-            Write-Host "DEBUG: Starting UI cleanup"
+            Write-Host "[DEBUG] ConfigEditorUI: Starting UI cleanup"
 
             # Clear references to prevent circular dependencies
             if ($this.State) {
@@ -797,9 +797,9 @@ class ConfigEditorUI {
             [System.GC]::WaitForPendingFinalizers()
             [System.GC]::Collect()
 
-            Write-Host "DEBUG: UI cleanup completed"
+            Write-Host "[OK] ConfigEditorUI: UI cleanup completed"
         } catch {
-            Write-Warning "Error during UI cleanup: $($_.Exception.Message)"
+            Write-Host "[WARNING] ConfigEditorUI: Error during UI cleanup - $($_.Exception.Message)"
         }
     }
 
@@ -1101,7 +1101,7 @@ class ConfigEditorUI {
             $item.Tag = $tag
             $comboBox.Items.Add($item) | Out-Null
         } catch {
-            Write-host "Error adding ComboBox item: $($_.Exception.Message)"
+            Write-Host "[ERROR] ConfigEditorUI: Error adding ComboBox item - $($_.Exception.Message)"
         }
     }
 
@@ -1124,7 +1124,7 @@ class ConfigEditorUI {
                 $this.InitializeGameActionCombos($selectedPlatform, $currentPermissions)
             }
         } catch {
-            Write-host "Error handling platform selection change: $($_.Exception.Message)"
+            Write-Host "[ERROR] ConfigEditorUI: Error handling platform selection change - $($_.Exception.Message)"
         }
     }
 

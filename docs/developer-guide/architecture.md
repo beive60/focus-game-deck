@@ -428,7 +428,145 @@ Write-Verbose "Detailed operation information" -Verbose
 - **Consistency**: Messages should rely on clear text indicators (like `[OK]`, `[ERROR]`) rather than color coding
 - **Cross-Platform**: Console color support varies across different PowerShell hosts and operating systems
 
-##### 3. Safe Character Alternatives
+##### 3. Console Message Format Standards
+
+**Standardized message format ensures consistency and readability across all project scripts.**
+
+**Message Format Template:**
+
+```text
+[LEVEL] Component: Action description
+[LEVEL] Component: Action description - Additional context
+```
+
+**Format Rules:**
+
+1. **Severity Level Prefix** (Required):
+   - Use uppercase with square brackets
+   - Must be one of: `[OK]`, `[ERROR]`, `[WARNING]`, `[INFO]`, `[DEBUG]`
+
+2. **Component Identifier** (Required):
+   - Identifies the module or function generating the message
+   - Use PascalCase or module name
+   - Follow with colon and space
+
+3. **Action Description** (Required):
+   - Clear, concise description of the action or status
+   - Use present or past tense consistently
+
+4. **Additional Context** (Optional):
+   - Provide details after a dash separator
+   - Include relevant values, paths, or error details
+
+**Examples:**
+
+```powershell
+# Success messages
+Write-Host "[OK] ConfigEditor: Configuration saved successfully"
+Write-Host "[OK] OBSManager: Connected to OBS Studio"
+
+# Error messages
+Write-Host "[ERROR] GameLauncher: Failed to start game - Process not found"
+Write-Host "[ERROR] FileOperation: Cannot read config.json - File does not exist"
+
+# Warning messages
+Write-Host "[WARNING] VTubeStudio: Connection timeout - Retrying in 5 seconds"
+Write-Host "[WARNING] ConfigValidator: Deprecated setting detected - Please update config.json"
+
+# Informational messages
+Write-Host "[INFO] BuildSystem: Starting compilation process"
+Write-Host "[INFO] TestRunner: Running 15 test cases"
+
+# Debug messages (only shown when debug mode enabled)
+Write-Host "[DEBUG] WebSocket: Sending authentication request - Token length: 32"
+Write-Host "[DEBUG] StateManager: Current state transition: Idle -> Starting"
+```
+
+**Multi-line Messages:**
+
+For complex output, use consistent indentation:
+
+```powershell
+Write-Host "[INFO] SystemCheck: Validating environment"
+Write-Host "  - PowerShell version: 7.4.0"
+Write-Host "  - ps2exe module: Installed"
+Write-Host "  - Configuration file: Valid"
+```
+
+**Progress Indicators:**
+
+For long-running operations, use standardized progress format:
+
+```powershell
+Write-Host "[INFO] BuildProcess: Step 1/5 - Installing dependencies"
+Write-Host "[INFO] BuildProcess: Step 2/5 - Compiling source files"
+# ...
+```
+
+**Helper Function Implementation:**
+
+To ensure consistency, consider creating a helper function:
+
+```powershell
+<#
+.SYNOPSIS
+    Writes a standardized console message.
+
+.PARAMETER Level
+    Message severity level: OK, ERROR, WARNING, INFO, DEBUG
+
+.PARAMETER Component
+    Component or module name generating the message
+
+.PARAMETER Message
+    Main message content
+
+.PARAMETER Details
+    Optional additional details or context
+
+.EXAMPLE
+    Write-ConsoleMessage -Level "OK" -Component "ConfigEditor" -Message "Configuration saved"
+    Write-ConsoleMessage -Level "ERROR" -Component "GameLauncher" -Message "Failed to start" -Details "Process not found"
+#>
+function Write-ConsoleMessage {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("OK", "ERROR", "WARNING", "INFO", "DEBUG")]
+        [string]$Level,
+
+        [Parameter(Mandatory = $false)]
+        [string]$Component,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Message,
+
+        [Parameter(Mandatory = $false)]
+        [string]$Details
+    )
+
+    $output = "[$Level]"
+    
+    if ($Component) {
+        $output += " ${Component}:"
+    }
+    
+    $output += " $Message"
+    
+    if ($Details) {
+        $output += " - $Details"
+    }
+
+    Write-Host $output
+}
+
+# Usage examples
+Write-ConsoleMessage -Level "OK" -Component "ConfigEditor" -Message "Configuration saved successfully"
+Write-ConsoleMessage -Level "ERROR" -Component "GameLauncher" -Message "Failed to start game" -Details "Process not found"
+Write-ConsoleMessage -Level "INFO" -Message "Operation completed"
+```
+
+##### 4. Safe Character Alternatives
 
 | UTF-8 Character | ASCII Alternative | Usage Context |
 |-----------------|-------------------|---------------|

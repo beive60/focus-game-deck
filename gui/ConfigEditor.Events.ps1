@@ -925,32 +925,32 @@
     # Handle check update
     [void] HandleCheckUpdate() {
         try {
-            Write-Host "=== Update Check DEBUG START ==="
+            Write-Host "[DEBUG] ConfigEditorEvents: Update check started"
 
             # Get current version - use global function reference
             $currentVersion = if ($global:GetProjectVersionFunc) {
                 & $global:GetProjectVersionFunc
             } else {
-                Write-Warning "Get-ProjectVersion not available"
+                Write-Host "[WARNING] ConfigEditorEvents: Get-ProjectVersion not available"
                 "Unknown"
             }
-            Write-Host "Current version: $currentVersion"
+            Write-Host "[INFO] ConfigEditorEvents: Current version - $currentVersion"
 
             # Check for updates - use global function reference
             if (-not $global:TestUpdateAvailableFunc) {
-                Write-Warning "Update checker not available"
+                Write-Host "[WARNING] ConfigEditorEvents: Update checker not available"
                 $message = $this.uiManager.GetLocalizedMessage("updateCheckFailed")
                 $title = $this.uiManager.GetLocalizedMessage("updateCheckTitle")
                 [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
                 return
             }
 
-            Write-Host "Checking for updates..."
+            Write-Host "[INFO] ConfigEditorEvents: Checking for updates"
             $updateInfo = & $global:TestUpdateAvailableFunc -CurrentVersion $currentVersion
 
             if ($updateInfo) {
-                Write-Host "Update info received:"
-                Write-Host ($updateInfo | ConvertTo-Json -Depth 3)
+                Write-Host "[DEBUG] ConfigEditorEvents: Update info received"
+                Write-Host "[DEBUG] ConfigEditorEvents: Update details - $($updateInfo | ConvertTo-Json -Depth 3)"
 
                 if ($updateInfo.UpdateAvailable) {
                     # Show update available dialog
@@ -962,10 +962,10 @@
                     if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
                         # Open the release page
                         if ($updateInfo.ReleaseUrl) {
-                            Write-Host "Opening release page: $($updateInfo.ReleaseUrl)"
+                            Write-Host "[INFO] ConfigEditorEvents: Opening release page - $($updateInfo.ReleaseUrl)"
                             Start-Process $updateInfo.ReleaseUrl
                         } else {
-                            Write-Warning "No release URL provided in update info"
+                            Write-Host "[WARNING] ConfigEditorEvents: No release URL provided in update info"
                         }
                     }
                 } else {
@@ -976,7 +976,7 @@
                     [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
                 }
             } else {
-                Write-Warning "No update info received"
+                Write-Host "[WARNING] ConfigEditorEvents: No update info received"
                 # Handle case where update check failed
                 $message = $this.uiManager.GetLocalizedMessage("updateCheckFailed")
                 $title = $this.uiManager.GetLocalizedMessage("updateCheckTitle")
@@ -984,11 +984,10 @@
                 [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
             }
 
-            Write-Host "=== Update Check DEBUG END ==="
+            Write-Host "[OK] ConfigEditorEvents: Update check completed"
 
         } catch {
-            Write-Error "Update check failed: $_"
-            Write-Host "Update check error: $_"
+            Write-Host "[ERROR] ConfigEditorEvents: Update check failed - $($_.Exception.Message)"
 
             # Show error message
             $message = $this.uiManager.GetLocalizedMessage("updateCheckError") -f $_.Exception.Message
@@ -1114,7 +1113,7 @@
             return
         }
 
-        Write-Host "Language changed from '$($this.uiManager.CurrentLanguage)' to '$selectedLanguageCode'"
+        Write-Host "[INFO] ConfigEditorEvents: Language changed from '$($this.uiManager.CurrentLanguage)' to '$selectedLanguageCode'"
 
         # Save the language setting to configuration
         if (-not $this.stateManager.ConfigData.PSObject.Properties["language"]) {
@@ -1136,21 +1135,21 @@
     # Handle window closing
     [void] HandleWindowClosing([System.ComponentModel.CancelEventArgs]$Event) {
         try {
-            Write-Host "DEBUG: HandleWindowClosing called"
+            Write-Host "[DEBUG] ConfigEditorEvents: HandleWindowClosing called"
 
             if ($this.stateManager.TestHasUnsavedChanges()) {
                 $result = Show-SafeMessage -Key "confirmDiscardChanges" -MessageType "Question" -Button "YesNoCancel" -DefaultResult "Cancel"
 
                 if ($result -ne "Yes") {
-                    Write-Host "DEBUG: User cancelled window closing"
+                    Write-Host "[DEBUG] ConfigEditorEvents: User cancelled window closing"
                     $Event.Cancel = $true
                     return
                 }
             }
 
-            Write-Host "DEBUG: Window closing approved"
+            Write-Host "[DEBUG] ConfigEditorEvents: Window closing approved"
         } catch {
-            Write-Warning "Error in HandleWindowClosing: $($_.Exception.Message)"
+            Write-Host "[WARNING] ConfigEditorEvents: Error in HandleWindowClosing - $($_.Exception.Message)"
             # Don't cancel on error - allow window to close
         }
     }
@@ -1323,7 +1322,7 @@
                 return
             }
 
-            Write-Host "Launching game from GUI: $GameId"
+            Write-Host "[INFO] ConfigEditorEvents: Launching game from GUI - $GameId"
 
             # Launch the game using PowerShell - bypass Main.ps1 to prevent recursive ConfigEditor launch
             $process = Start-Process -FilePath "powershell.exe" -ArgumentList @(
@@ -1377,35 +1376,34 @@
     # Handle about dialog
     [void] HandleAbout() {
         try {
-            Write-Host "=== Handle-About DEBUG START ==="
+            Write-Host "[DEBUG] ConfigEditorEvents: About dialog started"
 
             # Get version information - use global function reference
             $version = if ($global:GetProjectVersionFunc) {
                 & $global:GetProjectVersionFunc
             } else {
-                Write-Warning "Get-ProjectVersion not available"
+                Write-Host "[WARNING] ConfigEditorEvents: Get-ProjectVersion not available"
                 "Unknown"
             }
             $buildDate = Get-Date -Format "yyyy-MM-dd"
 
-            Write-Host "Version: $version"
-            Write-Host "Build Date: $buildDate"
+            Write-Host "[INFO] ConfigEditorEvents: Version - $version"
+            Write-Host "[INFO] ConfigEditorEvents: Build Date - $buildDate"
 
             # Create about message
             $aboutMessage = $this.uiManager.GetLocalizedMessage("aboutMessage") -f $version, $buildDate
             $aboutTitle = $this.uiManager.GetLocalizedMessage("aboutTitle")
 
-            Write-Host "About Message: $aboutMessage"
-            Write-Host "About Title: $aboutTitle"
+            Write-Host "[DEBUG] ConfigEditorEvents: About Message - $aboutMessage"
+            Write-Host "[DEBUG] ConfigEditorEvents: About Title - $aboutTitle"
 
             # Show the about dialog
             [System.Windows.MessageBox]::Show($aboutMessage, $aboutTitle, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
 
-            Write-Host "=== Handle-About DEBUG END ==="
+            Write-Host "[OK] ConfigEditorEvents: About dialog completed"
 
         } catch {
-            Write-Error "About dialog failed: $_"
-            Write-Host "About dialog error: $_"
+            Write-Host "[ERROR] ConfigEditorEvents: About dialog error - $($_.Exception.Message)"
         }
     }
 
@@ -1447,7 +1445,7 @@
 
             # Execute the launcher creation script
             $gameIds = $selectedGames -join ","
-            Write-Host "Creating launchers for games: $gameIds"
+            Write-Host "[INFO] ConfigEditorEvents: Creating launchers for games - $gameIds"
 
             try {
                 & $launcherScriptPath -GameIds $gameIds -ConfigPath $script:ConfigPath
@@ -1467,7 +1465,7 @@
     # Register all UI event handlers
     [void] RegisterAll() {
         try {
-            Write-Host "Registering all UI event handlers..."
+            Write-Host "[INFO] ConfigEditorEvents: Registering all UI event handlers"
 
             $self = $this
 
@@ -1475,10 +1473,10 @@
             $this.uiManager.Window.add_Closing({
                     param($sender, $e)
                     try {
-                        Write-Host "DEBUG: Window Closing event fired"
+                        Write-Host "[DEBUG] ConfigEditorEvents: Window Closing event fired"
                         $self.HandleWindowClosing($e)
                     } catch {
-                        Write-Warning "Error in window closing event: $($_.Exception.Message)"
+                        Write-Host "[WARNING] ConfigEditorEvents: Error in window closing event - $($_.Exception.Message)"
                     }
                 }.GetNewClosure())
 
@@ -1542,9 +1540,9 @@
             $this.uiManager.Window.FindName("CheckUpdateMenuItem").add_Click({ $self.HandleCheckUpdate() }.GetNewClosure())
             $this.uiManager.Window.FindName("AboutMenuItem").add_Click({ $self.HandleAbout() }.GetNewClosure())
 
-            Write-Host "All UI event handlers registered successfully."
+            Write-Host "[OK] ConfigEditorEvents: All UI event handlers registered successfully"
         } catch {
-            Write-Error "Failed to register event handlers: $($_.Exception.Message)"
+            Write-Host "[ERROR] ConfigEditorEvents: Failed to register event handlers - $($_.Exception.Message)"
             throw $_
         }
     }
