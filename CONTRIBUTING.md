@@ -187,6 +187,39 @@ function Get-ExampleFunction {
 
 ### Console Output Guidelines
 
+**Standard Message Format:**
+
+All console output must follow this standardized format for consistency:
+
+```text
+[LEVEL] Component: Action description
+[LEVEL] Component: Action description - Additional context
+```
+
+**Severity Levels:**
+
+- `[OK]` - Success messages
+- `[ERROR]` - Error messages
+- `[WARNING]` - Warning messages
+- `[INFO]` - Informational messages
+- `[DEBUG]` - Debug messages (only shown in debug mode)
+
+**Examples:**
+
+```powershell
+# Good: Clear, standardized format
+Write-Host "[OK] ConfigEditor: Configuration saved successfully"
+Write-Host "[ERROR] GameLauncher: Failed to start game - Process not found"
+Write-Host "[INFO] BuildSystem: Starting compilation process"
+
+# Bad: Inconsistent format
+Write-Host "Success"
+Write-Host "Error: something went wrong"
+Write-Host "starting build..."
+```
+
+**Additional Guidelines:**
+
 **Avoid using `Write-Host` with color parameters** (`-ForegroundColor`, `-BackgroundColor`) to respect users' console customization.
 
 ```powershell
@@ -194,6 +227,10 @@ function Get-ExampleFunction {
 Write-Host "[OK] Success message"
 Write-Host "[ERROR] Error message"
 Write-Host "[WARNING] Warning message"
+
+# Avoid: Forced colors that conflict with user preferences
+Write-Host "Success" -ForegroundColor Green
+Write-Host "Error" -ForegroundColor Red
 ```
 
 For detailed guidelines and rationale, see [Character Encoding and Console Compatibility Guidelines](docs/developer-guide/architecture.md#character-encoding-and-console-compatibility-guidelines).
