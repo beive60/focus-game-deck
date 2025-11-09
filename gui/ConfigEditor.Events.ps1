@@ -879,15 +879,59 @@
     # Handle save configuration
     [void] HandleSaveConfig() {
         try {
-            # Save current data to config object
-            Save-UIDataToConfig
+            # Determine which tab is currently active and save accordingly
+            $mainTabControl = $script:Window.FindName("MainTabControl")
+            $selectedTab = if ($mainTabControl) { $mainTabControl.SelectedItem } else { $null }
+
+            if ($selectedTab) {
+                switch ($selectedTab.Name) {
+                    "GamesTab" {
+                        Write-Verbose "Saving game settings from HandleSaveConfig"
+                        Save-CurrentGameData
+                    }
+                    "ManagedAppsTab" {
+                        Write-Verbose "Saving managed apps from HandleSaveConfig"
+                        Save-CurrentAppData
+
+                        # Save global apps to manage settings
+                        $appsToManagePanel = $script:Window.FindName("AppsToManagePanel")
+                        if ($appsToManagePanel) {
+                            $appsToManage = @()
+                            foreach ($child in $appsToManagePanel.Children) {
+                                if ($child -is [System.Windows.Controls.CheckBox] -and $child.IsChecked) {
+                                    $appsToManage += $child.Tag
+                                }
+                            }
+
+                            # Store in current game's appsToManage if a game is selected
+                            if ($script:CurrentGameId) {
+                                $gameData = $this.stateManager.ConfigData.games.$script:CurrentGameId
+                                if ($gameData) {
+                                    if (-not $gameData.PSObject.Properties["appsToManage"]) {
+                                        $gameData | Add-Member -NotePropertyName "appsToManage" -NotePropertyValue $appsToManage
+                                    } else {
+                                        $gameData.appsToManage = $appsToManage
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    "GlobalSettingsTab" {
+                        Write-Verbose "Saving global settings from HandleSaveConfig"
+                        Save-GlobalSettingsData
+                    }
+                    default {
+                        Write-Verbose "Unknown tab, no specific save action"
+                    }
+                }
+            }
 
             # Write to file with 4-space indentation
             Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
 
             # Update original config and clear modified flag
             Save-OriginalConfig
-            $script:HasUnsavedChanges = $false
+            $this.stateManager.ClearModified()
 
             Show-SafeMessage -Key "configSaved" -MessageType "Information"
             Write-Verbose "Configuration saved to: $script:ConfigPath"
@@ -1137,14 +1181,56 @@
         try {
             Write-Host "[DEBUG] ConfigEditorEvents: HandleWindowClosing called"
 
+            # Check if there are unsaved changes
             if ($this.stateManager.TestHasUnsavedChanges()) {
-                $result = Show-SafeMessage -Key "confirmDiscardChanges" -MessageType "Question" -Button "YesNoCancel" -DefaultResult "Cancel"
+                Write-Host "[DEBUG] ConfigEditorEvents: Unsaved changes detected"
 
-                if ($result -ne "Yes") {
-                    Write-Host "[DEBUG] ConfigEditorEvents: User cancelled window closing"
-                    $Event.Cancel = $true
-                    return
+                # Create custom dialog with three buttons
+                $message = $this.uiManager.GetLocalizedMessage("saveBeforeClosePrompt")
+                $title = $this.uiManager.GetLocalizedMessage("unsavedChangesTitle")
+                $saveAndClose = $this.uiManager.GetLocalizedMessage("saveAndClose")
+                $discardAndClose = $this.uiManager.GetLocalizedMessage("discardAndClose")
+                $cancel = $this.uiManager.GetLocalizedMessage("cancelButton")
+
+                # Create custom message box
+                $result = [System.Windows.MessageBox]::Show(
+                    $message,
+                    $title,
+                    [System.Windows.MessageBoxButton]::YesNoCancel,
+                    [System.Windows.MessageBoxImage]::Question,
+                    [System.Windows.MessageBoxResult]::Cancel
+                )
+
+                Write-Host "[DEBUG] ConfigEditorEvents: User choice - $result"
+
+                switch ($result) {
+                    "Yes" {
+                        # Save and close
+                        Write-Host "[DEBUG] ConfigEditorEvents: Saving changes before closing"
+                        try {
+                            $this.HandleSaveConfig()
+                            Write-Host "[DEBUG] ConfigEditorEvents: Changes saved successfully"
+                        } catch {
+                            Write-Host "[ERROR] ConfigEditorEvents: Failed to save changes - $($_.Exception.Message)"
+                            # Show error and cancel closing
+                            Show-SafeMessage -Key "configSaveFailed" -MessageType "Error"
+                            $Event.Cancel = $true
+                            return
+                        }
+                    }
+                    "No" {
+                        # Discard and close
+                        Write-Host "[DEBUG] ConfigEditorEvents: Discarding changes and closing"
+                    }
+                    "Cancel" {
+                        # Cancel closing
+                        Write-Host "[DEBUG] ConfigEditorEvents: User cancelled window closing"
+                        $Event.Cancel = $true
+                        return
+                    }
                 }
+            } else {
+                Write-Host "[DEBUG] ConfigEditorEvents: No unsaved changes, closing directly"
             }
 
             Write-Host "[DEBUG] ConfigEditorEvents: Window closing approved"
@@ -1160,12 +1246,36 @@
             # Save current game data
             Save-CurrentGameData
 
+            # Save apps to manage for current game
+            if ($script:CurrentGameId) {
+                $gameData = $this.stateManager.ConfigData.games.$script:CurrentGameId
+                if ($gameData) {
+                    $appsToManagePanel = $script:Window.FindName("AppsToManagePanel")
+                    if ($appsToManagePanel) {
+                        $appsToManage = @()
+                        foreach ($child in $appsToManagePanel.Children) {
+                            if ($child -is [System.Windows.Controls.CheckBox] -and $child.IsChecked) {
+                                $appsToManage += $child.Tag
+                            }
+                        }
+
+                        # Update game's appsToManage property
+                        if (-not $gameData.PSObject.Properties["appsToManage"]) {
+                            $gameData | Add-Member -NotePropertyName "appsToManage" -NotePropertyValue $appsToManage
+                        } else {
+                            $gameData.appsToManage = $appsToManage
+                        }
+                        Write-Verbose "Saved appsToManage for game $script:CurrentGameId: $($appsToManage -join ', ')"
+                    }
+                }
+            }
+
             # Write to file with 4-space indentation
             Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
 
             # Update original config and clear modified flag
             Save-OriginalConfig
-            $script:HasUnsavedChanges = $false
+            $this.stateManager.ClearModified()
 
             # Refresh games list to reflect any changes
             $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
@@ -1191,20 +1301,30 @@
             # Get the potentially updated app ID after save
             $updatedAppId = $script:CurrentAppId
 
-            # Save global apps to manage settings
-            $appsToManagePanel = $script:Window.FindName("AppsToManagePanel")
-            $appsToManage = @()
+            # Save apps to manage for current game if on Games tab context
+            # Note: The AppsToManagePanel is shown on the Games tab, not Managed Apps tab
+            # So we save it with the current game's data
+            if ($script:CurrentGameId) {
+                $gameData = $this.stateManager.ConfigData.games.$script:CurrentGameId
+                if ($gameData) {
+                    $appsToManagePanel = $script:Window.FindName("AppsToManagePanel")
+                    if ($appsToManagePanel) {
+                        $appsToManage = @()
+                        foreach ($child in $appsToManagePanel.Children) {
+                            if ($child -is [System.Windows.Controls.CheckBox] -and $child.IsChecked) {
+                                $appsToManage += $child.Tag
+                            }
+                        }
 
-            foreach ($child in $appsToManagePanel.Children) {
-                if ($child -is [System.Windows.Controls.CheckBox] -and $child.IsChecked) {
-                    $appsToManage += $child.Tag
+                        # Update game's appsToManage property
+                        if (-not $gameData.PSObject.Properties["appsToManage"]) {
+                            $gameData | Add-Member -NotePropertyName "appsToManage" -NotePropertyValue $appsToManage
+                        } else {
+                            $gameData.appsToManage = $appsToManage
+                        }
+                        Write-Verbose "Saved appsToManage for game $script:CurrentGameId: $($appsToManage -join ', ')"
+                    }
                 }
-            }
-
-            if (-not $this.stateManager.ConfigData.PSObject.Properties["appsToManage"]) {
-                $this.stateManager.ConfigData | Add-Member -NotePropertyName "appsToManage" -NotePropertyValue $appsToManage
-            } else {
-                $this.stateManager.ConfigData.appsToManage = $appsToManage
             }
 
             # Write to file with 4-space indentation
@@ -1212,7 +1332,7 @@
 
             # Update original config and clear modified flag
             Save-OriginalConfig
-            $script:HasUnsavedChanges = $false
+            $this.stateManager.ClearModified()
 
             # Refresh managed apps list to reflect any changes (including ID changes)
             $this.uiManager.UpdateManagedAppsList($this.stateManager.ConfigData)
@@ -1251,7 +1371,7 @@
 
             # Update original config and clear modified flag
             Save-OriginalConfig
-            $script:HasUnsavedChanges = $false
+            $this.stateManager.ClearModified()
 
             Show-SafeMessage -Key "globalSettingsSaved" -MessageType "Information"
             Write-Verbose "Global settings saved"

@@ -533,70 +533,101 @@ function Update-AppsToManagePanel {
             return
         }
 
-        # Clear existing checkboxes
-        $appsToManagePanel.Children.Clear()
+        # Set flag to prevent event handling during update
+        if (-not $script:UpdatingAppsPanel) {
+            $script:UpdatingAppsPanel = $false
+        }
 
-        # Get current game data
-        if (-not $script:CurrentGameId) {
-            Write-Verbose "No game selected, clearing AppsToManagePanel"
+        # Prevent recursive updates
+        if ($script:UpdatingAppsPanel) {
+            Write-Verbose "Already updating AppsToManagePanel, skipping recursive call"
             return
         }
 
-        $gameData = $script:StateManager.ConfigData.games.$script:CurrentGameId
-        if (-not $gameData) {
-            Write-Warning "Game data not found for: $script:CurrentGameId"
-            return
+        $script:UpdatingAppsPanel = $true
+
+        try {
+            # Clear existing checkboxes
+            $appsToManagePanel.Children.Clear()
+
+            # Get current game data
+            if (-not $script:CurrentGameId) {
+                Write-Verbose "No game selected, clearing AppsToManagePanel"
+                return
+            }
+
+            $gameData = $script:StateManager.ConfigData.games.$script:CurrentGameId
+            if (-not $gameData) {
+                Write-Warning "Game data not found for: $script:CurrentGameId"
+                return
+            }
+
+            # Get list of apps to manage for this game
+            $appsToManage = if ($gameData.appsToManage) { $gameData.appsToManage } else { @() }
+            Write-Verbose "AppsToManage for $script:CurrentGameId`: $($appsToManage -join ', ')"
+
+            # Get all available managed apps
+            $managedApps = $script:StateManager.ConfigData.managedApps
+            if (-not $managedApps) {
+                Write-Verbose "No managed apps found in configuration"
+                return
+            }
+
+            # Get order if available
+            $appOrder = if ($managedApps._order) { $managedApps._order } else { @() }
+
+            # Create checkboxes for each managed app
+            $appsToDisplay = if ($appOrder.Count -gt 0) {
+                $appOrder | Where-Object { $_ -ne "_order" -and $managedApps.PSObject.Properties[$_] }
+            } else {
+                $managedApps.PSObject.Properties.Name | Where-Object { $_ -ne "_order" }
+            }
+
+            foreach ($appId in $appsToDisplay) {
+                $appData = $managedApps.$appId
+                if (-not $appData) { continue }
+
+                $checkbox = New-Object System.Windows.Controls.CheckBox
+                $checkbox.Content = if ($appData.displayName) { $appData.displayName } else { $appId }
+                $checkbox.Tag = $appId
+                $checkbox.IsChecked = $appsToManage -contains $appId
+                $checkbox.Margin = "0,2"
+
+                # Capture StateManager in closure for event handlers
+                $stateManager = $script:StateManager
+                $updatingFlag = { $script:UpdatingAppsPanel }
+
+                # Add event handler for checkbox state changes
+                $checkbox.add_Checked({
+                        param($sender, $e)
+                        # Skip if updating panel
+                        if (& $updatingFlag) {
+                            return
+                        }
+                        $stateManager.SetModified()
+                    }.GetNewClosure())
+
+                $checkbox.add_Unchecked({
+                        param($sender, $e)
+                        # Skip if updating panel
+                        if (& $updatingFlag) {
+                            return
+                        }
+                        $stateManager.SetModified()
+                    }.GetNewClosure())
+
+                $appsToManagePanel.Children.Add($checkbox) | Out-Null
+                Write-Verbose "Added checkbox for app: $appId (checked: $($checkbox.IsChecked))"
+            }
+
+            Write-Verbose "Updated AppsToManagePanel with $($appsToManagePanel.Children.Count) apps"
+        } finally {
+            # Always reset the flag
+            $script:UpdatingAppsPanel = $false
         }
-
-        # Get list of apps to manage for this game
-        $appsToManage = if ($gameData.appsToManage) { $gameData.appsToManage } else { @() }
-        Write-Verbose "AppsToManage for $script:CurrentGameId`: $($appsToManage -join ', ')"
-
-        # Get all available managed apps
-        $managedApps = $script:StateManager.ConfigData.managedApps
-        if (-not $managedApps) {
-            Write-Warning "No managed apps found in configuration"
-            return
-        }
-
-        # Get order if available
-        $appOrder = if ($managedApps._order) { $managedApps._order } else { @() }
-
-        # Create checkboxes for each managed app
-        $appsToDisplay = if ($appOrder.Count -gt 0) {
-            $appOrder | Where-Object { $_ -ne "_order" -and $managedApps.PSObject.Properties[$_] }
-        } else {
-            $managedApps.PSObject.Properties.Name | Where-Object { $_ -ne "_order" }
-        }
-
-        foreach ($appId in $appsToDisplay) {
-            $appData = $managedApps.$appId
-            if (-not $appData) { continue }
-
-            $checkbox = New-Object System.Windows.Controls.CheckBox
-            $checkbox.Content = if ($appData.displayName) { $appData.displayName } else { $appId }
-            $checkbox.Tag = $appId
-            $checkbox.IsChecked = $appsToManage -contains $appId
-            $checkbox.Margin = "0,2"
-
-            # Add event handler for checkbox state changes
-            $checkbox.add_Checked({
-                    param($sender, $e)
-                    Set-ConfigModified
-                }.GetNewClosure())
-
-            $checkbox.add_Unchecked({
-                    param($sender, $e)
-                    Set-ConfigModified
-                }.GetNewClosure())
-
-            $appsToManagePanel.Children.Add($checkbox) | Out-Null
-            Write-Verbose "Added checkbox for app: $appId (checked: $($checkbox.IsChecked))"
-        }
-
-        Write-Verbose "Updated AppsToManagePanel with $($appsToManagePanel.Children.Count) apps"
     } catch {
         Write-Warning "Failed to update AppsToManagePanel: $($_.Exception.Message)"
+        $script:UpdatingAppsPanel = $false
     }
 }
 
@@ -692,6 +723,42 @@ function Update-TerminationSettingsVisibility {
     # TODO: Implement or remove in future refactoring
 }
 
+<#
+.SYNOPSIS
+    Helper function to safely set or add a property to a PSCustomObject.
+
+.DESCRIPTION
+    Checks if a property exists on an object and sets its value, or adds the property if it doesn't exist.
+    This prevents errors when trying to set non-existent properties on PSCustomObject instances.
+
+.PARAMETER Object
+    The PSCustomObject to modify.
+
+.PARAMETER PropertyName
+    The name of the property to set or add.
+
+.PARAMETER Value
+    The value to assign to the property.
+#>
+function Set-PropertyValue {
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$Object,
+
+        [Parameter(Mandatory = $true)]
+        [string]$PropertyName,
+
+        [Parameter(Mandatory = $false)]
+        $Value
+    )
+
+    if ($Object.PSObject.Properties[$PropertyName]) {
+        $Object.$PropertyName = $Value
+    } else {
+        $Object | Add-Member -NotePropertyName $PropertyName -NotePropertyValue $Value -Force
+    }
+}
+
 function Save-CurrentGameData {
     if (-not $script:CurrentGameId) {
         Write-Verbose "No game selected, skipping save"
@@ -715,43 +782,44 @@ function Save-CurrentGameData {
     # Save game name
     $gameNameTextBox = $script:Window.FindName("GameNameTextBox")
     if ($gameNameTextBox) {
-        $gameData.name = $gameNameTextBox.Text
+        Set-PropertyValue -Object $gameData -PropertyName "name" -Value $gameNameTextBox.Text
     }
 
     # Save process name
     $processNameTextBox = $script:Window.FindName("ProcessNameTextBox")
     if ($processNameTextBox) {
-        $gameData.processName = $processNameTextBox.Text
+        Set-PropertyValue -Object $gameData -PropertyName "processName" -Value $processNameTextBox.Text
     }
 
     # Save platform
     $platformCombo = $script:Window.FindName("PlatformComboBox")
     if ($platformCombo -and $platformCombo.SelectedItem) {
-        $gameData.platform = $platformCombo.SelectedItem.Tag
+        Set-PropertyValue -Object $gameData -PropertyName "platform" -Value $platformCombo.SelectedItem.Tag
     }
 
     # Save Steam AppID
     $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
     if ($steamAppIdTextBox) {
-        $gameData.steamAppId = $steamAppIdTextBox.Text
+        Set-PropertyValue -Object $gameData -PropertyName "steamAppId" -Value $steamAppIdTextBox.Text
     }
 
     # Save Epic GameID
     $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
     if ($epicGameIdTextBox) {
-        $gameData.epicGameId = $epicGameIdTextBox.Text
+        Set-PropertyValue -Object $gameData -PropertyName "epicGameId" -Value $epicGameIdTextBox.Text
     }
 
     # Save Riot GameID
     $riotGameIdTextBox = $script:Window.FindName("RiotGameIdTextBox")
     if ($riotGameIdTextBox) {
-        $gameData.riotGameId = $riotGameIdTextBox.Text
+        Set-PropertyValue -Object $gameData -PropertyName "riotGameId" -Value $riotGameIdTextBox.Text
     }
 
     # Save executable path (normalize backslashes to forward slashes)
     $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
     if ($executablePathTextBox) {
-        $gameData.executablePath = $executablePathTextBox.Text -replace '\\', '/'
+        $normalizedPath = $executablePathTextBox.Text -replace '\\', '/'
+        Set-PropertyValue -Object $gameData -PropertyName "executablePath" -Value $normalizedPath
     }
 
     # Save managed apps list
@@ -763,7 +831,7 @@ function Save-CurrentGameData {
                 $appsToManage += $child.Tag
             }
         }
-        $gameData.appsToManage = $appsToManage
+        Set-PropertyValue -Object $gameData -PropertyName "appsToManage" -Value $appsToManage
     }
 
     Write-Verbose "Game data saved successfully for: $script:CurrentGameId"
@@ -823,40 +891,41 @@ function Save-CurrentAppData {
     if ($appProcessNameTextBox) {
         $processNameValue = $appProcessNameTextBox.Text
         if ($processNameValue -match '\|') {
-            $appData.processName = $processNameValue -split '\|' | ForEach-Object { $_.Trim() }
+            Set-PropertyValue -Object $appData -PropertyName "processName" -Value ($processNameValue -split '\|' | ForEach-Object { $_.Trim() })
         } else {
-            $appData.processName = $processNameValue
+            Set-PropertyValue -Object $appData -PropertyName "processName" -Value $processNameValue
         }
     }
 
     # Save path (normalize backslashes to forward slashes)
     $appPathTextBox = $script:Window.FindName("AppPathTextBox")
     if ($appPathTextBox) {
-        $appData.path = $appPathTextBox.Text -replace '\\', '/'
+        $normalizedPath = $appPathTextBox.Text -replace '\\', '/'
+        Set-PropertyValue -Object $appData -PropertyName "path" -Value $normalizedPath
     }
 
     # Save arguments
     $appArgumentsTextBox = $script:Window.FindName("AppArgumentsTextBox")
     if ($appArgumentsTextBox) {
-        $appData.arguments = $appArgumentsTextBox.Text
+        Set-PropertyValue -Object $appData -PropertyName "arguments" -Value $appArgumentsTextBox.Text
     }
 
     # Save start action
     $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
     if ($gameStartActionCombo -and $gameStartActionCombo.SelectedItem) {
-        $appData.gameStartAction = $gameStartActionCombo.SelectedItem.Tag
+        Set-PropertyValue -Object $appData -PropertyName "gameStartAction" -Value $gameStartActionCombo.SelectedItem.Tag
     }
 
     # Save end action
     $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
     if ($gameEndActionCombo -and $gameEndActionCombo.SelectedItem) {
-        $appData.gameEndAction = $gameEndActionCombo.SelectedItem.Tag
+        Set-PropertyValue -Object $appData -PropertyName "gameEndAction" -Value $gameEndActionCombo.SelectedItem.Tag
     }
 
     # Save termination method
     $terminationMethodCombo = $script:Window.FindName("TerminationMethodCombo")
     if ($terminationMethodCombo -and $terminationMethodCombo.SelectedItem) {
-        $appData.terminationMethod = $terminationMethodCombo.SelectedItem.Tag
+        Set-PropertyValue -Object $appData -PropertyName "terminationMethod" -Value $terminationMethodCombo.SelectedItem.Tag
     }
 
     # Save graceful timeout
@@ -864,9 +933,9 @@ function Save-CurrentAppData {
     if ($gracefulTimeoutTextBox) {
         $timeoutSeconds = 5
         if ([int]::TryParse($gracefulTimeoutTextBox.Text, [ref]$timeoutSeconds)) {
-            $appData.gracefulTimeoutMs = $timeoutSeconds * 1000
+            Set-PropertyValue -Object $appData -PropertyName "gracefulTimeoutMs" -Value ($timeoutSeconds * 1000)
         } else {
-            $appData.gracefulTimeoutMs = 5000
+            Set-PropertyValue -Object $appData -PropertyName "gracefulTimeoutMs" -Value 5000
         }
     }
 
