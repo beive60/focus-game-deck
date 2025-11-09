@@ -1710,6 +1710,18 @@
                             $selectedTab = $this.SelectedItem
                             if ($selectedTab -and $selectedTab.Name -eq "GameLauncherTab") {
                                 $self.HandleRefreshGameList()
+                            } elseif ($selectedTab -and $selectedTab.Name -eq "GamesTab") {
+                                # Ensure first game is selected when switching to Games tab
+                                $gamesList = $self.uiManager.Window.FindName("GamesList")
+                                if ($gamesList -and $gamesList.Items.Count -gt 0 -and $gamesList.SelectedIndex -lt 0) {
+                                    $gamesList.SelectedIndex = 0
+                                }
+                            } elseif ($selectedTab -and $selectedTab.Name -eq "ManagedAppsTab") {
+                                # Ensure first app is selected when switching to Managed Apps tab
+                                $managedAppsList = $self.uiManager.Window.FindName("ManagedAppsList")
+                                if ($managedAppsList -and $managedAppsList.Items.Count -gt 0 -and $managedAppsList.SelectedIndex -lt 0) {
+                                    $managedAppsList.SelectedIndex = 0
+                                }
                             }
                         } catch {
                             Write-Warning "Error in tab selection changed: $($_.Exception.Message)"
