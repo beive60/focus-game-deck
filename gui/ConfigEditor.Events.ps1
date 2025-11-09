@@ -1555,6 +1555,32 @@
         }
     }
 
+    # Handle refresh managed apps list
+    [void] HandleRefreshManagedAppsList() {
+        try {
+            Write-Verbose "Refreshing managed apps list..."
+            $configData = $this.stateManager.ConfigData
+            $this.uiManager.UpdateManagedAppsList($configData)
+            Write-Verbose "Managed apps list refreshed successfully"
+        } catch {
+            Write-Warning "Failed to refresh managed apps list: $($_.Exception.Message)"
+        }
+    }
+
+    # Handle refresh all lists
+    [void] HandleRefreshAll() {
+        try {
+            Write-Verbose "Refreshing all lists..."
+            $configData = $this.stateManager.ConfigData
+            $this.uiManager.UpdateGamesList($configData)
+            $this.uiManager.UpdateGameLauncherList($configData)
+            $this.uiManager.UpdateManagedAppsList($configData)
+            Write-Verbose "All lists refreshed successfully"
+        } catch {
+            Write-Warning "Failed to refresh all lists: $($_.Exception.Message)"
+        }
+    }
+
     # Handle about dialog
     [void] HandleAbout() {
         try {
@@ -1663,7 +1689,6 @@
                 }.GetNewClosure())
 
             # --- Game Launcher Tab ---
-            $this.uiManager.Window.FindName("RefreshGameListButton").add_Click({ $self.HandleRefreshGameList() }.GetNewClosure())
             $this.uiManager.Window.FindName("GenerateLaunchersButton").add_Click({ $self.HandleGenerateLaunchers() }.GetNewClosure())
 
             # Add tab selection event to update game list when switching to launcher tab
@@ -1729,6 +1754,9 @@
             $this.uiManager.Window.FindName("AutoDetectObsButton").add_Click({ $self.HandleAutoDetectPath("Obs") }.GetNewClosure())
 
             # --- Menu Items ---
+            $this.uiManager.Window.FindName("RefreshGameListMenuItem").add_Click({ $self.HandleRefreshGameList() }.GetNewClosure())
+            $this.uiManager.Window.FindName("RefreshManagedAppsListMenuItem").add_Click({ $self.HandleRefreshManagedAppsList() }.GetNewClosure())
+            $this.uiManager.Window.FindName("RefreshAllMenuItem").add_Click({ $self.HandleRefreshAll() }.GetNewClosure())
             $this.uiManager.Window.FindName("CheckUpdateMenuItem").add_Click({ $self.HandleCheckUpdate() }.GetNewClosure())
             $this.uiManager.Window.FindName("AboutMenuItem").add_Click({ $self.HandleAbout() }.GetNewClosure())
 

@@ -14,6 +14,20 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem
+                x:Name="RefreshMenu"
+                Header="[REFRESH_MENU_HEADER]">
+                <MenuItem
+                    x:Name="RefreshGameListMenuItem"
+                    Header="[REFRESH_GAME_LIST_MENU_ITEM]"/>
+                <MenuItem
+                    x:Name="RefreshManagedAppsListMenuItem"
+                    Header="[REFRESH_MANAGED_APPS_LIST_MENU_ITEM]"/>
+                <Separator/>
+                <MenuItem
+                    x:Name="RefreshAllMenuItem"
+                    Header="[REFRESH_ALL_MENU_ITEM]"/>
+            </MenuItem>
+            <MenuItem
                 x:Name="HelpMenu"
                 Header="[HELP_MENU_HEADER]">
                 <MenuItem
@@ -66,13 +80,7 @@
                     <Grid
                         Grid.Row="0"
                         Margin="20,15">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
                         <StackPanel
-                            Grid.Column="0"
                             VerticalAlignment="Center">
                             <TextBlock
                                 x:Name="LauncherWelcomeText"
@@ -86,14 +94,6 @@
                                 Foreground="#666"
                                 Margin="0,2,0,0"/>
                         </StackPanel>
-
-                        <Button
-                            x:Name="RefreshGameListButton"
-                            Content="[REFRESH_BUTTON]"
-                            Grid.Column="1"
-                            Width="100"
-                            Height="30"
-                            VerticalAlignment="Center"/>
                     </Grid>
 
                     <ScrollViewer

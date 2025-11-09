@@ -41,7 +41,6 @@ $script:ActionButtonMappings = @{
     "SaveManagedAppsButton"    = "saveButton"
     "SaveGlobalSettingsButton" = "saveButton"
     "GenerateLaunchersButton"  = "generateLaunchers"
-    "RefreshGameListButton"    = "refreshButton"
 }
 
 # List movement buttons
@@ -129,9 +128,13 @@ $script:CheckBoxMappings = @{
 
 # MenuItem mappings
 $script:MenuItemMappings = @{
-    "HelpMenu"            = "helpMenuHeader"
-    "CheckUpdateMenuItem" = "checkUpdateMenuItem"
-    "AboutMenuItem"       = "aboutMenuItem"
+    "RefreshMenu"                   = "refreshMenuHeader"
+    "RefreshGameListMenuItem"       = "refreshGameListMenuItem"
+    "RefreshManagedAppsListMenuItem" = "refreshManagedAppsListMenuItem"
+    "RefreshAllMenuItem"            = "refreshAllMenuItem"
+    "HelpMenu"                      = "helpMenuHeader"
+    "CheckUpdateMenuItem"           = "checkUpdateMenuItem"
+    "AboutMenuItem"                 = "aboutMenuItem"
 }
 
 # Tooltip mappings for elements that don't have visible text but need tooltips
