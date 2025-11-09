@@ -212,6 +212,7 @@ function Initialize-ConfigEditor {
         Write-Host "[INFO] ConfigEditor: Loading script modules"
 
         $modulePaths = @(
+            (Join-Path $PSScriptRoot "ConfigEditor.JsonHelper.ps1"),    # Load JSON helper first
             (Join-Path $PSScriptRoot "ConfigEditor.Mappings.ps1"),      # Load mappings first
             (Join-Path $PSScriptRoot "ConfigEditor.State.ps1"),
             (Join-Path $PSScriptRoot "ConfigEditor.Localization.ps1"),
@@ -845,13 +846,8 @@ function Show-LanguageChangeRestartMessage {
                     throw "StateManager or ConfigData not available"
                 }
 
-                $configJson = $script:StateManager.ConfigData | ConvertTo-Json -Depth 10
+                Save-ConfigJson -ConfigData $script:StateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
 
-                if ([string]::IsNullOrWhiteSpace($configJson) -or $configJson -eq "null") {
-                    throw "Configuration data is empty or null"
-                }
-
-                Set-Content -Path $script:ConfigPath -Value $configJson -Encoding UTF8
                 Write-Verbose "Configuration saved successfully"
             } catch {
                 Write-Error "Failed to save configuration before restart: $($_.Exception.Message)"
