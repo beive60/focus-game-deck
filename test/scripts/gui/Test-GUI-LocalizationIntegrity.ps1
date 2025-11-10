@@ -7,8 +7,16 @@
     specific problems with XAML element mapping and string replacement control.
 #>
 
+# Determine paths - test is now in test/scripts/gui/ directory
+$ProjectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+$MappingsPath = Join-Path -Path $ProjectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1"
+
 # Import required modules for analysis
-. "$PSScriptRoot/ConfigEditor.Mappings.ps1"
+if (Test-Path $MappingsPath) {
+    . $MappingsPath
+} else {
+    Write-Warning "ConfigEditor.Mappings.ps1 not found at: $MappingsPath"
+}
 
 <#
 .SYNOPSIS
@@ -175,12 +183,11 @@ function Test-JsonKeyStructure {
     }
 
     try {
-        # Look for JSON localization files
-        $projectRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+        # Look for JSON localization files - using already computed $ProjectRoot
         $localizationPaths = @(
-            "$projectRoot/gui/localization",
-            "$projectRoot/localization",
-            "$projectRoot/resources/localization"
+            (Join-Path -Path $ProjectRoot -ChildPath "gui/localization"),
+            (Join-Path -Path $ProjectRoot -ChildPath "localization"),
+            (Join-Path -Path $ProjectRoot -ChildPath "resources/localization")
         )
 
         $jsonFiles = @()
@@ -265,9 +272,8 @@ function Test-XamlElementAccess {
     }
 
     try {
-        # Find XAML files
-        $projectRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-        $xamlFiles = Get-ChildItem -Path $projectRoot -Filter "*.xaml" -Recurse -ErrorAction SilentlyContinue
+        # Find XAML files - using already computed $ProjectRoot
+        $xamlFiles = Get-ChildItem -Path $ProjectRoot -Filter "*.xaml" -Recurse -ErrorAction SilentlyContinue
 
         if ($xamlFiles.Count -eq 0) {
             $results.Issues += "No XAML files found in project"
@@ -376,8 +382,8 @@ function Test-StringReplacementFlow {
             }
         }
 
-        # Check for main localization application mechanism
-        $mainConfigEditor = "$PSScriptRoot/ConfigEditor.ps1"
+        # Check for main localization application mechanism - using computed $ProjectRoot
+        $mainConfigEditor = Join-Path -Path $ProjectRoot -ChildPath "gui/ConfigEditor.ps1"
         if (Test-Path $mainConfigEditor) {
             $configEditorContent = Get-Content -Path $mainConfigEditor -Raw
 
@@ -427,9 +433,10 @@ function Test-ModularizationImpact {
     }
 
     try {
-        # Find all ConfigEditor.*.ps1 files
+        # Find all ConfigEditor.*.ps1 files - search in gui directory
         $modulePattern = "ConfigEditor.*.ps1"
-        $moduleFiles = Get-ChildItem -Path $PSScriptRoot -Filter $modulePattern -ErrorAction SilentlyContinue
+        $guiPath = Join-Path -Path $ProjectRoot -ChildPath "gui"
+        $moduleFiles = Get-ChildItem -Path $guiPath -Filter $modulePattern -ErrorAction SilentlyContinue
 
         foreach ($moduleFile in $moduleFiles) {
             $results.ModuleFiles += $moduleFile.Name
@@ -568,8 +575,9 @@ $analysis = Test-LocalizationControlFlow
 if ($analysis) {
     Write-LocalizationDiagnosticReport -Analysis $analysis
 
-    # Output analysis to file for further review
-    $outputPath = "$PSScriptRoot/localization-diagnostic-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
+    # Output analysis to file for further review - save to gui directory
+    $outputDir = Join-Path -Path $ProjectRoot -ChildPath "gui"
+    $outputPath = Join-Path -Path $outputDir -ChildPath "localization-diagnostic-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
     $analysis | ConvertTo-Json -Depth 5 | Out-File -Path $outputPath -Encoding UTF8
     Write-Host "`nDetailed analysis saved to: $outputPath"
 } else {

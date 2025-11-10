@@ -30,13 +30,41 @@ param(
     [string]$Verbosity = 'Detailed'
 )
 
-$ErrorActionPreference = "Stop"# Ensure Pester is available
-if (-not (Get-Module -ListAvailable -Name Pester)) {
-    Write-Host "[INFO] PesterRunner: Installing Pester module"
-    Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser
+$ErrorActionPreference = "Stop"
+
+# Check if Pester 5.0+ is installed
+$pesterModule = Get-Module -ListAvailable -Name Pester | Where-Object { $_.Version -ge [Version]"5.0.0" }
+
+if (-not $pesterModule) {
+    Write-Host "[INFO] PesterRunner: Pester 5.0+ not found. Installing Pester module"
+    try {
+        Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser -ErrorAction Stop
+        Write-Host "[INFO] PesterRunner: Pester module installed successfully"
+    }
+    catch {
+        Write-Host "[ERROR] PesterRunner: Failed to install Pester module"
+        Write-Host "[ERROR] Error: $($_.Exception.Message)"
+        Write-Host ""
+        Write-Host "Please install Pester manually:"
+        Write-Host "  Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser"
+        Write-Host ""
+        exit 1
+    }
 }
 
-Import-Module Pester -MinimumVersion 5.0
+try {
+    Import-Module Pester -MinimumVersion 5.0 -ErrorAction Stop
+    Write-Host "[INFO] PesterRunner: Pester module loaded successfully"
+}
+catch {
+    Write-Host "[ERROR] PesterRunner: Failed to import Pester module"
+    Write-Host "[ERROR] Error: $($_.Exception.Message)"
+    Write-Host ""
+    Write-Host "Pester 5.0 or higher is required. Please install it:"
+    Write-Host "  Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser"
+    Write-Host ""
+    exit 1
+}
 
 # Navigate up two levels from test/runners/ to project root
 $ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
