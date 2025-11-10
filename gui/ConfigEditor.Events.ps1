@@ -975,6 +975,42 @@
         }
     }
 
+    # Handle browse OBS path
+    [void] HandleBrowseOBSPath() {
+        $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $openFileDialog.Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*"
+        $openFileDialog.Title = $this.uiManager.GetLocalizedMessage("selectExecutable")
+
+        if ($openFileDialog.ShowDialog()) {
+            $script:Window.FindName("OBSPathTextBox").Text = $openFileDialog.FileName
+            Write-Verbose "Selected OBS executable path: $($openFileDialog.FileName)"
+        }
+    }
+
+    # Handle browse Discord path
+    [void] HandleBrowseDiscordPath() {
+        $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $openFileDialog.Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*"
+        $openFileDialog.Title = $this.uiManager.GetLocalizedMessage("selectExecutable")
+
+        if ($openFileDialog.ShowDialog()) {
+            $script:Window.FindName("DiscordPathTextBox").Text = $openFileDialog.FileName
+            Write-Verbose "Selected Discord executable path: $($openFileDialog.FileName)"
+        }
+    }
+
+    # Handle browse VTube Studio path
+    [void] HandleBrowseVTubeStudioPath() {
+        $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $openFileDialog.Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*"
+        $openFileDialog.Title = $this.uiManager.GetLocalizedMessage("selectExecutable")
+
+        if ($openFileDialog.ShowDialog()) {
+            $script:Window.FindName("VTubePathTextBox").Text = $openFileDialog.FileName
+            Write-Verbose "Selected VTube Studio executable path: $($openFileDialog.FileName)"
+        }
+    }
+
     # Handle check update
     [void] HandleCheckUpdate() {
         try {
@@ -1108,6 +1144,35 @@
                         }
                     }
                 }
+                "Discord" {
+                    # Use version-agnostic path pattern that will be resolved at runtime
+                    # The DiscordManager module will automatically find the latest version
+                    $discordBase = "${env:LOCALAPPDATA}/Discord"
+                    if (Test-Path $discordBase) {
+                        # Check if any app-* directories exist
+                        $appDirs = Get-ChildItem -Path $discordBase -Directory -Filter "app-*" -ErrorAction SilentlyContinue
+                        if ($appDirs.Count -gt 0) {
+                            # Return the base pattern path instead of specific version
+                            # This allows DiscordManager to resolve the latest version at runtime
+                            $detectedPaths += "$discordBase/app-*/Discord.exe"
+                        }
+                    }
+                    # If no app-* directories found, detection fails
+                    # This indicates Discord is not properly installed
+                }
+                "VTubeStudio" {
+                    $commonPaths = @(
+                        "${env:ProgramFiles(x86)}/Steam/steamapps/common/VTube Studio/VTube Studio.exe",
+                        "${env:ProgramFiles}/Steam/steamapps/common/VTube Studio/VTube Studio.exe",
+                        "C:/Program Files (x86)/Steam/steamapps/common/VTube Studio/VTube Studio.exe",
+                        "C:/Program Files/Steam/steamapps/common/VTube Studio/VTube Studio.exe"
+                    )
+                    foreach ($path in $commonPaths) {
+                        if (Test-Path $path) {
+                            $detectedPaths += $path
+                        }
+                    }
+                }
             }
 
             if ($detectedPaths.Count -eq 0) {
@@ -1131,6 +1196,8 @@
                     "Epic" { $script:Window.FindName("EpicPathTextBox").Text = $selectedPath }
                     "Riot" { $script:Window.FindName("RiotPathTextBox").Text = $selectedPath }
                     "OBS" { $script:Window.FindName("OBSPathTextBox").Text = $selectedPath }
+                    "Discord" { $script:Window.FindName("DiscordPathTextBox").Text = $selectedPath }
+                    "VTubeStudio" { $script:Window.FindName("VTubePathTextBox").Text = $selectedPath }
                 }
 
                 $message = $this.uiManager.GetLocalizedMessage("pathDetected") -f $Platform, $selectedPath
@@ -1852,16 +1919,19 @@
             $this.uiManager.Window.FindName("MoveAppBottomButton").add_Click({ $self.HandleMoveApp("Bottom") }.GetNewClosure())
 
             # --- OBS Tab ---
+            $this.uiManager.Window.FindName("BrowseOBSPathButton").add_Click({ $self.HandleBrowseOBSPath() }.GetNewClosure())
+            $this.uiManager.Window.FindName("AutoDetectOBSButton").add_Click({ $self.HandleAutoDetectPath("OBS") }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveOBSSettingsButton").add_Click({ $self.HandleSaveOBSSettings() }.GetNewClosure())
 
             # --- Discord Tab ---
+            $this.uiManager.Window.FindName("BrowseDiscordPathButton").add_Click({ $self.HandleBrowseDiscordPath() }.GetNewClosure())
+            $this.uiManager.Window.FindName("AutoDetectDiscordButton").add_Click({ $self.HandleAutoDetectPath("Discord") }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveDiscordSettingsButton").add_Click({ $self.HandleSaveDiscordSettings() }.GetNewClosure())
 
             # --- VTube Studio Tab ---
+            $this.uiManager.Window.FindName("BrowseVTubePathButton").add_Click({ $self.HandleBrowseVTubeStudioPath() }.GetNewClosure())
+            $this.uiManager.Window.FindName("AutoDetectVTubeButton").add_Click({ $self.HandleAutoDetectPath("VTubeStudio") }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveVTubeStudioSettingsButton").add_Click({ $self.HandleSaveVTubeStudioSettings() }.GetNewClosure())
-
-            # --- OBS Tab ---
-            $this.uiManager.Window.FindName("AutoDetectOBSButton").add_Click({ $self.HandleAutoDetectPath("OBS") }.GetNewClosure())
 
             # --- Global Settings Tab ---
             $this.uiManager.Window.FindName("LanguageCombo").add_SelectionChanged({ $self.HandleLanguageSelectionChanged() }.GetNewClosure())

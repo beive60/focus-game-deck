@@ -288,7 +288,15 @@ class ConfigEditorUI {
                             "Label" { $propToSet = "Content"; $currentValue = $element.Content }
                             "GroupBox" { $propToSet = "Header"; $currentValue = $element.Header }
                             "CheckBox" { $propToSet = "Content"; $currentValue = $element.Content }
-                            "TextBlock" { $propToSet = "Text"; $currentValue = $element.Text }
+                            "TextBlock" {
+                                if ($elementType -eq "Tooltip") {
+                                    $propToSet = "ToolTip"
+                                    $currentValue = $element.ToolTip
+                                } else {
+                                    $propToSet = "Text"
+                                    $currentValue = $element.Text
+                                }
+                            }
                             "MenuItem" { $propToSet = "Header"; $currentValue = $element.Header }
                             "ComboBoxItem" { $propToSet = "Content"; $currentValue = $element.Content }
                             "Button" { if ($elementType -eq "Tooltip") { $propToSet = "ToolTip"; $currentValue = $element.ToolTip } }
@@ -925,6 +933,58 @@ class ConfigEditorUI {
                 if ($ConfigData.integrations.obs) {
                     $obsPathTextBox = $self.Window.FindName("OBSPathTextBox")
                     if ($obsPathTextBox) { $obsPathTextBox.Text = $ConfigData.integrations.obs.path }
+                }
+
+                # Load Discord settings
+                if ($ConfigData.discord) {
+                    $discordPathTextBox = $self.Window.FindName("DiscordPathTextBox")
+                    if ($discordPathTextBox) {
+                        $discordPathTextBox.Text = $ConfigData.discord.path
+                        Write-Verbose "Loaded Discord path: $($ConfigData.discord.path)"
+                    }
+
+                    $enableGameModeCheckBox = $self.Window.FindName("DiscordEnableGameModeCheckBox")
+                    if ($enableGameModeCheckBox) {
+                        $enableGameModeCheckBox.IsChecked = [bool]$ConfigData.discord.enableGameMode
+                    }
+
+                    $statusOnStartCombo = $self.Window.FindName("DiscordStatusOnStartCombo")
+                    if ($statusOnStartCombo -and $ConfigData.discord.statusOnStart) {
+                        for ($i = 0; $i -lt $statusOnStartCombo.Items.Count; $i++) {
+                            if ($statusOnStartCombo.Items[$i].Tag -eq $ConfigData.discord.statusOnStart) {
+                                $statusOnStartCombo.SelectedIndex = $i
+                                break
+                            }
+                        }
+                    }
+
+                    $statusOnEndCombo = $self.Window.FindName("DiscordStatusOnEndCombo")
+                    if ($statusOnEndCombo -and $ConfigData.discord.statusOnEnd) {
+                        for ($i = 0; $i -lt $statusOnEndCombo.Items.Count; $i++) {
+                            if ($statusOnEndCombo.Items[$i].Tag -eq $ConfigData.discord.statusOnEnd) {
+                                $statusOnEndCombo.SelectedIndex = $i
+                                break
+                            }
+                        }
+                    }
+
+                    $disableOverlayCheckBox = $self.Window.FindName("DiscordDisableOverlayCheckBox")
+                    if ($disableOverlayCheckBox) {
+                        $disableOverlayCheckBox.IsChecked = [bool]$ConfigData.discord.disableOverlay
+                    }
+
+                    # Load Rich Presence settings
+                    if ($ConfigData.discord.rpc) {
+                        $rpcEnableCheckBox = $self.Window.FindName("DiscordRPCEnableCheckBox")
+                        if ($rpcEnableCheckBox) {
+                            $rpcEnableCheckBox.IsChecked = [bool]$ConfigData.discord.rpc.enabled
+                        }
+
+                        $rpcAppIdTextBox = $self.Window.FindName("DiscordRPCAppIdTextBox")
+                        if ($rpcAppIdTextBox) {
+                            $rpcAppIdTextBox.Text = $ConfigData.discord.rpc.applicationId
+                        }
+                    }
                 }
 
                 $langCombo = $self.Window.FindName("LanguageCombo")

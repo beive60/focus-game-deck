@@ -1122,6 +1122,7 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="80"/>
                                         <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="25"/>
                                     </Grid.ColumnDefinitions>
 
                                     <TextBox
@@ -1142,6 +1143,14 @@
                                         Grid.Column="2"
                                         Width="85"
                                         Height="25"/>
+                                    <TextBlock
+                                        x:Name="AutoDetectObsTooltip"
+                                        Text="?"
+                                        Grid.Column="3"
+                                        FontWeight="Bold"
+                                        Foreground="#0078D4"
+                                        Margin="3,0,0,0"
+                                        VerticalAlignment="Center"/>
                                 </Grid>
                             </GroupBox>
                         </StackPanel>
@@ -1266,24 +1275,52 @@
                             <GroupBox
                                 Header="実行ファイル"
                                 Margin="0,0,0,15">
-                                <Grid Margin="10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="80"/>
-                                    </Grid.ColumnDefinitions>
+                                <StackPanel Margin="10">
+                                    <!-- 情報メッセージ -->
+                                    <TextBlock
+                                        x:Name="DiscordPathInfoText"
+                                        Foreground="#0078D4"
+                                        FontSize="11"
+                                        TextWrapping="Wrap"
+                                        Margin="0,0,0,8"/>
+                                    
+                                    <!-- パス入力とボタン -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition Width="90"/>
+                                            <ColumnDefinition Width="25"/>
+                                        </Grid.ColumnDefinitions>
 
-                                    <TextBox
-                                        x:Name="DiscordPathTextBox"
-                                        Grid.Column="0"
-                                        VerticalContentAlignment="Center"
-                                        Margin="0,0,5,0"/>
-                                    <Button
-                                        x:Name="BrowseDiscordPathButton"
-                                        Content="参照"
-                                        Grid.Column="1"
-                                        Width="70"
-                                        Height="25"/>
-                                </Grid>
+                                        <TextBox
+                                            x:Name="DiscordPathTextBox"
+                                            Grid.Column="0"
+                                            VerticalContentAlignment="Center"
+                                            Margin="0,0,5,0"/>
+                                        <Button
+                                            x:Name="BrowseDiscordPathButton"
+                                            Content="参照"
+                                            Grid.Column="1"
+                                            Width="70"
+                                            Height="25"
+                                            Margin="0,0,5,0"/>
+                                        <Button
+                                            x:Name="AutoDetectDiscordButton"
+                                            Content="自動検出"
+                                            Grid.Column="2"
+                                            Width="85"
+                                            Height="25"/>
+                                        <TextBlock
+                                            x:Name="AutoDetectDiscordTooltip"
+                                            Text="?"
+                                            Grid.Column="3"
+                                            FontWeight="Bold"
+                                            Foreground="#0078D4"
+                                            Margin="3,0,0,0"
+                                            VerticalAlignment="Center"/>
+                                    </Grid>
+                                </StackPanel>
                             </GroupBox>
                         </StackPanel>
                     </ScrollViewer>
@@ -1410,6 +1447,8 @@
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition Width="90"/>
+                                            <ColumnDefinition Width="25"/>
                                         </Grid.ColumnDefinitions>
 
                                         <TextBox
@@ -1422,7 +1461,22 @@
                                             Content="参照"
                                             Grid.Column="1"
                                             Width="70"
+                                            Height="25"
+                                            Margin="0,0,5,0"/>
+                                        <Button
+                                            x:Name="AutoDetectVTubeButton"
+                                            Content="自動検出"
+                                            Grid.Column="2"
+                                            Width="85"
                                             Height="25"/>
+                                        <TextBlock
+                                            x:Name="AutoDetectVTubeStudioTooltip"
+                                            Text="?"
+                                            Grid.Column="3"
+                                            FontWeight="Bold"
+                                            Foreground="#0078D4"
+                                            Margin="3,0,0,0"
+                                            VerticalAlignment="Center"/>
                                     </Grid>
                                 </StackPanel>
                             </GroupBox>

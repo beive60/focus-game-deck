@@ -1347,12 +1347,62 @@ function Save-DiscordSettingsData {
     Write-Verbose "Save-DiscordSettingsData: Starting to save Discord settings"
 
     try {
-        # TODO: Implement Discord settings save logic once UI controls are defined
-        # Placeholder for Discord-specific settings
-
         # Ensure discord section exists
         if (-not $script:StateManager.ConfigData.discord) {
             $script:StateManager.ConfigData | Add-Member -NotePropertyName "discord" -NotePropertyValue @{} -Force
+        }
+
+        # Get Discord path from UI
+        $discordPathTextBox = $script:Window.FindName("DiscordPathTextBox")
+        if ($discordPathTextBox -and $discordPathTextBox.Text) {
+            $script:StateManager.ConfigData.discord.path = $discordPathTextBox.Text
+            Write-Verbose "Save-DiscordSettingsData: Discord path set to $($discordPathTextBox.Text)"
+        }
+
+        # Get game mode checkbox
+        $enableGameModeCheckBox = $script:Window.FindName("DiscordEnableGameModeCheckBox")
+        if ($enableGameModeCheckBox) {
+            $script:StateManager.ConfigData.discord.enableGameMode = $enableGameModeCheckBox.IsChecked
+            Write-Verbose "Save-DiscordSettingsData: Enable game mode set to $($enableGameModeCheckBox.IsChecked)"
+        }
+
+        # Get status settings
+        $statusOnStartCombo = $script:Window.FindName("DiscordStatusOnStartCombo")
+        if ($statusOnStartCombo -and $statusOnStartCombo.SelectedItem) {
+            $script:StateManager.ConfigData.discord.statusOnStart = $statusOnStartCombo.SelectedItem.Tag
+            Write-Verbose "Save-DiscordSettingsData: Status on start set to $($statusOnStartCombo.SelectedItem.Tag)"
+        }
+
+        $statusOnEndCombo = $script:Window.FindName("DiscordStatusOnEndCombo")
+        if ($statusOnEndCombo -and $statusOnEndCombo.SelectedItem) {
+            $script:StateManager.ConfigData.discord.statusOnEnd = $statusOnEndCombo.SelectedItem.Tag
+            Write-Verbose "Save-DiscordSettingsData: Status on end set to $($statusOnEndCombo.SelectedItem.Tag)"
+        }
+
+        # Get overlay checkbox
+        $disableOverlayCheckBox = $script:Window.FindName("DiscordDisableOverlayCheckBox")
+        if ($disableOverlayCheckBox) {
+            $script:StateManager.ConfigData.discord.disableOverlay = $disableOverlayCheckBox.IsChecked
+            Write-Verbose "Save-DiscordSettingsData: Disable overlay set to $($disableOverlayCheckBox.IsChecked)"
+        }
+
+        # Get Rich Presence settings
+        $rpcEnableCheckBox = $script:Window.FindName("DiscordRPCEnableCheckBox")
+        if ($rpcEnableCheckBox) {
+            if (-not $script:StateManager.ConfigData.discord.rpc) {
+                $script:StateManager.ConfigData.discord | Add-Member -NotePropertyName "rpc" -NotePropertyValue @{} -Force
+            }
+            $script:StateManager.ConfigData.discord.rpc.enabled = $rpcEnableCheckBox.IsChecked
+            Write-Verbose "Save-DiscordSettingsData: RPC enabled set to $($rpcEnableCheckBox.IsChecked)"
+        }
+
+        $rpcAppIdTextBox = $script:Window.FindName("DiscordRPCAppIdTextBox")
+        if ($rpcAppIdTextBox) {
+            if (-not $script:StateManager.ConfigData.discord.rpc) {
+                $script:StateManager.ConfigData.discord | Add-Member -NotePropertyName "rpc" -NotePropertyValue @{} -Force
+            }
+            $script:StateManager.ConfigData.discord.rpc.applicationId = $rpcAppIdTextBox.Text
+            Write-Verbose "Save-DiscordSettingsData: RPC application ID set to $($rpcAppIdTextBox.Text)"
         }
 
         # Mark configuration as modified

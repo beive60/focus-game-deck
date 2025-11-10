@@ -124,6 +124,7 @@ $script:TextMappings = @{
     "LauncherStatusText"   = "readyToLaunch"
     "LauncherHintText"     = "launcherHintText"
     "LauncherHelpText"     = "launcherHelpText"
+    "DiscordPathInfoText"  = "discordPathInfo"
 }
 
 # CheckBox content mappings
@@ -145,14 +146,17 @@ $script:MenuItemMappings = @{
 
 # Tooltip mappings for elements that don't have visible text but need tooltips
 $script:TooltipMappings = @{
-    "MoveGameTopButton"    = "moveTopTooltip"
-    "MoveGameUpButton"     = "moveUpTooltip"
-    "MoveGameDownButton"   = "moveDownTooltip"
-    "MoveGameBottomButton" = "moveBottomTooltip"
-    "MoveAppTopButton"     = "moveTopTooltip"
-    "MoveAppUpButton"      = "moveUpTooltip"
-    "MoveAppDownButton"    = "moveDownTooltip"
-    "MoveAppBottomButton"  = "moveBottomTooltip"
+    "MoveGameTopButton"              = "moveTopTooltip"
+    "MoveGameUpButton"               = "moveUpTooltip"
+    "MoveGameDownButton"             = "moveDownTooltip"
+    "MoveGameBottomButton"           = "moveBottomTooltip"
+    "MoveAppTopButton"               = "moveTopTooltip"
+    "MoveAppUpButton"                = "moveUpTooltip"
+    "MoveAppDownButton"              = "moveDownTooltip"
+    "MoveAppBottomButton"            = "moveBottomTooltip"
+    "AutoDetectObsTooltip"           = "autoDetectObsTooltip"
+    "AutoDetectDiscordTooltip"       = "autoDetectDiscordTooltip"
+    "AutoDetectVTubeStudioTooltip"   = "autoDetectVTubeStudioTooltip"
 }
 
 # ComboBoxItem content mappings
