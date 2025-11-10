@@ -383,7 +383,6 @@
                                         Grid.Column="0"
                                         Orientation="Horizontal"
                                         VerticalAlignment="Center"
-                                        Visibility="Collapsed"
                                         ToolTip="[TOOLTIP_EPIC_GAME_ID]">
                                         <Label
                                             x:Name="EpicGameIdLabel"
@@ -403,8 +402,7 @@
                                         Grid.Row="4"
                                         Grid.Column="1"
                                         VerticalContentAlignment="Center"
-                                        Margin="5"
-                                        Visibility="Collapsed"/>
+                                        Margin="5"/>
 
                                     <StackPanel
                                         x:Name="RiotGameIdLabelPanel"
@@ -412,7 +410,6 @@
                                         Grid.Column="0"
                                         Orientation="Horizontal"
                                         VerticalAlignment="Center"
-                                        Visibility="Collapsed"
                                         ToolTip="[TOOLTIP_RIOT_GAME_ID]">
                                         <Label
                                             x:Name="RiotGameIdLabel"
@@ -432,8 +429,7 @@
                                         Grid.Row="5"
                                         Grid.Column="1"
                                         VerticalContentAlignment="Center"
-                                        Margin="5"
-                                        Visibility="Collapsed"/>
+                                        Margin="5"/>
 
                                     <StackPanel
                                         x:Name="ExecutablePathLabelPanel"
@@ -441,7 +437,6 @@
                                         Grid.Column="0"
                                         Orientation="Horizontal"
                                         VerticalAlignment="Center"
-                                        Visibility="Collapsed"
                                         ToolTip="[TOOLTIP_EXECUTABLE_PATH]">
                                         <Label
                                             x:Name="ExecutablePathLabel"
@@ -459,8 +454,7 @@
                                     <Grid
                                         x:Name="ExecutablePathInputGrid"
                                         Grid.Row="6"
-                                        Grid.Column="1"
-                                        Visibility="Collapsed">
+                                        Grid.Column="1">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="80"/>
@@ -1283,7 +1277,7 @@
                                         FontSize="11"
                                         TextWrapping="Wrap"
                                         Margin="0,0,0,8"/>
-                                    
+
                                     <!-- パス入力とボタン -->
                                     <Grid>
                                         <Grid.ColumnDefinitions>

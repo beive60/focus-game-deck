@@ -638,61 +638,90 @@ function Update-PlatformFields {
         Write-Verbose "Update-PlatformFields called for platform: $Platform"
 
         # Get all platform-specific UI elements
-        $steamAppIdLabelPanel = $script:Window.FindName("SteamAppIdLabelPanel")
         $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
-
-        $epicGameIdLabelPanel = $script:Window.FindName("EpicGameIdLabelPanel")
         $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
-
-        $riotGameIdLabelPanel = $script:Window.FindName("RiotGameIdLabelPanel")
         $riotGameIdTextBox = $script:Window.FindName("RiotGameIdTextBox")
-
-        $executablePathLabelPanel = $script:Window.FindName("ExecutablePathLabelPanel")
         $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
         $browseExecutablePathButton = $script:Window.FindName("BrowseExecutablePathButton")
 
-        # Hide all platform-specific fields first
-        if ($steamAppIdLabelPanel) { $steamAppIdLabelPanel.Visibility = [System.Windows.Visibility]::Collapsed }
-        if ($steamAppIdTextBox) { $steamAppIdTextBox.Visibility = [System.Windows.Visibility]::Collapsed }
+        # Disable all platform fields and set gray background
+        if ($steamAppIdTextBox) {
+            $steamAppIdTextBox.IsEnabled = $false
+            $steamAppIdTextBox.Background = [System.Windows.Media.Brushes]::LightGray
+        }
+        if ($epicGameIdTextBox) {
+            $epicGameIdTextBox.IsEnabled = $false
+            $epicGameIdTextBox.Background = [System.Windows.Media.Brushes]::LightGray
+        }
+        if ($riotGameIdTextBox) {
+            $riotGameIdTextBox.IsEnabled = $false
+            $riotGameIdTextBox.Background = [System.Windows.Media.Brushes]::LightGray
+        }
+        if ($executablePathTextBox) {
+            $executablePathTextBox.IsEnabled = $false
+            $executablePathTextBox.Background = [System.Windows.Media.Brushes]::LightGray
+        }
+        if ($browseExecutablePathButton) {
+            $browseExecutablePathButton.IsEnabled = $false
+        }
 
-        if ($epicGameIdLabelPanel) { $epicGameIdLabelPanel.Visibility = [System.Windows.Visibility]::Collapsed }
-        if ($epicGameIdTextBox) { $epicGameIdTextBox.Visibility = [System.Windows.Visibility]::Collapsed }
-
-        if ($riotGameIdLabelPanel) { $riotGameIdLabelPanel.Visibility = [System.Windows.Visibility]::Collapsed }
-        if ($riotGameIdTextBox) { $riotGameIdTextBox.Visibility = [System.Windows.Visibility]::Collapsed }
-
-        if ($executablePathLabelPanel) { $executablePathLabelPanel.Visibility = [System.Windows.Visibility]::Collapsed }
-        if ($executablePathTextBox) { $executablePathTextBox.Visibility = [System.Windows.Visibility]::Collapsed }
-        if ($browseExecutablePathButton) { $browseExecutablePathButton.Visibility = [System.Windows.Visibility]::Collapsed }
-
-        # Show fields based on platform
+        # Enable the appropriate field based on platform and clear others
         switch ($Platform) {
             "steam" {
-                if ($steamAppIdLabelPanel) { $steamAppIdLabelPanel.Visibility = [System.Windows.Visibility]::Visible }
-                if ($steamAppIdTextBox) { $steamAppIdTextBox.Visibility = [System.Windows.Visibility]::Visible }
-                Write-Verbose "  Showing Steam AppID fields"
+                if ($steamAppIdTextBox) {
+                    $steamAppIdTextBox.IsEnabled = $true
+                    $steamAppIdTextBox.Background = [System.Windows.Media.Brushes]::White
+                }
+                if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
+                if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
+                if ($executablePathTextBox) { $executablePathTextBox.Text = "" }
+                Write-Verbose "  Enabled Steam AppID field"
             }
             "epic" {
-                if ($epicGameIdLabelPanel) { $epicGameIdLabelPanel.Visibility = [System.Windows.Visibility]::Visible }
-                if ($epicGameIdTextBox) { $epicGameIdTextBox.Visibility = [System.Windows.Visibility]::Visible }
-                Write-Verbose "  Showing Epic GameID fields"
+                if ($epicGameIdTextBox) {
+                    $epicGameIdTextBox.IsEnabled = $true
+                    $epicGameIdTextBox.Background = [System.Windows.Media.Brushes]::White
+                }
+                if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = "" }
+                if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
+                if ($executablePathTextBox) { $executablePathTextBox.Text = "" }
+                Write-Verbose "  Enabled Epic GameID field"
             }
             "riot" {
-                if ($riotGameIdLabelPanel) { $riotGameIdLabelPanel.Visibility = [System.Windows.Visibility]::Visible }
-                if ($riotGameIdTextBox) { $riotGameIdTextBox.Visibility = [System.Windows.Visibility]::Visible }
-                Write-Verbose "  Showing Riot GameID fields"
+                if ($riotGameIdTextBox) {
+                    $riotGameIdTextBox.IsEnabled = $true
+                    $riotGameIdTextBox.Background = [System.Windows.Media.Brushes]::White
+                }
+                if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = "" }
+                if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
+                if ($executablePathTextBox) { $executablePathTextBox.Text = "" }
+                Write-Verbose "  Enabled Riot GameID field"
             }
             "standalone" {
-                if ($executablePathLabelPanel) { $executablePathLabelPanel.Visibility = [System.Windows.Visibility]::Visible }
-                if ($executablePathTextBox) { $executablePathTextBox.Visibility = [System.Windows.Visibility]::Visible }
-                if ($browseExecutablePathButton) { $browseExecutablePathButton.Visibility = [System.Windows.Visibility]::Visible }
-                Write-Verbose "  Showing Executable Path fields"
+                if ($executablePathTextBox) {
+                    $executablePathTextBox.IsEnabled = $true
+                    $executablePathTextBox.Background = [System.Windows.Media.Brushes]::White
+                }
+                if ($browseExecutablePathButton) {
+                    $browseExecutablePathButton.IsEnabled = $true
+                }
+                if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = "" }
+                if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
+                if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
+                Write-Verbose "  Enabled Executable Path field"
             }
             default {
                 Write-Warning "Unknown platform: $Platform, defaulting to standalone"
-                if ($executablePathLabelPanel) { $executablePathLabelPanel.Visibility = [System.Windows.Visibility]::Visible }
-                if ($executablePathTextBox) { $executablePathTextBox.Visibility = [System.Windows.Visibility]::Visible }
-                if ($browseExecutablePathButton) { $browseExecutablePathButton.Visibility = [System.Windows.Visibility]::Visible }
+                if ($executablePathTextBox) {
+                    $executablePathTextBox.IsEnabled = $true
+                    $executablePathTextBox.Background = [System.Windows.Media.Brushes]::White
+                }
+                if ($browseExecutablePathButton) {
+                    $browseExecutablePathButton.IsEnabled = $true
+                }
+                if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = "" }
+                if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
+                if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
             }
         }
 
