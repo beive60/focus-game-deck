@@ -44,3 +44,7 @@ src/logs/*.log
 # Temporary backup files
 *.backup
 *~
+
+# Test results
+test/test-results.xml
+test/history/*.xml
