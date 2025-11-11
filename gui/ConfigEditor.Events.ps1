@@ -519,14 +519,11 @@
             }
         }
 
-        # Mark as modified
-        $this.stateManager.SetModified()
+            # Mark as modified
+            $this.stateManager.SetModified()
 
-        Show-SafeMessage -Key "gameAdded" -MessageType "Information"
-        Write-Verbose "Added new game: $newGameId"
-    }
-
-    # Handle duplicate game
+            Write-Verbose "Added new game: $newGameId"
+        }    # Handle duplicate game
     [void] HandleDuplicateGame() {
         $gamesList = $script:Window.FindName("GamesList")
         $selectedGame = $gamesList.SelectedItem
@@ -610,9 +607,6 @@
             $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
             Update-AppsToManagePanel
 
-
-
-            Show-SafeMessage -Key "gameDeleted" -MessageType "Information"
             Write-Verbose "Deleted game: $selectedGame"
         }
     }
@@ -1200,8 +1194,6 @@
                     "VTubeStudio" { $script:Window.FindName("VTubePathTextBox").Text = $selectedPath }
                 }
 
-                $message = $this.uiManager.GetLocalizedMessage("pathDetected") -f $Platform, $selectedPath
-                Show-SafeMessage -Message $message -MessageType "Information"
                 Write-Verbose "Auto-detected $Platform path: $selectedPath"
             }
 
