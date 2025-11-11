@@ -20,10 +20,10 @@ Write-Host "=== About Dialog Placeholder Replacement Test ==="
 
 try {
     # Import required modules
-    $VersionModulePath = Join-Path $PSScriptRoot "Version.ps1"
+    $VersionModulePath = Join-Path $PSScriptRoot "build-tools/Version.ps1"
     if (Test-Path $VersionModulePath) {
         . $VersionModulePath
-        Write-Host "✓ Version module loaded successfully"
+        Write-Host "[OK] Version module loaded successfully"
     } else {
         throw "Version module not found: $VersionModulePath"
     }
@@ -31,7 +31,7 @@ try {
     $LanguageHelperPath = Join-Path $PSScriptRoot "scripts/LanguageHelper.ps1"
     if (Test-Path $LanguageHelperPath) {
         . $LanguageHelperPath
-        Write-Host "✓ Language helper loaded successfully"
+        Write-Host "[OK] Language helper loaded successfully"
     } else {
         throw "Language helper not found: $LanguageHelperPath"
     }
@@ -52,7 +52,7 @@ try {
     }
 
     $messagesContent = Get-Content $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    Write-Host "✓ Messages loaded successfully"
+    Write-Host "[OK] Messages loaded successfully"
 
     # Test for each supported language
     $languages = @("ja", "en", "zh-CN")
@@ -88,9 +88,9 @@ try {
         Write-Host "Replacement successful: $replacementWorked" -ForegroundColor $(if ($replacementWorked) { "Green" } else { "Red" })
 
         if ($replacementWorked) {
-            Write-Host "✓ Language '$lang': SUCCESS"
+            Write-Host "[OK] Language '$lang': SUCCESS"
         } else {
-            Write-Host "✗ Language '$lang': FAILED"
+            Write-Host "[FAILED] Language '$lang': FAILED"
         }
         Write-Host ""
     }
@@ -132,7 +132,7 @@ try {
     Write-Host "=== Test Complete ==="
 
 } catch {
-    Write-Host "❌ Test failed: $($_.Exception.Message)"
+    Write-Host "[ERROR] Test failed: $($_.Exception.Message)"
     Write-Host "Exception details:"
     Write-Host $_.Exception
     exit 1
