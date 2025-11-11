@@ -38,11 +38,13 @@
 
     # Helper method to update TerminationMethod ComboBox enabled state
     # Should be enabled only when either start or end action is "stop-process"
+    # Also updates AppArgumentsTextBox state (enabled only when either action is "start-process")
     [void] UpdateTerminationMethodState() {
         $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
         $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
         $terminationMethodCombo = $script:Window.FindName("TerminationMethodCombo")
         $gracefulTimeoutTextBox = $script:Window.FindName("GracefulTimeoutTextBox")
+        $appArgumentsTextBox = $script:Window.FindName("AppArgumentsTextBox")
 
         if (-not $terminationMethodCombo) {
             Write-Verbose "TerminationMethodCombo not found"
@@ -62,33 +64,40 @@
             "none"
         }
 
-        # Enable only if either action is "stop-process"
-        $shouldEnable = ($startAction -eq "stop-process") -or ($endAction -eq "stop-process")
-        
+        # Enable termination method only if either action is "stop-process"
+        $shouldEnableTermination = ($startAction -eq "stop-process") -or ($endAction -eq "stop-process")
+
         # Store current selection before disabling
-        if (-not $shouldEnable -and $terminationMethodCombo.SelectedItem) {
+        if (-not $shouldEnableTermination -and $terminationMethodCombo.SelectedItem) {
             # Save the current selection
             if (-not $script:SavedTerminationMethod) {
                 $script:SavedTerminationMethod = $terminationMethodCombo.SelectedItem.Tag
             }
             # Clear selection when disabled
             $terminationMethodCombo.SelectedIndex = -1
-        } elseif ($shouldEnable -and $terminationMethodCombo.SelectedIndex -eq -1) {
+        } elseif ($shouldEnableTermination -and $terminationMethodCombo.SelectedIndex -eq -1) {
             # Restore saved selection when re-enabled, or use default
-            $savedValue = if ($script:SavedTerminationMethod) { 
-                $script:SavedTerminationMethod 
-            } else { 
-                "auto" 
+            $savedValue = if ($script:SavedTerminationMethod) {
+                $script:SavedTerminationMethod
+            } else {
+                "auto"
             }
             $this.SetComboBoxSelectionByTag($terminationMethodCombo, $savedValue)
         }
-        
-        $terminationMethodCombo.IsEnabled = $shouldEnable
+
+        $terminationMethodCombo.IsEnabled = $shouldEnableTermination
         if ($gracefulTimeoutTextBox) {
-            $gracefulTimeoutTextBox.IsEnabled = $shouldEnable
+            $gracefulTimeoutTextBox.IsEnabled = $shouldEnableTermination
         }
 
-        Write-Verbose "TerminationMethod enabled: $shouldEnable (StartAction: $startAction, EndAction: $endAction)"
+        # Enable arguments textbox only if either action is "start-process"
+        if ($appArgumentsTextBox) {
+            $shouldEnableArguments = ($startAction -eq "start-process") -or ($endAction -eq "start-process")
+            $appArgumentsTextBox.IsEnabled = $shouldEnableArguments
+            Write-Verbose "AppArguments enabled: $shouldEnableArguments (StartAction: $startAction, EndAction: $endAction)"
+        }
+
+        Write-Verbose "TerminationMethod enabled: $shouldEnableTermination (StartAction: $startAction, EndAction: $endAction)"
     }
 
     # Handle platform selection changed
@@ -110,50 +119,50 @@
             $gameData = $this.stateManager.ConfigData.games.$selectedGame
 
             Write-Verbose "HandleGameSelectionChanged: Selected game = $selectedGame"
-            
+
             if ($gameData) {
                 Write-Verbose "HandleGameSelectionChanged: Game data found for $selectedGame"
                 Write-Verbose "  - name: $($gameData.name)"
                 Write-Verbose "  - platform: $($gameData.platform)"
                 Write-Verbose "  - steamAppId: $($gameData.steamAppId)"
                 Write-Verbose "  - executablePath: $($gameData.executablePath)"
-                
+
                 # Load game details into form
                 $gameNameTextBox = $script:Window.FindName("GameNameTextBox")
-                if ($gameNameTextBox) { 
+                if ($gameNameTextBox) {
                     # Check for both 'name' and 'displayName' for compatibility
                     $displayName = if ($gameData.name) { $gameData.name } elseif ($gameData.displayName) { $gameData.displayName } else { "" }
                     $gameNameTextBox.Text = $displayName
                     Write-Verbose "  Set GameNameTextBox: $displayName"
                 }
-                
+
                 $gameIdTextBox = $script:Window.FindName("GameIdTextBox")
-                if ($gameIdTextBox) { 
+                if ($gameIdTextBox) {
                     $appId = if ($gameData.appId) { $gameData.appId } else { $selectedGame }
                     $gameIdTextBox.Text = $appId
                     Write-Verbose "  Set GameIdTextBox: $appId"
                 }
-                
+
                 $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
-                if ($steamAppIdTextBox) { 
-                    $steamAppIdTextBox.Text = if ($gameData.steamAppId) { $gameData.steamAppId } else { "" } 
+                if ($steamAppIdTextBox) {
+                    $steamAppIdTextBox.Text = if ($gameData.steamAppId) { $gameData.steamAppId } else { "" }
                     Write-Verbose "  Set SteamAppIdTextBox: $($gameData.steamAppId)"
                 }
-                
+
                 $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
-                if ($epicGameIdTextBox) { 
+                if ($epicGameIdTextBox) {
                     $epicGameIdTextBox.Text = if ($gameData.epicGameId) { $gameData.epicGameId } else { "" }
                     Write-Verbose "  Set EpicGameIdTextBox: $($gameData.epicGameId)"
                 }
-                
+
                 $riotGameIdTextBox = $script:Window.FindName("RiotGameIdTextBox")
-                if ($riotGameIdTextBox) { 
+                if ($riotGameIdTextBox) {
                     $riotGameIdTextBox.Text = if ($gameData.riotGameId) { $gameData.riotGameId } else { "" }
                     Write-Verbose "  Set RiotGameIdTextBox: $($gameData.riotGameId)"
                 }
-                
+
                 $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
-                if ($executablePathTextBox) { 
+                if ($executablePathTextBox) {
                     $executablePathTextBox.Text = if ($gameData.executablePath) { $gameData.executablePath } else { "" }
                     Write-Verbose "  Set ExecutablePathTextBox: $($gameData.executablePath)"
                 }
@@ -168,14 +177,14 @@
                 # Set platform
                 $platformCombo = $script:Window.FindName("PlatformComboBox")
                 # Normalize platform value: "direct" is an alias for "standalone"
-                $platform = if ($gameData.platform) { 
+                $platform = if ($gameData.platform) {
                     if ($gameData.platform -eq "direct") { "standalone" } else { $gameData.platform }
-                } else { 
-                    "standalone" 
+                } else {
+                    "standalone"
                 }
-                
+
                 Write-Verbose "  Platform: $platform (original: $($gameData.platform))"
-                
+
                 $platformFound = $false
                 for ($i = 0; $i -lt $platformCombo.Items.Count; $i++) {
                     if ($platformCombo.Items[$i].Tag -eq $platform) {
@@ -185,7 +194,7 @@
                         break
                     }
                 }
-                
+
                 if (-not $platformFound) {
                     Write-Warning "Platform '$platform' not found in ComboBox, defaulting to standalone (index 0)"
                     $platformCombo.SelectedIndex = 0
@@ -218,7 +227,7 @@
                     $script:SavedTerminationMethod = $terminationMethod
                     $this.SetComboBoxSelectionByTag($terminationMethodCombo, $terminationMethod)
                 }
-                
+
                 if ($gracefulTimeoutTextBox) {
                     $gracefulTimeoutTextBox.Text = if ($gameData.managedApps.gracefulTimeout) { $gameData.managedApps.gracefulTimeout.ToString() } else { "5" }
                 }
@@ -235,7 +244,7 @@
                 # Enable buttons
                 $duplicateGameButton = $script:Window.FindName("DuplicateGameButton")
                 if ($duplicateGameButton) { $duplicateGameButton.IsEnabled = $true }
-                
+
                 $deleteGameButton = $script:Window.FindName("DeleteGameButton")
                 if ($deleteGameButton) { $deleteGameButton.IsEnabled = $true }
 
@@ -247,22 +256,22 @@
         } else {
             # No game selected, clear the form
             $script:CurrentGameId = ""
-            
+
             $gameNameTextBox = $script:Window.FindName("GameNameTextBox")
             if ($gameNameTextBox) { $gameNameTextBox.Text = "" }
-            
+
             $gameIdTextBox = $script:Window.FindName("GameIdTextBox")
             if ($gameIdTextBox) { $gameIdTextBox.Text = "" }
-            
+
             $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
             if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = "" }
-            
+
             $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
             if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
-            
+
             $riotGameIdTextBox = $script:Window.FindName("RiotGameIdTextBox")
             if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
-            
+
             $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
             if ($executablePathTextBox) { $executablePathTextBox.Text = "" }
 
@@ -295,7 +304,7 @@
             # Disable buttons
             $duplicateGameButton = $script:Window.FindName("DuplicateGameButton")
             if ($duplicateGameButton) { $duplicateGameButton.IsEnabled = $false }
-            
+
             $deleteGameButton = $script:Window.FindName("DeleteGameButton")
             if ($deleteGameButton) { $deleteGameButton.IsEnabled = $false }
 
@@ -314,7 +323,7 @@
             $appData = $this.stateManager.ConfigData.managedApps.$selectedApp
 
             Write-Verbose "HandleAppSelectionChanged: Selected app = $selectedApp"
-            
+
             if ($appData) {
                 Write-Verbose "HandleAppSelectionChanged: App data found for $selectedApp"
                 Write-Verbose "  - displayName: $($appData.displayName)"
@@ -324,13 +333,14 @@
                 Write-Verbose "  - gameEndAction: $($appData.gameEndAction)"
                 Write-Verbose "  - terminationMethod: $($appData.terminationMethod)"
                 Write-Verbose "  - gracefulTimeoutMs: $($appData.gracefulTimeoutMs)"
-                
+
                 # Load app details into form
                 $appIdTextBox = $script:Window.FindName("AppIdTextBox")
                 if ($appIdTextBox) {
-                    $appIdTextBox.Text = if ($appData.displayName) { $appData.displayName } else { $selectedApp }
+                    # Display the actual app ID (config key), not the display name
+                    $appIdTextBox.Text = $selectedApp
                 }
-                
+
                 $appProcessNameTextBox = $script:Window.FindName("AppProcessNameTextBox")
                 if ($appProcessNameTextBox) {
                     # Check for both processName (singular) and processNames (plural) for compatibility
@@ -352,40 +362,40 @@
                 # NOTE: Managed Apps tab uses same ComboBox controls as Game tab
                 $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
                 $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
-                
+
                 if ($gameStartActionCombo) {
                     # Check for both startAction and gameStartAction for compatibility
-                    $appStartAction = if ($appData.startAction) { 
-                        $appData.startAction 
-                    } elseif ($appData.gameStartAction) { 
-                        $appData.gameStartAction 
-                    } else { 
-                        "start-process" 
+                    $appStartAction = if ($appData.startAction) {
+                        $appData.startAction
+                    } elseif ($appData.gameStartAction) {
+                        $appData.gameStartAction
+                    } else {
+                        "start-process"
                     }
                     $this.SetComboBoxSelectionByTag($gameStartActionCombo, $appStartAction)
                 }
-                
+
                 if ($gameEndActionCombo) {
                     # Check for both endAction and gameEndAction for compatibility
-                    $appEndAction = if ($appData.endAction) { 
-                        $appData.endAction 
-                    } elseif ($appData.gameEndAction) { 
-                        $appData.gameEndAction 
-                    } else { 
-                        "stop-process" 
+                    $appEndAction = if ($appData.endAction) {
+                        $appData.endAction
+                    } elseif ($appData.gameEndAction) {
+                        $appData.gameEndAction
+                    } else {
+                        "stop-process"
                     }
                     $this.SetComboBoxSelectionByTag($gameEndActionCombo, $appEndAction)
                 }
-                
+
                 $appPathTextBox = $script:Window.FindName("AppPathTextBox")
                 if ($appPathTextBox) {
                     # Check for both executablePath and path for compatibility
-                    $pathValue = if ($appData.executablePath) { 
-                        $appData.executablePath 
-                    } elseif ($appData.path) { 
-                        $appData.path 
-                    } else { 
-                        "" 
+                    $pathValue = if ($appData.executablePath) {
+                        $appData.executablePath
+                    } elseif ($appData.path) {
+                        $appData.path
+                    } else {
+                        ""
                     }
                     $appPathTextBox.Text = $pathValue
                 }
@@ -404,17 +414,17 @@
                     $script:SavedTerminationMethod = $appTerminationMethod
                     $this.SetComboBoxSelectionByTag($terminationMethodCombo, $appTerminationMethod)
                 }
-                
+
                 $gracefulTimeoutTextBox = $script:Window.FindName("GracefulTimeoutTextBox")
                 if ($gracefulTimeoutTextBox) {
                     # Check for both gracefulTimeout and gracefulTimeoutMs for compatibility
-                    $timeoutValue = if ($appData.gracefulTimeout) { 
-                        $appData.gracefulTimeout.ToString() 
-                    } elseif ($appData.gracefulTimeoutMs) { 
+                    $timeoutValue = if ($appData.gracefulTimeout) {
+                        $appData.gracefulTimeout.ToString()
+                    } elseif ($appData.gracefulTimeoutMs) {
                         # Convert milliseconds to seconds for display
                         ([int]($appData.gracefulTimeoutMs / 1000)).ToString()
-                    } else { 
-                        "5" 
+                    } else {
+                        "5"
                     }
                     $gracefulTimeoutTextBox.Text = $timeoutValue
                 }
@@ -422,7 +432,7 @@
                 # Enable buttons
                 $duplicateAppButton = $script:Window.FindName("DuplicateAppButton")
                 if ($duplicateAppButton) { $duplicateAppButton.IsEnabled = $true }
-                
+
                 $deleteAppButton = $script:Window.FindName("DeleteAppButton")
                 if ($deleteAppButton) { $deleteAppButton.IsEnabled = $true }
 
@@ -437,32 +447,32 @@
         } else {
             # No app selected, clear the form
             $script:CurrentAppId = ""
-            
+
             $appIdTextBox = $script:Window.FindName("AppIdTextBox")
             if ($appIdTextBox) { $appIdTextBox.Text = "" }
-            
+
             $appProcessNameTextBox = $script:Window.FindName("AppProcessNameTextBox")
             if ($appProcessNameTextBox) { $appProcessNameTextBox.Text = "" }
-            
+
             $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
             if ($gameStartActionCombo) { $this.SetComboBoxSelectionByTag($gameStartActionCombo, "start-process") }
-            
+
             $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
             if ($gameEndActionCombo) { $this.SetComboBoxSelectionByTag($gameEndActionCombo, "stop-process") }
-            
+
             $appPathTextBox = $script:Window.FindName("AppPathTextBox")
             if ($appPathTextBox) { $appPathTextBox.Text = "" }
-            
+
             $terminationMethodCombo = $script:Window.FindName("TerminationMethodCombo")
             if ($terminationMethodCombo) { $this.SetComboBoxSelectionByTag($terminationMethodCombo, "auto") }
-            
+
             $gracefulTimeoutTextBox = $script:Window.FindName("GracefulTimeoutTextBox")
             if ($gracefulTimeoutTextBox) { $gracefulTimeoutTextBox.Text = "5" }
 
             # Disable buttons
             $duplicateAppButton = $script:Window.FindName("DuplicateAppButton")
             if ($duplicateAppButton) { $duplicateAppButton.IsEnabled = $false }
-            
+
             $deleteAppButton = $script:Window.FindName("DeleteAppButton")
             if ($deleteAppButton) { $deleteAppButton.IsEnabled = $false }
 
@@ -872,16 +882,59 @@
     # Handle save configuration
     [void] HandleSaveConfig() {
         try {
-            # Save current data to config object
-            Save-UIDataToConfig
+            # Determine which tab is currently active and save accordingly
+            $mainTabControl = $script:Window.FindName("MainTabControl")
+            $selectedTab = if ($mainTabControl) { $mainTabControl.SelectedItem } else { $null }
 
-            # Write to file
-            $configJson = $this.stateManager.ConfigData | ConvertTo-Json -Depth 10
-            Set-Content -Path $script:ConfigPath -Value $configJson -Encoding UTF8
+            if ($selectedTab) {
+                switch ($selectedTab.Name) {
+                    "GamesTab" {
+                        Write-Verbose "Saving game settings from HandleSaveConfig"
+                        Save-CurrentGameData
+                    }
+                    "ManagedAppsTab" {
+                        Write-Verbose "Saving managed apps from HandleSaveConfig"
+                        Save-CurrentAppData
+
+                        # Save global apps to manage settings
+                        $appsToManagePanel = $script:Window.FindName("AppsToManagePanel")
+                        if ($appsToManagePanel) {
+                            $appsToManage = @()
+                            foreach ($child in $appsToManagePanel.Children) {
+                                if ($child -is [System.Windows.Controls.CheckBox] -and $child.IsChecked) {
+                                    $appsToManage += $child.Tag
+                                }
+                            }
+
+                            # Store in current game's appsToManage if a game is selected
+                            if ($script:CurrentGameId) {
+                                $gameData = $this.stateManager.ConfigData.games.$script:CurrentGameId
+                                if ($gameData) {
+                                    if (-not $gameData.PSObject.Properties["appsToManage"]) {
+                                        $gameData | Add-Member -NotePropertyName "appsToManage" -NotePropertyValue $appsToManage
+                                    } else {
+                                        $gameData.appsToManage = $appsToManage
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    "GlobalSettingsTab" {
+                        Write-Verbose "Saving global settings from HandleSaveConfig"
+                        Save-GlobalSettingsData
+                    }
+                    default {
+                        Write-Verbose "Unknown tab, no specific save action"
+                    }
+                }
+            }
+
+            # Write to file with 4-space indentation
+            Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
 
             # Update original config and clear modified flag
             Save-OriginalConfig
-            $script:HasUnsavedChanges = $false
+            $this.stateManager.ClearModified()
 
             Show-SafeMessage -Key "configSaved" -MessageType "Information"
             Write-Verbose "Configuration saved to: $script:ConfigPath"
@@ -916,35 +969,71 @@
         }
     }
 
+    # Handle browse OBS path
+    [void] HandleBrowseOBSPath() {
+        $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $openFileDialog.Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*"
+        $openFileDialog.Title = $this.uiManager.GetLocalizedMessage("selectExecutable")
+
+        if ($openFileDialog.ShowDialog()) {
+            $script:Window.FindName("OBSPathTextBox").Text = $openFileDialog.FileName
+            Write-Verbose "Selected OBS executable path: $($openFileDialog.FileName)"
+        }
+    }
+
+    # Handle browse Discord path
+    [void] HandleBrowseDiscordPath() {
+        $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $openFileDialog.Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*"
+        $openFileDialog.Title = $this.uiManager.GetLocalizedMessage("selectExecutable")
+
+        if ($openFileDialog.ShowDialog()) {
+            $script:Window.FindName("DiscordPathTextBox").Text = $openFileDialog.FileName
+            Write-Verbose "Selected Discord executable path: $($openFileDialog.FileName)"
+        }
+    }
+
+    # Handle browse VTube Studio path
+    [void] HandleBrowseVTubeStudioPath() {
+        $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $openFileDialog.Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*"
+        $openFileDialog.Title = $this.uiManager.GetLocalizedMessage("selectExecutable")
+
+        if ($openFileDialog.ShowDialog()) {
+            $script:Window.FindName("VTubePathTextBox").Text = $openFileDialog.FileName
+            Write-Verbose "Selected VTube Studio executable path: $($openFileDialog.FileName)"
+        }
+    }
+
     # Handle check update
     [void] HandleCheckUpdate() {
         try {
-            Write-Host "=== Update Check DEBUG START ==="
+            Write-Host "[DEBUG] ConfigEditorEvents: Update check started"
 
             # Get current version - use global function reference
             $currentVersion = if ($global:GetProjectVersionFunc) {
                 & $global:GetProjectVersionFunc
             } else {
-                Write-Warning "Get-ProjectVersion not available"
+                Write-Host "[WARNING] ConfigEditorEvents: Get-ProjectVersion not available"
                 "Unknown"
             }
-            Write-Host "Current version: $currentVersion"
+            Write-Host "[INFO] ConfigEditorEvents: Current version - $currentVersion"
 
             # Check for updates - use global function reference
             if (-not $global:TestUpdateAvailableFunc) {
-                Write-Warning "Update checker not available"
+                Write-Host "[WARNING] ConfigEditorEvents: Update checker not available"
                 $message = $this.uiManager.GetLocalizedMessage("updateCheckFailed")
                 $title = $this.uiManager.GetLocalizedMessage("updateCheckTitle")
                 [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
                 return
             }
 
-            Write-Host "Checking for updates..."
+            Write-Host "[INFO] ConfigEditorEvents: Checking for updates"
             $updateInfo = & $global:TestUpdateAvailableFunc -CurrentVersion $currentVersion
 
             if ($updateInfo) {
-                Write-Host "Update info received:"
-                Write-Host ($updateInfo | ConvertTo-Json -Depth 3)
+                Write-Host "[DEBUG] ConfigEditorEvents: Update info received"
+                Write-Host "[DEBUG] ConfigEditorEvents: Update details - $($updateInfo | ConvertTo-Json -Depth 3)"
 
                 if ($updateInfo.UpdateAvailable) {
                     # Show update available dialog
@@ -956,10 +1045,10 @@
                     if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
                         # Open the release page
                         if ($updateInfo.ReleaseUrl) {
-                            Write-Host "Opening release page: $($updateInfo.ReleaseUrl)"
+                            Write-Host "[INFO] ConfigEditorEvents: Opening release page - $($updateInfo.ReleaseUrl)"
                             Start-Process $updateInfo.ReleaseUrl
                         } else {
-                            Write-Warning "No release URL provided in update info"
+                            Write-Host "[WARNING] ConfigEditorEvents: No release URL provided in update info"
                         }
                     }
                 } else {
@@ -970,7 +1059,7 @@
                     [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
                 }
             } else {
-                Write-Warning "No update info received"
+                Write-Host "[WARNING] ConfigEditorEvents: No update info received"
                 # Handle case where update check failed
                 $message = $this.uiManager.GetLocalizedMessage("updateCheckFailed")
                 $title = $this.uiManager.GetLocalizedMessage("updateCheckTitle")
@@ -978,11 +1067,10 @@
                 [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
             }
 
-            Write-Host "=== Update Check DEBUG END ==="
+            Write-Host "[OK] ConfigEditorEvents: Update check completed"
 
         } catch {
-            Write-Error "Update check failed: $_"
-            Write-Host "Update check error: $_"
+            Write-Host "[ERROR] ConfigEditorEvents: Update check failed - $($_.Exception.Message)"
 
             # Show error message
             $message = $this.uiManager.GetLocalizedMessage("updateCheckError") -f $_.Exception.Message
@@ -1037,12 +1125,41 @@
                         }
                     }
                 }
-                "Obs" {
+                "OBS" {
                     $commonPaths = @(
                         "${env:ProgramFiles}/obs-studio/bin/64bit/obs64.exe",
                         "${env:ProgramFiles(x86)}/obs-studio/bin/64bit/obs64.exe",
                         "C:/Program Files/obs-studio/bin/64bit/obs64.exe",
                         "C:/Program Files (x86)/obs-studio/bin/64bit/obs64.exe"
+                    )
+                    foreach ($path in $commonPaths) {
+                        if (Test-Path $path) {
+                            $detectedPaths += $path
+                        }
+                    }
+                }
+                "Discord" {
+                    # Use version-agnostic path pattern that will be resolved at runtime
+                    # The DiscordManager module will automatically find the latest version
+                    $discordBase = "${env:LOCALAPPDATA}/Discord"
+                    if (Test-Path $discordBase) {
+                        # Check if any app-* directories exist
+                        $appDirs = Get-ChildItem -Path $discordBase -Directory -Filter "app-*" -ErrorAction SilentlyContinue
+                        if ($appDirs.Count -gt 0) {
+                            # Return the base pattern path instead of specific version
+                            # This allows DiscordManager to resolve the latest version at runtime
+                            $detectedPaths += "$discordBase/app-*/Discord.exe"
+                        }
+                    }
+                    # If no app-* directories found, detection fails
+                    # This indicates Discord is not properly installed
+                }
+                "VTubeStudio" {
+                    $commonPaths = @(
+                        "${env:ProgramFiles(x86)}/Steam/steamapps/common/VTube Studio/VTube Studio.exe",
+                        "${env:ProgramFiles}/Steam/steamapps/common/VTube Studio/VTube Studio.exe",
+                        "C:/Program Files (x86)/Steam/steamapps/common/VTube Studio/VTube Studio.exe",
+                        "C:/Program Files/Steam/steamapps/common/VTube Studio/VTube Studio.exe"
                     )
                     foreach ($path in $commonPaths) {
                         if (Test-Path $path) {
@@ -1072,7 +1189,9 @@
                     "Steam" { $script:Window.FindName("SteamPathTextBox").Text = $selectedPath }
                     "Epic" { $script:Window.FindName("EpicPathTextBox").Text = $selectedPath }
                     "Riot" { $script:Window.FindName("RiotPathTextBox").Text = $selectedPath }
-                    "Obs" { $script:Window.FindName("ObsPathTextBox").Text = $selectedPath }
+                    "OBS" { $script:Window.FindName("OBSPathTextBox").Text = $selectedPath }
+                    "Discord" { $script:Window.FindName("DiscordPathTextBox").Text = $selectedPath }
+                    "VTubeStudio" { $script:Window.FindName("VTubePathTextBox").Text = $selectedPath }
                 }
 
                 Write-Verbose "Auto-detected $Platform path: $selectedPath"
@@ -1106,7 +1225,7 @@
             return
         }
 
-        Write-Host "Language changed from '$($this.uiManager.CurrentLanguage)' to '$selectedLanguageCode'"
+        Write-Host "[INFO] ConfigEditorEvents: Language changed from '$($this.uiManager.CurrentLanguage)' to '$selectedLanguageCode'"
 
         # Save the language setting to configuration
         if (-not $this.stateManager.ConfigData.PSObject.Properties["language"]) {
@@ -1128,21 +1247,142 @@
     # Handle window closing
     [void] HandleWindowClosing([System.ComponentModel.CancelEventArgs]$Event) {
         try {
-            Write-Host "DEBUG: HandleWindowClosing called"
+            Write-Host "[DEBUG] ConfigEditorEvents: HandleWindowClosing called"
 
+            # Check if there are unsaved changes
             if ($this.stateManager.TestHasUnsavedChanges()) {
-                $result = Show-SafeMessage -Key "confirmDiscardChanges" -MessageType "Question" -Button "YesNoCancel" -DefaultResult "Cancel"
+                Write-Host "[DEBUG] ConfigEditorEvents: Unsaved changes detected"
 
-                if ($result -ne "Yes") {
-                    Write-Host "DEBUG: User cancelled window closing"
-                    $Event.Cancel = $true
-                    return
+                # Get localized messages
+                $message = $this.uiManager.GetLocalizedMessage("saveBeforeClosePrompt")
+                $title = $this.uiManager.GetLocalizedMessage("unsavedChangesTitle")
+                $saveAndClose = $this.uiManager.GetLocalizedMessage("saveAndClose")
+                $discardAndClose = $this.uiManager.GetLocalizedMessage("discardAndClose")
+                $cancel = $this.uiManager.GetLocalizedMessage("cancelButton")
+
+                # Create custom dialog window
+                Add-Type -AssemblyName PresentationFramework
+                $dialogXaml = @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="$title"
+        Width="480" Height="180"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="$message"
+                   TextWrapping="Wrap"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Left"
+                   MaxWidth="440"
+                   FontSize="14"/>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Margin="0,20,0,0">
+            <Button Name="SaveButton"
+                    Content="$saveAndClose"
+                    Width="130"
+                    Height="32"
+                    Margin="5"
+                    IsDefault="True"/>
+            <Button Name="DiscardButton"
+                    Content="$discardAndClose"
+                    Width="130"
+                    Height="32"
+                    Margin="5"/>
+            <Button Name="CancelButton"
+                    Content="$cancel"
+                    Width="100"
+                    Height="32"
+                    Margin="5"
+                    IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>
+"@
+
+                $reader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($dialogXaml))
+                $dialogWindow = [Windows.Markup.XamlReader]::Load($reader)
+                $reader.Close()
+
+                # Set owner for modal behavior
+                $dialogWindow.Owner = $this.Window
+
+                # Get buttons
+                $saveButton = $dialogWindow.FindName("SaveButton")
+                $discardButton = $dialogWindow.FindName("DiscardButton")
+                $cancelButton = $dialogWindow.FindName("CancelButton")
+
+                # Store result
+                $dialogResult = $null
+
+                # Add event handlers
+                $saveButton.Add_Click({
+                    $dialogWindow.Tag = "Save"
+                    $dialogWindow.DialogResult = $true
+                    $dialogWindow.Close()
+                })
+
+                $discardButton.Add_Click({
+                    $dialogWindow.Tag = "Discard"
+                    $dialogWindow.DialogResult = $true
+                    $dialogWindow.Close()
+                })
+
+                $cancelButton.Add_Click({
+                    $dialogWindow.Tag = "Cancel"
+                    $dialogWindow.DialogResult = $false
+                    $dialogWindow.Close()
+                })
+
+                # Show dialog
+                $result = $dialogWindow.ShowDialog()
+                $userChoice = $dialogWindow.Tag
+
+                Write-Host "[DEBUG] ConfigEditorEvents: User choice - $userChoice"
+
+                switch ($userChoice) {
+                    "Save" {
+                        # Save and close
+                        Write-Host "[DEBUG] ConfigEditorEvents: Saving changes before closing"
+                        try {
+                            $this.HandleSaveConfig()
+                            Write-Host "[DEBUG] ConfigEditorEvents: Changes saved successfully"
+                        } catch {
+                            Write-Host "[ERROR] ConfigEditorEvents: Failed to save changes - $($_.Exception.Message)"
+                            # Show error and cancel closing
+                            Show-SafeMessage -Key "configSaveFailed" -MessageType "Error"
+                            $Event.Cancel = $true
+                            return
+                        }
+                    }
+                    "Discard" {
+                        # Discard and close
+                        Write-Host "[DEBUG] ConfigEditorEvents: Discarding changes and closing"
+                    }
+                    default {
+                        # Cancel closing (includes "Cancel" and null)
+                        Write-Host "[DEBUG] ConfigEditorEvents: User cancelled window closing"
+                        $Event.Cancel = $true
+                        return
+                    }
                 }
+            } else {
+                Write-Host "[DEBUG] ConfigEditorEvents: No unsaved changes, closing directly"
             }
 
-            Write-Host "DEBUG: Window closing approved"
+            Write-Host "[DEBUG] ConfigEditorEvents: Window closing approved"
         } catch {
-            Write-Warning "Error in HandleWindowClosing: $($_.Exception.Message)"
+            Write-Host "[WARNING] ConfigEditorEvents: Error in HandleWindowClosing - $($_.Exception.Message)"
             # Don't cancel on error - allow window to close
         }
     }
@@ -1153,13 +1393,36 @@
             # Save current game data
             Save-CurrentGameData
 
-            # Write to file
-            $configJson = $this.stateManager.ConfigData | ConvertTo-Json -Depth 10
-            Set-Content -Path $script:ConfigPath -Value $configJson -Encoding UTF8
+            # Save apps to manage for current game
+            if ($script:CurrentGameId) {
+                $gameData = $this.stateManager.ConfigData.games.$script:CurrentGameId
+                if ($gameData) {
+                    $appsToManagePanel = $script:Window.FindName("AppsToManagePanel")
+                    if ($appsToManagePanel) {
+                        $appsToManage = @()
+                        foreach ($child in $appsToManagePanel.Children) {
+                            if ($child -is [System.Windows.Controls.CheckBox] -and $child.IsChecked) {
+                                $appsToManage += $child.Tag
+                            }
+                        }
+
+                        # Update game's appsToManage property
+                        if (-not $gameData.PSObject.Properties["appsToManage"]) {
+                            $gameData | Add-Member -NotePropertyName "appsToManage" -NotePropertyValue $appsToManage
+                        } else {
+                            $gameData.appsToManage = $appsToManage
+                        }
+                        Write-Verbose "Saved appsToManage for game $script:CurrentGameId: $($appsToManage -join ', ')"
+                    }
+                }
+            }
+
+            # Write to file with 4-space indentation
+            Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
 
             # Update original config and clear modified flag
             Save-OriginalConfig
-            $script:HasUnsavedChanges = $false
+            $this.stateManager.ClearModified()
 
             # Refresh games list to reflect any changes
             $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
@@ -1176,35 +1439,64 @@
     # Handle save managed apps
     [void] HandleSaveManagedApps() {
         try {
+            # Store the current app ID before saving (it might change during save)
+            $currentAppId = $script:CurrentAppId
+
             # Save current app data
             Save-CurrentAppData
 
-            # Save global apps to manage settings
-            $appsToManagePanel = $script:Window.FindName("AppsToManagePanel")
-            $appsToManage = @()
+            # Get the potentially updated app ID after save
+            $updatedAppId = $script:CurrentAppId
 
-            foreach ($child in $appsToManagePanel.Children) {
-                if ($child -is [System.Windows.Controls.CheckBox] -and $child.IsChecked) {
-                    $appsToManage += $child.Tag
+            # Save apps to manage for current game if on Games tab context
+            # Note: The AppsToManagePanel is shown on the Games tab, not Managed Apps tab
+            # So we save it with the current game's data
+            if ($script:CurrentGameId) {
+                $gameData = $this.stateManager.ConfigData.games.$script:CurrentGameId
+                if ($gameData) {
+                    $appsToManagePanel = $script:Window.FindName("AppsToManagePanel")
+                    if ($appsToManagePanel) {
+                        $appsToManage = @()
+                        foreach ($child in $appsToManagePanel.Children) {
+                            if ($child -is [System.Windows.Controls.CheckBox] -and $child.IsChecked) {
+                                $appsToManage += $child.Tag
+                            }
+                        }
+
+                        # Update game's appsToManage property
+                        if (-not $gameData.PSObject.Properties["appsToManage"]) {
+                            $gameData | Add-Member -NotePropertyName "appsToManage" -NotePropertyValue $appsToManage
+                        } else {
+                            $gameData.appsToManage = $appsToManage
+                        }
+                        Write-Verbose "Saved appsToManage for game $script:CurrentGameId: $($appsToManage -join ', ')"
+                    }
                 }
             }
 
-            if (-not $this.stateManager.ConfigData.PSObject.Properties["appsToManage"]) {
-                $this.stateManager.ConfigData | Add-Member -NotePropertyName "appsToManage" -NotePropertyValue $appsToManage
-            } else {
-                $this.stateManager.ConfigData.appsToManage = $appsToManage
-            }
-
-            # Write to file
-            $configJson = $this.stateManager.ConfigData | ConvertTo-Json -Depth 10
-            Set-Content -Path $script:ConfigPath -Value $configJson -Encoding UTF8
+            # Write to file with 4-space indentation
+            Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
 
             # Update original config and clear modified flag
             Save-OriginalConfig
-            $script:HasUnsavedChanges = $false
+            $this.stateManager.ClearModified()
 
-            # Refresh managed apps list to reflect any changes
+            # Refresh managed apps list to reflect any changes (including ID changes)
             $this.uiManager.UpdateManagedAppsList($this.stateManager.ConfigData)
+
+            # Restore selection to the updated app ID
+            if ($updatedAppId) {
+                $managedAppsList = $script:Window.FindName("ManagedAppsList")
+                if ($managedAppsList) {
+                    for ($i = 0; $i -lt $managedAppsList.Items.Count; $i++) {
+                        if ($managedAppsList.Items[$i] -eq $updatedAppId) {
+                            $managedAppsList.SelectedIndex = $i
+                            Write-Verbose "Restored selection to app: $updatedAppId"
+                            break
+                        }
+                    }
+                }
+            }
 
             Show-SafeMessage -Key "managedAppsSaved" -MessageType "Information"
             Write-Verbose "Managed apps settings saved"
@@ -1221,13 +1513,12 @@
             # Save global settings data
             Save-GlobalSettingsData
 
-            # Write to file
-            $configJson = $this.stateManager.ConfigData | ConvertTo-Json -Depth 10
-            Set-Content -Path $script:ConfigPath -Value $configJson -Encoding UTF8
+            # Write to file with 4-space indentation
+            Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
 
             # Update original config and clear modified flag
             Save-OriginalConfig
-            $script:HasUnsavedChanges = $false
+            $this.stateManager.ClearModified()
 
             Show-SafeMessage -Key "globalSettingsSaved" -MessageType "Information"
             Write-Verbose "Global settings saved"
@@ -1238,6 +1529,100 @@
         }
     }
 
+    # Handle save OBS settings
+    [void] HandleSaveOBSSettings() {
+        try {
+            # Save OBS settings data
+            Save-OBSSettingsData
+
+            # Write to file with 4-space indentation
+            Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
+
+            # Update original config and clear modified flag
+            Save-OriginalConfig
+            $this.stateManager.ClearModified()
+
+            Show-SafeMessage -Key "obsSettingsSaved" -MessageType "Information"
+            Write-Verbose "OBS settings saved"
+
+        } catch {
+            Write-Error "Failed to save OBS settings: $_"
+            Show-SafeMessage -Key "obsSettingsSaveFailed" -MessageType "Error"
+        }
+    }
+
+    # Handle save Discord settings
+    [void] HandleSaveDiscordSettings() {
+        try {
+            # Save Discord settings data
+            Save-DiscordSettingsData
+
+            # Write to file with 4-space indentation
+            Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
+
+            # Update original config and clear modified flag
+            Save-OriginalConfig
+            $this.stateManager.ClearModified()
+
+            Show-SafeMessage -Key "discordSettingsSaved" -MessageType "Information"
+            Write-Verbose "Discord settings saved"
+
+        } catch {
+            Write-Error "Failed to save Discord settings: $_"
+            Show-SafeMessage -Key "discordSettingsSaveFailed" -MessageType "Error"
+        }
+    }
+
+    # Handle save VTube Studio settings
+    [void] HandleSaveVTubeStudioSettings() {
+        try {
+            # Save VTube Studio settings data
+            Save-VTubeStudioSettingsData
+
+            # Write to file with 4-space indentation
+            Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
+
+            # Update original config and clear modified flag
+            Save-OriginalConfig
+            $this.stateManager.ClearModified()
+
+            Show-SafeMessage -Key "vtubeStudioSettingsSaved" -MessageType "Information"
+            Write-Verbose "VTube Studio settings saved"
+
+        } catch {
+            Write-Error "Failed to save VTube Studio settings: $_"
+            Show-SafeMessage -Key "vtubeStudioSettingsSaveFailed" -MessageType "Error"
+        }
+    }
+
+    # Handle opening integration tab from game settings
+    [void] HandleOpenIntegrationTab([string]$TabName) {
+        try {
+            $tabControl = $script:Window.FindName("MainTabControl")
+            if (-not $tabControl) {
+                Write-Warning "TabControl not found"
+                return
+            }
+
+            $targetTab = $null
+            switch ($TabName) {
+                "OBS" { $targetTab = $script:Window.FindName("OBSTab") }
+                "Discord" { $targetTab = $script:Window.FindName("DiscordTab") }
+                "VTubeStudio" { $targetTab = $script:Window.FindName("VTubeStudioTab") }
+            }
+
+            if ($targetTab) {
+                $tabControl.SelectedItem = $targetTab
+                Write-Verbose "Switched to $TabName tab"
+            } else {
+                Write-Warning "$TabName tab not found"
+            }
+
+        } catch {
+            Write-Error "Failed to open $TabName tab: $_"
+        }
+    }
+
     # Handle refresh game list button click
     [void] HandleRefreshGameList() {
         try {
@@ -1245,40 +1630,6 @@
             $this.uiManager.UpdateGameLauncherList($this.stateManager.ConfigData)
         } catch {
             Write-Warning "Failed to refresh game list: $($_.Exception.Message)"
-        }
-    }
-
-    # Handle add new game from launcher
-    [void] HandleAddNewGameFromLauncher() {
-        try {
-            Write-Verbose "Adding new game from launcher"
-            # Switch to Games tab and trigger add game
-            $mainTabControl = $this.uiManager.Window.FindName("MainTabControl")
-            $gamesTab = $this.uiManager.Window.FindName("GamesTab")
-
-            if ($mainTabControl -and $gamesTab) {
-                $mainTabControl.SelectedItem = $gamesTab
-                # Trigger add game functionality
-                $this.HandleAddGame()
-            }
-        } catch {
-            Write-Warning "Failed to add new game from launcher: $($_.Exception.Message)"
-        }
-    }
-
-    # Handle open config from launcher
-    [void] HandleOpenConfigFromLauncher() {
-        try {
-            Write-Verbose "Opening config from launcher"
-            # Switch to Global Settings tab
-            $mainTabControl = $this.uiManager.Window.FindName("MainTabControl")
-            $globalSettingsTab = $this.uiManager.Window.FindName("GlobalSettingsTab")
-
-            if ($mainTabControl -and $globalSettingsTab) {
-                $mainTabControl.SelectedItem = $globalSettingsTab
-            }
-        } catch {
-            Write-Warning "Failed to open config from launcher: $($_.Exception.Message)"
         }
     }
 
@@ -1315,7 +1666,7 @@
                 return
             }
 
-            Write-Host "Launching game from GUI: $GameId"
+            Write-Host "[INFO] ConfigEditorEvents: Launching game from GUI - $GameId"
 
             # Launch the game using PowerShell - bypass Main.ps1 to prevent recursive ConfigEditor launch
             $process = Start-Process -FilePath "powershell.exe" -ArgumentList @(
@@ -1366,38 +1717,63 @@
         }
     }
 
+    # Handle refresh managed apps list
+    [void] HandleRefreshManagedAppsList() {
+        try {
+            Write-Verbose "Refreshing managed apps list..."
+            $configData = $this.stateManager.ConfigData
+            $this.uiManager.UpdateManagedAppsList($configData)
+            Write-Verbose "Managed apps list refreshed successfully"
+        } catch {
+            Write-Warning "Failed to refresh managed apps list: $($_.Exception.Message)"
+        }
+    }
+
+    # Handle refresh all lists
+    [void] HandleRefreshAll() {
+        try {
+            Write-Verbose "Refreshing all lists..."
+            $configData = $this.stateManager.ConfigData
+            $this.uiManager.UpdateGamesList($configData)
+            $this.uiManager.UpdateGameLauncherList($configData)
+            $this.uiManager.UpdateManagedAppsList($configData)
+            Write-Verbose "All lists refreshed successfully"
+        } catch {
+            Write-Warning "Failed to refresh all lists: $($_.Exception.Message)"
+        }
+    }
+
     # Handle about dialog
     [void] HandleAbout() {
         try {
-            Write-Host "=== Handle-About DEBUG START ==="
+            Write-Host "[DEBUG] ConfigEditorEvents: About dialog started"
 
             # Get version information - use global function reference
             $version = if ($global:GetProjectVersionFunc) {
                 & $global:GetProjectVersionFunc
             } else {
-                Write-Warning "Get-ProjectVersion not available"
+                Write-Host "[WARNING] ConfigEditorEvents: Get-ProjectVersion not available"
                 "Unknown"
             }
             $buildDate = Get-Date -Format "yyyy-MM-dd"
 
-            Write-Host "Version: $version"
-            Write-Host "Build Date: $buildDate"
+            Write-Host "[INFO] ConfigEditorEvents: Version - $version"
+            Write-Host "[INFO] ConfigEditorEvents: Build Date - $buildDate"
 
             # Create about message
             $aboutMessage = $this.uiManager.GetLocalizedMessage("aboutMessage") -f $version, $buildDate
             $aboutTitle = $this.uiManager.GetLocalizedMessage("aboutTitle")
 
-            Write-Host "About Message: $aboutMessage"
-            Write-Host "About Title: $aboutTitle"
+            Write-Host "[DEBUG] ConfigEditorEvents: About Message - $aboutMessage"
+            Write-Host "[DEBUG] ConfigEditorEvents: About Title - $aboutTitle"
 
             # Show the about dialog
             [System.Windows.MessageBox]::Show($aboutMessage, $aboutTitle, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
 
-            Write-Host "=== Handle-About DEBUG END ==="
+            Write-Host "[OK] ConfigEditorEvents: About dialog completed"
 
         } catch {
-            Write-Error "About dialog failed: $_"
-            Write-Host "About dialog error: $_"
+            Write-Host "[ERROR] ConfigEditorEvents: About dialog error - $($_.Exception.Message)"
         }
     }
 
@@ -1439,7 +1815,7 @@
 
             # Execute the launcher creation script
             $gameIds = $selectedGames -join ","
-            Write-Host "Creating launchers for games: $gameIds"
+            Write-Host "[INFO] ConfigEditorEvents: Creating launchers for games - $gameIds"
 
             try {
                 & $launcherScriptPath -GameIds $gameIds -ConfigPath $script:ConfigPath
@@ -1459,7 +1835,7 @@
     # Register all UI event handlers
     [void] RegisterAll() {
         try {
-            Write-Host "Registering all UI event handlers..."
+            Write-Host "[INFO] ConfigEditorEvents: Registering all UI event handlers"
 
             $self = $this
 
@@ -1467,17 +1843,14 @@
             $this.uiManager.Window.add_Closing({
                     param($sender, $e)
                     try {
-                        Write-Host "DEBUG: Window Closing event fired"
+                        Write-Host "[DEBUG] ConfigEditorEvents: Window Closing event fired"
                         $self.HandleWindowClosing($e)
                     } catch {
-                        Write-Warning "Error in window closing event: $($_.Exception.Message)"
+                        Write-Host "[WARNING] ConfigEditorEvents: Error in window closing event - $($_.Exception.Message)"
                     }
                 }.GetNewClosure())
 
             # --- Game Launcher Tab ---
-            $this.uiManager.Window.FindName("RefreshGameListButton").add_Click({ $self.HandleRefreshGameList() }.GetNewClosure())
-            $this.uiManager.Window.FindName("AddNewGameButton").add_Click({ $self.HandleAddNewGameFromLauncher() }.GetNewClosure())
-            $this.uiManager.Window.FindName("OpenConfigButton").add_Click({ $self.HandleOpenConfigFromLauncher() }.GetNewClosure())
             $this.uiManager.Window.FindName("GenerateLaunchersButton").add_Click({ $self.HandleGenerateLaunchers() }.GetNewClosure())
 
             # Add tab selection event to update game list when switching to launcher tab
@@ -1488,6 +1861,18 @@
                             $selectedTab = $this.SelectedItem
                             if ($selectedTab -and $selectedTab.Name -eq "GameLauncherTab") {
                                 $self.HandleRefreshGameList()
+                            } elseif ($selectedTab -and $selectedTab.Name -eq "GamesTab") {
+                                # Ensure first game is selected when switching to Games tab
+                                $gamesList = $self.uiManager.Window.FindName("GamesList")
+                                if ($gamesList -and $gamesList.Items.Count -gt 0 -and $gamesList.SelectedIndex -lt 0) {
+                                    $gamesList.SelectedIndex = 0
+                                }
+                            } elseif ($selectedTab -and $selectedTab.Name -eq "ManagedAppsTab") {
+                                # Ensure first app is selected when switching to Managed Apps tab
+                                $managedAppsList = $self.uiManager.Window.FindName("ManagedAppsList")
+                                if ($managedAppsList -and $managedAppsList.Items.Count -gt 0 -and $managedAppsList.SelectedIndex -lt 0) {
+                                    $managedAppsList.SelectedIndex = 0
+                                }
                             }
                         } catch {
                             Write-Warning "Error in tab selection changed: $($_.Exception.Message)"
@@ -1509,6 +1894,9 @@
             $this.uiManager.Window.FindName("MoveGameUpButton").add_Click({ $self.HandleMoveGame("Up") }.GetNewClosure())
             $this.uiManager.Window.FindName("MoveGameDownButton").add_Click({ $self.HandleMoveGame("Down") }.GetNewClosure())
             $this.uiManager.Window.FindName("MoveGameBottomButton").add_Click({ $self.HandleMoveGame("Bottom") }.GetNewClosure())
+            $this.uiManager.Window.FindName("OpenOBSTabButton").add_Click({ $self.HandleOpenIntegrationTab("OBS") }.GetNewClosure())
+            $this.uiManager.Window.FindName("OpenDiscordTabButton").add_Click({ $self.HandleOpenIntegrationTab("Discord") }.GetNewClosure())
+            $this.uiManager.Window.FindName("OpenVTubeStudioTabButton").add_Click({ $self.HandleOpenIntegrationTab("VTubeStudio") }.GetNewClosure())
 
             # --- Managed Apps Tab ---
             $this.uiManager.Window.FindName("ManagedAppsList").add_SelectionChanged({ $self.HandleAppSelectionChanged() }.GetNewClosure())
@@ -1522,21 +1910,38 @@
             $this.uiManager.Window.FindName("MoveAppDownButton").add_Click({ $self.HandleMoveApp("Down") }.GetNewClosure())
             $this.uiManager.Window.FindName("MoveAppBottomButton").add_Click({ $self.HandleMoveApp("Bottom") }.GetNewClosure())
 
+            # --- OBS Tab ---
+            $this.uiManager.Window.FindName("BrowseOBSPathButton").add_Click({ $self.HandleBrowseOBSPath() }.GetNewClosure())
+            $this.uiManager.Window.FindName("AutoDetectOBSButton").add_Click({ $self.HandleAutoDetectPath("OBS") }.GetNewClosure())
+            $this.uiManager.Window.FindName("SaveOBSSettingsButton").add_Click({ $self.HandleSaveOBSSettings() }.GetNewClosure())
+
+            # --- Discord Tab ---
+            $this.uiManager.Window.FindName("BrowseDiscordPathButton").add_Click({ $self.HandleBrowseDiscordPath() }.GetNewClosure())
+            $this.uiManager.Window.FindName("AutoDetectDiscordButton").add_Click({ $self.HandleAutoDetectPath("Discord") }.GetNewClosure())
+            $this.uiManager.Window.FindName("SaveDiscordSettingsButton").add_Click({ $self.HandleSaveDiscordSettings() }.GetNewClosure())
+
+            # --- VTube Studio Tab ---
+            $this.uiManager.Window.FindName("BrowseVTubePathButton").add_Click({ $self.HandleBrowseVTubeStudioPath() }.GetNewClosure())
+            $this.uiManager.Window.FindName("AutoDetectVTubeButton").add_Click({ $self.HandleAutoDetectPath("VTubeStudio") }.GetNewClosure())
+            $this.uiManager.Window.FindName("SaveVTubeStudioSettingsButton").add_Click({ $self.HandleSaveVTubeStudioSettings() }.GetNewClosure())
+
             # --- Global Settings Tab ---
             $this.uiManager.Window.FindName("LanguageCombo").add_SelectionChanged({ $self.HandleLanguageSelectionChanged() }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveGlobalSettingsButton").add_Click({ $self.HandleSaveGlobalSettings() }.GetNewClosure())
             $this.uiManager.Window.FindName("AutoDetectSteamButton").add_Click({ $self.HandleAutoDetectPath("Steam") }.GetNewClosure())
             $this.uiManager.Window.FindName("AutoDetectEpicButton").add_Click({ $self.HandleAutoDetectPath("Epic") }.GetNewClosure())
             $this.uiManager.Window.FindName("AutoDetectRiotButton").add_Click({ $self.HandleAutoDetectPath("Riot") }.GetNewClosure())
-            $this.uiManager.Window.FindName("AutoDetectObsButton").add_Click({ $self.HandleAutoDetectPath("Obs") }.GetNewClosure())
 
             # --- Menu Items ---
+            $this.uiManager.Window.FindName("RefreshGameListMenuItem").add_Click({ $self.HandleRefreshGameList() }.GetNewClosure())
+            $this.uiManager.Window.FindName("RefreshManagedAppsListMenuItem").add_Click({ $self.HandleRefreshManagedAppsList() }.GetNewClosure())
+            $this.uiManager.Window.FindName("RefreshAllMenuItem").add_Click({ $self.HandleRefreshAll() }.GetNewClosure())
             $this.uiManager.Window.FindName("CheckUpdateMenuItem").add_Click({ $self.HandleCheckUpdate() }.GetNewClosure())
             $this.uiManager.Window.FindName("AboutMenuItem").add_Click({ $self.HandleAbout() }.GetNewClosure())
 
-            Write-Host "All UI event handlers registered successfully."
+            Write-Host "[OK] ConfigEditorEvents: All UI event handlers registered successfully"
         } catch {
-            Write-Error "Failed to register event handlers: $($_.Exception.Message)"
+            Write-Host "[ERROR] ConfigEditorEvents: Failed to register event handlers - $($_.Exception.Message)"
             throw $_
         }
     }

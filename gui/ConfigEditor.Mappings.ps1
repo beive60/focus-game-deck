@@ -15,7 +15,6 @@ $script:CrudButtonMappings = @{
     "AddAppButton"        = "addButton"
     "DuplicateAppButton"  = "duplicateButton"
     "DeleteAppButton"     = "deleteButton"
-    "AddNewGameButton"    = "addGameButton"
 }
 
 # File browser buttons
@@ -38,12 +37,13 @@ $script:AutoDetectButtonMappings = @{
 
 # Save and action buttons
 $script:ActionButtonMappings = @{
-    "SaveGameSettingsButton"   = "saveButton"
-    "SaveManagedAppsButton"    = "saveButton"
-    "SaveGlobalSettingsButton" = "saveButton"
-    "GenerateLaunchersButton"  = "generateLaunchers"
-    "RefreshGameListButton"    = "refreshButton"
-    "OpenConfigButton"         = "openConfigButton"
+    "SaveGameSettingsButton"        = "saveButton"
+    "SaveManagedAppsButton"         = "saveButton"
+    "SaveGlobalSettingsButton"      = "saveButton"
+    "SaveOBSSettingsButton"         = "saveButton"
+    "SaveDiscordSettingsButton"     = "saveButton"
+    "SaveVTubeStudioSettingsButton" = "saveButton"
+    "GenerateLaunchersButton"       = "generateLaunchers"
 }
 
 # List movement buttons
@@ -110,6 +110,9 @@ $script:TabMappings = @{
     "GameLauncherTab"   = "gameLauncherTabHeader"
     "GamesTab"          = "gamesTabHeader"
     "ManagedAppsTab"    = "managedAppsTabHeader"
+    "OBSTab"            = "obsTabHeader"
+    "DiscordTab"        = "discordTabHeader"
+    "VTubeStudioTab"    = "vtubestudioTabHeader"
     "GlobalSettingsTab" = "globalSettingsTabHeader"
 }
 
@@ -121,6 +124,7 @@ $script:TextMappings = @{
     "LauncherStatusText"   = "readyToLaunch"
     "LauncherHintText"     = "launcherHintText"
     "LauncherHelpText"     = "launcherHelpText"
+    "DiscordPathInfoText"  = "discordPathInfo"
 }
 
 # CheckBox content mappings
@@ -131,21 +135,28 @@ $script:CheckBoxMappings = @{
 
 # MenuItem mappings
 $script:MenuItemMappings = @{
-    "HelpMenu"            = "helpMenuHeader"
-    "CheckUpdateMenuItem" = "checkUpdateMenuItem"
-    "AboutMenuItem"       = "aboutMenuItem"
+    "RefreshMenu"                   = "refreshMenuHeader"
+    "RefreshGameListMenuItem"       = "refreshGameListMenuItem"
+    "RefreshManagedAppsListMenuItem" = "refreshManagedAppsListMenuItem"
+    "RefreshAllMenuItem"            = "refreshAllMenuItem"
+    "HelpMenu"                      = "helpMenuHeader"
+    "CheckUpdateMenuItem"           = "checkUpdateMenuItem"
+    "AboutMenuItem"                 = "aboutMenuItem"
 }
 
 # Tooltip mappings for elements that don't have visible text but need tooltips
 $script:TooltipMappings = @{
-    "MoveGameTopButton"    = "moveTopTooltip"
-    "MoveGameUpButton"     = "moveUpTooltip"
-    "MoveGameDownButton"   = "moveDownTooltip"
-    "MoveGameBottomButton" = "moveBottomTooltip"
-    "MoveAppTopButton"     = "moveTopTooltip"
-    "MoveAppUpButton"      = "moveUpTooltip"
-    "MoveAppDownButton"    = "moveDownTooltip"
-    "MoveAppBottomButton"  = "moveBottomTooltip"
+    "MoveGameTopButton"              = "moveTopTooltip"
+    "MoveGameUpButton"               = "moveUpTooltip"
+    "MoveGameDownButton"             = "moveDownTooltip"
+    "MoveGameBottomButton"           = "moveBottomTooltip"
+    "MoveAppTopButton"               = "moveTopTooltip"
+    "MoveAppUpButton"                = "moveUpTooltip"
+    "MoveAppDownButton"              = "moveDownTooltip"
+    "MoveAppBottomButton"            = "moveBottomTooltip"
+    "AutoDetectObsTooltip"           = "autoDetectObsTooltip"
+    "AutoDetectDiscordTooltip"       = "autoDetectDiscordTooltip"
+    "AutoDetectVTubeStudioTooltip"   = "autoDetectVTubeStudioTooltip"
 }
 
 # ComboBoxItem content mappings
@@ -168,17 +179,12 @@ $script:ComboBoxItemMappings = @{
 
 # Game action message key mappings (used for dynamic ComboBoxItem creation)
 # These are not x:Name values but message keys used in InitializeGameActionCombos()
+# Simplified to core actions only: none, start-process, stop-process
+# Application-specific integrations (OBS, Discord, VTube Studio) are configured in dedicated tabs
 $script:GameActionMessageKeys = @{
-    "none"                    = "gameActionNone"
-    "start-process"           = "gameActionStartProcess"
-    "stop-process"            = "gameActionStopProcess"
-    "toggle-hotkeys"          = "gameActionToggleHotkeys"
-    "start-vtube-studio"      = "gameActionStartVtubeStudio"
-    "stop-vtube-studio"       = "gameActionStopVtubeStudio"
-    "set-discord-gaming-mode" = "gameActionSetDiscordGaming"
-    "restore-discord-normal"  = "gameActionRestoreDiscord"
-    "pause-wallpaper"         = "gameActionPauseWallpaper"
-    "play-wallpaper"          = "gameActionPlayWallpaper"
+    "none"          = "gameActionNone"
+    "start-process" = "gameActionStartProcess"
+    "stop-process"  = "gameActionStopProcess"
 }
 
 # Termination method options mapping

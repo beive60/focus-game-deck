@@ -172,8 +172,8 @@ $appManager = New-AppManager -Config $config -Messages $msg
 $obsManager = $null
 
 if ("obs" -in $gameConfig.appsToManage) {
-    if ($config.obs) {
-        $obsManager = New-OBSManager -OBSConfig $config.obs -Messages $msg
+    if ($config.integrations.obs) {
+        $obsManager = New-OBSManager -OBSConfig $config.integrations.obs -Messages $msg
         if ($logger) { $logger.Info("OBS manager initialized", "OBS") }
     } else {
         Write-Warning "OBS is in appsToManage but OBS configuration is missing"
@@ -210,7 +210,7 @@ function Invoke-GameCleanup {
     }
 
     # Handle OBS replay buffer shutdown
-    if ($obsManager -and $config.obs.replayBuffer) {
+    if ($obsManager -and $config.integrations.obs.replayBuffer) {
         if ($obsManager.Connect()) {
             $obsManager.StopReplayBuffer()
             $obsManager.Disconnect()
@@ -239,11 +239,11 @@ try {
     # Handle OBS startup (special case)
     if ("obs" -in $gameConfig.appsToManage -and $obsManager) {
         Write-Host "Starting OBS..." -ForegroundColor Cyan
-        if ($obsManager.StartOBS($config.paths.obs)) {
+        if ($obsManager.StartOBS($config.integrations.obs.path)) {
             if ($logger) { $logger.Info("OBS started successfully", "OBS") }
 
             # Handle replay buffer if configured
-            if ($config.obs.replayBuffer) {
+            if ($config.integrations.obs.replayBuffer) {
                 if ($obsManager.Connect()) {
                     $obsManager.StartReplayBuffer()
                     $obsManager.Disconnect()

@@ -45,10 +45,10 @@ The `config.json` file has the following main sections:
 ```json
 {
     "language": "",              // UI language (optional)
-    "obs": { ... },             // OBS Studio integration
     "managedApps": { ... },     // Applications to manage
     "games": { ... },           // Game definitions
     "paths": { ... },           // Platform launcher paths
+    "integrations": { ... },    // Integration apps (OBS, Discord, VTube Studio)
     "logging": { ... }          // Logging configuration
 }
 ```
@@ -295,8 +295,7 @@ Configure paths to platform launchers and essential applications.
 "paths": {
     "steam": "C:/Program Files (x86)/Steam/steam.exe",
     "epic": "C:/Program Files (x86)/Epic Games/Launcher/Portal/Binaries/Win32/EpicGamesLauncher.exe",
-    "riot": "C:/Riot Games/Riot Client/RiotClientServices.exe",
-    "obs": "C:/Program Files/obs-studio/bin/64bit/obs64.exe"
+    "riot": "C:/Riot Games/Riot Client/RiotClientServices.exe"
 }
 ```
 
@@ -315,10 +314,92 @@ Configure paths to platform launchers and essential applications.
 
 - **Default**: `C:/Riot Games/Riot Client/RiotClientServices.exe`
 
-#### OBS Studio
+## Integration Apps
 
-- **Default**: `C:/Program Files/obs-studio/bin/64bit/obs64.exe`
+Configure integration applications (OBS Studio, Discord, VTube Studio) that provide additional features during gaming sessions. These are managed separately from regular managed apps in the `integrations` section.
+
+### OBS Studio Integration
+
+Configure OBS Studio for streaming and recording automation.
+
+```json
+"integrations": {
+    "obs": {
+        "path": "C:/Program Files/obs-studio/bin/64bit/obs64.exe",
+        "processName": "obs64",
+        "gameStartAction": "none",
+        "gameEndAction": "none",
+        "websocket": {
+            "host": "127.0.0.1",
+            "port": 4455,
+            "password": ""
+        },
+        "replayBuffer": true
+    }
+}
+```
+
+#### OBS Configuration Properties
+
+| Property | Description | Default |
+|----------|-------------|---------|
+| `path` | Path to OBS executable | `C:/Program Files/obs-studio/bin/64bit/obs64.exe` |
+| `processName` | OBS process name | `obs64` |
+| `gameStartAction` | Action when game starts | `none` |
+| `gameEndAction` | Action when game ends | `none` |
+| `websocket.host` | WebSocket server host | `127.0.0.1` |
+| `websocket.port` | WebSocket server port | `4455` |
+| `websocket.password` | WebSocket password (encrypted) | Empty |
+| `replayBuffer` | Enable replay buffer control | `false` |
+
+#### Common OBS Paths
+
+- **64-bit**: `C:/Program Files/obs-studio/bin/64bit/obs64.exe`
 - **32-bit**: `C:/Program Files (x86)/obs-studio/bin/32bit/obs32.exe`
+
+### Discord Integration
+
+Configure Discord Rich Presence and status management.
+
+```json
+"integrations": {
+    "discord": {
+        "path": "%LOCALAPPDATA%/Discord/app-*/Discord.exe",
+        "processName": "Discord",
+        "gameStartAction": "none",
+        "gameEndAction": "none",
+        "discord": {
+            "statusOnGameStart": "dnd",
+            "statusOnGameEnd": "online",
+            "disableOverlay": true,
+            "rpc": {
+                "enabled": true,
+                "applicationId": ""
+            }
+        }
+    }
+}
+```
+
+### VTube Studio Integration
+
+Configure VTube Studio for VTuber streaming.
+
+```json
+"integrations": {
+    "vtubeStudio": {
+        "path": "",
+        "processName": "VTube Studio",
+        "gameStartAction": "none",
+        "gameEndAction": "none",
+        "websocket": {
+            "host": "localhost",
+            "port": 8001,
+            "enabled": false
+        }
+    }
+}
+```
 
 ## Logging Configuration
 
@@ -434,24 +515,29 @@ Use `*` for wildcard matching:
 
 ```json
 {
-    "obs": {
-        "websocket": {
-            "host": "localhost",
-            "port": 4455,
-            "password": "your-obs-password"
-        },
-        "replayBuffer": true
-    },
-    "managedApps": {
+    "integrations": {
         "obs": {
+            "path": "C:/Program Files/obs-studio/bin/64bit/obs64.exe",
             "processName": "obs64",
-            "gameStartAction": "start-process",
-            "gameEndAction": "none"
+            "gameStartAction": "none",
+            "gameEndAction": "none",
+            "websocket": {
+                "host": "localhost",
+                "port": 4455,
+                "password": "your-obs-password"
+            },
+            "replayBuffer": true
         },
         "vtubeStudio": {
+            "path": "",
             "processName": "VTube Studio",
-            "gameStartAction": "start-vtube-studio",
-            "gameEndAction": "stop-vtube-studio"
+            "gameStartAction": "none",
+            "gameEndAction": "none",
+            "websocket": {
+                "host": "localhost",
+                "port": 8001,
+                "enabled": false
+            }
         }
     },
     "games": {
@@ -460,7 +546,12 @@ Use `*` for wildcard matching:
             "platform": "riot",
             "riotGameId": "valorant",
             "processName": "VALORANT-Win64-Shipping*",
-            "appsToManage": ["obs", "vtubeStudio"]
+            "appsToManage": [],
+            "integrations": {
+                "useOBS": true,
+                "useDiscord": true,
+                "useVTubeStudio": true
+            }
         }
     }
 }

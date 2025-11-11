@@ -45,7 +45,8 @@ focus-game-deck/
 | FR-01 | **Configuration File Loading** | Load `../config/config.json` at startup and display contents on screen. If not found, load `../config/config.json.sample`. |
 | FR-02 | **Game Settings Management** | Add, edit, and delete managed games. |
 | FR-03 | **Managed Apps Settings Management** | Add, edit, and delete controlled applications. |
-| FR-04 | **Global Settings Management** | Edit overall settings such as OBS integration, main paths, and display language. |
+| FR-04 | **Global Settings Management** | Edit overall settings such as main paths and display language. |
+| FR-06 | **Integration Apps Settings Management** | Configure integration apps (OBS, Discord, VTube Studio) including connection settings and behavior options. |
 | FR-05 | **Configuration File Saving** | Save all changes made on screen as syntactically correct JSON to `../config/config.json`. |
 | FR-08 | **Validation** | Check input value validity, prevent saving if errors exist, and provide user feedback. |
 
@@ -73,6 +74,9 @@ This application consists of a single window, with main functions switched throu
     * `Game Settings` tab
     * `Managed Apps Settings` tab
     * `Global Settings` tab
+    * `OBS Integration Settings` tab
+    * `Discord Integration Settings` tab
+    * `VTube Studio Integration Settings` tab
   * **Footer**:
     * `Save` button
     * `Close` button
@@ -115,12 +119,31 @@ This application consists of a single window, with main functions switched throu
 
 #### **2.4. "Global Settings" Tab**
 
-* **Screen Layout**: Composed of three groups: `OBS Integration Settings`, `Path Settings`, and `Overall Settings`.
+* **Screen Layout**: Composed of two groups: `Path Settings` and `Overall Settings`.
 * **Data Flow**:
-  1. At startup, display values from `obs`, `paths`, and `language` in `config.json` to corresponding controls.
-  2. `Password` text box masks input values.
+  1. At startup, display values from `paths` and `language` in `config.json` to corresponding controls.
 
-#### **2.5. Footer**
+#### **2.5. "OBS Integration Settings" Tab**
+
+* **Screen Layout**: Single group for OBS connection and replay buffer settings.
+* **Data Flow**:
+  1. At startup, display values from `integrations.obs` in `config.json` to corresponding controls.
+  2. `Password` text box masks input values using SecureString encryption.
+  3. Executable path is loaded from `integrations.obs.path`.
+
+#### **2.6. "Discord Integration Settings" Tab**
+
+* **Screen Layout**: Single group for Discord Rich Presence configuration.
+* **Data Flow**:
+  1. At startup, display values from `integrations.discord` in `config.json` to corresponding controls.
+
+#### **2.7. "VTube Studio Integration Settings" Tab**
+
+* **Screen Layout**: Single group for VTube Studio WebSocket connection settings.
+* **Data Flow**:
+  1. At startup, display values from `integrations.vtubeStudio` in `config.json` to corresponding controls.
+
+#### **2.8. Footer**
 
 * **`Save` Button**:
   1. `Click` event fires.
@@ -133,12 +156,12 @@ This application consists of a single window, with main functions switched throu
   1. `Click` event fires.
   2. Close window. Warning for unsaved changes is not implemented in v1.0 (future improvement item).
 
-#### **2.6. Security and Risk Management Requirements**
+#### **2.9. Security and Risk Management Requirements**
 
 Security requirements specific to the GUI configuration editor are defined as follows:
 
 * **Configuration File Security**:
-  * Password Encryption: Sensitive information such as OBS WebSocket passwords is encrypted using Windows DPAPI (SecureString)
+  * Password Encryption: Sensitive information such as OBS/VTube Studio WebSocket passwords is encrypted using Windows DPAPI (SecureString)
   * Configuration Validation: Detect and prevent invalid values and dangerous path specifications
   * File Path Verification: Validate the legitimacy of executable file paths and directory paths
 
@@ -176,7 +199,7 @@ Overall structure of the application. Configuration items are clearly separated 
 +-----------------------------------------------------------------+
 | Focus Game Deck - Configuration Editor                         |
 +-----------------------------------------------------------------+
-| | Game Settings | | Managed Apps | | Global Settings |        |
+| | Game Settings | | Managed Apps | | Global Settings | | OBS | | Discord | | VTube Studio |        |
 +-----------------------------------------------------------------+
 |                                                                 |
 |                                                                 |
@@ -244,18 +267,46 @@ Language dropdown is automatically generated based on language keys present in m
 
 ```txt
 +-----------------------------------------------------------------+
-| OBS Integration Settings                                        |
-|   Host:       [localhost_______]  Port: [4455__]               |
-|   Password:   [****************]                               |
-|   [x] Enable replay buffer during games                        |
-| --------------------------------------------------------------- |
 | Path Settings                                                  |
 |   Steam.exe Path:   [C:/Program Files..] [Browse]              |
-|   obs64.exe Path:   [C:/Program Files..] [Browse]              |
 | --------------------------------------------------------------- |
 | Overall Settings                                               |
 |   Display Language: [English (en)         ^]                   |
 |                                                                 |
++-----------------------------------------------------------------+
+```
+
+* Tab 4: OBS Integration Settings
+  * Screen for configuring OBS Studio WebSocket connection and replay buffer behavior.
+
+```txt
++-----------------------------------------------------------------+
+| OBS Integration Settings                                        |
+|   Executable Path: [C:/Program Files/obs-studio/bin/64bit/obs64.exe] [Browse] |
+|   Host:       [localhost_______]  Port: [4455__]               |
+|   Password:   [****************]                               |
+|   [x] Enable replay buffer during games                        |
++-----------------------------------------------------------------+
+```
+
+* Tab 5: Discord Integration Settings
+  * Screen for configuring Discord Rich Presence integration.
+
+```txt
++-----------------------------------------------------------------+
+| Discord Integration Settings                                    |
+|   [x] Enable Discord Rich Presence                             |
+|   Application ID: [1234567890123456789_]                       |
++-----------------------------------------------------------------+
+```
+
+* Tab 6: VTube Studio Integration Settings
+  * Screen for configuring VTube Studio WebSocket connection.
+
+```txt
++-----------------------------------------------------------------+
+| VTube Studio Integration Settings                              |
+|   Host:       [localhost_______]  Port: [8001__]               |
 +-----------------------------------------------------------------+
 ```
 
@@ -271,9 +322,9 @@ The following design decisions were made for implementing this GUI configuration
 
 **Selection Rationale:**
 
-- **Consistency**: Implementation in the same PowerShell environment as the main engine
-- **Lightweight**: No additional runtime required, utilizes Windows standard features
-- **Distribution Ease**: Single executable file creation possible through ps2exe
+* **Consistency**: Implementation in the same PowerShell environment as the main engine
+* **Lightweight**: No additional runtime required, utilizes Windows standard features
+* **Distribution Ease**: Single executable file creation possible through ps2exe
 
 #### **2. Internationalization Method: JSON External Resources**
 
@@ -287,9 +338,9 @@ Regarding Japanese character garbling issues in PowerShell's `[System.Windows.Me
 
 **Adoption Decision:**
 
-- **Maintainability**: Easy translation and message changes through separation of strings and code
-- **Standard Approach**: Implementation following common internationalization patterns
-- **Extensibility**: Foundation for future multi-language support
+* **Maintainability**: Easy translation and message changes through separation of strings and code
+* **Standard Approach**: Implementation following common internationalization patterns
+* **Extensibility**: Foundation for future multi-language support
 
 **Technical Details:**
 
@@ -315,9 +366,9 @@ gui/
 
 **Design Patterns:**
 
-- **MVVM-like**: Separation of XAML and PowerShell
-- **Event-Driven**: Handle UI operations like button clicks with handlers
-- **Configuration-Driven**: All behavior controlled by config.json
+* **MVVM-like**: Separation of XAML and PowerShell
+* **Event-Driven**: Handle UI operations like button clicks with handlers
+* **Configuration-Driven**: All behavior controlled by config.json
 
 #### **4. Error Handling Strategy**
 
@@ -339,16 +390,16 @@ Show-SafeMessage -MessageKey "configSaved" -TitleKey "info"
 
 ### **Future Extension Plans**
 
-- **Theme Functionality**: UI color setting customization
-- **Plugin Support**: Integration with external scripts
-- **Cloud Sync**: External storage and sharing of configurations
+* **Theme Functionality**: UI color setting customization
+* **Plugin Support**: Integration with external scripts
+* **Cloud Sync**: External storage and sharing of configurations
 
 ## Language Support
 
 This documentation is available in multiple languages:
 
-- **English** (Main): [docs/BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md)
-- **日本語** (Japanese): [docs/ja/BD_and_FD_for_GUI.md](./ja/BD_and_FD_for_GUI.md)
+* **English** (Main): [docs/BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md)
+* **日本語** (Japanese): [docs/ja/BD_and_FD_for_GUI.md](./ja/BD_and_FD_for_GUI.md)
 
 ---
 

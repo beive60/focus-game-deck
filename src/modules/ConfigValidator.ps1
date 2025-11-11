@@ -78,10 +78,10 @@ class ConfigValidator {
             $this.Errors += "Steam path is required in 'paths.steam'"
         }
 
-        # Validate OBS path if present
-        if ($this.Config.paths.obs) {
-            if (-not (Test-Path $this.Config.paths.obs)) {
-                $this.Warnings += "OBS path does not exist: '$($this.Config.paths.obs)'"
+        # Validate OBS path if present (now in integrations.obs.path)
+        if ($this.Config.integrations.obs.path) {
+            if (-not (Test-Path $this.Config.integrations.obs.path)) {
+                $this.Warnings += "OBS path does not exist: '$($this.Config.integrations.obs.path)'"
             }
         }
     }
@@ -92,7 +92,7 @@ class ConfigValidator {
             return
         }
 
-        $validActions = @("start-process", "stop-process", "toggle-hotkeys", "start-vtube-studio", "stop-vtube-studio", "set-discord-gaming-mode", "restore-discord-normal", "pause-wallpaper", "play-wallpaper", "none")
+        $validActions = @("start-process", "stop-process", "none")
 
         foreach ($appProperty in $this.Config.managedApps.PSObject.Properties) {
             $appId = $appProperty.Name
@@ -120,8 +120,8 @@ class ConfigValidator {
                 $this.Errors += "Application '$appId' has invalid gameEndAction: '$($appConfig.gameEndAction)'. Valid values: $($validActions -join ', ')"
             }
 
-            # Validate path if needed for actions
-            $needsPath = @("start-process", "toggle-hotkeys")
+            # Validate path if needed for start-process action
+            $needsPath = @("start-process")
             if (($appConfig.gameStartAction -in $needsPath) -or ($appConfig.gameEndAction -in $needsPath)) {
                 if (-not $appConfig.path -or $appConfig.path -eq "") {
                     $this.Errors += "Application '$appId' requires 'path' property for its configured actions"
@@ -130,50 +130,7 @@ class ConfigValidator {
                 }
             }
 
-            # Validate application-specific actions (Discord and VTube Studio exclusivity)
-            $discordSpecificActions = @("set-discord-gaming-mode", "restore-discord-normal")
-            $vtubeStudioSpecificActions = @("start-vtube-studio", "stop-vtube-studio")
-
-            # Check Discord-specific actions
-            if (($appConfig.gameStartAction -in $discordSpecificActions) -or ($appConfig.gameEndAction -in $discordSpecificActions)) {
-                if ($appId -ne "discord") {
-                    $invalidAction = if ($appConfig.gameStartAction -in $discordSpecificActions) { $appConfig.gameStartAction } else { $appConfig.gameEndAction }
-                    $this.Errors += "Application '$appId' cannot use Discord-specific action '$invalidAction'. This action is only available for 'discord' application."
-                } else {
-                    # Validate Discord-specific configuration when Discord actions are used
-                    if (-not $appConfig.discord) {
-                        $this.Warnings += "Application '$appId' uses Discord-specific actions but is missing 'discord' configuration section"
-                    } else {
-                        # Validate RPC configuration if enabled
-                        if ($appConfig.discord.rpc -and $appConfig.discord.rpc.enabled) {
-                            if (-not $appConfig.discord.rpc.applicationId -or $appConfig.discord.rpc.applicationId -eq "") {
-                                $this.Warnings += "Application '$appId' has RPC enabled but missing 'applicationId' in RPC configuration"
-                            }
-                        }
-                    }
-                }
-            }
-
-            # Check VTube Studio-specific actions
-            if (($appConfig.gameStartAction -in $vtubeStudioSpecificActions) -or ($appConfig.gameEndAction -in $vtubeStudioSpecificActions)) {
-                if ($appId -ne "vtubeStudio") {
-                    $invalidAction = if ($appConfig.gameStartAction -in $vtubeStudioSpecificActions) { $appConfig.gameStartAction } else { $appConfig.gameEndAction }
-                    $this.Errors += "Application '$appId' cannot use VTube Studio-specific action '$invalidAction'. This action is only available for 'vtubeStudio' application."
-                }
-            }
-
-            # Special validation for VTube Studio actions (existing validation enhanced)
-            $vtubeActions = @("start-vtube-studio", "stop-vtube-studio")
-            if (($appConfig.gameStartAction -in $vtubeActions) -or ($appConfig.gameEndAction -in $vtubeActions)) {
-                # VTube Studio uses auto-detection, but validate optional configuration
-                if ($appConfig.websocket) {
-                    if ($appConfig.websocket.port -and ($appConfig.websocket.port -lt 1 -or $appConfig.websocket.port -gt 65535)) {
-                        $this.Errors += "Application '$appId' has invalid WebSocket port: '$($appConfig.websocket.port)'"
-                    }
-                }
-            }
-
-            # Validate process name if needed for stop action
+            # Validate process name if needed for stop-process action
             if (($appConfig.gameStartAction -eq "stop-process") -or ($appConfig.gameEndAction -eq "stop-process")) {
                 if (-not $appConfig.processName -or $appConfig.processName -eq "") {
                     $this.Errors += "Application '$appId' requires 'processName' property for stop-process action"
@@ -282,33 +239,33 @@ class ConfigValidator {
             return
         }
 
-        # Validate OBS path
-        if (-not $this.Config.paths.obs) {
-            $this.Errors += "OBS is used but 'paths.obs' is not configured"
-        }
-
-        # Validate OBS configuration section
-        if (-not $this.Config.obs) {
-            $this.Errors += "OBS is used but 'obs' configuration section is missing"
+        # Validate OBS integration exists
+        if (-not $this.Config.integrations.obs) {
+            $this.Errors += "OBS is used but 'integrations.obs' configuration section is missing"
             return
         }
 
+        # Validate OBS path
+        if (-not $this.Config.integrations.obs.path) {
+            $this.Errors += "OBS is used but 'integrations.obs.path' is not configured"
+        }
+
         # Validate WebSocket configuration
-        if (-not $this.Config.obs.websocket) {
+        if (-not $this.Config.integrations.obs.websocket) {
             $this.Errors += "OBS WebSocket configuration is missing"
         } else {
-            if (-not $this.Config.obs.websocket.host) {
+            if (-not $this.Config.integrations.obs.websocket.host) {
                 $this.Warnings += "OBS WebSocket host not specified, using default 'localhost'"
             }
 
-            if (-not $this.Config.obs.websocket.port) {
+            if (-not $this.Config.integrations.obs.websocket.port) {
                 $this.Warnings += "OBS WebSocket port not specified, using default 4455"
             }
         }
 
         # Validate replay buffer setting
-        if ($this.Config.obs.PSObject.Properties.Name -contains "replayBuffer") {
-            if ($this.Config.obs.replayBuffer -isnot [bool]) {
+        if ($this.Config.integrations.obs.PSObject.Properties.Name -contains "replayBuffer") {
+            if ($this.Config.integrations.obs.replayBuffer -isnot [bool]) {
                 $this.Warnings += "OBS replayBuffer should be a boolean value (true/false)"
             }
         }
