@@ -90,9 +90,8 @@ param(
 #Requires -Version 5.1
 
 # Test Configuration
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$projectRoot = Split-Path -Parent $scriptDir
-$srcDir = Join-Path $projectRoot "src"
+$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+$srcDir = Join-Path -Path $projectRoot -ChildPath "src"
 
 # Import modules for testing
 $modulePaths = @(

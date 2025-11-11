@@ -30,11 +30,11 @@ $ErrorActionPreference = "Stop"
 if ($Verbose) { $VerbosePreference = "Continue" }
 
 # Initialize script variables
-$scriptDir = $PSScriptRoot
-$configPath = Join-Path $scriptDir "../config/config.json"
-$messagesPath = Join-Path $scriptDir "../localization/messages.json"
-$loggerModulePath = Join-Path $scriptDir "../src/modules/Logger.ps1"
-$testLogDir = Join-Path $scriptDir "temp-logs"
+$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+$configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
+$messagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
+$loggerModulePath = Join-Path -Path $projectRoot -ChildPath "src/modules/Logger.ps1"
+$testLogDir = Join-Path -Path $PSScriptRoot -ChildPath "temp-logs"
 $testLogFile = Join-Path $testLogDir "test-log-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
 
 # Test results tracking

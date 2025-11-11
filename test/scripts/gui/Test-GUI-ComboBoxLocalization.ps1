@@ -66,11 +66,11 @@ $ErrorActionPreference = "Stop"
 $VerbosePreference = "Continue"
 
 # Define project root and script paths
-$ProjectRoot = Split-Path -Parent $PSScriptRoot
-$GuiPath = Join-Path $ProjectRoot "gui"
-$MappingsPath = Join-Path $GuiPath "ConfigEditor.Mappings.ps1"
-$MessagesPath = Join-Path $GuiPath "../localization/messages.json"
-$XamlPath = Join-Path $GuiPath "MainWindow.xaml"
+$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+$GuiPath = Join-Path -Path $projectRoot -ChildPath "gui"
+$MappingsPath = Join-Path -Path $GuiPath -ChildPath "ConfigEditor.Mappings.ps1"
+$MessagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
+$XamlPath = Join-Path -Path $GuiPath -ChildPath "MainWindow.xaml"
 
 Write-Host "=== ComboBoxItem Localization Test ==="
 Write-Host "Testing language: $Language"

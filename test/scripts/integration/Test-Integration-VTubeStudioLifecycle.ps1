@@ -4,10 +4,13 @@
 Write-Host "=== VTube Studio Startup/Shutdown Test ==="
 
 # Load required modules
-. "$PSScriptRoot/../src/modules/VTubeStudioManager.ps1"
+$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+$vtubeStudioManagerPath = Join-Path -Path $projectRoot -ChildPath "src/modules/VTubeStudioManager.ps1"
+. $vtubeStudioManagerPath
 
 # Load configuration
-$config = Get-Content "$PSScriptRoot/../config/config.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+$configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
+$config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
 # Create VTubeStudioManager instance
 $vtubeManager = New-VTubeStudioManager -VTubeConfig $config.managedApps.vtubeStudio -Messages @{}

@@ -4,8 +4,10 @@
 Write-Host "=== VTube Studio Integration Test ==="
 
 # Load required modules
+$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
 try {
-    . "$PSScriptRoot/../src/modules/VTubeStudioManager.ps1"
+    $vtubeStudioManagerPath = Join-Path -Path $projectRoot -ChildPath "src/modules/VTubeStudioManager.ps1"
+    . $vtubeStudioManagerPath
     Write-Host "[OK] VTubeStudioManager module loaded"
 } catch {
     Write-Host "[ERROR] Failed to load VTubeStudioManager: $_"
@@ -13,7 +15,8 @@ try {
 }
 
 try {
-    . "$PSScriptRoot/../src/modules/AppManager.ps1"
+    $appManagerPath = Join-Path -Path $projectRoot -ChildPath "src/modules/AppManager.ps1"
+    . $appManagerPath
     Write-Host "[OK] AppManager module loaded"
 } catch {
     Write-Host "[ERROR] Failed to load AppManager: $_"
@@ -22,7 +25,8 @@ try {
 
 # Load configuration
 try {
-    $config = Get-Content "$PSScriptRoot/../config/config.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+    $configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
+    $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
     Write-Host "[OK] Configuration loaded"
 } catch {
     Write-Host "[ERROR] Failed to load configuration: $_"
@@ -80,7 +84,8 @@ try {
 Write-Host "`n=== Testing Configuration Validator ==="
 
 try {
-    . "$PSScriptRoot/../src/modules/ConfigValidator.ps1"
+    $configValidatorPath = Join-Path -Path $projectRoot -ChildPath "src/modules/ConfigValidator.ps1"
+    . $configValidatorPath
     Write-Host "[OK] ConfigValidator module loaded"
 
     $validator = New-ConfigValidator -Config $config -Messages @{}

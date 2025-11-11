@@ -31,9 +31,9 @@ param(
 $ErrorActionPreference = 'Stop'
 
 # Define paths
-$ProjectRoot = Split-Path -Parent $PSScriptRoot
-$MainWindowPath = Join-Path $ProjectRoot "gui/MainWindow.xaml"
-$MappingsPath = Join-Path $ProjectRoot "gui/ConfigEditor.Mappings.ps1"
+$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+$MainWindowPath = Join-Path -Path $projectRoot -ChildPath "gui/MainWindow.xaml"
+$MappingsPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1"
 
 Write-Host "=== Focus Game Deck - ConfigEditor Consistency Test ==="
 

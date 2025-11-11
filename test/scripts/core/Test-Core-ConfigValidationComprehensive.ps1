@@ -14,8 +14,8 @@
 # --- Start of Functions from Invoke-FocusGameDeck.ps1 ---
 
 # Import updated ConfigValidator module
-$scriptDir = $PSScriptRoot
-$configValidatorPath = Join-Path $scriptDir "../src/modules/ConfigValidator.ps1"
+$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+$configValidatorPath = Join-Path -Path $projectRoot -ChildPath "src/modules/ConfigValidator.ps1"
 if (Test-Path $configValidatorPath) {
     . $configValidatorPath
 } else {
@@ -74,8 +74,7 @@ Write-Host "=== FocusGameDeck Configuration Validation Test ==="
 Write-Host ""
 
 # Load configuration file
-$scriptDir = $PSScriptRoot
-$configPath = Join-Path $scriptDir "../config/config.json"
+$configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
 
 if (-not (Test-Path $configPath)) {
     Write-Host "Error: config.json not found at $configPath"

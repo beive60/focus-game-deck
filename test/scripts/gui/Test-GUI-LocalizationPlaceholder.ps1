@@ -45,7 +45,8 @@ try {
 
     # Test message loading
     Write-Host "--- Step 2: Testing message loading ---"
-    $messagesPath = Join-Path $PSScriptRoot "../localization/messages.json"
+    $projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+    $messagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
     if (-not (Test-Path $messagesPath)) {
         throw "Messages file not found: $messagesPath"
     }
@@ -98,7 +99,7 @@ try {
     Write-Host "--- Step 4: Testing Get-LocalizedMessage function ---"
 
     # Import the ConfigEditor script to access its functions
-    $configEditorPath = Join-Path $PSScriptRoot "../gui/ConfigEditor.ps1"
+    $configEditorPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.ps1"
     if (Test-Path $configEditorPath) {
         # Read the script content and extract just the Get-LocalizedMessage function
         $scriptContent = Get-Content $configEditorPath -Raw

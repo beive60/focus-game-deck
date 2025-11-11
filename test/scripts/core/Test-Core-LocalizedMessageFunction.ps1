@@ -76,13 +76,14 @@ Write-Host "=== Direct Get-LocalizedMessage Function Test ==="
 
 try {
     # Import required modules
-    $VersionModulePath = Join-Path $PSScriptRoot "Version.ps1"
+    $projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+    $VersionModulePath = Join-Path -Path $projectRoot -ChildPath "build-tools/Version.ps1"
     if (Test-Path $VersionModulePath) {
         . $VersionModulePath
     }
 
     # Load messages
-    $messagesPath = Join-Path $PSScriptRoot "../localization/messages.json"
+    $messagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
     $messagesContent = Get-Content $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
     # Set up script variables as they would be in ConfigEditor

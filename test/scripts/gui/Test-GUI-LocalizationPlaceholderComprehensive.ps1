@@ -63,10 +63,12 @@ Write-Host ""
 
 try {
     # Load required modules
-    . "$PSScriptRoot/Version.ps1"
+    $projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+    $versionModulePath = Join-Path -Path $projectRoot -ChildPath "build-tools/Version.ps1"
+    . $versionModulePath
 
     # Load messages
-    $messagesPath = Join-Path $PSScriptRoot "../localization/messages.json"
+    $messagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
     $messagesContent = Get-Content $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
     # Get version info

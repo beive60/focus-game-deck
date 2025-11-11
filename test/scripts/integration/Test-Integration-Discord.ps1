@@ -4,12 +4,12 @@
 Write-Host "=== Discord Integration MVP Test ==="
 
 # Load required modules
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$rootDir = Split-Path -Parent $scriptDir
-. "$rootDir/src/modules/DiscordManager.ps1"
+$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+$discordManagerPath = Join-Path -Path $projectRoot -ChildPath "src/modules/DiscordManager.ps1"
+. $discordManagerPath
 
 # Load config for testing
-$configPath = "$rootDir/config/config.json"
+$configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
 if (-not (Test-Path $configPath)) {
     Write-Host "Config file not found: $configPath"
     exit 1

@@ -4,11 +4,15 @@
 Write-Host "=== AppManager VTube Studio Integration Test ==="
 
 # Load required modules
-. "$PSScriptRoot/../src/modules/AppManager.ps1"
-. "$PSScriptRoot/../src/modules/VTubeStudioManager.ps1"
+$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+$appManagerPath = Join-Path -Path $projectRoot -ChildPath "src/modules/AppManager.ps1"
+$vtubeStudioManagerPath = Join-Path -Path $projectRoot -ChildPath "src/modules/VTubeStudioManager.ps1"
+. $appManagerPath
+. $vtubeStudioManagerPath
 
 # Load configuration
-$config = Get-Content "$PSScriptRoot/../config/config.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+$configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
+$config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
 # Create AppManager instance
 $appManager = New-AppManager -Config $config -Messages @{}

@@ -24,12 +24,6 @@ Create-Launchers.bat
 *ConfigEditor.bat
 Build-ConfigEditor.ps1
 
-# Test-related temporary files
-test/test-launchers/
-test/test-config.json
-test/*_test.txt
-test/*.tmp
-
 # Enhanced launcher debug files
 *.lnk.log
 launcher-debug.txt
@@ -48,3 +42,4 @@ src/logs/*.log
 # Test results
 test/test-results.xml
 test/history/*.xml
+gui/localization-diagnostic-*.json

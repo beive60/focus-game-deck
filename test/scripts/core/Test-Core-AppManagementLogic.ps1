@@ -195,8 +195,8 @@ Write-Host "=== FocusGameDeck App Actions Test ==="
 Write-Host ""
 
 # Load configuration file
-$scriptDir = $PSScriptRoot
-$configPath = Join-Path $scriptDir "../config/config.json"
+$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+$configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
 
 if (-not (Test-Path $configPath)) {
     Write-Host "Error: config.json not found at $configPath"

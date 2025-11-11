@@ -66,11 +66,10 @@ param(
 #Requires -Version 5.1
 
 # Setup paths
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$projectRoot = Split-Path -Parent $scriptDir
-$configPath = Join-Path $projectRoot "config/config.json"
-$configSamplePath = Join-Path $projectRoot "config/config.json.sample"
-$mainScriptPath = Join-Path $projectRoot "src/Invoke-FocusGameDeck.ps1"
+$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+$configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
+$configSamplePath = Join-Path -Path $projectRoot -ChildPath "config/config.json.sample"
+$mainScriptPath = Join-Path -Path $projectRoot -ChildPath "src/Invoke-FocusGameDeck.ps1"
 
 Write-Host "=== Focus Game Deck - Development Mock Game Test ==="
 Write-Host "Mock Game ID: $MockGameId"

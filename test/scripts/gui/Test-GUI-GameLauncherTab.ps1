@@ -102,12 +102,13 @@ function New-MockConfigData {
 # Helper function to load actual messages from messages.json
 function New-MockMessages {
     try {
-        $messagesPath = Join-Path $PSScriptRoot "../localization/messages.json"
+        $projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+        $messagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
         if (Test-Path $messagesPath) {
             $messagesData = Get-Content $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
             Write-Verbose "Loaded messages from: $messagesPath"
             Write-Verbose "multipleGamesReady message: '$($messagesData.en.multipleGamesReady)'"
-            return $messagesData.en  # Use English messages for testing
+            return $messagesData.en
         } else {
             Write-Warning "Messages file not found at: $messagesPath"
         }
@@ -138,7 +139,8 @@ function New-MockMessages {
 
 # Load the ConfigEditor script functions for testing
 try {
-    $configEditorPath = Join-Path $PSScriptRoot "../gui/ConfigEditor.ps1"
+    $projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+    $configEditorPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.ps1"
 
     # Extract only the functions we need for testing (without running the main application)
     $configEditorContent = Get-Content $configEditorPath -Raw
@@ -579,7 +581,8 @@ Invoke-Test -TestName "Switch-ToGameSettingsTab" -Description "Test tab switchin
 Invoke-Test -TestName "ConfigEditor-Integration" -Description "Test integration with actual ConfigEditor Get-LocalizedMessage function" -TestCode {
     try {
         # Try to source the actual Get-LocalizedMessage function from ConfigEditor
-        $configEditorPath = Join-Path $PSScriptRoot "../gui/ConfigEditor.ps1"
+        $projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+        $configEditorPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.ps1"
         if (Test-Path $configEditorPath) {
             $configContent = Get-Content $configEditorPath -Raw
 
