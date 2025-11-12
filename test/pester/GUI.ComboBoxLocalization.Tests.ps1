@@ -63,7 +63,7 @@ Describe "GUI ComboBox Localization Tests" -Tag "GUI", "Localization" {
             # Simplified test:
             $testMapping = $ComboBoxItemMappings['LogRetentionUnlimitedItem']
             $testMapping | Should -Not -BeNullOrEmpty
-            $testMapping | Should -Be 'LOG_RETENTION_UNLIMITED'
+            $testMapping | Should -Be 'logRetentionUnlimited'
         }
 
         It "should have message keys for all ComboBox mappings" {
