@@ -824,6 +824,21 @@ function Save-CurrentGameData {
         Set-PropertyValue -Object $gameData -PropertyName "processName" -Value $processNameTextBox.Text
     }
 
+    # Save comment
+    $gameCommentTextBox = $script:Window.FindName("GameCommentTextBox")
+    if ($gameCommentTextBox) {
+        $comment = $gameCommentTextBox.Text.Trim()
+        if ([string]::IsNullOrWhiteSpace($comment)) {
+            # If comment is empty, remove the property
+            if ($gameData.PSObject.Properties.Name -contains "_comment") {
+                $gameData.PSObject.Properties.Remove("_comment")
+            }
+        } else {
+            Set-PropertyValue -Object $gameData -PropertyName "_comment" -Value $comment
+        }
+        Write-Verbose "Saved _comment: $comment"
+    }
+
     # Save platform
     $platformCombo = $script:Window.FindName("PlatformComboBox")
     if ($platformCombo -and $platformCombo.SelectedItem) {
@@ -918,6 +933,35 @@ function Save-CurrentAppData {
     }
 
     Write-Verbose "Saving app data for: $script:CurrentAppId $(if ($idChanged) { "-> $newAppId" })"
+
+    # Save display name
+    $appDisplayNameTextBox = $script:Window.FindName("AppDisplayNameTextBox")
+    if ($appDisplayNameTextBox) {
+        $displayName = $appDisplayNameTextBox.Text.Trim()
+        if ([string]::IsNullOrWhiteSpace($displayName)) {
+            # If displayName is empty, use the app ID as displayName
+            $displayName = $newAppId
+            Write-Verbose "DisplayName is empty, using app ID as displayName: $displayName"
+        }
+
+        Set-PropertyValue -Object $appData -PropertyName "displayName" -Value $displayName
+        Write-Verbose "Saved displayName: $displayName"
+    }
+
+    # Save comment
+    $appCommentTextBox = $script:Window.FindName("AppCommentTextBox")
+    if ($appCommentTextBox) {
+        $comment = $appCommentTextBox.Text.Trim()
+        if ([string]::IsNullOrWhiteSpace($comment)) {
+            # If comment is empty, remove the property
+            if ($appData.PSObject.Properties.Name -contains "_comment") {
+                $appData.PSObject.Properties.Remove("_comment")
+            }
+        } else {
+            Set-PropertyValue -Object $appData -PropertyName "_comment" -Value $comment
+        }
+        Write-Verbose "Saved _comment: $comment"
+    }
 
     # Save process name
     $appProcessNameTextBox = $script:Window.FindName("AppProcessNameTextBox")

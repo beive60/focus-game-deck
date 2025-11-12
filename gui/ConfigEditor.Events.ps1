@@ -174,6 +174,13 @@
                     Write-Verbose "  Set ProcessNameTextBox: $($gameData.processName)"
                 }
 
+                # Load comment
+                $gameCommentTextBox = $script:Window.FindName("GameCommentTextBox")
+                if ($gameCommentTextBox) {
+                    $gameCommentTextBox.Text = if ($gameData._comment) { $gameData._comment } else { "" }
+                    Write-Verbose "  Set GameCommentTextBox: $($gameData._comment)"
+                }
+
                 # Set platform
                 $platformCombo = $script:Window.FindName("PlatformComboBox")
                 # Normalize platform value: "direct" is an alias for "standalone"
@@ -339,6 +346,20 @@
                 if ($appIdTextBox) {
                     # Display the actual app ID (config key), not the display name
                     $appIdTextBox.Text = $selectedApp
+                }
+
+                # Load display name
+                $appDisplayNameTextBox = $script:Window.FindName("AppDisplayNameTextBox")
+                if ($appDisplayNameTextBox) {
+                    $appDisplayNameTextBox.Text = if ($appData.displayName) { $appData.displayName } else { "" }
+                    Write-Verbose "  Set AppDisplayNameTextBox: $($appData.displayName)"
+                }
+
+                # Load comment
+                $appCommentTextBox = $script:Window.FindName("AppCommentTextBox")
+                if ($appCommentTextBox) {
+                    $appCommentTextBox.Text = if ($appData._comment) { $appData._comment } else { "" }
+                    Write-Verbose "  Set AppCommentTextBox: $($appData._comment)"
                 }
 
                 $appProcessNameTextBox = $script:Window.FindName("AppProcessNameTextBox")
