@@ -65,5 +65,5 @@ Write-Host "Cleaning up temporary files..."
 Remove-Item -Path $tempDir -Recurse -Force
 
 Write-Host "--------------------------------------------------"
-Write-Host "Successfully created '$IcoOutputPath' with resolutions: $($Resolutions -join ', ')." -ForegroundColor Green
+Write-Host "Successfully created '$IcoOutputPath' with resolutions: $($Resolutions -join ', ')."
 Write-Host "Please review the new icon and commit both 'icon.svg' and 'icon.ico' if the changes are correct."

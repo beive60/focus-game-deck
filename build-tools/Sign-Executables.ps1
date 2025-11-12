@@ -104,8 +104,8 @@ function Get-SigningConfig {
 
 # List available code signing certificates
 function Get-CodeSigningCertificates {
-    Write-Host "Available Code Signing Certificates:" -ForegroundColor Cyan
-    Write-Host "======================================" -ForegroundColor Cyan
+    Write-Host "Available Code Signing Certificates:"
+    Write-Host "======================================"
 
     $certs = Get-ChildItem -Path "Cert:/CurrentUser/My" | Where-Object {
         $_.Extensions | Where-Object {
@@ -115,27 +115,27 @@ function Get-CodeSigningCertificates {
     }
 
     if ($certs.Count -eq 0) {
-        Write-Host "No code signing certificates found in CurrentUser/My store." -ForegroundColor Yellow
-        Write-Host "Please install an Extended Validation certificate first." -ForegroundColor Yellow
+        Write-Host "No code signing certificates found in CurrentUser/My store."
+        Write-Host "Please install an Extended Validation certificate first."
         return $null
     }
 
     foreach ($cert in $certs) {
-        Write-Host "Certificate Details:" -ForegroundColor Green
-        Write-Host "Subject: $($cert.Subject)" -ForegroundColor White
-        Write-Host "Issuer: $($cert.Issuer)" -ForegroundColor White
-        Write-Host "Thumbprint: $($cert.Thumbprint)" -ForegroundColor Yellow
-        Write-Host "Valid From: $($cert.NotBefore)" -ForegroundColor White
-        Write-Host "Valid To: $($cert.NotAfter)" -ForegroundColor White
-        Write-Host "Has Private Key: $($cert.HasPrivateKey)" -ForegroundColor White
+        Write-Host "Certificate Details:"
+        Write-Host "Subject: $($cert.Subject)"
+        Write-Host "Issuer: $($cert.Issuer)"
+        Write-Host "Thumbprint: $($cert.Thumbprint)"
+        Write-Host "Valid From: $($cert.NotBefore)"
+        Write-Host "Valid To: $($cert.NotAfter)"
+        Write-Host "Has Private Key: $($cert.HasPrivateKey)"
 
         # Check if certificate is expired
         if ($cert.NotAfter -lt (Get-Date)) {
-            Write-Host "Status: EXPIRED" -ForegroundColor Red
+            Write-Host "Status: EXPIRED"
         } elseif ($cert.NotBefore -gt (Get-Date)) {
-            Write-Host "Status: NOT YET VALID" -ForegroundColor Yellow
+            Write-Host "Status: NOT YET VALID"
         } else {
-            Write-Host "Status: VALID" -ForegroundColor Green
+            Write-Host "Status: VALID"
         }
 
         Write-Host ("-" * 50) -ForegroundColor Gray
@@ -154,12 +154,12 @@ function Test-Certificate {
     }
 
     if ([string]::IsNullOrEmpty($SigningConfig.certificateThumbprint)) {
-        Write-Host "No certificate thumbprint configured. Available certificates:" -ForegroundColor Yellow
+        Write-Host "No certificate thumbprint configured. Available certificates:"
         Get-CodeSigningCertificates
         return $false
     }
 
-    Write-Host "Testing certificate: $($SigningConfig.certificateThumbprint)" -ForegroundColor Cyan
+    Write-Host "Testing certificate: $($SigningConfig.certificateThumbprint)"
 
     try {
         $cert = Get-ChildItem -Path $SigningConfig.certificateStorePath |
@@ -170,10 +170,10 @@ function Test-Certificate {
             return $false
         }
 
-        Write-Host "Certificate found and accessible:" -ForegroundColor Green
-        Write-Host "Subject: $($cert.Subject)" -ForegroundColor White
-        Write-Host "Valid To: $($cert.NotAfter)" -ForegroundColor White
-        Write-Host "Has Private Key: $($cert.HasPrivateKey)" -ForegroundColor White
+        Write-Host "Certificate found and accessible:"
+        Write-Host "Subject: $($cert.Subject)"
+        Write-Host "Valid To: $($cert.NotAfter)"
+        Write-Host "Has Private Key: $($cert.HasPrivateKey)"
 
         if (-not $cert.HasPrivateKey) {
             Write-Error "Certificate does not have an associated private key"
@@ -186,10 +186,10 @@ function Test-Certificate {
         }
 
         # Test timestamp server connectivity
-        Write-Host "Testing timestamp server connectivity..." -ForegroundColor Cyan
+        Write-Host "Testing timestamp server connectivity..."
         try {
             $null = Invoke-WebRequest -Uri $SigningConfig.timestampServer -Method Head -TimeoutSec 10
-            Write-Host "Timestamp server is accessible" -ForegroundColor Green
+            Write-Host "Timestamp server is accessible"
         } catch {
             Write-Warning "Timestamp server test failed: $($_.Exception.Message)"
         }
@@ -215,11 +215,11 @@ function Add-CodeSignature {
     }
 
     if (-not $SigningConfig.enabled) {
-        Write-Host "Code signing is disabled in configuration." -ForegroundColor Yellow
+        Write-Host "Code signing is disabled in configuration."
         return $false
     }
 
-    Write-Host "Signing file: $(Split-Path $FilePath -Leaf)" -ForegroundColor Cyan
+    Write-Host "Signing file: $(Split-Path $FilePath -Leaf)"
 
     try {
         $signParams = @{
@@ -244,7 +244,7 @@ function Add-CodeSignature {
         # Check if signature is trusted (Valid status)
         $isSignatureTrusted = $signature.Status -eq "Valid"
 
-        Write-Host "Signature analysis for: $fileName" -ForegroundColor Cyan
+        Write-Host "Signature analysis for: $fileName"
         Write-Host "Signature applied: $($isSignatureApplied)" -ForegroundColor $(if($isSignatureApplied) {"Green"} else {"Red"})
         Write-Host "Signature trusted: $($isSignatureTrusted)" -ForegroundColor $(if($isSignatureTrusted) {"Green"} else {"Yellow"})
         Write-Host "Signature status: $($signature.Status)" -ForegroundColor Gray
@@ -255,9 +255,9 @@ function Add-CodeSignature {
 
         if ($isSignatureApplied) {
             if ($isSignatureTrusted) {
-                Write-Host "Successfully signed with trusted certificate: $fileName" -ForegroundColor Green
+                Write-Host "Successfully signed with trusted certificate: $fileName"
             } else {
-                Write-Host "Successfully signed with test/self-signed certificate: $fileName" -ForegroundColor Yellow
+                Write-Host "Successfully signed with test/self-signed certificate: $fileName"
                 Write-Host "Note: Certificate is not trusted by system (expected for test certificates)" -ForegroundColor Gray
             }
             return $true
@@ -287,11 +287,11 @@ function Add-AllCodeSignatures {
     $exeFiles = Get-ChildItem -Path $BuildPath -Filter "*.exe" -Recurse
 
     if ($exeFiles.Count -eq 0) {
-        Write-Host "No executable files found in build directory." -ForegroundColor Yellow
+        Write-Host "No executable files found in build directory."
         return $true
     }
 
-    Write-Host "Found $($exeFiles.Count) executable files to sign:" -ForegroundColor Cyan
+    Write-Host "Found $($exeFiles.Count) executable files to sign:"
 
     $successCount = 0
     $failCount = 0
@@ -304,12 +304,12 @@ function Add-AllCodeSignatures {
         }
     }
 
-    Write-Host "Signing Summary:" -ForegroundColor Cyan
-    Write-Host "Successfully signed: $successCount" -ForegroundColor Green
+    Write-Host "Signing Summary:"
+    Write-Host "Successfully signed: $successCount"
     if ($failCount -gt 0) {
-        Write-Host "Failed to sign: $failCount" -ForegroundColor Red
+        Write-Host "Failed to sign: $failCount"
     } elseif ($failCount -eq 0) {
-        Write-Host "All files signed successfully!" -ForegroundColor Green
+        Write-Host "All files signed successfully!"
     }
 
     return $failCount -eq 0
@@ -328,7 +328,7 @@ function New-SignedDistribution {
         New-Item -ItemType Directory -Path $distDir -Force | Out-Null
     }
 
-    Write-Host "Signed distribution package created: $distDir" -ForegroundColor Green
+    Write-Host "Signed distribution package created: $distDir"
 
     # Create version info file
     $versionInfo = @{
@@ -352,15 +352,15 @@ function New-SignedDistribution {
     $versionInfoPath = Join-Path $distDir "signature-info.json"
     $versionInfo | ConvertTo-Json -Depth 4 | Set-Content -Path $versionInfoPath -Encoding UTF8
 
-    Write-Host "Signature information saved to: signature-info.json" -ForegroundColor Green
+    Write-Host "Signature information saved to: signature-info.json"
 
     return $distDir
 }
 
 # Main script execution
 try {
-    Write-Host "Focus Game Deck - Code Signing Tool" -ForegroundColor Cyan
-    Write-Host "====================================" -ForegroundColor Cyan
+    Write-Host "Focus Game Deck - Code Signing Tool"
+    Write-Host "===================================="
 
     # Load configuration
     $fullConfig = Get-Content $SigningConfigPath -Raw | ConvertFrom-Json
@@ -378,9 +378,9 @@ try {
     # Test certificate if requested
     if ($TestCertificate) {
         if (Test-Certificate -SigningConfig $signingConfig) {
-            Write-Host "Certificate test passed!" -ForegroundColor Green
+            Write-Host "Certificate test passed!"
         } else {
-            Write-Host "Certificate test failed!" -ForegroundColor Red
+            Write-Host "Certificate test failed!"
             exit 1
         }
         exit 0
@@ -389,9 +389,9 @@ try {
     # Sign specific file if requested
     if (-not [string]::IsNullOrEmpty($SignFile)) {
         if (Add-CodeSignature -FilePath $SignFile -SigningConfig $signingConfig) {
-            Write-Host "File signed successfully!" -ForegroundColor Green
+            Write-Host "File signed successfully!"
         } else {
-            Write-Host "Failed to sign file!" -ForegroundColor Red
+            Write-Host "Failed to sign file!"
             exit 1
         }
         exit 0
@@ -400,8 +400,8 @@ try {
     # Sign all files if requested
     if ($SignAll) {
         if (-not $signingConfig.enabled) {
-            Write-Host "Code signing is disabled in configuration." -ForegroundColor Yellow
-            Write-Host "Please enable signing and configure certificate thumbprint." -ForegroundColor Yellow
+            Write-Host "Code signing is disabled in configuration."
+            Write-Host "Please enable signing and configure certificate thumbprint."
             exit 1
         }
 
@@ -412,34 +412,34 @@ try {
 
                 if ($buildConfig.createDistribution) {
                     $distributionPath = New-SignedDistribution -BuildPath $BuildPath -BuildConfig $buildConfig
-                    Write-Host "Signed distribution package created: $distributionPath" -ForegroundColor Green
+                    Write-Host "Signed distribution package created: $distributionPath"
                 }
 
-                Write-Host "All files signed successfully!" -ForegroundColor Green
+                Write-Host "All files signed successfully!"
             } else {
-                Write-Host "Some files failed to sign!" -ForegroundColor Red
+                Write-Host "Some files failed to sign!"
                 exit 1
             }
         } else {
-            Write-Host "Certificate validation failed!" -ForegroundColor Red
+            Write-Host "Certificate validation failed!"
             exit 1
         }
         exit 0
     }
 
     # Show usage if no specific action requested
-    Write-Host "Usage:" -ForegroundColor Yellow
+    Write-Host "Usage:"
     Write-Host "./Sign-Executables.ps1 -ListCertificates      # List available certificates"
     Write-Host "./Sign-Executables.ps1 -TestCertificate       # Test configured certificate"
     Write-Host "./Sign-Executables.ps1 -SignAll               # Sign all executables in build directory"
     Write-Host "./Sign-Executables.ps1 -SignFile <path>       # Sign specific file"
     Write-Host ""
-    Write-Host "Configuration:" -ForegroundColor Yellow
+    Write-Host "Configuration:"
     Write-Host "Signing Config file: $SigningConfigPath"
     Write-Host "Build path: $BuildPath"
     Write-Host "Signing enabled: $($signingConfig.enabled)"
     Write-Host ""
-    Write-Host "Setup Instructions:" -ForegroundColor Cyan
+    Write-Host "Setup Instructions:"
     Write-Host "1. Install Extended Validation certificate in Windows Certificate Store"
     Write-Host "2. Run: ./Sign-Executables.ps1 -ListCertificates"
     Write-Host "3. Copy certificate thumbprint to signing-config.json"

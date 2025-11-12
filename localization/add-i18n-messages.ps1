@@ -213,5 +213,5 @@ foreach ($key in $newMessagesZh.Keys) {
 # Save updated messages
 $messages | ConvertTo-Json -Depth 10 | Set-Content -Path $outputPath -Encoding UTF8
 
-Write-Host "Successfully added i18n messages to all language sections" -ForegroundColor Green
-Write-Host "Output file: $outputPath" -ForegroundColor Cyan
+Write-Host "Successfully added i18n messages to all language sections"
+Write-Host "Output file: $outputPath"

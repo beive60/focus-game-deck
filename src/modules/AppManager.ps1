@@ -307,13 +307,13 @@ class AppManager {
                 # Try graceful first, then force if needed
                 $gracefulSuccess = $this.GracefulTermination($processName, $timeoutMs, $appId)
                 if (-not $gracefulSuccess) {
-                    Write-Host ($this.Messages.graceful_failed_using_force -f $processName) -ForegroundColor Yellow
+                    Write-Host ($this.Messages.graceful_failed_using_force -f $processName)
                     return $this.ForceTermination($processName, $appId)
                 }
                 return $true
             }
             default {
-                Write-Host "Unknown termination method '$method' for $appId. Using 'auto' as fallback." -ForegroundColor Yellow
+                Write-Host "Unknown termination method '$method' for $appId. Using 'auto' as fallback."
                 return $this.TerminateProcess($processName, "auto", $timeoutMs, $appId)
             }
         }
@@ -340,17 +340,17 @@ class AppManager {
                 # Check if process still exists
                 $remainingProcesses = Get-Process -Name $processName -ErrorAction SilentlyContinue
                 if (-not $remainingProcesses) {
-                    Write-Host ($this.Messages.graceful_shutdown_success -f $processName) -ForegroundColor Green
+                    Write-Host ($this.Messages.graceful_shutdown_success -f $processName)
                     return $true
                 }
             }
 
             # Timeout reached
-            Write-Host ($this.Messages.graceful_shutdown_timeout -f $processName, ($timeoutMs / 1000)) -ForegroundColor Yellow
+            Write-Host ($this.Messages.graceful_shutdown_timeout -f $processName, ($timeoutMs / 1000))
             return $false
         }
         catch {
-            Write-Host ($this.Messages.graceful_shutdown_failed -f $processName, $_) -ForegroundColor Red
+            Write-Host ($this.Messages.graceful_shutdown_failed -f $processName, $_)
             return $false
         }
     }
@@ -359,11 +359,11 @@ class AppManager {
     [bool] ForceTermination([string] $processName, [string] $appId) {
         try {
             Stop-Process -Name $processName -Force -ErrorAction Stop
-            Write-Host ($this.Messages.force_termination_success -f $processName) -ForegroundColor Yellow
+            Write-Host ($this.Messages.force_termination_success -f $processName)
             return $true
         }
         catch {
-            Write-Host ($this.Messages.force_termination_failed -f $processName, $_) -ForegroundColor Red
+            Write-Host ($this.Messages.force_termination_failed -f $processName, $_)
             return $false
         }
     }

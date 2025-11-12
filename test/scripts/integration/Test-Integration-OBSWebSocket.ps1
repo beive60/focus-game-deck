@@ -118,7 +118,7 @@ try {
     $connected = $obsManager.Connect()
 
     if ($connected) {
-        Write-Host "`n✓ Test Result: SUCCESS" -ForegroundColor Green
+        Write-Host "`n✓ Test Result: SUCCESS"
         Write-Host "OBS WebSocket connection and authentication successful!"
 
         # Optional: Test replay buffer commands if enabled
@@ -128,9 +128,9 @@ try {
             Write-Host "  Starting Replay Buffer..."
             $startResult = $obsManager.StartReplayBuffer()
             if ($startResult) {
-                Write-Host "  ✓ Replay Buffer started successfully" -ForegroundColor Green
+                Write-Host "  ✓ Replay Buffer started successfully"
             } else {
-                Write-Host "  ✗ Failed to start Replay Buffer" -ForegroundColor Yellow
+                Write-Host "  ✗ Failed to start Replay Buffer"
             }
 
             Start-Sleep -Seconds 2
@@ -138,9 +138,9 @@ try {
             Write-Host "  Stopping Replay Buffer..."
             $stopResult = $obsManager.StopReplayBuffer()
             if ($stopResult) {
-                Write-Host "  ✓ Replay Buffer stopped successfully" -ForegroundColor Green
+                Write-Host "  ✓ Replay Buffer stopped successfully"
             } else {
-                Write-Host "  ✗ Failed to stop Replay Buffer" -ForegroundColor Yellow
+                Write-Host "  ✗ Failed to stop Replay Buffer"
             }
         }
 
@@ -150,7 +150,7 @@ try {
         Write-Host "Disconnected successfully"
 
     } else {
-        Write-Host "`n✗ Test Result: FAILED" -ForegroundColor Red
+        Write-Host "`n✗ Test Result: FAILED"
         Write-Host "Failed to connect or authenticate to OBS WebSocket"
         Write-Host ""
         Write-Host "Troubleshooting steps:"
@@ -162,7 +162,7 @@ try {
     }
 
 } catch {
-    Write-Host "`n✗ Test Result: FAILED" -ForegroundColor Red
+    Write-Host "`n✗ Test Result: FAILED"
     Write-Host "Exception occurred during test: $_"
     Write-Host $_.Exception.Message
     Write-Host $_.ScriptStackTrace

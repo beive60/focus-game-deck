@@ -365,26 +365,26 @@ class ConfigValidator {
     # Display validation results
     [void] DisplayResults() {
         if ($this.Errors.Count -eq 0 -and $this.Warnings.Count -eq 0) {
-            Write-Host $this.Messages.config_validation_passed -ForegroundColor Green
+            Write-Host $this.Messages.config_validation_passed
             return
         }
 
         if ($this.Errors.Count -gt 0) {
-            Write-Host $this.Messages.config_validation_failed -ForegroundColor Red
+            Write-Host $this.Messages.config_validation_failed
             foreach ($errorMsg in $this.Errors) {
-                Write-Host "  ERROR: $errorMsg" -ForegroundColor Red
+                Write-Host "  ERROR: $errorMsg"
             }
         }
 
         if ($this.Warnings.Count -gt 0) {
-            Write-Host "Configuration Warnings:" -ForegroundColor Yellow
+            Write-Host "Configuration Warnings:"
             foreach ($warning in $this.Warnings) {
-                Write-Host "  WARNING: $warning" -ForegroundColor Yellow
+                Write-Host "  WARNING: $warning"
             }
         }
 
         if ($this.Errors.Count -eq 0) {
-            Write-Host "Configuration is valid (with warnings)" -ForegroundColor Yellow
+            Write-Host "Configuration is valid (with warnings)"
         }
     }
 }

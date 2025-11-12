@@ -215,13 +215,13 @@ class Logger {
                 Write-Host $logEntry -ForegroundColor Gray
             }
             ([LogLevel]::Info) {
-                Write-Host $logEntry -ForegroundColor White
+                Write-Host $logEntry
             }
             ([LogLevel]::Warning) {
-                Write-Host $logEntry -ForegroundColor Yellow
+                Write-Host $logEntry
             }
             ([LogLevel]::Error) {
-                Write-Host $logEntry -ForegroundColor Red
+                Write-Host $logEntry
             }
             ([LogLevel]::Critical) {
                 Write-Host $logEntry -ForegroundColor Magenta

@@ -92,9 +92,9 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
             $mappingIntegrity = $analysis.MappingIntegrity
 
             if ($mappingIntegrity.Duplicates.Count -gt 0) {
-                Write-Host "Warning: Duplicate mapping keys detected:" -ForegroundColor Yellow
+                Write-Host "Warning: Duplicate mapping keys detected:"
                 foreach ($dup in $mappingIntegrity.Duplicates.Keys) {
-                    Write-Host "  - $dup : $($mappingIntegrity.Duplicates[$dup] -join ', ')" -ForegroundColor Yellow
+                    Write-Host "  - $dup : $($mappingIntegrity.Duplicates[$dup] -join ', ')"
                 }
                 Set-ItResult -Skipped -Because "Duplicate keys found but not critical for test execution"
             } else {
@@ -135,9 +135,9 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
             $jsonValidation = $analysis.JsonKeyValidation
 
             if ($jsonValidation.MissingKeys.Count -gt 0) {
-                Write-Host "Warning: Missing JSON keys detected ($($jsonValidation.MissingKeys.Count)):" -ForegroundColor Yellow
+                Write-Host "Warning: Missing JSON keys detected ($($jsonValidation.MissingKeys.Count)):"
                 $jsonValidation.MissingKeys | Select-Object -First 5 | ForEach-Object {
-                    Write-Host "  - $_" -ForegroundColor Yellow
+                    Write-Host "  - $_"
                 }
                 Set-ItResult -Skipped -Because "Missing keys found but not critical for test execution"
             } else {
@@ -183,7 +183,7 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
             }
 
             if ($totalUnmapped -gt 0) {
-                Write-Host "Warning: $totalUnmapped unmapped XAML elements detected" -ForegroundColor Yellow
+                Write-Host "Warning: $totalUnmapped unmapped XAML elements detected"
                 Set-ItResult -Skipped -Because "Unmapped elements found but not critical for test execution"
             } else {
                 $true | Should -Be $true
@@ -222,9 +222,9 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
             $stringFlow = $analysis.StringReplacementFlow
 
             if ($stringFlow.Issues.Count -gt 0) {
-                Write-Host "Warning: String replacement issues detected ($($stringFlow.Issues.Count)):" -ForegroundColor Yellow
+                Write-Host "Warning: String replacement issues detected ($($stringFlow.Issues.Count)):"
                 $stringFlow.Issues | Select-Object -First 5 | ForEach-Object {
-                    Write-Host "  - $_" -ForegroundColor Yellow
+                    Write-Host "  - $_"
                 }
                 Set-ItResult -Skipped -Because "Issues found but not critical for test execution"
             } else {
@@ -274,9 +274,9 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
             $circularDepIssues = $modulization.Issues | Where-Object { $_ -like "*circular dependency*" }
 
             if ($circularDepIssues.Count -gt 0) {
-                Write-Host "Warning: Circular dependencies detected:" -ForegroundColor Yellow
+                Write-Host "Warning: Circular dependencies detected:"
                 $circularDepIssues | ForEach-Object {
-                    Write-Host "  - $_" -ForegroundColor Yellow
+                    Write-Host "  - $_"
                 }
                 Set-ItResult -Skipped -Because "Circular dependencies found but not critical for test execution"
             } else {
@@ -303,7 +303,7 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
             Write-Host "Total localization issues detected: $totalIssues"
 
             if ($totalIssues -gt 0) {
-                Write-Host "Note: Issues detected but test passes - see diagnostic output for details" -ForegroundColor Yellow
+                Write-Host "Note: Issues detected but test passes - see diagnostic output for details"
             }
 
             # Test passes even with issues as this is a diagnostic tool

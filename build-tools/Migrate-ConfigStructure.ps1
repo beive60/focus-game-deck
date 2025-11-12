@@ -104,12 +104,12 @@ function Invoke-ConfigMigration {
         $Config
     )
 
-    Write-Host "Starting configuration migration..." -ForegroundColor Cyan
+    Write-Host "Starting configuration migration..."
 
     # Check if already migrated
     if ($Config.PSObject.Properties.Name -contains "integrations") {
-        Write-Host "Configuration appears to already be migrated (integrations section exists)" -ForegroundColor Yellow
-        Write-Host "Skipping migration to avoid data loss" -ForegroundColor Yellow
+        Write-Host "Configuration appears to already be migrated (integrations section exists)"
+        Write-Host "Skipping migration to avoid data loss"
         return $null
     }
 
@@ -123,7 +123,7 @@ function Invoke-ConfigMigration {
     if ($Config.managedApps) {
         foreach ($appName in $specializedApps) {
             if ($Config.managedApps.PSObject.Properties.Name -contains $appName) {
-                Write-Host "  Migrating '$appName' from managedApps to integrations..." -ForegroundColor Green
+                Write-Host "  Migrating '$appName' from managedApps to integrations..."
 
                 # Copy the app configuration to integrations
                 $integrations[$appName] = $Config.managedApps.$appName
@@ -152,7 +152,7 @@ function Invoke-ConfigMigration {
     # Add integrations section to config if we migrated anything
     if ($migrated) {
         $Config | Add-Member -NotePropertyName "integrations" -NotePropertyValue ([PSCustomObject]$integrations) -Force
-        Write-Host "  Created 'integrations' section" -ForegroundColor Green
+        Write-Host "  Created 'integrations' section"
     }
 
     # Update games to use new integrations structure
@@ -182,17 +182,17 @@ function Invoke-ConfigMigration {
                 # Remove specialized apps from appsToManage
                 $game.appsToManage = @($game.appsToManage | Where-Object { $_ -notin $specializedApps })
 
-                Write-Host "  Updated game '$gameId' with integrations" -ForegroundColor Green
+                Write-Host "  Updated game '$gameId' with integrations"
                 $migrated = $true
             }
         }
     }
 
     if ($migrated) {
-        Write-Host "Migration completed successfully!" -ForegroundColor Green
+        Write-Host "Migration completed successfully!"
         return $Config
     } else {
-        Write-Host "No changes needed - configuration is already in correct format" -ForegroundColor Yellow
+        Write-Host "No changes needed - configuration is already in correct format"
         return $null
     }
 }
@@ -200,19 +200,19 @@ function Invoke-ConfigMigration {
 # Main execution
 try {
     Write-Host ""
-    Write-Host "========================================" -ForegroundColor Cyan
-    Write-Host "  Config Structure Migration Tool" -ForegroundColor Cyan
-    Write-Host "========================================" -ForegroundColor Cyan
+    Write-Host "========================================"
+    Write-Host "  Config Structure Migration Tool"
+    Write-Host "========================================"
     Write-Host ""
 
     # Resolve full path
     $ConfigPath = Resolve-Path $ConfigPath -ErrorAction Stop
 
-    Write-Host "Configuration file: $ConfigPath" -ForegroundColor White
+    Write-Host "Configuration file: $ConfigPath"
     Write-Host ""
 
     # Load current configuration
-    Write-Host "Loading configuration..." -ForegroundColor Cyan
+    Write-Host "Loading configuration..."
     $config = Get-ConfigJson -Path $ConfigPath
 
     # Create backup
@@ -221,19 +221,19 @@ try {
         $BackupPath = $ConfigPath -replace '\.json$', "_backup_$timestamp.json"
     }
 
-    Write-Host "Creating backup: $BackupPath" -ForegroundColor Cyan
+    Write-Host "Creating backup: $BackupPath"
     Copy-Item -Path $ConfigPath -Destination $BackupPath -Force
-    Write-Host "Backup created successfully" -ForegroundColor Green
+    Write-Host "Backup created successfully"
     Write-Host ""
 
     # Confirm migration unless -Force is used
     if (-not $Force) {
-        Write-Host "This will migrate your configuration to the new structure." -ForegroundColor Yellow
-        Write-Host "A backup has been created at: $BackupPath" -ForegroundColor Yellow
+        Write-Host "This will migrate your configuration to the new structure."
+        Write-Host "A backup has been created at: $BackupPath"
         Write-Host ""
         $response = Read-Host "Do you want to proceed? (Y/N)"
         if ($response -notmatch '^[Yy]') {
-            Write-Host "Migration cancelled by user" -ForegroundColor Yellow
+            Write-Host "Migration cancelled by user"
             exit 0
         }
     }
@@ -244,37 +244,37 @@ try {
     if ($migratedConfig) {
         # Save migrated configuration
         Write-Host ""
-        Write-Host "Saving migrated configuration..." -ForegroundColor Cyan
+        Write-Host "Saving migrated configuration..."
         Save-ConfigJson -ConfigData $migratedConfig -Path $ConfigPath
 
         Write-Host ""
-        Write-Host "========================================" -ForegroundColor Green
-        Write-Host "  Migration completed successfully!" -ForegroundColor Green
-        Write-Host "========================================" -ForegroundColor Green
+        Write-Host "========================================"
+        Write-Host "  Migration completed successfully!"
+        Write-Host "========================================"
         Write-Host ""
-        Write-Host "Original config backed up to:" -ForegroundColor White
+        Write-Host "Original config backed up to:"
         Write-Host "  $BackupPath" -ForegroundColor Gray
         Write-Host ""
-        Write-Host "Updated config saved to:" -ForegroundColor White
+        Write-Host "Updated config saved to:"
         Write-Host "  $ConfigPath" -ForegroundColor Gray
         Write-Host ""
     } else {
         Write-Host ""
-        Write-Host "No migration performed" -ForegroundColor Yellow
+        Write-Host "No migration performed"
         Write-Host ""
     }
 
 } catch {
     Write-Host ""
-    Write-Host "========================================" -ForegroundColor Red
-    Write-Host "  Migration failed!" -ForegroundColor Red
-    Write-Host "========================================" -ForegroundColor Red
+    Write-Host "========================================"
+    Write-Host "  Migration failed!"
+    Write-Host "========================================"
     Write-Host ""
-    Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Error: $($_.Exception.Message)"
     Write-Host ""
 
     if ($BackupPath -and (Test-Path $BackupPath)) {
-        Write-Host "Your original configuration is safe at:" -ForegroundColor Yellow
+        Write-Host "Your original configuration is safe at:"
         Write-Host "  $BackupPath" -ForegroundColor Gray
         Write-Host ""
     }

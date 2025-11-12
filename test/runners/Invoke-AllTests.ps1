@@ -10,7 +10,7 @@
 param(
     [Parameter()]
     [switch]$SkipIntegrationTests,
-    
+
     [Parameter()]
     [string]$OutputFormat = "Console" # Console, JSON, HTML
 )
@@ -51,37 +51,37 @@ $TestResults = @{
 
 $StartTime = Get-Date
 
-Write-Host "`n========================================" -ForegroundColor Cyan
-Write-Host "Focus Game Deck - Test Suite Execution" -ForegroundColor Cyan
-Write-Host "========================================`n" -ForegroundColor Cyan
+Write-Host "`n========================================"
+Write-Host "Focus Game Deck - Test Suite Execution"
+Write-Host "========================================`n"
 
 foreach ($category in $TestCategories.Keys) {
     if ($SkipIntegrationTests -and $category -eq "Integration") {
-        Write-Host "⊘ Skipping $category tests..." -ForegroundColor Yellow
+        Write-Host "⊘ Skipping $category tests..."
         continue
     }
-    
+
     Write-Host "`n--- $category Tests ---`n" -ForegroundColor Magenta
-    
+
     foreach ($testScript in $TestCategories[$category]) {
         $testPath = Join-Path $ProjectRoot "test" $testScript
-        
+
         if (-not (Test-Path $testPath)) {
-            Write-Host "  [SKIP] $testScript (not found)" -ForegroundColor Yellow
+            Write-Host "  [SKIP] $testScript (not found)"
             $TestResults.Skipped++
             continue
         }
-        
+
         Write-Host "  Running: $testScript" -ForegroundColor Gray
-        
+
         $testStart = Get-Date
         $testOutput = & $testPath 2>&1
         $exitCode = $LASTEXITCODE
         $testEnd = Get-Date
         $duration = ($testEnd - $testStart).TotalSeconds
-        
+
         $TestResults.Total++
-        
+
         $result = @{
             Name = $testScript
             Category = $category
@@ -89,18 +89,18 @@ foreach ($category in $TestCategories.Keys) {
             ExitCode = $exitCode
             Output = $testOutput
         }
-        
+
         # Parse test output for pass/fail
         if ($exitCode -eq 0 -or $testOutput -match '\[OK\]|\bPASS(ED)?\b|Success') {
-            Write-Host "  [PASS] $testScript ($duration s)" -ForegroundColor Green
+            Write-Host "  [PASS] $testScript ($duration s)"
             $TestResults.Passed++
             $result.Status = "PASS"
         } else {
-            Write-Host "  [FAIL] $testScript ($duration s)" -ForegroundColor Red
+            Write-Host "  [FAIL] $testScript ($duration s)"
             $TestResults.Failed++
             $result.Status = "FAIL"
         }
-        
+
         $TestResults.Details += $result
     }
 }
@@ -109,22 +109,22 @@ $EndTime = Get-Date
 $TestResults.Duration = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
 
 # Generate Summary
-Write-Host "`n========================================" -ForegroundColor Cyan
-Write-Host "Test Execution Summary" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Total Tests:    $($TestResults.Total)" -ForegroundColor White
-Write-Host "Passed:         $($TestResults.Passed)" -ForegroundColor Green
+Write-Host "`n========================================"
+Write-Host "Test Execution Summary"
+Write-Host "========================================"
+Write-Host "Total Tests:    $($TestResults.Total)"
+Write-Host "Passed:         $($TestResults.Passed)"
 Write-Host "Failed:         $($TestResults.Failed)" -ForegroundColor $(if ($TestResults.Failed -eq 0) { "Green" } else { "Red" })
-Write-Host "Skipped:        $($TestResults.Skipped)" -ForegroundColor Yellow
-Write-Host "Duration:       $($TestResults.Duration)s" -ForegroundColor White
+Write-Host "Skipped:        $($TestResults.Skipped)"
+Write-Host "Duration:       $($TestResults.Duration)s"
 Write-Host "Success Rate:   $([math]::Round(($TestResults.Passed / $TestResults.Total) * 100, 1))%" -ForegroundColor $(if ($TestResults.Failed -eq 0) { "Green" } else { "Yellow" })
-Write-Host "========================================`n" -ForegroundColor Cyan
+Write-Host "========================================`n"
 
 # Failed tests details
 if ($TestResults.Failed -gt 0) {
-    Write-Host "Failed Tests:" -ForegroundColor Red
+    Write-Host "Failed Tests:"
     foreach ($test in ($TestResults.Details | Where-Object { $_.Status -eq "FAIL" })) {
-        Write-Host "  - $($test.Name) [$($test.Category)]" -ForegroundColor Red
+        Write-Host "  - $($test.Name) [$($test.Category)]"
     }
     Write-Host ""
 }
@@ -134,7 +134,7 @@ switch ($OutputFormat) {
     "JSON" {
         $jsonPath = Join-Path $ProjectRoot "test" "test-results.json"
         $TestResults | ConvertTo-Json -Depth 10 | Set-Content $jsonPath -Encoding UTF8
-        Write-Host "Results exported to: $jsonPath" -ForegroundColor Cyan
+        Write-Host "Results exported to: $jsonPath"
     }
     "HTML" {
         $htmlPath = Join-Path $ProjectRoot "test" "test-results.html"
@@ -150,7 +150,7 @@ switch ($OutputFormat) {
 </html>
 "@
         $html | Set-Content $htmlPath -Encoding UTF8
-        Write-Host "Results exported to: $htmlPath" -ForegroundColor Cyan
+        Write-Host "Results exported to: $htmlPath"
     }
 }
 

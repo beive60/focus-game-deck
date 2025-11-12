@@ -11,8 +11,8 @@ param(
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-Write-Host "=== ConfigEditor Debug Test ===" -ForegroundColor Cyan
-Write-Host "Auto-close timer: $AutoCloseSeconds seconds" -ForegroundColor Cyan
+Write-Host "=== ConfigEditor Debug Test ==="
+Write-Host "Auto-close timer: $AutoCloseSeconds seconds"
 Write-Host ""
 
 # Prepare warning collection
@@ -45,17 +45,17 @@ try {
 
     # Display collected information
     Write-Host ""
-    Write-Host "=== Test Results ===" -ForegroundColor Cyan
+    Write-Host "=== Test Results ==="
     Write-Host ""
 
     if ($errorVar.Count -gt 0) {
-        Write-Host "ERRORS ($($errorVar.Count)):" -ForegroundColor Red
-        $errorVar | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+        Write-Host "ERRORS ($($errorVar.Count)):"
+        $errorVar | ForEach-Object { Write-Host "  $_"}
         Write-Host ""
     }
 
     if ($warningVar.Count -gt 0) {
-        Write-Host "WARNINGS ($($warningVar.Count)):" -ForegroundColor Yellow
+        Write-Host "WARNINGS ($($warningVar.Count)):"
 
         # Group warnings by type
         $localizationWarnings = $warningVar | Where-Object { $_ -match 'GetLocalizedMessage' }
@@ -63,13 +63,13 @@ try {
 
         if ($otherWarnings.Count -gt 0) {
             Write-Host ""
-            Write-Host "  Other Warnings:" -ForegroundColor Yellow
-            $otherWarnings | ForEach-Object { Write-Host "    $_" -ForegroundColor Yellow }
+            Write-Host "  Other Warnings:"
+            $otherWarnings | ForEach-Object { Write-Host "    $_"}
         }
 
         if ($localizationWarnings.Count -gt 0) {
             Write-Host ""
-            Write-Host "  Localization Warnings ($($localizationWarnings.Count)):" -ForegroundColor Yellow
+            Write-Host "  Localization Warnings ($($localizationWarnings.Count)):"
 
             # Extract unique missing keys
             $missingKeys = $localizationWarnings | ForEach-Object {
@@ -78,7 +78,7 @@ try {
                 }
             } | Select-Object -Unique | Sort-Object
 
-            Write-Host "    Missing localization keys: $($missingKeys.Count)" -ForegroundColor Yellow
+            Write-Host "    Missing localization keys: $($missingKeys.Count)"
 
             if ($Verbose) {
                 $missingKeys | ForEach-Object { Write-Host "      - $_" -ForegroundColor Gray }
@@ -87,29 +87,29 @@ try {
             }
         }
     } else {
-        Write-Host "No warnings detected!" -ForegroundColor Green
+        Write-Host "No warnings detected!"
     }
 
     Write-Host ""
-    Write-Host "=== Summary ===" -ForegroundColor Cyan
+    Write-Host "=== Summary ==="
     Write-Host "  Errors:   $($errorVar.Count)" -ForegroundColor $(if ($errorVar.Count -eq 0) { "Green" } else { "Red" })
     Write-Host "  Warnings: $($warningVar.Count)" -ForegroundColor $(if ($warningVar.Count -eq 0) { "Green" } else { "Yellow" })
     Write-Host ""
 
     if ($errorVar.Count -eq 0 -and $warningVar.Count -eq 0) {
-        Write-Host "Test PASSED - No issues detected!" -ForegroundColor Green
+        Write-Host "Test PASSED - No issues detected!"
         exit 0
     } elseif ($errorVar.Count -eq 0) {
-        Write-Host "Test PASSED with warnings" -ForegroundColor Yellow
+        Write-Host "Test PASSED with warnings"
         exit 0
     } else {
-        Write-Host "Test FAILED - Errors detected" -ForegroundColor Red
+        Write-Host "Test FAILED - Errors detected"
         exit 1
     }
 
 } catch {
     Write-Host ""
-    Write-Host "Test FAILED with exception:" -ForegroundColor Red
-    Write-Host $_.Exception.Message -ForegroundColor Red
+    Write-Host "Test FAILED with exception:"
+    Write-Host $_.Exception.Message
     exit 1
 }

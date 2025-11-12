@@ -115,9 +115,9 @@ $script:Version = "1.0.0"
 $script:BuildDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $script:StartTime = Get-Date
 
-Write-Host "Focus Game Deck - Master Build Script v$script:Version" -ForegroundColor Cyan
-Write-Host "Build started at: $script:BuildDate" -ForegroundColor Cyan
-Write-Host "=" * 60 -ForegroundColor Cyan
+Write-Host "Focus Game Deck - Master Build Script v$script:Version"
+Write-Host "Build started at: $script:BuildDate"
+Write-Host "=" * 60
 
 # Function to log messages with timestamps
 function Write-BuildLog {
@@ -445,38 +445,38 @@ function Show-BuildSummary {
     $endTime = Get-Date
     $duration = $endTime - $script:StartTime
 
-    Write-Host "`n" + ("=" * 60) -ForegroundColor Cyan
-    Write-Host "BUILD SUMMARY" -ForegroundColor Cyan
-    Write-Host ("=" * 60) -ForegroundColor Cyan
+    Write-Host "`n" + ("=" * 60)
+    Write-Host "BUILD SUMMARY"
+    Write-Host ("=" * 60)
 
     Write-Host "Status: " -NoNewline
     if ($Success) {
-        Write-Host "SUCCESS" -ForegroundColor Green
+        Write-Host "SUCCESS"
     } else {
-        Write-Host "FAILED" -ForegroundColor Red
+        Write-Host "FAILED"
     }
 
-    Write-Host "Version: $script:Version" -ForegroundColor White
-    Write-Host "Build Time: $($duration.ToString('mm\:ss'))" -ForegroundColor White
-    Write-Host "Signed: $(if ($IsSigned) { 'Yes' } else { 'No' })" -ForegroundColor White
+    Write-Host "Version: $script:Version"
+    Write-Host "Build Time: $($duration.ToString('mm\:ss'))"
+    Write-Host "Signed: $(if ($IsSigned) { 'Yes' } else { 'No' })"
 
     if ($Success) {
-        Write-Host "`nBuilt executables:" -ForegroundColor Yellow
+        Write-Host "`nBuilt executables:"
         $distDir = Join-Path $PSScriptRoot "dist"
         if (Test-Path $distDir) {
             Get-ChildItem $distDir -Filter "*.exe" | ForEach-Object {
-                Write-Host "  $($_.Name) ($([math]::Round($_.Length / 1KB, 1)) KB)" -ForegroundColor White
+                Write-Host "  $($_.Name) ($([math]::Round($_.Length / 1KB, 1)) KB)"
             }
         }
 
         $projectRoot = Split-Path $PSScriptRoot -Parent
         $releaseDir = Join-Path $projectRoot "release"
         if (Test-Path $releaseDir) {
-            Write-Host "`nRelease package created: $releaseDir" -ForegroundColor Green
+            Write-Host "`nRelease package created: $releaseDir"
         }
     }
 
-    Write-Host ("=" * 60) -ForegroundColor Cyan
+    Write-Host ("=" * 60)
 }
 
 # Main execution logic
@@ -538,18 +538,18 @@ try {
 
     # Show usage if no workflow specified
     else {
-        Write-Host "`nUsage:" -ForegroundColor Yellow
+        Write-Host "`nUsage:"
         Write-Host "  ./Release-Manager.ps1 -Development   # Build for development (no signing)"
         Write-Host "  ./Release-Manager.ps1 -Production    # Build for production (with signing)"
         Write-Host "  ./Release-Manager.ps1 -SetupOnly     # Only setup build environment"
         Write-Host "  ./Release-Manager.ps1 -Clean         # Clean all build artifacts"
         Write-Host "  ./Release-Manager.ps1 -Verbose       # Enable verbose logging"
         Write-Host ""
-        Write-Host "Examples:" -ForegroundColor Cyan
+        Write-Host "Examples:"
         Write-Host "  ./Release-Manager.ps1 -Development -Verbose"
         Write-Host "  ./Release-Manager.ps1 -Production"
         Write-Host ""
-        Write-Host "This script will:" -ForegroundColor White
+        Write-Host "This script will:"
         Write-Host "  1. Install required modules (ps2exe)"
         Write-Host "  2. Build all executable files"
         Write-Host "  3. Apply code signing (production only)"
