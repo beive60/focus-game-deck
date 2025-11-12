@@ -794,7 +794,6 @@ function Set-PropertyValue {
         $Object | Add-Member -NotePropertyName $PropertyName -NotePropertyValue $Value -Force
     }
 }
-
 function Save-CurrentGameData {
     if (-not $script:CurrentGameId) {
         Write-Verbose "No game selected, skipping save"
@@ -806,14 +805,43 @@ function Save-CurrentGameData {
         return
     }
 
-    # Get the current game data
+    # 1. Read the new game ID from the GameIdTextBox (if present)
+    $gameIdTextBox = $script:Window.FindName("GameIdTextBox")
+    $newGameId = if ($gameIdTextBox -and $gameIdTextBox.Text) {
+        $gameIdTextBox.Text.Trim()
+    } else {
+        $script:CurrentGameId
+    }
+
+    # 2. Validate the new game ID
+    if ([string]::IsNullOrWhiteSpace($newGameId)) {
+        Write-Warning "Game ID cannot be empty"
+        # Note: Add key "gameIdCannotBeEmpty" to localization/messages.json
+        Show-SafeMessage -Key "gameIdCannotBeEmpty" -MessageType "Warning"
+        return
+    }
+
+    $idChanged = ($newGameId -ne $script:CurrentGameId)
+
+    # 3. When ID changed, ensure the new ID is not already in use
+    if ($idChanged) {
+        if ($script:StateManager.ConfigData.games.PSObject.Properties.Name -contains $newGameId) {
+            Write-Warning "Game ID '$newGameId' is already in use. Cannot rename."
+            # Note: Add key "gameIdAlreadyExists" to localization/messages.json
+            Show-SafeMessage -Key "gameIdAlreadyExists" -MessageType "Warning" -FormatArgs @($newGameId)
+            return
+        }
+        Write-Verbose "Game ID changed from '$script:CurrentGameId' to '$newGameId'"
+    }
+
+    # Retrieve existing game data using the old ID
     $gameData = $script:StateManager.ConfigData.games.$script:CurrentGameId
     if (-not $gameData) {
         Write-Warning "Game data not found for: $script:CurrentGameId"
         return
     }
 
-    Write-Verbose "Saving game data for: $script:CurrentGameId"
+    Write-Verbose "Saving game data for: $script:CurrentGameId $(if ($idChanged) { "-> $newGameId" })"
 
     # Save game name
     $gameNameTextBox = $script:Window.FindName("GameNameTextBox")
@@ -832,7 +860,6 @@ function Save-CurrentGameData {
     if ($gameCommentTextBox) {
         $comment = $gameCommentTextBox.Text.Trim()
         if ([string]::IsNullOrWhiteSpace($comment)) {
-            # If comment is empty, remove the property
             if ($gameData.PSObject.Properties.Name -contains "_comment") {
                 $gameData.PSObject.Properties.Remove("_comment")
             }
@@ -883,6 +910,38 @@ function Save-CurrentGameData {
             }
         }
         Set-PropertyValue -Object $gameData -PropertyName "appsToManage" -Value $appsToManage
+    }
+
+    # If the ID changed, perform the rename operation on the games object
+    if ($idChanged) {
+        Write-Verbose "Performing game ID rename operation"
+
+        # (1) Add the game data under the new ID
+        $script:StateManager.ConfigData.games | Add-Member -NotePropertyName $newGameId -NotePropertyValue $gameData -Force
+
+        # (2) Remove the old ID entry
+        $script:StateManager.ConfigData.games.PSObject.Properties.Remove($script:CurrentGameId)
+
+        # (3) Update the _order array if present
+        if ($script:StateManager.ConfigData.games._order) {
+            $orderIndex = $script:StateManager.ConfigData.games._order.IndexOf($script:CurrentGameId)
+            if ($orderIndex -ge 0) {
+                $script:StateManager.ConfigData.games._order[$orderIndex] = $newGameId
+            }
+        }
+
+        # (4) Update the current selected game ID to the new one
+        $script:CurrentGameId = $newGameId
+        Write-Verbose "Game ID renamed successfully to: $newGameId"
+    }
+
+    # Mark configuration as modified if StateManager supports it
+    try {
+        if ($script:StateManager -and $script:StateManager.SetModified) {
+            $script:StateManager.SetModified()
+        }
+    } catch {
+        Write-Verbose "SetModified not available or failed: $($_.Exception.Message)"
     }
 
     Write-Verbose "Game data saved successfully for: $script:CurrentGameId"
