@@ -37,6 +37,7 @@ class ConfigEditorUI {
     [string]$CurrentLanguage
     [bool]$HasUnsavedChanges
     [PSObject]$EventHandler
+    [string]$ProjectRoot
 
     <#
     .SYNOPSIS
@@ -62,18 +63,20 @@ class ConfigEditorUI {
         Automatically loads XAML from MainWindow.xaml in the script directory.
     #>
     # Constructor
-    ConfigEditorUI([ConfigEditorState]$stateManager, [hashtable]$allMappings, [ConfigEditorLocalization]$localization) {
+    ConfigEditorUI([ConfigEditorState]$stateManager, [hashtable]$allMappings, [ConfigEditorLocalization]$localization, [string]$ProjectRoot) {
         try {
             Write-Host "[DEBUG] ConfigEditorUI: Constructor started"
             $this.State = $stateManager
             $this.Mappings = $allMappings
             $this.Messages = $localization.Messages
             $this.CurrentLanguage = $localization.CurrentLanguage
+            # Store project root for internal file path construction (classes cannot access outer script variables)
+            $this.ProjectRoot = $ProjectRoot
             Write-Host "[DEBUG] ConfigEditorUI: State manager, mappings, and localization assigned"
 
-            # Load XAML
+            # Load XAML (use project root defined in main script)
             Write-Host "[DEBUG] ConfigEditorUI: Step 1/6 - Loading XAML file"
-            $xamlPath = Join-Path $PSScriptRoot "MainWindow.xaml"
+            $xamlPath = Join-Path -Path $this.ProjectRoot -ChildPath "gui/MainWindow.xaml"
             if (-not (Test-Path $xamlPath)) {
                 throw "XAML file not found: $xamlPath"
             }
@@ -277,13 +280,13 @@ class ConfigEditorUI {
 
                     # Set watermark visibility based on text content
                     $appArgumentsTextBox.add_TextChanged({
-                        param($sender, $e)
-                        $watermark.Visibility = if ([string]::IsNullOrEmpty($sender.Text)) {
-                            [System.Windows.Visibility]::Visible
-                        } else {
-                            [System.Windows.Visibility]::Hidden
-                        }
-                    }.GetNewClosure())
+                            param($sender, $e)
+                            $watermark.Visibility = if ([string]::IsNullOrEmpty($sender.Text)) {
+                                [System.Windows.Visibility]::Visible
+                            } else {
+                                [System.Windows.Visibility]::Hidden
+                            }
+                        }.GetNewClosure())
 
                     # Add watermark to parent grid
                     $parent = $appArgumentsTextBox.Parent

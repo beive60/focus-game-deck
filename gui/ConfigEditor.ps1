@@ -70,6 +70,8 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
+$projectRoot = Split-Path -Parent $PSScriptRoot
+
 # Prerequisites check function
 function Test-Prerequisites {
     param()
@@ -83,10 +85,10 @@ function Test-Prerequisites {
 
     # Check essential files
     $requiredFiles = @(
-        (Join-Path $PSScriptRoot "MainWindow.xaml"),
-        (Join-Path $PSScriptRoot "../localization/messages.json"),
-        (Join-Path $PSScriptRoot "ConfigEditor.Mappings.ps1"),
-        (Join-Path (Split-Path $PSScriptRoot) "config/config.json")
+        (Join-Path -Path $projectRoot -ChildPath "gui/MainWindow.xaml"),
+        (Join-Path -Path $projectRoot -ChildPath "localization/messages.json"),
+        (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1"),
+        (Join-Path -Path $projectRoot -ChildPath "config/config.json")
     )
 
     foreach ($file in $requiredFiles) {
@@ -124,7 +126,7 @@ function Initialize-WpfAssemblies {
 # Load configuration function
 function Import-Configuration {
     try {
-        $configPath = Join-Path (Split-Path $PSScriptRoot -Parent) "config/config.json"
+        $configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
 
         if (-not (Test-Path $configPath)) {
             # Try sample config
@@ -216,12 +218,12 @@ function Initialize-ConfigEditor {
         Write-Host "[INFO] ConfigEditor: Loading script modules"
 
         $modulePaths = @(
-            (Join-Path $PSScriptRoot "ConfigEditor.JsonHelper.ps1"),    # Load JSON helper first
-            (Join-Path $PSScriptRoot "ConfigEditor.Mappings.ps1"),      # Load mappings first
-            (Join-Path $PSScriptRoot "ConfigEditor.State.ps1"),
-            (Join-Path $PSScriptRoot "ConfigEditor.Localization.ps1"),
-            (Join-Path $PSScriptRoot "ConfigEditor.UI.ps1"),            # UI depends on mappings
-            (Join-Path $PSScriptRoot "ConfigEditor.Events.ps1")
+            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.JsonHelper.ps1"),    # Load JSON helper first
+            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1"),      # Load mappings first
+            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.State.ps1"),
+            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Localization.ps1"),
+            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.UI.ps1"),            # UI depends on mappings
+            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Events.ps1")
         )
 
         foreach ($modulePath in $modulePaths) {
@@ -249,7 +251,8 @@ function Initialize-ConfigEditor {
         # Step 4: Initialize localization
         Write-Host "[INFO] ConfigEditor: Initializing localization"
         try {
-            $script:Localization = [ConfigEditorLocalization]::new()
+            # Pass shared project root into localization class (PowerShell classes cannot access script-scoped variables)
+            $script:Localization = [ConfigEditorLocalization]::new($projectRoot)
             Write-Host "[OK] ConfigEditor: Localization initialized - Language: $($script:Localization.CurrentLanguage)"
         } catch {
             Write-Error "Failed to initialize localization: $($_.Exception.Message)"
@@ -293,7 +296,8 @@ function Initialize-ConfigEditor {
                 Tooltip = $TooltipMappings
                 ComboBoxItem = $ComboBoxItemMappings
             }
-            $uiManager = [ConfigEditorUI]::new($stateManager, $allMappings, $script:Localization)
+            # Pass project root into UI class so it can construct file paths without referencing script-scoped variables
+            $uiManager = [ConfigEditorUI]::new($stateManager, $allMappings, $script:Localization, $projectRoot)
 
             Write-Host "[DEBUG] ConfigEditor: ConfigEditorUI instance created - $($null -ne $uiManager)"
 
@@ -344,7 +348,8 @@ function Initialize-ConfigEditor {
         }
 
         # Step 7: Initialize event handler
-        $eventHandler = [ConfigEditorEvents]::new($uiManager, $stateManager)
+        # Pass project root into events handler so it can construct file paths without referencing script-scoped variables
+        $eventHandler = [ConfigEditorEvents]::new($uiManager, $stateManager, $projectRoot)
 
         # Connect event handler to UI manager
         $uiManager.EventHandler = $eventHandler
@@ -446,7 +451,6 @@ function Initialize-ConfigEditor {
     } catch {
         Write-Host "[ERROR] ConfigEditor: Initialization failed - $($_.Exception.Message)"
         if ($_.InvocationInfo.ScriptName) {
-            $projectRoot = Split-Path $PSScriptRoot -Parent
             $relativePath = $_.InvocationInfo.ScriptName -replace [regex]::Escape($projectRoot), "."
             $relativePath = $relativePath -replace "\\", "/"  # Convert to forward slashes
             Write-Host "[ERROR] ConfigEditor: Module - $relativePath"
@@ -471,8 +475,7 @@ function Initialize-ConfigEditor {
 # Import additional modules after WPF assemblies are loaded
 function Import-AdditionalModules {
     try {
-        # Get project root directory (parent of gui folder)
-        $projectRoot = Split-Path $PSScriptRoot -Parent
+        # Use $projectRoot defined at top of the script (parent of gui folder)
         Write-Verbose "Project root: $projectRoot"
 
         # Define modules to load and their configurations
@@ -1622,7 +1625,7 @@ function Show-LanguageChangeRestartMessage {
             # Get the current script path
             $currentScript = $PSCommandPath
             if (-not $currentScript) {
-                $currentScript = Join-Path $PSScriptRoot "ConfigEditor.ps1"
+                $currentScript = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.ps1"
             }
 
             # Start new instance FIRST with proper encoding
@@ -1708,18 +1711,41 @@ function Get-SafeLocalizedMessage {
     )
 
     try {
+        # Prefer ConfigEditorForm.localization when available (older codepath)
         if ($script:ConfigEditorForm -and $script:ConfigEditorForm.localization) {
             return $script:ConfigEditorForm.localization.GetMessage($Key, $FormatArgs)
-        } elseif ($script:UIManager) {
+        }
+
+        # If the ConfigEditorForm exposes a Messages hashtable, use it (ConfigEditorUI stores Messages)
+        if ($script:ConfigEditorForm -and $script:ConfigEditorForm.Messages) {
+            try {
+                $msgs = $script:ConfigEditorForm.Messages
+                if ($msgs.PSObject.Properties[$Key]) {
+                    $msg = $msgs.$Key
+                    if ($FormatArgs -and $FormatArgs.Count -gt 0) { return $msg -f $FormatArgs }
+                    return $msg
+                }
+            } catch {
+                # fallthrough to other sources
+            }
+        }
+
+        # Localization singleton created during initialization
+        if ($script:Localization) {
+            return $script:Localization.GetMessage($Key, $FormatArgs)
+        }
+
+        # Fallback to UIManager helper method
+        if ($script:UIManager) {
             $message = $script:UIManager.GetLocalizedMessage($Key)
             if ($FormatArgs -and $FormatArgs.Count -gt 0) {
                 return $message -f $FormatArgs
             }
             return $message
-        } else {
-            Write-Warning "Localization not available, using key as message: $Key"
-            return $Key
         }
+
+        Write-Warning "Localization not available, using key as message: $Key"
+        return $Key
     } catch {
         Write-Warning "Failed to get localized message for key '$Key': $($_.Exception.Message)"
         return $Key
@@ -1767,17 +1793,41 @@ function Show-SafeMessage {
         if ($Message) {
             $messageText = $Message
         } else {
+            # Try multiple sources in order of preference
             if ($script:ConfigEditorForm -and $script:ConfigEditorForm.localization) {
                 $messageText = $script:ConfigEditorForm.localization.GetMessage($Key, $FormatArgs)
+            } elseif ($script:ConfigEditorForm -and $script:ConfigEditorForm.Messages) {
+                try {
+                    $msgs = $script:ConfigEditorForm.Messages
+                    if ($msgs.PSObject.Properties[$Key]) {
+                        $messageText = $msgs.$Key
+                        if ($FormatArgs -and $FormatArgs.Count -gt 0) { $messageText = $messageText -f $FormatArgs }
+                    } else {
+                        $messageText = $Key
+                    }
+                } catch {
+                    $messageText = $Key
+                }
+            } elseif ($script:Localization) {
+                $messageText = $script:Localization.GetMessage($Key, $FormatArgs)
+            } elseif ($script:UIManager) {
+                $messageText = $script:UIManager.GetLocalizedMessage($Key)
+                if ($FormatArgs -and $FormatArgs.Count -gt 0) { $messageText = $messageText -f $FormatArgs }
             } else {
                 Write-Warning "Localization not available, using key as message: $Key"
                 $messageText = $Key
             }
         }
 
-        # Get localized title
+        # Get localized title (same lookup order)
         if ($script:ConfigEditorForm -and $script:ConfigEditorForm.localization) {
             $titleText = $script:ConfigEditorForm.localization.GetMessage($titleKeyToUse, @())
+        } elseif ($script:ConfigEditorForm -and $script:ConfigEditorForm.Messages -and $script:ConfigEditorForm.Messages.PSObject.Properties[$titleKeyToUse]) {
+            $titleText = $script:ConfigEditorForm.Messages.$titleKeyToUse
+        } elseif ($script:Localization) {
+            $titleText = $script:Localization.GetMessage($titleKeyToUse, @())
+        } elseif ($script:UIManager) {
+            $titleText = $script:UIManager.GetLocalizedMessage($titleKeyToUse)
         } else {
             $titleText = $titleKeyToUse
         }

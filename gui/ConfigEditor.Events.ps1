@@ -1,10 +1,12 @@
 ﻿class ConfigEditorEvents {
     $uiManager
     $stateManager
+    [string]$ProjectRoot
 
-    ConfigEditorEvents($ui, $state) {
+    ConfigEditorEvents($ui, $state, [string]$ProjectRoot) {
         $this.uiManager = $ui
         $this.stateManager = $state
+        $this.ProjectRoot = $ProjectRoot
     }
 
     # Helper method to set ComboBox selection by matching Tag property
@@ -509,13 +511,13 @@
         # Create new game with default values
         $newGame = @{
             displayName = "New Game"
-            platform    = "standalone"
-            appId       = $newGameId
+            platform = "standalone"
+            appId = $newGameId
             managedApps = @{
-                gameStartAction   = "none"
-                gameEndAction     = "none"
+                gameStartAction = "none"
+                gameEndAction = "none"
                 terminationMethod = "auto"
-                gracefulTimeout   = 5
+                gracefulTimeout = 5
             }
         }
 
@@ -540,11 +542,11 @@
             }
         }
 
-            # Mark as modified
-            $this.stateManager.SetModified()
+        # Mark as modified
+        $this.stateManager.SetModified()
 
-            Write-Verbose "Added new game: $newGameId"
-        }    # Handle duplicate game
+        Write-Verbose "Added new game: $newGameId"
+    }    # Handle duplicate game
     [void] HandleDuplicateGame() {
         $gamesList = $script:Window.FindName("GamesList")
         $selectedGame = $gamesList.SelectedItem
@@ -561,12 +563,10 @@
             $originalGameData = $this.stateManager.ConfigData.games.$selectedGame
             $duplicatedGameData = $originalGameData | ConvertTo-Json -Depth 10 | ConvertFrom-Json
 
-            # Modify the display name to indicate it's a copy
-            $originalDisplayName = if ($duplicatedGameData.displayName) { $duplicatedGameData.displayName } else { $selectedGame }
-            $duplicatedGameData.displayName = "$originalDisplayName (Copy)"
-
-            # Update appId to match the new game ID
-            $duplicatedGameData.appId = $newGameId
+            # Modify the display/name to indicate it's a copy (games historically use 'name')
+            $originalDisplayName = if ($duplicatedGameData.displayName) { $duplicatedGameData.displayName } elseif ($duplicatedGameData.name) { $duplicatedGameData.name } else { $selectedGame }
+            # Prefer setting the canonical 'name' property for games; use helper to safely add property
+            Set-PropertyValue -Object $duplicatedGameData -PropertyName "name" -Value "$originalDisplayName (Copy)"
 
             # Add to configuration
             $this.stateManager.ConfigData.games | Add-Member -NotePropertyName $newGameId -NotePropertyValue $duplicatedGameData
@@ -708,12 +708,12 @@
 
         # Create new app with default values
         $newApp = @{
-            displayName       = "New App"
-            processNames      = @("notepad.exe")
-            startAction       = "start-process"
-            endAction         = "stop-process"
+            displayName = "New App"
+            processNames = @("notepad.exe")
+            startAction = "start-process"
+            endAction = "stop-process"
             terminationMethod = "auto"
-            gracefulTimeout   = 5
+            gracefulTimeout = 5
         }
 
         # Add to configuration
@@ -762,9 +762,9 @@
             $originalAppData = $this.stateManager.ConfigData.managedApps.$selectedApp
             $duplicatedAppData = $originalAppData | ConvertTo-Json -Depth 10 | ConvertFrom-Json
 
-            # Modify the display name to indicate it's a copy
-            $originalDisplayName = if ($duplicatedAppData.displayName) { $duplicatedAppData.displayName } else { $selectedApp }
-            $duplicatedAppData.displayName = "$originalDisplayName (Copy)"
+            # Modify the display name to indicate it's a copy (managed apps use 'displayName')
+            $originalDisplayName = if ($duplicatedAppData.displayName) { $duplicatedAppData.displayName } elseif ($duplicatedAppData.name) { $duplicatedAppData.name } else { $selectedApp }
+            Set-PropertyValue -Object $duplicatedAppData -PropertyName "displayName" -Value "$originalDisplayName (Copy)"
 
             # Add to configuration
             $this.stateManager.ConfigData.managedApps | Add-Member -NotePropertyName $newAppId -NotePropertyValue $duplicatedAppData
@@ -1348,22 +1348,22 @@
 
                 # Add event handlers
                 $saveButton.Add_Click({
-                    $dialogWindow.Tag = "Save"
-                    $dialogWindow.DialogResult = $true
-                    $dialogWindow.Close()
-                })
+                        $dialogWindow.Tag = "Save"
+                        $dialogWindow.DialogResult = $true
+                        $dialogWindow.Close()
+                    })
 
                 $discardButton.Add_Click({
-                    $dialogWindow.Tag = "Discard"
-                    $dialogWindow.DialogResult = $true
-                    $dialogWindow.Close()
-                })
+                        $dialogWindow.Tag = "Discard"
+                        $dialogWindow.DialogResult = $true
+                        $dialogWindow.Close()
+                    })
 
                 $cancelButton.Add_Click({
-                    $dialogWindow.Tag = "Cancel"
-                    $dialogWindow.DialogResult = $false
-                    $dialogWindow.Close()
-                })
+                        $dialogWindow.Tag = "Cancel"
+                        $dialogWindow.DialogResult = $false
+                        $dialogWindow.Close()
+                    })
 
                 # Show dialog
                 $result = $dialogWindow.ShowDialog()
@@ -1676,7 +1676,7 @@
             }
 
             # Use the direct game launcher to avoid recursive ConfigEditor launches
-            $gameLauncherPath = Join-Path (Split-Path $PSScriptRoot) "src/Invoke-FocusGameDeck.ps1"
+            $gameLauncherPath = Join-Path -Path $this.ProjectRoot -ChildPath "src/Invoke-FocusGameDeck.ps1"
 
             if (-not (Test-Path $gameLauncherPath)) {
                 Show-SafeMessage -Key "launcherNotFound" -MessageType "Error"
@@ -1822,12 +1822,12 @@
                 return
             }
 
-            # Use the enhanced launcher creation script
-            $launcherScriptPath = Join-Path (Split-Path $PSScriptRoot) "scripts/Create-Launchers-Enhanced.ps1"
+            # Use the enhanced launcher creation script (resolve from project root)
+            $launcherScriptPath = Join-Path -Path $this.ProjectRoot -ChildPath "scripts/Create-Launchers-Enhanced.ps1"
 
             if (-not (Test-Path $launcherScriptPath)) {
                 # Fallback to basic launcher script
-                $launcherScriptPath = Join-Path (Split-Path $PSScriptRoot) "scripts/Create-Launchers.ps1"
+                $launcherScriptPath = Join-Path -Path $this.ProjectRoot -ChildPath "scripts/Create-Launchers.ps1"
                 if (-not (Test-Path $launcherScriptPath)) {
                     Show-SafeMessage -Key "launcherScriptNotFound" -MessageType "Error"
                     return
