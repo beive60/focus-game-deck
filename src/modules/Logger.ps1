@@ -1,6 +1,34 @@
-# Logger Module
-# Centralized logging functionality with multiple levels and output options
+<#
+.SYNOPSIS
+    Logger Module - Centralized logging functionality with multiple levels and output options.
 
+.DESCRIPTION
+    This module provides a comprehensive logging system with support for:
+    - Multiple log levels (Trace, Debug, Info, Warning, Error, Critical)
+    - Console and file output
+    - Log rotation and retention policies
+    - Log notarization using Firebase
+    - Self-authentication for log integrity verification
+
+.NOTES
+    File Name  : Logger.ps1
+    Author     : Focus Game Deck Team
+    Requires   : PowerShell 5.1 or later
+#>
+
+<#
+.SYNOPSIS
+    Defines log severity levels.
+
+.DESCRIPTION
+    Enumeration of available log levels from least to most severe:
+    - Trace (0): Detailed diagnostic information
+    - Debug (1): Debug-level messages
+    - Info (2): Informational messages
+    - Warning (3): Warning messages
+    - Error (4): Error messages
+    - Critical (5): Critical error messages
+#>
 enum LogLevel {
     Trace = 0
     Debug = 1
@@ -10,6 +38,22 @@ enum LogLevel {
     Critical = 5
 }
 
+<#
+.SYNOPSIS
+    Main logging class for Focus Game Deck.
+
+.DESCRIPTION
+    Provides centralized logging functionality with support for multiple output targets,
+    log rotation, retention policies, and optional log notarization for integrity verification.
+
+.EXAMPLE
+    $logger = [Logger]::new($config, $messages)
+    $logger.Info("Application started", "MAIN")
+
+.EXAMPLE
+    $logger = [Logger]::new($config, $messages)
+    $logger.Error("Failed to connect to service", "NETWORK")
+#>
 class Logger {
     [string] $LogFilePath
     [LogLevel] $MinimumLevel
@@ -28,7 +72,23 @@ class Logger {
     hidden [string] $AppVersion
     hidden [string] $ExecutablePath
 
-    # Constructor
+    <#
+    .SYNOPSIS
+        Initializes a new Logger instance.
+
+    .DESCRIPTION
+        Creates a new logger with configuration from the provided config object.
+        Sets up logging targets, retention policies, and authentication properties.
+
+    .PARAMETER config
+        Configuration object containing logging settings (level, file path, retention, etc.)
+
+    .PARAMETER messages
+        Localization messages object for internationalized log messages
+
+    .EXAMPLE
+        $logger = [Logger]::new($config, $messages)
+    #>
     Logger([object] $config, [object] $messages) {
         $this.Messages = $messages
         $this.MinimumLevel = [LogLevel]::Info
@@ -86,7 +146,26 @@ class Logger {
         $this.InitializeSelfAuthentication()
     }
 
-    # Main logging method
+    <#
+    .SYNOPSIS
+        Main logging method for all log levels.
+
+    .DESCRIPTION
+        Writes a log entry with the specified level, message, and component.
+        Respects the minimum log level and outputs to configured targets.
+
+    .PARAMETER level
+        The severity level of the log entry (LogLevel enum)
+
+    .PARAMETER message
+        The log message text
+
+    .PARAMETER component
+        The component or module name generating the log entry (default: "MAIN")
+
+    .EXAMPLE
+        $logger.Log([LogLevel]::Info, "Application started", "MAIN")
+    #>
     [void] Log([LogLevel] $level, [string] $message, [string] $component = "MAIN") {
         if ($level -lt $this.MinimumLevel) {
             return
@@ -111,7 +190,22 @@ class Logger {
         }
     }
 
-    # Write to console with appropriate colors
+    <#
+    .SYNOPSIS
+        Writes a log entry to the console with appropriate colors.
+
+    .DESCRIPTION
+        Outputs log entries to the console with color coding based on severity level.
+
+    .PARAMETER level
+        The severity level (determines output color)
+
+    .PARAMETER logEntry
+        The formatted log entry text to display
+
+    .EXAMPLE
+        $logger.WriteToConsole([LogLevel]::Warning, "[2024-01-01] [WARNING] Test warning")
+    #>
     [void] WriteToConsole([LogLevel] $level, [string] $logEntry) {
         switch ($level) {
             ([LogLevel]::Trace) {
@@ -121,13 +215,13 @@ class Logger {
                 Write-Host $logEntry -ForegroundColor Gray
             }
             ([LogLevel]::Info) {
-                Write-Host $logEntry -ForegroundColor White
+                Write-Host $logEntry
             }
             ([LogLevel]::Warning) {
-                Write-Host $logEntry -ForegroundColor Yellow
+                Write-Host $logEntry
             }
             ([LogLevel]::Error) {
-                Write-Host $logEntry -ForegroundColor Red
+                Write-Host $logEntry
             }
             ([LogLevel]::Critical) {
                 Write-Host $logEntry -ForegroundColor Magenta
@@ -135,32 +229,149 @@ class Logger {
         }
     }
 
-    # Convenience methods for different log levels
+    <#
+    .SYNOPSIS
+        Logs a trace-level message.
+
+    .DESCRIPTION
+        Convenience method for logging detailed diagnostic information.
+
+    .PARAMETER message
+        The trace message text
+
+    .PARAMETER component
+        The component or module name (default: "MAIN")
+
+    .EXAMPLE
+        $logger.Trace("Entering function ProcessData", "DATA")
+    #>
     [void] Trace([string] $message, [string] $component = "MAIN") {
         $this.Log([LogLevel]::Trace, $message, $component)
     }
 
+    <#
+    .SYNOPSIS
+        Logs a debug-level message.
+
+    .DESCRIPTION
+        Convenience method for logging debug information.
+
+    .PARAMETER message
+        The debug message text
+
+    .PARAMETER component
+        The component or module name (default: "MAIN")
+
+    .EXAMPLE
+        $logger.Debug("Processing item 42", "PROCESS")
+    #>
     [void] Debug([string] $message, [string] $component = "MAIN") {
         $this.Log([LogLevel]::Debug, $message, $component)
     }
 
+    <#
+    .SYNOPSIS
+        Logs an informational message.
+
+    .DESCRIPTION
+        Convenience method for logging general informational messages.
+
+    .PARAMETER message
+        The information message text
+
+    .PARAMETER component
+        The component or module name (default: "MAIN")
+
+    .EXAMPLE
+        $logger.Info("Application initialized successfully", "MAIN")
+    #>
     [void] Info([string] $message, [string] $component = "MAIN") {
         $this.Log([LogLevel]::Info, $message, $component)
     }
 
+    <#
+    .SYNOPSIS
+        Logs a warning message.
+
+    .DESCRIPTION
+        Convenience method for logging warning messages.
+
+    .PARAMETER message
+        The warning message text
+
+    .PARAMETER component
+        The component or module name (default: "MAIN")
+
+    .EXAMPLE
+        $logger.Warning("Configuration file not found, using defaults", "CONFIG")
+    #>
     [void] Warning([string] $message, [string] $component = "MAIN") {
         $this.Log([LogLevel]::Warning, $message, $component)
     }
 
+    <#
+    .SYNOPSIS
+        Logs an error message.
+
+    .DESCRIPTION
+        Convenience method for logging error messages.
+
+    .PARAMETER message
+        The error message text
+
+    .PARAMETER component
+        The component or module name (default: "MAIN")
+
+    .EXAMPLE
+        $logger.Error("Failed to connect to database", "DATABASE")
+    #>
     [void] Error([string] $message, [string] $component = "MAIN") {
         $this.Log([LogLevel]::Error, $message, $component)
     }
 
+    <#
+    .SYNOPSIS
+        Logs a critical error message.
+
+    .DESCRIPTION
+        Convenience method for logging critical error messages that may require immediate attention.
+
+    .PARAMETER message
+        The critical error message text
+
+    .PARAMETER component
+        The component or module name (default: "MAIN")
+
+    .EXAMPLE
+        $logger.Critical("System integrity check failed", "SECURITY")
+    #>
     [void] Critical([string] $message, [string] $component = "MAIN") {
         $this.Log([LogLevel]::Critical, $message, $component)
     }
 
-    # Log exception with stack trace
+    <#
+    .SYNOPSIS
+        Logs an exception with full details including stack trace.
+
+    .DESCRIPTION
+        Logs exception information including message and stack trace at Error level.
+
+    .PARAMETER exception
+        The exception object to log
+
+    .PARAMETER context
+        Additional context about where the exception occurred
+
+    .PARAMETER component
+        The component or module name (default: "MAIN")
+
+    .EXAMPLE
+        try {
+            # Some code
+        } catch {
+            $logger.LogException($_.Exception, "ProcessData", "DATA")
+        }
+    #>
     [void] LogException([System.Exception] $exception, [string] $context = "", [string] $component = "MAIN") {
         $message = "Exception in $context : $($exception.Message)"
         if ($exception.StackTrace) {
@@ -169,18 +380,70 @@ class Logger {
         $this.Error($message, $component)
     }
 
-    # Log start of operation
+    <#
+    .SYNOPSIS
+        Logs the start of an operation.
+
+    .DESCRIPTION
+        Records when an operation begins, useful for tracking operation flow.
+
+    .PARAMETER operationName
+        The name of the operation being started
+
+    .PARAMETER component
+        The component or module name (default: "MAIN")
+
+    .EXAMPLE
+        $logger.LogOperationStart("Database Migration", "DATABASE")
+    #>
     [void] LogOperationStart([string] $operationName, [string] $component = "MAIN") {
         $this.Info("Starting operation: $operationName", $component)
     }
 
-    # Log end of operation with duration
+    <#
+    .SYNOPSIS
+        Logs the completion of an operation with duration.
+
+    .DESCRIPTION
+        Records when an operation completes and calculates its duration.
+
+    .PARAMETER operationName
+        The name of the operation that completed
+
+    .PARAMETER startTime
+        The DateTime when the operation started
+
+    .PARAMETER component
+        The component or module name (default: "MAIN")
+
+    .EXAMPLE
+        $startTime = Get-Date
+        # ... operation code ...
+        $logger.LogOperationEnd("Database Migration", $startTime, "DATABASE")
+    #>
     [void] LogOperationEnd([string] $operationName, [datetime] $startTime, [string] $component = "MAIN") {
         $duration = (Get-Date) - $startTime
         $this.Info("Completed operation: $operationName (Duration: $($duration.TotalMilliseconds)ms)", $component)
     }
 
-    # Clean up old log files based on retention policy
+    <#
+    .SYNOPSIS
+        Cleans up old log files based on retention policy.
+
+    .DESCRIPTION
+        Removes log files older than the configured retention period to manage disk space.
+        Supports unlimited retention with -1 value.
+
+    .PARAMETER config
+        Configuration object containing log retention settings
+
+    .EXAMPLE
+        $logger.CleanupOldLogs($config)
+
+    .NOTES
+        Default retention period is 90 days if not specified.
+        Use -1 for unlimited retention (no cleanup).
+    #>
     hidden [void] CleanupOldLogs([object] $config) {
         try {
             # Get log retention days from config, default to 90 if not specified or invalid
@@ -253,7 +516,20 @@ class Logger {
         }
     }
 
-    # Initialize self-authentication properties by retrieving digital signature information
+    <#
+    .SYNOPSIS
+        Initializes self-authentication properties using digital signature information.
+
+    .DESCRIPTION
+        Retrieves and stores the application's digital signature hash, version, and executable path
+        for log integrity verification and authentication purposes.
+
+    .EXAMPLE
+        $logger.InitializeSelfAuthentication()
+
+    .NOTES
+        Sets AppSignatureHash to special values for unsigned builds or verification errors.
+    #>
     hidden [void] InitializeSelfAuthentication() {
         try {
             # Get the path of the currently executing script or executable
@@ -315,7 +591,19 @@ class Logger {
         }
     }
 
-    # Get application version from Version.ps1
+    <#
+    .SYNOPSIS
+        Retrieves the application version from Version.ps1.
+
+    .DESCRIPTION
+        Executes the Version.ps1 script to get the current application version string.
+
+    .OUTPUTS
+        String containing the version number, or error message if retrieval fails.
+
+    .EXAMPLE
+        $version = $logger.GetApplicationVersion()
+    #>
     hidden [string] GetApplicationVersion() {
         try {
             $versionScriptPath = Join-Path $PSScriptRoot "../../Version.ps1"
@@ -340,7 +628,23 @@ class Logger {
         }
     }
 
-    # Rotate log file if it gets too large
+    <#
+    .SYNOPSIS
+        Rotates the log file if it exceeds the maximum size.
+
+    .DESCRIPTION
+        Creates a backup of the current log file and starts a new one if the file size
+        exceeds the specified maximum.
+
+    .PARAMETER maxSizeMB
+        Maximum log file size in megabytes (default: 10 MB)
+
+    .EXAMPLE
+        $logger.RotateLogFile(20)
+
+    .NOTES
+        Backup files are named with timestamp: filename-backup-yyyyMMdd-HHmmss.log
+    #>
     [void] RotateLogFile([int] $maxSizeMB = 10) {
         if (-not $this.EnableFileLogging -or -not (Test-Path $this.LogFilePath)) {
             return
@@ -361,7 +665,19 @@ class Logger {
         }
     }
 
-    # Calculate SHA256 hash of log file
+    <#
+    .SYNOPSIS
+        Calculates the SHA256 hash of the log file.
+
+    .DESCRIPTION
+        Computes the SHA256 hash of the current log file for integrity verification.
+
+    .OUTPUTS
+        String containing the SHA256 hash, or null if calculation fails.
+
+    .EXAMPLE
+        $hash = $logger.GetLogFileHash()
+    #>
     hidden [string] GetLogFileHash() {
         if (-not (Test-Path $this.LogFilePath)) {
             return $null
@@ -376,7 +692,29 @@ class Logger {
         }
     }
 
-    # Send log hash to Firebase for notarization with self-authentication data
+    <#
+    .SYNOPSIS
+        Sends log hash to Firebase for notarization.
+
+    .DESCRIPTION
+        Uploads the log file hash along with authentication data to Firebase Firestore
+        for tamper-proof timestamping and verification.
+
+    .PARAMETER hash
+        The SHA256 hash of the log file
+
+    .PARAMETER clientTimestamp
+        ISO 8601 formatted timestamp from the client
+
+    .OUTPUTS
+        Firebase response object containing the document ID and metadata
+
+    .EXAMPLE
+        $response = $logger.SendHashToFirebase($hash, $timestamp)
+
+    .NOTES
+        Requires Firebase configuration (project ID and API key) to be set.
+    #>
     hidden [object] SendHashToFirebase([string] $hash, [string] $clientTimestamp) {
         if (-not $this.FirebaseProjectId -or -not $this.FirebaseApiKey) {
             throw "Firebase configuration is not properly set"
@@ -421,7 +759,24 @@ class Logger {
         }
     }
 
-    # Finalize and notarize log file
+    <#
+    .SYNOPSIS
+        Finalizes and notarizes the log file asynchronously.
+
+    .DESCRIPTION
+        Calculates the log file hash and sends it to Firebase for notarization,
+        creating a tamper-proof certificate of the log contents.
+
+    .OUTPUTS
+        String containing the notarization certificate ID, or null if notarization fails.
+
+    .EXAMPLE
+        $certificateId = $logger.FinalizeAndNotarizeLogAsync()
+
+    .NOTES
+        Only executes if EnableNotarization is true in configuration.
+        Returns immediately if logging or notarization is disabled.
+    #>
     [string] FinalizeAndNotarizeLogAsync() {
         if (-not $this.EnableNotarization) {
             $this.Debug("Log notarization is disabled", "NOTARY")
@@ -474,10 +829,38 @@ class Logger {
     }
 }
 
-# Global logger instance
+<#
+.SYNOPSIS
+    Global logger instance for the entire application.
+
+.DESCRIPTION
+    Stores the initialized Logger instance for use throughout the application lifecycle.
+#>
 $Global:FocusGameDeckLogger = $null
 
-# Public function to initialize logger
+<#
+.SYNOPSIS
+    Initializes the global logger instance.
+
+.DESCRIPTION
+    Creates and configures a new Logger instance with the provided configuration and messages.
+    Stores the instance in the global scope for application-wide access.
+
+.PARAMETER Config
+    Configuration object containing logging settings
+
+.PARAMETER Messages
+    Localization messages object for internationalized log messages
+
+.OUTPUTS
+    Logger instance that was initialized
+
+.EXAMPLE
+    $logger = Initialize-Logger -Config $config -Messages $messages
+
+.NOTES
+    Should be called once during application startup.
+#>
 function Initialize-Logger {
     param(
         [Parameter(Mandatory = $true)]
@@ -491,7 +874,24 @@ function Initialize-Logger {
     return $Global:FocusGameDeckLogger
 }
 
-# Public function to get logger instance
+<#
+.SYNOPSIS
+    Retrieves the global logger instance.
+
+.DESCRIPTION
+    Returns the initialized logger instance from global scope.
+    Throws an error if the logger has not been initialized.
+
+.OUTPUTS
+    Logger instance
+
+.EXAMPLE
+    $logger = Get-Logger
+    $logger.Info("Test message")
+
+.NOTES
+    Call Initialize-Logger before using this function.
+#>
 function Get-Logger {
     if (-not $Global:FocusGameDeckLogger) {
         throw "Logger not initialized. Call Initialize-Logger first."
@@ -499,7 +899,28 @@ function Get-Logger {
     return $Global:FocusGameDeckLogger
 }
 
-# Convenience functions for quick logging
+<#
+.SYNOPSIS
+    Convenience function for quick logging at any level.
+
+.DESCRIPTION
+    Writes a log entry at the specified level using the global logger instance.
+
+.PARAMETER Level
+    The log level (LogLevel enum value)
+
+.PARAMETER Message
+    The log message text
+
+.PARAMETER Component
+    The component or module name (default: "MAIN")
+
+.EXAMPLE
+    Write-FGDLog -Level ([LogLevel]::Info) -Message "Test" -Component "TEST"
+
+.NOTES
+    Requires Initialize-Logger to be called first.
+#>
 function Write-FGDLog {
     param(
         [Parameter(Mandatory = $true)]
@@ -515,6 +936,25 @@ function Write-FGDLog {
     $logger.Log($Level, $Message, $Component)
 }
 
+<#
+.SYNOPSIS
+    Convenience function for logging informational messages.
+
+.DESCRIPTION
+    Writes an Info-level log entry using the global logger instance.
+
+.PARAMETER Message
+    The information message text
+
+.PARAMETER Component
+    The component or module name (default: "MAIN")
+
+.EXAMPLE
+    Write-FGDInfo -Message "Application started" -Component "MAIN"
+
+.NOTES
+    Requires Initialize-Logger to be called first.
+#>
 function Write-FGDInfo {
     param(
         [Parameter(Mandatory = $true)]
@@ -526,6 +966,25 @@ function Write-FGDInfo {
     Write-FGDLog -Level ([LogLevel]::Info) -Message $Message -Component $Component
 }
 
+<#
+.SYNOPSIS
+    Convenience function for logging warning messages.
+
+.DESCRIPTION
+    Writes a Warning-level log entry using the global logger instance.
+
+.PARAMETER Message
+    The warning message text
+
+.PARAMETER Component
+    The component or module name (default: "MAIN")
+
+.EXAMPLE
+    Write-FGDWarning -Message "Configuration missing" -Component "CONFIG"
+
+.NOTES
+    Requires Initialize-Logger to be called first.
+#>
 function Write-FGDWarning {
     param(
         [Parameter(Mandatory = $true)]
@@ -537,6 +996,25 @@ function Write-FGDWarning {
     Write-FGDLog -Level ([LogLevel]::Warning) -Message $Message -Component $Component
 }
 
+<#
+.SYNOPSIS
+    Convenience function for logging error messages.
+
+.DESCRIPTION
+    Writes an Error-level log entry using the global logger instance.
+
+.PARAMETER Message
+    The error message text
+
+.PARAMETER Component
+    The component or module name (default: "MAIN")
+
+.EXAMPLE
+    Write-FGDError -Message "Connection failed" -Component "NETWORK"
+
+.NOTES
+    Requires Initialize-Logger to be called first.
+#>
 function Write-FGDError {
     param(
         [Parameter(Mandatory = $true)]
@@ -548,4 +1026,15 @@ function Write-FGDError {
     Write-FGDLog -Level ([LogLevel]::Error) -Message $Message -Component $Component
 }
 
+<#
+.SYNOPSIS
+    Functions are available via dot-sourcing.
+
+.DESCRIPTION
+    This module exports the Logger class and convenience functions for use in other scripts.
+    Import using: . ./modules/Logger.ps1
+
+.NOTES
+    All functions and classes are available after dot-sourcing this file.
+#>
 # Functions are available via dot-sourcing

@@ -55,15 +55,15 @@ try {
 
     # Display localized loading messages
     if ($msg.mainLoadingConfig) {
-        Write-Host $msg.mainLoadingConfig -ForegroundColor Cyan
+        Write-Host $msg.mainLoadingConfig
     } else {
-        Write-Host "Loading configuration..." -ForegroundColor Cyan
+        Write-Host "Loading configuration..."
     }
 
     if ($msg.mainConfigLoaded) {
-        Write-Host $msg.mainConfigLoaded -ForegroundColor Green
+        Write-Host $msg.mainConfigLoaded
     } else {
-        Write-Host "Configuration loaded successfully." -ForegroundColor Green
+        Write-Host "Configuration loaded successfully."
     }
 } catch {
     Write-Error "Failed to load configuration: $_"
@@ -116,9 +116,9 @@ try {
 
 # Validate configuration
 if ($msg.mainValidatingConfig) {
-    Write-Host $msg.mainValidatingConfig -ForegroundColor Cyan
+    Write-Host $msg.mainValidatingConfig
 } else {
-    Write-Host "Validating configuration..." -ForegroundColor Cyan
+    Write-Host "Validating configuration..."
 }
 $validator = New-ConfigValidator -Config $config -Messages $msg
 if (-not $validator.ValidateConfiguration($GameId)) {
@@ -137,7 +137,7 @@ if (-not $gameConfig) {
     } else {
         $errorMsg = "Error: Game ID '{0}' not found in configuration." -f $GameId
     }
-    Write-Host $errorMsg -ForegroundColor Red
+    Write-Host $errorMsg
 
     if ($msg.mainAvailableGameIds) {
         Write-Host ($msg.mainAvailableGameIds -f ($config.games.PSObject.Properties.Name -join ', '))
@@ -157,8 +157,8 @@ if (-not $gamePlatform) {
 
 if (-not $platformManager.IsPlatformAvailable($gamePlatform)) {
     $errorMsg = "Platform '$gamePlatform' is not available or supported for game '$($gameConfig.name)'"
-    Write-Host $errorMsg -ForegroundColor Red
-    Write-Host "Available platforms: $($availablePlatforms -join ', ')" -ForegroundColor Yellow
+    Write-Host $errorMsg
+    Write-Host "Available platforms: $($availablePlatforms -join ', ')"
     if ($logger) { $logger.Error($errorMsg, "PLATFORM") }
     exit 1
 }
@@ -172,8 +172,8 @@ $appManager = New-AppManager -Config $config -Messages $msg
 $obsManager = $null
 
 if ("obs" -in $gameConfig.appsToManage) {
-    if ($config.obs) {
-        $obsManager = New-OBSManager -OBSConfig $config.obs -Messages $msg
+    if ($config.integrations.obs) {
+        $obsManager = New-OBSManager -OBSConfig $config.integrations.obs -Messages $msg
         if ($logger) { $logger.Info("OBS manager initialized", "OBS") }
     } else {
         Write-Warning "OBS is in appsToManage but OBS configuration is missing"
@@ -210,7 +210,7 @@ function Invoke-GameCleanup {
     }
 
     # Handle OBS replay buffer shutdown
-    if ($obsManager -and $config.obs.replayBuffer) {
+    if ($obsManager -and $config.integrations.obs.replayBuffer) {
         if ($obsManager.Connect()) {
             $obsManager.StopReplayBuffer()
             $obsManager.Disconnect()
@@ -238,12 +238,12 @@ try {
 
     # Handle OBS startup (special case)
     if ("obs" -in $gameConfig.appsToManage -and $obsManager) {
-        Write-Host "Starting OBS..." -ForegroundColor Cyan
-        if ($obsManager.StartOBS($config.paths.obs)) {
+        Write-Host "Starting OBS..."
+        if ($obsManager.StartOBS($config.integrations.obs.path)) {
             if ($logger) { $logger.Info("OBS started successfully", "OBS") }
 
             # Handle replay buffer if configured
-            if ($config.obs.replayBuffer) {
+            if ($config.integrations.obs.replayBuffer) {
                 if ($obsManager.Connect()) {
                     $obsManager.StartReplayBuffer()
                     $obsManager.Disconnect()
@@ -264,20 +264,20 @@ try {
 
     # Process normal applications startup
     if ($normalApps.Count -gt 0) {
-        Write-Host "Starting managed applications..." -ForegroundColor Cyan
+        Write-Host "Starting managed applications..."
         $appManager.ProcessStartupSequence($normalApps)
         if ($logger) { $logger.Info("Application startup sequence completed", "APP") }
     }
 
     # Launch game via appropriate platform
     if ($msg.mainLaunchingGame) {
-        Write-Host ($msg.mainLaunchingGame -f $detectedPlatforms[$gamePlatform].Name) -ForegroundColor Cyan
+        Write-Host ($msg.mainLaunchingGame -f $detectedPlatforms[$gamePlatform].Name)
     } else {
-        Write-Host "Launching game via $($detectedPlatforms[$gamePlatform].Name)..." -ForegroundColor Cyan
+        Write-Host "Launching game via $($detectedPlatforms[$gamePlatform].Name)..."
     }
     try {
         $launcherProcess = $platformManager.LaunchGame($gamePlatform, $gameConfig)
-        Write-Host ("Starting game: {0}" -f $gameConfig.name) -ForegroundColor Green
+        Write-Host ("Starting game: {0}" -f $gameConfig.name)
         if ($logger) { $logger.Info("Game launch command sent to $($detectedPlatforms[$gamePlatform].Name): $($gameConfig.name)", "GAME") }
     } catch {
         $errorMsg = "Failed to launch game via $($detectedPlatforms[$gamePlatform].Name): $_"
@@ -288,9 +288,9 @@ try {
 
     # Wait for actual game process to start (not the launcher)
     if ($msg.mainWaitingForProcess) {
-        Write-Host $msg.mainWaitingForProcess -ForegroundColor Yellow
+        Write-Host $msg.mainWaitingForProcess
     } else {
-        Write-Host "Waiting for game process to start..." -ForegroundColor Yellow
+        Write-Host "Waiting for game process to start..."
     }
     $gameProcess = $null
     $processStartTimeout = 300  # 5 minutes timeout
@@ -300,13 +300,13 @@ try {
         Start-Sleep -Seconds 3
         $elapsed = (Get-Date) - $startTime
         if ([int]$elapsed.TotalSeconds % 30 -eq 0 -and $elapsed.TotalSeconds -gt 0) {
-            Write-Host "." -NoNewline -ForegroundColor Yellow
+            Write-Host "." -NoNewline
         }
         $gameProcess = Get-Process $gameConfig.processName -ErrorAction SilentlyContinue
     } while (-not $gameProcess -and $elapsed.TotalSeconds -lt $processStartTimeout)
 
     if ($gameProcess) {
-        Write-Host ("`nNow monitoring process: {0}. The script will continue after the game exits." -f $gameConfig.name) -ForegroundColor Green
+        Write-Host ("`nNow monitoring process: {0}. The script will continue after the game exits." -f $gameConfig.name)
         if ($logger) { $logger.Info("Game process detected and monitoring started: $($gameConfig.processName)", "GAME") }
 
         # Wait for the game process to end.
@@ -317,7 +317,7 @@ try {
             Wait-Process -InputObject $gameProcess -ErrorAction Stop
         } catch {
             if ($logger) { $logger.Warning("Direct wait failed. Falling back to polling for process exit: $($gameProcess.Name) (PID: $($gameProcess.Id)). This can happen with admin-level processes.", "GAME") }
-            Write-Host "`nDirect process wait failed. Monitoring process in fallback mode (polling every 3s). This can happen with admin-level processes." -ForegroundColor Yellow
+            Write-Host "`nDirect process wait failed. Monitoring process in fallback mode (polling every 3s). This can happen with admin-level processes."
 
             while ($true) {
                 $processCheck = Get-Process -Id $gameProcess.Id -ErrorAction SilentlyContinue
@@ -330,9 +330,9 @@ try {
         }
 
         if ($msg.mainGameExited) {
-            Write-Host ($msg.mainGameExited -f $gameConfig.name) -ForegroundColor Yellow
+            Write-Host ($msg.mainGameExited -f $gameConfig.name)
         } else {
-            Write-Host ("Game has exited: {0}" -f $gameConfig.name) -ForegroundColor Yellow
+            Write-Host ("Game has exited: {0}" -f $gameConfig.name)
         }
         if ($logger) { $logger.Info("Game process ended: $($gameConfig.name)", "GAME") }
     } else {
@@ -349,9 +349,9 @@ try {
     }
 
     if ($msg.mainSessionCompletedMessage) {
-        Write-Host $msg.mainSessionCompletedMessage -ForegroundColor Green
+        Write-Host $msg.mainSessionCompletedMessage
     } else {
-        Write-Host "Focus Game Deck session completed." -ForegroundColor Green
+        Write-Host "Focus Game Deck session completed."
     }
 } catch {
     $errorMsg = "Unexpected error during execution: $_"
@@ -374,9 +374,9 @@ try {
     if ($logger) {
         try {
             if ($msg.mainFinalizingLog) {
-                Write-Host $msg.mainFinalizingLog -ForegroundColor Cyan
+                Write-Host $msg.mainFinalizingLog
             } else {
-                Write-Host "Finalizing session log..." -ForegroundColor Cyan
+                Write-Host "Finalizing session log..."
             }
             $certificateId = $logger.FinalizeAndNotarizeLogAsync()
 
@@ -384,9 +384,9 @@ try {
                 if ($msg.mainLogNotarizedSuccess) {
                     Write-Host ($msg.mainLogNotarizedSuccess -f $certificateId)
                 } else {
-                    Write-Host "[OK] " -NoNewline -ForegroundColor Green
-                    Write-Host "Log successfully notarized. Certificate ID: " -NoNewline -ForegroundColor White
-                    Write-Host $certificateId -ForegroundColor Yellow
+                    Write-Host "[OK] " -NoNewline
+                    Write-Host "Log successfully notarized. Certificate ID: " -NoNewline
+                    Write-Host $certificateId
                 }
                 if ($msg.mainLogNotarizationInfo) {
                     Write-Host $msg.mainLogNotarizationInfo -ForegroundColor Gray

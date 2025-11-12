@@ -65,51 +65,51 @@ function Test-PS2EXE {
 
 # Install ps2exe if needed
 if ($Install) {
-    Write-Host "Installing ps2exe module..." -ForegroundColor Yellow
+    Write-Host "Installing ps2exe module..."
 
     if (-not (Test-PS2EXE)) {
         try {
             Install-Module -Name ps2exe -Scope CurrentUser -Force
-            Write-Host "ps2exe module installed successfully." -ForegroundColor Green
+            Write-Host "ps2exe module installed successfully."
         } catch {
-            Write-Host "Failed to install ps2exe: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "Failed to install ps2exe: $($_.Exception.Message)"
             exit 1
         }
     } else {
-        Write-Host "ps2exe module is already installed." -ForegroundColor Green
+        Write-Host "ps2exe module is already installed."
     }
 }
 
 # Clean build artifacts
 if ($Clean) {
-    Write-Host "Cleaning build artifacts..." -ForegroundColor Yellow
+    Write-Host "Cleaning build artifacts..."
 
     $buildDir = Join-Path $PSScriptRoot "build"
     $distDir = Join-Path $PSScriptRoot "dist"
 
     if (Test-Path $buildDir) {
         Remove-Item $buildDir -Recurse -Force
-        Write-Host "Build directory cleaned." -ForegroundColor Green
+        Write-Host "Build directory cleaned."
     }
 
     if (Test-Path $distDir) {
         Remove-Item $distDir -Recurse -Force
-        Write-Host "Distribution directory cleaned." -ForegroundColor Green
+        Write-Host "Distribution directory cleaned."
     }    $exeFiles = Get-ChildItem -Path $PSScriptRoot -Filter "*.exe" -Recurse
     foreach ($exeFile in $exeFiles) {
         if ($exeFile.Name -like "*Focus-Game-Deck*") {
             Remove-Item $exeFile.FullName -Force
-            Write-Host "Removed: $($exeFile.FullName)" -ForegroundColor Green
+            Write-Host "Removed: $($exeFile.FullName)"
         }
     }
 }
 
 # Build executables
 if ($Build) {
-    Write-Host "Building executables..." -ForegroundColor Yellow
+    Write-Host "Building executables..."
 
     if (-not (Test-PS2EXE)) {
-        Write-Host "ps2exe module is not installed. Run with -Install parameter first." -ForegroundColor Red
+        Write-Host "ps2exe module is not installed. Run with -Install parameter first."
         exit 1
     }
 
@@ -127,7 +127,7 @@ if ($Build) {
         $mainOutputPath = Join-Path $buildDir "Focus-Game-Deck.exe"
 
         if (Test-Path $mainScriptPath) {
-            Write-Host "Building main application..." -ForegroundColor Cyan
+            Write-Host "Building main application..."
 
             $ps2exeParams = @{
                 inputFile = $mainScriptPath
@@ -153,22 +153,22 @@ if ($Build) {
             ps2exe @ps2exeParams
 
             if (Test-Path $mainOutputPath) {
-                Write-Host "Main executable created: $mainOutputPath" -ForegroundColor Green
+                Write-Host "Main executable created: $mainOutputPath"
             } else {
-                Write-Host "Failed to create main executable." -ForegroundColor Red
+                Write-Host "Failed to create main executable."
             }
         } else {
-            Write-Host "Main script not found: $mainScriptPath" -ForegroundColor Red
+            Write-Host "Main script not found: $mainScriptPath"
         }
 
         # Main executable now includes multi-platform support
 
         # Note: Config Editor functionality is now integrated into the main executable
         # Users can access it by running Focus-Game-Deck.exe without arguments or with --config
-        Write-Host "Config Editor functionality integrated into main executable." -ForegroundColor Green
+        Write-Host "Config Editor functionality integrated into main executable."
 
         # Copy necessary files to build directory
-        Write-Host "Copying configuration files..." -ForegroundColor Cyan
+        Write-Host "Copying configuration files..."
 
         $configDir = Join-Path $buildDir "config"
         if (-not (Test-Path $configDir)) {
@@ -182,19 +182,19 @@ if ($Build) {
             }
         }
 
-        Write-Host "Build completed successfully!" -ForegroundColor Green
-        Write-Host "Built files are located in: $buildDir" -ForegroundColor Cyan
+        Write-Host "Build completed successfully!"
+        Write-Host "Built files are located in: $buildDir"
 
         # List built files
-        Write-Host "`nBuilt files:" -ForegroundColor Yellow
+        Write-Host "`nBuilt files:"
         Get-ChildItem $buildDir -Recurse | Where-Object { -not $_.PSIsContainer } | ForEach-Object {
             $relativePath = $_.FullName.Replace($buildDir, "").TrimStart('\')
-            Write-Host "  $relativePath" -ForegroundColor White
+            Write-Host "  $relativePath"
         }
 
         # Auto-sign if requested
         if ($Sign -or $All) {
-            Write-Host "`nStarting code signing process..." -ForegroundColor Cyan
+            Write-Host "`nStarting code signing process..."
             $signingScript = Join-Path $PSScriptRoot "Sign-Executables.ps1"
             if (Test-Path $signingScript) {
                 & $signingScript -SignAll
@@ -209,7 +209,7 @@ if ($Build) {
             New-Item -ItemType Directory -Path $distDir -Force | Out-Null
         }
 
-        Write-Host "Creating distribution package..." -ForegroundColor Cyan
+        Write-Host "Creating distribution package..."
 
         # Move executables to dist directory
         Get-ChildItem $buildDir -Filter "*.exe" | ForEach-Object {
@@ -226,7 +226,7 @@ if ($Build) {
             }
 
             $signStatus = if ($isSigned) { "(signed)" } else { "(unsigned)" }
-            Write-Host "Moved: $($_.Name) to distribution directory $signStatus" -ForegroundColor Green
+            Write-Host "Moved: $($_.Name) to distribution directory $signStatus"
         }
 
         # Copy configuration files and other assets to dist directory
@@ -239,20 +239,20 @@ if ($Build) {
         }
 
         # Clean up intermediate build directory
-        Write-Host "Cleaning up intermediate build directory..." -ForegroundColor Cyan
+        Write-Host "Cleaning up intermediate build directory..."
         Remove-Item $buildDir -Recurse -Force
-        Write-Host "Build directory cleaned up." -ForegroundColor Green
+        Write-Host "Build directory cleaned up."
 
-        Write-Host "Distribution package completed! Files are located in: $distDir" -ForegroundColor Green    
+        Write-Host "Distribution package completed! Files are located in: $distDir"
     } catch {
-        Write-Host "Failed to build executables: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Failed to build executables: $($_.Exception.Message)"
         exit 1
     }
 }
 
 # Sign existing build if requested
 if ($Sign -and -not $Build) {
-    Write-Host "Signing existing build..." -ForegroundColor Yellow
+    Write-Host "Signing existing build..."
     $buildDir = Join-Path $PSScriptRoot "build"
     $distDir = Join-Path $PSScriptRoot "dist"
 
@@ -270,7 +270,7 @@ if ($Sign -and -not $Build) {
             New-Item -ItemType Directory -Path $distDir -Force | Out-Null
         }
 
-        Write-Host "Creating distribution package..." -ForegroundColor Cyan
+        Write-Host "Creating distribution package..."
 
         # Move executables to dist directory
         Get-ChildItem $buildDir -Filter "*.exe" | ForEach-Object {
@@ -287,7 +287,7 @@ if ($Sign -and -not $Build) {
             }
 
             $signStatus = if ($isSigned) { "(signed)" } else { "(unsigned)" }
-            Write-Host "Moved: $($_.Name) to distribution directory $signStatus" -ForegroundColor Green
+            Write-Host "Moved: $($_.Name) to distribution directory $signStatus"
         }
 
         # Copy other files to dist directory
@@ -304,18 +304,18 @@ if ($Sign -and -not $Build) {
         }
 
         # Clean up intermediate build directory
-        Write-Host "Cleaning up intermediate build directory..." -ForegroundColor Cyan
+        Write-Host "Cleaning up intermediate build directory..."
         Remove-Item $buildDir -Recurse -Force
-        Write-Host "Build directory cleaned up." -ForegroundColor Green
+        Write-Host "Build directory cleaned up."
 
-        Write-Host "Distribution package completed! Files are located in: $distDir" -ForegroundColor Green
+        Write-Host "Distribution package completed! Files are located in: $distDir"
     } else {
         Write-Error "Code signing script not found: $signingScript"
         exit 1
     }
 }# Show usage if no parameters
 if (-not $Install -and -not $Build -and -not $Clean -and -not $Sign -and -not $All) {
-    Write-Host "Focus Game Deck - Main Application Build Script" -ForegroundColor Cyan
+    Write-Host "Focus Game Deck - Main Application Build Script"
     Write-Host ""
     Write-Host "Usage:"
     Write-Host "  ./Build-FocusGameDeck.ps1 -Install           # Install ps2exe module"

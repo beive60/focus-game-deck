@@ -1,36 +1,76 @@
-# Focus Game Deck - Configuration Editor
-# PowerShell + WPF GUI for editing config.json
-#
-# Design Philosophy:
-# 1. Lightweight & Simple - Uses Windows native WPF, no additional runtime required
-# 2. Maintainable & Extensible - Configuration-driven design with modular structure
-# 3. User-Friendly - Intuitive 3-tab GUI with proper internationalization support
-#
-# Technical Architecture:
-# - PowerShell + WPF: Windows-native GUI technology for lightweight implementation
-# - Dynamic Language Detection: Automatic language detection based on config.json and OS settings
-# - Configuration-Driven: All behavior controlled through config.json
-# - Event-Driven: UI operations handled through PowerShell event handlers
-#
-# Language Support:
-# This implementation uses dynamic language detection following the priority:
-# 1. config.json language setting (if exists and valid)
-# 2. OS display language (if supported)
-# 3. English fallback (default)
-#
-# Author: GitHub Copilot Assistant
-# Version: 1.1.0 - Dynamic Language Detection and English Support
-# Date: 2025-09-23
+﻿<#
+.SYNOPSIS
+    Focus Game Deck - Configuration Editor GUI application.
+
+.DESCRIPTION
+    PowerShell + WPF based GUI application for editing config.json with multi-language support.
+    Provides an intuitive 3-tab interface for managing game configurations, managed applications,
+    and global settings.
+
+    Design Philosophy:
+    1. Lightweight & Simple - Uses Windows native WPF, no additional runtime required
+    2. Maintainable & Extensible - Configuration-driven design with modular structure
+    3. User-Friendly - Intuitive 3-tab GUI with proper internationalization support
+
+    Technical Architecture:
+    - PowerShell + WPF: Windows-native GUI technology for lightweight implementation
+    - Dynamic Language Detection: Automatic language detection based on config.json and OS settings
+    - Configuration-Driven: All behavior controlled through config.json
+    - Event-Driven: UI operations handled through PowerShell event handlers
+
+    Language Support Priority:
+    1. config.json language setting (if exists and valid)
+    2. OS display language (if supported)
+    3. English fallback (default)
+
+.PARAMETER NoAutoStart
+    Prevents automatic startup of the configuration editor. Used for loading functions only.
+
+.PARAMETER DebugMode
+    Enables debug mode with verbose output for troubleshooting.
+
+.PARAMETER AutoCloseSeconds
+    Automatically closes the window after the specified number of seconds (debug mode only).
+
+.EXAMPLE
+    .\ConfigEditor.ps1
+    Starts the configuration editor in normal mode.
+
+.EXAMPLE
+    .\ConfigEditor.ps1 -DebugMode
+    Starts the configuration editor in debug mode with verbose output.
+
+.EXAMPLE
+    .\ConfigEditor.ps1 -DebugMode -AutoCloseSeconds 10
+    Starts the configuration editor in debug mode and auto-closes after 10 seconds.
+
+.NOTES
+    Author: Focus Game Deck Development Team
+    Version: 1.1.0 - Dynamic Language Detection and English Support
+    Last Updated: 2025-09-23
+    Requires: PowerShell 5.1 or higher, Windows 10/11
+
+.LINK
+    https://github.com/beive60/focus-game-deck
+#>
 
 param(
-    [switch]$NoAutoStart
+    [switch]$NoAutoStart,
+    [switch]$DebugMode,
+    [int]$AutoCloseSeconds = 0
 )
+
+if ($DebugMode) {
+    $VerbosePreference = 'Continue'
+}
 
 # Set system-level encoding settings for proper character display
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
+
+$projectRoot = Split-Path -Parent $PSScriptRoot
 
 # Prerequisites check function
 function Test-Prerequisites {
@@ -45,10 +85,10 @@ function Test-Prerequisites {
 
     # Check essential files
     $requiredFiles = @(
-        (Join-Path $PSScriptRoot "MainWindow.xaml"),
-        (Join-Path $PSScriptRoot "../localization/messages.json"),
-        (Join-Path $PSScriptRoot "ConfigEditor.Mappings.ps1"),
-        (Join-Path (Split-Path $PSScriptRoot) "config/config.json")
+        (Join-Path -Path $projectRoot -ChildPath "gui/MainWindow.xaml"),
+        (Join-Path -Path $projectRoot -ChildPath "localization/messages.json"),
+        (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1"),
+        (Join-Path -Path $projectRoot -ChildPath "config/config.json")
     )
 
     foreach ($file in $requiredFiles) {
@@ -58,24 +98,24 @@ function Test-Prerequisites {
     }
 
     if ($issues.Count -gt 0) {
-        Write-Host "=== PREREQUISITES CHECK FAILED ===" -ForegroundColor Red
-        $issues | ForEach-Object { Write-Host "- $_" -ForegroundColor Red }
+        Write-Host "[ERROR] ConfigEditor: Prerequisites check failed"
+        $issues | ForEach-Object { Write-Host "  - $_" }
         return $false
     }
 
-    Write-Host "Prerequisites check passed" -ForegroundColor Green
+    Write-Host "[OK] ConfigEditor: Prerequisites check passed"
     return $true
 }
 
 # Load WPF assemblies FIRST before any dot-sourcing
 function Initialize-WpfAssemblies {
     try {
-        Write-Host "Loading WPF assemblies..." -ForegroundColor Yellow
+        Write-Host "[INFO] ConfigEditor: Loading WPF assemblies"
         Add-Type -AssemblyName PresentationFramework
         Add-Type -AssemblyName PresentationCore
         Add-Type -AssemblyName WindowsBase
         Add-Type -AssemblyName System.Windows.Forms
-        Write-Host "WPF assemblies loaded successfully" -ForegroundColor Green
+        Write-Host "[OK] ConfigEditor: WPF assemblies loaded successfully"
         return $true
     } catch {
         Write-Error "Failed to load WPF assemblies: $($_.Exception.Message)"
@@ -86,14 +126,14 @@ function Initialize-WpfAssemblies {
 # Load configuration function
 function Import-Configuration {
     try {
-        $configPath = Join-Path (Split-Path $PSScriptRoot -Parent) "config/config.json"
+        $configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
 
         if (-not (Test-Path $configPath)) {
             # Try sample config
             $samplePath = "$configPath.sample"
             if (Test-Path $samplePath) {
                 Copy-Item $samplePath $configPath
-                Write-Host "Created config.json from sample" -ForegroundColor Yellow
+                Write-Host "[INFO] ConfigEditor: Created config.json from sample"
             } else {
                 throw "Configuration file not found: $configPath"
             }
@@ -101,7 +141,7 @@ function Import-Configuration {
 
         $script:ConfigData = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
         $script:ConfigPath = $configPath
-        Write-Host "Configuration loaded successfully" -ForegroundColor Green
+        Write-Host "[OK] ConfigEditor: Configuration loaded successfully"
 
     } catch {
         Write-Error "Failed to load configuration: $($_.Exception.Message)"
@@ -132,18 +172,18 @@ function Test-UIMappings {
         }
 
         if ($missingMappings.Count -gt 0) {
-            Write-Warning "Missing UI mappings: $($missingMappings -join ', ')"
+            Write-Host "[WARNING] ConfigEditor: Missing UI mappings - $($missingMappings -join ', ')"
             return $false
         }
 
         # Validate mapping structure
         # [修正] ScopeをGlobalからScriptに変更
         if ((Get-Variable -Name 'ButtonMappings' -Scope Script -ErrorAction SilentlyContinue).Value.Count -eq 0) {
-            Write-Warning "ButtonMappings is empty"
+            Write-Host "[WARNING] ConfigEditor: ButtonMappings is empty"
             return $false
         }
 
-        Write-Host "UI mappings validated successfully" -ForegroundColor Green
+        Write-Host "[OK] ConfigEditor: UI mappings validated successfully"
         return $true
     } catch {
         Write-Warning "Failed to validate UI mappings: $($_.Exception.Message)"
@@ -154,7 +194,17 @@ function Test-UIMappings {
 # Initialize the application
 function Initialize-ConfigEditor {
     try {
-        Write-Host "=== ConfigEditor initialization started ===" -ForegroundColor Green
+        # Debug mode information
+        if ($DebugMode) {
+            Write-Host "[DEBUG] ConfigEditor: Debug mode enabled"
+            if ($AutoCloseSeconds -gt 0) {
+                Write-Host "[DEBUG] ConfigEditor: Auto-close timer - $AutoCloseSeconds seconds"
+            } else {
+                Write-Host "[DEBUG] ConfigEditor: Manual close required"
+            }
+        }
+
+        Write-Host "[INFO] ConfigEditor: Initialization started"
 
         # Step 1: Load WPF assemblies FIRST
         if (-not (Initialize-WpfAssemblies)) {
@@ -165,14 +215,15 @@ function Initialize-ConfigEditor {
         Import-Configuration
 
         # Step 3: NOW we can safely dot-source files that contain WPF types
-        Write-Host "Loading script modules..." -ForegroundColor Yellow
+        Write-Host "[INFO] ConfigEditor: Loading script modules"
 
         $modulePaths = @(
-            (Join-Path $PSScriptRoot "ConfigEditor.Mappings.ps1"),      # Load mappings first
-            (Join-Path $PSScriptRoot "ConfigEditor.State.ps1"),
-            (Join-Path $PSScriptRoot "ConfigEditor.Localization.ps1"),
-            (Join-Path $PSScriptRoot "ConfigEditor.UI.ps1"),            # UI depends on mappings
-            (Join-Path $PSScriptRoot "ConfigEditor.Events.ps1")
+            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.JsonHelper.ps1"),    # Load JSON helper first
+            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1"),      # Load mappings first
+            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.State.ps1"),
+            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Localization.ps1"),
+            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.UI.ps1"),            # UI depends on mappings
+            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Events.ps1")
         )
 
         foreach ($modulePath in $modulePaths) {
@@ -185,23 +236,31 @@ function Initialize-ConfigEditor {
             }
         }
 
-        Write-Host "Script modules loaded successfully" -ForegroundColor Green
+        Write-Host "[OK] ConfigEditor: Script modules loaded successfully"
 
         # Step 3.5: Validate UI mappings
         if (-not (Test-UIMappings)) {
-            Write-Warning "UI mappings validation failed - some features may not work properly"
+            Write-Host "[WARNING] ConfigEditor: UI mappings validation failed - Some features may not work properly"
         }
 
         # Step 3.6: Import additional modules (Version, UpdateChecker, etc.)
-        Write-Host "Importing additional modules..." -ForegroundColor Yellow
+        Write-Host "[INFO] ConfigEditor: Importing additional modules"
         Import-AdditionalModules
-        Write-Host "Additional modules imported" -ForegroundColor Green
+        Write-Host "[OK] ConfigEditor: Additional modules imported"
 
         # Step 4: Initialize localization
-        $localization = [ConfigEditorLocalization]::new()
+        Write-Host "[INFO] ConfigEditor: Initializing localization"
+        try {
+            # Pass shared project root into localization class (PowerShell classes cannot access script-scoped variables)
+            $script:Localization = [ConfigEditorLocalization]::new($projectRoot)
+            Write-Host "[OK] ConfigEditor: Localization initialized - Language: $($script:Localization.CurrentLanguage)"
+        } catch {
+            Write-Error "Failed to initialize localization: $($_.Exception.Message)"
+            throw
+        }
 
         # Step 5: Initialize state manager with config path
-        Write-Host "Initializing state manager..." -ForegroundColor Yellow
+        Write-Host "[INFO] ConfigEditor: Initializing state manager"
         $stateManager = [ConfigEditorState]::new($script:ConfigPath)
         $stateManager.LoadConfiguration()
 
@@ -209,23 +268,23 @@ function Initialize-ConfigEditor {
         if ($null -eq $stateManager.ConfigData) {
             throw "Configuration data is null after loading"
         }
-        Write-Host "Configuration data structure: $($stateManager.ConfigData.GetType().Name)" -ForegroundColor Yellow
+        Write-Host "[INFO] ConfigEditor: Configuration data structure - $($stateManager.ConfigData.GetType().Name)"
 
         $stateManager.SaveOriginalConfig()
-        Write-Host "State manager initialized successfully" -ForegroundColor Green
+        Write-Host "[OK] ConfigEditor: State manager initialized successfully"
 
         # Store state manager in script scope for access from functions
         $script:StateManager = $stateManager
 
         # Step 6: Initialize UI manager
-        Write-Host "Initializing UI manager..." -ForegroundColor Yellow
+        Write-Host "[INFO] ConfigEditor: Initializing UI manager"
         try {
             # Validate mappings are available before creating UI
             if (-not (Get-Variable -Name "ButtonMappings" -Scope Script -ErrorAction SilentlyContinue)) {
-                Write-Warning "Button mappings not loaded - UI functionality may be limited"
+                Write-Host "[WARNING] ConfigEditor: Button mappings not loaded - UI functionality may be limited"
             }
 
-            Write-Host "DEBUG: Creating ConfigEditorUI instance..." -ForegroundColor Cyan
+            Write-Host "[DEBUG] ConfigEditor: Creating ConfigEditorUI instance"
 
             $allMappings = @{
                 Button = $ButtonMappings
@@ -237,31 +296,32 @@ function Initialize-ConfigEditor {
                 Tooltip = $TooltipMappings
                 ComboBoxItem = $ComboBoxItemMappings
             }
-            $uiManager = [ConfigEditorUI]::new($stateManager, $allMappings, $localization)
+            # Pass project root into UI class so it can construct file paths without referencing script-scoped variables
+            $uiManager = [ConfigEditorUI]::new($stateManager, $allMappings, $script:Localization, $projectRoot)
 
-            Write-Host "DEBUG: ConfigEditorUI instance created: $($null -ne $uiManager)" -ForegroundColor Cyan
+            Write-Host "[DEBUG] ConfigEditor: ConfigEditorUI instance created - $($null -ne $uiManager)"
 
             if ($null -eq $uiManager) {
                 throw "Failed to create UI manager"
             }
 
-            Write-Host "DEBUG: Checking uiManager.Window..." -ForegroundColor Cyan
+            Write-Host "[DEBUG] ConfigEditor: Checking uiManager.Window"
 
             if ($null -eq $uiManager.Window) {
-                Write-Host "DEBUG: uiManager.Window is null" -ForegroundColor Red
-                Write-Host "DEBUG: Available uiManager properties:" -ForegroundColor Cyan
+                Write-Host "[DEBUG] ConfigEditor: uiManager.Window is null"
+                Write-Host "[DEBUG] ConfigEditor: Available uiManager properties:"
                 $uiManager | Get-Member -MemberType Property | ForEach-Object {
                     $propName = $_.Name
                     try {
                         $propValue = $uiManager.$propName
-                        Write-Host "  - $propName : $propValue" -ForegroundColor Cyan
+                        Write-Host "  - $propName : $propValue"
                     } catch {
-                        Write-Host "  - $propName : <Error accessing property>" -ForegroundColor Yellow
+                        Write-Host "  - $propName : <Error accessing property>"
                     }
                 }
                 throw "UI manager Window is null"
             } else {
-                Write-Host "DEBUG: uiManager.Window type: $($uiManager.Window.GetType().Name)" -ForegroundColor Cyan
+                Write-Host "[DEBUG] ConfigEditor: uiManager.Window type - $($uiManager.Window.GetType().Name)"
             }
 
             $script:Window = $uiManager.Window
@@ -269,26 +329,27 @@ function Initialize-ConfigEditor {
             # Store UI manager in script scope for access from functions
             $script:UIManager = $uiManager
 
-            Write-Host "UI manager initialized successfully" -ForegroundColor Green
+            Write-Host "[OK] ConfigEditor: UI manager initialized successfully"
         } catch {
-            Write-Host "DEBUG: UI Manager initialization error details:" -ForegroundColor Red
-            Write-Host "DEBUG: Error type: $($_.Exception.GetType().Name)" -ForegroundColor Red
-            Write-Host "DEBUG: Error message: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "[DEBUG] ConfigEditor: UI Manager initialization error details"
+            Write-Host "[DEBUG] ConfigEditor: Error type - $($_.Exception.GetType().Name)"
+            Write-Host "[DEBUG] ConfigEditor: Error message - $($_.Exception.Message)"
             if ($_.Exception.InnerException) {
-                Write-Host "DEBUG: Inner exception: $($_.Exception.InnerException.Message)" -ForegroundColor Red
+                Write-Host "[DEBUG] ConfigEditor: Inner exception - $($_.Exception.InnerException.Message)"
             }
 
             # Check if mapping-related error
             if ($_.Exception.Message -match "ButtonMappings|Mappings|mapping") {
-                Write-Host "DEBUG: This appears to be a mapping-related error" -ForegroundColor Yellow
-                Write-Host "DEBUG: Verify ConfigEditor.Mappings.ps1 is properly loaded" -ForegroundColor Yellow
+                Write-Host "[DEBUG] ConfigEditor: This appears to be a mapping-related error"
+                Write-Host "[DEBUG] ConfigEditor: Verify ConfigEditor.Mappings.ps1 is properly loaded"
             }
 
             throw
         }
 
         # Step 7: Initialize event handler
-        $eventHandler = [ConfigEditorEvents]::new($uiManager, $stateManager)
+        # Pass project root into events handler so it can construct file paths without referencing script-scoped variables
+        $eventHandler = [ConfigEditorEvents]::new($uiManager, $stateManager, $projectRoot)
 
         # Connect event handler to UI manager
         $uiManager.EventHandler = $eventHandler
@@ -299,7 +360,7 @@ function Initialize-ConfigEditor {
         $eventHandler.RegisterAll()
 
         # Step 8: Load data to UI
-        Write-Host "Loading data to UI..." -ForegroundColor Yellow
+        Write-Host "[INFO] ConfigEditor: Loading data to UI"
         try {
             if ($null -eq $uiManager) {
                 throw "UIManager is null"
@@ -310,45 +371,68 @@ function Initialize-ConfigEditor {
             $uiManager.LoadDataToUI($stateManager.ConfigData)
 
             # Initialize game launcher list
-            Write-Host "Initializing game launcher list..." -ForegroundColor Yellow
+            Write-Host "[INFO] ConfigEditor: Initializing game launcher list"
             $uiManager.UpdateGameLauncherList($stateManager.ConfigData)
 
-            Write-Host "Data loaded to UI successfully" -ForegroundColor Green
+            Write-Host "[OK] ConfigEditor: Data loaded to UI successfully"
         } catch {
-            Write-Host "Failed to load data to UI: $($_.Exception.Message)" -ForegroundColor Red
-            Write-Host "UIManager exists: $($null -ne $uiManager)" -ForegroundColor Yellow
-            Write-Host "ConfigData exists: $($null -ne $stateManager.ConfigData)" -ForegroundColor Yellow
+            Write-Host "[ERROR] ConfigEditor: Failed to load data to UI - $($_.Exception.Message)"
+            Write-Host "[DEBUG] ConfigEditor: UIManager exists - $($null -ne $uiManager)"
+            Write-Host "[DEBUG] ConfigEditor: ConfigData exists - $($null -ne $stateManager.ConfigData)"
             throw
         }
 
         # Mark initialization as complete - event handlers can now process user changes
         $script:IsInitializationComplete = $true
-        Write-Host "Initialization completed - UI is now ready for user interaction" -ForegroundColor Green
+        Write-Host "[OK] ConfigEditor: Initialization completed - UI is ready for user interaction"
 
         # Step 9: Show window
-        Write-Host "Showing window..." -ForegroundColor Yellow
+        Write-Host "[INFO] ConfigEditor: Showing window"
         try {
-            # Use ShowDialog() which properly handles the window lifecycle
-            $dialogResult = $window.ShowDialog()
-            Write-Host "DEBUG: Window closed with result: $dialogResult" -ForegroundColor Cyan
+            # Debug mode: Auto-close after specified seconds
+            if ($DebugMode -and $AutoCloseSeconds -gt 0) {
+                Write-Host "[DEBUG] ConfigEditor: Window will auto-close in $AutoCloseSeconds seconds"
+
+                # Create a timer to auto-close the window
+                $timer = New-Object System.Windows.Threading.DispatcherTimer
+                $timer.Interval = [TimeSpan]::FromSeconds($AutoCloseSeconds)
+                $timer.Add_Tick({
+                        Write-Host "[DEBUG] ConfigEditor: Auto-closing window"
+                        $window.Close()
+                        $timer.Stop()
+                    })
+                $timer.Start()
+
+                # Show window and wait
+                $dialogResult = $window.ShowDialog()
+                Write-Host "[DEBUG] ConfigEditor: Window closed with result - $dialogResult"
+            } elseif ($DebugMode) {
+                Write-Host "[DEBUG] ConfigEditor: Showing window - Manual close required"
+                $dialogResult = $window.ShowDialog()
+                Write-Host "[DEBUG] ConfigEditor: Window closed with result - $dialogResult"
+            } else {
+                # Normal mode: Use ShowDialog() which properly handles the window lifecycle
+                $dialogResult = $window.ShowDialog()
+                Write-Host "[DEBUG] ConfigEditor: Window closed with result - $dialogResult"
+            }
         } catch {
-            Write-Host "DEBUG: Window show/close error: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "[DEBUG] ConfigEditor: Window show/close error - $($_.Exception.Message)"
         } finally {
             # Ensure proper cleanup
             if ($uiManager) {
                 try {
-                    Write-Host "DEBUG: Final UI manager cleanup" -ForegroundColor Yellow
+                    Write-Host "[DEBUG] ConfigEditor: Final UI manager cleanup"
                     $uiManager.Cleanup()
                 } catch {
-                    Write-Warning "Error in final UI manager cleanup: $($_.Exception.Message)"
+                    Write-Host "[WARNING] ConfigEditor: Error in final UI manager cleanup - $($_.Exception.Message)"
                 }
             }
             if ($window) {
                 try {
-                    Write-Host "DEBUG: Final window cleanup" -ForegroundColor Yellow
+                    Write-Host "[DEBUG] ConfigEditor: Final window cleanup"
                     $window = $null
                 } catch {
-                    Write-Warning "Error in final window cleanup: $($_.Exception.Message)"
+                    Write-Host "[WARNING] ConfigEditor: Error in final window cleanup - $($_.Exception.Message)"
                 }
             }
 
@@ -362,20 +446,18 @@ function Initialize-ConfigEditor {
             [System.GC]::Collect()
         }
 
-        Write-Host "=== ConfigEditor initialization completed ===" -ForegroundColor Green
+        Write-Host "[OK] ConfigEditor: Initialization completed"
 
     } catch {
-        Write-Host "=== INITIALIZATION FAILED ===" -ForegroundColor Red
-        Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "[ERROR] ConfigEditor: Initialization failed - $($_.Exception.Message)"
         if ($_.InvocationInfo.ScriptName) {
-            $projectRoot = Split-Path $PSScriptRoot -Parent
             $relativePath = $_.InvocationInfo.ScriptName -replace [regex]::Escape($projectRoot), "."
             $relativePath = $relativePath -replace "\\", "/"  # Convert to forward slashes
-            Write-Host "Module: $relativePath" -ForegroundColor Red
+            Write-Host "[ERROR] ConfigEditor: Module - $relativePath"
         } else {
-            Write-Host "Module: <Main Script>" -ForegroundColor Red
+            Write-Host "[ERROR] ConfigEditor: Module - <Main Script>"
         }
-        Write-Host "Location: Line $($_.InvocationInfo.ScriptLineNumber)" -ForegroundColor Red
+        Write-Host "[ERROR] ConfigEditor: Location - Line $($_.InvocationInfo.ScriptLineNumber)"
 
         try {
             [System.Windows.MessageBox]::Show(
@@ -385,7 +467,7 @@ function Initialize-ConfigEditor {
                 [System.Windows.MessageBoxImage]::Error
             )
         } catch {
-            Write-Host "Failed to show error dialog: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "[ERROR] ConfigEditor: Failed to show error dialog - $($_.Exception.Message)"
         }
     }
 }
@@ -393,8 +475,7 @@ function Initialize-ConfigEditor {
 # Import additional modules after WPF assemblies are loaded
 function Import-AdditionalModules {
     try {
-        # Get project root directory (parent of gui folder)
-        $projectRoot = Split-Path $PSScriptRoot -Parent
+        # Use $projectRoot defined at top of the script (parent of gui folder)
         Write-Verbose "Project root: $projectRoot"
 
         # Define modules to load and their configurations
@@ -428,7 +509,7 @@ function Import-AdditionalModules {
                 . $modulePath
                 Write-Verbose "Loaded: $moduleName"
             } catch {
-                Write-Warning "Error loading $($moduleName): $($_.Exception.Message)"
+                Write-Host "[WARNING] ConfigEditor: Error loading $($moduleName) - $($_.Exception.Message)"
                 continue # Skip to next module if loading failed
             }
 
@@ -436,15 +517,15 @@ function Import-AdditionalModules {
             foreach ($functionName in $moduleInfo.GlobalFunctions.Keys) {
                 $globalVarName = $moduleInfo.GlobalFunctions[$functionName]
                 if (Test-Path "function:$functionName") {
-                    Write-Host "$functionName function loaded successfully" -ForegroundColor Green
+                    Write-Host "[OK] ConfigEditor: $functionName function loaded successfully"
                     Set-Variable -Name $globalVarName -Value (Get-Item "function:$functionName") -Scope Global
                 } else {
-                    Write-Warning "$functionName function not available after loading $moduleName"
+                    Write-Host "[WARNING] ConfigEditor: $functionName function not available after loading $moduleName"
                 }
             }
         }
     } catch {
-        Write-Warning "Failed to import additional modules: $($_.Exception.Message)"
+        Write-Host "[WARNING] ConfigEditor: Failed to import additional modules - $($_.Exception.Message)"
     }
 }
 
@@ -452,14 +533,209 @@ function Import-AdditionalModules {
 # These will be properly implemented or removed in a future refactoring
 
 function Update-AppsToManagePanel {
-    Write-Verbose "Update-AppsToManagePanel called (stub)"
-    # TODO: Implement or remove in future refactoring
+    try {
+        $appsToManagePanel = $script:Window.FindName("AppsToManagePanel")
+        if (-not $appsToManagePanel) {
+            Write-Warning "AppsToManagePanel not found"
+            return
+        }
+
+        # Set flag to prevent event handling during update
+        if (-not $script:UpdatingAppsPanel) {
+            $script:UpdatingAppsPanel = $false
+        }
+
+        # Prevent recursive updates
+        if ($script:UpdatingAppsPanel) {
+            Write-Verbose "Already updating AppsToManagePanel, skipping recursive call"
+            return
+        }
+
+        $script:UpdatingAppsPanel = $true
+
+        try {
+            # Clear existing checkboxes
+            $appsToManagePanel.Children.Clear()
+
+            # Get current game data
+            if (-not $script:CurrentGameId) {
+                Write-Verbose "No game selected, clearing AppsToManagePanel"
+                return
+            }
+
+            $gameData = $script:StateManager.ConfigData.games.$script:CurrentGameId
+            if (-not $gameData) {
+                Write-Warning "Game data not found for: $script:CurrentGameId"
+                return
+            }
+
+            # Get list of apps to manage for this game
+            $appsToManage = if ($gameData.appsToManage) { $gameData.appsToManage } else { @() }
+            Write-Verbose "AppsToManage for $script:CurrentGameId`: $($appsToManage -join ', ')"
+
+            # Get all available managed apps
+            $managedApps = $script:StateManager.ConfigData.managedApps
+            if (-not $managedApps) {
+                Write-Verbose "No managed apps found in configuration"
+                return
+            }
+
+            # Get order if available
+            $appOrder = if ($managedApps._order) { $managedApps._order } else { @() }
+
+            # Create checkboxes for each managed app
+            $appsToDisplay = if ($appOrder.Count -gt 0) {
+                $appOrder | Where-Object { $_ -ne "_order" -and $managedApps.PSObject.Properties[$_] }
+            } else {
+                $managedApps.PSObject.Properties.Name | Where-Object { $_ -ne "_order" }
+            }
+
+            foreach ($appId in $appsToDisplay) {
+                $appData = $managedApps.$appId
+                if (-not $appData) { continue }
+
+                $checkbox = New-Object System.Windows.Controls.CheckBox
+                $checkbox.Content = if ($appData.displayName) { $appData.displayName } else { $appId }
+                $checkbox.Tag = $appId
+                $checkbox.IsChecked = $appsToManage -contains $appId
+                $checkbox.Margin = "0,2"
+
+                # Capture StateManager in closure for event handlers
+                $stateManager = $script:StateManager
+                $updatingFlag = { $script:UpdatingAppsPanel }
+
+                # Add event handler for checkbox state changes
+                $checkbox.add_Checked({
+                        param($sender, $e)
+                        # Skip if updating panel
+                        if (& $updatingFlag) {
+                            return
+                        }
+                        $stateManager.SetModified()
+                    }.GetNewClosure())
+
+                $checkbox.add_Unchecked({
+                        param($sender, $e)
+                        # Skip if updating panel
+                        if (& $updatingFlag) {
+                            return
+                        }
+                        $stateManager.SetModified()
+                    }.GetNewClosure())
+
+                $appsToManagePanel.Children.Add($checkbox) | Out-Null
+                Write-Verbose "Added checkbox for app: $appId (checked: $($checkbox.IsChecked))"
+            }
+
+            Write-Verbose "Updated AppsToManagePanel with $($appsToManagePanel.Children.Count) apps"
+        } finally {
+            # Always reset the flag
+            $script:UpdatingAppsPanel = $false
+        }
+    } catch {
+        Write-Warning "Failed to update AppsToManagePanel: $($_.Exception.Message)"
+        $script:UpdatingAppsPanel = $false
+    }
 }
 
 function Update-PlatformFields {
     param([string]$Platform)
-    Write-Verbose "Update-PlatformFields called for platform: $Platform (stub)"
-    # TODO: Implement or remove in future refactoring
+
+    try {
+        Write-Verbose "Update-PlatformFields called for platform: $Platform"
+
+        # Get all platform-specific UI elements
+        $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
+        $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
+        $riotGameIdTextBox = $script:Window.FindName("RiotGameIdTextBox")
+        $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
+        $browseExecutablePathButton = $script:Window.FindName("BrowseExecutablePathButton")
+
+        # Disable all platform fields and set gray background
+        if ($steamAppIdTextBox) {
+            $steamAppIdTextBox.IsEnabled = $false
+            $steamAppIdTextBox.Background = [System.Windows.Media.Brushes]::LightGray
+        }
+        if ($epicGameIdTextBox) {
+            $epicGameIdTextBox.IsEnabled = $false
+            $epicGameIdTextBox.Background = [System.Windows.Media.Brushes]::LightGray
+        }
+        if ($riotGameIdTextBox) {
+            $riotGameIdTextBox.IsEnabled = $false
+            $riotGameIdTextBox.Background = [System.Windows.Media.Brushes]::LightGray
+        }
+        if ($executablePathTextBox) {
+            $executablePathTextBox.IsEnabled = $false
+            $executablePathTextBox.Background = [System.Windows.Media.Brushes]::LightGray
+        }
+        if ($browseExecutablePathButton) {
+            $browseExecutablePathButton.IsEnabled = $false
+        }
+
+        # Enable the appropriate field based on platform and clear others
+        switch ($Platform) {
+            "steam" {
+                if ($steamAppIdTextBox) {
+                    $steamAppIdTextBox.IsEnabled = $true
+                    $steamAppIdTextBox.Background = [System.Windows.Media.Brushes]::White
+                }
+                if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
+                if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
+                if ($executablePathTextBox) { $executablePathTextBox.Text = "" }
+                Write-Verbose "  Enabled Steam AppID field"
+            }
+            "epic" {
+                if ($epicGameIdTextBox) {
+                    $epicGameIdTextBox.IsEnabled = $true
+                    $epicGameIdTextBox.Background = [System.Windows.Media.Brushes]::White
+                }
+                if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = "" }
+                if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
+                if ($executablePathTextBox) { $executablePathTextBox.Text = "" }
+                Write-Verbose "  Enabled Epic GameID field"
+            }
+            "riot" {
+                if ($riotGameIdTextBox) {
+                    $riotGameIdTextBox.IsEnabled = $true
+                    $riotGameIdTextBox.Background = [System.Windows.Media.Brushes]::White
+                }
+                if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = "" }
+                if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
+                if ($executablePathTextBox) { $executablePathTextBox.Text = "" }
+                Write-Verbose "  Enabled Riot GameID field"
+            }
+            "standalone" {
+                if ($executablePathTextBox) {
+                    $executablePathTextBox.IsEnabled = $true
+                    $executablePathTextBox.Background = [System.Windows.Media.Brushes]::White
+                }
+                if ($browseExecutablePathButton) {
+                    $browseExecutablePathButton.IsEnabled = $true
+                }
+                if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = "" }
+                if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
+                if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
+                Write-Verbose "  Enabled Executable Path field"
+            }
+            default {
+                Write-Warning "Unknown platform: $Platform, defaulting to standalone"
+                if ($executablePathTextBox) {
+                    $executablePathTextBox.IsEnabled = $true
+                    $executablePathTextBox.Background = [System.Windows.Media.Brushes]::White
+                }
+                if ($browseExecutablePathButton) {
+                    $browseExecutablePathButton.IsEnabled = $true
+                }
+                if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = "" }
+                if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
+                if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
+            }
+        }
+
+        Write-Verbose "Platform fields updated successfully for: $Platform"
+    } catch {
+        Write-Warning "Failed to update platform fields: $($_.Exception.Message)"
+    }
 }
 
 function Update-MoveButtonStates {
@@ -483,24 +759,832 @@ function Update-TerminationSettingsVisibility {
     # TODO: Implement or remove in future refactoring
 }
 
+<#
+.SYNOPSIS
+    Helper function to safely set or add a property to a PSCustomObject.
+
+.DESCRIPTION
+    Checks if a property exists on an object and sets its value, or adds the property if it doesn't exist.
+    This prevents errors when trying to set non-existent properties on PSCustomObject instances.
+
+.PARAMETER Object
+    The PSCustomObject to modify.
+
+.PARAMETER PropertyName
+    The name of the property to set or add.
+
+.PARAMETER Value
+    The value to assign to the property.
+#>
+function Set-PropertyValue {
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$Object,
+
+        [Parameter(Mandatory = $true)]
+        [string]$PropertyName,
+
+        [Parameter(Mandatory = $false)]
+        $Value
+    )
+
+    if ($Object.PSObject.Properties[$PropertyName]) {
+        $Object.$PropertyName = $Value
+    } else {
+        $Object | Add-Member -NotePropertyName $PropertyName -NotePropertyValue $Value -Force
+    }
+}
 function Save-CurrentGameData {
-    Write-Verbose "Save-CurrentGameData called (stub)"
-    # TODO: Implement or remove in future refactoring
+    if (-not $script:CurrentGameId) {
+        Write-Verbose "No game selected, skipping save"
+        return
+    }
+
+    if (-not $script:StateManager -or -not $script:StateManager.ConfigData.games) {
+        Write-Warning "StateManager or games not available"
+        return
+    }
+
+    # 1. Read the new game ID from the GameIdTextBox (if present)
+    $gameIdTextBox = $script:Window.FindName("GameIdTextBox")
+    $newGameId = if ($gameIdTextBox -and $gameIdTextBox.Text) {
+        $gameIdTextBox.Text.Trim()
+    } else {
+        $script:CurrentGameId
+    }
+
+    # 2. Validate the new game ID
+    if ([string]::IsNullOrWhiteSpace($newGameId)) {
+        Write-Warning "Game ID cannot be empty"
+        # Note: Add key "gameIdCannotBeEmpty" to localization/messages.json
+        Show-SafeMessage -Key "gameIdCannotBeEmpty" -MessageType "Warning"
+        return
+    }
+
+    $idChanged = ($newGameId -ne $script:CurrentGameId)
+
+    # 3. When ID changed, ensure the new ID is not already in use
+    if ($idChanged) {
+        if ($script:StateManager.ConfigData.games.PSObject.Properties.Name -contains $newGameId) {
+            Write-Warning "Game ID '$newGameId' is already in use. Cannot rename."
+            # Note: Add key "gameIdAlreadyExists" to localization/messages.json
+            Show-SafeMessage -Key "gameIdAlreadyExists" -MessageType "Warning" -FormatArgs @($newGameId)
+            return
+        }
+        Write-Verbose "Game ID changed from '$script:CurrentGameId' to '$newGameId'"
+    }
+
+    # Retrieve existing game data using the old ID
+    $gameData = $script:StateManager.ConfigData.games.$script:CurrentGameId
+    if (-not $gameData) {
+        Write-Warning "Game data not found for: $script:CurrentGameId"
+        return
+    }
+
+    Write-Verbose "Saving game data for: $script:CurrentGameId $(if ($idChanged) { "-> $newGameId" })"
+
+    # Save game name
+    $gameNameTextBox = $script:Window.FindName("GameNameTextBox")
+    if ($gameNameTextBox) {
+        Set-PropertyValue -Object $gameData -PropertyName "name" -Value $gameNameTextBox.Text
+    }
+
+    # Save process name
+    $processNameTextBox = $script:Window.FindName("ProcessNameTextBox")
+    if ($processNameTextBox) {
+        Set-PropertyValue -Object $gameData -PropertyName "processName" -Value $processNameTextBox.Text
+    }
+
+    # Save comment
+    $gameCommentTextBox = $script:Window.FindName("GameCommentTextBox")
+    if ($gameCommentTextBox) {
+        $comment = $gameCommentTextBox.Text.Trim()
+        if ([string]::IsNullOrWhiteSpace($comment)) {
+            if ($gameData.PSObject.Properties.Name -contains "_comment") {
+                $gameData.PSObject.Properties.Remove("_comment")
+            }
+        } else {
+            Set-PropertyValue -Object $gameData -PropertyName "_comment" -Value $comment
+        }
+        Write-Verbose "Saved _comment: $comment"
+    }
+
+    # Save platform
+    $platformCombo = $script:Window.FindName("PlatformComboBox")
+    if ($platformCombo -and $platformCombo.SelectedItem) {
+        Set-PropertyValue -Object $gameData -PropertyName "platform" -Value $platformCombo.SelectedItem.Tag
+    }
+
+    # Save Steam AppID
+    $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
+    if ($steamAppIdTextBox) {
+        Set-PropertyValue -Object $gameData -PropertyName "steamAppId" -Value $steamAppIdTextBox.Text
+    }
+
+    # Save Epic GameID
+    $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
+    if ($epicGameIdTextBox) {
+        Set-PropertyValue -Object $gameData -PropertyName "epicGameId" -Value $epicGameIdTextBox.Text
+    }
+
+    # Save Riot GameID
+    $riotGameIdTextBox = $script:Window.FindName("RiotGameIdTextBox")
+    if ($riotGameIdTextBox) {
+        Set-PropertyValue -Object $gameData -PropertyName "riotGameId" -Value $riotGameIdTextBox.Text
+    }
+
+    # Save executable path (normalize backslashes to forward slashes)
+    $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
+    if ($executablePathTextBox) {
+        $normalizedPath = $executablePathTextBox.Text -replace '\\', '/'
+        Set-PropertyValue -Object $gameData -PropertyName "executablePath" -Value $normalizedPath
+    }
+
+    # Save managed apps list
+    $appsToManagePanel = $script:Window.FindName("AppsToManagePanel")
+    if ($appsToManagePanel) {
+        $appsToManage = @()
+        foreach ($child in $appsToManagePanel.Children) {
+            if ($child -is [System.Windows.Controls.CheckBox] -and $child.IsChecked) {
+                $appsToManage += $child.Tag
+            }
+        }
+        Set-PropertyValue -Object $gameData -PropertyName "appsToManage" -Value $appsToManage
+    }
+
+    # If the ID changed, perform the rename operation on the games object
+    if ($idChanged) {
+        Write-Verbose "Performing game ID rename operation"
+
+        # (1) Add the game data under the new ID
+        $script:StateManager.ConfigData.games | Add-Member -NotePropertyName $newGameId -NotePropertyValue $gameData -Force
+
+        # (2) Remove the old ID entry
+        $script:StateManager.ConfigData.games.PSObject.Properties.Remove($script:CurrentGameId)
+
+        # (3) Update the _order array if present
+        if ($script:StateManager.ConfigData.games._order) {
+            $orderIndex = $script:StateManager.ConfigData.games._order.IndexOf($script:CurrentGameId)
+            if ($orderIndex -ge 0) {
+                $script:StateManager.ConfigData.games._order[$orderIndex] = $newGameId
+            }
+        }
+
+        # (4) Update the current selected game ID to the new one
+        $script:CurrentGameId = $newGameId
+        Write-Verbose "Game ID renamed successfully to: $newGameId"
+    }
+
+    # Mark configuration as modified if StateManager supports it
+    try {
+        if ($script:StateManager -and $script:StateManager.SetModified) {
+            $script:StateManager.SetModified()
+        }
+    } catch {
+        Write-Verbose "SetModified not available or failed: $($_.Exception.Message)"
+    }
+
+    Write-Verbose "Game data saved successfully for: $script:CurrentGameId"
 }
 
 function Save-CurrentAppData {
-    Write-Verbose "Save-CurrentAppData called (stub)"
-    # TODO: Implement or remove in future refactoring
+    if (-not $script:CurrentAppId) {
+        Write-Verbose "No app selected, skipping save"
+        return
+    }
+
+    if (-not $script:StateManager -or -not $script:StateManager.ConfigData.managedApps) {
+        Write-Warning "StateManager or managedApps not available"
+        return
+    }
+
+    # Get the user-entered app ID from the text box
+    # This is the actual config key, not the display name
+    $appIdTextBox = $script:Window.FindName("AppIdTextBox")
+    $newAppId = if ($appIdTextBox -and $appIdTextBox.Text) {
+        $appIdTextBox.Text.Trim()
+    } else {
+        $script:CurrentAppId
+    }
+
+    # Validate the new app ID
+    if ([string]::IsNullOrWhiteSpace($newAppId)) {
+        Write-Warning "App ID cannot be empty"
+        Show-SafeMessage -Key "appIdCannotBeEmpty" -MessageType "Warning"
+        return
+    }
+
+    # Check if the app ID has changed
+    $idChanged = ($newAppId -ne $script:CurrentAppId)
+
+    # If ID changed, validate that the new ID is not already in use
+    if ($idChanged) {
+        if ($script:StateManager.ConfigData.managedApps.PSObject.Properties.Name -contains $newAppId) {
+            Write-Warning "App ID '$newAppId' is already in use. Cannot rename."
+            Show-SafeMessage -Key "appIdAlreadyExists" -MessageType "Warning" -FormatArgs @($newAppId)
+            return
+        }
+        Write-Verbose "App ID changed from '$script:CurrentAppId' to '$newAppId'"
+    }
+
+    # Get the existing app data
+    $appData = $script:StateManager.ConfigData.managedApps.$script:CurrentAppId
+    if (-not $appData) {
+        Write-Warning "App data not found for: $script:CurrentAppId"
+        return
+    }
+
+    Write-Verbose "Saving app data for: $script:CurrentAppId $(if ($idChanged) { "-> $newAppId" })"
+
+    # Save display name
+    $appDisplayNameTextBox = $script:Window.FindName("AppDisplayNameTextBox")
+    if ($appDisplayNameTextBox) {
+        $displayName = $appDisplayNameTextBox.Text.Trim()
+        if ([string]::IsNullOrWhiteSpace($displayName)) {
+            # If displayName is empty, use the app ID as displayName
+            $displayName = $newAppId
+            Write-Verbose "DisplayName is empty, using app ID as displayName: $displayName"
+        }
+
+        Set-PropertyValue -Object $appData -PropertyName "displayName" -Value $displayName
+        Write-Verbose "Saved displayName: $displayName"
+    }
+
+    # Save comment
+    $appCommentTextBox = $script:Window.FindName("AppCommentTextBox")
+    if ($appCommentTextBox) {
+        $comment = $appCommentTextBox.Text.Trim()
+        if ([string]::IsNullOrWhiteSpace($comment)) {
+            # If comment is empty, remove the property
+            if ($appData.PSObject.Properties.Name -contains "_comment") {
+                $appData.PSObject.Properties.Remove("_comment")
+            }
+        } else {
+            Set-PropertyValue -Object $appData -PropertyName "_comment" -Value $comment
+        }
+        Write-Verbose "Saved _comment: $comment"
+    }
+
+    # Save process name
+    $appProcessNameTextBox = $script:Window.FindName("AppProcessNameTextBox")
+    if ($appProcessNameTextBox) {
+        $processNameValue = $appProcessNameTextBox.Text
+        if ($processNameValue -match '\|') {
+            Set-PropertyValue -Object $appData -PropertyName "processName" -Value ($processNameValue -split '\|' | ForEach-Object { $_.Trim() })
+        } else {
+            Set-PropertyValue -Object $appData -PropertyName "processName" -Value $processNameValue
+        }
+    }
+
+    # Save path (normalize backslashes to forward slashes)
+    $appPathTextBox = $script:Window.FindName("AppPathTextBox")
+    if ($appPathTextBox) {
+        $normalizedPath = $appPathTextBox.Text -replace '\\', '/'
+        Set-PropertyValue -Object $appData -PropertyName "path" -Value $normalizedPath
+    }
+
+    # Save arguments
+    $appArgumentsTextBox = $script:Window.FindName("AppArgumentsTextBox")
+    if ($appArgumentsTextBox) {
+        Set-PropertyValue -Object $appData -PropertyName "arguments" -Value $appArgumentsTextBox.Text
+    }
+
+    # Save start action
+    $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
+    if ($gameStartActionCombo -and $gameStartActionCombo.SelectedItem) {
+        Set-PropertyValue -Object $appData -PropertyName "gameStartAction" -Value $gameStartActionCombo.SelectedItem.Tag
+    }
+
+    # Save end action
+    $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
+    if ($gameEndActionCombo -and $gameEndActionCombo.SelectedItem) {
+        Set-PropertyValue -Object $appData -PropertyName "gameEndAction" -Value $gameEndActionCombo.SelectedItem.Tag
+    }
+
+    # Save termination method
+    $terminationMethodCombo = $script:Window.FindName("TerminationMethodCombo")
+    if ($terminationMethodCombo -and $terminationMethodCombo.SelectedItem) {
+        Set-PropertyValue -Object $appData -PropertyName "terminationMethod" -Value $terminationMethodCombo.SelectedItem.Tag
+    }
+
+    # Save graceful timeout
+    $gracefulTimeoutTextBox = $script:Window.FindName("GracefulTimeoutTextBox")
+    if ($gracefulTimeoutTextBox) {
+        $timeoutSeconds = 5
+        if ([int]::TryParse($gracefulTimeoutTextBox.Text, [ref]$timeoutSeconds)) {
+            Set-PropertyValue -Object $appData -PropertyName "gracefulTimeoutMs" -Value ($timeoutSeconds * 1000)
+        } else {
+            Set-PropertyValue -Object $appData -PropertyName "gracefulTimeoutMs" -Value 5000
+        }
+    }
+
+    # If the app ID changed, we need to:
+    # 1. Add the data under the new ID
+    # 2. Remove the old ID entry
+    # 3. Update the _order array
+    # 4. Update references in games that use this app
+    if ($idChanged) {
+        Write-Verbose "Performing app ID rename operation"
+
+        # Add data under new ID
+        $script:StateManager.ConfigData.managedApps | Add-Member -NotePropertyName $newAppId -NotePropertyValue $appData -Force
+
+        # Remove old ID entry
+        $script:StateManager.ConfigData.managedApps.PSObject.Properties.Remove($script:CurrentAppId)
+
+        # Update the _order array
+        if ($script:StateManager.ConfigData.managedApps._order) {
+            $orderIndex = $script:StateManager.ConfigData.managedApps._order.IndexOf($script:CurrentAppId)
+            if ($orderIndex -ge 0) {
+                $script:StateManager.ConfigData.managedApps._order[$orderIndex] = $newAppId
+            }
+        }
+
+        # Update references in games' appsToManage arrays
+        if ($script:StateManager.ConfigData.games) {
+            foreach ($gameId in $script:StateManager.ConfigData.games.PSObject.Properties.Name) {
+                if ($gameId -eq '_order') { continue }
+
+                $game = $script:StateManager.ConfigData.games.$gameId
+                if ($game.appsToManage -and ($game.appsToManage -contains $script:CurrentAppId)) {
+                    $appIndex = $game.appsToManage.IndexOf($script:CurrentAppId)
+                    if ($appIndex -ge 0) {
+                        $game.appsToManage[$appIndex] = $newAppId
+                        Write-Verbose "Updated app reference in game '$gameId'"
+                    }
+                }
+            }
+        }
+
+        # Update the current app ID reference
+        $script:CurrentAppId = $newAppId
+
+        Write-Verbose "App ID renamed successfully to: $newAppId"
+    }
+
+    # Mark as modified
+    $script:StateManager.SetModified()
+
+    Write-Verbose "App data saved for: $script:CurrentAppId"
+}
+
+<#
+.SYNOPSIS
+    Encrypts a plain text password using Windows Data Protection API (DPAPI).
+
+.DESCRIPTION
+    Uses ConvertTo-SecureString and ConvertFrom-SecureString to encrypt passwords
+    with DPAPI. The encrypted string can only be decrypted by the same user on
+    the same machine.
+
+.PARAMETER PlainTextPassword
+    The plain text password to encrypt.
+
+.OUTPUTS
+    String - The encrypted password string.
+#>
+function Protect-Password {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$PlainTextPassword
+    )
+
+    try {
+        if ([string]::IsNullOrEmpty($PlainTextPassword)) {
+            return ""
+        }
+
+        # Convert to SecureString, then to encrypted string using DPAPI
+        $secureString = ConvertTo-SecureString -String $PlainTextPassword -AsPlainText -Force
+        $encryptedString = ConvertFrom-SecureString -SecureString $secureString
+
+        return $encryptedString
+    } catch {
+        Write-Warning "Failed to encrypt password: $($_.Exception.Message)"
+        return $PlainTextPassword  # Fallback to plain text if encryption fails
+    }
+}
+
+<#
+.SYNOPSIS
+    Decrypts a DPAPI-encrypted password string.
+
+.DESCRIPTION
+    Uses ConvertTo-SecureString to decrypt DPAPI-encrypted passwords.
+    Supports both encrypted strings and plain text (for backward compatibility).
+
+.PARAMETER EncryptedPassword
+    The encrypted password string to decrypt.
+
+.OUTPUTS
+    String - The decrypted plain text password.
+#>
+function Unprotect-Password {
+    param(
+        [Parameter(Mandatory = $false)]
+        [string]$EncryptedPassword
+    )
+
+    try {
+        if ([string]::IsNullOrEmpty($EncryptedPassword)) {
+            return ""
+        }
+
+        # Try to decrypt as DPAPI-encrypted string
+        try {
+            $secureString = ConvertTo-SecureString -String $EncryptedPassword
+            $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureString)
+            $plainText = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
+            [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+
+            return $plainText
+        } catch {
+            # If decryption fails, assume it's plain text (backward compatibility)
+            Write-Verbose "Password is not encrypted, treating as plain text"
+            return $EncryptedPassword
+        }
+    } catch {
+        Write-Warning "Failed to decrypt password: $($_.Exception.Message)"
+        return ""
+    }
 }
 
 function Save-GlobalSettingsData {
-    Write-Verbose "Save-GlobalSettingsData called (stub)"
-    # TODO: Implement or remove in future refactoring
+    Write-Verbose "Save-GlobalSettingsData: Starting to save global settings"
+
+    try {
+        # Get references to UI controls
+        $obsHostTextBox = $script:Window.FindName("OBSHostTextBox")
+        $obsPortTextBox = $script:Window.FindName("OBSPortTextBox")
+        $obsPasswordBox = $script:Window.FindName("OBSPasswordBox")
+        $replayBufferCheckBox = $script:Window.FindName("OBSReplayBufferCheckBox")
+        $steamPathTextBox = $script:Window.FindName("SteamPathTextBox")
+        $epicPathTextBox = $script:Window.FindName("EpicPathTextBox")
+        $riotPathTextBox = $script:Window.FindName("RiotPathTextBox")
+        $obsPathTextBox = $script:Window.FindName("OBSPathTextBox")
+        $logRetentionCombo = $script:Window.FindName("LogRetentionCombo")
+        $enableLogNotarizationCheckBox = $script:Window.FindName("EnableLogNotarizationCheckBox")
+
+        # Ensure integrations section exists
+        if (-not $script:StateManager.ConfigData.integrations) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "integrations" -NotePropertyValue @{} -Force
+        }
+
+        # Ensure integrations.obs section exists
+        if (-not $script:StateManager.ConfigData.integrations.obs) {
+            $script:StateManager.ConfigData.integrations | Add-Member -NotePropertyName "obs" -NotePropertyValue @{} -Force
+        }
+
+        # Ensure integrations.obs.websocket section exists
+        if (-not $script:StateManager.ConfigData.integrations.obs.websocket) {
+            $script:StateManager.ConfigData.integrations.obs | Add-Member -NotePropertyName "websocket" -NotePropertyValue @{} -Force
+        }
+
+        # Save OBS websocket settings
+        if ($obsHostTextBox) {
+            if (-not $script:StateManager.ConfigData.integrations.obs.websocket.PSObject.Properties["host"]) {
+                $script:StateManager.ConfigData.integrations.obs.websocket | Add-Member -NotePropertyName "host" -NotePropertyValue $obsHostTextBox.Text -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.obs.websocket.host = $obsHostTextBox.Text
+            }
+            Write-Verbose "Saved OBS host: $($obsHostTextBox.Text)"
+        }
+
+        if ($obsPortTextBox) {
+            $portValue = if ($obsPortTextBox.Text) { [int]$obsPortTextBox.Text } else { 4455 }
+            if (-not $script:StateManager.ConfigData.integrations.obs.websocket.PSObject.Properties["port"]) {
+                $script:StateManager.ConfigData.integrations.obs.websocket | Add-Member -NotePropertyName "port" -NotePropertyValue $portValue -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.obs.websocket.port = $portValue
+            }
+            Write-Verbose "Saved OBS port: $portValue"
+        }
+
+        if ($obsPasswordBox) {
+            # Check if user entered a new password or if we should keep the existing one
+            if ($obsPasswordBox.Password.Length -gt 0) {
+                # User entered a new password - encrypt and save it
+                $encryptedPassword = Protect-Password -PlainTextPassword $obsPasswordBox.Password
+
+                if (-not $script:StateManager.ConfigData.integrations.obs.websocket.PSObject.Properties["password"]) {
+                    $script:StateManager.ConfigData.integrations.obs.websocket | Add-Member -NotePropertyName "password" -NotePropertyValue $encryptedPassword -Force
+                } else {
+                    $script:StateManager.ConfigData.integrations.obs.websocket.password = $encryptedPassword
+                }
+                Write-Verbose "Saved OBS password (encrypted): $('*' * $obsPasswordBox.Password.Length)"
+            } elseif ($obsPasswordBox.Tag -eq "SAVED") {
+                # Password field is empty but Tag indicates password exists - keep existing password
+                Write-Verbose "OBS password unchanged (keeping existing encrypted password)"
+                # No action needed - existing password in config is preserved
+            } else {
+                # Password field is empty and no saved password - clear password
+                if ($script:StateManager.ConfigData.integrations.obs.websocket.PSObject.Properties["password"]) {
+                    $script:StateManager.ConfigData.integrations.obs.websocket.password = ""
+                }
+                Write-Verbose "OBS password cleared"
+            }
+        }
+
+        # Save OBS replay buffer setting
+        if ($replayBufferCheckBox) {
+            if (-not $script:StateManager.ConfigData.integrations.obs.PSObject.Properties["replayBuffer"]) {
+                $script:StateManager.ConfigData.integrations.obs | Add-Member -NotePropertyName "replayBuffer" -NotePropertyValue ([bool]$replayBufferCheckBox.IsChecked) -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.obs.replayBuffer = [bool]$replayBufferCheckBox.IsChecked
+            }
+            Write-Verbose "Saved replay buffer: $($replayBufferCheckBox.IsChecked)"
+        }
+
+        # Ensure paths section exists
+        if (-not $script:StateManager.ConfigData.paths) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "paths" -NotePropertyValue @{} -Force
+        }
+
+        # Save platform paths (normalize backslashes to forward slashes)
+        if ($steamPathTextBox) {
+            $normalizedPath = $steamPathTextBox.Text -replace '\\', '/'
+            if (-not $script:StateManager.ConfigData.paths.PSObject.Properties["steam"]) {
+                $script:StateManager.ConfigData.paths | Add-Member -NotePropertyName "steam" -NotePropertyValue $normalizedPath -Force
+            } else {
+                $script:StateManager.ConfigData.paths.steam = $normalizedPath
+            }
+            Write-Verbose "Saved Steam path: $normalizedPath"
+        }
+
+        if ($epicPathTextBox) {
+            $normalizedPath = $epicPathTextBox.Text -replace '\\', '/'
+            if (-not $script:StateManager.ConfigData.paths.PSObject.Properties["epic"]) {
+                $script:StateManager.ConfigData.paths | Add-Member -NotePropertyName "epic" -NotePropertyValue $normalizedPath -Force
+            } else {
+                $script:StateManager.ConfigData.paths.epic = $normalizedPath
+            }
+            Write-Verbose "Saved Epic path: $normalizedPath"
+        }
+
+        if ($riotPathTextBox) {
+            $normalizedPath = $riotPathTextBox.Text -replace '\\', '/'
+            if (-not $script:StateManager.ConfigData.paths.PSObject.Properties["riot"]) {
+                $script:StateManager.ConfigData.paths | Add-Member -NotePropertyName "riot" -NotePropertyValue $normalizedPath -Force
+            } else {
+                $script:StateManager.ConfigData.paths.riot = $normalizedPath
+            }
+            Write-Verbose "Saved Riot path: $normalizedPath"
+        }
+
+        if ($obsPathTextBox) {
+            $normalizedPath = $obsPathTextBox.Text -replace '\\', '/'
+            if (-not $script:StateManager.ConfigData.integrations.obs.PSObject.Properties["path"]) {
+                $script:StateManager.ConfigData.integrations.obs | Add-Member -NotePropertyName "path" -NotePropertyValue $normalizedPath -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.obs.path = $normalizedPath
+            }
+            Write-Verbose "Saved OBS path: $normalizedPath"
+        }
+
+        # Ensure logging section exists
+        if (-not $script:StateManager.ConfigData.logging) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "logging" -NotePropertyValue @{} -Force
+        }
+
+        # Save log retention setting
+        if ($logRetentionCombo -and $logRetentionCombo.SelectedItem) {
+            $retentionDays = switch ($logRetentionCombo.SelectedItem.Tag) {
+                "7" { 7 }
+                "30" { 30 }
+                "180" { 180 }
+                "unlimited" { 0 }
+                default { 90 }
+            }
+
+            if (-not $script:StateManager.ConfigData.logging.PSObject.Properties["logRetentionDays"]) {
+                $script:StateManager.ConfigData.logging | Add-Member -NotePropertyName "logRetentionDays" -NotePropertyValue $retentionDays -Force
+            } else {
+                $script:StateManager.ConfigData.logging.logRetentionDays = $retentionDays
+            }
+            Write-Verbose "Saved log retention days: $retentionDays"
+        }
+
+        # Save log notarization setting
+        if ($enableLogNotarizationCheckBox) {
+            if (-not $script:StateManager.ConfigData.logging.PSObject.Properties["enableNotarization"]) {
+                $script:StateManager.ConfigData.logging | Add-Member -NotePropertyName "enableNotarization" -NotePropertyValue ([bool]$enableLogNotarizationCheckBox.IsChecked) -Force
+            } else {
+                $script:StateManager.ConfigData.logging.enableNotarization = [bool]$enableLogNotarizationCheckBox.IsChecked
+            }
+            Write-Verbose "Saved log notarization: $($enableLogNotarizationCheckBox.IsChecked)"
+        }
+
+        # Mark configuration as modified
+        $script:StateManager.SetModified()
+
+        Write-Verbose "Save-GlobalSettingsData: Global settings saved successfully"
+
+    } catch {
+        Write-Error "Failed to save global settings data: $($_.Exception.Message)"
+        throw
+    }
+}
+
+function Save-OBSSettingsData {
+    Write-Verbose "Save-OBSSettingsData: Starting to save OBS settings"
+
+    try {
+        # Get references to UI controls from OBS tab
+        $obsHostTextBox = $script:Window.FindName("OBSHostTextBox")
+        $obsPortTextBox = $script:Window.FindName("OBSPortTextBox")
+        $obsPasswordBox = $script:Window.FindName("OBSPasswordBox")
+        $replayBufferCheckBox = $script:Window.FindName("OBSReplayBufferCheckBox")
+        $obsPathTextBox = $script:Window.FindName("OBSPathTextBox")
+
+        # Ensure integrations section exists
+        if (-not $script:StateManager.ConfigData.integrations) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "integrations" -NotePropertyValue @{} -Force
+        }
+
+        # Ensure integrations.obs section exists
+        if (-not $script:StateManager.ConfigData.integrations.obs) {
+            $script:StateManager.ConfigData.integrations | Add-Member -NotePropertyName "obs" -NotePropertyValue @{} -Force
+        }
+
+        # Ensure integrations.obs.websocket section exists
+        if (-not $script:StateManager.ConfigData.integrations.obs.websocket) {
+            $script:StateManager.ConfigData.integrations.obs | Add-Member -NotePropertyName "websocket" -NotePropertyValue @{} -Force
+        }
+
+        # Save OBS websocket settings
+        if ($obsHostTextBox) {
+            if (-not $script:StateManager.ConfigData.integrations.obs.websocket.PSObject.Properties["host"]) {
+                $script:StateManager.ConfigData.integrations.obs.websocket | Add-Member -NotePropertyName "host" -NotePropertyValue $obsHostTextBox.Text -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.obs.websocket.host = $obsHostTextBox.Text
+            }
+            Write-Verbose "Saved OBS host: $($obsHostTextBox.Text)"
+        }
+
+        if ($obsPortTextBox) {
+            $portValue = if ($obsPortTextBox.Text) { [int]$obsPortTextBox.Text } else { 4455 }
+            if (-not $script:StateManager.ConfigData.integrations.obs.websocket.PSObject.Properties["port"]) {
+                $script:StateManager.ConfigData.integrations.obs.websocket | Add-Member -NotePropertyName "port" -NotePropertyValue $portValue -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.obs.websocket.port = $portValue
+            }
+            Write-Verbose "Saved OBS port: $portValue"
+        }
+
+        if ($obsPasswordBox) {
+            if ($obsPasswordBox.Password.Length -gt 0) {
+                $encryptedPassword = Protect-Password -PlainTextPassword $obsPasswordBox.Password
+                if (-not $script:StateManager.ConfigData.integrations.obs.websocket.PSObject.Properties["password"]) {
+                    $script:StateManager.ConfigData.integrations.obs.websocket | Add-Member -NotePropertyName "password" -NotePropertyValue $encryptedPassword -Force
+                } else {
+                    $script:StateManager.ConfigData.integrations.obs.websocket.password = $encryptedPassword
+                }
+                Write-Verbose "Saved OBS password (encrypted)"
+            } elseif ($obsPasswordBox.Tag -eq "SAVED") {
+                Write-Verbose "OBS password unchanged (keeping existing encrypted password)"
+            } else {
+                if ($script:StateManager.ConfigData.integrations.obs.websocket.PSObject.Properties["password"]) {
+                    $script:StateManager.ConfigData.integrations.obs.websocket.password = ""
+                }
+                Write-Verbose "OBS password cleared"
+            }
+        }
+
+        # Save OBS replay buffer setting
+        if ($replayBufferCheckBox) {
+            if (-not $script:StateManager.ConfigData.integrations.obs.PSObject.Properties["replayBuffer"]) {
+                $script:StateManager.ConfigData.integrations.obs | Add-Member -NotePropertyName "replayBuffer" -NotePropertyValue ([bool]$replayBufferCheckBox.IsChecked) -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.obs.replayBuffer = [bool]$replayBufferCheckBox.IsChecked
+            }
+            Write-Verbose "Saved replay buffer: $($replayBufferCheckBox.IsChecked)"
+        }
+
+        # Save OBS executable path
+        if ($obsPathTextBox) {
+            $normalizedPath = $obsPathTextBox.Text -replace '\\', '/'
+            if (-not $script:StateManager.ConfigData.integrations.obs.PSObject.Properties["path"]) {
+                $script:StateManager.ConfigData.integrations.obs | Add-Member -NotePropertyName "path" -NotePropertyValue $normalizedPath -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.obs.path = $normalizedPath
+            }
+            Write-Verbose "Saved OBS path: $normalizedPath"
+        }
+
+        # Mark configuration as modified
+        $script:StateManager.SetModified()
+
+        Write-Verbose "Save-OBSSettingsData: OBS settings saved successfully"
+
+    } catch {
+        Write-Error "Failed to save OBS settings data: $($_.Exception.Message)"
+        throw
+    }
+}
+
+function Save-DiscordSettingsData {
+    Write-Verbose "Save-DiscordSettingsData: Starting to save Discord settings"
+
+    try {
+        # Ensure discord section exists
+        if (-not $script:StateManager.ConfigData.discord) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "discord" -NotePropertyValue @{} -Force
+        }
+
+        # Get Discord path from UI
+        $discordPathTextBox = $script:Window.FindName("DiscordPathTextBox")
+        if ($discordPathTextBox -and $discordPathTextBox.Text) {
+            $script:StateManager.ConfigData.discord.path = $discordPathTextBox.Text
+            Write-Verbose "Save-DiscordSettingsData: Discord path set to $($discordPathTextBox.Text)"
+        }
+
+        # Get game mode checkbox
+        $enableGameModeCheckBox = $script:Window.FindName("DiscordEnableGameModeCheckBox")
+        if ($enableGameModeCheckBox) {
+            $script:StateManager.ConfigData.discord.enableGameMode = $enableGameModeCheckBox.IsChecked
+            Write-Verbose "Save-DiscordSettingsData: Enable game mode set to $($enableGameModeCheckBox.IsChecked)"
+        }
+
+        # Get status settings
+        $statusOnStartCombo = $script:Window.FindName("DiscordStatusOnStartCombo")
+        if ($statusOnStartCombo -and $statusOnStartCombo.SelectedItem) {
+            $script:StateManager.ConfigData.discord.statusOnStart = $statusOnStartCombo.SelectedItem.Tag
+            Write-Verbose "Save-DiscordSettingsData: Status on start set to $($statusOnStartCombo.SelectedItem.Tag)"
+        }
+
+        $statusOnEndCombo = $script:Window.FindName("DiscordStatusOnEndCombo")
+        if ($statusOnEndCombo -and $statusOnEndCombo.SelectedItem) {
+            $script:StateManager.ConfigData.discord.statusOnEnd = $statusOnEndCombo.SelectedItem.Tag
+            Write-Verbose "Save-DiscordSettingsData: Status on end set to $($statusOnEndCombo.SelectedItem.Tag)"
+        }
+
+        # Get overlay checkbox
+        $disableOverlayCheckBox = $script:Window.FindName("DiscordDisableOverlayCheckBox")
+        if ($disableOverlayCheckBox) {
+            $script:StateManager.ConfigData.discord.disableOverlay = $disableOverlayCheckBox.IsChecked
+            Write-Verbose "Save-DiscordSettingsData: Disable overlay set to $($disableOverlayCheckBox.IsChecked)"
+        }
+
+        # Get Rich Presence settings
+        $rpcEnableCheckBox = $script:Window.FindName("DiscordRPCEnableCheckBox")
+        if ($rpcEnableCheckBox) {
+            if (-not $script:StateManager.ConfigData.discord.rpc) {
+                $script:StateManager.ConfigData.discord | Add-Member -NotePropertyName "rpc" -NotePropertyValue @{} -Force
+            }
+            $script:StateManager.ConfigData.discord.rpc.enabled = $rpcEnableCheckBox.IsChecked
+            Write-Verbose "Save-DiscordSettingsData: RPC enabled set to $($rpcEnableCheckBox.IsChecked)"
+        }
+
+        $rpcAppIdTextBox = $script:Window.FindName("DiscordRPCAppIdTextBox")
+        if ($rpcAppIdTextBox) {
+            if (-not $script:StateManager.ConfigData.discord.rpc) {
+                $script:StateManager.ConfigData.discord | Add-Member -NotePropertyName "rpc" -NotePropertyValue @{} -Force
+            }
+            $script:StateManager.ConfigData.discord.rpc.applicationId = $rpcAppIdTextBox.Text
+            Write-Verbose "Save-DiscordSettingsData: RPC application ID set to $($rpcAppIdTextBox.Text)"
+        }
+
+        # Mark configuration as modified
+        $script:StateManager.SetModified()
+
+        Write-Verbose "Save-DiscordSettingsData: Discord settings saved successfully"
+
+    } catch {
+        Write-Error "Failed to save Discord settings data: $($_.Exception.Message)"
+        throw
+    }
+}
+
+function Save-VTubeStudioSettingsData {
+    Write-Verbose "Save-VTubeStudioSettingsData: Starting to save VTube Studio settings"
+
+    try {
+        # TODO: Implement VTube Studio settings save logic once UI controls are defined
+        # Placeholder for VTube Studio-specific settings
+
+        # Ensure vtubeStudio section exists
+        if (-not $script:StateManager.ConfigData.vtubeStudio) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "vtubeStudio" -NotePropertyValue @{} -Force
+        }
+
+        # Mark configuration as modified
+        $script:StateManager.SetModified()
+
+        Write-Verbose "Save-VTubeStudioSettingsData: VTube Studio settings saved successfully"
+
+    } catch {
+        Write-Error "Failed to save VTube Studio settings data: $($_.Exception.Message)"
+        throw
+    }
 }
 
 function Save-OriginalConfig {
-    Write-Verbose "Save-OriginalConfig called (stub)"
-    # TODO: Implement or remove in future refactoring
+    if ($script:StateManager) {
+        $script:StateManager.SaveOriginalConfig()
+        Write-Verbose "Original configuration saved"
+    } else {
+        Write-Warning "StateManager not available, cannot save original configuration"
+    }
 }
 
 function Set-ConfigModified {
@@ -560,13 +1644,8 @@ function Show-LanguageChangeRestartMessage {
                     throw "StateManager or ConfigData not available"
                 }
 
-                $configJson = $script:StateManager.ConfigData | ConvertTo-Json -Depth 10
+                Save-ConfigJson -ConfigData $script:StateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
 
-                if ([string]::IsNullOrWhiteSpace($configJson) -or $configJson -eq "null") {
-                    throw "Configuration data is empty or null"
-                }
-
-                Set-Content -Path $script:ConfigPath -Value $configJson -Encoding UTF8
                 Write-Verbose "Configuration saved successfully"
             } catch {
                 Write-Error "Failed to save configuration before restart: $($_.Exception.Message)"
@@ -600,13 +1679,12 @@ function Show-LanguageChangeRestartMessage {
                 }
             }
 
-            # Restart the application
-            Write-Host "Restarting application to apply language changes..." -ForegroundColor Cyan
+            Write-Host "[ERROR] ConfigEditor: Restarting application to apply language changes"
 
             # Get the current script path
             $currentScript = $PSCommandPath
             if (-not $currentScript) {
-                $currentScript = Join-Path $PSScriptRoot "ConfigEditor.ps1"
+                $currentScript = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.ps1"
             }
 
             # Start new instance FIRST with proper encoding
@@ -619,9 +1697,9 @@ function Show-LanguageChangeRestartMessage {
 
             try {
                 $newProcess = [System.Diagnostics.Process]::Start($startInfo)
-                Write-Host "New instance started successfully (PID: $($newProcess.Id))" -ForegroundColor Green
+                Write-Host "[OK] ConfigEditor: New instance started successfully - PID: $($newProcess.Id)"
             } catch {
-                Write-Warning "Failed to start new instance: $($_.Exception.Message)"
+                Write-Host "[WARNING] ConfigEditor: Failed to start new instance - $($_.Exception.Message)"
                 return
             }
 
@@ -692,18 +1770,41 @@ function Get-SafeLocalizedMessage {
     )
 
     try {
+        # Prefer ConfigEditorForm.localization when available (older codepath)
         if ($script:ConfigEditorForm -and $script:ConfigEditorForm.localization) {
             return $script:ConfigEditorForm.localization.GetMessage($Key, $FormatArgs)
-        } elseif ($script:UIManager) {
+        }
+
+        # If the ConfigEditorForm exposes a Messages hashtable, use it (ConfigEditorUI stores Messages)
+        if ($script:ConfigEditorForm -and $script:ConfigEditorForm.Messages) {
+            try {
+                $msgs = $script:ConfigEditorForm.Messages
+                if ($msgs.PSObject.Properties[$Key]) {
+                    $msg = $msgs.$Key
+                    if ($FormatArgs -and $FormatArgs.Count -gt 0) { return $msg -f $FormatArgs }
+                    return $msg
+                }
+            } catch {
+                # fallthrough to other sources
+            }
+        }
+
+        # Localization singleton created during initialization
+        if ($script:Localization) {
+            return $script:Localization.GetMessage($Key, $FormatArgs)
+        }
+
+        # Fallback to UIManager helper method
+        if ($script:UIManager) {
             $message = $script:UIManager.GetLocalizedMessage($Key)
             if ($FormatArgs -and $FormatArgs.Count -gt 0) {
                 return $message -f $FormatArgs
             }
             return $message
-        } else {
-            Write-Warning "Localization not available, using key as message: $Key"
-            return $Key
         }
+
+        Write-Warning "Localization not available, using key as message: $Key"
+        return $Key
     } catch {
         Write-Warning "Failed to get localized message for key '$Key': $($_.Exception.Message)"
         return $Key
@@ -751,17 +1852,41 @@ function Show-SafeMessage {
         if ($Message) {
             $messageText = $Message
         } else {
+            # Try multiple sources in order of preference
             if ($script:ConfigEditorForm -and $script:ConfigEditorForm.localization) {
                 $messageText = $script:ConfigEditorForm.localization.GetMessage($Key, $FormatArgs)
+            } elseif ($script:ConfigEditorForm -and $script:ConfigEditorForm.Messages) {
+                try {
+                    $msgs = $script:ConfigEditorForm.Messages
+                    if ($msgs.PSObject.Properties[$Key]) {
+                        $messageText = $msgs.$Key
+                        if ($FormatArgs -and $FormatArgs.Count -gt 0) { $messageText = $messageText -f $FormatArgs }
+                    } else {
+                        $messageText = $Key
+                    }
+                } catch {
+                    $messageText = $Key
+                }
+            } elseif ($script:Localization) {
+                $messageText = $script:Localization.GetMessage($Key, $FormatArgs)
+            } elseif ($script:UIManager) {
+                $messageText = $script:UIManager.GetLocalizedMessage($Key)
+                if ($FormatArgs -and $FormatArgs.Count -gt 0) { $messageText = $messageText -f $FormatArgs }
             } else {
                 Write-Warning "Localization not available, using key as message: $Key"
                 $messageText = $Key
             }
         }
 
-        # Get localized title
+        # Get localized title (same lookup order)
         if ($script:ConfigEditorForm -and $script:ConfigEditorForm.localization) {
             $titleText = $script:ConfigEditorForm.localization.GetMessage($titleKeyToUse, @())
+        } elseif ($script:ConfigEditorForm -and $script:ConfigEditorForm.Messages -and $script:ConfigEditorForm.Messages.PSObject.Properties[$titleKeyToUse]) {
+            $titleText = $script:ConfigEditorForm.Messages.$titleKeyToUse
+        } elseif ($script:Localization) {
+            $titleText = $script:Localization.GetMessage($titleKeyToUse, @())
+        } elseif ($script:UIManager) {
+            $titleText = $script:UIManager.GetLocalizedMessage($titleKeyToUse)
         } else {
             $titleText = $titleKeyToUse
         }
@@ -903,12 +2028,35 @@ $script:HasUnsavedChanges = $false
 $script:OriginalConfigData = $null
 $script:IsInitializationComplete = $false
 
+# Debug helper function to show usage information
+function Show-DebugHelp {
+    Write-Host ""
+    Write-Host "[INFO] ConfigEditor: Debug Mode Usage"
+    Write-Host ""
+    Write-Host "Start with debug mode (manual close):"
+    Write-Host "  gui\ConfigEditor.ps1 -DebugMode"
+    Write-Host ""
+    Write-Host "Start with auto-close (3 seconds):"
+    Write-Host "  gui\ConfigEditor.ps1 -DebugMode -AutoCloseSeconds 3"
+    Write-Host ""
+    Write-Host "Start with auto-close (10 seconds):"
+    Write-Host "  gui\ConfigEditor.ps1 -DebugMode -AutoCloseSeconds 10"
+    Write-Host ""
+    Write-Host "Normal mode (no debug output):"
+    Write-Host "  gui\ConfigEditor.ps1"
+    Write-Host ""
+    Write-Host "Show this help:"
+    Write-Host "  gui\ConfigEditor.ps1 -NoAutoStart"
+    Write-Host "  Then call: Show-DebugHelp"
+    Write-Host ""
+}
+
 # Start the application
 if (-not $NoAutoStart) {
     if (Test-Prerequisites) {
         Initialize-ConfigEditor
     } else {
-        Write-Host "Cannot start ConfigEditor due to missing prerequisites" -ForegroundColor Red
+        Write-Host "[ERROR] ConfigEditor: Cannot start due to missing prerequisites"
         exit 1
     }
 }

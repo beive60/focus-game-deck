@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     ConfigEditor Localization Module
 .DESCRIPTION
@@ -13,6 +13,7 @@ class ConfigEditorLocalization {
     [string]$CurrentLanguage = "en"
     [PSCustomObject]$Messages = $null
     [string]$MessagesPath = ""
+    [string]$ProjectRoot = ""
 
     <#
     .SYNOPSIS
@@ -20,8 +21,10 @@ class ConfigEditorLocalization {
     .NOTES
         Sets the MessagesPath, detects language, and loads messages.
     #>
-    ConfigEditorLocalization() {
-        $this.MessagesPath = Join-Path $PSScriptRoot "messages.json"
+    ConfigEditorLocalization([string]$ProjectRoot) {
+        # Store provided project root and build messages path from it.
+        $this.ProjectRoot = $ProjectRoot
+        $this.MessagesPath = Join-Path -Path $this.ProjectRoot -ChildPath "localization/messages.json"
         $this.DetectLanguage()
         $this.LoadMessages()
     }

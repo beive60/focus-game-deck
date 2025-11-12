@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "GUI Execution",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${workspaceFolder}/src/Main.PS1",
+            "cwd": "${workspaceFolder}",
+            "createTemporaryIntegratedConsole": false,
+            "args": []
+        },
+        {
+            "name": "Mock process Execution",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${file}",
+            "cwd": "${workspaceFolder}",
+            "createTemporaryIntegratedConsole": false,
+            "args": [
+                "calc_mock"
+            ]
+        }
+    ]
+}

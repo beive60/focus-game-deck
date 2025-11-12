@@ -15,7 +15,8 @@
 # Date: 2025-09-24
 
 # Import version information
-$VersionModulePath = Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) "Version.ps1"
+$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../.."
+$VersionModulePath = Join-Path -Path $projectRoot -ChildPath "build-tools/Version.ps1"
 if (Test-Path $VersionModulePath) {
     . $VersionModulePath
 } else {
@@ -27,32 +28,32 @@ function Get-LatestReleaseInfo {
     param(
         [int]$TimeoutSeconds = 10
     )
-    
+
     try {
         $repoInfo = Get-GitHubRepositoryInfo
         $apiUrl = "$($repoInfo.ApiUrl)/releases/latest"
-        
+
         Write-Verbose "Checking for updates from: $apiUrl"
-        
+
         # Configure web request
         $webRequest = [System.Net.WebRequest]::Create($apiUrl)
         $webRequest.Timeout = $TimeoutSeconds * 1000
         $webRequest.UserAgent = "Focus Game Deck Update Checker"
-        
+
         # Make the request
         $response = $webRequest.GetResponse()
         $responseStream = $response.GetResponseStream()
         $reader = New-Object System.IO.StreamReader($responseStream)
         $jsonContent = $reader.ReadToEnd()
-        
+
         # Clean up
         $reader.Close()
         $responseStream.Close()
         $response.Close()
-        
+
         # Parse JSON response
         $releaseInfo = $jsonContent | ConvertFrom-Json
-        
+
         return @{
             Success = $true
             TagName = $releaseInfo.tag_name
@@ -64,7 +65,7 @@ function Get-LatestReleaseInfo {
             Draft = $releaseInfo.draft
             Assets = $releaseInfo.assets
         }
-        
+
     } catch [System.Net.WebException] {
         return @{
             Success = $false
@@ -91,10 +92,10 @@ function Test-UpdateAvailable {
     param(
         [switch]$IncludePreRelease
     )
-    
+
     try {
         $releaseInfo = Get-LatestReleaseInfo
-        
+
         if (-not $releaseInfo.Success) {
             return @{
                 UpdateAvailable = $false
@@ -102,7 +103,7 @@ function Test-UpdateAvailable {
                 ErrorType = $releaseInfo.ErrorType
             }
         }
-        
+
         # Skip draft releases
         if ($releaseInfo.Draft) {
             return @{
@@ -110,7 +111,7 @@ function Test-UpdateAvailable {
                 Message = "Latest release is a draft"
             }
         }
-        
+
         # Skip pre-releases unless explicitly included
         if ($releaseInfo.PreRelease -and -not $IncludePreRelease) {
             return @{
@@ -118,14 +119,14 @@ function Test-UpdateAvailable {
                 Message = "Latest release is a pre-release"
             }
         }
-        
+
         # Get current version
         $currentVersion = Get-ProjectVersion -IncludePreRelease
         $latestVersion = $releaseInfo.TagName -replace '^v', ''  # Remove 'v' prefix if present
-        
+
         # Compare versions
         $comparison = Compare-Version -Version1 $currentVersion -Version2 $latestVersion
-        
+
         if ($comparison -lt 0) {
             return @{
                 UpdateAvailable = $true
@@ -141,7 +142,7 @@ function Test-UpdateAvailable {
                 Message = "Current version is up to date"
             }
         }
-        
+
     } catch {
         return @{
             UpdateAvailable = $false
@@ -157,25 +158,25 @@ function Get-UpdateCheckMessage {
         [hashtable]$UpdateCheckResult,
         [hashtable]$Messages = @{}
     )
-    
+
     if (-not $UpdateCheckResult) {
         return "Update check failed: No result provided"
     }
-    
+
     if ($UpdateCheckResult.ContainsKey("ErrorMessage")) {
         switch ($UpdateCheckResult.ErrorType) {
-            "NetworkError" { 
+            "NetworkError" {
                 return $Messages.GetValueOrDefault("networkError", "Network error: Unable to check for updates")
             }
-            "TimeoutError" { 
+            "TimeoutError" {
                 return $Messages.GetValueOrDefault("timeoutError", "Timeout error: Update check timed out")
             }
-            default { 
+            default {
                 return $Messages.GetValueOrDefault("unknownError", "Unknown error: $($UpdateCheckResult.ErrorMessage)")
             }
         }
     }
-    
+
     if ($UpdateCheckResult.UpdateAvailable) {
         $current = $UpdateCheckResult.CurrentVersion
         $latest = $UpdateCheckResult.LatestVersion
@@ -188,11 +189,11 @@ function Get-UpdateCheckMessage {
 # Open GitHub releases page in default browser
 function Open-ReleasesPage {
     param()
-    
+
     try {
         $repoInfo = Get-GitHubRepositoryInfo
         $releasesUrl = "https://github.com/$($repoInfo.Owner)/$($repoInfo.Name)/releases"
-        
+
         Start-Process $releasesUrl
         return $true
     } catch {

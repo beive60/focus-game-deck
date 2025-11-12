@@ -36,8 +36,8 @@ param(
 
 # Check if config.json exists
 if (-not (Test-Path $configPath)) {
-    Write-Host "Error: config/config.json not found." -ForegroundColor Red
-    Write-Host "Please copy config/config.json.sample to config/config.json and configure it." -ForegroundColor Yellow
+    Write-Host "Error: config/config.json not found."
+    Write-Host "Please copy config/config.json.sample to config/config.json and configure it."
     if (-not $NoInteractive) {
         pause
     }
@@ -129,7 +129,7 @@ function New-GameShortcut {
 
         return $true
     } catch {
-        Write-Host "Warning: Failed to create shortcut '$ShortcutPath': $($_.Exception.Message)" -ForegroundColor Yellow
+        Write-Host "Warning: Failed to create shortcut '$ShortcutPath': $($_.Exception.Message)"
         return $false
     }
 }
@@ -154,13 +154,13 @@ function Remove-OldLaunchers {
     # Remove old .bat files
     $oldBatFiles = Get-ChildItem -Path $RootDirectory -Filter "launch_*.bat" -ErrorAction SilentlyContinue
     if ($oldBatFiles) {
-        Write-Host "Cleaning up old .bat launchers..." -ForegroundColor Cyan
+        Write-Host "Cleaning up old .bat launchers..."
         foreach ($file in $oldBatFiles) {
             try {
                 Remove-Item $file.FullName -Force
                 Write-Host "  Removed: $($file.Name)" -ForegroundColor Gray
             } catch {
-                Write-Host "  Warning: Could not remove $($file.Name): $($_.Exception.Message)" -ForegroundColor Yellow
+                Write-Host "  Warning: Could not remove $($file.Name): $($_.Exception.Message)"
             }
         }
     }
@@ -168,13 +168,13 @@ function Remove-OldLaunchers {
     # Remove old .lnk files
     $oldLnkFiles = Get-ChildItem -Path $RootDirectory -Filter "launch_*.lnk" -ErrorAction SilentlyContinue
     if ($oldLnkFiles) {
-        Write-Host "Cleaning up old shortcut launchers..." -ForegroundColor Cyan
+        Write-Host "Cleaning up old shortcut launchers..."
         foreach ($file in $oldLnkFiles) {
             try {
                 Remove-Item $file.FullName -Force
                 Write-Host "  Removed: $($file.Name)" -ForegroundColor Gray
             } catch {
-                Write-Host "  Warning: Could not remove $($file.Name): $($_.Exception.Message)" -ForegroundColor Yellow
+                Write-Host "  Warning: Could not remove $($file.Name): $($_.Exception.Message)"
             }
         }
     }
@@ -182,11 +182,11 @@ function Remove-OldLaunchers {
 
 # Main execution
 try {
-    Write-Host "Focus Game Deck - Enhanced Launcher Creator" -ForegroundColor Green
-    Write-Host "=" * 50 -ForegroundColor Green
+    Write-Host "Focus Game Deck - Enhanced Launcher Creator"
+    Write-Host "=" * 50
 
     # Load the configuration file
-    Write-Host "Loading configuration from: $configPath" -ForegroundColor Cyan
+    Write-Host "Loading configuration from: $configPath"
     $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
     # Clean up old launchers
@@ -196,14 +196,14 @@ try {
     $games = $config.games.PSObject.Properties
 
     if ($games.Count -eq 0) {
-        Write-Host "Warning: No games found in configuration." -ForegroundColor Yellow
+        Write-Host "Warning: No games found in configuration."
         if (-not $NoInteractive) {
             pause
         }
         exit 0
     }
 
-    Write-Host "`nFound $($games.Count) games. Generating shortcut launchers..." -ForegroundColor Cyan
+    Write-Host "`nFound $($games.Count) games. Generating shortcut launchers..."
 
     $successCount = 0
     $failureCount = 0
@@ -220,7 +220,7 @@ try {
         # PowerShell arguments for executing the core script
         $psArguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Minimized -File `"$coreScriptPath`" -GameId $gameId"
 
-        Write-Host "  Creating launcher for: $gameDisplayName" -ForegroundColor White
+        Write-Host "  Creating launcher for: $gameDisplayName"
 
         # Create the shortcut
         $success = New-GameShortcut -ShortcutPath $shortcutPath `
@@ -231,30 +231,30 @@ try {
             -WindowStyle 7
 
         if ($success) {
-            Write-Host "    [OK] Successfully created: launch_$($gameId).lnk" -ForegroundColor Green
+            Write-Host "    [OK] Successfully created: launch_$($gameId).lnk"
             $successCount++
         } else {
-            Write-Host "    [ERROR] Failed to create launcher for: $gameDisplayName" -ForegroundColor Red
+            Write-Host "    [ERROR] Failed to create launcher for: $gameDisplayName"
             $failureCount++
         }
     }
 
     # Summary
-    Write-Host "`n" + ("=" * 50) -ForegroundColor Green
-    Write-Host "Launcher creation completed!" -ForegroundColor Green
-    Write-Host "Successfully created: $successCount shortcuts" -ForegroundColor Green
+    Write-Host "`n" + ("=" * 50)
+    Write-Host "Launcher creation completed!"
+    Write-Host "Successfully created: $successCount shortcuts"
 
     if ($failureCount -gt 0) {
-        Write-Host "Failed to create: $failureCount shortcuts" -ForegroundColor Red
+        Write-Host "Failed to create: $failureCount shortcuts"
     }
 
-    Write-Host "`nYou can now double-click the 'launch_GAMEID.lnk' files to start your games." -ForegroundColor Cyan
-    Write-Host "The PowerShell window will be minimized automatically for better user experience." -ForegroundColor Cyan
+    Write-Host "`nYou can now double-click the 'launch_GAMEID.lnk' files to start your games."
+    Write-Host "The PowerShell window will be minimized automatically for better user experience."
 
 } catch {
-    Write-Host "`nError: Failed to process configuration file." -ForegroundColor Red
-    Write-Host "Details: $($_.Exception.Message)" -ForegroundColor Red
-    Write-Host "`nPlease check your config.json file for syntax errors." -ForegroundColor Yellow
+    Write-Host "`nError: Failed to process configuration file."
+    Write-Host "Details: $($_.Exception.Message)"
+    Write-Host "`nPlease check your config.json file for syntax errors."
 } finally {
     if (-not $NoInteractive) {
         Write-Host "`nPress any key to continue..." -ForegroundColor Gray

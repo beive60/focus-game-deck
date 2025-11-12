@@ -1,3 +1,55 @@
+<#
+.SYNOPSIS
+    Focus Game Deck - Unified main entry point for all functionality.
+
+.DESCRIPTION
+    This script serves as the single entry point for Focus Game Deck, providing:
+    - Game launching with automatic integration management
+    - GUI configuration editor
+    - Command-line game list and help
+    - Version information display
+
+.PARAMETER GameId
+    The ID of the game to launch (optional, positional parameter)
+
+.PARAMETER Config
+    Switch to force launch the GUI configuration editor
+
+.PARAMETER List
+    Switch to display a list of all configured games
+
+.PARAMETER Help
+    Switch to show help information
+
+.PARAMETER Version
+    Switch to display version information
+
+.EXAMPLE
+    Focus-Game-Deck.exe
+    Launches the GUI configuration editor
+
+.EXAMPLE
+    Focus-Game-Deck.exe valorant
+    Launches the game with ID "valorant"
+
+.EXAMPLE
+    Focus-Game-Deck.exe --list
+    Lists all configured games
+
+.EXAMPLE
+    Focus-Game-Deck.exe --help
+    Displays help information
+
+.NOTES
+    File Name  : Main.PS1
+    Author     : Focus Game Deck Team
+    Version    : 2.0.0
+    Requires   : PowerShell 5.1 or later
+
+.LINK
+    https://github.com/beive60/focus-game-deck
+#>
+
 # Focus Game Deck - Unified Main Entry Point
 # PowerShell script that serves as the single entry point for all Focus Game Deck functionality
 #
@@ -97,11 +149,20 @@ if ($languageHelperPath -and (Test-Path $languageHelperPath)) {
 
 <#
 .SYNOPSIS
-    Shows help information for Focus Game Deck
+    Displays help information for Focus Game Deck.
 
 .DESCRIPTION
-    Displays usage information, available commands, and examples for the
-    Focus Game Deck application in the user's preferred language.
+    Shows usage instructions, available commands, and examples in the user's
+    preferred language. Includes version information if available.
+
+.OUTPUTS
+    None - displays help text to console
+
+.EXAMPLE
+    Show-Help
+
+.NOTES
+    Automatically detects language from configuration and uses localized messages.
 #>
 function Show-Help {
     param()

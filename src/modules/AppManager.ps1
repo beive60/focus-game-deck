@@ -1,11 +1,55 @@
-# Application Manager Module
-# Handles unified application lifecycle management
+<#
+.SYNOPSIS
+    Application Manager Module - Unified application lifecycle management.
 
+.DESCRIPTION
+    This module provides centralized management for application processes,
+    including starting, stopping, and executing custom actions on managed applications.
+
+.NOTES
+    File Name  : AppManager.ps1
+    Author     : Focus Game Deck Team
+    Requires   : PowerShell 5.1 or later
+#>
+
+<#
+.SYNOPSIS
+    Main class for managing application lifecycles.
+
+.DESCRIPTION
+    Handles starting, stopping, and validating application configurations.
+    Supports various application actions including process management, hotkey toggling,
+    and integration with other services like VTube Studio and Discord.
+
+.EXAMPLE
+    $appManager = [AppManager]::new($config, $messages)
+    $appManager.InvokeAction("discord", "start-process")
+
+.EXAMPLE
+    $appManager = [AppManager]::new($config, $messages)
+    $appManager.StopProcess("vtube-studio", $appConfig)
+#>
 class AppManager {
     [object] $Config
     [object] $Messages
     [object] $ManagedApps
 
+    <#
+    .SYNOPSIS
+        Initializes a new AppManager instance.
+
+    .DESCRIPTION
+        Creates an application manager with the provided configuration and localization messages.
+
+    .PARAMETER config
+        Configuration object containing managed apps settings
+
+    .PARAMETER messages
+        Localization messages object for internationalized output
+
+    .EXAMPLE
+        $appManager = [AppManager]::new($config, $messages)
+    #>
     # Constructor
     AppManager([object] $config, [object] $messages) {
         $this.Config = $config
@@ -13,6 +57,23 @@ class AppManager {
         $this.ManagedApps = $config.managedApps
     }
 
+    <#
+    .SYNOPSIS
+        Validates an application configuration.
+
+    .DESCRIPTION
+        Checks if the specified application exists in configuration and has
+        all required properties (processName, etc.).
+
+    .PARAMETER appId
+        The application ID to validate
+
+    .OUTPUTS
+        Boolean indicating whether the configuration is valid
+
+    .EXAMPLE
+        $isValid = $appManager.ValidateAppConfig("discord")
+    #>
     # Validate application configuration
     [bool] ValidateAppConfig([string] $appId) {
         if (-not $this.ManagedApps.$appId) {
@@ -31,6 +92,36 @@ class AppManager {
         return $true
     }
 
+    <#
+    .SYNOPSIS
+        Executes an action on a managed application.
+
+    .DESCRIPTION
+        Validates the application configuration and executes the specified action.
+        Supported actions include:
+        - start-process: Start the application process
+        - stop-process: Stop the application process
+        - toggle-hotkeys: Toggle hotkey functionality
+        - start-vtube-studio: Start VTube Studio integration
+        - stop-vtube-studio: Stop VTube Studio integration
+        - set-discord-gaming-mode: Enable Discord gaming mode
+        - restore-discord-normal: Restore Discord to normal mode
+        - pause-wallpaper: Pause wallpaper animations
+        - play-wallpaper: Resume wallpaper animations
+        - none: No action (returns true)
+
+    .PARAMETER appId
+        The application ID to perform the action on
+
+    .PARAMETER action
+        The action to execute
+
+    .OUTPUTS
+        Boolean indicating whether the action was successful
+
+    .EXAMPLE
+        $success = $appManager.InvokeAction("discord", "start-process")
+    #>
     # Execute application action
     [bool] InvokeAction([string] $appId, [string] $action) {
         if (-not $this.ValidateAppConfig($appId)) {
@@ -79,6 +170,29 @@ class AppManager {
         return $false
     }
 
+    <#
+    .SYNOPSIS
+        Starts an application process.
+
+    .DESCRIPTION
+        Launches the application using its configured path and optional arguments.
+        Validates the path exists before attempting to start the process.
+
+    .PARAMETER appId
+        The application ID to start
+
+    .PARAMETER appConfig
+        The application configuration object containing path and arguments
+
+    .OUTPUTS
+        Boolean indicating whether the process started successfully
+
+    .EXAMPLE
+        $success = $appManager.StartProcess("discord", $appConfig)
+
+    .NOTES
+        Supports applications with or without command-line arguments.
+    #>
     # Start application process
     [bool] StartProcess([string] $appId, [object] $appConfig) {
         if (-not $appConfig.path -or $appConfig.path -eq "") {
@@ -113,6 +227,32 @@ class AppManager {
         }
     }
 
+    <#
+    .SYNOPSIS
+        Stops an application process.
+
+    .DESCRIPTION
+        Terminates the application process(es) using the configured termination method.
+        Supports multiple process names separated by | character.
+        Uses graceful shutdown with configurable timeout before forceful termination.
+
+    .PARAMETER appId
+        The application ID to stop
+
+    .PARAMETER appConfig
+        The application configuration object containing processName and termination settings
+
+    .OUTPUTS
+        Boolean indicating whether the process was successfully stopped
+
+    .EXAMPLE
+        $success = $appManager.StopProcess("discord", $appConfig)
+
+    .NOTES
+        Default termination method is "auto" (graceful then forceful).
+        Default graceful timeout is 3000ms (3 seconds).
+        Supports pipe-separated process names for multi-process applications.
+    #>
     # Stop application process
     [bool] StopProcess([string] $appId, [object] $appConfig) {
         if (-not $appConfig.processName -or $appConfig.processName -eq "") {
@@ -167,13 +307,13 @@ class AppManager {
                 # Try graceful first, then force if needed
                 $gracefulSuccess = $this.GracefulTermination($processName, $timeoutMs, $appId)
                 if (-not $gracefulSuccess) {
-                    Write-Host ($this.Messages.graceful_failed_using_force -f $processName) -ForegroundColor Yellow
+                    Write-Host ($this.Messages.graceful_failed_using_force -f $processName)
                     return $this.ForceTermination($processName, $appId)
                 }
                 return $true
             }
             default {
-                Write-Host "Unknown termination method '$method' for $appId. Using 'auto' as fallback." -ForegroundColor Yellow
+                Write-Host "Unknown termination method '$method' for $appId. Using 'auto' as fallback."
                 return $this.TerminateProcess($processName, "auto", $timeoutMs, $appId)
             }
         }
@@ -200,17 +340,17 @@ class AppManager {
                 # Check if process still exists
                 $remainingProcesses = Get-Process -Name $processName -ErrorAction SilentlyContinue
                 if (-not $remainingProcesses) {
-                    Write-Host ($this.Messages.graceful_shutdown_success -f $processName) -ForegroundColor Green
+                    Write-Host ($this.Messages.graceful_shutdown_success -f $processName)
                     return $true
                 }
             }
 
             # Timeout reached
-            Write-Host ($this.Messages.graceful_shutdown_timeout -f $processName, ($timeoutMs / 1000)) -ForegroundColor Yellow
+            Write-Host ($this.Messages.graceful_shutdown_timeout -f $processName, ($timeoutMs / 1000))
             return $false
         }
         catch {
-            Write-Host ($this.Messages.graceful_shutdown_failed -f $processName, $_) -ForegroundColor Red
+            Write-Host ($this.Messages.graceful_shutdown_failed -f $processName, $_)
             return $false
         }
     }
@@ -219,11 +359,11 @@ class AppManager {
     [bool] ForceTermination([string] $processName, [string] $appId) {
         try {
             Stop-Process -Name $processName -Force -ErrorAction Stop
-            Write-Host ($this.Messages.force_termination_success -f $processName) -ForegroundColor Yellow
+            Write-Host ($this.Messages.force_termination_success -f $processName)
             return $true
         }
         catch {
-            Write-Host ($this.Messages.force_termination_failed -f $processName, $_) -ForegroundColor Red
+            Write-Host ($this.Messages.force_termination_failed -f $processName, $_)
             return $false
         }
     }

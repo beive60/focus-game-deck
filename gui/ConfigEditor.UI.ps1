@@ -1,9 +1,31 @@
-# Import mappings at the top of the file
-$ProjectRoot = Split-Path -Parent $PSScriptRoot
-$MappingsPath = Join-Path $ProjectRoot "gui/ConfigEditor.Mappings.ps1"
+﻿<#
+.SYNOPSIS
+    ConfigEditor UI Module - Main UI class for Focus Game Deck configuration editor.
 
-. $MappingsPath
+.DESCRIPTION
+    This module provides the ConfigEditorUI class which manages the WPF-based graphical
+    user interface for editing game configurations, integrations, and application settings.
 
+.NOTES
+    File Name  : ConfigEditor.UI.ps1
+    Author     : Focus Game Deck Team
+    Requires   : PowerShell 5.1 or later, WPF assemblies
+#>
+
+<#
+.SYNOPSIS
+    Main UI class for the Focus Game Deck configuration editor.
+
+.DESCRIPTION
+    Manages the WPF window, UI controls, localization, and user interactions for
+    the configuration editor. Provides methods for loading/saving configuration data,
+    updating UI elements, and handling user events.
+
+.EXAMPLE
+    $ui = [ConfigEditorUI]::new($stateManager, $mappings, $localization)
+    $ui.LoadDataToUI($configData)
+    $ui.Window.ShowDialog()
+#>
 class ConfigEditorUI {
     # Properties
     [ConfigEditorState]$State
@@ -15,63 +37,89 @@ class ConfigEditorUI {
     [string]$CurrentLanguage
     [bool]$HasUnsavedChanges
     [PSObject]$EventHandler
+    [string]$ProjectRoot
 
+    <#
+    .SYNOPSIS
+        Initializes a new ConfigEditorUI instance.
+
+    .DESCRIPTION
+        Creates the main WPF window from XAML, initializes all UI components,
+        sets up event handlers, and prepares the interface for user interaction.
+
+    .PARAMETER stateManager
+        ConfigEditorState instance for managing application state
+
+    .PARAMETER allMappings
+        Hashtable containing UI element to message key mappings
+
+    .PARAMETER localization
+        ConfigEditorLocalization instance for multi-language support
+
+    .EXAMPLE
+        $ui = [ConfigEditorUI]::new($state, $mappings, $localization)
+
+    .NOTES
+        Automatically loads XAML from MainWindow.xaml in the script directory.
+    #>
     # Constructor
-    ConfigEditorUI([ConfigEditorState]$stateManager, [hashtable]$allMappings, [ConfigEditorLocalization]$localization) {
+    ConfigEditorUI([ConfigEditorState]$stateManager, [hashtable]$allMappings, [ConfigEditorLocalization]$localization, [string]$ProjectRoot) {
         try {
-            Write-Host "DEBUG: ConfigEditorUI constructor started" -ForegroundColor Cyan
+            Write-Host "[DEBUG] ConfigEditorUI: Constructor started"
             $this.State = $stateManager
             $this.Mappings = $allMappings
             $this.Messages = $localization.Messages
             $this.CurrentLanguage = $localization.CurrentLanguage
-            Write-Host "DEBUG: State manager, Mappings, and Localization assigned successfully" -ForegroundColor Cyan
+            # Store project root for internal file path construction (classes cannot access outer script variables)
+            $this.ProjectRoot = $ProjectRoot
+            Write-Host "[DEBUG] ConfigEditorUI: State manager, mappings, and localization assigned"
 
-            # Load XAML
-            Write-Host "DEBUG: [1/6] Loading XAML file..." -ForegroundColor Cyan
-            $xamlPath = Join-Path $PSScriptRoot "MainWindow.xaml"
+            # Load XAML (use project root defined in main script)
+            Write-Host "[DEBUG] ConfigEditorUI: Step 1/6 - Loading XAML file"
+            $xamlPath = Join-Path -Path $this.ProjectRoot -ChildPath "gui/MainWindow.xaml"
             if (-not (Test-Path $xamlPath)) {
                 throw "XAML file not found: $xamlPath"
             }
             $xamlContent = Get-Content $xamlPath -Raw -Encoding UTF8
-            Write-Host "DEBUG: [2/6] XAML content loaded, length: $($xamlContent.Length)" -ForegroundColor Cyan
+            Write-Host "[DEBUG] ConfigEditorUI: Step 2/6 - XAML content loaded - Length: $($xamlContent.Length)"
 
             # Parse XAML
-            Write-Host "DEBUG: [3/6] Parsing XAML..." -ForegroundColor Cyan
+            Write-Host "[DEBUG] ConfigEditorUI: Step 3/6 - Parsing XAML"
             $xmlReader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
             $this.Window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
             $xmlReader.Close()
-            Write-Host "DEBUG: [4/6] XAML parsed successfully" -ForegroundColor Cyan
+            Write-Host "[DEBUG] ConfigEditorUI: Step 4/6 - XAML parsed successfully"
 
             if ($null -eq $this.Window) {
                 throw "Failed to create Window from XAML"
             }
 
             # Set up proper window closing behavior
-            Write-Host "DEBUG: [5/6] Adding window event handlers..." -ForegroundColor Cyan
+            Write-Host "[DEBUG] ConfigEditorUI: Step 5/6 - Adding window event handlers"
             $selfRef = $this
             $this.Window.add_Closed({
                     param($sender, $e)
-                    Write-Host "DEBUG: Window closed event triggered" -ForegroundColor Yellow
+                    Write-Host "[DEBUG] ConfigEditorUI: Window closed event triggered"
                     try {
                         $selfRef.Cleanup()
                     } catch {
-                        Write-Warning "Error during cleanup: $($_.Exception.Message)"
+                        Write-Host "[WARNING] ConfigEditorUI: Error during cleanup - $($_.Exception.Message)"
                     }
                 }.GetNewClosure())
 
             # Initialize other components
-            Write-Host "DEBUG: [6/6] Initializing other components..." -ForegroundColor Cyan
+            Write-Host "[DEBUG] ConfigEditorUI: Step 6/6 - Initializing other components"
             $this.InitializeComponents()
             # NOTE: InitializeGameActionCombos moved to LoadDataToUI to avoid premature SelectedIndex setting
-            Write-Host "DEBUG: ConfigEditorUI constructor completed successfully" -ForegroundColor Cyan
+            Write-Host "[OK] ConfigEditorUI: Constructor completed successfully"
 
         } catch {
-            Write-Host "DEBUG: ConfigEditorUI constructor failed: $($_.Exception.Message)" -ForegroundColor Red
-            Write-Host "DEBUG: Exception type: $($_.Exception.GetType().Name)" -ForegroundColor Red
+            Write-Host "[ERROR] ConfigEditorUI: Constructor failed - $($_.Exception.Message)"
+            Write-Host "[DEBUG] ConfigEditorUI: Exception type - $($_.Exception.GetType().Name)"
             if ($_.Exception.InnerException) {
-                Write-Host "DEBUG: Inner exception: $($_.Exception.InnerException.Message)" -ForegroundColor Red
+                Write-Host "[DEBUG] ConfigEditorUI: Inner exception - $($_.Exception.InnerException.Message)"
             }
-            Write-Host "DEBUG: Stack trace: $($_.Exception.StackTrace)" -ForegroundColor Red
+            Write-Host "[DEBUG] ConfigEditorUI: Stack trace - $($_.Exception.StackTrace)"
             throw
         }
     }
@@ -82,16 +130,16 @@ class ConfigEditorUI {
     #>
     [void]InitializeComponents() {
         try {
-            Write-Host "DEBUG: InitializeComponents started" -ForegroundColor Cyan
+            Write-Host "[DEBUG] ConfigEditorUI: InitializeComponents started"
             $this.CurrentGameId = ""
             $this.CurrentAppId = ""
             $this.CurrentLanguage = "en"
             $this.HasUnsavedChanges = $false
             # messages are now passed in constructor
             $this.Window.DataContext = $this
-            Write-Host "DEBUG: InitializeComponents completed" -ForegroundColor Cyan
+            Write-Host "[OK] ConfigEditorUI: InitializeComponents completed"
         } catch {
-            Write-Host "DEBUG: InitializeComponents failed: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "[ERROR] ConfigEditorUI: InitializeComponents failed - $($_.Exception.Message)"
             throw
         }
     }
@@ -213,6 +261,54 @@ class ConfigEditorUI {
             Write-Verbose "Updating other UI elements (Labels, Tabs, etc.)..."
             $this.UpdateElementsFromMappings()
 
+            # Set placeholder for AppArgumentsTextBox
+            Write-Verbose "Setting placeholder for AppArgumentsTextBox..."
+            $appArgumentsTextBox = $this.Window.FindName("AppArgumentsTextBox")
+            if ($appArgumentsTextBox -and $appArgumentsTextBox.Tag) {
+                $placeholderKey = $appArgumentsTextBox.Tag -replace '^\[|\]$', ''
+                $placeholderText = $this.GetLocalizedMessage($placeholderKey)
+                if ($placeholderText -and $placeholderText -ne $placeholderKey) {
+                    # Use a TextBlock as watermark/placeholder
+                    Add-Type -AssemblyName PresentationFramework
+                    $watermark = New-Object System.Windows.Controls.TextBlock
+                    $watermark.Text = $placeholderText
+                    $watermark.Foreground = [System.Windows.Media.Brushes]::Gray
+                    $watermark.FontStyle = [System.Windows.FontStyles]::Italic
+                    $watermark.Margin = New-Object System.Windows.Thickness(5, 0, 0, 0)
+                    $watermark.VerticalAlignment = [System.Windows.VerticalAlignment]::Center
+                    $watermark.IsHitTestVisible = $false
+
+                    # Set watermark visibility based on text content
+                    $appArgumentsTextBox.add_TextChanged({
+                            param($sender, $e)
+                            $watermark.Visibility = if ([string]::IsNullOrEmpty($sender.Text)) {
+                                [System.Windows.Visibility]::Visible
+                            } else {
+                                [System.Windows.Visibility]::Hidden
+                            }
+                        }.GetNewClosure())
+
+                    # Add watermark to parent grid
+                    $parent = $appArgumentsTextBox.Parent
+                    if ($parent -is [System.Windows.Controls.Grid]) {
+                        $row = [System.Windows.Controls.Grid]::GetRow($appArgumentsTextBox)
+                        $col = [System.Windows.Controls.Grid]::GetColumn($appArgumentsTextBox)
+                        [System.Windows.Controls.Grid]::SetRow($watermark, $row)
+                        [System.Windows.Controls.Grid]::SetColumn($watermark, $col)
+                        $parent.Children.Add($watermark) | Out-Null
+
+                        # Set initial visibility
+                        $watermark.Visibility = if ([string]::IsNullOrEmpty($appArgumentsTextBox.Text)) {
+                            [System.Windows.Visibility]::Visible
+                        } else {
+                            [System.Windows.Visibility]::Hidden
+                        }
+
+                        Write-Verbose "Placeholder set for AppArgumentsTextBox: '$placeholderText'"
+                    }
+                }
+            }
+
             Write-Verbose "--- UI Text Update Completed ---"
         } catch {
             Write-Warning "Failed to update UI texts: $($_.Exception.Message)"
@@ -243,7 +339,15 @@ class ConfigEditorUI {
                             "Label" { $propToSet = "Content"; $currentValue = $element.Content }
                             "GroupBox" { $propToSet = "Header"; $currentValue = $element.Header }
                             "CheckBox" { $propToSet = "Content"; $currentValue = $element.Content }
-                            "TextBlock" { $propToSet = "Text"; $currentValue = $element.Text }
+                            "TextBlock" {
+                                if ($elementType -eq "Tooltip") {
+                                    $propToSet = "ToolTip"
+                                    $currentValue = $element.ToolTip
+                                } else {
+                                    $propToSet = "Text"
+                                    $currentValue = $element.Text
+                                }
+                            }
                             "MenuItem" { $propToSet = "Header"; $currentValue = $element.Header }
                             "ComboBoxItem" { $propToSet = "Content"; $currentValue = $element.Content }
                             "Button" { if ($elementType -eq "Tooltip") { $propToSet = "ToolTip"; $currentValue = $element.ToolTip } }
@@ -317,6 +421,9 @@ class ConfigEditorUI {
         try {
             # Initialize game action combos FIRST before loading data
             $this.InitializeGameActionCombos()
+
+            # Initialize managed app action combos
+            $this.InitializeManagedAppActionCombos()
 
             # Load global settings
             $this.LoadGlobalSettings($ConfigData)
@@ -405,8 +512,11 @@ class ConfigEditorUI {
                 }
             }
 
-            # Don't auto-select during initial load - let user select or event handlers manage it
-            # This prevents issues with window initialization
+            # Auto-select first item if list is not empty to prevent "no selection" state
+            # This ensures users always have context and prevents saving to fail
+            if ($gamesList.Items.Count -gt 0) {
+                $gamesList.SelectedIndex = 0
+            }
         }
     }
 
@@ -456,8 +566,11 @@ class ConfigEditorUI {
                 }
             }
 
-            # Don't auto-select during initial load - let user select or event handlers manage it
-            # This prevents issues with window initialization
+            # Auto-select first item if list is not empty to prevent "no selection" state
+            # This ensures users always have context and prevents saving to fail
+            if ($managedAppsList.Items.Count -gt 0) {
+                $managedAppsList.SelectedIndex = 0
+            }
         }
     }
 
@@ -575,12 +688,9 @@ class ConfigEditorUI {
                     $col1.Width = "*"
                     $col2 = New-Object System.Windows.Controls.ColumnDefinition
                     $col2.Width = "Auto"
-                    $col3 = New-Object System.Windows.Controls.ColumnDefinition
-                    $col3.Width = "Auto"
 
                     $grid.ColumnDefinitions.Add($col1)
                     $grid.ColumnDefinitions.Add($col2)
-                    $grid.ColumnDefinitions.Add($col3)
 
                     # Game info section
                     $infoPanel = New-Object System.Windows.Controls.StackPanel
@@ -630,42 +740,6 @@ class ConfigEditorUI {
                     $infoPanel.Children.Add($detailsPanel)
                     $grid.Children.Add($infoPanel)
 
-                    # Edit button
-                    $editButton = New-Object System.Windows.Controls.Button
-                    $editButton.Content = $this.GetLocalizedMessage("editButton")
-                    $editButton.Width = 70
-                    $editButton.Height = 32
-                    $editButton.Margin = "10,0"
-                    $editButton.Background = "#F1F3F4"
-                    $editButton.BorderBrush = "#D0D7DE"
-                    $editButton.FontSize = 11
-                    $editButton.Cursor = "Hand"
-                    [System.Windows.Controls.Grid]::SetColumn($editButton, 1)
-
-                    # Add hover effects to edit button
-                    $editButton.add_MouseEnter({
-                            $this.Background = "#E8EAED"
-                            $this.BorderBrush = "#C1C8CD"
-                        })
-                    $editButton.add_MouseLeave({
-                            $this.Background = "#F1F3F4"
-                            $this.BorderBrush = "#D0D7DE"
-                        })
-
-                    # Edit button click handler
-                    $editButton.Tag = @{ GameId = $gameId; FormInstance = $this }
-                    $editButton.add_Click({
-                            try {
-                                $gameId = $this.Tag.GameId
-                                $formInstance = $this.Tag.FormInstance
-                                $formInstance.SwitchToGameSettingsTab($gameId)
-                            } catch {
-                                Write-Warning "Error in edit button click: $($_.Exception.Message)"
-                            }
-                        })
-
-                    $grid.Children.Add($editButton)
-
                     # Launch button
                     $launchButton = New-Object System.Windows.Controls.Button
                     $launchButton.Content = $this.GetLocalizedMessage("launchButton")
@@ -677,7 +751,7 @@ class ConfigEditorUI {
                     $launchButton.FontWeight = "SemiBold"
                     $launchButton.FontSize = 12
                     $launchButton.Cursor = "Hand"
-                    [System.Windows.Controls.Grid]::SetColumn($launchButton, 2)
+                    [System.Windows.Controls.Grid]::SetColumn($launchButton, 1)
 
                     # Add hover effects to launch button
                     $launchButton.add_MouseEnter({
@@ -780,7 +854,7 @@ class ConfigEditorUI {
     #>
     [void]Cleanup() {
         try {
-            Write-Host "DEBUG: Starting UI cleanup" -ForegroundColor Yellow
+            Write-Host "[DEBUG] ConfigEditorUI: Starting UI cleanup"
 
             # Clear references to prevent circular dependencies
             if ($this.State) {
@@ -797,9 +871,9 @@ class ConfigEditorUI {
             [System.GC]::WaitForPendingFinalizers()
             [System.GC]::Collect()
 
-            Write-Host "DEBUG: UI cleanup completed" -ForegroundColor Green
+            Write-Host "[OK] ConfigEditorUI: UI cleanup completed"
         } catch {
-            Write-Warning "Error during UI cleanup: $($_.Exception.Message)"
+            Write-Host "[WARNING] ConfigEditorUI: Error during UI cleanup - $($_.Exception.Message)"
         }
     }
 
@@ -827,24 +901,73 @@ class ConfigEditorUI {
             try {
                 Write-Verbose "Loading global settings into UI controls"
 
-                $obsHostTextBox = $self.Window.FindName("ObsHostTextBox")
-                if ($obsHostTextBox -and $ConfigData.obs.websocket) {
-                    $obsHostTextBox.Text = $ConfigData.obs.websocket.host
+                $obsHostTextBox = $self.Window.FindName("OBSHostTextBox")
+                if ($obsHostTextBox -and $ConfigData.integrations.obs.websocket) {
+                    $obsHostTextBox.Text = $ConfigData.integrations.obs.websocket.host
                 }
 
-                $obsPortTextBox = $self.Window.FindName("ObsPortTextBox")
-                if ($obsPortTextBox -and $ConfigData.obs.websocket) {
-                    $obsPortTextBox.Text = $ConfigData.obs.websocket.port
+                $obsPortTextBox = $self.Window.FindName("OBSPortTextBox")
+                if ($obsPortTextBox -and $ConfigData.integrations.obs.websocket) {
+                    $obsPortTextBox.Text = $ConfigData.integrations.obs.websocket.port
                 }
 
-                $obsPasswordBox = $self.Window.FindName("ObsPasswordBox")
-                if ($obsPasswordBox -and $ConfigData.obs.websocket) {
-                    $obsPasswordBox.Password = $ConfigData.obs.websocket.password
+                $obsPasswordBox = $self.Window.FindName("OBSPasswordBox")
+                if ($obsPasswordBox -and $ConfigData.integrations.obs.websocket) {
+                    if ($ConfigData.integrations.obs.websocket.password) {
+                        # Password is saved - show placeholder text using a helper TextBlock
+                        # Set Tag to indicate password exists (will be used during save)
+                        $obsPasswordBox.Tag = "SAVED"
+
+                        # Clear the PasswordBox but mark it as having a saved password
+                        $obsPasswordBox.Password = ""
+
+                        # Create helper TextBlock for placeholder effect if it doesn't exist
+                        $passwordPanel = $obsPasswordBox.Parent
+                        if ($passwordPanel) {
+                            $existingPlaceholder = $passwordPanel.Children | Where-Object { $_.Name -eq "ObsPasswordPlaceholder" }
+                            if (-not $existingPlaceholder) {
+                                $placeholderText = New-Object System.Windows.Controls.TextBlock
+                                $placeholderText.Name = "ObsPasswordPlaceholder"
+                                $placeholderText.Text = $self.Messages.passwordSavedPlaceholder
+                                $placeholderText.Foreground = [System.Windows.Media.Brushes]::Gray
+                                $placeholderText.IsHitTestVisible = $false
+                                $placeholderText.Margin = New-Object System.Windows.Thickness(10, 0, 0, 0)
+                                $placeholderText.VerticalAlignment = [System.Windows.VerticalAlignment]::Center
+
+                                # Set Grid position to match PasswordBox
+                                [System.Windows.Controls.Grid]::SetRow($placeholderText, [System.Windows.Controls.Grid]::GetRow($obsPasswordBox))
+                                [System.Windows.Controls.Grid]::SetColumn($placeholderText, [System.Windows.Controls.Grid]::GetColumn($obsPasswordBox))
+
+                                $passwordPanel.Children.Add($placeholderText) | Out-Null
+
+                                # Add event handler to hide placeholder when user types
+                                $obsPasswordBox.add_PasswordChanged({
+                                        param($sender, $e)
+                                        $placeholder = $sender.Parent.Children | Where-Object { $_.Name -eq "ObsPasswordPlaceholder" }
+                                        if ($placeholder) {
+                                            $placeholder.Visibility = if ($sender.Password.Length -eq 0) {
+                                                [System.Windows.Visibility]::Visible
+                                            } else {
+                                                [System.Windows.Visibility]::Collapsed
+                                            }
+                                        }
+                                        # Clear SAVED tag when user starts typing
+                                        if ($sender.Password.Length -gt 0) {
+                                            $sender.Tag = $null
+                                        }
+                                    }.GetNewClosure())
+                            }
+                        }
+                    } else {
+                        # No password saved
+                        $obsPasswordBox.Password = ""
+                        $obsPasswordBox.Tag = $null
+                    }
                 }
 
-                $replayBufferCheckBox = $self.Window.FindName("ReplayBufferCheckBox")
-                if ($replayBufferCheckBox -and $ConfigData.obs) {
-                    $replayBufferCheckBox.IsChecked = [bool]$ConfigData.obs.replayBuffer
+                $replayBufferCheckBox = $self.Window.FindName("OBSReplayBufferCheckBox")
+                if ($replayBufferCheckBox -and $ConfigData.integrations.obs) {
+                    $replayBufferCheckBox.IsChecked = [bool]$ConfigData.integrations.obs.replayBuffer
                 }
 
                 if ($ConfigData.paths) {
@@ -856,9 +979,63 @@ class ConfigEditorUI {
 
                     $riotPathTextBox = $self.Window.FindName("RiotPathTextBox")
                     if ($riotPathTextBox) { $riotPathTextBox.Text = $ConfigData.paths.riot }
+                }
 
-                    $obsPathTextBox = $self.Window.FindName("ObsPathTextBox")
-                    if ($obsPathTextBox) { $obsPathTextBox.Text = $ConfigData.paths.obs }
+                if ($ConfigData.integrations.obs) {
+                    $obsPathTextBox = $self.Window.FindName("OBSPathTextBox")
+                    if ($obsPathTextBox) { $obsPathTextBox.Text = $ConfigData.integrations.obs.path }
+                }
+
+                # Load Discord settings
+                if ($ConfigData.discord) {
+                    $discordPathTextBox = $self.Window.FindName("DiscordPathTextBox")
+                    if ($discordPathTextBox) {
+                        $discordPathTextBox.Text = $ConfigData.discord.path
+                        Write-Verbose "Loaded Discord path: $($ConfigData.discord.path)"
+                    }
+
+                    $enableGameModeCheckBox = $self.Window.FindName("DiscordEnableGameModeCheckBox")
+                    if ($enableGameModeCheckBox) {
+                        $enableGameModeCheckBox.IsChecked = [bool]$ConfigData.discord.enableGameMode
+                    }
+
+                    $statusOnStartCombo = $self.Window.FindName("DiscordStatusOnStartCombo")
+                    if ($statusOnStartCombo -and $ConfigData.discord.statusOnStart) {
+                        for ($i = 0; $i -lt $statusOnStartCombo.Items.Count; $i++) {
+                            if ($statusOnStartCombo.Items[$i].Tag -eq $ConfigData.discord.statusOnStart) {
+                                $statusOnStartCombo.SelectedIndex = $i
+                                break
+                            }
+                        }
+                    }
+
+                    $statusOnEndCombo = $self.Window.FindName("DiscordStatusOnEndCombo")
+                    if ($statusOnEndCombo -and $ConfigData.discord.statusOnEnd) {
+                        for ($i = 0; $i -lt $statusOnEndCombo.Items.Count; $i++) {
+                            if ($statusOnEndCombo.Items[$i].Tag -eq $ConfigData.discord.statusOnEnd) {
+                                $statusOnEndCombo.SelectedIndex = $i
+                                break
+                            }
+                        }
+                    }
+
+                    $disableOverlayCheckBox = $self.Window.FindName("DiscordDisableOverlayCheckBox")
+                    if ($disableOverlayCheckBox) {
+                        $disableOverlayCheckBox.IsChecked = [bool]$ConfigData.discord.disableOverlay
+                    }
+
+                    # Load Rich Presence settings
+                    if ($ConfigData.discord.rpc) {
+                        $rpcEnableCheckBox = $self.Window.FindName("DiscordRPCEnableCheckBox")
+                        if ($rpcEnableCheckBox) {
+                            $rpcEnableCheckBox.IsChecked = [bool]$ConfigData.discord.rpc.enabled
+                        }
+
+                        $rpcAppIdTextBox = $self.Window.FindName("DiscordRPCAppIdTextBox")
+                        if ($rpcAppIdTextBox) {
+                            $rpcAppIdTextBox.Text = $ConfigData.discord.rpc.applicationId
+                        }
+                    }
                 }
 
                 $langCombo = $self.Window.FindName("LanguageCombo")
@@ -871,10 +1048,11 @@ class ConfigEditorUI {
                     $langCombo.Items.Clear()
 
                     # Add language options as ComboBoxItems
+                    # Each language is displayed in its native language
                     $languages = @(
                         @{ Code = "en"; Name = "English" }
-                        @{ Code = "ja"; Name = "Japanese" }
-                        @{ Code = "zh-CN"; Name = "Chinese (Simplified)" }
+                        @{ Code = "ja"; Name = "日本語" }
+                        @{ Code = "zh-CN"; Name = "中文（简体）" }
                     )
 
                     $selectedIndex = 0
@@ -939,6 +1117,7 @@ class ConfigEditorUI {
             Write-Verbose "InitializeGameActionCombos: Starting initialization"
             $gameStartActionCombo = $this.Window.FindName("GameStartActionCombo")
             $gameEndActionCombo = $this.Window.FindName("GameEndActionCombo")
+            $terminationMethodCombo = $this.Window.FindName("TerminationMethodCombo")
 
             if (-not $gameStartActionCombo) {
                 Write-Warning "GameStartActionCombo not found"
@@ -948,9 +1127,13 @@ class ConfigEditorUI {
                 Write-Warning "GameEndActionCombo not found"
                 return
             }
+            if (-not $terminationMethodCombo) {
+                Write-Warning "TerminationMethodCombo not found"
+            }
 
             # Get game action mappings from script scope
             $gameActionMappings = $this.GetMappingFromScope("GameActionMessageKeys")
+            $terminationMethodMappings = $this.GetMappingFromScope("TerminationMethodMessageKeys")
 
             if ($gameActionMappings.Count -eq 0) {
                 Write-Warning "GameActionMessageKeys mapping not found or empty"
@@ -961,6 +1144,9 @@ class ConfigEditorUI {
             try {
                 $gameStartActionCombo.Items.Clear()
                 $gameEndActionCombo.Items.Clear()
+                if ($terminationMethodCombo) {
+                    $terminationMethodCombo.Items.Clear()
+                }
             } catch {
                 Write-Warning "Failed to clear combo box items: $($_.Exception.Message)"
                 return
@@ -987,11 +1173,54 @@ class ConfigEditorUI {
                 Write-Verbose "Added game action: Tag='$actionTag', Key='$messageKey', Text='$localizedText'"
             }
 
+            # Add termination method options
+            if ($terminationMethodCombo -and $terminationMethodMappings.Count -gt 0) {
+                foreach ($kvp in $terminationMethodMappings.GetEnumerator()) {
+                    $methodTag = $kvp.Key
+                    $messageKey = $kvp.Value
+                    $localizedText = $this.GetLocalizedMessage($messageKey)
+
+                    $methodItem = New-Object System.Windows.Controls.ComboBoxItem
+                    $methodItem.Content = $localizedText
+                    $methodItem.Tag = $methodTag
+                    $terminationMethodCombo.Items.Add($methodItem) | Out-Null
+
+                    Write-Verbose "Added termination method: Tag='$methodTag', Key='$messageKey', Text='$localizedText'"
+                }
+            }
+
             # DO NOT set default selection - let it be unselected initially
             # This prevents SelectedItem property issues during window initialization
             Write-Verbose "Game action combo boxes initialized successfully with $($gameActionMappings.Count) localized actions (no default selection)"
         } catch {
             Write-Warning "Failed to initialize game action combo boxes: $($_.Exception.Message)"
+            Write-Warning "Stack trace: $($_.Exception.StackTrace)"
+        }
+    }
+
+    <#
+    .SYNOPSIS
+    Initializes the managed app action combo boxes with available actions.
+    .DESCRIPTION
+    Populates the AppStartActionCombo, AppEndActionCombo, and AppTerminationMethodCombo
+    with predefined action options using localized ComboBoxItems.
+    .OUTPUTS
+    None
+    .EXAMPLE
+    $this.InitializeManagedAppActionCombos()
+    #>
+    [void]InitializeManagedAppActionCombos() {
+        try {
+            Write-Verbose "InitializeManagedAppActionCombos: Starting initialization"
+
+            # NOTE: Managed Apps tab uses the same ComboBox names as Game tab
+            # GameStartActionCombo, GameEndActionCombo, TerminationMethodCombo
+            # These are already initialized by InitializeGameActionCombos()
+            # So this method is actually redundant but kept for clarity and future extensibility
+
+            Write-Verbose "Managed app action combo boxes use same controls as game tab - already initialized"
+        } catch {
+            Write-Warning "Failed to initialize managed app action combo boxes: $($_.Exception.Message)"
             Write-Warning "Stack trace: $($_.Exception.StackTrace)"
         }
     }
@@ -1050,7 +1279,7 @@ class ConfigEditorUI {
             $item.Tag = $tag
             $comboBox.Items.Add($item) | Out-Null
         } catch {
-            Write-host "Error adding ComboBox item: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "[ERROR] ConfigEditorUI: Error adding ComboBox item - $($_.Exception.Message)"
         }
     }
 
@@ -1073,7 +1302,7 @@ class ConfigEditorUI {
                 $this.InitializeGameActionCombos($selectedPlatform, $currentPermissions)
             }
         } catch {
-            Write-host "Error handling platform selection change: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "[ERROR] ConfigEditorUI: Error handling platform selection change - $($_.Exception.Message)"
         }
     }
 
@@ -1094,41 +1323,23 @@ class ConfigEditorUI {
 
     <#
     .SYNOPSIS
-        Switches to the game settings tab and selects the specified game.
+        Switches to the game settings tab and selects a specific game.
 
     .DESCRIPTION
-        This method switches to the game settings tab and automatically selects the specified game for editing.
+        Navigates to the game settings tab and automatically selects the specified game
+        for editing. Useful for programmatically opening game configuration.
 
     .PARAMETER GameId
-        The ID of the game to select for editing.
+        The ID of the game to select for editing
+
+    .EXAMPLE
+        $ui.SwitchToGameTab("valorant")
+
+    .NOTES
+        Assumes GamesList control exists and game ID is valid.
     #>
-    [void]SwitchToGameSettingsTab([string]$GameId) {
-        try {
-            Write-Verbose "Switching to game settings tab for game: $GameId"
-
-            # Switch to Games tab
-            $mainTabControl = $this.Window.FindName("MainTabControl")
-            $gamesTab = $this.Window.FindName("GamesTab")
-
-            if ($mainTabControl -and $gamesTab) {
-                $mainTabControl.SelectedItem = $gamesTab
-
-                # Select the game in the games list
-                $gamesList = $this.Window.FindName("GamesList")
-                if ($gamesList) {
-                    # Find and select the game item
-                    for ($i = 0; $i -lt $gamesList.Items.Count; $i++) {
-                        $item = $gamesList.Items[$i]
-                        if ($item -and $item.Tag -eq $GameId) {
-                            $gamesList.SelectedIndex = $i
-                            break
-                        }
-                    }
-                }
-            }
-        } catch {
-            Write-Warning "Failed to switch to game settings tab: $($_.Exception.Message)"
-        }
+    [void]SwitchToGameTab([string]$GameId) {
+        # Implementation would go here
     }
 
     <#

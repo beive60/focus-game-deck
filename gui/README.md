@@ -8,6 +8,12 @@ This directory contains the source code for the GUI configuration editor.
 ## File Structure
 
 - `ConfigEditor.ps1` - Main GUI configuration editor logic (part of unified architecture)
+- `ConfigEditor.Events.ps1` - Event handling logic for UI interactions
+- `ConfigEditor.JsonHelper.ps1` - JSON formatting utilities (ensures 4-space indentation)
+- `ConfigEditor.Localization.ps1` - Internationalization and localization support
+- `ConfigEditor.Mappings.ps1` - UI element to message key mappings
+- `ConfigEditor.State.ps1` - Configuration state management
+- `ConfigEditor.UI.ps1` - UI construction and management
 - `MainWindow.xaml` - WPF window UI layout definition (includes Game Launcher tab)
 - `messages.json` - Internationalization message resources for GUI
 
