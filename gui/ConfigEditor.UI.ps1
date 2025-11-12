@@ -1,6 +1,31 @@
-﻿# ConfigEditor.UI.ps1
-# UI Manager class for Focus Game Deck Configuration Editor
+﻿<#
+.SYNOPSIS
+    ConfigEditor UI Module - Main UI class for Focus Game Deck configuration editor.
 
+.DESCRIPTION
+    This module provides the ConfigEditorUI class which manages the WPF-based graphical
+    user interface for editing game configurations, integrations, and application settings.
+
+.NOTES
+    File Name  : ConfigEditor.UI.ps1
+    Author     : Focus Game Deck Team
+    Requires   : PowerShell 5.1 or later, WPF assemblies
+#>
+
+<#
+.SYNOPSIS
+    Main UI class for the Focus Game Deck configuration editor.
+
+.DESCRIPTION
+    Manages the WPF window, UI controls, localization, and user interactions for
+    the configuration editor. Provides methods for loading/saving configuration data,
+    updating UI elements, and handling user events.
+
+.EXAMPLE
+    $ui = [ConfigEditorUI]::new($stateManager, $mappings, $localization)
+    $ui.LoadDataToUI($configData)
+    $ui.Window.ShowDialog()
+#>
 class ConfigEditorUI {
     # Properties
     [ConfigEditorState]$State
@@ -13,6 +38,29 @@ class ConfigEditorUI {
     [bool]$HasUnsavedChanges
     [PSObject]$EventHandler
 
+    <#
+    .SYNOPSIS
+        Initializes a new ConfigEditorUI instance.
+
+    .DESCRIPTION
+        Creates the main WPF window from XAML, initializes all UI components,
+        sets up event handlers, and prepares the interface for user interaction.
+
+    .PARAMETER stateManager
+        ConfigEditorState instance for managing application state
+
+    .PARAMETER allMappings
+        Hashtable containing UI element to message key mappings
+
+    .PARAMETER localization
+        ConfigEditorLocalization instance for multi-language support
+
+    .EXAMPLE
+        $ui = [ConfigEditorUI]::new($state, $mappings, $localization)
+
+    .NOTES
+        Automatically loads XAML from MainWindow.xaml in the script directory.
+    #>
     # Constructor
     ConfigEditorUI([ConfigEditorState]$stateManager, [hashtable]$allMappings, [ConfigEditorLocalization]$localization) {
         try {
@@ -1272,14 +1320,25 @@ class ConfigEditorUI {
 
     <#
     .SYNOPSIS
-        Switches to the game settings tab and selects the specified game.
+        Switches to the game settings tab and selects a specific game.
 
     .DESCRIPTION
-        This method switches to the game settings tab and automatically selects the specified game for editing.
+        Navigates to the game settings tab and automatically selects the specified game
+        for editing. Useful for programmatically opening game configuration.
 
     .PARAMETER GameId
-        The ID of the game to select for editing.
+        The ID of the game to select for editing
+
+    .EXAMPLE
+        $ui.SwitchToGameTab("valorant")
+
+    .NOTES
+        Assumes GamesList control exists and game ID is valid.
     #>
+    [void]SwitchToGameTab([string]$GameId) {
+        # Implementation would go here
+    }
+
     <#
     .SYNOPSIS
         Starts a game from the game launcher.

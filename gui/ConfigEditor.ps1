@@ -60,6 +60,10 @@ param(
     [int]$AutoCloseSeconds = 0
 )
 
+if ($DebugMode) {
+    $VerbosePreference = 'Continue'
+}
+
 # Set system-level encoding settings for proper character display
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
