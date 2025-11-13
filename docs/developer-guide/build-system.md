@@ -97,11 +97,30 @@ build-tools/Release-Manager.ps1 (Tier 3: Orchestration)
 ./build-tools/Build-FocusGameDeck.ps1 -All
 ```
 
-**Generated Executables**:
+**Generated Executables (v3.0+ Multi-Executable Bundle Architecture)**:
 
-- `Focus-Game-Deck.exe` - Main application (console-based, ~36KB)
-- `Focus-Game-Deck-MultiPlatform.exe` - Multi-platform version (~37KB)
-- `Focus-Game-Deck-Config-Editor.exe` - GUI configuration editor (~75KB)
+- `Focus-Game-Deck.exe` - Main router executable (console-based, ~30-40KB)
+  - Lightweight entry point that delegates to specialized executables
+  - Handles argument parsing and process routing
+  - Sources from `src/Main-Router.ps1`
+
+- `ConfigEditor.exe` - GUI configuration editor (no console, ~75-100KB)
+  - Fully bundled WPF application for configuration management
+  - Includes all GUI dependencies and XAML layouts
+  - Sources from `gui/ConfigEditor.ps1`
+
+- `Invoke-FocusGameDeck.exe` - Game launcher engine (console-based, ~60-80KB)
+  - Core game launching and environment automation
+  - Includes all game modules and integration managers
+  - Sources from `src/Invoke-FocusGameDeck.ps1`
+
+**Supporting Files** (required at runtime):
+- `config/` - Configuration and messages files
+- `localization/` - Language resource files  
+- `gui/` - XAML layouts and GUI helper scripts
+- `src/modules/` - PowerShell modules for game launcher
+- `scripts/` - Utility scripts (LanguageHelper.ps1)
+- `build-tools/` - Version information
 
 ### Sign-Executables.ps1
 
@@ -165,35 +184,61 @@ build-tools/Release-Manager.ps1 (Tier 3: Orchestration)
 - `http://timestamp.globalsign.com/?signature=sha2`
 - `http://timestamp.entrust.net/TSS/RFC3161sha2TS`
 
-## Build Artifacts Structure
+## Build Artifacts Structure (v3.0+)
 
 ```text
 focus-game-deck/
 ├── build-tools/
-│   ├── build/                       # Temporary build artifacts (auto-deleted)
-│   │   ├── Focus-Game-Deck.exe
-│   │   ├── Focus-Game-Deck-MultiPlatform.exe
-│   │   ├── Focus-Game-Deck-Config-Editor.exe
-│   │   ├── launcher.bat
-│   │   └── config/
-│   │       ├── config.json
-│   │       ├── messages.json
-│   │       └── config.sample.json
-│   └── dist/                        # Distribution-ready executables (signed/unsigned)
-│       ├── Focus-Game-Deck.exe
-│       ├── Focus-Game-Deck-MultiPlatform.exe
-│       ├── Focus-Game-Deck-Config-Editor.exe
-│       ├── launcher.bat
+│   ├── build/                       # Temporary build artifacts (auto-deleted after packaging)
+│   │   ├── Focus-Game-Deck.exe     # Main router (30-40KB)
+│   │   ├── ConfigEditor.exe        # GUI editor (75-100KB)
+│   │   ├── Invoke-FocusGameDeck.exe # Game launcher (60-80KB)
+│   │   ├── config/
+│   │   │   ├── config.json
+│   │   │   ├── messages.json
+│   │   │   └── config.sample.json
+│   │   ├── localization/
+│   │   │   └── messages.json
+│   │   ├── gui/                    # GUI support files for ConfigEditor.exe
+│   │   │   ├── *.ps1 (helper scripts)
+│   │   │   └── *.xaml (UI layouts)
+│   │   ├── src/
+│   │   │   └── modules/            # Game modules for Invoke-FocusGameDeck.exe
+│   │   │       └── *.ps1
+│   │   ├── scripts/
+│   │   │   └── LanguageHelper.ps1
+│   │   └── build-tools/
+│   │       └── Version.ps1
+│   └── dist/                        # Distribution-ready package (signed/unsigned)
+│       ├── Focus-Game-Deck.exe     # Signed main router
+│       ├── ConfigEditor.exe        # Signed GUI editor
+│       ├── Invoke-FocusGameDeck.exe # Signed game launcher
 │       ├── config/
-│       │   ├── config.json
-│       │   ├── messages.json
-│       │   └── config.sample.json
+│       ├── localization/
+│       ├── gui/
+│       ├── src/modules/
+│       ├── scripts/
+│       ├── build-tools/
 │       └── signature-info.json     # Signature metadata (if signed)
 └── release/                         # Final distribution package
-    ├── [executable files copied from dist/]
-    ├── README.txt                   # Release documentation
-    └── version-info.json            # Version and build metadata
+    ├── Focus-Game-Deck.exe         # Main executable
+    ├── ConfigEditor.exe            # GUI executable
+    ├── Invoke-FocusGameDeck.exe    # Launcher executable
+    ├── config/                     # Configuration files
+    ├── localization/               # Language files
+    ├── gui/                        # GUI support files
+    ├── src/modules/                # Game modules
+    ├── scripts/                    # Utility scripts
+    ├── README.txt                  # Release documentation
+    └── version-info.json           # Version and build metadata
 ```
+
+**Key Changes in v3.0:**
+- Three separate executables instead of one monolithic executable
+- All executables are digitally signed
+- Supporting files (config, gui, modules) are shared by all executables
+- Smaller individual executable sizes, better memory efficiency
+- Each executable only loads what it needs at runtime
 
 ## Development Workflow
 
