@@ -1283,53 +1283,31 @@
 
                 # Create custom dialog window
                 Add-Type -AssemblyName PresentationFramework
-                $dialogXaml = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="$title"
-        Width="480" Height="180"
-        WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize"
-        ShowInTaskbar="False">
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                   Text="$message"
-                   TextWrapping="Wrap"
-                   VerticalAlignment="Center"
-                   HorizontalAlignment="Left"
-                   MaxWidth="440"
-                   FontSize="14"/>
+                # Try to load XAML fragment from project GUI files (allows editing dialog XAML separately)
+                $dialogXamlPath = Join-Path -Path $this.ProjectRoot -ChildPath "gui/ConfirmSaveChangesDialog.fragment.xaml"
+                $dialogXaml = $null
+                if (Test-Path $dialogXamlPath) {
+                    try {
+                        $dialogXaml = Get-Content -Path $dialogXamlPath -Raw
+                        Write-Verbose "Loaded dialog fragment from: $dialogXamlPath"
 
-        <StackPanel Grid.Row="1"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Center"
-                    Margin="0,20,0,0">
-            <Button Name="SaveButton"
-                    Content="$saveAndClose"
-                    Width="130"
-                    Height="32"
-                    Margin="5"
-                    IsDefault="True"/>
-            <Button Name="DiscardButton"
-                    Content="$discardAndClose"
-                    Width="130"
-                    Height="32"
-                    Margin="5"/>
-            <Button Name="CancelButton"
-                    Content="$cancel"
-                    Width="100"
-                    Height="32"
-                    Margin="5"
-                    IsCancel="True"/>
-        </StackPanel>
-    </Grid>
-</Window>
-"@
+                        # Expand a small set of known placeholders so fragment can include $title/$message etc.
+                        # Replace literal tokens like $title in the fragment with the runtime values.
+                        $dialogXaml = $dialogXaml -replace '\$title', [System.Text.RegularExpressions.Regex]::Escape($title)
+                        $dialogXaml = $dialogXaml -replace '\$message', [System.Text.RegularExpressions.Regex]::Escape($message)
+                        $dialogXaml = $dialogXaml -replace '\$saveAndClose', [System.Text.RegularExpressions.Regex]::Escape($saveAndClose)
+                        $dialogXaml = $dialogXaml -replace '\$discardAndClose', [System.Text.RegularExpressions.Regex]::Escape($discardAndClose)
+                        $dialogXaml = $dialogXaml -replace '\$cancel', [System.Text.RegularExpressions.Regex]::Escape($cancel)
+                    } catch {
+                        Write-Warning "Failed to read dialog XAML fragment at {$dialogXamlPath}: $($_.Exception.Message)"
+                        $dialogXaml = $null
+                    }
+                } else {
+                    Write-Verbose "Dialog fragment not found at: $dialogXamlPath"
+                }
+
+
 
                 $reader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($dialogXaml))
                 $dialogWindow = [Windows.Markup.XamlReader]::Load($reader)
