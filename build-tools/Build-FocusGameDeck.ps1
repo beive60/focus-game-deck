@@ -1,19 +1,23 @@
 <#
 .SYNOPSIS
-    Focus Game Deck application build script
+    Focus Game Deck application build script - Multi-Executable Bundle Architecture
 
 .DESCRIPTION
-    This script creates an executable version of the main Focus Game Deck application.
-    It uses the ps2exe module to convert PowerShell scripts into EXE files and
-    applies digital signatures when required.
+    This script creates three separate, fully bundled, digitally signed executables:
+    1. Focus-Game-Deck.exe - Lightweight router that launches sub-processes
+    2. ConfigEditor.exe - Fully bundled GUI configuration editor
+    3. Invoke-FocusGameDeck.exe - Fully bundled game launcher
+    
+    This architecture ensures all executed code is contained within digitally signed
+    executables, eliminating the security vulnerability of external unsigned scripts.
 
 .PARAMETER Install
     Installs the ps2exe module.
     Use this on first run or when the ps2exe module is not found.
 
 .PARAMETER Build
-    Builds the main application executable.
-    Creates Focus-Game-Deck.exe from src/Main.PS1.
+    Builds all three application executables.
+    Creates Focus-Game-Deck.exe, ConfigEditor.exe, and Invoke-FocusGameDeck.exe.
 
 .PARAMETER Clean
     Removes build artifacts and cache files.
@@ -33,14 +37,14 @@
 
 .EXAMPLE
     .\Build-FocusGameDeck.ps1 -Build
-    Builds the main application.
+    Builds all three executables.
 
 .EXAMPLE
     .\Build-FocusGameDeck.ps1 -All
     Executes all operations (install, cleanup, build, sign).
 
 .NOTES
-    Version: 1.0.0
+    Version: 3.0.0 - Multi-Executable Bundle Architecture
     Author: Focus Game Deck Development Team
     This script requires Windows PowerShell 5.1 or later.
 #>
@@ -122,28 +126,29 @@ if ($Build) {
             New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
         }
 
-        # Build main application (now using unified Main.ps1 entry point)
-        $mainScriptPath = Join-Path (Split-Path $PSScriptRoot -Parent) "src/Main.ps1"
+        # Get project root and icon
+        $projectRoot = Split-Path $PSScriptRoot -Parent
+        $iconFile = Join-Path $projectRoot "assets/icon.ico"
+        
+        # Build 1: Main Router (Focus-Game-Deck.exe)
+        Write-Host "Building Main Router (Focus-Game-Deck.exe)..."
+        $mainRouterPath = Join-Path $projectRoot "src/Main-Router.ps1"
         $mainOutputPath = Join-Path $buildDir "Focus-Game-Deck.exe"
 
-        if (Test-Path $mainScriptPath) {
-            Write-Host "Building main application..."
-
+        if (Test-Path $mainRouterPath) {
             $ps2exeParams = @{
-                inputFile = $mainScriptPath
+                inputFile = $mainRouterPath
                 outputFile = $mainOutputPath
                 title = "Focus Game Deck"
-                description = "Gaming environment optimization tool (Multi-Platform)"
+                description = "Gaming environment optimization tool - Main Router"
                 company = "Focus Game Deck Project"
-                version = "1.0.0.0"
+                version = "3.0.0.0"
                 copyright = "MIT License"
                 requireAdmin = $false
                 STA = $false
                 noConsole = $false
             }
 
-            # Add icon if it exists
-            $iconFile = Join-Path (Split-Path $PSScriptRoot -Parent) "assets/icon.ico"
             if (Test-Path $iconFile) {
                 $ps2exeParams.Add("iconFile", $iconFile)
             } else {
@@ -153,43 +158,173 @@ if ($Build) {
             ps2exe @ps2exeParams
 
             if (Test-Path $mainOutputPath) {
-                Write-Host "Main executable created: $mainOutputPath"
+                Write-Host "[OK] Main Router executable created: $mainOutputPath"
             } else {
-                Write-Host "Failed to create main executable."
+                Write-Host "[ERROR] Failed to create Main Router executable."
             }
         } else {
-            Write-Host "Main script not found: $mainScriptPath"
+            Write-Host "[ERROR] Main Router script not found: $mainRouterPath"
         }
 
-        # Main executable now includes multi-platform support
+        # Build 2: Config Editor (ConfigEditor.exe)
+        Write-Host "Building Config Editor (ConfigEditor.exe)..."
+        $configEditorPath = Join-Path $projectRoot "gui/ConfigEditor.ps1"
+        $configEditorOutput = Join-Path $buildDir "ConfigEditor.exe"
 
-        # Note: Config Editor functionality is now integrated into the main executable
-        # Users can access it by running Focus-Game-Deck.exe without arguments or with --config
-        Write-Host "Config Editor functionality integrated into main executable."
+        if (Test-Path $configEditorPath) {
+            $ps2exeParams = @{
+                inputFile = $configEditorPath
+                outputFile = $configEditorOutput
+                title = "Focus Game Deck - Configuration Editor"
+                description = "Focus Game Deck GUI Configuration Editor"
+                company = "Focus Game Deck Project"
+                version = "3.0.0.0"
+                copyright = "MIT License"
+                requireAdmin = $false
+                STA = $true
+                noConsole = $true
+            }
 
-        # Copy necessary files to build directory
-        Write-Host "Copying configuration files..."
+            if (Test-Path $iconFile) {
+                $ps2exeParams.Add("iconFile", $iconFile)
+            }
 
+            ps2exe @ps2exeParams
+
+            if (Test-Path $configEditorOutput) {
+                Write-Host "[OK] Config Editor executable created: $configEditorOutput"
+            } else {
+                Write-Host "[ERROR] Failed to create Config Editor executable."
+            }
+        } else {
+            Write-Host "[ERROR] Config Editor script not found: $configEditorPath"
+        }
+
+        # Build 3: Game Launcher (Invoke-FocusGameDeck.exe)
+        Write-Host "Building Game Launcher (Invoke-FocusGameDeck.exe)..."
+        $gameLauncherPath = Join-Path $projectRoot "src/Invoke-FocusGameDeck.ps1"
+        $gameLauncherOutput = Join-Path $buildDir "Invoke-FocusGameDeck.exe"
+
+        if (Test-Path $gameLauncherPath) {
+            $ps2exeParams = @{
+                inputFile = $gameLauncherPath
+                outputFile = $gameLauncherOutput
+                title = "Focus Game Deck - Game Launcher"
+                description = "Focus Game Deck Game Launcher Engine"
+                company = "Focus Game Deck Project"
+                version = "3.0.0.0"
+                copyright = "MIT License"
+                requireAdmin = $false
+                STA = $false
+                noConsole = $false
+            }
+
+            if (Test-Path $iconFile) {
+                $ps2exeParams.Add("iconFile", $iconFile)
+            }
+
+            ps2exe @ps2exeParams
+
+            if (Test-Path $gameLauncherOutput) {
+                Write-Host "[OK] Game Launcher executable created: $gameLauncherOutput"
+            } else {
+                Write-Host "[ERROR] Failed to create Game Launcher executable."
+            }
+        } else {
+            Write-Host "[ERROR] Game Launcher script not found: $gameLauncherPath"
+        }
+
+        Write-Host ""
+        Write-Host "Multi-Executable Bundle Architecture:"
+        Write-Host "  1. Focus-Game-Deck.exe - Main router (launches sub-processes)"
+        Write-Host "  2. ConfigEditor.exe - GUI configuration editor (fully bundled)"
+        Write-Host "  3. Invoke-FocusGameDeck.exe - Game launcher (fully bundled)"
+
+        # Copy necessary supporting files to build directory
+        Write-Host ""
+        Write-Host "Copying supporting files to build directory..."
+        
+        # Copy config directory
         $configDir = Join-Path $buildDir "config"
         if (-not (Test-Path $configDir)) {
             New-Item -ItemType Directory -Path $configDir -Force | Out-Null
         }
-
-        $sourceConfigDir = Join-Path (Split-Path $PSScriptRoot -Parent) "config"
+        $sourceConfigDir = Join-Path $projectRoot "config"
         if (Test-Path $sourceConfigDir) {
             Get-ChildItem $sourceConfigDir -Filter "*.json" | ForEach-Object {
                 Copy-Item $_.FullName $configDir -Force
             }
+            Write-Host "[OK] Copied config files"
         }
 
+        # Copy localization directory
+        $localizationDir = Join-Path $buildDir "localization"
+        if (-not (Test-Path $localizationDir)) {
+            New-Item -ItemType Directory -Path $localizationDir -Force | Out-Null
+        }
+        $sourceLocalizationDir = Join-Path $projectRoot "localization"
+        if (Test-Path $sourceLocalizationDir) {
+            Copy-Item "$sourceLocalizationDir/*.json" $localizationDir -Force
+            Write-Host "[OK] Copied localization files"
+        }
+
+        # Copy gui directory (for XAML and helper scripts that ConfigEditor.exe references at runtime)
+        $guiDir = Join-Path $buildDir "gui"
+        if (-not (Test-Path $guiDir)) {
+            New-Item -ItemType Directory -Path $guiDir -Force | Out-Null
+        }
+        $sourceGuiDir = Join-Path $projectRoot "gui"
+        if (Test-Path $sourceGuiDir) {
+            Get-ChildItem $sourceGuiDir -Include "*.ps1", "*.xaml" -Recurse | ForEach-Object {
+                Copy-Item $_.FullName $guiDir -Force
+            }
+            Write-Host "[OK] Copied GUI files"
+        }
+
+        # Copy src/modules directory (for modules that Invoke-FocusGameDeck.exe references at runtime)
+        $srcDir = Join-Path $buildDir "src"
+        $srcModulesDir = Join-Path $srcDir "modules"
+        if (-not (Test-Path $srcModulesDir)) {
+            New-Item -ItemType Directory -Path $srcModulesDir -Force | Out-Null
+        }
+        $sourceModulesDir = Join-Path $projectRoot "src/modules"
+        if (Test-Path $sourceModulesDir) {
+            Copy-Item "$sourceModulesDir/*.ps1" $srcModulesDir -Force
+            Write-Host "[OK] Copied module files"
+        }
+
+        # Copy scripts directory (for LanguageHelper.ps1 and other utilities)
+        $scriptsDir = Join-Path $buildDir "scripts"
+        if (-not (Test-Path $scriptsDir)) {
+            New-Item -ItemType Directory -Path $scriptsDir -Force | Out-Null
+        }
+        $sourceScriptsDir = Join-Path $projectRoot "scripts"
+        if (Test-Path $sourceScriptsDir) {
+            Copy-Item "$sourceScriptsDir/LanguageHelper.ps1" $scriptsDir -Force -ErrorAction SilentlyContinue
+            Write-Host "[OK] Copied script files"
+        }
+
+        # Copy build-tools/Version.ps1 (for version information)
+        $buildToolsDir = Join-Path $buildDir "build-tools"
+        if (-not (Test-Path $buildToolsDir)) {
+            New-Item -ItemType Directory -Path $buildToolsDir -Force | Out-Null
+        }
+        $versionScript = Join-Path $PSScriptRoot "Version.ps1"
+        if (Test-Path $versionScript) {
+            Copy-Item $versionScript $buildToolsDir -Force
+            Write-Host "[OK] Copied version script"
+        }
+
+        Write-Host ""
         Write-Host "Build completed successfully!"
         Write-Host "Built files are located in: $buildDir"
 
-        # List built files
-        Write-Host "`nBuilt files:"
-        Get-ChildItem $buildDir -Recurse | Where-Object { -not $_.PSIsContainer } | ForEach-Object {
-            $relativePath = $_.FullName.Replace($buildDir, "").TrimStart('\')
-            Write-Host "  $relativePath"
+        # List built executables
+        Write-Host ""
+        Write-Host "Built executables:"
+        Get-ChildItem $buildDir -Filter "*.exe" | ForEach-Object {
+            $fileSize = [math]::Round($_.Length / 1KB, 2)
+            Write-Host "  $($_.Name) ($fileSize KB)"
         }
 
         # Auto-sign if requested
