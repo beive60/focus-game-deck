@@ -50,7 +50,7 @@ try {
 
     if ($errorVar.Count -gt 0) {
         Write-Host "ERRORS ($($errorVar.Count)):"
-        $errorVar | ForEach-Object { Write-Host "  $_"}
+        $errorVar | ForEach-Object { Write-Host "  $_" }
         Write-Host ""
     }
 
@@ -64,7 +64,7 @@ try {
         if ($otherWarnings.Count -gt 0) {
             Write-Host ""
             Write-Host "  Other Warnings:"
-            $otherWarnings | ForEach-Object { Write-Host "    $_"}
+            $otherWarnings | ForEach-Object { Write-Host "    $_" }
         }
 
         if ($localizationWarnings.Count -gt 0) {
@@ -81,9 +81,9 @@ try {
             Write-Host "    Missing localization keys: $($missingKeys.Count)"
 
             if ($Verbose) {
-                $missingKeys | ForEach-Object { Write-Host "      - $_" -ForegroundColor Gray }
+                $missingKeys | ForEach-Object { Write-Host "      - $_" }
             } else {
-                Write-Host "    (Use -Verbose to see all missing keys)" -ForegroundColor Gray
+                Write-Host "    (Use -Verbose to see all missing keys)"
             }
         }
     } else {

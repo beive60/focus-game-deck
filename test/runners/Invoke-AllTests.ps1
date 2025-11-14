@@ -61,7 +61,7 @@ foreach ($category in $TestCategories.Keys) {
         continue
     }
 
-    Write-Host "`n--- $category Tests ---`n" -ForegroundColor Magenta
+    Write-Host "`n--- $category Tests ---`n"
 
     foreach ($testScript in $TestCategories[$category]) {
         $testPath = Join-Path $ProjectRoot "test" $testScript
@@ -72,7 +72,7 @@ foreach ($category in $TestCategories.Keys) {
             continue
         }
 
-        Write-Host "  Running: $testScript" -ForegroundColor Gray
+        Write-Host "  Running: $testScript"
 
         $testStart = Get-Date
         $testOutput = & $testPath 2>&1

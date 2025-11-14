@@ -209,10 +209,10 @@ class Logger {
     [void] WriteToConsole([LogLevel] $level, [string] $logEntry) {
         switch ($level) {
             ([LogLevel]::Trace) {
-                Write-Host $logEntry -ForegroundColor DarkGray
+                Write-Host $logEntry
             }
             ([LogLevel]::Debug) {
-                Write-Host $logEntry -ForegroundColor Gray
+                Write-Host $logEntry
             }
             ([LogLevel]::Info) {
                 Write-Host $logEntry
@@ -224,7 +224,7 @@ class Logger {
                 Write-Host $logEntry
             }
             ([LogLevel]::Critical) {
-                Write-Host $logEntry -ForegroundColor Magenta
+                Write-Host $logEntry
             }
         }
     }

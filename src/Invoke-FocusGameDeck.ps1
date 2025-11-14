@@ -389,15 +389,15 @@ try {
                     Write-Host $certificateId
                 }
                 if ($msg.mainLogNotarizationInfo) {
-                    Write-Host $msg.mainLogNotarizationInfo -ForegroundColor Gray
+                    Write-Host $msg.mainLogNotarizationInfo
                 } else {
-                    Write-Host "  This certificate can be used to verify log integrity if needed." -ForegroundColor Gray
+                    Write-Host "  This certificate can be used to verify log integrity if needed."
                 }
             } else {
                 if ($msg.mainLogFinalized) {
-                    Write-Host $msg.mainLogFinalized -ForegroundColor Gray
+                    Write-Host $msg.mainLogFinalized
                 } else {
-                    Write-Host "Log finalized (notarization disabled or failed)" -ForegroundColor Gray
+                    Write-Host "Log finalized (notarization disabled or failed)"
                 }
             }
         } catch {
