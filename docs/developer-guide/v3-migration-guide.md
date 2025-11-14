@@ -14,19 +14,65 @@ This document provides a comprehensive guide for building, testing, and deployin
 - Code signature could not prevent tampered external code from running
 
 **After (v3.0):**
-- Three separate, fully bundled, digitally signed executables:
-  1. **Focus-Game-Deck.exe** (30-40KB) - Main router
-  2. **ConfigEditor.exe** (75-100KB) - GUI configuration editor
-  3. **Invoke-FocusGameDeck.exe** (60-80KB) - Game launcher engine
-- All executed code is contained within signed executables
-- External scripts eliminated from execution path
+- Three separate, digitally signed executables with bundled PowerShell code:
+  1. **Focus-Game-Deck.exe** (30-40KB) - Main router (no dependencies)
+  2. **ConfigEditor.exe** (75-100KB) - GUI with bundled helper scripts
+  3. **Invoke-FocusGameDeck.exe** (60-80KB) - Game launcher with bundled modules
+- All PowerShell code (.ps1 files) is bundled into signed executables
+- Only data files (JSON, XAML) remain external (acceptable as they don't execute code)
+
+### Bundling Implementation
+
+**ps2exe Flat Directory Structure:**
+When ps2exe bundles files, it extracts them to a flat temporary directory at runtime. The bundled scripts detect execution mode and adjust path resolution:
+
+- **Main.exe**: Standalone router with no external PS1 dependencies
+- **ConfigEditor.exe**: Bundles all 6 GUI helper scripts (ConfigEditor.*.ps1)
+- **Invoke-FocusGameDeck.exe**: Bundles all 10 module scripts (src/modules/*.ps1)
+
+**Path Resolution:**
+```powershell
+# Bundled scripts detect execution mode
+$isExecutable = (Get-Process -Id $PID).ProcessName -ne 'pwsh' -and ...
+
+if ($isExecutable) {
+    # ps2exe flat extraction - all PS1 files at $PSScriptRoot
+    $modulePath = Join-Path $PSScriptRoot "Logger.ps1"
+} else {
+    # Development mode - relative paths
+    $modulePath = Join-Path $PSScriptRoot "modules/Logger.ps1"
+}
+```
 
 ### Key Benefits
 
-- **Enhanced Security**: All execution flows through digitally signed code
+- **Enhanced Security**: All PowerShell code is within digitally signed executables
+- **Attack Surface Reduced**: Only data files (JSON, XAML) are external, not executable code
 - **Improved Efficiency**: ~40MB memory savings, ~1.5s faster startup
 - **Better Process Isolation**: Each component runs independently
 - **Simplified Distribution**: Clean executable bundle with supporting files
+
+### Build Process Changes
+
+The build script now uses staging directories:
+
+1. **Staging Phase**: Creates flat directory with all dependencies
+2. **Bundling Phase**: ps2exe compiles from staging directory
+3. **Result**: All PS1 dependencies are bundled into the executable
+
+Example for Invoke-FocusGameDeck.exe:
+```
+staging-gamelauncher/
+├── Invoke-FocusGameDeck.ps1 (main script)
+├── Logger.ps1 (bundled)
+├── ConfigValidator.ps1 (bundled)
+├── AppManager.ps1 (bundled)
+├── OBSManager.ps1 (bundled)
+├── PlatformManager.ps1 (bundled)
+└── ... (all other modules bundled)
+```
+
+ps2exe creates a single executable containing all these files.
 
 ## Building v3.0
 

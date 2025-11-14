@@ -183,6 +183,11 @@ if ($Build) {
         $configEditorPath = Join-Path $projectRoot "gui/ConfigEditor.ps1"
         if (Test-Path $configEditorPath) {
             Copy-Item $configEditorPath $configEditorStaging -Force
+            Write-Host "[INFO] Copied ConfigEditor.ps1 to staging"
+            
+            # Note: ConfigEditor will load helper scripts via dot-sourcing
+            # In bundled mode, all files are in flat structure at $PSScriptRoot
+            # ConfigEditor.ps1 needs to be aware of this via execution mode detection
             
             # Copy all GUI helper scripts to flat structure (ps2exe will bundle these)
             $guiHelpers = @(
