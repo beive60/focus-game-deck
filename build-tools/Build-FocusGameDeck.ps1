@@ -182,12 +182,42 @@ if ($Build) {
         # Copy ConfigEditor main script
         $configEditorPath = Join-Path $projectRoot "gui/ConfigEditor.ps1"
         if (Test-Path $configEditorPath) {
-            Copy-Item $configEditorPath $configEditorStaging -Force
-            Write-Host "[INFO] Copied ConfigEditor.ps1 to staging"
+            # Read ConfigEditor and patch for bundled execution
+            $configEditorContent = Get-Content $configEditorPath -Raw -Encoding UTF8
             
-            # Note: ConfigEditor will load helper scripts via dot-sourcing
-            # In bundled mode, all files are in flat structure at $PSScriptRoot
-            # ConfigEditor.ps1 needs to be aware of this via execution mode detection
+            # Patch $projectRoot to handle bundled execution
+            # In bundled mode, all files are at $PSScriptRoot (flat extraction directory)
+            # In development mode, use normal project structure
+            $projectRootPatch = @'
+# Detect execution mode for ps2exe bundling
+$currentProcess = Get-Process -Id $PID
+$isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
+
+if ($isExecutable) {
+    # Running as bundled executable - ps2exe extracts to flat temp directory
+    # All helper scripts are at $PSScriptRoot
+    $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+    $guiScriptRoot = $PSScriptRoot
+} else {
+    # Running as script (development mode) - use normal structure
+    $projectRoot = Split-Path -Parent $PSScriptRoot
+    $guiScriptRoot = $PSScriptRoot
+}
+'@
+            
+            $configEditorContent = $configEditorContent -replace '\$projectRoot = Split-Path -Parent \$PSScriptRoot', $projectRootPatch
+            
+            # Patch module paths to use flat structure when bundled
+            # Replace: Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.XXX.ps1"
+            # With: Join-Path -Path $(if ($isExecutable) { $guiScriptRoot } else { $projectRoot }) -ChildPath $(if ($isExecutable) { "ConfigEditor.XXX.ps1" } else { "gui/ConfigEditor.XXX.ps1" })
+            $configEditorContent = $configEditorContent -replace '(Join-Path -Path \$projectRoot -ChildPath "gui/(ConfigEditor\.[^"]+)")', '(Join-Path -Path $(if ($isExecutable) { $guiScriptRoot } else { $projectRoot }) -ChildPath $(if ($isExecutable) { "$2" } else { "gui/$2" }))'
+            
+            # Patch XAML path
+            $configEditorContent = $configEditorContent -replace '(Join-Path -Path \$projectRoot -ChildPath "gui/(MainWindow\.xaml)")', '(Join-Path -Path $(if ($isExecutable) { $guiScriptRoot } else { $projectRoot }) -ChildPath $(if ($isExecutable) { "$2" } else { "gui/$2" }))'
+            
+            # Save patched version
+            $configEditorContent | Set-Content (Join-Path $configEditorStaging "ConfigEditor.ps1") -Encoding UTF8 -Force
+            Write-Host "[INFO] Patched ConfigEditor.ps1 for bundled execution"
             
             # Copy all GUI helper scripts to flat structure (ps2exe will bundle these)
             $guiHelpers = @(
