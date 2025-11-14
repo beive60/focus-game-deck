@@ -131,13 +131,14 @@ if ($Build) {
         $iconFile = Join-Path $projectRoot "assets/icon.ico"
         
         # Build 1: Main Router (Focus-Game-Deck.exe)
+        # This is a lightweight router that only launches other executables
         Write-Host "Building Main Router (Focus-Game-Deck.exe)..."
-        $mainRouterPath = Join-Path $projectRoot "src/Main-Router.ps1"
+        $mainBundledPath = Join-Path $projectRoot "src/Main-Bundled.ps1"
         $mainOutputPath = Join-Path $buildDir "Focus-Game-Deck.exe"
 
-        if (Test-Path $mainRouterPath) {
+        if (Test-Path $mainBundledPath) {
             $ps2exeParams = @{
-                inputFile = $mainRouterPath
+                inputFile = $mainBundledPath
                 outputFile = $mainOutputPath
                 title = "Focus Game Deck"
                 description = "Gaming environment optimization tool - Main Router"
@@ -163,17 +164,58 @@ if ($Build) {
                 Write-Host "[ERROR] Failed to create Main Router executable."
             }
         } else {
-            Write-Host "[ERROR] Main Router script not found: $mainRouterPath"
+            Write-Host "[ERROR] Main Bundled script not found: $mainBundledPath"
         }
 
         # Build 2: Config Editor (ConfigEditor.exe)
-        Write-Host "Building Config Editor (ConfigEditor.exe)..."
+        # Bundle all GUI dependencies into the executable
+        Write-Host ""
+        Write-Host "Building Config Editor (ConfigEditor.exe) with bundled dependencies..."
+        
+        # Create staging directory for ConfigEditor
+        $configEditorStaging = Join-Path $buildDir "staging-configeditor"
+        if (Test-Path $configEditorStaging) {
+            Remove-Item $configEditorStaging -Recurse -Force
+        }
+        New-Item -ItemType Directory -Path $configEditorStaging -Force | Out-Null
+        
+        # Copy ConfigEditor main script
         $configEditorPath = Join-Path $projectRoot "gui/ConfigEditor.ps1"
-        $configEditorOutput = Join-Path $buildDir "ConfigEditor.exe"
-
         if (Test-Path $configEditorPath) {
+            Copy-Item $configEditorPath $configEditorStaging -Force
+            
+            # Copy all GUI helper scripts to flat structure (ps2exe will bundle these)
+            $guiHelpers = @(
+                "ConfigEditor.JsonHelper.ps1",
+                "ConfigEditor.Mappings.ps1",
+                "ConfigEditor.State.ps1",
+                "ConfigEditor.Localization.ps1",
+                "ConfigEditor.UI.ps1",
+                "ConfigEditor.Events.ps1"
+            )
+            
+            foreach ($helper in $guiHelpers) {
+                $helperPath = Join-Path $projectRoot "gui/$helper"
+                if (Test-Path $helperPath) {
+                    Copy-Item $helperPath $configEditorStaging -Force
+                    Write-Host "[INFO] Bundled: $helper"
+                }
+            }
+            
+            # Copy XAML files (these will be external resources at runtime)
+            Copy-Item (Join-Path $projectRoot "gui/MainWindow.xaml") $configEditorStaging -Force -ErrorAction SilentlyContinue
+            Copy-Item (Join-Path $projectRoot "gui/ConfirmSaveChangesDialog.xaml") $configEditorStaging -Force -ErrorAction SilentlyContinue
+            
+            # Copy helper scripts (LanguageHelper, Version)
+            Copy-Item (Join-Path $projectRoot "scripts/LanguageHelper.ps1") $configEditorStaging -Force -ErrorAction SilentlyContinue
+            Copy-Item (Join-Path $PSScriptRoot "Version.ps1") $configEditorStaging -Force -ErrorAction SilentlyContinue
+            
+            # Now build from staging directory
+            $configEditorInput = Join-Path $configEditorStaging "ConfigEditor.ps1"
+            $configEditorOutput = Join-Path $buildDir "ConfigEditor.exe"
+            
             $ps2exeParams = @{
-                inputFile = $configEditorPath
+                inputFile = $configEditorInput
                 outputFile = $configEditorOutput
                 title = "Focus Game Deck - Configuration Editor"
                 description = "Focus Game Deck GUI Configuration Editor"
@@ -196,18 +238,62 @@ if ($Build) {
             } else {
                 Write-Host "[ERROR] Failed to create Config Editor executable."
             }
+            
+            # Clean up staging directory
+            Remove-Item $configEditorStaging -Recurse -Force
         } else {
             Write-Host "[ERROR] Config Editor script not found: $configEditorPath"
         }
 
         # Build 3: Game Launcher (Invoke-FocusGameDeck.exe)
-        Write-Host "Building Game Launcher (Invoke-FocusGameDeck.exe)..."
-        $gameLauncherPath = Join-Path $projectRoot "src/Invoke-FocusGameDeck.ps1"
-        $gameLauncherOutput = Join-Path $buildDir "Invoke-FocusGameDeck.exe"
-
+        # Bundle all game launcher modules into the executable
+        Write-Host ""
+        Write-Host "Building Game Launcher (Invoke-FocusGameDeck.exe) with bundled dependencies..."
+        
+        # Create staging directory for game launcher
+        $gameLauncherStaging = Join-Path $buildDir "staging-gamelauncher"
+        if (Test-Path $gameLauncherStaging) {
+            Remove-Item $gameLauncherStaging -Recurse -Force
+        }
+        New-Item -ItemType Directory -Path $gameLauncherStaging -Force | Out-Null
+        
+        # Copy game launcher main script
+        $gameLauncherPath = Join-Path $projectRoot "src/Invoke-FocusGameDeck-Bundled.ps1"
         if (Test-Path $gameLauncherPath) {
+            Copy-Item $gameLauncherPath (Join-Path $gameLauncherStaging "Invoke-FocusGameDeck.ps1") -Force
+            
+            # Copy all module scripts to flat structure (ps2exe will bundle these)
+            $modules = @(
+                "Logger.ps1",
+                "ConfigValidator.ps1",
+                "AppManager.ps1",
+                "OBSManager.ps1",
+                "PlatformManager.ps1",
+                "VTubeStudioManager.ps1",
+                "DiscordManager.ps1",
+                "DiscordRPCClient.ps1",
+                "WebSocketAppManagerBase.ps1",
+                "UpdateChecker.ps1"
+            )
+            
+            foreach ($module in $modules) {
+                $modulePath = Join-Path $projectRoot "src/modules/$module"
+                if (Test-Path $modulePath) {
+                    Copy-Item $modulePath $gameLauncherStaging -Force
+                    Write-Host "[INFO] Bundled: $module"
+                }
+            }
+            
+            # Copy helper scripts
+            Copy-Item (Join-Path $projectRoot "scripts/LanguageHelper.ps1") $gameLauncherStaging -Force -ErrorAction SilentlyContinue
+            Copy-Item (Join-Path $PSScriptRoot "Version.ps1") $gameLauncherStaging -Force -ErrorAction SilentlyContinue
+            
+            # Now build from staging directory
+            $gameLauncherInput = Join-Path $gameLauncherStaging "Invoke-FocusGameDeck.ps1"
+            $gameLauncherOutput = Join-Path $buildDir "Invoke-FocusGameDeck.exe"
+            
             $ps2exeParams = @{
-                inputFile = $gameLauncherPath
+                inputFile = $gameLauncherInput
                 outputFile = $gameLauncherOutput
                 title = "Focus Game Deck - Game Launcher"
                 description = "Focus Game Deck Game Launcher Engine"
@@ -230,6 +316,9 @@ if ($Build) {
             } else {
                 Write-Host "[ERROR] Failed to create Game Launcher executable."
             }
+            
+            # Clean up staging directory
+            Remove-Item $gameLauncherStaging -Recurse -Force
         } else {
             Write-Host "[ERROR] Game Launcher script not found: $gameLauncherPath"
         }
