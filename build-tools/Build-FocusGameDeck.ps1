@@ -7,7 +7,7 @@
     1. Focus-Game-Deck.exe - Lightweight router that launches sub-processes
     2. ConfigEditor.exe - Fully bundled GUI configuration editor
     3. Invoke-FocusGameDeck.exe - Fully bundled game launcher
-    
+
     This architecture ensures all executed code is contained within digitally signed
     executables, eliminating the security vulnerability of external unsigned scripts.
 
@@ -129,7 +129,7 @@ if ($Build) {
         # Get project root and icon
         $projectRoot = Split-Path $PSScriptRoot -Parent
         $iconFile = Join-Path $projectRoot "assets/icon.ico"
-        
+
         # Build 1: Main Router (Focus-Game-Deck.exe)
         # This is a lightweight router that only launches other executables
         Write-Host "Building Main Router (Focus-Game-Deck.exe)..."
@@ -171,20 +171,20 @@ if ($Build) {
         # Bundle all GUI dependencies into the executable
         Write-Host ""
         Write-Host "Building Config Editor (ConfigEditor.exe) with bundled dependencies..."
-        
+
         # Create staging directory for ConfigEditor
-        $configEditorStaging = Join-Path $buildDir "staging-configeditor"
+        $configEditorStaging = Join-Path -Path $buildDir -ChildPath"staging-configEditor"
         if (Test-Path $configEditorStaging) {
             Remove-Item $configEditorStaging -Recurse -Force
         }
         New-Item -ItemType Directory -Path $configEditorStaging -Force | Out-Null
-        
+
         # Copy ConfigEditor main script
-        $configEditorPath = Join-Path $projectRoot "gui/ConfigEditor.ps1"
+        $configEditorPath = Join-Path -Path $projectRoot "gui/ConfigEditor.ps1"
         if (Test-Path $configEditorPath) {
             # Read ConfigEditor and patch for bundled execution
             $configEditorContent = Get-Content $configEditorPath -Raw -Encoding UTF8
-            
+
             # Patch $projectRoot to handle bundled execution
             # In bundled mode, all files are at $PSScriptRoot (flat extraction directory)
             # In development mode, use normal project structure
@@ -204,21 +204,21 @@ if ($isExecutable) {
     $guiScriptRoot = $PSScriptRoot
 }
 '@
-            
+
             $configEditorContent = $configEditorContent -replace '\$projectRoot = Split-Path -Parent \$PSScriptRoot', $projectRootPatch
-            
+
             # Patch module paths to use flat structure when bundled
             # Replace: Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.XXX.ps1"
             # With: Join-Path -Path $(if ($isExecutable) { $guiScriptRoot } else { $projectRoot }) -ChildPath $(if ($isExecutable) { "ConfigEditor.XXX.ps1" } else { "gui/ConfigEditor.XXX.ps1" })
             $configEditorContent = $configEditorContent -replace '(Join-Path -Path \$projectRoot -ChildPath "gui/(ConfigEditor\.[^"]+)")', '(Join-Path -Path $(if ($isExecutable) { $guiScriptRoot } else { $projectRoot }) -ChildPath $(if ($isExecutable) { "$2" } else { "gui/$2" }))'
-            
+
             # Patch XAML path
             $configEditorContent = $configEditorContent -replace '(Join-Path -Path \$projectRoot -ChildPath "gui/(MainWindow\.xaml)")', '(Join-Path -Path $(if ($isExecutable) { $guiScriptRoot } else { $projectRoot }) -ChildPath $(if ($isExecutable) { "$2" } else { "gui/$2" }))'
-            
+
             # Save patched version
             $configEditorContent | Set-Content (Join-Path $configEditorStaging "ConfigEditor.ps1") -Encoding UTF8 -Force
             Write-Host "[INFO] Patched ConfigEditor.ps1 for bundled execution"
-            
+
             # Copy all GUI helper scripts to flat structure (ps2exe will bundle these)
             $guiHelpers = @(
                 "ConfigEditor.JsonHelper.ps1",
@@ -228,7 +228,7 @@ if ($isExecutable) {
                 "ConfigEditor.UI.ps1",
                 "ConfigEditor.Events.ps1"
             )
-            
+
             foreach ($helper in $guiHelpers) {
                 $helperPath = Join-Path $projectRoot "gui/$helper"
                 if (Test-Path $helperPath) {
@@ -236,19 +236,19 @@ if ($isExecutable) {
                     Write-Host "[INFO] Bundled: $helper"
                 }
             }
-            
+
             # Copy XAML files (these will be external resources at runtime)
-            Copy-Item (Join-Path $projectRoot "gui/MainWindow.xaml") $configEditorStaging -Force -ErrorAction SilentlyContinue
-            Copy-Item (Join-Path $projectRoot "gui/ConfirmSaveChangesDialog.xaml") $configEditorStaging -Force -ErrorAction SilentlyContinue
-            
+            Copy-Item (Join-Path -Path $projectRoot -ChildPath "gui/MainWindow.xaml") $configEditorStaging -Force -ErrorAction SilentlyContinue
+            Copy-Item (Join-Path -Path $projectRoot -ChildPath "gui/ConfirmSaveChangesDialog.xaml") $configEditorStaging -Force -ErrorAction SilentlyContinue
+
             # Copy helper scripts (LanguageHelper, Version)
-            Copy-Item (Join-Path $projectRoot "scripts/LanguageHelper.ps1") $configEditorStaging -Force -ErrorAction SilentlyContinue
+            Copy-Item (Join-Path -Path $projectRoot -ChildPath"scripts/LanguageHelper.ps1") $configEditorStaging -Force -ErrorAction SilentlyContinue
             Copy-Item (Join-Path $PSScriptRoot "Version.ps1") $configEditorStaging -Force -ErrorAction SilentlyContinue
-            
+
             # Now build from staging directory
             $configEditorInput = Join-Path $configEditorStaging "ConfigEditor.ps1"
             $configEditorOutput = Join-Path $buildDir "ConfigEditor.exe"
-            
+
             $ps2exeParams = @{
                 inputFile = $configEditorInput
                 outputFile = $configEditorOutput
@@ -273,7 +273,7 @@ if ($isExecutable) {
             } else {
                 Write-Host "[ERROR] Failed to create Config Editor executable."
             }
-            
+
             # Clean up staging directory
             Remove-Item $configEditorStaging -Recurse -Force
         } else {
@@ -284,19 +284,19 @@ if ($isExecutable) {
         # Bundle all game launcher modules into the executable
         Write-Host ""
         Write-Host "Building Game Launcher (Invoke-FocusGameDeck.exe) with bundled dependencies..."
-        
+
         # Create staging directory for game launcher
-        $gameLauncherStaging = Join-Path $buildDir "staging-gamelauncher"
+        $gameLauncherStaging = Join-Path $buildDir "staging-gameLauncher"
         if (Test-Path $gameLauncherStaging) {
             Remove-Item $gameLauncherStaging -Recurse -Force
         }
         New-Item -ItemType Directory -Path $gameLauncherStaging -Force | Out-Null
-        
+
         # Copy game launcher main script
         $gameLauncherPath = Join-Path $projectRoot "src/Invoke-FocusGameDeck-Bundled.ps1"
         if (Test-Path $gameLauncherPath) {
             Copy-Item $gameLauncherPath (Join-Path $gameLauncherStaging "Invoke-FocusGameDeck.ps1") -Force
-            
+
             # Copy all module scripts to flat structure (ps2exe will bundle these)
             $modules = @(
                 "Logger.ps1",
@@ -310,7 +310,7 @@ if ($isExecutable) {
                 "WebSocketAppManagerBase.ps1",
                 "UpdateChecker.ps1"
             )
-            
+
             foreach ($module in $modules) {
                 $modulePath = Join-Path $projectRoot "src/modules/$module"
                 if (Test-Path $modulePath) {
@@ -318,15 +318,15 @@ if ($isExecutable) {
                     Write-Host "[INFO] Bundled: $module"
                 }
             }
-            
+
             # Copy helper scripts
             Copy-Item (Join-Path $projectRoot "scripts/LanguageHelper.ps1") $gameLauncherStaging -Force -ErrorAction SilentlyContinue
             Copy-Item (Join-Path $PSScriptRoot "Version.ps1") $gameLauncherStaging -Force -ErrorAction SilentlyContinue
-            
+
             # Now build from staging directory
             $gameLauncherInput = Join-Path $gameLauncherStaging "Invoke-FocusGameDeck.ps1"
             $gameLauncherOutput = Join-Path $buildDir "Invoke-FocusGameDeck.exe"
-            
+
             $ps2exeParams = @{
                 inputFile = $gameLauncherInput
                 outputFile = $gameLauncherOutput
@@ -351,7 +351,7 @@ if ($isExecutable) {
             } else {
                 Write-Host "[ERROR] Failed to create Game Launcher executable."
             }
-            
+
             # Clean up staging directory
             Remove-Item $gameLauncherStaging -Recurse -Force
         } else {
@@ -367,7 +367,7 @@ if ($isExecutable) {
         # Copy necessary supporting files to build directory
         Write-Host ""
         Write-Host "Copying supporting files to build directory..."
-        
+
         # Copy config directory
         $configDir = Join-Path $buildDir "config"
         if (-not (Test-Path $configDir)) {
@@ -375,10 +375,19 @@ if ($isExecutable) {
         }
         $sourceConfigDir = Join-Path $projectRoot "config"
         if (Test-Path $sourceConfigDir) {
-            Get-ChildItem $sourceConfigDir -Filter "*.json" | ForEach-Object {
-                Copy-Item $_.FullName $configDir -Force
+            # Copy *.json.sample files and rename to *.json
+            Get-ChildItem $sourceConfigDir -Filter "*.json.sample" | ForEach-Object {
+                $destName = $_.Name -replace '\.sample$', ''
+                $destPath = Join-Path $configDir $destName
+                Copy-Item $_.FullName $destPath -Force
+                Write-Host "[OK] Copied $($_.Name) as $destName"
             }
-            Write-Host "[OK] Copied config files"
+
+            # Copy other JSON files (excluding *.json.sample files)
+            Get-ChildItem $sourceConfigDir -Filter "*.json" | Where-Object { $_.Name -notlike "*.json.sample" } | ForEach-Object {
+                Copy-Item $_.FullName $configDir -Force
+                Write-Host "[OK] Copied $($_.Name)"
+            }
         }
 
         # Copy localization directory
