@@ -472,39 +472,19 @@ if ($isExecutable) {
         }
 
         # Copy other support directories that bundled executables may require at runtime
-        # These must be present inside the dist directory because the executables will
-        # look up relative paths at runtime for additional resources.
+        # Only XAML files and localization data are needed - all scripts are bundled
 
-        # Copy directly from project source to dist (bypassing build directory since staging dirs were cleaned)
+        # Copy directly from project source to dist
 
-        # Ensure GUI (XAML + helpers) is present
+        # Ensure GUI (XAML only) is present
         $sourceGuiProject = Join-Path $projectRoot "gui"
         $distGuiDir = Join-Path $distDir "gui"
         if (Test-Path $sourceGuiProject) {
             if (-not (Test-Path $distGuiDir)) { New-Item -ItemType Directory -Path $distGuiDir -Force | Out-Null }
-            Get-ChildItem $sourceGuiProject -Include "*.ps1", "*.xaml" -Recurse | ForEach-Object {
+            Get-ChildItem $sourceGuiProject -Include "*.xaml" -Recurse | ForEach-Object {
                 Copy-Item $_.FullName $distGuiDir -Force
             }
-            Write-Host "[OK] Copied GUI files to distribution directory"
-        }
-
-        # Ensure src/modules is present for the game launcher
-        $sourceModulesProject = Join-Path $projectRoot "src/modules"
-        $distModulesParent = Join-Path $distDir "src"
-        $distModulesDir = Join-Path $distModulesParent "modules"
-        if (Test-Path $sourceModulesProject) {
-            if (-not (Test-Path $distModulesDir)) { New-Item -ItemType Directory -Path $distModulesDir -Force | Out-Null }
-            Copy-Item "$sourceModulesProject/*.ps1" $distModulesDir -Force
-            Write-Host "[OK] Copied src/modules to distribution directory"
-        }
-
-        # Ensure scripts directory is present
-        $sourceScriptsProject = Join-Path $projectRoot "scripts"
-        $distScriptsDir = Join-Path $distDir "scripts"
-        if (Test-Path $sourceScriptsProject) {
-            if (-not (Test-Path $distScriptsDir)) { New-Item -ItemType Directory -Path $distScriptsDir -Force | Out-Null }
-            Copy-Item "$sourceScriptsProject/LanguageHelper.ps1" $distScriptsDir -Force -ErrorAction SilentlyContinue
-            Write-Host "[OK] Copied scripts to distribution directory"
+            Write-Host "[OK] Copied GUI XAML files to distribution directory"
         }
 
         # Ensure localization directory is present
@@ -516,31 +496,23 @@ if ($isExecutable) {
             Write-Host "[OK] Copied localization files to distribution directory"
         }
 
-        # Ensure build-tools/Version.ps1 is available in dist/build-tools
-        $sourceVersionProject = Join-Path $PSScriptRoot "Version.ps1"
-        $distBuildToolsDir = Join-Path $distDir "build-tools"
-        if (Test-Path $sourceVersionProject) {
-            if (-not (Test-Path $distBuildToolsDir)) { New-Item -ItemType Directory -Path $distBuildToolsDir -Force | Out-Null }
-            Copy-Item $sourceVersionProject $distBuildToolsDir -Force
-            Write-Host "[OK] Copied build-tools/Version.ps1 to distribution directory"
-        }
-
-        # Verification summary for required artifacts
-        Write-Host "Checking presence of runtime support files in dist..."
+        # Verification: All scripts should be bundled in executables
+        Write-Host ""
+        Write-Host "Verifying distribution package (all scripts should be bundled)..."
         $checkPaths = @(
-            (Join-Path $distDir "config"),
-            $distGuiDir,
-            $distModulesDir,
-            $distScriptsDir,
-            $distLocalizationDir,
-            (Join-Path $distBuildToolsDir "Version.ps1")
+            @{ Path = (Join-Path $distDir "config"); Type = "Configuration files" },
+            @{ Path = (Join-Path $distGuiDir "MainWindow.xaml"); Type = "GUI XAML resources" },
+            @{ Path = (Join-Path $distDir "localization"); Type = "Localization resources" },
+            @{ Path = (Join-Path $distDir "Focus-Game-Deck.exe"); Type = "Main router executable" },
+            @{ Path = (Join-Path $distDir "ConfigEditor.exe"); Type = "Config editor executable" },
+            @{ Path = (Join-Path $distDir "Invoke-FocusGameDeck.exe"); Type = "Game launcher executable" }
         )
 
-        foreach ($p in $checkPaths) {
-            if (Test-Path $p) {
-                Write-Host "  PRESENT: $p"
+        foreach ($item in $checkPaths) {
+            if (Test-Path $item.Path) {
+                Write-Host "  [OK] $($item.Type): $($item.Path)"
             } else {
-                Write-Warning "  MISSING: $p"
+                Write-Warning "  [MISSING] $($item.Type): $($item.Path)"
             }
         }
 
