@@ -133,12 +133,12 @@ if ($Build) {
         # Build 1: Main Router (Focus-Game-Deck.exe)
         # This is a lightweight router that only launches other executables
         Write-Host "Building Main Router (Focus-Game-Deck.exe)..."
-        $mainBundledPath = Join-Path $projectRoot "src/Main-Bundled.ps1"
+        $mainScriptPath = Join-Path $projectRoot "src/Main.PS1"
         $mainOutputPath = Join-Path $buildDir "Focus-Game-Deck.exe"
 
-        if (Test-Path $mainBundledPath) {
+        if (Test-Path $mainScriptPath) {
             $ps2exeParams = @{
-                inputFile = $mainBundledPath
+                inputFile = $mainScriptPath
                 outputFile = $mainOutputPath
                 title = "Focus Game Deck"
                 description = "Gaming environment optimization tool - Main Router"
@@ -164,7 +164,7 @@ if ($Build) {
                 Write-Host "[ERROR] Failed to create Main Router executable."
             }
         } else {
-            Write-Host "[ERROR] Main Bundled script not found: $mainBundledPath"
+            Write-Host "[ERROR] Main script not found: $mainScriptPath"
         }
 
         # Build 2: Config Editor (ConfigEditor.exe)

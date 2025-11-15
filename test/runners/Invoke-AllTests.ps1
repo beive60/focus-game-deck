@@ -16,7 +16,7 @@ param(
 )
 
 $ErrorActionPreference = "Continue"
-$ProjectRoot = Split-Path -Parent $PSScriptRoot
+$ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 
 # Test categories
 $TestCategories = @{
@@ -57,14 +57,14 @@ Write-Host "========================================`n"
 
 foreach ($category in $TestCategories.Keys) {
     if ($SkipIntegrationTests -and $category -eq "Integration") {
-        Write-Host "⊘ Skipping $category tests..."
+        Write-Host "Skipping $category tests..."
         continue
     }
 
     Write-Host "`n--- $category Tests ---`n"
 
     foreach ($testScript in $TestCategories[$category]) {
-        $testPath = Join-Path $ProjectRoot "test" $testScript
+        $testPath = Join-Path -Path $ProjectRoot -ChildPath "test/scripts/$category/$testScript"
 
         if (-not (Test-Path $testPath)) {
             Write-Host "  [SKIP] $testScript (not found)"
@@ -114,10 +114,10 @@ Write-Host "Test Execution Summary"
 Write-Host "========================================"
 Write-Host "Total Tests:    $($TestResults.Total)"
 Write-Host "Passed:         $($TestResults.Passed)"
-Write-Host "Failed:         $($TestResults.Failed)" -ForegroundColor $(if ($TestResults.Failed -eq 0) { "Green" } else { "Red" })
+Write-Host "Failed:         $($TestResults.Failed)"
 Write-Host "Skipped:        $($TestResults.Skipped)"
 Write-Host "Duration:       $($TestResults.Duration)s"
-Write-Host "Success Rate:   $([math]::Round(($TestResults.Passed / $TestResults.Total) * 100, 1))%" -ForegroundColor $(if ($TestResults.Failed -eq 0) { "Green" } else { "Yellow" })
+Write-Host "Success Rate:   $([math]::Round(($TestResults.Passed / $TestResults.Total) * 100, 1))%"
 Write-Host "========================================`n"
 
 # Failed tests details
