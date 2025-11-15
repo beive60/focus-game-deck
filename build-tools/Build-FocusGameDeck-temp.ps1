@@ -292,7 +292,7 @@ if ($isExecutable) {
         New-Item -ItemType Directory -Path $gameLauncherStaging -Force | Out-Null
 
         # Copy game launcher main script and apply build-time patching
-        $gameLauncherPath = Join-Path $projectRoot "src/Invoke-FocusGameDeck.ps1"
+        $gameLauncherPath = Join-Path $projectRoot "src/Invoke-FocusGameDeck-Bundled.ps1"
         if (Test-Path $gameLauncherPath) {
             # Read game launcher script and patch for bundled execution
             $gameLauncherContent = Get-Content $gameLauncherPath -Raw -Encoding UTF8
@@ -306,20 +306,15 @@ $currentProcess = Get-Process -Id $PID
 $isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
 
 # Initialize script variables with path resolution for ps2exe bundling
-# When ps2exe bundles files, they are extracted to a flat temporary directory at $PSScriptRoot
-# The actual executable is at a different location: $currentProcess.Path
+# When ps2exe bundles files, they are extracted to a flat temporary directory
+# $PSScriptRoot points to this flat extraction directory
 $scriptDir = $PSScriptRoot
 
 if ($isExecutable) {
-    # Running as bundled executable
-    # Get the directory where the executable is located (not the temp extraction dir)
-    $workingDir = Split-Path -Parent $currentProcess.Path
-
-    # Config and messages are relative to executable location
-    $configPath = Join-Path $workingDir "config/config.json"
-    $messagesPath = Join-Path $workingDir "localization/messages.json"
-
-    # Module scripts are bundled and extracted to $PSScriptRoot (temp directory)
+    # Running as bundled executable - all files are in flat structure at $PSScriptRoot
+    $configPath = Join-Path (Split-Path $scriptDir -Parent) "config/config.json"
+    
+    # Module paths in flat structure (ps2exe extracts all bundled files here)
     $modulePaths = @(
         (Join-Path $scriptDir "Logger.ps1"),
         (Join-Path $scriptDir "ConfigValidator.ps1"),
@@ -327,12 +322,13 @@ if ($isExecutable) {
         (Join-Path $scriptDir "OBSManager.ps1"),
         (Join-Path $scriptDir "PlatformManager.ps1")
     )
-
+    
     $languageHelperPath = Join-Path $scriptDir "LanguageHelper.ps1"
+    $messagesPath = Join-Path (Split-Path $scriptDir -Parent) "localization/messages.json"
 } else {
     # Running as script (development mode) - use relative paths
     $configPath = Join-Path $scriptDir "../config/config.json"
-
+    
     $modulePaths = @(
         (Join-Path $scriptDir "modules/Logger.ps1"),
         (Join-Path $scriptDir "modules/ConfigValidator.ps1"),
@@ -340,7 +336,7 @@ if ($isExecutable) {
         (Join-Path $scriptDir "modules/OBSManager.ps1"),
         (Join-Path $scriptDir "modules/PlatformManager.ps1")
     )
-
+    
     $languageHelperPath = Join-Path $scriptDir "../scripts/LanguageHelper.ps1"
     $messagesPath = Join-Path $scriptDir "../localization/messages.json"
 }
@@ -713,3 +709,4 @@ if (-not $Install -and -not $Build -and -not $Clean -and -not $Sign -and -not $A
     Write-Host "Final distribution files will be placed in the 'dist' directory."
     Write-Host "Digital signature status can be verified via Windows Properties."
 }
+

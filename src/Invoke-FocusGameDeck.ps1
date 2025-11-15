@@ -14,6 +14,11 @@ if (-not (Get-Module -Name Microsoft.PowerShell.Security)) {
     }
 }
 
+# >>> BUILD-TIME-PATCH-START: Path resolution for ps2exe bundling >>>
+# This section will be replaced by the build script (Build-FocusGameDeck.ps1)
+# During build, the script inserts execution mode detection and dynamic path resolution
+# to support both development (.ps1) and bundled executable (.exe) modes
+
 # Initialize script variables
 $scriptDir = $PSScriptRoot
 $configPath = Join-Path $scriptDir "../config/config.json"
@@ -69,6 +74,7 @@ try {
     Write-Error "Failed to load configuration: $_"
     exit 1
 }
+# <<< BUILD-TIME-PATCH-END <<<
 
 # Initialize logger
 try {
