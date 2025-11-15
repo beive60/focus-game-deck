@@ -77,9 +77,9 @@ The new architecture bundles all code into three separate, signed executables us
 - **Simplified Distribution**: Clean distribution with only executables and supporting files (JSON, XAML)
 - **Better Process Isolation**: Each component runs in its own process, improving stability and resource management
 
-**Execution Flow:**
+**Focus Game Deck v3.0+ Execution Flow::**
 
-```
+```architecture
 User Command
     ↓
 Focus-Game-Deck.exe (Router)
@@ -171,6 +171,67 @@ The Focus Game Deck architecture consists of five main layers, each serving dist
 > # Or direct execution
 > powershell -ExecutionPolicy Bypass -Command "& {your stats command here}"
 > ```
+
+### Build-Time Patching System
+
+The build system uses a unified build-time patching approach for both entry points:
+
+#### Development Phase
+
+- Source files contain simple relative path resolution
+- Marker comments define sections that will be replaced during build
+- Easy to develop and test in the source environment
+
+```powershell
+# >>> BUILD-TIME-PATCH-START: Path resolution for ps2exe bundling >>>
+# Development code: simple relative paths
+$projectRoot = Split-Path -Parent $PSScriptRoot
+$configPath = Join-Path $projectRoot "config/config.json"
+# <<< BUILD-TIME-PATCH-END <<<
+```
+
+#### Build Phase
+
+- Build script detects marker comments
+- Replaces marked sections with environment-aware code
+- Generates both script and executable versions
+
+#### Production Phase
+
+- Patched code detects execution environment (script vs executable)
+- Resolves paths correctly for each environment
+- Handles the `$PSScriptRoot` limitation in ps2exe executables
+
+**Path Resolution Strategy:**
+
+```powershell
+# Patched code injected at build time
+$currentProcess = Get-Process -Id $PID
+$isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
+
+if ($isExecutable) {
+    # Use executable's actual location
+    $workingDir = Split-Path -Parent $currentProcess.Path
+    $configPath = Join-Path $workingDir "config/config.json"
+} else {
+    # Use script's directory
+    $configPath = Join-Path $PSScriptRoot "../config/config.json"
+}
+```
+
+**Benefits:**
+
+- Single source file for both execution modes
+- No manual maintenance of separate bundled versions
+- Automatic handling of path differences
+- Improved maintainability
+
+**Entry Points with Build-Time Patching:**
+
+- `gui/ConfigEditor.ps1` → `ConfigEditor.exe`
+- `src/Invoke-FocusGameDeck.ps1` → `Invoke-FocusGameDeck.exe`
+
+For detailed build system information, see [Build System Documentation](build-system.md).
 
 ### Design Decision Records
 
@@ -463,7 +524,7 @@ The multi-executable bundle architecture was selected for the following reasons:
 
 **Technical Implementation:**
 
-```
+```architecture
 Focus Game Deck v3.0 Multi-Executable Architecture
 ──────────────────────────────────────────────────
 
@@ -715,13 +776,13 @@ function Write-ConsoleMessage {
     )
 
     $output = "[$Level]"
-    
+
     if ($Component) {
         $output += " ${Component}:"
     }
-    
+
     $output += " $Message"
-    
+
     if ($Details) {
         $output += " - $Details"
     }
@@ -1017,6 +1078,7 @@ To maintain this design philosophy, please prioritize the following:
 | 2.0.0 | 2025-10-01 | Unified architecture implementation: Main.PS1 entry point with integrated GUI and game launcher, obsolete file cleanup, English documentation standardization |
 | 2.1.0 | 2025-11-03 | Console output guidelines: Added prohibition of Write-Host color parameters to respect user console customization and improve accessibility |
 | 3.0.0 | 2025-11-13 | Multi-Executable Bundle Architecture: Security-first redesign with three separate signed executables (Main Router, ConfigEditor, Game Launcher) eliminating external unsigned script vulnerability, improving efficiency through process isolation, and establishing foundation for future extensibility |
+| 3.0.1 | 2025-11-15 | Build-Time Patching Unification: Refactored build system to use unified build-time patching approach for both ConfigEditor and Invoke-FocusGameDeck, eliminating duplicate -Bundled.ps1 files and improving maintainability through single-source architecture |
 
 ---
 
