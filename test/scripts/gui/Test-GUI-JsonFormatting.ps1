@@ -12,19 +12,7 @@
 
 # Set execution policy and encoding
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
-
-# Dynamically set console encoding only if a valid console handle exists
-try {
-    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-    Write-Verbose "Console encoding successfully set to UTF-8."
-} catch [System.IO.IOException] {
-    # This is expected for -noConsole executables (e.g., ConfigEditor.exe)
-    # The error is "The handle is invalid."
-    Write-Verbose "No console handle found. Skipping console encoding setup."
-} catch {
-    # Catch any other unexpected errors
-    Write-Warning "An unexpected error occurred while setting console encoding: $_"
-}
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 Write-Host "=== JSON Formatting Test ==="
 Write-Host ""
