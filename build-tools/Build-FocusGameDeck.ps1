@@ -196,8 +196,7 @@ $isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.Proc
 if ($isExecutable) {
     # Running as bundled executable - ps2exe extracts to flat temp directory
     # All helper scripts are at $PSScriptRoot
-    $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-    $guiScriptRoot = $PSScriptRoot
+    $projectRoot = Split-Path -Parent $currentProcess.Path$PSScriptRoot
 } else {
     # Running as script (development mode) - use normal structure
     $projectRoot = Split-Path -Parent $PSScriptRoot
@@ -408,44 +407,10 @@ if ($isExecutable) {
         }
         $sourceGuiDir = Join-Path $projectRoot "gui"
         if (Test-Path $sourceGuiDir) {
-            Get-ChildItem $sourceGuiDir -Include "*.ps1", "*.xaml" -Recurse | ForEach-Object {
+            Get-ChildItem $sourceGuiDir -Include "*.xaml" -Recurse | ForEach-Object {
                 Copy-Item $_.FullName $guiDir -Force
             }
-            Write-Host "[OK] Copied GUI files"
-        }
-
-        # Copy src/modules directory (for modules that Invoke-FocusGameDeck.exe references at runtime)
-        $srcDir = Join-Path $buildDir "src"
-        $srcModulesDir = Join-Path $srcDir "modules"
-        if (-not (Test-Path $srcModulesDir)) {
-            New-Item -ItemType Directory -Path $srcModulesDir -Force | Out-Null
-        }
-        $sourceModulesDir = Join-Path $projectRoot "src/modules"
-        if (Test-Path $sourceModulesDir) {
-            Copy-Item "$sourceModulesDir/*.ps1" $srcModulesDir -Force
-            Write-Host "[OK] Copied module files"
-        }
-
-        # Copy scripts directory (for LanguageHelper.ps1 and other utilities)
-        $scriptsDir = Join-Path $buildDir "scripts"
-        if (-not (Test-Path $scriptsDir)) {
-            New-Item -ItemType Directory -Path $scriptsDir -Force | Out-Null
-        }
-        $sourceScriptsDir = Join-Path $projectRoot "scripts"
-        if (Test-Path $sourceScriptsDir) {
-            Copy-Item "$sourceScriptsDir/LanguageHelper.ps1" $scriptsDir -Force -ErrorAction SilentlyContinue
-            Write-Host "[OK] Copied script files"
-        }
-
-        # Copy build-tools/Version.ps1 (for version information)
-        $buildToolsDir = Join-Path $buildDir "build-tools"
-        if (-not (Test-Path $buildToolsDir)) {
-            New-Item -ItemType Directory -Path $buildToolsDir -Force | Out-Null
-        }
-        $versionScript = Join-Path $PSScriptRoot "Version.ps1"
-        if (Test-Path $versionScript) {
-            Copy-Item $versionScript $buildToolsDir -Force
-            Write-Host "[OK] Copied version script"
+            Write-Host "[OK] Copied GUI files (XAML only)"
         }
 
         Write-Host ""
@@ -504,6 +469,79 @@ if ($isExecutable) {
                 New-Item -ItemType Directory -Path $distConfigDir -Force | Out-Null
             }
             Copy-Item "$configDir/*" $distConfigDir -Recurse -Force
+        }
+
+        # Copy other support directories that bundled executables may require at runtime
+        # These must be present inside the dist directory because the executables will
+        # look up relative paths at runtime for additional resources.
+
+        # Copy directly from project source to dist (bypassing build directory since staging dirs were cleaned)
+
+        # Ensure GUI (XAML + helpers) is present
+        $sourceGuiProject = Join-Path $projectRoot "gui"
+        $distGuiDir = Join-Path $distDir "gui"
+        if (Test-Path $sourceGuiProject) {
+            if (-not (Test-Path $distGuiDir)) { New-Item -ItemType Directory -Path $distGuiDir -Force | Out-Null }
+            Get-ChildItem $sourceGuiProject -Include "*.ps1", "*.xaml" -Recurse | ForEach-Object {
+                Copy-Item $_.FullName $distGuiDir -Force
+            }
+            Write-Host "[OK] Copied GUI files to distribution directory"
+        }
+
+        # Ensure src/modules is present for the game launcher
+        $sourceModulesProject = Join-Path $projectRoot "src/modules"
+        $distModulesParent = Join-Path $distDir "src"
+        $distModulesDir = Join-Path $distModulesParent "modules"
+        if (Test-Path $sourceModulesProject) {
+            if (-not (Test-Path $distModulesDir)) { New-Item -ItemType Directory -Path $distModulesDir -Force | Out-Null }
+            Copy-Item "$sourceModulesProject/*.ps1" $distModulesDir -Force
+            Write-Host "[OK] Copied src/modules to distribution directory"
+        }
+
+        # Ensure scripts directory is present
+        $sourceScriptsProject = Join-Path $projectRoot "scripts"
+        $distScriptsDir = Join-Path $distDir "scripts"
+        if (Test-Path $sourceScriptsProject) {
+            if (-not (Test-Path $distScriptsDir)) { New-Item -ItemType Directory -Path $distScriptsDir -Force | Out-Null }
+            Copy-Item "$sourceScriptsProject/LanguageHelper.ps1" $distScriptsDir -Force -ErrorAction SilentlyContinue
+            Write-Host "[OK] Copied scripts to distribution directory"
+        }
+
+        # Ensure localization directory is present
+        $sourceLocalizationProject = Join-Path $projectRoot "localization"
+        $distLocalizationDir = Join-Path $distDir "localization"
+        if (Test-Path $sourceLocalizationProject) {
+            if (-not (Test-Path $distLocalizationDir)) { New-Item -ItemType Directory -Path $distLocalizationDir -Force | Out-Null }
+            Copy-Item "$sourceLocalizationProject/*.json" $distLocalizationDir -Force
+            Write-Host "[OK] Copied localization files to distribution directory"
+        }
+
+        # Ensure build-tools/Version.ps1 is available in dist/build-tools
+        $sourceVersionProject = Join-Path $PSScriptRoot "Version.ps1"
+        $distBuildToolsDir = Join-Path $distDir "build-tools"
+        if (Test-Path $sourceVersionProject) {
+            if (-not (Test-Path $distBuildToolsDir)) { New-Item -ItemType Directory -Path $distBuildToolsDir -Force | Out-Null }
+            Copy-Item $sourceVersionProject $distBuildToolsDir -Force
+            Write-Host "[OK] Copied build-tools/Version.ps1 to distribution directory"
+        }
+
+        # Verification summary for required artifacts
+        Write-Host "Checking presence of runtime support files in dist..."
+        $checkPaths = @(
+            (Join-Path $distDir "config"),
+            $distGuiDir,
+            $distModulesDir,
+            $distScriptsDir,
+            $distLocalizationDir,
+            (Join-Path $distBuildToolsDir "Version.ps1")
+        )
+
+        foreach ($p in $checkPaths) {
+            if (Test-Path $p) {
+                Write-Host "  PRESENT: $p"
+            } else {
+                Write-Warning "  MISSING: $p"
+            }
         }
 
         # Clean up intermediate build directory
