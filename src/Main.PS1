@@ -86,36 +86,41 @@ param(
 $currentProcess = Get-Process -Id $PID
 $isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
 
-# When running as executable, ps2exe extracts files to a flat temporary directory
-# $PSScriptRoot points to this extraction directory
+# Define the application root directory
+# This is critical for finding external resources (config, XAML, logs)
 if ($isExecutable) {
-    # Running as compiled executable
-    $workingDir = Split-Path -Parent $currentProcess.Path
+    # In executable mode, the root is the directory where the .exe file is located
+    # ps2exe extracts to temp, but we need the actual exe location
+    $appRoot = Split-Path -Parent $currentProcess.Path
+    $scriptDir = $PSScriptRoot  # Points to temp extraction dir
+} else {
+    # In development (script) mode, calculate the project root relative to the current script
+    # For Main.PS1 in /src, the root is one level up
+    $appRoot = Split-Path -Parent $PSScriptRoot
     $scriptDir = $PSScriptRoot
+}
 
+# Path to external resources relative to $appRoot (not $PSScriptRoot)
+if ($isExecutable) {
     # In bundled mode, all files are in the same directory as the executable
-    $configPath = Join-Path $workingDir "config.json"
-    $messagesPath = Join-Path $workingDir "messages.json"
-    $configEditorExe = Join-Path $workingDir "ConfigEditor.exe"
-    $gameLauncherExe = Join-Path $workingDir "Invoke-FocusGameDeck.exe"
+    $configPath = Join-Path $appRoot "config/config.json"
+    $messagesPath = Join-Path $appRoot "localization/messages.json"
+    $configEditorExe = Join-Path $appRoot "ConfigEditor.exe"
+    $gameLauncherExe = Join-Path $appRoot "Invoke-FocusGameDeck.exe"
 
     # For version and language helper, check both bundled location and working dir
     $versionScriptPath = Join-Path $scriptDir "Version.ps1"
     $languageHelperPath = Join-Path $scriptDir "LanguageHelper.ps1"
 } else {
-    # Running as script (development mode)
-    $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
-    $workingDir = (Get-Location).Path
-    $projectRoot = if ($scriptDir -like "*\src") { Split-Path $scriptDir -Parent } else { $workingDir }
-
-    $configPath = Join-Path $projectRoot "config/config.json"
-    $messagesPath = Join-Path $projectRoot "localization/messages.json"
-    $configEditorExe = Join-Path $projectRoot "build-tools/dist/ConfigEditor.exe"
-    $gameLauncherExe = Join-Path $projectRoot "build-tools/dist/Invoke-FocusGameDeck.exe"
-    $gameLauncherPath = Join-Path $projectRoot "src/Invoke-FocusGameDeck.ps1"
-    $configEditorPath = Join-Path $projectRoot "gui/ConfigEditor.ps1"
-    $versionScriptPath = Join-Path $projectRoot "build-tools/Version.ps1"
-    $languageHelperPath = Join-Path $projectRoot "scripts/LanguageHelper.ps1"
+    # In development (script) mode, use project structure paths
+    $configPath = Join-Path $appRoot "config/config.json"
+    $messagesPath = Join-Path $appRoot "localization/messages.json"
+    $configEditorExe = Join-Path $appRoot "build-tools/dist/ConfigEditor.exe"
+    $gameLauncherExe = Join-Path $appRoot "build-tools/dist/Invoke-FocusGameDeck.exe"
+    $gameLauncherPath = Join-Path $appRoot "src/Invoke-FocusGameDeck.ps1"
+    $configEditorPath = Join-Path $appRoot "gui/ConfigEditor.ps1"
+    $versionScriptPath = Join-Path $appRoot "build-tools/Version.ps1"
+    $languageHelperPath = Join-Path $appRoot "scripts/LanguageHelper.ps1"
 }
 
 # Import required modules if not already loaded

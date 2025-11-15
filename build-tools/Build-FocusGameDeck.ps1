@@ -182,41 +182,9 @@ if ($Build) {
         # Copy ConfigEditor main script
         $configEditorPath = Join-Path -Path $projectRoot "gui/ConfigEditor.ps1"
         if (Test-Path $configEditorPath) {
-            # Read ConfigEditor and patch for bundled execution
-            $configEditorContent = Get-Content $configEditorPath -Raw -Encoding UTF8
-
-            # Patch $projectRoot to handle bundled execution
-            # In bundled mode, all files are at $PSScriptRoot (flat extraction directory)
-            # In development mode, use normal project structure
-            $projectRootPatch = @'
-# Detect execution mode for ps2exe bundling
-$currentProcess = Get-Process -Id $PID
-$isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
-
-if ($isExecutable) {
-    # Running as bundled executable - ps2exe extracts to flat temp directory
-    # All helper scripts are at $PSScriptRoot
-    $projectRoot = Split-Path -Parent $currentProcess.Path$PSScriptRoot
-} else {
-    # Running as script (development mode) - use normal structure
-    $projectRoot = Split-Path -Parent $PSScriptRoot
-    $guiScriptRoot = $PSScriptRoot
-}
-'@
-
-            $configEditorContent = $configEditorContent -replace '\$projectRoot = Split-Path -Parent \$PSScriptRoot', $projectRootPatch
-
-            # Patch module paths to use flat structure when bundled
-            # Replace: Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.XXX.ps1"
-            # With: Join-Path -Path $(if ($isExecutable) { $guiScriptRoot } else { $projectRoot }) -ChildPath $(if ($isExecutable) { "ConfigEditor.XXX.ps1" } else { "gui/ConfigEditor.XXX.ps1" })
-            $configEditorContent = $configEditorContent -replace '(Join-Path -Path \$projectRoot -ChildPath "gui/(ConfigEditor\.[^"]+)")', '(Join-Path -Path $(if ($isExecutable) { $guiScriptRoot } else { $projectRoot }) -ChildPath $(if ($isExecutable) { "$2" } else { "gui/$2" }))'
-
-            # Patch XAML path
-            $configEditorContent = $configEditorContent -replace '(Join-Path -Path \$projectRoot -ChildPath "gui/(MainWindow\.xaml)")', '(Join-Path -Path $(if ($isExecutable) { $guiScriptRoot } else { $projectRoot }) -ChildPath $(if ($isExecutable) { "$2" } else { "gui/$2" }))'
-
-            # Save patched version
-            $configEditorContent | Set-Content (Join-Path $configEditorStaging "ConfigEditor.ps1") -Encoding UTF8 -Force
-            Write-Host "[INFO] Patched ConfigEditor.ps1 for bundled execution"
+            # Copy ConfigEditor.ps1 directly - source already has correct $appRoot logic
+            Copy-Item $configEditorPath (Join-Path $configEditorStaging "ConfigEditor.ps1") -Force
+            Write-Host "[INFO] Copied ConfigEditor.ps1 to staging (source has $appRoot logic)"
 
             # Copy all GUI helper scripts to flat structure (ps2exe will bundle these)
             $guiHelpers = @(
@@ -305,45 +273,34 @@ if ($isExecutable) {
 $currentProcess = Get-Process -Id $PID
 $isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
 
-# Initialize script variables with path resolution for ps2exe bundling
-# When ps2exe bundles files, they are extracted to a flat temporary directory at $PSScriptRoot
-# The actual executable is at a different location: $currentProcess.Path
-$scriptDir = $PSScriptRoot
-
+# Define the application root directory
+# This is critical for finding external resources (config, logs)
 if ($isExecutable) {
-    # Running as bundled executable
-    # Get the directory where the executable is located (not the temp extraction dir)
-    $workingDir = Split-Path -Parent $currentProcess.Path
-
-    # Config and messages are relative to executable location
-    $configPath = Join-Path $workingDir "config/config.json"
-    $messagesPath = Join-Path $workingDir "localization/messages.json"
-
-    # Module scripts are bundled and extracted to $PSScriptRoot (temp directory)
-    $modulePaths = @(
-        (Join-Path $scriptDir "Logger.ps1"),
-        (Join-Path $scriptDir "ConfigValidator.ps1"),
-        (Join-Path $scriptDir "AppManager.ps1"),
-        (Join-Path $scriptDir "OBSManager.ps1"),
-        (Join-Path $scriptDir "PlatformManager.ps1")
-    )
-
-    $languageHelperPath = Join-Path $scriptDir "LanguageHelper.ps1"
+    # In executable mode, the root is the directory where the .exe file is located
+    # ps2exe extracts to temp, but we need the actual exe location for external files
+    $appRoot = Split-Path -Parent $currentProcess.Path
+    $scriptDir = $PSScriptRoot  # Points to temp extraction dir for bundled scripts
 } else {
-    # Running as script (development mode) - use relative paths
-    $configPath = Join-Path $scriptDir "../config/config.json"
-
-    $modulePaths = @(
-        (Join-Path $scriptDir "modules/Logger.ps1"),
-        (Join-Path $scriptDir "modules/ConfigValidator.ps1"),
-        (Join-Path $scriptDir "modules/AppManager.ps1"),
-        (Join-Path $scriptDir "modules/OBSManager.ps1"),
-        (Join-Path $scriptDir "modules/PlatformManager.ps1")
-    )
-
-    $languageHelperPath = Join-Path $scriptDir "../scripts/LanguageHelper.ps1"
-    $messagesPath = Join-Path $scriptDir "../localization/messages.json"
+    # In development (script) mode, calculate the project root relative to the current script
+    # For Invoke-FocusGameDeck.ps1 in /src, the root is one level up
+    $appRoot = Split-Path -Parent $PSScriptRoot
+    $scriptDir = $PSScriptRoot
 }
+
+# Initialize path variables - use $appRoot for external files
+$configPath = Join-Path $appRoot "config/config.json"
+$messagesPath = Join-Path $appRoot "localization/messages.json"
+
+# Module scripts are bundled and extracted to $PSScriptRoot (flat in bundled mode)
+$modulePaths = @(
+    (Join-Path $scriptDir "Logger.ps1"),
+    (Join-Path $scriptDir "ConfigValidator.ps1"),
+    (Join-Path $scriptDir "AppManager.ps1"),
+    (Join-Path $scriptDir "OBSManager.ps1"),
+    (Join-Path $scriptDir "PlatformManager.ps1")
+)
+
+$languageHelperPath = Join-Path $scriptDir "LanguageHelper.ps1"
 
 # Import modules
 foreach ($modulePath in $modulePaths) {

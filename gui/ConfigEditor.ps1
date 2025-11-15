@@ -82,7 +82,24 @@ try {
     Write-Warning "An unexpected error occurred while setting console encoding: $_"
 }
 
-$projectRoot = Split-Path -Parent $PSScriptRoot
+# Detect execution environment to determine application root
+$currentProcess = Get-Process -Id $PID
+$isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
+
+# Define the application root directory
+# This is critical for finding external resources (config, XAML, logs)
+if ($isExecutable) {
+    # In executable mode, the root is the directory where the .exe file is located
+    # ps2exe extracts to temp, but we need the actual exe location for external files
+    $appRoot = Split-Path -Parent $currentProcess.Path
+} else {
+    # In development (script) mode, calculate the project root relative to the current script
+    # For ConfigEditor.ps1 in /gui, the root is one level up
+    $appRoot = Split-Path -Parent $PSScriptRoot
+}
+
+# Use $appRoot for all external file paths (not $PSScriptRoot)
+$projectRoot = $appRoot
 
 # Prerequisites check function
 function Test-Prerequisites {
