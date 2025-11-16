@@ -97,6 +97,7 @@ if ($isExecutable) {
     # For ConfigEditor.ps1 in /gui, the root is one level up
     $appRoot = Split-Path -Parent $PSScriptRoot
 }
+$scriptDir = $PSScriptRoot
 
 # Use $appRoot for all external file paths (not $PSScriptRoot)
 $projectRoot = $appRoot
@@ -112,13 +113,12 @@ function Test-Prerequisites {
         $issues += "PowerShell version 5.0 or higher required. Current: $($PSVersionTable.PSVersion)"
     }
 
-    # Check essential files
+    # Define required external files based on execution mode
     $requiredFiles = @(
-        (Join-Path -Path $projectRoot -ChildPath "gui/MainWindow.xaml"),
-        (Join-Path -Path $projectRoot -ChildPath "localization/messages.json"),
-        (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1"),
-        (Join-Path -Path $projectRoot -ChildPath "config/config.json")
-    )
+            (Join-Path -Path $appRoot -ChildPath "gui/MainWindow.xaml"),
+            (Join-Path -Path $appRoot -ChildPath "localization/messages.json"),
+            (Join-Path -Path $appRoot -ChildPath "config/config.json")
+        )
 
     foreach ($file in $requiredFiles) {
         if (-not (Test-Path $file)) {
@@ -132,7 +132,9 @@ function Test-Prerequisites {
         return $false
     }
 
-    Write-Host "[OK] ConfigEditor: Prerequisites check passed"
+    if ($isExecutable) {
+        Write-Host "[OK] ConfigEditor: Prerequisites check passed"
+    }
     return $true
 }
 
@@ -155,7 +157,7 @@ function Initialize-WpfAssemblies {
 # Load configuration function
 function Import-Configuration {
     try {
-        $configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
+        $configPath = Join-Path -Path $appRoot -ChildPath "config/config.json"
 
         if (-not (Test-Path $configPath)) {
             # Try sample config
@@ -194,7 +196,7 @@ function Test-UIMappings {
 
         $missingMappings = @()
         foreach ($varName in $mappingVariables) {
-            # [修正] ScopeをGlobalからScriptに変更
+            # [fix] Change Scope to Script from Global
             if (-not (Get-Variable -Name $varName -Scope Script -ErrorAction SilentlyContinue)) {
                 $missingMappings += $varName
             }
@@ -206,7 +208,7 @@ function Test-UIMappings {
         }
 
         # Validate mapping structure
-        # [修正] ScopeをGlobalからScriptに変更
+        # [fix] Change Scope to Script from Global
         if ((Get-Variable -Name 'ButtonMappings' -Scope Script -ErrorAction SilentlyContinue).Value.Count -eq 0) {
             Write-Host "[WARNING] ConfigEditor: ButtonMappings is empty"
             return $false
@@ -246,22 +248,76 @@ function Initialize-ConfigEditor {
         # Step 3: NOW we can safely dot-source files that contain WPF types
         Write-Host "[INFO] ConfigEditor: Loading script modules"
 
-        $modulePaths = @(
-            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.JsonHelper.ps1"),    # Load JSON helper first
-            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1"),      # Load mappings first
-            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.State.ps1"),
-            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Localization.ps1"),
-            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.UI.ps1"),            # UI depends on mappings
-            (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Events.ps1")
+        # Define module list (order matters - dependencies must be loaded first)
+        $moduleNames = @(
+            "ConfigEditor.JsonHelper.ps1",
+            "ConfigEditor.Mappings.ps1",
+            "ConfigEditor.State.ps1",
+            "ConfigEditor.Localization.ps1",
+            "ConfigEditor.UI.ps1",
+            "ConfigEditor.Events.ps1"
         )
 
-        foreach ($modulePath in $modulePaths) {
-            if (Test-Path $modulePath) {
-                . $modulePath
-                Write-Verbose "Loaded: $(Split-Path $modulePath -Leaf)"
-            } else {
-                Write-Error "Required module not found: $modulePath"
-                throw "Missing required module: $(Split-Path $modulePath -Leaf)"
+        if ($isExecutable) {
+            # In executable mode, modules are bundled inside the .exe by ps2exe
+            # ps2exe bundles files from the staging directory where ConfigEditor.ps1 was located
+            # At runtime, they can be dot-sourced as if they were in the same directory as the exe
+            Write-Host "[INFO] ConfigEditor: Running in executable mode - loading bundled modules"
+            Write-Host "[DEBUG] ConfigEditor: appRoot = '$appRoot'"
+            Write-Host "[DEBUG] ConfigEditor: Current directory = '$PWD'"
+
+            # ps2exe makes bundled files available for dot-sourcing from the exe's directory
+            foreach ($moduleName in $moduleNames) {
+                Write-Host "[DEBUG] ConfigEditor: Attempting to load bundled module - $moduleName"
+
+                $loaded = $false
+                $lastError = $null
+
+                # Construct the full path relative to the exe directory
+                # ps2exe bundles files as if they were in the same directory as the main script
+                $modulePath = Join-Path -Path $appRoot -ChildPath $moduleName
+
+                try {
+                    Write-Host "[DEBUG] ConfigEditor: Trying to dot-source - $modulePath"
+                    . $modulePath
+                    Write-Host "[OK] ConfigEditor: Successfully loaded - $moduleName"
+                    Write-Verbose "Loaded: $moduleName"
+                    $loaded = $true
+                } catch {
+                    $lastError = $_.Exception.Message
+                    Write-Host "[ERROR] ConfigEditor: Failed to load - $lastError"
+                }
+
+                if (-not $loaded) {
+                    Write-Host "[ERROR] ConfigEditor: Unable to load bundled module: $moduleName"
+                    Write-Host "[ERROR] ConfigEditor: Path tried: $modulePath"
+                    Write-Host "[ERROR] ConfigEditor: Last error: $lastError"
+
+                    # List files in appRoot to help diagnose
+                    Write-Host "[DEBUG] ConfigEditor: Files in appRoot ($appRoot):"
+                    if (Test-Path $appRoot) {
+                        Get-ChildItem -Path $appRoot -Filter "*.ps1" -ErrorAction SilentlyContinue | ForEach-Object {
+                            Write-Host "[DEBUG] ConfigEditor:   - $($_.Name)"
+                        }
+                    }
+
+                    throw "Missing bundled module: $moduleName"
+                }
+            }
+        } else {
+            # In script mode, load modules from file system
+            Write-Host "[INFO] ConfigEditor: Running in script mode - loading modules from filesystem"
+
+            foreach ($moduleName in $moduleNames) {
+                $modulePath = Join-Path -Path $appRoot -ChildPath "gui/$moduleName"
+                if (Test-Path $modulePath) {
+                    Write-Host "[DEBUG] ConfigEditor: Dot-sourcing module - $modulePath"
+                    . $modulePath
+                    Write-Verbose "Loaded: $(Split-Path $modulePath -Leaf)"
+                } else {
+                    Write-Error "Required module not found: $modulePath"
+                    throw "Missing required module: $moduleName"
+                }
             }
         }
 
@@ -490,8 +546,8 @@ function Initialize-ConfigEditor {
 
         try {
             [System.Windows.MessageBox]::Show(
-                "初期化エラーが発生しました: $($_.Exception.Message)",
-                "エラー",
+                "An initialization error occurred: $($_.Exception.Message)",
+                "Error",
                 [System.Windows.MessageBoxButton]::OK,
                 [System.Windows.MessageBoxImage]::Error
             )

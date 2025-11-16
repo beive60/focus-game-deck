@@ -172,21 +172,12 @@ if ($Build) {
         Write-Host ""
         Write-Host "Building Config Editor (ConfigEditor.exe) with bundled dependencies..."
 
-        # Create staging directory for ConfigEditor
-        $configEditorStaging = Join-Path -Path $buildDir -ChildPath"staging-configEditor"
-        if (Test-Path $configEditorStaging) {
-            Remove-Item $configEditorStaging -Recurse -Force
-        }
-        New-Item -ItemType Directory -Path $configEditorStaging -Force | Out-Null
-
-        # Copy ConfigEditor main script
+        # Define ConfigEditor paths
         $configEditorPath = Join-Path -Path $projectRoot "gui/ConfigEditor.ps1"
         if (Test-Path $configEditorPath) {
-            # Copy ConfigEditor.ps1 directly - source already has correct $appRoot logic
-            Copy-Item $configEditorPath (Join-Path $configEditorStaging "ConfigEditor.ps1") -Force
-            Write-Host "[INFO] Copied ConfigEditor.ps1 to staging (source has $appRoot logic)"
+            $configEditorOutput = Join-Path $buildDir "ConfigEditor.exe"
 
-            # Copy all GUI helper scripts to flat structure (ps2exe will bundle these)
+            # Collect all helper scripts to embed
             $guiHelpers = @(
                 "ConfigEditor.JsonHelper.ps1",
                 "ConfigEditor.Mappings.ps1",
@@ -196,28 +187,33 @@ if ($Build) {
                 "ConfigEditor.Events.ps1"
             )
 
+            $embedFilesHash = @{}
             foreach ($helper in $guiHelpers) {
                 $helperPath = Join-Path $projectRoot "gui/$helper"
                 if (Test-Path $helperPath) {
-                    Copy-Item $helperPath $configEditorStaging -Force
-                    Write-Host "[INFO] Bundled: $helper"
+                    $embedFilesHash[(Join-Path -Path "./" -ChildPath $helper)] = $helperPath
+                    Write-Host "[INFO] Will embed: $helper"
                 }
             }
 
-            # Copy XAML files (these will be external resources at runtime)
-            Copy-Item (Join-Path -Path $projectRoot -ChildPath "gui/MainWindow.xaml") $configEditorStaging -Force -ErrorAction SilentlyContinue
-            Copy-Item (Join-Path -Path $projectRoot -ChildPath "gui/ConfirmSaveChangesDialog.xaml") $configEditorStaging -Force -ErrorAction SilentlyContinue
+            # Add other helper scripts
+            $languageHelper = "scripts/LanguageHelper.ps1"
+            $languageHelperPath = Join-Path -Path $projectRoot -ChildPath $languageHelper
+            if (Test-Path $languageHelperPath) {
+                $embedFilesHash[(Join-Path -Path "./" -ChildPath $languageHelper)] = $languageHelperPath
+                Write-Host "[INFO] Will embed: $languageHelper"
+            }
 
-            # Copy helper scripts (LanguageHelper, Version)
-            Copy-Item (Join-Path -Path $projectRoot -ChildPath"scripts/LanguageHelper.ps1") $configEditorStaging -Force -ErrorAction SilentlyContinue
-            Copy-Item (Join-Path $PSScriptRoot "Version.ps1") $configEditorStaging -Force -ErrorAction SilentlyContinue
+            $versionScript = "Version.ps1"
+            $versionScriptPath = Join-Path -Path $PSScriptRoot -ChildPath $versionScript
+            if (Test-Path $versionScriptPath) {
+                $embedFilesHash[(Join-Path -Path "./" -ChildPath $versionScript)] = $versionScriptPath
+                Write-Host "[INFO] Will embed: Version.ps1"
+            }
 
-            # Now build from staging directory
-            $configEditorInput = Join-Path $configEditorStaging "ConfigEditor.ps1"
-            $configEditorOutput = Join-Path $buildDir "ConfigEditor.exe"
-
+            # Build ps2exe parameters with embedFiles
             $ps2exeParams = @{
-                inputFile = $configEditorInput
+                inputFile = $configEditorPath
                 outputFile = $configEditorOutput
                 title = "Focus Game Deck - Configuration Editor"
                 description = "Focus Game Deck GUI Configuration Editor"
@@ -233,6 +229,11 @@ if ($Build) {
                 $ps2exeParams.Add("iconFile", $iconFile)
             }
 
+            if ($embedFilesHash.Count -gt 0) {
+                $ps2exeParams.Add("embedFiles", $embedFilesHash)
+                Write-Host "[INFO] Embedding $($embedFilesHash.Count) helper files into ConfigEditor.exe"
+            }
+
             ps2exe @ps2exeParams
 
             if (Test-Path $configEditorOutput) {
@@ -240,9 +241,6 @@ if ($Build) {
             } else {
                 Write-Host "[ERROR] Failed to create Config Editor executable."
             }
-
-            # Clean up staging directory
-            Remove-Item $configEditorStaging -Recurse -Force
         } else {
             Write-Host "[ERROR] Config Editor script not found: $configEditorPath"
         }

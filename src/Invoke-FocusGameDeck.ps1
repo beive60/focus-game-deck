@@ -24,13 +24,12 @@ if ($isExecutable) {
     # In executable mode, the root is the directory where the .exe file is located
     # ps2exe extracts to temp, but we need the actual exe location for external files
     $appRoot = Split-Path -Parent $currentProcess.Path
-    $scriptDir = $PSScriptRoot  # Points to temp extraction dir for bundled scripts
 } else {
     # In development (script) mode, calculate the project root relative to the current script
     # For Invoke-FocusGameDeck.ps1 in /src, the root is one level up
     $appRoot = Split-Path -Parent $PSScriptRoot
-    $scriptDir = $PSScriptRoot
 }
+$scriptDir = $PSScriptRoot
 
 # >>> BUILD-TIME-PATCH-START: Path resolution for ps2exe bundling >>>
 # This section will be replaced by the build script (Build-FocusGameDeck.ps1)
