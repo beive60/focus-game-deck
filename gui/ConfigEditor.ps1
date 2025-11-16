@@ -97,7 +97,6 @@ if ($isExecutable) {
     # For ConfigEditor.ps1 in /gui, the root is one level up
     $appRoot = Split-Path -Parent $PSScriptRoot
 }
-$scriptDir = $PSScriptRoot
 
 # Use $appRoot for all external file paths (not $PSScriptRoot)
 $projectRoot = $appRoot
@@ -133,7 +132,7 @@ function Test-Prerequisites {
     }
 
     if ($isExecutable) {
-        Write-Host "[OK] ConfigEditor: Prerequisites check passed"
+        Write-Verbose "[OK] ConfigEditor: Prerequisites check passed"
     }
     return $true
 }
@@ -141,12 +140,12 @@ function Test-Prerequisites {
 # Load WPF assemblies FIRST before any dot-sourcing
 function Initialize-WpfAssemblies {
     try {
-        Write-Host "[INFO] ConfigEditor: Loading WPF assemblies"
+        Write-Verbose "[INFO] ConfigEditor: Loading WPF assemblies"
         Add-Type -AssemblyName PresentationFramework
         Add-Type -AssemblyName PresentationCore
         Add-Type -AssemblyName WindowsBase
         Add-Type -AssemblyName System.Windows.Forms
-        Write-Host "[OK] ConfigEditor: WPF assemblies loaded successfully"
+        Write-Verbose "[OK] ConfigEditor: WPF assemblies loaded successfully"
         return $true
     } catch {
         Write-Error "Failed to load WPF assemblies: $($_.Exception.Message)"
@@ -164,7 +163,7 @@ function Import-Configuration {
             $samplePath = "$configPath.sample"
             if (Test-Path $samplePath) {
                 Copy-Item $samplePath $configPath
-                Write-Host "[INFO] ConfigEditor: Created config.json from sample"
+                Write-Verbose "[INFO] ConfigEditor: Created config.json from sample"
             } else {
                 throw "Configuration file not found: $configPath"
             }
@@ -172,7 +171,7 @@ function Import-Configuration {
 
         $script:ConfigData = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
         $script:ConfigPath = $configPath
-        Write-Host "[OK] ConfigEditor: Configuration loaded successfully"
+        Write-Verbose "[OK] ConfigEditor: Configuration loaded successfully"
 
     } catch {
         Write-Error "Failed to load configuration: $($_.Exception.Message)"
@@ -214,7 +213,7 @@ function Test-UIMappings {
             return $false
         }
 
-        Write-Host "[OK] ConfigEditor: UI mappings validated successfully"
+        Write-Verbose "[OK] ConfigEditor: UI mappings validated successfully"
         return $true
     } catch {
         Write-Warning "Failed to validate UI mappings: $($_.Exception.Message)"
@@ -233,7 +232,7 @@ function Initialize-ConfigEditor {
             Write-Verbose "[DEBUG] ConfigEditor: Manual close required"
         }
 
-        Write-Host "[INFO] ConfigEditor: Initialization started"
+        Write-Verbose "[INFO] ConfigEditor: Initialization started"
 
         # Step 1: Load WPF assemblies FIRST
         if (-not (Initialize-WpfAssemblies)) {
@@ -244,7 +243,7 @@ function Initialize-ConfigEditor {
         Import-Configuration
 
         # Step 3: NOW we can safely dot-source files that contain WPF types
-        Write-Host "[INFO] ConfigEditor: Loading script modules"
+        Write-Verbose "[INFO] ConfigEditor: Loading script modules"
 
         # Define module list (order matters - dependencies must be loaded first)
         $guiModuleNames = @(
@@ -294,12 +293,12 @@ function Initialize-ConfigEditor {
             }
         } else {
             # In script mode, load modules from file system
-            Write-Host "[INFO] ConfigEditor: Running in script mode - loading modules from filesystem"
+            Write-Verbose "[INFO] ConfigEditor: Running in script mode - loading modules from filesystem"
 
             foreach ($guiModuleName in $guiModuleNames) {
                 $guiModulePath = Join-Path -Path $appRoot -ChildPath "gui/$guiModuleName"
                 if (Test-Path $guiModulePath) {
-                    Write-Host "[DEBUG] ConfigEditor: Dot-sourcing module - $guiModulePath"
+                    Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - $guiModulePath"
                     . $guiModulePath
                     Write-Verbose "Loaded: $(Split-Path $guiModulePath -Leaf)"
                 } else {
@@ -309,7 +308,7 @@ function Initialize-ConfigEditor {
             }
         }
 
-        Write-Host "[OK] ConfigEditor: Script modules loaded successfully"
+        Write-Verbose "[OK] ConfigEditor: Script modules loaded successfully"
 
         # Step 3.5: Validate UI mappings
         if (-not (Test-UIMappings)) {
@@ -317,23 +316,23 @@ function Initialize-ConfigEditor {
         }
 
         # Step 3.6: Import additional modules (Version, UpdateChecker, etc.)
-        Write-Host "[INFO] ConfigEditor: Importing additional modules"
+        Write-Verbose "[INFO] ConfigEditor: Importing additional modules"
         Import-AdditionalModules
-        Write-Host "[OK] ConfigEditor: Additional modules imported"
+        Write-Verbose "[OK] ConfigEditor: Additional modules imported"
 
         # Step 4: Initialize localization
-        Write-Host "[INFO] ConfigEditor: Initializing localization"
+        Write-Verbose "[INFO] ConfigEditor: Initializing localization"
         try {
             # Pass shared project root into localization class (PowerShell classes cannot access script-scoped variables)
             $script:Localization = [ConfigEditorLocalization]::new($projectRoot)
-            Write-Host "[OK] ConfigEditor: Localization initialized - Language: $($script:Localization.CurrentLanguage)"
+            Write-Verbose "[OK] ConfigEditor: Localization initialized - Language: $($script:Localization.CurrentLanguage)"
         } catch {
             Write-Error "Failed to initialize localization: $($_.Exception.Message)"
             throw
         }
 
         # Step 5: Initialize state manager with config path
-        Write-Host "[INFO] ConfigEditor: Initializing state manager"
+        Write-Verbose "[INFO] ConfigEditor: Initializing state manager"
         $stateManager = [ConfigEditorState]::new($script:ConfigPath)
         $stateManager.LoadConfiguration()
 
@@ -341,23 +340,23 @@ function Initialize-ConfigEditor {
         if ($null -eq $stateManager.ConfigData) {
             throw "Configuration data is null after loading"
         }
-        Write-Host "[INFO] ConfigEditor: Configuration data structure - $($stateManager.ConfigData.GetType().Name)"
+        Write-Verbose "[INFO] ConfigEditor: Configuration data structure - $($stateManager.ConfigData.GetType().Name)"
 
         $stateManager.SaveOriginalConfig()
-        Write-Host "[OK] ConfigEditor: State manager initialized successfully"
+        Write-Verbose "[OK] ConfigEditor: State manager initialized successfully"
 
         # Store state manager in script scope for access from functions
         $script:StateManager = $stateManager
 
         # Step 6: Initialize UI manager
-        Write-Host "[INFO] ConfigEditor: Initializing UI manager"
+        Write-Verbose "[INFO] ConfigEditor: Initializing UI manager"
         try {
             # Validate mappings are available before creating UI
             if (-not (Get-Variable -Name "ButtonMappings" -Scope Script -ErrorAction SilentlyContinue)) {
                 Write-Host "[WARNING] ConfigEditor: Button mappings not loaded - UI functionality may be limited"
             }
 
-            Write-Host "[DEBUG] ConfigEditor: Creating ConfigEditorUI instance"
+            Write-Verbose "[DEBUG] ConfigEditor: Creating ConfigEditorUI instance"
 
             $allMappings = @{
                 Button = $ButtonMappings
@@ -372,17 +371,17 @@ function Initialize-ConfigEditor {
             # Pass project root into UI class so it can construct file paths without referencing script-scoped variables
             $uiManager = [ConfigEditorUI]::new($stateManager, $allMappings, $script:Localization, $projectRoot)
 
-            Write-Host "[DEBUG] ConfigEditor: ConfigEditorUI instance created - $($null -ne $uiManager)"
+            Write-Verbose "[DEBUG] ConfigEditor: ConfigEditorUI instance created - $($null -ne $uiManager)"
 
             if ($null -eq $uiManager) {
                 throw "Failed to create UI manager"
             }
 
-            Write-Host "[DEBUG] ConfigEditor: Checking uiManager.Window"
+            Write-Verbose "[DEBUG] ConfigEditor: Checking uiManager.Window"
 
             if ($null -eq $uiManager.Window) {
-                Write-Host "[DEBUG] ConfigEditor: uiManager.Window is null"
-                Write-Host "[DEBUG] ConfigEditor: Available uiManager properties:"
+                Write-Verbose "[DEBUG] ConfigEditor: uiManager.Window is null"
+                Write-Verbose "[DEBUG] ConfigEditor: Available uiManager properties:"
                 $uiManager | Get-Member -MemberType Property | ForEach-Object {
                     $propName = $_.Name
                     try {
@@ -394,7 +393,7 @@ function Initialize-ConfigEditor {
                 }
                 throw "UI manager Window is null"
             } else {
-                Write-Host "[DEBUG] ConfigEditor: uiManager.Window type - $($uiManager.Window.GetType().Name)"
+                Write-Verbose "[DEBUG] ConfigEditor: uiManager.Window type - $($uiManager.Window.GetType().Name)"
             }
 
             $script:Window = $uiManager.Window
@@ -402,19 +401,19 @@ function Initialize-ConfigEditor {
             # Store UI manager in script scope for access from functions
             $script:UIManager = $uiManager
 
-            Write-Host "[OK] ConfigEditor: UI manager initialized successfully"
+            Write-Verbose "[OK] ConfigEditor: UI manager initialized successfully"
         } catch {
-            Write-Host "[DEBUG] ConfigEditor: UI Manager initialization error details"
-            Write-Host "[DEBUG] ConfigEditor: Error type - $($_.Exception.GetType().Name)"
-            Write-Host "[DEBUG] ConfigEditor: Error message - $($_.Exception.Message)"
+            Write-Verbose "[DEBUG] ConfigEditor: UI Manager initialization error details"
+            Write-Verbose "[DEBUG] ConfigEditor: Error type - $($_.Exception.GetType().Name)"
+            Write-Verbose "[DEBUG] ConfigEditor: Error message - $($_.Exception.Message)"
             if ($_.Exception.InnerException) {
-                Write-Host "[DEBUG] ConfigEditor: Inner exception - $($_.Exception.InnerException.Message)"
+                Write-Verbose "[DEBUG] ConfigEditor: Inner exception - $($_.Exception.InnerException.Message)"
             }
 
             # Check if mapping-related error
             if ($_.Exception.Message -match "ButtonMappings|Mappings|mapping") {
-                Write-Host "[DEBUG] ConfigEditor: This appears to be a mapping-related error"
-                Write-Host "[DEBUG] ConfigEditor: Verify ConfigEditor.Mappings.ps1 is properly loaded"
+                Write-Verbose "[DEBUG] ConfigEditor: This appears to be a mapping-related error"
+                Write-Verbose "[DEBUG] ConfigEditor: Verify ConfigEditor.Mappings.ps1 is properly loaded"
             }
 
             throw
@@ -433,7 +432,7 @@ function Initialize-ConfigEditor {
         $eventHandler.RegisterAll()
 
         # Step 8: Load data to UI
-        Write-Host "[INFO] ConfigEditor: Loading data to UI"
+        Write-Verbose "[INFO] ConfigEditor: Loading data to UI"
         try {
             if ($null -eq $uiManager) {
                 throw "UIManager is null"
@@ -444,33 +443,33 @@ function Initialize-ConfigEditor {
             $uiManager.LoadDataToUI($stateManager.ConfigData)
 
             # Initialize game launcher list
-            Write-Host "[INFO] ConfigEditor: Initializing game launcher list"
+            Write-Verbose "[INFO] ConfigEditor: Initializing game launcher list"
             $uiManager.UpdateGameLauncherList($stateManager.ConfigData)
 
-            Write-Host "[OK] ConfigEditor: Data loaded to UI successfully"
+            Write-Verbose "[OK] ConfigEditor: Data loaded to UI successfully"
         } catch {
             Write-Host "[ERROR] ConfigEditor: Failed to load data to UI - $($_.Exception.Message)"
-            Write-Host "[DEBUG] ConfigEditor: UIManager exists - $($null -ne $uiManager)"
-            Write-Host "[DEBUG] ConfigEditor: ConfigData exists - $($null -ne $stateManager.ConfigData)"
+            Write-Verbose "[DEBUG] ConfigEditor: UIManager exists - $($null -ne $uiManager)"
+            Write-Verbose "[DEBUG] ConfigEditor: ConfigData exists - $($null -ne $stateManager.ConfigData)"
             throw
         }
 
         # Mark initialization as complete - event handlers can now process user changes
         $script:IsInitializationComplete = $true
-        Write-Host "[OK] ConfigEditor: Initialization completed - UI is ready for user interaction"
+        Write-Verbose "[OK] ConfigEditor: Initialization completed - UI is ready for user interaction"
 
         # Step 9: Show window
-        Write-Host "[INFO] ConfigEditor: Showing window"
+        Write-Verbose "[INFO] ConfigEditor: Showing window"
         try {
             # Debug mode: Auto-close after specified seconds
             if ($DebugMode -and $AutoCloseSeconds -gt 0) {
-                Write-Host "[DEBUG] ConfigEditor: Window will auto-close in $AutoCloseSeconds seconds"
+                Write-Verbose "[DEBUG] ConfigEditor: Window will auto-close in $AutoCloseSeconds seconds"
 
                 # Create a timer to auto-close the window
                 $timer = New-Object System.Windows.Threading.DispatcherTimer
                 $timer.Interval = [TimeSpan]::FromSeconds($AutoCloseSeconds)
                 $timer.Add_Tick({
-                        Write-Host "[DEBUG] ConfigEditor: Auto-closing window"
+                        Write-Verbose "[DEBUG] ConfigEditor: Auto-closing window"
                         $window.Close()
                         $timer.Stop()
                     })
@@ -478,23 +477,23 @@ function Initialize-ConfigEditor {
 
                 # Show window and wait
                 $dialogResult = $window.ShowDialog()
-                Write-Host "[DEBUG] ConfigEditor: Window closed with result - $dialogResult"
+                Write-Verbose "[DEBUG] ConfigEditor: Window closed with result - $dialogResult"
             } elseif ($DebugMode) {
-                Write-Host "[DEBUG] ConfigEditor: Showing window - Manual close required"
+                Write-Verbose "[DEBUG] ConfigEditor: Showing window - Manual close required"
                 $dialogResult = $window.ShowDialog()
-                Write-Host "[DEBUG] ConfigEditor: Window closed with result - $dialogResult"
+                Write-Verbose "[DEBUG] ConfigEditor: Window closed with result - $dialogResult"
             } else {
                 # Normal mode: Use ShowDialog() which properly handles the window lifecycle
                 $dialogResult = $window.ShowDialog()
-                Write-Host "[DEBUG] ConfigEditor: Window closed with result - $dialogResult"
+                Write-Verbose "[DEBUG] ConfigEditor: Window closed with result - $dialogResult"
             }
         } catch {
-            Write-Host "[DEBUG] ConfigEditor: Window show/close error - $($_.Exception.Message)"
+            Write-Verbose "[DEBUG] ConfigEditor: Window show/close error - $($_.Exception.Message)"
         } finally {
             # Ensure proper cleanup
             if ($uiManager) {
                 try {
-                    Write-Host "[DEBUG] ConfigEditor: Final UI manager cleanup"
+                    Write-Verbose "[DEBUG] ConfigEditor: Final UI manager cleanup"
                     $uiManager.Cleanup()
                 } catch {
                     Write-Host "[WARNING] ConfigEditor: Error in final UI manager cleanup - $($_.Exception.Message)"
@@ -502,7 +501,7 @@ function Initialize-ConfigEditor {
             }
             if ($window) {
                 try {
-                    Write-Host "[DEBUG] ConfigEditor: Final window cleanup"
+                    Write-Verbose "[DEBUG] ConfigEditor: Final window cleanup"
                     $window = $null
                 } catch {
                     Write-Host "[WARNING] ConfigEditor: Error in final window cleanup - $($_.Exception.Message)"
@@ -519,7 +518,7 @@ function Initialize-ConfigEditor {
             [System.GC]::Collect()
         }
 
-        Write-Host "[OK] ConfigEditor: Initialization completed"
+        Write-Verbose "[OK] ConfigEditor: Initialization completed"
 
     } catch {
         Write-Host "[ERROR] ConfigEditor: Initialization failed - $($_.Exception.Message)"
@@ -1770,7 +1769,7 @@ function Show-LanguageChangeRestartMessage {
 
             try {
                 $newProcess = [System.Diagnostics.Process]::Start($startInfo)
-                Write-Host "[OK] ConfigEditor: New instance started successfully - PID: $($newProcess.Id)"
+                Write-Verbose "[OK] ConfigEditor: New instance started successfully - PID: $($newProcess.Id)"
             } catch {
                 Write-Host "[WARNING] ConfigEditor: Failed to start new instance - $($_.Exception.Message)"
                 return
@@ -2104,7 +2103,7 @@ $script:IsInitializationComplete = $false
 # Debug helper function to show usage information
 function Show-DebugHelp {
     Write-Host ""
-    Write-Host "[INFO] ConfigEditor: Debug Mode Usage"
+    Write-Verbose "[INFO] ConfigEditor: Debug Mode Usage"
     Write-Host ""
     Write-Host "Start with debug mode (manual close):"
     Write-Host "  gui\ConfigEditor.ps1 -DebugMode"
