@@ -33,7 +33,7 @@ launcher-debug.txt
 .vscode/keybindings.json
 
 # User logs
-src/logs/*.log
+*.log
 
 # Temporary backup files
 *.backup

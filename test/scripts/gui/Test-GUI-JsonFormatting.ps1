@@ -79,7 +79,7 @@ $lines[0..14] | ForEach-Object {
     if ($_ -match '^( +)(.*)$') {
         $indent = $matches[1]
         $content = $matches[2]
-        Write-Host "$indent" -NoNewline -ForegroundColor DarkGray
+        Write-Host "$indent" -NoNewline
         Write-Host "$content"
     } else {
         Write-Host $_

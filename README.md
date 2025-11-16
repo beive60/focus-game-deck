@@ -18,26 +18,49 @@ Focus Game Deck automates your gaming session from start to finish - handling te
 - **Zero-Config Setup** - Intelligent defaults with optional GUI configuration
 - **Robust Design** - Comprehensive validation and cleanup even if interrupted
 - **Gaming Integrations** - Built-in support for OBS, VTube Studio, Discord
-- **Single-File Distribution** - Digitally signed executables, no installation required
+- **Secure Architecture** - Three separate, digitally signed executables ensure code integrity
+- **Efficient Design** - Multi-executable architecture optimizes memory usage and startup time
 
 ## Quick Start
 
 ### 1. Launch Focus Game Deck
 
 ```bash
-# Launch unified application (GUI + Game Launcher)
+# Launch GUI configuration editor (default)
 Focus-Game-Deck.exe
+
+# Launch configuration editor explicitly
+Focus-Game-Deck.exe --config
+
+# Launch a specific game directly
+Focus-Game-Deck.exe <game-id>
+
+# List all configured games
+Focus-Game-Deck.exe --list
+
+# Show help
+Focus-Game-Deck.exe --help
 ```
 
 ### 2. Configure & Launch Games
 
-- **Setup**: Configure your games in the "Game Settings" tab
-- **Launch**: Use the "Game Launcher" tab for one-click game launching
-- **Alternative**: Use command line for direct game launch: `Focus-Game-Deck.exe <game-id>`
+- **Setup**: Configure your games using the GUI configuration editor (ConfigEditor.exe)
+- **Launch**: Use command line or desktop shortcuts for one-click game launching
+- **Alternative**: The main executable automatically routes to the appropriate component
 
 ### 3. Generate Shortcuts (Optional)
 
 Generate `launch_[game-id].lnk` files for desktop shortcuts via the GUI settings panel.
+
+## Architecture (v3.0+)
+
+Focus Game Deck uses a secure multi-executable bundle architecture:
+
+- **Focus-Game-Deck.exe** - Main router that delegates to specialized executables
+- **ConfigEditor.exe** - GUI configuration editor (launched when you run Focus-Game-Deck.exe)
+- **Invoke-FocusGameDeck.exe** - Game launcher engine (launched for game sessions)
+
+All three executables are digitally signed to ensure code integrity. See [Architecture Documentation](docs/developer-guide/architecture.md) for details.
 
 ## Prerequisites
 

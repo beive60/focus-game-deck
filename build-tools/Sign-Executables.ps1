@@ -138,7 +138,7 @@ function Get-CodeSigningCertificates {
             Write-Host "Status: VALID"
         }
 
-        Write-Host ("-" * 50) -ForegroundColor Gray
+        Write-Host ("-" * 50)
     }
 
     return $certs
@@ -245,12 +245,12 @@ function Add-CodeSignature {
         $isSignatureTrusted = $signature.Status -eq "Valid"
 
         Write-Host "Signature analysis for: $fileName"
-        Write-Host "Signature applied: $($isSignatureApplied)" -ForegroundColor $(if($isSignatureApplied) {"Green"} else {"Red"})
-        Write-Host "Signature trusted: $($isSignatureTrusted)" -ForegroundColor $(if($isSignatureTrusted) {"Green"} else {"Yellow"})
-        Write-Host "Signature status: $($signature.Status)" -ForegroundColor Gray
+        Write-Host "Signature applied: $($isSignatureApplied)" -ForegroundColor $(if ($isSignatureApplied) { "Green" } else { "Red" })
+        Write-Host "Signature trusted: $($isSignatureTrusted)" -ForegroundColor $(if ($isSignatureTrusted) { "Green" } else { "Yellow" })
+        Write-Host "Signature status: $($signature.Status)"
 
         if ($signature.SignerCertificate) {
-            Write-Host "Certificate subject: $($signature.SignerCertificate.Subject)" -ForegroundColor Gray
+            Write-Host "Certificate subject: $($signature.SignerCertificate.Subject)"
         }
 
         if ($isSignatureApplied) {
@@ -258,7 +258,7 @@ function Add-CodeSignature {
                 Write-Host "Successfully signed with trusted certificate: $fileName"
             } else {
                 Write-Host "Successfully signed with test/self-signed certificate: $fileName"
-                Write-Host "Note: Certificate is not trusted by system (expected for test certificates)" -ForegroundColor Gray
+                Write-Host "Note: Certificate is not trusted by system (expected for test certificates)"
             }
             return $true
         } else {

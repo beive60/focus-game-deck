@@ -253,10 +253,10 @@ try {
         Write-Host "========================================"
         Write-Host ""
         Write-Host "Original config backed up to:"
-        Write-Host "  $BackupPath" -ForegroundColor Gray
+        Write-Host "  $BackupPath"
         Write-Host ""
         Write-Host "Updated config saved to:"
-        Write-Host "  $ConfigPath" -ForegroundColor Gray
+        Write-Host "  $ConfigPath"
         Write-Host ""
     } else {
         Write-Host ""
@@ -275,7 +275,7 @@ try {
 
     if ($BackupPath -and (Test-Path $BackupPath)) {
         Write-Host "Your original configuration is safe at:"
-        Write-Host "  $BackupPath" -ForegroundColor Gray
+        Write-Host "  $BackupPath"
         Write-Host ""
     }
 

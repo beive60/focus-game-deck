@@ -66,7 +66,7 @@ function Test-ReleaseValidation {
         if ($LASTEXITCODE -eq 0) {
             if ($gitStatus) {
                 $warnings += "Uncommitted changes detected"
-                $gitStatus | ForEach-Object { Write-Host "  $_"}
+                $gitStatus | ForEach-Object { Write-Host "  $_" }
             } else {
                 Write-Host "[OK] Git repository is clean"
             }
@@ -84,7 +84,7 @@ function Test-ReleaseValidation {
     try {
         $versionInfo = Get-ProjectVersionInfo
         Write-Host "[OK] Version file is valid"
-        Write-Host "  Current version: $($versionInfo.FullVersion)" -ForegroundColor Gray
+        Write-Host "  Current version: $($versionInfo.FullVersion)"
     } catch {
         $errors += "Version file validation failed: $($_.Exception.Message)"
     }
@@ -133,12 +133,12 @@ function Test-ReleaseValidation {
     } else {
         if ($errors.Count -gt 0) {
             Write-Host "[ERROR] Errors found:"
-            $errors | ForEach-Object { Write-Host "  - $_"}
+            $errors | ForEach-Object { Write-Host "  - $_" }
         }
 
         if ($warnings.Count -gt 0) {
             Write-Host "[WARNING] Warnings:"
-            $warnings | ForEach-Object { Write-Host "  - $_"}
+            $warnings | ForEach-Object { Write-Host "  - $_" }
         }
 
         return $false
@@ -158,7 +158,7 @@ function Get-GitTags {
                     $date = ($tagInfo -split ' ')[0]
                     $message = ($tagInfo -split ' ', 4)[3]
                     Write-Host "  $_ " -NoNewline
-                    Write-Host "($date) " -NoNewline -ForegroundColor Gray
+                    Write-Host "($date) " -NoNewline
                     Write-Host $message
                 }
             }
@@ -174,7 +174,7 @@ function Show-NextVersions {
     Write-Host "=== Next Version Options ==="
 
     $current = Get-ProjectVersionInfo
-    Write-Host "Current version: $($current.FullVersion)" -ForegroundColor Gray
+    Write-Host "Current version: $($current.FullVersion)"
 
     # Calculate different version bump options
     $major = @{ Major = $current.Major + 1; Minor = 0; Patch = 0; PreRelease = "" }
@@ -235,7 +235,7 @@ function Show-Help {
     Write-Host "  ./Version-Helper.ps1 list-tags"
     Write-Host "  ./Version-Helper.ps1 next"
     Write-Host ""
-    Write-Host "For release management, use Release-Manager.ps1" -ForegroundColor Gray
+    Write-Host "For release management, use Release-Manager.ps1"
 }
 
 # Main execution
