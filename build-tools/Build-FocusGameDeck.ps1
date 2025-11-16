@@ -1,8 +1,33 @@
 <#
 .SYNOPSIS
-    Focus Game Deck application build script - Multi-Executable Bundle Architecture
+    [DEPRECATED] Focus Game Deck application build script - Multi-Executable Bundle Architecture
 
 .DESCRIPTION
+    ================================================================================================
+    ⚠️  DEPRECATION NOTICE - This script is deprecated in favor of specialized tool scripts  ⚠️
+    ================================================================================================
+
+    This monolithic build script has been refactored following the Single Responsibility Principle (SRP).
+    Its functionality has been separated into specialized tool scripts:
+
+    - Install-BuildDependencies.ps1  : Manages ps2exe module installation
+    - Invoke-PsScriptBundler.ps1     : Handles PowerShell script bundling
+    - Build-Executables.ps1          : Compiles executables using ps2exe
+    - Copy-Resources.ps1             : Copies non-executable runtime assets
+    - Sign-Executables.ps1           : Applies digital signatures
+    - Create-Package.ps1             : Creates final distribution package
+    - Release-Manager.ps1            : Orchestrates the complete build workflow
+
+    RECOMMENDED USAGE:
+    - For complete builds: Use Release-Manager.ps1 -Development or -Production
+    - For individual tasks: Use the appropriate specialized tool script
+
+    This script is maintained for backward compatibility but will be removed in a future version.
+    Please update your build processes to use the new tool scripts.
+
+    ================================================================================================
+
+    LEGACY DESCRIPTION:
     This script creates three separate, fully bundled, digitally signed executables:
     1. Focus-Game-Deck.exe - Lightweight router that launches sub-processes
     2. ConfigEditor.exe - Fully bundled GUI configuration editor
@@ -12,32 +37,32 @@
     executables, eliminating the security vulnerability of external unsigned scripts.
 
 .PARAMETER Install
-    Installs the ps2exe module.
-    Use this on first run or when the ps2exe module is not found.
+    [DEPRECATED] Installs the ps2exe module.
+    Use Install-BuildDependencies.ps1 instead.
 
 .PARAMETER Build
-    Builds all three application executables.
-    Creates Focus-Game-Deck.exe, ConfigEditor.exe, and Invoke-FocusGameDeck.exe.
+    [DEPRECATED] Builds all three application executables.
+    Use Build-Executables.ps1 instead.
 
 .PARAMETER Clean
-    Removes build artifacts and cache files.
-    Completely deletes build and dist directories to clean up the environment.
+    [DEPRECATED] Removes build artifacts and cache files.
+    Use Release-Manager.ps1 -Clean instead.
 
 .PARAMETER Sign
-    Applies digital signature to the created executable files.
-    Signing configuration must be set up in build-tools/signing-config/signing-config.json.
+    [DEPRECATED] Applies digital signature to the created executable files.
+    Use Sign-Executables.ps1 -SignAll instead.
 
 .PARAMETER All
-    Executes all operations (Install, Clean, Build, Sign) sequentially.
-    Use this when you want to run the complete build process at once.
+    [DEPRECATED] Executes all operations (Install, Clean, Build, Sign) sequentially.
+    Use Release-Manager.ps1 -Production instead.
 
 .EXAMPLE
     .\Build-FocusGameDeck.ps1 -Install
-    Installs the ps2exe module.
+    [DEPRECATED] Use: .\Install-BuildDependencies.ps1
 
 .EXAMPLE
     .\Build-FocusGameDeck.ps1 -Build
-    Builds all three executables.
+    [DEPRECATED] Use: .\Build-Executables.ps1
 
 .EXAMPLE
     .\Build-FocusGameDeck.ps1 -All
@@ -47,6 +72,9 @@
     Version: 3.0.0 - Multi-Executable Bundle Architecture
     Author: Focus Game Deck Development Team
     This script requires Windows PowerShell 5.1 or later.
+
+    STATUS: DEPRECATED - Use specialized tool scripts instead
+    See DEPRECATION NOTICE in DESCRIPTION for replacement scripts.
 #>
 
 param(
@@ -56,6 +84,38 @@ param(
     [switch]$Sign,
     [switch]$All
 )
+
+# Display deprecation warning
+function Show-DeprecationWarning {
+    Write-Host ""
+    Write-Host "================================================================================================" -ForegroundColor Yellow
+    Write-Host "⚠️  DEPRECATION WARNING" -ForegroundColor Yellow
+    Write-Host "================================================================================================" -ForegroundColor Yellow
+    Write-Host "This script (Build-FocusGameDeck.ps1) is DEPRECATED and will be removed in a future version." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "The build system has been refactored following the Single Responsibility Principle." -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "Please use the new specialized tool scripts:" -ForegroundColor White
+    Write-Host "  - Install-BuildDependencies.ps1  : Install ps2exe module" -ForegroundColor White
+    Write-Host "  - Build-Executables.ps1          : Build executables" -ForegroundColor White
+    Write-Host "  - Copy-Resources.ps1             : Copy runtime resources" -ForegroundColor White
+    Write-Host "  - Sign-Executables.ps1           : Sign executables" -ForegroundColor White
+    Write-Host "  - Create-Package.ps1             : Create release package" -ForegroundColor White
+    Write-Host "  - Release-Manager.ps1            : Orchestrate complete workflow" -ForegroundColor White
+    Write-Host ""
+    Write-Host "Recommended commands:" -ForegroundColor Cyan
+    Write-Host "  Development build: .\Release-Manager.ps1 -Development" -ForegroundColor Green
+    Write-Host "  Production build:  .\Release-Manager.ps1 -Production" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "This script will continue to work but is no longer maintained." -ForegroundColor Yellow
+    Write-Host "================================================================================================" -ForegroundColor Yellow
+    Write-Host ""
+
+    Start-Sleep -Seconds 3
+}
+
+# Show deprecation warning whenever this script is executed
+Show-DeprecationWarning
 
 # Check if ps2exe is installed
 function Test-PS2EXE {

@@ -4,6 +4,9 @@
 
 This document describes the comprehensive build system implemented for Focus Game Deck, including executable generation, digital signature infrastructure, and automated release packaging.
 
+The build system follows the **Single Responsibility Principle (SRP)**, separating build tasks into specialized tool scripts coordinated by a single orchestrator.
+This architecture provides better maintainability, testability, and flexibility.
+
 ## Configuration File Security
 
 ### Sensitive Data Management
@@ -12,30 +15,29 @@ This document describes the comprehensive build system implemented for Focus Gam
 
 ## Build System Architecture
 
-### Three-Tier Build System
+### SRP-Based Architecture (v3.0+)
 
-The build system consists of three tiers, each with specific responsibilities:
-
-1. **Individual Component Builds** - Single-purpose scripts for specific components
-2. **Integrated Build Scripts** - Orchestrate multiple components
-3. **Master Build Orchestration** - Complete workflow management
+The build system consists of specialized tool scripts, each with a single responsibility, coordinated by an orchestrator:
 
 ```text
-build-tools/Release-Manager.ps1 (Tier 3: Orchestration)
-├── build-tools/
-│   ├── Build-FocusGameDeck.ps1 (Tier 2: Integration)
-│   │   ├── ps2exe compilation for main applications
-│   │   ├── Configuration file management
-│   │   └── Build artifact organization
-│   └── Sign-Executables.ps1 (Tier 2: Security)
-│       ├── Certificate validation and management
-│       ├── Automated code signing
-│       └── Signature verification
-└── Release package generation
-    ├── Distribution directory creation
-    ├── Documentation generation
-    └── Version metadata creation
+Release-Manager.ps1 (Orchestrator)
+├── Install-BuildDependencies.ps1  (Tool: Dependency installation)
+├── Invoke-PsScriptBundler.ps1    (Tool: Script bundling)
+├── Build-Executables.ps1          (Tool: Executable compilation)
+├── Copy-Resources.ps1             (Tool: Resource copying)
+├── Sign-Executables.ps1           (Tool: Code signing)
+└── Create-Package.ps1             (Tool: Package creation)
+
+Build-FocusGameDeck.ps1 [DEPRECATED]
+└── Legacy monolithic build script (maintained for backward compatibility)
 ```
+
+**Key Benefits:**
+
+- **Maintainability**: Each script has a single, well-defined responsibility
+- **Testability**: Individual components can be tested in isolation
+- **Reusability**: Tool scripts can be used independently or composed
+- **Flexibility**: Easy to modify workflows without affecting other components
 
 ## Build-Time Patching Architecture
 
@@ -254,28 +256,113 @@ To add a new entry point that requires build-time patching:
 - Build time tracking and reporting
 - Release package generation
 
-### Build-FocusGameDeck.ps1
+### Tool Scripts (Specialized Workers)
 
-**Purpose**: Core executable generation and build artifact management.
+#### Install-BuildDependencies.ps1
+
+**Purpose**: Manage build environment setup.
+
+**Responsibility**: Checks for and installs required PowerShell modules (primarily ps2exe).
 
 **Usage**:
 
 ```powershell
-# Install ps2exe module
-./build-tools/Build-FocusGameDeck.ps1 -Install
+# Install dependencies
+./build-tools/Install-BuildDependencies.ps1
 
-# Build all executables
-./build-tools/Build-FocusGameDeck.ps1 -Build
+# Force reinstall
+./build-tools/Install-BuildDependencies.ps1 -Force
 
-# Sign existing build
-./build-tools/Build-FocusGameDeck.ps1 -Sign
-
-# Clean build artifacts
-./build-tools/Build-FocusGameDeck.ps1 -Clean
-
-# Complete workflow (install, build, sign)
-./build-tools/Build-FocusGameDeck.ps1 -All
+# Verbose output
+./build-tools/Install-BuildDependencies.ps1 -Verbose
 ```
+
+#### Invoke-PsScriptBundler.ps1
+
+**Purpose**: Handle PowerShell script preprocessing and bundling.
+
+**Responsibility**: Reads entry-point scripts, recursively resolves dot-sourced dependencies, and concatenates them into single flat .ps1 files.
+
+**Usage**:
+
+```powershell
+# Bundle a script
+./build-tools/Invoke-PsScriptBundler.ps1 -EntryPoint "gui/ConfigEditor.ps1" -OutputPath "build/ConfigEditor-bundled.ps1"
+
+# With explicit project root
+./build-tools/Invoke-PsScriptBundler.ps1 -EntryPoint "src/Invoke-FocusGameDeck.ps1" -OutputPath "build/Invoke-bundled.ps1" -ProjectRoot "C:/project"
+```
+
+#### Build-Executables.ps1
+
+**Purpose**: Compile executables using ps2exe.
+
+**Responsibility**: Takes bundled scripts as input and manages ps2exe compilation parameters for each target executable.
+
+**Usage**:
+
+```powershell
+# Build all executables
+./build-tools/Build-Executables.ps1
+
+# Custom directories
+./build-tools/Build-Executables.ps1 -BuildDir "custom/build" -OutputDir "custom/dist"
+
+# Verbose output
+./build-tools/Build-Executables.ps1 -Verbose
+```
+
+#### Copy-Resources.ps1
+
+**Purpose**: Copy all non-executable assets.
+
+**Responsibility**: Copies runtime files not compiled into executables (JSON, XAML, documentation).
+
+**Usage**:
+
+```powershell
+# Copy all resources
+./build-tools/Copy-Resources.ps1
+
+# Custom destination
+./build-tools/Copy-Resources.ps1 -DestinationDir "custom/output"
+
+# Verbose output
+./build-tools/Copy-Resources.ps1 -Verbose
+```
+
+#### Create-Package.ps1
+
+**Purpose**: Create the final distribution package.
+
+**Responsibility**: Assembles all build artifacts into the release/ directory with documentation.
+
+**Usage**:
+
+```powershell
+# Create release package
+./build-tools/Create-Package.ps1
+
+# Create signed package
+./build-tools/Create-Package.ps1 -IsSigned
+
+# With explicit version
+./build-tools/Create-Package.ps1 -Version "3.0.0" -IsSigned
+```
+
+#### Build-FocusGameDeck.ps1 [DEPRECATED]
+
+**Status**: Deprecated in favor of specialized tool scripts.
+
+**Purpose**: Legacy monolithic build script (maintained for backward compatibility).
+
+**Migration**:
+
+- Use `Install-BuildDependencies.ps1` instead of `-Install`
+- Use `Build-Executables.ps1` instead of `-Build`
+- Use `Release-Manager.ps1 -Production` instead of `-All`
+
+**Note**: This script displays a deprecation warning and will be removed in a future version.
 
 **Generated Executables (v3.0+ Multi-Executable Bundle Architecture)**:
 
@@ -424,17 +511,30 @@ focus-game-deck/
 
 ## Development Workflow
 
+### Quick Start
+
+```powershell
+# Complete development build (recommended)
+./build-tools/Release-Manager.ps1 -Development
+
+# This orchestrates:
+# 1. Install-BuildDependencies.ps1  - Install ps2exe if needed
+# 2. Build-Executables.ps1          - Build all executables
+# 3. Copy-Resources.ps1             - Copy runtime resources
+# 4. Create-Package.ps1             - Create release package (unsigned)
+```
+
 ### Daily Development Build
 
 ```powershell
-# Quick development build
-./build-tools/Release-Manager.ps1 -Development
+# Quick development build with verbose output
+./build-tools/Release-Manager.ps1 -Development -Verbose
 
-# This will:
-# 1. Install ps2exe if needed
-# 2. Build all executables
-# 3. Create release package (unsigned)
-# 4. Generate build report
+# Individual steps (for debugging):
+./build-tools/Install-BuildDependencies.ps1  # Setup only
+./build-tools/Build-Executables.ps1          # Build only
+./build-tools/Copy-Resources.ps1             # Copy only
+./build-tools/Create-Package.ps1             # Package only
 ```
 
 ### Production Release Build
@@ -443,12 +543,28 @@ focus-game-deck/
 # Complete production build
 ./build-tools/Release-Manager.ps1 -Production
 
-# This will:
-# 1. Install ps2exe if needed
-# 2. Build all executables
-# 3. Apply digital signatures (if configured)
-# 4. Create signed distribution package
-# 5. Generate signature verification report
+# This orchestrates:
+# 1. Install-BuildDependencies.ps1  - Install ps2exe if needed
+# 2. Build-Executables.ps1          - Build all executables
+# 3. Copy-Resources.ps1             - Copy runtime resources
+# 4. Sign-Executables.ps1           - Apply digital signatures (if configured)
+# 5. Create-Package.ps1             - Create signed distribution package
+```
+
+### Workflow Visualization
+
+```text
+Development Build:
+  Install → Build → Copy → Package
+
+Production Build:
+  Install → Build → Copy → Sign → Package
+
+Setup Only:
+  Install (stop)
+
+Clean:
+  Remove all artifacts
 ```
 
 ### Build Verification
@@ -568,6 +684,6 @@ This provides:
 
 ---
 
-**Last Updated**: September 24, 2025
-**Version**: 1.2.0
+**Last Updated**: November 16, 2025
+**Version**: 3.0.0 - SRP Architecture Refactoring
 **Maintainer**: Focus Game Deck Development Team

@@ -9,11 +9,13 @@ This document provides a comprehensive guide for building, testing, and deployin
 ### Architecture Changes
 
 **Before (v2.x):**
+
 - Single signed `Focus-Game-Deck.exe` that executed external, unsigned `.ps1` scripts
 - Security vulnerability: malicious actors could modify external scripts
 - Code signature could not prevent tampered external code from running
 
 **After (v3.0):**
+
 - Three separate, digitally signed executables with bundled PowerShell code:
   1. **Focus-Game-Deck.exe** (30-40KB) - Main router (no dependencies)
   2. **ConfigEditor.exe** (75-100KB) - GUI with bundled helper scripts
@@ -31,6 +33,7 @@ When ps2exe bundles files, it extracts them to a flat temporary directory at run
 - **Invoke-FocusGameDeck.exe**: Bundles all 10 module scripts (src/modules/*.ps1)
 
 **Path Resolution:**
+
 ```powershell
 # Bundled scripts detect execution mode
 $isExecutable = (Get-Process -Id $PID).ProcessName -ne 'pwsh' -and ...
@@ -61,6 +64,7 @@ The build script now uses staging directories:
 3. **Result**: All PS1 dependencies are bundled into the executable
 
 Example for Invoke-FocusGameDeck.exe:
+
 ```
 staging-gamelauncher/
 ├── Invoke-FocusGameDeck.ps1 (main script)
@@ -343,7 +347,7 @@ Monitor memory usage of each executable:
 
 ```powershell
 # Get memory usage
-Get-Process Focus-Game-Deck, ConfigEditor, Invoke-FocusGameDeck | 
+Get-Process Focus-Game-Deck, ConfigEditor, Invoke-FocusGameDeck |
   Select-Object ProcessName, @{N='MemoryMB';E={[math]::Round($_.WorkingSet64/1MB,2)}}
 
 # Expected ranges:
@@ -427,9 +431,9 @@ The multi-executable architecture enables:
 
 For issues or questions:
 
-- Create an issue: https://github.com/beive60/focus-game-deck/issues
-- See documentation: https://github.com/beive60/focus-game-deck/docs
-- Review changelog: https://github.com/beive60/focus-game-deck/releases
+- Create an issue: <https://github.com/beive60/focus-game-deck/issues>
+- See documentation: <https://github.com/beive60/focus-game-deck/docs>
+- Review changelog: <https://github.com/beive60/focus-game-deck/releases>
 
 ---
 

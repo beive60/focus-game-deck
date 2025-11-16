@@ -9,8 +9,7 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                "./build-tools/Build-FocusGameDeck.ps1",
-                "-Install"
+                "./build-tools/Install-BuildDependencies.ps1"
             ],
             "group": "build",
             "presentation": {
@@ -24,7 +23,7 @@
             "runOptions": {
                 "runOn": "default"
             },
-            "detail": "Install required ps2exe module for building executables"
+            "detail": "Install required ps2exe module for building executables (uses specialized tool script)"
         },
         {
             "label": "[SETUP] Build Environment Only",
@@ -117,8 +116,7 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                "./build-tools/Build-FocusGameDeck.ps1",
-                "-Build"
+                "./build-tools/Build-Executables.ps1"
             ],
             "group": "build",
             "presentation": {
@@ -133,7 +131,7 @@
             "runOptions": {
                 "runOn": "default"
             },
-            "detail": "Build executables only without full release workflow"
+            "detail": "Build executables only without full release workflow (uses specialized tool script)"
         },
         {
             "label": "[CLEAN] Delete All Build Artifacts",
