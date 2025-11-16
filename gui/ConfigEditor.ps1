@@ -115,10 +115,10 @@ function Test-Prerequisites {
 
     # Define required external files based on execution mode
     $requiredFiles = @(
-            (Join-Path -Path $appRoot -ChildPath "gui/MainWindow.xaml"),
-            (Join-Path -Path $appRoot -ChildPath "localization/messages.json"),
-            (Join-Path -Path $appRoot -ChildPath "config/config.json")
-        )
+        (Join-Path -Path $appRoot -ChildPath "gui/MainWindow.xaml"),
+        (Join-Path -Path $appRoot -ChildPath "localization/messages.json"),
+        (Join-Path -Path $appRoot -ChildPath "config/config.json")
+    )
 
     foreach ($file in $requiredFiles) {
         if (-not (Test-Path $file)) {
@@ -226,13 +226,11 @@ function Test-UIMappings {
 function Initialize-ConfigEditor {
     try {
         # Debug mode information
-        if ($DebugMode) {
-            Write-Host "[DEBUG] ConfigEditor: Debug mode enabled"
-            if ($AutoCloseSeconds -gt 0) {
-                Write-Host "[DEBUG] ConfigEditor: Auto-close timer - $AutoCloseSeconds seconds"
-            } else {
-                Write-Host "[DEBUG] ConfigEditor: Manual close required"
-            }
+        Write-Verbose "[DEBUG] ConfigEditor: Debug mode enabled"
+        if ($AutoCloseSeconds -gt 0) {
+            Write-Verbose "[DEBUG] ConfigEditor: Auto-close timer - $AutoCloseSeconds seconds"
+        } else {
+            Write-Verbose "[DEBUG] ConfigEditor: Manual close required"
         }
 
         Write-Host "[INFO] ConfigEditor: Initialization started"
@@ -249,7 +247,7 @@ function Initialize-ConfigEditor {
         Write-Host "[INFO] ConfigEditor: Loading script modules"
 
         # Define module list (order matters - dependencies must be loaded first)
-        $moduleNames = @(
+        $guiModuleNames = @(
             "ConfigEditor.JsonHelper.ps1",
             "ConfigEditor.Mappings.ps1",
             "ConfigEditor.State.ps1",
@@ -261,27 +259,26 @@ function Initialize-ConfigEditor {
         if ($isExecutable) {
             # In executable mode, modules are bundled inside the .exe by ps2exe
             # ps2exe bundles files from the staging directory where ConfigEditor.ps1 was located
-            # At runtime, they can be dot-sourced as if they were in the same directory as the exe
-            Write-Host "[INFO] ConfigEditor: Running in executable mode - loading bundled modules"
-            Write-Host "[DEBUG] ConfigEditor: appRoot = '$appRoot'"
-            Write-Host "[DEBUG] ConfigEditor: Current directory = '$PWD'"
+            Write-Verbose "[INFO] ConfigEditor: Running in executable mode - loading bundled modules"
+            Write-Verbose "[DEBUG] ConfigEditor: appRoot = '$appRoot'"
+            Write-Verbose "[DEBUG] ConfigEditor: Current directory = '$PWD'"
 
             # ps2exe makes bundled files available for dot-sourcing from the exe's directory
-            foreach ($moduleName in $moduleNames) {
-                Write-Host "[DEBUG] ConfigEditor: Attempting to load bundled module - $moduleName"
+            foreach ($guiModuleName in $guiModuleNames) {
+                Write-Verbose "[DEBUG] ConfigEditor: Attempting to load bundled module - $guiModuleName"
 
                 $loaded = $false
                 $lastError = $null
 
                 # Construct the full path relative to the exe directory
                 # ps2exe bundles files as if they were in the same directory as the main script
-                $modulePath = Join-Path -Path $appRoot -ChildPath $moduleName
+                $guiModulePath = Join-Path -Path $appRoot -ChildPath $guiModuleName
 
                 try {
-                    Write-Host "[DEBUG] ConfigEditor: Trying to dot-source - $modulePath"
-                    . $modulePath
-                    Write-Host "[OK] ConfigEditor: Successfully loaded - $moduleName"
-                    Write-Verbose "Loaded: $moduleName"
+                    Write-Verbose "[DEBUG] ConfigEditor: Trying to dot-source - $guiModulePath"
+                    . $guiModulePath
+                    Write-Verbose "[OK] ConfigEditor: Successfully loaded - $guiModuleName"
+                    Write-Verbose "Loaded: $guiModuleName"
                     $loaded = $true
                 } catch {
                     $lastError = $_.Exception.Message
@@ -289,34 +286,25 @@ function Initialize-ConfigEditor {
                 }
 
                 if (-not $loaded) {
-                    Write-Host "[ERROR] ConfigEditor: Unable to load bundled module: $moduleName"
-                    Write-Host "[ERROR] ConfigEditor: Path tried: $modulePath"
-                    Write-Host "[ERROR] ConfigEditor: Last error: $lastError"
-
-                    # List files in appRoot to help diagnose
-                    Write-Host "[DEBUG] ConfigEditor: Files in appRoot ($appRoot):"
-                    if (Test-Path $appRoot) {
-                        Get-ChildItem -Path $appRoot -Filter "*.ps1" -ErrorAction SilentlyContinue | ForEach-Object {
-                            Write-Host "[DEBUG] ConfigEditor:   - $($_.Name)"
-                        }
-                    }
-
-                    throw "Missing bundled module: $moduleName"
+                    Write-Host "[ERROR] ConfigEditor: Unable to load bundled module: $guiModuleName"
+                    Write-Verbose "[ERROR] ConfigEditor: Path tried: $guiModulePath"
+                    Write-Verbose "[ERROR] ConfigEditor: Last error: $lastError"
+                    throw "Missing bundled module: $guiModuleName"
                 }
             }
         } else {
             # In script mode, load modules from file system
             Write-Host "[INFO] ConfigEditor: Running in script mode - loading modules from filesystem"
 
-            foreach ($moduleName in $moduleNames) {
-                $modulePath = Join-Path -Path $appRoot -ChildPath "gui/$moduleName"
-                if (Test-Path $modulePath) {
-                    Write-Host "[DEBUG] ConfigEditor: Dot-sourcing module - $modulePath"
-                    . $modulePath
-                    Write-Verbose "Loaded: $(Split-Path $modulePath -Leaf)"
+            foreach ($guiModuleName in $guiModuleNames) {
+                $guiModulePath = Join-Path -Path $appRoot -ChildPath "gui/$guiModuleName"
+                if (Test-Path $guiModulePath) {
+                    Write-Host "[DEBUG] ConfigEditor: Dot-sourcing module - $guiModulePath"
+                    . $guiModulePath
+                    Write-Verbose "Loaded: $(Split-Path $guiModulePath -Leaf)"
                 } else {
-                    Write-Error "Required module not found: $modulePath"
-                    throw "Missing required module: $moduleName"
+                    Write-Error "Required module not found: $guiModulePath"
+                    throw "Missing required module: $guiModuleName"
                 }
             }
         }
@@ -602,7 +590,7 @@ function Import-AdditionalModules {
             foreach ($functionName in $moduleInfo.GlobalFunctions.Keys) {
                 $globalVarName = $moduleInfo.GlobalFunctions[$functionName]
                 if (Test-Path "function:$functionName") {
-                    Write-Host "[OK] ConfigEditor: $functionName function loaded successfully"
+                    Write-Verbose "[OK] ConfigEditor: $functionName function loaded successfully"
                     Set-Variable -Name $globalVarName -Value (Get-Item "function:$functionName") -Scope Global
                 } else {
                     Write-Host "[WARNING] ConfigEditor: $functionName function not available after loading $moduleName"

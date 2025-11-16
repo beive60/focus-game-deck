@@ -197,18 +197,17 @@ if ($Build) {
             }
 
             # Add other helper scripts
-            $languageHelper = "scripts/LanguageHelper.ps1"
-            $languageHelperPath = Join-Path -Path $projectRoot -ChildPath $languageHelper
-            if (Test-Path $languageHelperPath) {
-                $embedFilesHash[(Join-Path -Path "./" -ChildPath $languageHelper)] = $languageHelperPath
-                Write-Host "[INFO] Will embed: $languageHelper"
-            }
-
-            $versionScript = "Version.ps1"
-            $versionScriptPath = Join-Path -Path $PSScriptRoot -ChildPath $versionScript
-            if (Test-Path $versionScriptPath) {
-                $embedFilesHash[(Join-Path -Path "./" -ChildPath $versionScript)] = $versionScriptPath
-                Write-Host "[INFO] Will embed: Version.ps1"
+            $additionalEmbedScripts = @(
+                "scripts/LanguageHelper.ps1",
+                "Version.ps1",
+                "src/modules/UpdateChecker.ps1"
+            )
+            foreach ($relPath in $additionalEmbedScripts) {
+                $fullPath = Join-Path -Path $projectRoot -ChildPath $relPath
+                if (Test-Path $fullPath) {
+                    $embedFilesHash[$relPath] = $fullPath
+                    Write-Host "[INFO] Will embed: $relPath"
+                }
             }
 
             # Build ps2exe parameters with embedFiles
