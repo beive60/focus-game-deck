@@ -78,19 +78,19 @@ class ConfigEditorLocalization {
     [void]LoadMessages() {
         try {
             if (-not (Test-Path $this.MessagesPath)) {
-                throw "Messages file not found: $($this.MessagesPath)"
+                throw "[ERROR] Messages file not found: $($this.MessagesPath)"
             }
             $messagesContent = Get-Content $this.MessagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
             if ($messagesContent.PSObject.Properties[$this.CurrentLanguage]) {
                 $this.Messages = $messagesContent.($this.CurrentLanguage)
             } else {
-                Write-Warning "Language '$($this.CurrentLanguage)' not found, falling back to English"
+                Write-Verbose "[INFO] Language '$($this.CurrentLanguage)' not found, falling back to English"
                 $this.Messages = $messagesContent.en
                 $this.CurrentLanguage = "en"
             }
-            Write-Host "Loaded messages for language: $($this.CurrentLanguage)"
+            Write-Verbose "[INFO] Loaded messages for language: $($this.CurrentLanguage)"
         } catch {
-            Write-Error "Failed to load messages: $($_.Exception.Message)"
+            Write-Error "[ERROR] Failed to load messages: $($_.Exception.Message)"
             $this.Messages = [PSCustomObject]@{}
         }
     }
@@ -114,11 +114,11 @@ class ConfigEditorLocalization {
                 }
                 return $message
             } else {
-                Write-Warning "Debug: Message key '$Key' not found in current language messages"
+                Write-Warning "[WARNING] Message key '$Key' not found in current language messages"
                 return $Key
             }
         } catch {
-            Write-Warning "Error getting message for key '$Key': $($_.Exception.Message)"
+            Write-Warning "[WARNING] Error getting message for key '$Key': $($_.Exception.Message)"
             return $Key
         }
     }
