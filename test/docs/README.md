@@ -18,14 +18,17 @@ test/
 │   └── Integration.Wrapper.Tests.ps1
 │
 ├── runners/             # Test execution scripts
-│   ├── Invoke-PesterTests.ps1    # Run tests via Pester framework
-│   └── Invoke-AllTests.ps1       # Legacy runner (direct execution)
+│   ├── Invoke-PesterTests.ps1           # Run tests via Pester framework
+│   └── Invoke-AllTests.ps1              # Legacy runner (direct execution)
 │
 ├── docs/                # Test documentation
 │   ├── Manual-Test-Guide.md
 │   └── DEBUG-MODE.md
 │
 ├── pester.config.psd1   # Pester configuration
+├── test-results.xml     # NUnit XML test results
+├── test-results.html    # HTML test report (auto-generated)
+├── Convert-TestResultsToHtml.ps1  # XML to HTML converter
 └── README.md           # This file
 ```
 
@@ -117,6 +120,26 @@ Duration: 15.3s
 - Test results: `test/test-results.xml` (NUnit format)
 - Compatible with CI/CD systems
 
+### HTML Report
+
+Generate visual HTML reports with dark mode support:
+
+```powershell
+test/Convert-TestResultsToHtml.ps1
+```
+
+**Features:**
+
+- Visual test summary with color-coded metrics
+- Automatic dark mode support (follows system preference)
+- Responsive design for all screen sizes
+- Detailed test results with error messages and stack traces
+- Test execution time for each test
+- Bilingual support (English/Japanese)
+- Print-optimized layout
+
+**Output:** `test/test-results.html` or timestamped reports in `test-results/` directory
+
 ## Adding New Tests
 
 ### 1. Create test script in appropriate directory
@@ -149,7 +172,7 @@ This structure was introduced to improve organization:
 - **Before**: All tests in flat `test/` directory (confusing)
 - **After**: Categorized into subdirectories (clear separation)
 
-Existing test scripts were **not modified** - only relocated. This maintains backward compatibility while improving maintainability.
+Existing test scripts were **not modified** - only relocatedThis maintains backward compatibility while improving maintainability.
 
 ## Best Practices
 

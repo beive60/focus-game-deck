@@ -1,5 +1,5 @@
 ﻿# Test About Dialog Placeholder Replacement
-# このスクリプトは Get-LocalizedMessage 関数のプレースホルダー置換機能をテストします
+# This script tests the replacement of placeholders in the About dialog messages
 
 param(
     [switch]$Verbose
