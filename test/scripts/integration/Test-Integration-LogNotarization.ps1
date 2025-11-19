@@ -39,9 +39,9 @@ $testLogFile = Join-Path $testLogDir "test-log-$(Get-Date -Format 'yyyyMMdd-HHmm
 
 # Test results tracking
 $testResults = @{
-    Total   = 0
-    Passed  = 0
-    Failed  = 0
+    Total = 0
+    Passed = 0
+    Failed = 0
     Skipped = 0
 }
 
@@ -49,9 +49,9 @@ function Write-TestHeader {
     param([string]$Title)
 
     Write-Host ""
-    Write-Host "=" * 60
+    Write-Host ("=" * 60)
     Write-Host " $Title"
-    Write-Host "=" * 60
+    Write-Host ("=" * 60)
 }
 
 function Write-TestResult {

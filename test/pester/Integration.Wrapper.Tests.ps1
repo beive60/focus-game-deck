@@ -24,8 +24,8 @@ Describe "Integration Tests" -Tag "Integration" {
                 return
             }
 
-            $output = & $testScript 2>&1
-            $outputText = $output -join "`n"
+            $output = & $testScript *>&1 | Out-String
+            $outputText = $output
 
             # These tests may fail if Discord is not running - that's OK
             if ($outputText -match "Discord.*not running|not found") {
@@ -45,8 +45,8 @@ Describe "Integration Tests" -Tag "Integration" {
                 return
             }
 
-            $output = & $testScript 2>&1
-            $outputText = $output -join "`n"
+            $output = & $testScript *>&1 | Out-String
+            $outputText = $output
 
             # OBS tests may fail if OBS is not running
             if ($outputText -match "OBS.*not running|not found|connection.*failed") {
@@ -66,8 +66,8 @@ Describe "Integration Tests" -Tag "Integration" {
                 return
             }
 
-            $output = & $testScript 2>&1
-            $outputText = $output -join "`n"
+            $output = & $testScript *>&1 | Out-String
+            $outputText = $output
 
             # VTube Studio tests may fail if not running
             if ($outputText -match "VTube Studio.*not running|not found") {
@@ -87,8 +87,9 @@ Describe "Integration Tests" -Tag "Integration" {
                 return
             }
 
-            $output = & $testScript 2>&1
-            $LASTEXITCODE | Should -Be 0 -Because "Log notarization should work without external dependencies"
+            $null = & $testScript *>&1
+            $exitCode = $LASTEXITCODE
+            $exitCode | Should -Be 0 -Because "Log notarization should work without external dependencies (exit code: $exitCode)"
         }
     }
 }

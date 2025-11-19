@@ -43,10 +43,11 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
 
         It "Should execute localization diagnostic without errors" {
             # Capture the output
-            $output = & $TestScriptPath 2>&1
+            $null = & $TestScriptPath *>&1
+            $exitCode = $LASTEXITCODE
 
             # Check that the script executed without throwing errors
-            $LASTEXITCODE | Should -Be 0 -Because "Diagnostic script should complete successfully"
+            $exitCode | Should -Be 0 -Because "Diagnostic script should complete successfully (exit code: $exitCode)"
         }
 
         It "Should generate diagnostic analysis results" {
