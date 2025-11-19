@@ -170,7 +170,7 @@ function New-VersionInfo {
 
 try {
     Write-Host "Focus Game Deck - Package Creator"
-    Write-Host "=" * 50
+    Write-Host ("=" * 60)
 
     if (-not (Test-Path $SourceDir)) {
         Write-PackageMessage "Source directory not found: $SourceDir" "ERROR"
@@ -216,9 +216,9 @@ try {
     Write-Verbose "  Created: version-info.json"
 
     Write-Host ""
-    Write-Host "=" * 50
+    Write-Host ("=" * 60)
     Write-Host "PACKAGE SUMMARY"
-    Write-Host "=" * 50
+    Write-Host ("=" * 60)
 
     Write-Host "Version: $Version"
     Write-Host "Build Date: $buildDate"

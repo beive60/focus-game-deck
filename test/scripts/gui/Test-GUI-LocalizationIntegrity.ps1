@@ -518,9 +518,9 @@ function Write-LocalizationDiagnosticReport {
         [hashtable]$Analysis
     )
 
-    Write-Host "`n" + "="*80
+    Write-Host ("=" * 60)
     Write-Host "LOCALIZATION DIAGNOSTIC REPORT"
-    Write-Host "="*80
+    Write-Host ("=" * 60)
 
     # Summary
     $totalIssues = 0
@@ -530,7 +530,7 @@ function Write-LocalizationDiagnosticReport {
         }
     }
 
-    Write-Host "`nSUMMARY:"
+    Write-Host "SUMMARY:"
     Write-Host "Total Issues Found: $totalIssues"
 
     # Detailed sections
@@ -565,7 +565,7 @@ function Write-LocalizationDiagnosticReport {
         }
     }
 
-    Write-Host "`n" + "="*80
+    Write-Host ("=" * 60)
 }
 
 # Run the diagnostic if script is executed directly
@@ -579,7 +579,27 @@ if ($analysis) {
     $outputDir = Join-Path -Path $projectRoot -ChildPath "gui"
     $outputPath = Join-Path -Path $outputDir -ChildPath "localization-diagnostic-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
     $analysis | ConvertTo-Json -Depth 5 | Out-File -Path $outputPath -Encoding UTF8
-    Write-Host "`nDetailed analysis saved to: $outputPath"
+    Write-Host "Detailed analysis saved to: $outputPath"
+
+    # Calculate total issues for test result
+    $totalIssues = 0
+    foreach ($section in $analysis.Values) {
+        if ($section -is [hashtable] -and $section.ContainsKey('Issues')) {
+            $totalIssues += $section.Issues.Count
+        }
+    }
+
+    # Return appropriate exit code
+    # Exit with 0 (success) but output issue count for Pester to evaluate
+    Write-Host "`n[TEST RESULT] Total Issues: $totalIssues"
+    if ($totalIssues -eq 0) {
+        Write-Host "[PASS] Localization integrity test passed with no issues"
+        exit 0
+    } else {
+        Write-Host "[INFO] Localization diagnostic completed with $totalIssues issues (see report for details)"
+        exit 0
+    }
 } else {
-    Write-Host "Diagnostic failed to complete"
+    Write-Host "[FAIL] Diagnostic failed to complete"
+    exit 1
 }

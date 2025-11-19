@@ -116,7 +116,7 @@ function Copy-DirectoryContents {
 
 try {
     Write-Host "Focus Game Deck - Resource Copier"
-    Write-Host "=" * 50
+    Write-Host ("=" * 60)
 
     if (-not (Test-Path $DestinationDir)) {
         New-Item -ItemType Directory -Path $DestinationDir -Force | Out-Null
@@ -182,9 +182,9 @@ try {
     }
 
     Write-Host ""
-    Write-Host "=" * 50
+    Write-Host ("=" * 60)
     Write-Host "COPY SUMMARY"
-    Write-Host "=" * 50
+    Write-Host ("=" * 60)
 
     $successCount = ($copyResults | Where-Object { $_ -eq $true }).Count
     $totalCount = $copyResults.Count

@@ -208,7 +208,7 @@ $entryContent
 
 try {
     Write-Host "Focus Game Deck - Script Bundler"
-    Write-Host "=" * 50
+    Write-Host ("=" * 60)
 
     $entryPointFull = Join-Path $ProjectRoot $EntryPoint
     if (-not (Test-Path $entryPointFull)) {

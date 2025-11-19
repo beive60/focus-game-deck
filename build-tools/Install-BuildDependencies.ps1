@@ -93,7 +93,7 @@ function Install-PS2EXE {
 
 try {
     Write-Host "Focus Game Deck - Build Dependencies Installer"
-    Write-Host "=" * 50
+    Write-Host ("=" * 60)
 
     $success = Install-PS2EXE -ForceReinstall $Force
 

@@ -127,7 +127,7 @@ function Build-Executable {
 
 try {
     Write-Host "Focus Game Deck - Executable Builder"
-    Write-Host "=" * 50
+    Write-Host ("=" * 60)
 
     if (-not (Test-PS2EXE)) {
         Write-BuildMessage "ps2exe module not found. Please run Install-BuildDependencies.ps1 first." "ERROR"
@@ -201,9 +201,9 @@ try {
         -IconFile $iconFile
 
     Write-Host ""
-    Write-Host "=" * 50
+    Write-Host ("=" * 60)
     Write-Host "BUILD SUMMARY"
-    Write-Host "=" * 50
+    Write-Host ("=" * 60)
 
     $successCount = ($buildResults | Where-Object { $_ -eq $true }).Count
     $totalCount = $buildResults.Count

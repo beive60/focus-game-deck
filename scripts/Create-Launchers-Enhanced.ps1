@@ -183,7 +183,7 @@ function Remove-OldLaunchers {
 # Main execution
 try {
     Write-Host "Focus Game Deck - Enhanced Launcher Creator"
-    Write-Host "=" * 50
+    Write-Host ("=" * 60)
 
     # Load the configuration file
     Write-Host "Loading configuration from: $configPath"
