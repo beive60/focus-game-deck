@@ -75,15 +75,18 @@ Write-Host "Testing JSON File Encoding..."
 # Test config.json
 try {
     $configPath = Join-Path $projectRoot "config/config.json"
+    if (-not (Test-Path $configPath)) {
+        $configPath = Join-Path $projectRoot "config/config.json.sample"
+    }
     $configContent = Get-Content $configPath -Raw -Encoding UTF8
     $null = $configContent | ConvertFrom-Json  # Test parsing
-    Test-Result "config.json UTF-8 parsing" $true
+    Test-Result "config.json(.sample) UTF-8 parsing" $true
 
     $configBytes = [System.IO.File]::ReadAllBytes($configPath)
     $hasBOM = ($configBytes.Length -ge 3 -and $configBytes[0] -eq 0xEF -and $configBytes[1] -eq 0xBB -and $configBytes[2] -eq 0xBF)
-    Test-Result "config.json without BOM" (-not $hasBOM) $(if ($hasBOM) { "BOM detected" } else { "" })
+    Test-Result "config.json(.sample) without BOM" (-not $hasBOM) $(if ($hasBOM) { "BOM detected" } else { "" })
 } catch {
-    Test-Result "config.json validation" $false $_.Exception.Message
+    Test-Result "config.json(.sample) validation" $false $_.Exception.Message
 }
 
 # Test messages.json
@@ -123,6 +126,9 @@ try {
         Test-Result "Logger module loading" $true
 
         $configPath = Join-Path $projectRoot "config/config.json"
+        if (-not (Test-Path $configPath)) {
+            $configPath = Join-Path $projectRoot "config/config.json.sample"
+        }
         if (Test-Path $configPath) {
             $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
@@ -150,7 +156,7 @@ try {
                 Test-Result "Logger compatibility" $false "LanguageHelper.ps1 not found"
             }
         } else {
-            Test-Result "Logger compatibility" $false "config.json not found"
+            Test-Result "Logger compatibility" $false "config.json or config.json.sample not found"
         }
     } else {
         Test-Result "Logger compatibility" $false "Logger.ps1 not found"
