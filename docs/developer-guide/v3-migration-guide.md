@@ -65,8 +65,8 @@ The build script now uses staging directories:
 
 Example for Invoke-FocusGameDeck.exe:
 
-```
-staging-gamelauncher/
+```architecture
+staging-gameLauncher/
 ├── Invoke-FocusGameDeck.ps1 (main script)
 ├── Logger.ps1 (bundled)
 ├── ConfigValidator.ps1 (bundled)
@@ -220,7 +220,7 @@ Get-AuthenticodeSignature build-tools/dist/*.exe | Format-Table Path, Status, Si
 
 ### Package Structure
 
-```
+```architecture
 FocusGameDeck-v3.0.0/
 ├── Focus-Game-Deck.exe          # Main router (signed)
 ├── ConfigEditor.exe             # GUI editor (signed)

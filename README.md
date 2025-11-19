@@ -26,7 +26,7 @@ Focus Game Deck automates your gaming session from start to finish - handling te
 ### 1. Launch Focus Game Deck
 
 ```bash
-# Launch GUI configuration editor (default)
+# Launch Focus Game Deck (GUI) (default)
 Focus-Game-Deck.exe
 
 # Launch configuration editor explicitly
@@ -83,8 +83,8 @@ All three executables are digitally signed to ensure code integrity. See [Archit
 
 | Document | Purpose |
 |----------|---------|
-| **📖 [Configuration Guide](docs/user-guide/configuration.md)** | Complete setup and configuration instructions |
-| **🔧 [Build System](docs/developer-guide/build-system.md)** | Development build system and security guidelines |
+| **[Configuration Guide](docs/user-guide/configuration.md)** | Complete setup and configuration instructions |
+| **[Build System](docs/developer-guide/build-system.md)** | Development build system and security guidelines |
 | **[Release Process](docs/developer-guide/release-process.md)** | Developer release workflow and procedures |
 | **[Roadmap](docs/project-info/roadmap.md)** | Project timeline and planned features |
 | **[All Documentation](docs/DOCUMENTATION-INDEX.md)** | Complete documentation index |

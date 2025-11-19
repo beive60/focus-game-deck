@@ -75,9 +75,9 @@ The build process is now managed by specialized tool scripts:
 
 The build script creates staging directories with flat structure for ps2exe bundling:
 
-```
+```architecture
 For Invoke-FocusGameDeck.exe:
-staging-gamelauncher/
+staging-gameLauncher/
 ├── Invoke-FocusGameDeck.ps1  (main script)
 ├── Logger.ps1                 (bundled)
 ├── ConfigValidator.ps1        (bundled)
@@ -178,7 +178,7 @@ Example of ps2exe extraction at runtime:
 
 ```architecture
 Original staging structure:
-staging-gamelauncher/
+staging-gameLauncher/
 ├── Invoke-FocusGameDeck.ps1
 ├── Logger.ps1
 ├── AppManager.ps1
@@ -226,7 +226,7 @@ In bundled executable:
 
 **Build Flow:**
 
-```
+```architecture
 1. Install ps2exe (if needed)
    ↓
 2. Create build directory
@@ -326,12 +326,12 @@ This has been refactored into specialized tool scripts, each with a single respo
 
 #### Tool Scripts
 
-**Install-BuildDependencies.ps1**
+**Install-BuildDependencies.ps1:**
 
 - **Responsibility**: Manage ps2exe module installation
 - **Usage**: `./build-tools/Install-BuildDependencies.ps1 [-Force] [-Verbose]`
 
-**Invoke-PsScriptBundler.ps1**
+**Invoke-PsScriptBundler.ps1:**
 
 - **Responsibility**: Resolve dot-sourced dependencies and create bundled scripts
 - **Usage**: `./build-tools/Invoke-PsScriptBundler.ps1 -EntryPoint "src/Main.ps1" -OutputPath "build/Main-bundled.ps1"`
@@ -341,7 +341,7 @@ This has been refactored into specialized tool scripts, each with a single respo
   - Creates single flat .ps1 files for ps2exe
   - Eliminates need for ps2exe's `-embedFiles` parameter
 
-**Build-Executables.ps1**
+**Build-Executables.ps1:**
 
 - **Responsibility**: Compile executables using ps2exe
 - **Usage**: `./build-tools/Build-Executables.ps1 [-BuildDir <path>] [-OutputDir <path>] [-Verbose]`
@@ -350,7 +350,7 @@ This has been refactored into specialized tool scripts, each with a single respo
   - Manages console visibility, STA mode, icons
   - Falls back to non-bundled scripts if bundled versions not found
 
-**Copy-Resources.ps1**
+**Copy-Resources.ps1:**
 
 - **Responsibility**: Copy non-executable runtime assets
 - **Usage**: `./build-tools/Copy-Resources.ps1 [-DestinationDir <path>] [-Verbose]`
@@ -360,12 +360,12 @@ This has been refactored into specialized tool scripts, each with a single respo
   - Copies XAML UI files
   - Copies assets and documentation
 
-**Sign-Executables.ps1**
+**Sign-Executables.ps1:**
 
 - **Responsibility**: Apply digital signatures (unchanged)
 - **Usage**: `./build-tools/Sign-Executables.ps1 -SignAll`
 
-**Create-Package.ps1**
+**Create-Package.ps1:**
 
 - **Responsibility**: Create final distribution package
 - **Usage**: `./build-tools/Create-Package.ps1 [-IsSigned] [-Version <version>] [-Verbose]`
@@ -374,7 +374,7 @@ This has been refactored into specialized tool scripts, each with a single respo
   - Generates README.txt
   - Creates version-info.json
 
-**Release-Manager.ps1**
+**Release-Manager.ps1:**
 
 - **Responsibility**: Orchestrate complete build workflow
 - **Usage**: `./build-tools/Release-Manager.ps1 -Development|-Production [-Verbose]`

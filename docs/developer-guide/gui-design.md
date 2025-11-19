@@ -394,13 +394,6 @@ Show-SafeMessage -MessageKey "configSaved" -TitleKey "info"
 * **Plugin Support**: Integration with external scripts
 * **Cloud Sync**: External storage and sharing of configurations
 
-## Language Support
-
-This documentation is available in multiple languages:
-
-* **English** (Main): [docs/BD_and_FD_for_GUI.md](./BD_and_FD_for_GUI.md)
-* **日本語** (Japanese): [docs/ja/BD_and_FD_for_GUI.md](./ja/BD_and_FD_for_GUI.md)
-
 ---
 
 *This design philosophy is recorded to ensure the technical continuity of the Focus Game Deck project and enable new developers to continue development with consistent policies.*
