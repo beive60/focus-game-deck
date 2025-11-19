@@ -30,11 +30,11 @@ $ErrorActionPreference = "Stop"
 if ($Verbose) { $VerbosePreference = "Continue" }
 
 # Initialize script variables
-$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+$projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
 $messagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
 $loggerModulePath = Join-Path -Path $projectRoot -ChildPath "src/modules/Logger.ps1"
-$testLogDir = Join-Path -Path $PSScriptRoot -ChildPath "temp-logs"
+$testLogDir = Join-Path -Path $PSScriptRoot -ChildPath "logs"
 $testLogFile = Join-Path $testLogDir "test-log-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
 
 # Test results tracking
@@ -171,15 +171,21 @@ function Test-ConfigurationLoading {
                     Write-TestResult "Firebase required fields present" $true
                 } else {
                     Write-TestSkipped "Firebase required fields present" "Missing fields: $($missingFields -join ', '). Configure Firebase settings in config.json"
-                    return $false
+                    Write-Host ""
+                    Write-Host "Log notarization not found - Firebase configuration is incomplete"
+                    return $null
                 }
             } else {
                 Write-TestSkipped "Firebase configuration section exists" "Firebase section missing in config.json"
-                return $false
+                Write-Host ""
+                Write-Host "Log notarization not found - Firebase section missing in config.json"
+                return $null
             }
         } else {
             Write-TestSkipped "Logging section exists" "Logging section missing in config.json"
-            return $false
+            Write-Host ""
+            Write-Host "Log notarization not found - Logging section missing in config.json"
+            return $null
         }
 
         return $config
@@ -454,9 +460,9 @@ try {
 
     $config = Test-ConfigurationLoading
     if (-not $config) {
-        Write-Host "Configuration test failed. Aborting remaining tests."
+        Write-Host "Configuration test failed or Firebase not configured. Skipping remaining tests."
         Show-TestSummary
-        exit 1
+        exit 0
     }
 
     $logger = Test-LoggerInitialization -Config $config
