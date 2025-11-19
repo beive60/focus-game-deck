@@ -117,7 +117,7 @@ $script:StartTime = Get-Date
 
 Write-Host "Focus Game Deck - Master Build Script v$script:Version"
 Write-Host "Build started at: $script:BuildDate"
-Write-Host "=" * 60
+Write-Host ("=" * 60)
 
 # Function to log messages with timestamps
 function Write-BuildLog {
