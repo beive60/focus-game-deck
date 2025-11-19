@@ -67,24 +67,42 @@ Describe "Character Encoding Tests" -Tag "Core", "Encoding" {
         It "should use ASCII-safe markers instead of UTF-8 symbols" {
             $scriptFiles = Get-ChildItem -Path $projectRoot -Filter "*.ps1" -Recurse
             $failedFiles = @()
+            $skippedFiles = @()
+            $checkedCount = 0
 
             foreach ($file in $scriptFiles) {
                 $relativePath = $file.FullName.Replace($projectRoot, "").TrimStart("\", "/")
-                Write-Host "Checking $relativePath"
+
+                # Skip self-check
                 if ($relativePath -eq "test/pester/Core.CharacterEncoding.Tests.ps1") {
-                    Write-Host "Skipping self-check for $relativePath"
+                    $skippedFiles += $relativePath
                     continue
                 }
+
                 $content = Get-Content $file.FullName -Raw -Encoding UTF8
+                $checkedCount++
 
                 # Check that we're not using problematic UTF-8 symbols in console output
                 # Allow them in comments and strings, but not in Write-Host for [OK]/[ERROR]
                 if ($content -match 'Write-Host.*[\p{So}\uFE0F]') {
-                    $failedFiles += $file.Name
+                    $failedFiles += @{
+                        Name = $file.Name
+                        Path = $relativePath
+                    }
                 }
             }
 
-            $failedFiles | Should -BeNullOrEmpty -Because "These files use UTF-8 symbols in console output: $($failedFiles -join ', ')"
+            # Output summary only after all checks are complete
+            Write-Host "Checked $checkedCount files, skipped $($skippedFiles.Count) file(s)" -ForegroundColor Cyan
+
+            if ($failedFiles.Count -gt 0) {
+                Write-Host "Files with UTF-8 symbols in console output:" -ForegroundColor Yellow
+                $failedFiles | ForEach-Object {
+                    Write-Host "  - $($_.Path)" -ForegroundColor Yellow
+                }
+            }
+
+            $failedFiles | Should -BeNullOrEmpty -Because "These files use UTF-8 symbols in console output: $($failedFiles.Name -join ', ')"
         }
     }
 }

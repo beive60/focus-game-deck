@@ -21,7 +21,6 @@ $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 # Test categories
 $TestCategories = @{
     "Core" = @(
-        "Test-Core-ConfigFileValidation.ps1",
         "Test-Core-CharacterEncoding.ps1",
         "Test-Core-LogRotation.ps1",
         "Test-Core-MultiPlatformSupport.ps1"

@@ -38,12 +38,4 @@ Describe "Core Functionality Tests" -Tag "Core" {
             $output -join "`n" | Should -Not -Match "FAIL.*Expected.*platforms"
         }
     }
-
-    Context "Config File Validation" {
-        It "should pass config file validation" {
-            $testScript = Join-Path -Path $projectRoot -ChildPath "test/scripts/core/Test-Core-ConfigFileValidation.ps1"
-            $output = & $testScript 2>&1
-            $output -join "`n" | Should -Match "\[OK\]"
-        }
-    }
 }

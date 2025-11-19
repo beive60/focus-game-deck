@@ -512,7 +512,7 @@ class Logger {
 
             foreach ($logFile in $logFiles) {
                 try {
-                    if ($logFile.LastWriteTime -lt $cutoffDate) {
+                    if ($logFile.LastWriteTime -le $cutoffDate) {
                         $fileSize = $logFile.Length
                         $this.Debug("Deleting old log file: $($logFile.Name) (Last modified: $($logFile.LastWriteTime.ToString('yyyy-MM-dd HH:mm:ss')))", "CLEANUP")
 
