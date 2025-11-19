@@ -63,7 +63,7 @@ Write-Host ""
 
 try {
     # Load required modules
-    $projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+    $projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
     $versionModulePath = Join-Path -Path $projectRoot -ChildPath "build-tools/Version.ps1"
     . $versionModulePath
 

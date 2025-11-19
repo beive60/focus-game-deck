@@ -17,10 +17,11 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
 Write-Host "=== About Dialog Placeholder Replacement Test ==="
+$projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+$VersionModulePath = Join-Path -Path $projectRoot -ChildPath "build-tools/Version.ps1"
 
 try {
     # Import required modules
-    $VersionModulePath = Join-Path $PSScriptRoot "build-tools/Version.ps1"
     if (Test-Path $VersionModulePath) {
         . $VersionModulePath
         Write-Host "[OK] Version module loaded successfully"
@@ -28,7 +29,7 @@ try {
         throw "Version module not found: $VersionModulePath"
     }
 
-    $LanguageHelperPath = Join-Path $PSScriptRoot "scripts/LanguageHelper.ps1"
+    $LanguageHelperPath = Join-Path -Path $projectRoot -ChildPath "scripts/LanguageHelper.ps1"
     if (Test-Path $LanguageHelperPath) {
         . $LanguageHelperPath
         Write-Host "[OK] Language helper loaded successfully"
@@ -45,7 +46,6 @@ try {
 
     # Test message loading
     Write-Host "--- Step 2: Testing message loading ---"
-    $projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
     $messagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
     if (-not (Test-Path $messagesPath)) {
         throw "Messages file not found: $messagesPath"

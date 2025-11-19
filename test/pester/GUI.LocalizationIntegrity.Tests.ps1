@@ -28,8 +28,8 @@
 #>
 
 BeforeAll {
-    $ProjectRoot = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
-    $TestScriptPath = Join-Path -Path $ProjectRoot -ChildPath "test/scripts/gui/Test-GUI-LocalizationIntegrity.ps1"
+    $projectRoot = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
+    $TestScriptPath = Join-Path -Path $projectRoot -ChildPath "test/scripts/gui/Test-GUI-LocalizationIntegrity.ps1"
 
     # Verify test script exists
     if (-not (Test-Path $TestScriptPath)) {
@@ -312,7 +312,7 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
 
         It "Should generate diagnostic output file" {
             # Check if diagnostic JSON file was created
-            $diagnosticFiles = Get-ChildItem -Path (Join-Path -Path $ProjectRoot -ChildPath "gui") -Filter "localization-diagnostic-*.json" -ErrorAction SilentlyContinue
+            $diagnosticFiles = Get-ChildItem -Path (Join-Path -Path $projectRoot -ChildPath "gui") -Filter "localization-diagnostic-*.json" -ErrorAction SilentlyContinue
 
             if ($diagnosticFiles.Count -gt 0) {
                 $latestFile = $diagnosticFiles | Sort-Object LastWriteTime -Descending | Select-Object -First 1

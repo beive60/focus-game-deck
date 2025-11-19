@@ -23,7 +23,7 @@ $ErrorActionPreference = "Stop"
 if ($Verbose) { $VerbosePreference = "Continue" }
 
 # Initialize project root path
-$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+$projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 
 Write-Host "Focus Game Deck - Character Encoding Validation Test"
 Write-Host "Validating implementation guidelines from ARCHITECTURE.md"

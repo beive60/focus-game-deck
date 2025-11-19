@@ -16,7 +16,7 @@ param(
 )
 
 $ErrorActionPreference = "Continue"
-$ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 
 # Test categories
 $TestCategories = @{
@@ -64,7 +64,7 @@ foreach ($category in $TestCategories.Keys) {
     Write-Host "`n--- $category Tests ---`n"
 
     foreach ($testScript in $TestCategories[$category]) {
-        $testPath = Join-Path -Path $ProjectRoot -ChildPath "test/scripts/$category/$testScript"
+        $testPath = Join-Path -Path $projectRoot -ChildPath "test/scripts/$category/$testScript"
 
         if (-not (Test-Path $testPath)) {
             Write-Host "  [SKIP] $testScript (not found)"
@@ -132,12 +132,12 @@ if ($TestResults.Failed -gt 0) {
 # Export results based on format
 switch ($OutputFormat) {
     "JSON" {
-        $jsonPath = Join-Path $ProjectRoot "test" "test-results.json"
+        $jsonPath = Join-Path $projectRoot "test" "test-results.json"
         $TestResults | ConvertTo-Json -Depth 10 | Set-Content $jsonPath -Encoding UTF8
         Write-Host "Results exported to: $jsonPath"
     }
     "HTML" {
-        $htmlPath = Join-Path $ProjectRoot "test" "test-results.html"
+        $htmlPath = Join-Path $projectRoot "test" "test-results.html"
         # Generate HTML report (simplified)
         $html = @"
 <!DOCTYPE html>

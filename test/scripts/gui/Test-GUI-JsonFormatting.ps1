@@ -18,7 +18,7 @@ Write-Host "=== JSON Formatting Test ==="
 Write-Host ""
 
 # Get project root
-$projectRoot = Split-Path $PSScriptRoot -Parent
+$projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 
 # Load the JSON helper
 $jsonHelperPath = Join-Path $projectRoot "gui/ConfigEditor.JsonHelper.ps1"

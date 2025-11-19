@@ -40,8 +40,7 @@ if (-not $pesterModule) {
     try {
         Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser -ErrorAction Stop
         Write-Host "[INFO] PesterRunner: Pester module installed successfully"
-    }
-    catch {
+    } catch {
         Write-Host "[ERROR] PesterRunner: Failed to install Pester module"
         Write-Host "[ERROR] Error: $($_.Exception.Message)"
         Write-Host ""
@@ -55,8 +54,7 @@ if (-not $pesterModule) {
 try {
     Import-Module Pester -MinimumVersion 5.0 -ErrorAction Stop
     Write-Host "[INFO] PesterRunner: Pester module loaded successfully"
-}
-catch {
+} catch {
     Write-Host "[ERROR] PesterRunner: Failed to import Pester module"
     Write-Host "[ERROR] Error: $($_.Exception.Message)"
     Write-Host ""
@@ -67,7 +65,7 @@ catch {
 }
 
 # Navigate up two levels from test/runners/ to project root
-$ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 
 # Configure Pester
 $config = New-PesterConfiguration
@@ -75,12 +73,12 @@ $config = New-PesterConfiguration
 # Only run wrapper tests (*.Wrapper.Tests.ps1) or all Pester tests
 if ($OnlyWrappers) {
     $config.Run.Path = @(
-        (Join-Path -Path $ProjectRoot -ChildPath "test/pester/Core.Wrapper.Tests.ps1"),
-        (Join-Path -Path $ProjectRoot -ChildPath "test/pester/GUI.Wrapper.Tests.ps1"),
-        (Join-Path -Path $ProjectRoot -ChildPath "test/pester/Integration.Wrapper.Tests.ps1")
+        (Join-Path -Path $projectRoot -ChildPath "test/pester/Core.Wrapper.Tests.ps1"),
+        (Join-Path -Path $projectRoot -ChildPath "test/pester/GUI.Wrapper.Tests.ps1"),
+        (Join-Path -Path $projectRoot -ChildPath "test/pester/Integration.Wrapper.Tests.ps1")
     )
 } else {
-    $config.Run.Path = Join-Path -Path $ProjectRoot -ChildPath "test/pester"
+    $config.Run.Path = Join-Path -Path $projectRoot -ChildPath "test/pester"
 }
 
 $config.Run.Exit = $false
@@ -98,7 +96,7 @@ $config.Output.Verbosity = $Verbosity
 
 $config.TestResult.Enabled = $true
 $config.TestResult.OutputFormat = 'NUnitXml'
-$config.TestResult.OutputPath = Join-Path -Path $ProjectRoot -ChildPath "test/test-results.xml"
+$config.TestResult.OutputPath = Join-Path -Path $projectRoot -ChildPath "test/test-results.xml"
 
 Write-Host ""
 Write-Host "========================================"

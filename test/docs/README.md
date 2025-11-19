@@ -154,7 +154,7 @@ test/Convert-TestResultsToHtml.ps1
 # test/pester/Core.Wrapper.Tests.ps1
 Context "New Feature" {
     It "should test new feature" {
-        $testScript = Join-Path $ProjectRoot "test/scripts/core/Test-Core-NewFeature.ps1"
+        $testScript = Join-Path $projectRoot "test/scripts/core/Test-Core-NewFeature.ps1"
         $output = & $testScript 2>&1
         $LASTEXITCODE | Should -Be 0
     }

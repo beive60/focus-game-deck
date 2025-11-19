@@ -8,8 +8,8 @@
 #>
 
 # Determine paths - test is now in test/scripts/gui/ directory
-$ProjectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
-$MappingsPath = Join-Path -Path $ProjectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1"
+$projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+$MappingsPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1"
 
 # Import required modules for analysis
 if (Test-Path $MappingsPath) {
@@ -32,11 +32,11 @@ if (Test-Path $MappingsPath) {
 function Test-LocalizationControlFlow {
     try {
         $analysis = @{
-            MappingIntegrity      = @{}
-            JsonKeyValidation     = @{}
-            XamlElementAccess     = @{}
+            MappingIntegrity = @{}
+            JsonKeyValidation = @{}
+            XamlElementAccess = @{}
             StringReplacementFlow = @{}
-            ModularizationImpact  = @{}
+            ModularizationImpact = @{}
         }
 
         # 1. Test mapping table integrity
@@ -83,7 +83,7 @@ function Test-LocalizationControlFlow {
 #>
 function Test-MappingTableIntegrity {
     $results = @{
-        Issues     = @()
+        Issues = @()
         Statistics = @{}
         Duplicates = @{}
     }
@@ -176,18 +176,18 @@ function Test-MappingTableIntegrity {
 #>
 function Test-JsonKeyStructure {
     $results = @{
-        Issues      = @()
-        FoundFiles  = @()
+        Issues = @()
+        FoundFiles = @()
         MissingKeys = @()
         KeyCoverage = @{}
     }
 
     try {
-        # Look for JSON localization files - using already computed $ProjectRoot
+        # Look for JSON localization files - using already computed $projectRoot
         $localizationPaths = @(
-            (Join-Path -Path $ProjectRoot -ChildPath "gui/localization"),
-            (Join-Path -Path $ProjectRoot -ChildPath "localization"),
-            (Join-Path -Path $ProjectRoot -ChildPath "resources/localization")
+            (Join-Path -Path $projectRoot -ChildPath "gui/localization"),
+            (Join-Path -Path $projectRoot -ChildPath "localization"),
+            (Join-Path -Path $projectRoot -ChildPath "resources/localization")
         )
 
         $jsonFiles = @()
@@ -208,8 +208,8 @@ function Test-JsonKeyStructure {
             try {
                 $jsonContent = Get-Content -Path $jsonFile.FullName -Raw | ConvertFrom-Json -AsHashtable
                 $results.KeyCoverage[$jsonFile.Name] = @{
-                    TotalKeys    = $jsonContent.Keys.Count
-                    MappedKeys   = 0
+                    TotalKeys = $jsonContent.Keys.Count
+                    MappedKeys = 0
                     UnmappedKeys = @()
                 }
 
@@ -266,14 +266,14 @@ function Test-JsonKeyStructure {
 #>
 function Test-XamlElementAccess {
     $results = @{
-        Issues          = @()
-        XamlFiles       = @()
+        Issues = @()
+        XamlFiles = @()
         ElementAnalysis = @{}
     }
 
     try {
-        # Find XAML files - using already computed $ProjectRoot
-        $xamlFiles = Get-ChildItem -Path $ProjectRoot -Filter "*.xaml" -Recurse -ErrorAction SilentlyContinue
+        # Find XAML files - using already computed $projectRoot
+        $xamlFiles = Get-ChildItem -Path $projectRoot -Filter "*.xaml" -Recurse -ErrorAction SilentlyContinue
 
         if ($xamlFiles.Count -eq 0) {
             $results.Issues += "No XAML files found in project"
@@ -292,9 +292,9 @@ function Test-XamlElementAccess {
 
                 $results.ElementAnalysis[$xamlFile.Name] = @{
                     TotalNamedElements = $namedElements.Count
-                    MappedElements     = 0
-                    UnmappedElements   = @()
-                    Elements           = $namedElements
+                    MappedElements = 0
+                    UnmappedElements = @()
+                    Elements = $namedElements
                 }
 
                 # Check which elements have mappings
@@ -343,8 +343,8 @@ function Test-XamlElementAccess {
 #>
 function Test-StringReplacementFlow {
     $results = @{
-        Issues               = @()
-        ControlMechanisms    = @{}
+        Issues = @()
+        ControlMechanisms = @{}
         FunctionAvailability = @{}
     }
 
@@ -382,16 +382,16 @@ function Test-StringReplacementFlow {
             }
         }
 
-        # Check for main localization application mechanism - using computed $ProjectRoot
-        $mainConfigEditor = Join-Path -Path $ProjectRoot -ChildPath "gui/ConfigEditor.ps1"
+        # Check for main localization application mechanism - using computed $projectRoot
+        $mainConfigEditor = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.ps1"
         if (Test-Path $mainConfigEditor) {
             $configEditorContent = Get-Content -Path $mainConfigEditor -Raw
 
             # Look for localization application patterns
             $patterns = @{
-                'DotSourceMappings'      = '\.\s*["\$].*ConfigEditor\.Mappings\.ps1'
-                'LocalizationCall'       = 'Set-.*Localization|Apply.*Localization|.*locali[sz]ation'
-                'JsonLoading'            = 'ConvertFrom-Json|Get-LocalizedStrings'
+                'DotSourceMappings' = '\.\s*["\$].*ConfigEditor\.Mappings\.ps1'
+                'LocalizationCall' = 'Set-.*Localization|Apply.*Localization|.*locali[sz]ation'
+                'JsonLoading' = 'ConvertFrom-Json|Get-LocalizedStrings'
                 'ElementPropertySetting' = '\.Content\s*=|\.Header\s*=|\.Text\s*='
             }
 
@@ -426,16 +426,16 @@ function Test-StringReplacementFlow {
 #>
 function Test-ModularizationImpact {
     $results = @{
-        Issues          = @()
-        ModuleFiles     = @()
+        Issues = @()
+        ModuleFiles = @()
         DependencyChain = @{}
-        Integration     = @{}
+        Integration = @{}
     }
 
     try {
         # Find all ConfigEditor.*.ps1 files - search in gui directory
         $modulePattern = "ConfigEditor.*.ps1"
-        $guiPath = Join-Path -Path $ProjectRoot -ChildPath "gui"
+        $guiPath = Join-Path -Path $projectRoot -ChildPath "gui"
         $moduleFiles = Get-ChildItem -Path $guiPath -Filter $modulePattern -ErrorAction SilentlyContinue
 
         foreach ($moduleFile in $moduleFiles) {
@@ -458,9 +458,9 @@ function Test-ModularizationImpact {
                 $exportedFunctions = $functionMatches | ForEach-Object { $_.Groups[1].Value }
 
                 $results.DependencyChain[$moduleFile.Name] = @{
-                    Dependencies      = $dependencies
+                    Dependencies = $dependencies
                     ExportedFunctions = $exportedFunctions
-                    Size              = $moduleContent.Length
+                    Size = $moduleContent.Length
                 }
             } catch {
                 $results.Issues += "Error analyzing module $($moduleFile.Name): $($_.Exception.Message)"
@@ -576,7 +576,7 @@ if ($analysis) {
     Write-LocalizationDiagnosticReport -Analysis $analysis
 
     # Output analysis to file for further review - save to gui directory
-    $outputDir = Join-Path -Path $ProjectRoot -ChildPath "gui"
+    $outputDir = Join-Path -Path $projectRoot -ChildPath "gui"
     $outputPath = Join-Path -Path $outputDir -ChildPath "localization-diagnostic-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
     $analysis | ConvertTo-Json -Depth 5 | Out-File -Path $outputPath -Encoding UTF8
     Write-Host "`nDetailed analysis saved to: $outputPath"

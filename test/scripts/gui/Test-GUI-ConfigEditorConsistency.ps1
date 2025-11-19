@@ -31,15 +31,17 @@ param(
 $ErrorActionPreference = 'Stop'
 
 # Define paths
-$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
-$MainWindowPath = Join-Path -Path $projectRoot -ChildPath "gui/MainWindow.xaml"
+$projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $MappingsPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1"
+$MessagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
+$XamlPath = Join-Path -Path $projectRoot -ChildPath "gui/MainWindow.xaml"
+$ConfigEditorPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.ps1"
 
 Write-Host "=== Focus Game Deck - ConfigEditor Consistency Test ==="
 
 # Check if required files exist
-if (-not (Test-Path $MainWindowPath)) {
-    Write-Error "MainWindow.xaml not found at: $MainWindowPath"
+if (-not (Test-Path $XamlPath)) {
+    Write-Error "MainWindow.xaml not found at: $XamlPath"
     exit 1
 }
 
@@ -94,13 +96,13 @@ try {
     $foundMappings = @()
 
     $allMappingTables = @{
-        Button   = $ButtonMappings
-        Label    = $LabelMappings
-        Tab      = $TabMappings
-        Text     = $TextMappings
+        Button = $ButtonMappings
+        Label = $LabelMappings
+        Tab = $TabMappings
+        Text = $TextMappings
         CheckBox = $CheckBoxMappings
         MenuItem = $MenuItemMappings
-        Tooltip  = $TooltipMappings
+        Tooltip = $TooltipMappings
     }
 
     foreach ($elementName in $uiElements.Keys) {
@@ -114,8 +116,8 @@ try {
                 $foundMappings += [PSCustomObject]@{
                     ElementName = $elementName
                     Placeholder = $uiElements[$elementName]
-                    MappingKey  = $mappingKey
-                    Type        = $type
+                    MappingKey = $mappingKey
+                    Type = $type
                 }
                 break
             }

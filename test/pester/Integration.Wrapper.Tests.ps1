@@ -10,14 +10,14 @@
 
 BeforeAll {
     # Navigate up two levels from test/pester/ to project root
-    $ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+    $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 }
 
 Describe "Integration Tests" -Tag "Integration" {
 
     Context "Discord Integration" {
         It "should test Discord Rich Presence integration" {
-            $testScript = Join-Path -Path $ProjectRoot -ChildPath "test/scripts/integration/Test-Integration-Discord.ps1"
+            $testScript = Join-Path -Path $projectRoot -ChildPath "test/scripts/integration/Test-Integration-Discord.ps1"
 
             if (-not (Test-Path $testScript)) {
                 Set-ItResult -Skipped -Because "Discord test script not found"
@@ -38,7 +38,7 @@ Describe "Integration Tests" -Tag "Integration" {
 
     Context "OBS Studio Integration" {
         It "should test OBS WebSocket connection" {
-            $testScript = Join-Path -Path $ProjectRoot -ChildPath "test/scripts/integration/Test-Integration-OBSWebSocket.ps1"
+            $testScript = Join-Path -Path $projectRoot -ChildPath "test/scripts/integration/Test-Integration-OBSWebSocket.ps1"
 
             if (-not (Test-Path $testScript)) {
                 Set-ItResult -Skipped -Because "OBS test script not found"
@@ -59,7 +59,7 @@ Describe "Integration Tests" -Tag "Integration" {
 
     Context "VTube Studio Integration" {
         It "should test VTube Studio WebSocket integration" {
-            $testScript = Join-Path -Path $ProjectRoot -ChildPath "test/scripts/integration/Test-Integration-VTubeStudio.ps1"
+            $testScript = Join-Path -Path $projectRoot -ChildPath "test/scripts/integration/Test-Integration-VTubeStudio.ps1"
 
             if (-not (Test-Path $testScript)) {
                 Set-ItResult -Skipped -Because "VTube Studio test script not found"
@@ -80,7 +80,7 @@ Describe "Integration Tests" -Tag "Integration" {
 
     Context "Log Notarization" {
         It "should test log authentication and notarization" {
-            $testScript = Join-Path -Path $ProjectRoot -ChildPath "test/scripts/integration/Test-Integration-LogNotarization.ps1"
+            $testScript = Join-Path -Path $projectRoot -ChildPath "test/scripts/integration/Test-Integration-LogNotarization.ps1"
 
             if (-not (Test-Path $testScript)) {
                 Set-ItResult -Skipped -Because "Log notarization test script not found"

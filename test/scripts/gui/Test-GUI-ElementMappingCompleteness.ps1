@@ -80,23 +80,22 @@ if ($ShowDetails) {
 }
 
 # Define project root and script paths
-$ProjectRoot = Split-Path -Parent $PSScriptRoot
-$GuiPath = Join-Path $ProjectRoot "gui"
-$MappingsPath = Join-Path $GuiPath "ConfigEditor.Mappings.ps1"
-$MessagesPath = Join-Path $GuiPath "messages.json"
-$XamlPath = Join-Path $GuiPath "MainWindow.xaml"
-$ConfigEditorPath = Join-Path $GuiPath "ConfigEditor.ps1"
+$projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+$MappingsPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1"
+$MessagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
+$XamlPath = Join-Path -Path $projectRoot -ChildPath "gui/MainWindow.xaml"
+$ConfigEditorPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.ps1"
 
 Write-Host "=== Mapping Completeness Test ==="
 Write-Host ""
 
 # Test results structure
 $testResults = @{
-    Total           = 0
-    Passed          = 0
-    Failed          = 0
-    Warnings        = 0
-    FailedTests     = @()
+    Total = 0
+    Passed = 0
+    Failed = 0
+    Warnings = 0
+    FailedTests = @()
     WarningMessages = @()
 }
 
@@ -154,7 +153,7 @@ function Add-TestResult {
         $testResults.Warnings++
         $testResults.WarningMessages += @{
             TestName = $TestName
-            Message  = $Message
+            Message = $Message
         }
         Write-Host "  [WARN] $TestName"
         if ($Message) {
@@ -167,7 +166,7 @@ function Add-TestResult {
         $testResults.Failed++
         $testResults.FailedTests += @{
             TestName = $TestName
-            Message  = $Message
+            Message = $Message
         }
         Write-Host "  [FAIL] $TestName"
         if ($Message) {
@@ -255,12 +254,12 @@ $window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
 $xmlReader.Close()
 
 $allMappingsToCheck = @{
-    Button       = $script:ButtonMappings
-    Label        = $script:LabelMappings
-    Tab          = $script:TabMappings
-    Text         = $script:TextMappings
-    CheckBox     = $script:CheckBoxMappings
-    MenuItem     = $script:MenuItemMappings
+    Button = $script:ButtonMappings
+    Label = $script:LabelMappings
+    Tab = $script:TabMappings
+    Text = $script:TextMappings
+    CheckBox = $script:CheckBoxMappings
+    MenuItem = $script:MenuItemMappings
     ComboBoxItem = $script:ComboBoxItemMappings
 }
 

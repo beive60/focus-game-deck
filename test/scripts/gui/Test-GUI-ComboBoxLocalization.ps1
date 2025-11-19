@@ -66,11 +66,11 @@ $ErrorActionPreference = "Stop"
 $VerbosePreference = "Continue"
 
 # Define project root and script paths
-$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
-$GuiPath = Join-Path -Path $projectRoot -ChildPath "gui"
-$MappingsPath = Join-Path -Path $GuiPath -ChildPath "ConfigEditor.Mappings.ps1"
+$projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+$MappingsPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1"
 $MessagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
-$XamlPath = Join-Path -Path $GuiPath -ChildPath "MainWindow.xaml"
+$XamlPath = Join-Path -Path $projectRoot -ChildPath "gui/MainWindow.xaml"
+$ConfigEditorPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.ps1"
 
 Write-Host "=== ComboBoxItem Localization Test ==="
 Write-Host "Testing language: $Language"
@@ -109,9 +109,9 @@ Write-Host "[5/6] Testing ComboBoxItem localization..."
 $comboBoxItemMappings = $script:ComboBoxItemMappings
 
 $testResults = @{
-    Total   = 0
+    Total = 0
     Success = 0
-    Failed  = 0
+    Failed = 0
     Details = @()
 }
 
@@ -121,13 +121,13 @@ foreach ($itemName in $comboBoxItemMappings.Keys) {
     $element = $window.FindName($itemName)
 
     $result = @{
-        ItemName      = $itemName
-        MessageKey    = $messageKey
-        Found         = $false
-        HasMessage    = $false
+        ItemName = $itemName
+        MessageKey = $messageKey
+        Found = $false
+        HasMessage = $false
         BeforeContent = ""
-        AfterContent  = ""
-        Success       = $false
+        AfterContent = ""
+        Success = $false
     }
 
     if ($element) {

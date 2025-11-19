@@ -8,8 +8,8 @@
 
 BeforeAll {
     # Navigate up two levels from test/pester/ to project root
-    $ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-    $TestLogDir = Join-Path -Path $ProjectRoot -ChildPath "test/temp/logs"
+    $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+    $TestLogDir = Join-Path -Path $projectRoot -ChildPath "test/temp/logs"
 
     # Create test log directory
     if (-not (Test-Path $TestLogDir)) {
@@ -17,7 +17,7 @@ BeforeAll {
     }
 
     # Load Logger module (simplified - adjust path as needed)
-    # . (Join-Path -Path $ProjectRoot -ChildPath "src/modules/Logger.ps1")
+    # . (Join-Path -Path $projectRoot -ChildPath "src/modules/Logger.ps1")
 }
 
 Describe "Log Rotation Tests" -Tag "Core", "Logging" {
@@ -50,7 +50,7 @@ Describe "Log Rotation Tests" -Tag "Core", "Logging" {
         It "should delete logs older than 30 days with 30-day retention" {
             $cutoffDate = (Get-Date).AddDays(-30)
             $oldLogs = Get-ChildItem -Path $TestLogDir -Filter "*.log" |
-                        Where-Object { $_.LastWriteTime -lt $cutoffDate }
+            Where-Object { $_.LastWriteTime -lt $cutoffDate }
 
             # Expected: 30days.log, 45days.log, 90days.log, 180days.log, 200days.log
             $oldLogs.Count | Should -BeGreaterThan 4
@@ -59,7 +59,7 @@ Describe "Log Rotation Tests" -Tag "Core", "Logging" {
         It "should preserve recent logs with 30-day retention" {
             $cutoffDate = (Get-Date).AddDays(-30)
             $recentLogs = Get-ChildItem -Path $TestLogDir -Filter "*.log" |
-                            Where-Object { $_.LastWriteTime -ge $cutoffDate }
+            Where-Object { $_.LastWriteTime -ge $cutoffDate }
 
             # Expected: recent.log
             $recentLogs.Count | Should -BeGreaterThan 0
@@ -68,7 +68,7 @@ Describe "Log Rotation Tests" -Tag "Core", "Logging" {
         It "should delete logs older than 90 days with 90-day retention" {
             $cutoffDate = (Get-Date).AddDays(-90)
             $oldLogs = Get-ChildItem -Path $TestLogDir -Filter "*.log" |
-                        Where-Object { $_.LastWriteTime -lt $cutoffDate }
+            Where-Object { $_.LastWriteTime -lt $cutoffDate }
 
             # Expected: 90days.log, 180days.log, 200days.log
             $oldLogs.Count | Should -BeGreaterOrEqual 2
