@@ -46,7 +46,7 @@
 
 .NOTES
     Author: Focus Game Deck Development Team
-    Version: 1.1.0 - Dynamic Language Detection and English Support
+    Version: 2.0.0 - Multi-Executable Architecture Migration
     Last Updated: 2025-09-23
     Requires: PowerShell 5.1 or higher, Windows 10/11
 
@@ -98,9 +98,6 @@ if ($isExecutable) {
     $appRoot = Split-Path -Parent $PSScriptRoot
 }
 
-# Use $appRoot for all external file paths (not $PSScriptRoot)
-$projectRoot = $appRoot
-
 # Prerequisites check function
 function Test-Prerequisites {
     param()
@@ -113,26 +110,22 @@ function Test-Prerequisites {
     }
 
     # Define required external files based on execution mode
+    $mainWindowPath = Join-Path -Path $appRoot -ChildPath "gui/MainWindow.xaml"
+    # Check MainWindow.xaml first (fatal if missing)
+    if (-not (Test-Path $mainWindowPath)) {
+        throw "Fatal error: Required file not found: $mainWindowPath"
+    }
+
     $requiredFiles = @(
-        (Join-Path -Path $appRoot -ChildPath "gui/MainWindow.xaml"),
+        $mainWindowPath,
         (Join-Path -Path $appRoot -ChildPath "localization/messages.json"),
         (Join-Path -Path $appRoot -ChildPath "config/config.json")
     )
 
     foreach ($file in $requiredFiles) {
         if (-not (Test-Path $file)) {
-            $issues += "Required file missing: $file"
+            Write-Verbose "[WARNING] Required file missing: $file"
         }
-    }
-
-    if ($issues.Count -gt 0) {
-        Write-Host "[ERROR] ConfigEditor: Prerequisites check failed"
-        $issues | ForEach-Object { Write-Host "  - $_" }
-        return $false
-    }
-
-    if ($isExecutable) {
-        Write-Verbose "[OK] ConfigEditor: Prerequisites check passed"
     }
     return $true
 }
@@ -255,43 +248,7 @@ function Initialize-ConfigEditor {
             "ConfigEditor.Events.ps1"
         )
 
-        if ($isExecutable) {
-            # In executable mode, modules are bundled inside the .exe by ps2exe
-            # ps2exe bundles files from the staging directory where ConfigEditor.ps1 was located
-            Write-Verbose "[INFO] ConfigEditor: Running in executable mode - loading bundled modules"
-            Write-Verbose "[DEBUG] ConfigEditor: appRoot = '$appRoot'"
-            Write-Verbose "[DEBUG] ConfigEditor: Current directory = '$PWD'"
-
-            # ps2exe makes bundled files available for dot-sourcing from the exe's directory
-            foreach ($guiModuleName in $guiModuleNames) {
-                Write-Verbose "[DEBUG] ConfigEditor: Attempting to load bundled module - $guiModuleName"
-
-                $loaded = $false
-                $lastError = $null
-
-                # Construct the full path relative to the exe directory
-                # ps2exe bundles files as if they were in the same directory as the main script
-                $guiModulePath = Join-Path -Path $appRoot -ChildPath $guiModuleName
-
-                try {
-                    Write-Verbose "[DEBUG] ConfigEditor: Trying to dot-source - $guiModulePath"
-                    . $guiModulePath
-                    Write-Verbose "[OK] ConfigEditor: Successfully loaded - $guiModuleName"
-                    Write-Verbose "Loaded: $guiModuleName"
-                    $loaded = $true
-                } catch {
-                    $lastError = $_.Exception.Message
-                    Write-Host "[ERROR] ConfigEditor: Failed to load - $lastError"
-                }
-
-                if (-not $loaded) {
-                    Write-Host "[ERROR] ConfigEditor: Unable to load bundled module: $guiModuleName"
-                    Write-Verbose "[ERROR] ConfigEditor: Path tried: $guiModulePath"
-                    Write-Verbose "[ERROR] ConfigEditor: Last error: $lastError"
-                    throw "Missing bundled module: $guiModuleName"
-                }
-            }
-        } else {
+        if (-not $isExecutable) {
             # In script mode, load modules from file system
             Write-Verbose "[INFO] ConfigEditor: Running in script mode - loading modules from filesystem"
 
@@ -300,9 +257,9 @@ function Initialize-ConfigEditor {
                 if (Test-Path $guiModulePath) {
                     Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - $guiModulePath"
                     . $guiModulePath
-                    Write-Verbose "Loaded: $(Split-Path $guiModulePath -Leaf)"
+                    Write-Verbose "[OK] ConfigEditor: Module Loaded: $(Split-Path $guiModulePath -Leaf)"
                 } else {
-                    Write-Error "Required module not found: $guiModulePath"
+                    Write-Error "[ERROR] ConfigEditor: Missing required module not found: $guiModulePath"
                     throw "Missing required module: $guiModuleName"
                 }
             }
@@ -324,10 +281,10 @@ function Initialize-ConfigEditor {
         Write-Verbose "[INFO] ConfigEditor: Initializing localization"
         try {
             # Pass shared project root into localization class (PowerShell classes cannot access script-scoped variables)
-            $script:Localization = [ConfigEditorLocalization]::new($projectRoot)
+            $script:Localization = [ConfigEditorLocalization]::new($appRoot)
             Write-Verbose "[OK] ConfigEditor: Localization initialized - Language: $($script:Localization.CurrentLanguage)"
         } catch {
-            Write-Error "Failed to initialize localization: $($_.Exception.Message)"
+            Write-Error "[ERROR] ConfigEditor: Failed to initialize localization: $($_.Exception.Message)"
             throw
         }
 
@@ -369,7 +326,7 @@ function Initialize-ConfigEditor {
                 ComboBoxItem = $ComboBoxItemMappings
             }
             # Pass project root into UI class so it can construct file paths without referencing script-scoped variables
-            $uiManager = [ConfigEditorUI]::new($stateManager, $allMappings, $script:Localization, $projectRoot)
+            $uiManager = [ConfigEditorUI]::new($stateManager, $allMappings, $script:Localization, $appRoot)
 
             Write-Verbose "[DEBUG] ConfigEditor: ConfigEditorUI instance created - $($null -ne $uiManager)"
 
@@ -381,19 +338,9 @@ function Initialize-ConfigEditor {
 
             if ($null -eq $uiManager.Window) {
                 Write-Verbose "[DEBUG] ConfigEditor: uiManager.Window is null"
-                Write-Verbose "[DEBUG] ConfigEditor: Available uiManager properties:"
-                $uiManager | Get-Member -MemberType Property | ForEach-Object {
-                    $propName = $_.Name
-                    try {
-                        $propValue = $uiManager.$propName
-                        Write-Host "  - $propName : $propValue"
-                    } catch {
-                        Write-Host "  - $propName : <Error accessing property>"
-                    }
-                }
                 throw "UI manager Window is null"
             } else {
-                Write-Verbose "[DEBUG] ConfigEditor: uiManager.Window type - $($uiManager.Window.GetType().Name)"
+                Write-Verbose "[OK] ConfigEditor: uiManager.Window type - $($uiManager.Window.GetType().Name)"
             }
 
             $script:Window = $uiManager.Window
@@ -421,7 +368,7 @@ function Initialize-ConfigEditor {
 
         # Step 7: Initialize event handler
         # Pass project root into events handler so it can construct file paths without referencing script-scoped variables
-        $eventHandler = [ConfigEditorEvents]::new($uiManager, $stateManager, $projectRoot)
+        $eventHandler = [ConfigEditorEvents]::new($uiManager, $stateManager, $appRoot)
 
         # Connect event handler to UI manager
         $uiManager.EventHandler = $eventHandler
@@ -523,7 +470,7 @@ function Initialize-ConfigEditor {
     } catch {
         Write-Host "[ERROR] ConfigEditor: Initialization failed - $($_.Exception.Message)"
         if ($_.InvocationInfo.ScriptName) {
-            $relativePath = $_.InvocationInfo.ScriptName -replace [regex]::Escape($projectRoot), "."
+            $relativePath = $_.InvocationInfo.ScriptName -replace [regex]::Escape($appRoot), "."
             $relativePath = $relativePath -replace "\\", "/"  # Convert to forward slashes
             Write-Host "[ERROR] ConfigEditor: Module - $relativePath"
         } else {
@@ -547,8 +494,8 @@ function Initialize-ConfigEditor {
 # Import additional modules after WPF assemblies are loaded
 function Import-AdditionalModules {
     try {
-        # Use $projectRoot defined at top of the script (parent of gui folder)
-        Write-Verbose "Project root: $projectRoot"
+        # Use $appRoot defined at top of the script (parent of gui folder)
+        Write-Verbose "Project root: $appRoot"
 
         # Define modules to load and their configurations
         $modulesToLoad = @(
@@ -568,7 +515,7 @@ function Import-AdditionalModules {
 
         # Load modules in a loop
         foreach ($moduleInfo in $modulesToLoad) {
-            $modulePath = Join-Path $projectRoot $moduleInfo.Path
+            $modulePath = Join-Path $appRoot $moduleInfo.Path
             $moduleName = Split-Path $modulePath -Leaf
 
             if (-not (Test-Path $modulePath)) {
@@ -1182,7 +1129,7 @@ function Save-CurrentAppData {
                     $appIndex = $game.appsToManage.IndexOf($script:CurrentAppId)
                     if ($appIndex -ge 0) {
                         $game.appsToManage[$appIndex] = $newAppId
-                        Write-Verbose "Updated app reference in game '$gameId'"
+                        Write-Verbose "[INFO] Updated app reference in game '$gameId'"
                     }
                 }
             }
@@ -1756,7 +1703,7 @@ function Show-LanguageChangeRestartMessage {
             # Get the current script path
             $currentScript = $PSCommandPath
             if (-not $currentScript) {
-                $currentScript = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.ps1"
+                $currentScript = Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.ps1"
             }
 
             # Start new instance FIRST with proper encoding

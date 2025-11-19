@@ -4,7 +4,7 @@
 
 .DESCRIPTION
     ================================================================================================
-    ⚠️  DEPRECATION NOTICE - This script is deprecated in favor of specialized tool scripts  ⚠️
+    DEPRECATION NOTICE - This script is deprecated in favor of specialized tool scripts
     ================================================================================================
 
     This monolithic build script has been refactored following the Single Responsibility Principle (SRP).
@@ -88,27 +88,27 @@ param(
 # Display deprecation warning
 function Show-DeprecationWarning {
     Write-Host ""
-    Write-Host "================================================================================================" -ForegroundColor Yellow
-    Write-Host "⚠️  DEPRECATION WARNING" -ForegroundColor Yellow
-    Write-Host "================================================================================================" -ForegroundColor Yellow
-    Write-Host "This script (Build-FocusGameDeck.ps1) is DEPRECATED and will be removed in a future version." -ForegroundColor Yellow
+    Write-Host "================================================================================================"
+    Write-Host "DEPRECATION WARNING"
+    Write-Host "================================================================================================"
+    Write-Host "This script (Build-FocusGameDeck.ps1) is DEPRECATED and will be removed in a future version."
     Write-Host ""
-    Write-Host "The build system has been refactored following the Single Responsibility Principle." -ForegroundColor Cyan
+    Write-Host "The build system has been refactored following the Single Responsibility Principle."
     Write-Host ""
-    Write-Host "Please use the new specialized tool scripts:" -ForegroundColor White
-    Write-Host "  - Install-BuildDependencies.ps1  : Install ps2exe module" -ForegroundColor White
-    Write-Host "  - Build-Executables.ps1          : Build executables" -ForegroundColor White
-    Write-Host "  - Copy-Resources.ps1             : Copy runtime resources" -ForegroundColor White
-    Write-Host "  - Sign-Executables.ps1           : Sign executables" -ForegroundColor White
-    Write-Host "  - Create-Package.ps1             : Create release package" -ForegroundColor White
-    Write-Host "  - Release-Manager.ps1            : Orchestrate complete workflow" -ForegroundColor White
+    Write-Host "Please use the new specialized tool scripts:"
+    Write-Host "  - Install-BuildDependencies.ps1  : Install ps2exe module"
+    Write-Host "  - Build-Executables.ps1          : Build executables"
+    Write-Host "  - Copy-Resources.ps1             : Copy runtime resources"
+    Write-Host "  - Sign-Executables.ps1           : Sign executables"
+    Write-Host "  - Create-Package.ps1             : Create release package"
+    Write-Host "  - Release-Manager.ps1            : Orchestrate complete workflow"
     Write-Host ""
-    Write-Host "Recommended commands:" -ForegroundColor Cyan
-    Write-Host "  Development build: .\Release-Manager.ps1 -Development" -ForegroundColor Green
-    Write-Host "  Production build:  .\Release-Manager.ps1 -Production" -ForegroundColor Green
+    Write-Host "Recommended commands:"
+    Write-Host "  Development build: .\Release-Manager.ps1 -Development"
+    Write-Host "  Production build:  .\Release-Manager.ps1 -Production"
     Write-Host ""
-    Write-Host "This script will continue to work but is no longer maintained." -ForegroundColor Yellow
-    Write-Host "================================================================================================" -ForegroundColor Yellow
+    Write-Host "This script will continue to work but is no longer maintained."
+    Write-Host "================================================================================================"
     Write-Host ""
 
     Start-Sleep -Seconds 3
@@ -325,7 +325,7 @@ if ($Build) {
             # Define the patch content that will be inserted between markers
             # This patch detects execution mode and adjusts paths accordingly
             $pathResolutionPatch = @'
-# >>> BUILD-TIME-PATCH-START: Path resolution for ps2exe bundling >>>
+# [BUILD-TIME-PATCH-START] Path resolution for ps2exe bundling
 # Detect execution mode for ps2exe bundling
 $currentProcess = Get-Process -Id $PID
 $isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
@@ -399,11 +399,11 @@ try {
     Write-Error "Failed to load configuration: $_"
     exit 1
 }
-# <<< BUILD-TIME-PATCH-END <<<
+# [BUILD-TIME-PATCH-END]
 '@
 
             # Replace the section between markers with the patch
-            $patchPattern = '(?s)# >>> BUILD-TIME-PATCH-START:.*?# <<< BUILD-TIME-PATCH-END <<<'
+            $patchPattern = '(?s)# \[BUILD-TIME-PATCH-START\].*?# \[BUILD-TIME-PATCH-END\]'
             $gameLauncherContent = $gameLauncherContent -replace $patchPattern, $pathResolutionPatch
 
             # Save patched version
@@ -541,7 +541,7 @@ try {
 
         # Auto-sign if requested
         if ($Sign -or $All) {
-            Write-Host "`nStarting code signing process..."
+            Write-Host "Starting code signing process..."
             $signingScript = Join-Path $PSScriptRoot "Sign-Executables.ps1"
             if (Test-Path $signingScript) {
                 & $signingScript -SignAll
