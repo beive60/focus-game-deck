@@ -569,6 +569,9 @@ function Write-LocalizationDiagnosticReport {
 }
 
 # Run the diagnostic if script is executed directly
+if ($MyInvocation.InvocationName -ne '.') {
+    write-Host "(MyInvocation.InvocationName -ne '.') is TRUE"
+}
 Write-Host "Starting localization diagnostic..."
 $analysis = Test-LocalizationControlFlow
 
@@ -578,7 +581,7 @@ if ($analysis) {
     # Output analysis to file for further review - save to gui directory
     $outputDir = Join-Path -Path $projectRoot -ChildPath "gui"
     $outputPath = Join-Path -Path $outputDir -ChildPath "localization-diagnostic-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
-    $analysis | ConvertTo-Json -Depth 5 | Out-File -Path $outputPath -Encoding UTF8
+    $analysis | ConvertTo-Json -Depth 5 | Out-File -FilePath $outputPath -Encoding UTF8
     Write-Host "Detailed analysis saved to: $outputPath"
 
     # Calculate total issues for test result

@@ -81,18 +81,25 @@ Describe "GUI Tests" -Tag "GUI" {
         It "should pass localization diagnostic analysis" {
             $testScript = Join-Path -Path $script:ProjectRoot -ChildPath "test/scripts/gui/Test-GUI-LocalizationIntegrity.ps1"
             $output = & $testScript *>&1 | Out-String
+            $exitCode = $LASTEXITCODE
 
-            # Localization integrity test is diagnostic, always passes but reports issues
-            $output | Should -Match "LOCALIZATION DIAGNOSTIC REPORT"
+            # Test should complete successfully
+            $exitCode | Should -Be 0 -Because "Localization diagnostic should complete without errors"
 
-            # Count issues for visibility
+            # Verify diagnostic report was generated
+            $output | Should -Match "LOCALIZATION DIAGNOSTIC REPORT" -Because "Diagnostic report should be generated"
+
+            # Extract and display issue count
             if ($output -match "Total Issues Found:\s+(\d+)") {
                 $issueCount = [int]$Matches[1]
-                Write-Host "Localization diagnostic found $issueCount issues (see output for details)"
+                Write-Host "Localization diagnostic found $issueCount issues"
+
+                # Note: This is a diagnostic test that reports issues but doesn't fail
+                # Issues are tracked for visibility and improvement planning
             }
 
-            # Test passes as this is a diagnostic tool, not a pass/fail test
-            $true | Should -Be $true
+            # Verify test result indicator is present
+            $output | Should -Match "\[TEST RESULT\]" -Because "Test should output result summary"
         }
     }
 

@@ -28,7 +28,7 @@
 #>
 
 BeforeAll {
-    $projectRoot = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
+    $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
     $TestScriptPath = Join-Path -Path $projectRoot -ChildPath "test/scripts/gui/Test-GUI-LocalizationIntegrity.ps1"
 
     # Verify test script exists
@@ -43,7 +43,7 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
 
         It "Should execute localization diagnostic without errors" {
             # Capture the output
-            $null = & $TestScriptPath *>&1
+            & $TestScriptPath *>&1
             $exitCode = $LASTEXITCODE
 
             # Check that the script executed without throwing errors

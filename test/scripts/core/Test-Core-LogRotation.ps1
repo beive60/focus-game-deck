@@ -255,12 +255,12 @@ function New-TestConfig {
 
     $config = @{
         logging = @{
-            level                = "Debug"
-            enableFileLogging    = $true
+            level = "Debug"
+            enableFileLogging = $true
             enableConsoleLogging = $false
-            filePath             = Join-Path $TestLogDir "focus-game-deck.log"
-            logRetentionDays     = $RetentionDays
-            enableNotarization   = $false
+            filePath = Join-Path $TestLogDir "focus-game-deck.log"
+            logRetentionDays = $RetentionDays
+            enableNotarization = $false
         }
     }
 
@@ -389,7 +389,7 @@ function Invoke-LogRotationTests {
     param()
 
     Write-Host "Starting Log Rotation Tests"
-    Write-Host "=" * 50
+    Write-Host ("=" * 60)
 
     # Test 1: 30-day retention
     Test-LogRetention -RetentionDays 30 -TestDescription "30-day retention policy"
@@ -413,12 +413,12 @@ function Invoke-LogRotationTests {
         # Create config with invalid retention value
         $invalidConfig = @{
             logging = @{
-                level                = "Debug"
-                enableFileLogging    = $true
+                level = "Debug"
+                enableFileLogging = $true
                 enableConsoleLogging = $false
-                filePath             = Join-Path $TestLogDir "focus-game-deck.log"
-                logRetentionDays     = 0  # Invalid value
-                enableNotarization   = $false
+                filePath = Join-Path $TestLogDir "focus-game-deck.log"
+                logRetentionDays = 0  # Invalid value
+                enableNotarization = $false
             }
         }
 
