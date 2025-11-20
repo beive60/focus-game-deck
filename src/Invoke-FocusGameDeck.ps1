@@ -14,9 +14,30 @@ if (-not (Get-Module -Name Microsoft.PowerShell.Security)) {
     }
 }
 
-# Initialize script variables
+# Detect execution environment to determine application root
+$currentProcess = Get-Process -Id $PID
+$isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
+
+# Define the application root directory
+# This is critical for finding external resources (config, logs)
+if ($isExecutable) {
+    # In executable mode, the root is the directory where the .exe file is located
+    # ps2exe extracts to temp, but we need the actual exe location for external files
+    $appRoot = Split-Path -Parent $currentProcess.Path
+} else {
+    # In development (script) mode, calculate the project root relative to the current script
+    # For Invoke-FocusGameDeck.ps1 in /src, the root is one level up
+    $appRoot = Split-Path -Parent $PSScriptRoot
+}
 $scriptDir = $PSScriptRoot
-$configPath = Join-Path $scriptDir "../config/config.json"
+
+# >>> BUILD-TIME-PATCH-START: Path resolution for ps2exe bundling >>>
+# This section will be replaced by the build script (Build-FocusGameDeck.ps1)
+# During build, the script inserts execution mode detection and dynamic path resolution
+# to support both development (.ps1) and bundled executable (.exe) modes
+
+# Initialize path variables - use $appRoot for external files
+$configPath = Join-Path $appRoot "config/config.json"
 
 # Import modules
 $modulePaths = @(
@@ -42,8 +63,8 @@ try {
     $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
     # Load messages for localization
-    $languageHelperPath = Join-Path $scriptDir "../scripts/LanguageHelper.ps1"
-    $messagesPath = Join-Path $scriptDir "../localization/messages.json"
+    $languageHelperPath = Join-Path $appRoot "scripts/LanguageHelper.ps1"
+    $messagesPath = Join-Path $appRoot "localization/messages.json"
 
     if (Test-Path $languageHelperPath) {
         . $languageHelperPath
@@ -69,10 +90,11 @@ try {
     Write-Error "Failed to load configuration: $_"
     exit 1
 }
+# <<< BUILD-TIME-PATCH-END <<<
 
 # Initialize logger
 try {
-    $logger = Initialize-Logger -Config $config -Messages $msg
+    $logger = Initialize-Logger -Config $config -Messages $msg -AppRoot $appRoot
     $logger.Info("Focus Game Deck started (Multi-Platform)", "MAIN")
     $logger.Info("Game ID: $GameId", "MAIN")
 
@@ -389,15 +411,15 @@ try {
                     Write-Host $certificateId
                 }
                 if ($msg.mainLogNotarizationInfo) {
-                    Write-Host $msg.mainLogNotarizationInfo -ForegroundColor Gray
+                    Write-Host $msg.mainLogNotarizationInfo
                 } else {
-                    Write-Host "  This certificate can be used to verify log integrity if needed." -ForegroundColor Gray
+                    Write-Host "  This certificate can be used to verify log integrity if needed."
                 }
             } else {
                 if ($msg.mainLogFinalized) {
-                    Write-Host $msg.mainLogFinalized -ForegroundColor Gray
+                    Write-Host $msg.mainLogFinalized
                 } else {
-                    Write-Host "Log finalized (notarization disabled or failed)" -ForegroundColor Gray
+                    Write-Host "Log finalized (notarization disabled or failed)"
                 }
             }
         } catch {

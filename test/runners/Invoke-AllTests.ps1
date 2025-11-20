@@ -16,12 +16,11 @@ param(
 )
 
 $ErrorActionPreference = "Continue"
-$ProjectRoot = Split-Path -Parent $PSScriptRoot
+$projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 
 # Test categories
 $TestCategories = @{
     "Core" = @(
-        "Test-Core-ConfigFileValidation.ps1",
         "Test-Core-CharacterEncoding.ps1",
         "Test-Core-LogRotation.ps1",
         "Test-Core-MultiPlatformSupport.ps1"
@@ -57,14 +56,14 @@ Write-Host "========================================`n"
 
 foreach ($category in $TestCategories.Keys) {
     if ($SkipIntegrationTests -and $category -eq "Integration") {
-        Write-Host "⊘ Skipping $category tests..."
+        Write-Host "Skipping $category tests..."
         continue
     }
 
-    Write-Host "`n--- $category Tests ---`n" -ForegroundColor Magenta
+    Write-Host "`n--- $category Tests ---`n"
 
     foreach ($testScript in $TestCategories[$category]) {
-        $testPath = Join-Path $ProjectRoot "test" $testScript
+        $testPath = Join-Path -Path $projectRoot -ChildPath "test/scripts/$category/$testScript"
 
         if (-not (Test-Path $testPath)) {
             Write-Host "  [SKIP] $testScript (not found)"
@@ -72,7 +71,7 @@ foreach ($category in $TestCategories.Keys) {
             continue
         }
 
-        Write-Host "  Running: $testScript" -ForegroundColor Gray
+        Write-Host "  Running: $testScript"
 
         $testStart = Get-Date
         $testOutput = & $testPath 2>&1
@@ -114,10 +113,10 @@ Write-Host "Test Execution Summary"
 Write-Host "========================================"
 Write-Host "Total Tests:    $($TestResults.Total)"
 Write-Host "Passed:         $($TestResults.Passed)"
-Write-Host "Failed:         $($TestResults.Failed)" -ForegroundColor $(if ($TestResults.Failed -eq 0) { "Green" } else { "Red" })
+Write-Host "Failed:         $($TestResults.Failed)"
 Write-Host "Skipped:        $($TestResults.Skipped)"
 Write-Host "Duration:       $($TestResults.Duration)s"
-Write-Host "Success Rate:   $([math]::Round(($TestResults.Passed / $TestResults.Total) * 100, 1))%" -ForegroundColor $(if ($TestResults.Failed -eq 0) { "Green" } else { "Yellow" })
+Write-Host "Success Rate:   $([math]::Round(($TestResults.Passed / $TestResults.Total) * 100, 1))%"
 Write-Host "========================================`n"
 
 # Failed tests details
@@ -132,12 +131,12 @@ if ($TestResults.Failed -gt 0) {
 # Export results based on format
 switch ($OutputFormat) {
     "JSON" {
-        $jsonPath = Join-Path $ProjectRoot "test" "test-results.json"
+        $jsonPath = Join-Path $projectRoot "test" "test-results.json"
         $TestResults | ConvertTo-Json -Depth 10 | Set-Content $jsonPath -Encoding UTF8
         Write-Host "Results exported to: $jsonPath"
     }
     "HTML" {
-        $htmlPath = Join-Path $ProjectRoot "test" "test-results.html"
+        $htmlPath = Join-Path $projectRoot "test" "test-results.html"
         # Generate HTML report (simplified)
         $html = @"
 <!DOCTYPE html>

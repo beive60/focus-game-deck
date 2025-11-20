@@ -7,7 +7,8 @@ Write-Host ""
 # Test 1: Check if XAML contains Standalone platform option
 Write-Host "Test 1: Checking XAML for Standalone platform option..."
 
-$xamlPath = "gui/MainWindow.xaml"
+$projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+$xamlPath = Join-Path -Path $projectRoot -ChildPath "gui/MainWindow.xaml"
 $xamlContent = Get-Content $xamlPath -Raw
 
 if ($xamlContent -match 'Tag="standalone"') {

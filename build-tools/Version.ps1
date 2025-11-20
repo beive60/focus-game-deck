@@ -179,7 +179,7 @@ function Compare-Version {
         return [string]::Compare($v1Pre, $v2Pre)
 
     } catch {
-        Write-Warning "Error comparing versions '$Version1' and '$Version2': $($_.Exception.Message)"
+        Write-Warning "[WARNING] comparing versions '$Version1' and '$Version2': $($_.Exception.Message)"
         return 0
     }
 }

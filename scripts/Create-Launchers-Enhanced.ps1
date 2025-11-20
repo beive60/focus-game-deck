@@ -158,7 +158,7 @@ function Remove-OldLaunchers {
         foreach ($file in $oldBatFiles) {
             try {
                 Remove-Item $file.FullName -Force
-                Write-Host "  Removed: $($file.Name)" -ForegroundColor Gray
+                Write-Host "  Removed: $($file.Name)"
             } catch {
                 Write-Host "  Warning: Could not remove $($file.Name): $($_.Exception.Message)"
             }
@@ -172,7 +172,7 @@ function Remove-OldLaunchers {
         foreach ($file in $oldLnkFiles) {
             try {
                 Remove-Item $file.FullName -Force
-                Write-Host "  Removed: $($file.Name)" -ForegroundColor Gray
+                Write-Host "  Removed: $($file.Name)"
             } catch {
                 Write-Host "  Warning: Could not remove $($file.Name): $($_.Exception.Message)"
             }
@@ -183,7 +183,7 @@ function Remove-OldLaunchers {
 # Main execution
 try {
     Write-Host "Focus Game Deck - Enhanced Launcher Creator"
-    Write-Host "=" * 50
+    Write-Host ("=" * 60)
 
     # Load the configuration file
     Write-Host "Loading configuration from: $configPath"
@@ -257,7 +257,7 @@ try {
     Write-Host "`nPlease check your config.json file for syntax errors."
 } finally {
     if (-not $NoInteractive) {
-        Write-Host "`nPress any key to continue..." -ForegroundColor Gray
+        Write-Host "`nPress any key to continue..."
         pause
     }
 }

@@ -198,7 +198,7 @@ function Test-PlatformManager {
         paths = @{
             steam = "C:/Program Files (x86)/Steam/steam.exe"
             epic = "C:/Program Files (x86)/Epic Games/Launcher/Portal/Binaries/Win32/EpicGamesLauncher.exe"
-            riot = "C:\Riot Games\Riot Client\RiotClientServices.exe"
+            riot = "C:/Riot Games/Riot Client/RiotClientServices.exe"
         }
     }
 
@@ -206,15 +206,14 @@ function Test-PlatformManager {
     try {
         $platformManager = New-PlatformManager -Config $testConfig -Messages @{}
         Test-Assert "PlatformManager Creation" ($null -ne $platformManager) "Successfully created PlatformManager instance"
-    }
-    catch {
+    } catch {
         Test-Assert "PlatformManager Creation" $false "Failed to create PlatformManager: $_"
         return
     }
 
     # Test supported platforms
     $supportedPlatforms = $platformManager.GetSupportedPlatforms()
-    Test-Assert "Supported Platforms Count" ($supportedPlatforms.Count -eq 3) "Expected 3 platforms (steam, epic, riot), got $($supportedPlatforms.Count)"
+    Test-Assert "Supported Platforms Count" ($supportedPlatforms.Count -eq 4) "Expected 4 platforms (steam, epic, riot and direct), got $($supportedPlatforms.Count)"
     Test-Assert "Steam Platform Support" ("steam" -in $supportedPlatforms) "Steam platform should be supported"
     Test-Assert "Epic Platform Support" ("epic" -in $supportedPlatforms) "Epic platform should be supported"
     Test-Assert "Riot Platform Support" ("riot" -in $supportedPlatforms) "Riot platform should be supported"
@@ -230,7 +229,7 @@ function Test-PlatformManager {
 
     # Test platform detection methods
     $detectedPlatforms = $platformManager.DetectAllPlatforms()
-    Test-Assert "Platform Detection Results" ($detectedPlatforms.Count -eq 3) "Should detect 3 platforms"
+    Test-Assert "Platform Detection Results" ($detectedPlatforms.Count -eq 4) "Should detect 4 platforms"
 
     foreach ($platform in @("steam", "epic", "riot")) {
         $platformInfo = $detectedPlatforms[$platform]
@@ -263,8 +262,7 @@ function Test-PlatformManager {
             $gameIdProperty = $platformObj.GameIdProperty
             $hasRequiredProperty = $gameConfig.ContainsKey($gameIdProperty)
             Test-Assert "$platform Game Config Validation" $hasRequiredProperty "Game config should have $gameIdProperty property"
-        }
-        catch {
+        } catch {
             Test-Assert "$platform Game Config Validation" $false "Validation failed: $_"
         }
     }
@@ -355,8 +353,7 @@ function Test-ConfigValidator {
     try {
         $validator = New-ConfigValidator -Config $testConfig -Messages @{}
         Test-Assert "ConfigValidator Creation" ($null -ne $validator) "Successfully created ConfigValidator"
-    }
-    catch {
+    } catch {
         Test-Assert "ConfigValidator Creation" $false "Failed to create ConfigValidator: $_"
         return
     }
@@ -452,8 +449,7 @@ function Test-ConfigurationLoading {
             $hasPath = $config.paths.PSObject.Properties.Name -contains $platform
             Test-Assert "$platform Path Configuration" $hasPath "$platform should have a configured path"
         }
-    }
-    catch {
+    } catch {
         Test-Assert "Main Config Loading" $false "Failed to load configuration: $_"
     }
 }

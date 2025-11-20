@@ -92,7 +92,7 @@ Write-Host "Loading OBSManager module from: $obsManagerPath"
 . $obsManagerPath
 
 # Run the test
-Write-Host "`n--- Starting OBS WebSocket Connection Test ---"
+Write-Host "--- Starting OBS WebSocket Connection Test ---"
 Write-Host "Testing OBSManager module functionality"
 Write-Host "OBS Config:"
 Write-Host "  Host: $($config.integrations.obs.websocket.host)"
@@ -118,7 +118,7 @@ try {
     $connected = $obsManager.Connect()
 
     if ($connected) {
-        Write-Host "`n✓ Test Result: SUCCESS"
+        Write-Host "[OK] Test Result: SUCCESS"
         Write-Host "OBS WebSocket connection and authentication successful!"
 
         # Optional: Test replay buffer commands if enabled
@@ -128,9 +128,9 @@ try {
             Write-Host "  Starting Replay Buffer..."
             $startResult = $obsManager.StartReplayBuffer()
             if ($startResult) {
-                Write-Host "  ✓ Replay Buffer started successfully"
+                Write-Host "[OK] Replay Buffer started successfully"
             } else {
-                Write-Host "  ✗ Failed to start Replay Buffer"
+                Write-Host "[ERROR] Failed to start Replay Buffer"
             }
 
             Start-Sleep -Seconds 2
@@ -138,19 +138,19 @@ try {
             Write-Host "  Stopping Replay Buffer..."
             $stopResult = $obsManager.StopReplayBuffer()
             if ($stopResult) {
-                Write-Host "  ✓ Replay Buffer stopped successfully"
+                Write-Host "[OK] Replay Buffer stopped successfully"
             } else {
-                Write-Host "  ✗ Failed to stop Replay Buffer"
+                Write-Host "[ERROR] Failed to stop Replay Buffer"
             }
         }
 
         # Disconnect
-        Write-Host "`nDisconnecting from OBS WebSocket..."
+        Write-Host "Disconnecting from OBS WebSocket..."
         $obsManager.Disconnect()
         Write-Host "Disconnected successfully"
 
     } else {
-        Write-Host "`n✗ Test Result: FAILED"
+        Write-Host "[ERROR] Test Result: FAILED"
         Write-Host "Failed to connect or authenticate to OBS WebSocket"
         Write-Host ""
         Write-Host "Troubleshooting steps:"
@@ -162,14 +162,14 @@ try {
     }
 
 } catch {
-    Write-Host "`n✗ Test Result: FAILED"
+    Write-Host "[ERROR] Test Result: FAILED"
     Write-Host "Exception occurred during test: $_"
     Write-Host $_.Exception.Message
     Write-Host $_.ScriptStackTrace
     exit 1
 }
 
-Write-Host "`n--- Test Finished ---"
+Write-Host "--- Test Finished ---"
 exit 0
 
 

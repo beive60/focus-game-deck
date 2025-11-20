@@ -86,10 +86,21 @@ class Logger {
     .PARAMETER messages
         Localization messages object for internationalized log messages
 
+    .PARAMETER appRoot
+        Application root directory for resolving log file paths (optional, defaults to calculating from $PSScriptRoot)
+
     .EXAMPLE
-        $logger = [Logger]::new($config, $messages)
+        $logger = [Logger]::new($config, $messages, $appRoot)
     #>
     Logger([object] $config, [object] $messages) {
+        $this.InitializeLogger($config, $messages, $null)
+    }
+    
+    Logger([object] $config, [object] $messages, [string] $appRoot) {
+        $this.InitializeLogger($config, $messages, $appRoot)
+    }
+    
+    hidden [void] InitializeLogger([object] $config, [object] $messages, [string] $appRoot) {
         $this.Messages = $messages
         $this.MinimumLevel = [LogLevel]::Info
         $this.EnableConsoleLogging = $true
@@ -116,7 +127,15 @@ class Logger {
             if ($config.logging.filePath) {
                 $this.LogFilePath = $config.logging.filePath
             } else {
-                $this.LogFilePath = Join-Path $PSScriptRoot "../logs/focus-game-deck.log"
+                # Use $appRoot if provided, otherwise fall back to $PSScriptRoot (development mode)
+                if ($appRoot) {
+                    $this.LogFilePath = Join-Path $appRoot "logs/focus-game-deck.log"
+                } else {
+                    # Fallback for development mode - calculate from module location
+                    # Logger.ps1 is in src/modules, so go up two levels
+                    $modulePath = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+                    $this.LogFilePath = Join-Path $modulePath "logs/focus-game-deck.log"
+                }
             }
 
             # Initialize Firebase configuration for log notarization
@@ -126,7 +145,14 @@ class Logger {
                 $this.FirebaseDatabaseURL = $config.logging.firebase.databaseURL
             }
         } else {
-            $this.LogFilePath = Join-Path $PSScriptRoot "../logs/focus-game-deck.log"
+            # Use $appRoot if provided, otherwise fall back to $PSScriptRoot (development mode)
+            if ($appRoot) {
+                $this.LogFilePath = Join-Path $appRoot "logs/focus-game-deck.log"
+            } else {
+                # Fallback for development mode
+                $modulePath = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+                $this.LogFilePath = Join-Path $modulePath "logs/focus-game-deck.log"
+            }
         }
 
         # Ensure log directory exists
@@ -209,10 +235,10 @@ class Logger {
     [void] WriteToConsole([LogLevel] $level, [string] $logEntry) {
         switch ($level) {
             ([LogLevel]::Trace) {
-                Write-Host $logEntry -ForegroundColor DarkGray
+                Write-Host $logEntry
             }
             ([LogLevel]::Debug) {
-                Write-Host $logEntry -ForegroundColor Gray
+                Write-Host $logEntry
             }
             ([LogLevel]::Info) {
                 Write-Host $logEntry
@@ -224,7 +250,7 @@ class Logger {
                 Write-Host $logEntry
             }
             ([LogLevel]::Critical) {
-                Write-Host $logEntry -ForegroundColor Magenta
+                Write-Host $logEntry
             }
         }
     }
@@ -486,7 +512,7 @@ class Logger {
 
             foreach ($logFile in $logFiles) {
                 try {
-                    if ($logFile.LastWriteTime -lt $cutoffDate) {
+                    if ($logFile.LastWriteTime -le $cutoffDate) {
                         $fileSize = $logFile.Length
                         $this.Debug("Deleting old log file: $($logFile.Name) (Last modified: $($logFile.LastWriteTime.ToString('yyyy-MM-dd HH:mm:ss')))", "CLEANUP")
 
@@ -852,11 +878,14 @@ $Global:FocusGameDeckLogger = $null
 .PARAMETER Messages
     Localization messages object for internationalized log messages
 
+.PARAMETER AppRoot
+    Application root directory for resolving log file paths (optional)
+
 .OUTPUTS
     Logger instance that was initialized
 
 .EXAMPLE
-    $logger = Initialize-Logger -Config $config -Messages $messages
+    $logger = Initialize-Logger -Config $config -Messages $messages -AppRoot $appRoot
 
 .NOTES
     Should be called once during application startup.
@@ -867,10 +896,17 @@ function Initialize-Logger {
         [object] $Config,
 
         [Parameter(Mandatory = $true)]
-        [object] $Messages
+        [object] $Messages,
+        
+        [Parameter(Mandatory = $false)]
+        [string] $AppRoot = $null
     )
 
-    $Global:FocusGameDeckLogger = [Logger]::new($Config, $Messages)
+    if ($AppRoot) {
+        $Global:FocusGameDeckLogger = [Logger]::new($Config, $Messages, $AppRoot)
+    } else {
+        $Global:FocusGameDeckLogger = [Logger]::new($Config, $Messages)
+    }
     return $Global:FocusGameDeckLogger
 }
 

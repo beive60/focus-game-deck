@@ -117,7 +117,7 @@ $script:StartTime = Get-Date
 
 Write-Host "Focus Game Deck - Master Build Script v$script:Version"
 Write-Host "Build started at: $script:BuildDate"
-Write-Host "=" * 60
+Write-Host ("=" * 60)
 
 # Function to log messages with timestamps
 function Write-BuildLog {
@@ -202,17 +202,18 @@ function Clear-BuildArtifacts {
 function Initialize-BuildEnvironment {
     Write-BuildLog "Setting up build environment..." "INFO" "Yellow"
 
-    # Install ps2exe module
-    $buildScript = Join-Path $PSScriptRoot "Build-FocusGameDeck.ps1"
-    return Invoke-BuildScript -ScriptPath $buildScript -Arguments @("-Install") -Description "Installing ps2exe module"
+    # Install ps2exe module using specialized tool script
+    $installScript = Join-Path $PSScriptRoot "Install-BuildDependencies.ps1"
+    return Invoke-BuildScript -ScriptPath $installScript -Arguments @() -Description "Installing build dependencies"
 }
 
 # Function to build all executables
 function Build-AllExecutables {
     Write-BuildLog "Building all executables..." "INFO" "Yellow"
 
-    $buildScript = Join-Path $PSScriptRoot "Build-FocusGameDeck.ps1"
-    return Invoke-BuildScript -ScriptPath $buildScript -Arguments @("-Build") -Description "Building all executables"
+    # Use specialized build script
+    $buildScript = Join-Path $PSScriptRoot "Build-Executables.ps1"
+    return Invoke-BuildScript -ScriptPath $buildScript -Arguments @() -Description "Building all executables"
 }
 
 # Function to sign all executables
@@ -354,11 +355,36 @@ function Register-SignatureHashes {
     }
 }
 
+# Function to copy resources
+function Copy-BuildResources {
+    Write-BuildLog "Copying build resources..." "INFO" "Yellow"
+
+    # Use specialized resource copier
+    $copyScript = Join-Path $PSScriptRoot "Copy-Resources.ps1"
+    return Invoke-BuildScript -ScriptPath $copyScript -Arguments @() -Description "Copying runtime resources"
+}
+
 # Function to create release package
 function New-ReleasePackage {
     param([bool]$IsSigned = $false)
 
     Write-BuildLog "Creating release package..." "INFO" "Yellow"
+
+    # Use specialized package creator
+    $packageScript = Join-Path $PSScriptRoot "Create-Package.ps1"
+    $arguments = @()
+    if ($IsSigned) {
+        $arguments += "-IsSigned"
+    }
+
+    return Invoke-BuildScript -ScriptPath $packageScript -Arguments $arguments -Description "Creating release package"
+}
+
+# Function to create legacy release package (deprecated)
+function New-LegacyReleasePackage {
+    param([bool]$IsSigned = $false)
+
+    Write-BuildLog "Creating legacy release package..." "INFO" "Yellow"
 
     $projectRoot = Split-Path $PSScriptRoot -Parent
     $releaseDir = Join-Path $projectRoot "release"
@@ -502,11 +528,20 @@ try {
     if ($Development) {
         Write-BuildLog "Starting DEVELOPMENT build workflow" "INFO" "Cyan"
 
+        # Step 1: Install dependencies
         $success = Initialize-BuildEnvironment
+
+        # Step 2: Build executables (bundling is now handled internally by Build-Executables.ps1)
         if ($success) {
             $success = Build-AllExecutables
         }
 
+        # Step 3: Copy resources
+        if ($success) {
+            $success = Copy-BuildResources
+        }
+
+        # Step 4: Create release package
         if ($success) {
             $success = New-ReleasePackage -IsSigned $false
         }
@@ -516,11 +551,20 @@ try {
     elseif ($Production) {
         Write-BuildLog "Starting PRODUCTION build workflow" "INFO" "Cyan"
 
+        # Step 1: Install dependencies
         $success = Initialize-BuildEnvironment
+
+        # Step 2: Build executables (bundling is now handled internally by Build-Executables.ps1)
         if ($success) {
             $success = Build-AllExecutables
         }
 
+        # Step 3: Copy resources
+        if ($success) {
+            $success = Copy-BuildResources
+        }
+
+        # Step 4: Sign executables
         if ($success) {
             $signingSuccess = Add-CodeSignatures
             if ($signingSuccess) {
@@ -531,6 +575,7 @@ try {
             }
         }
 
+        # Step 5: Create release package
         if ($success) {
             $success = New-ReleasePackage -IsSigned $isSigned
         }

@@ -23,7 +23,7 @@ $ErrorActionPreference = "Stop"
 if ($Verbose) { $VerbosePreference = "Continue" }
 
 # Initialize project root path
-$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+$projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 
 Write-Host "Focus Game Deck - Character Encoding Validation Test"
 Write-Host "Validating implementation guidelines from ARCHITECTURE.md"
@@ -74,16 +74,16 @@ Write-Host "Testing JSON File Encoding..."
 
 # Test config.json
 try {
-    $configPath = Join-Path $projectRoot "config/config.json"
+    $configPath = Join-Path $projectRoot "config/config.json.sample"
     $configContent = Get-Content $configPath -Raw -Encoding UTF8
     $null = $configContent | ConvertFrom-Json  # Test parsing
-    Test-Result "config.json UTF-8 parsing" $true
+    Test-Result "config.json.sample UTF-8 parsing" $true
 
     $configBytes = [System.IO.File]::ReadAllBytes($configPath)
     $hasBOM = ($configBytes.Length -ge 3 -and $configBytes[0] -eq 0xEF -and $configBytes[1] -eq 0xBB -and $configBytes[2] -eq 0xBF)
-    Test-Result "config.json without BOM" (-not $hasBOM) $(if ($hasBOM) { "BOM detected" } else { "" })
+    Test-Result "config.json.sample without BOM" (-not $hasBOM) $(if ($hasBOM) { "BOM detected" } else { "" })
 } catch {
-    Test-Result "config.json validation" $false $_.Exception.Message
+    Test-Result "config.json.sample validation" $false $_.Exception.Message
 }
 
 # Test messages.json
@@ -122,35 +122,39 @@ try {
         . $loggerPath
         Test-Result "Logger module loading" $true
 
-        $configPath = Join-Path $projectRoot "config/config.json"
+        $configPath = Join-Path $projectRoot "config/config.json.sample"
         if (Test-Path $configPath) {
             $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
             # Import LanguageHelper for proper message loading
             $languageHelperPath = Join-Path $projectRoot "scripts/LanguageHelper.ps1"
             if (Test-Path $languageHelperPath) {
-                . $languageHelperPath
+                try {
+                    . $languageHelperPath
 
-                # Load messages using proper LanguageHelper method
-                $messagesPath = Join-Path $projectRoot "localization/messages.json"
-                $langCode = Get-DetectedLanguage -ConfigData $config
-                $msg = Get-LocalizedMessages -MessagesPath $messagesPath -LanguageCode $langCode
+                    # Load messages using proper LanguageHelper method
+                    $messagesPath = Join-Path $projectRoot "localization/messages.json"
+                    $langCode = Get-DetectedLanguage -ConfigData $config
+                    $msg = Get-LocalizedMessages -MessagesPath $messagesPath -LanguageCode $langCode
 
-                # Create simple test messages for compatibility testing
-                $testMessages = @{
-                    test_message = "Character encoding test message"
+                    # Create simple test messages for compatibility testing
+                    $testMessages = @{
+                        test_message = "Character encoding test message"
+                    }
+
+                    $logger = Initialize-Logger -Config $config -Messages $testMessages
+                    Test-Result "Logger initialization" $true
+
+                    $logger.Info("Character encoding test message", "TEST")
+                    Test-Result "Logger UTF-8 logging" $true
+                } catch {
+                    Test-Result "Logger compatibility" $false "Error loading LanguageHelper or messages: $($_.Exception.Message)"
                 }
-
-                $logger = Initialize-Logger -Config $config -Messages $testMessages
-                Test-Result "Logger initialization" $true
-
-                $logger.Info("Character encoding test message", "TEST")
-                Test-Result "Logger UTF-8 logging" $true
             } else {
-                Test-Result "Logger compatibility" $false "LanguageHelper.ps1 not found"
+                Test-Result "Logger compatibility" $false "LanguageHelper.ps1 not found at: $languageHelperPath"
             }
         } else {
-            Test-Result "Logger compatibility" $false "config.json not found"
+            Test-Result "Logger compatibility" $false "config.json or config.json.sample not found"
         }
     } else {
         Test-Result "Logger compatibility" $false "Logger.ps1 not found"
@@ -160,9 +164,9 @@ try {
 }
 
 Write-Host ""
-Write-Host "=" * 60
+Write-Host ("=" * 60)
 Write-Host " Test Summary"
-Write-Host "=" * 60
+Write-Host ("=" * 60)
 Write-Host "Total Tests: $($results.Total)"
 Write-Host "Passed: $($results.Passed)"
 Write-Host "Failed: $($results.Failed)"
@@ -179,9 +183,9 @@ if ($successRate -gt 90) {
 if ($results.Failed -eq 0) {
     Write-Host ""
     Write-Host "All character encoding tests passed! Project follows ARCHITECTURE.md guidelines."
+    exit 0
 } else {
     Write-Host ""
     Write-Host "Some tests failed. Please review character encoding guidelines in ARCHITECTURE.md"
+    exit 1
 }
-
-if ($results.Failed -gt 0) { exit 1 }

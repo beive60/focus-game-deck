@@ -38,7 +38,7 @@
         "footer_issues": "課題",
         "footer_license": "ライセンス",
         "footer_roadmap": "ロードマップ",
-        "footer_copyright": "Copyright © 2025 Focus Game Deck. MITライセンスの下でリリースされています。"
+        "footer_copyright": "Copyright (c) 2025 Focus Game Deck. MITライセンスの下でリリースされています。"
     },
     "zh-CN": {
         "site_title": "Focus Game Deck",
@@ -79,7 +79,7 @@
         "footer_issues": "问题",
         "footer_license": "许可证",
         "footer_roadmap": "路线图",
-        "footer_copyright": "版权所有 © 2025 Focus Game Deck. 在MIT许可证下发布。"
+        "footer_copyright": "版权所有 (c) 2025 Focus Game Deck. 在MIT许可证下发布。"
     },
     "en": {
         "site_title": "Focus Game Deck",
@@ -121,7 +121,7 @@
         "footer_issues": "Issues",
         "footer_license": "License",
         "footer_roadmap": "Roadmap",
-        "footer_copyright": "Copyright © 2025 Focus Game Deck. Released under the MIT License.",
+        "footer_copyright": "Copyright (c) 2025 Focus Game Deck. Released under the MIT License.",
         "manual_title": "Focus Game Deck - GUI Manual",
         "manual_subtitle": "Complete guide to the unified gaming environment interface",
         "back_to_main": "← Back to Main Page",
