@@ -71,7 +71,7 @@ function Invoke-AppAction {
         "stop-process" {
             if ($appConfig.processName -and $appConfig.processName -ne "") {
                 # Handle multiple process names separated by |
-                $processNames = $appConfig.processName -split '/|'
+                $processNames = $appConfig.processName -split '\|'
 
                 foreach ($processName in $processNames) {
                     $processName = $processName.Trim()

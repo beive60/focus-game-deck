@@ -220,8 +220,7 @@ class AppManager {
 
             Write-Host ($this.Messages.app_started -f $appId)
             return $true
-        }
-        catch {
+        } catch {
             Write-Host "Failed to start $appId : $_"
             return $false
         }
@@ -267,7 +266,7 @@ class AppManager {
         $gracefulTimeoutMs = if ($appConfig.gracefulTimeoutMs) { $appConfig.gracefulTimeoutMs } else { 3000 }
 
         # Handle multiple process names separated by |
-        $processNames = $appConfig.processName -split '/|'
+        $processNames = $appConfig.processName -split '\|'
         $processFound = $false
 
         foreach ($processName in $processNames) {
@@ -281,8 +280,7 @@ class AppManager {
                         $processFound = $true
                     }
                 }
-            }
-            catch {
+            } catch {
                 # Process not found, continue to next
             }
         }
@@ -348,8 +346,7 @@ class AppManager {
             # Timeout reached
             Write-Host ($this.Messages.graceful_shutdown_timeout -f $processName, ($timeoutMs / 1000))
             return $false
-        }
-        catch {
+        } catch {
             Write-Host ($this.Messages.graceful_shutdown_failed -f $processName, $_)
             return $false
         }
@@ -361,8 +358,7 @@ class AppManager {
             Stop-Process -Name $processName -Force -ErrorAction Stop
             Write-Host ($this.Messages.force_termination_success -f $processName)
             return $true
-        }
-        catch {
+        } catch {
             Write-Host ($this.Messages.force_termination_failed -f $processName, $_)
             return $false
         }
@@ -385,8 +381,7 @@ class AppManager {
             Start-Process -FilePath $appConfig.path -ArgumentList $arguments
             Write-Host ($this.Messages.app_hotkey_toggled -f $appId, $this.Messages.clibor_action_toggled)
             return $true
-        }
-        catch {
+        } catch {
             Write-Host "Failed to toggle hotkeys for $appId : $_"
             return $false
         }
@@ -409,8 +404,7 @@ class AppManager {
 
             # Start VTube Studio
             return $vtubeManager.StartVTubeStudio()
-        }
-        catch {
+        } catch {
             Write-Host "Failed to start VTube Studio: $_"
             return $false
         }
@@ -433,8 +427,7 @@ class AppManager {
 
             # Stop VTube Studio
             return $vtubeManager.StopVTubeStudio()
-        }
-        catch {
+        } catch {
             Write-Host "Failed to stop VTube Studio: $_"
             return $false
         }
@@ -457,8 +450,7 @@ class AppManager {
 
             # Set Gaming Mode
             return $discordManager.SetGamingMode($this.gameConfig.name)
-        }
-        catch {
+        } catch {
             Write-Host "Failed to set Discord Gaming Mode: $_"
             return $false
         }
@@ -481,8 +473,7 @@ class AppManager {
 
             # Restore Normal Mode
             return $discordManager.RestoreNormalMode()
-        }
-        catch {
+        } catch {
             Write-Host "Failed to restore Discord Normal Mode: $_"
             return $false
         }
@@ -524,8 +515,7 @@ class AppManager {
             $actionDescription = if ($command -eq "pause") { "paused" } else { "resumed" }
             Write-Host "Wallpaper Engine $actionDescription successfully"
             return $true
-        }
-        catch {
+        } catch {
             Write-Host "Failed to control Wallpaper Engine ($command): $_"
             return $false
         }

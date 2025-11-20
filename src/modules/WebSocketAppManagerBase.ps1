@@ -52,8 +52,7 @@ class WebSocketAppManagerBase {
                 }
             }
             return $resultText | ConvertFrom-Json
-        }
-        catch {
+        } catch {
             if ($this.Logger) {
                 $this.Logger.Error("WebSocket receive error for $($this.AppName): $_", $this.AppName.ToUpper())
             }
@@ -76,8 +75,7 @@ class WebSocketAppManagerBase {
             $sendSegment = New-Object ArraySegment[byte](, $buffer)
             $this.WebSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
             return $true
-        }
-        catch {
+        } catch {
             if ($this.Logger) {
                 $this.Logger.Error("WebSocket send error for $($this.AppName): $_", $this.AppName.ToUpper())
             }
@@ -106,8 +104,7 @@ class WebSocketAppManagerBase {
                 $newWebSocket.Dispose()
                 return $null
             }
-        }
-        catch {
+        } catch {
             if ($this.Logger) {
                 $this.Logger.Error("WebSocket connection error for $($this.AppName): $_", $this.AppName.ToUpper())
             }
@@ -124,14 +121,12 @@ class WebSocketAppManagerBase {
                 if ($socketToClean.State -eq [System.Net.WebSockets.WebSocketState]::Open) {
                     $socketToClean.CloseAsync([System.Net.WebSockets.WebSocketCloseStatus]::NormalClosure, "Disconnecting", [System.Threading.CancellationToken]::None).Wait()
                 }
-            }
-            catch {
+            } catch {
                 # Ignore errors during disconnect
                 if ($this.Logger) {
                     $this.Logger.Warning("WebSocket cleanup warning for $($this.AppName): $_", $this.AppName.ToUpper())
                 }
-            }
-            finally {
+            } finally {
                 $socketToClean.Dispose()
                 if ($socketToClean -eq $this.WebSocket) {
                     $this.WebSocket = $null
@@ -147,7 +142,7 @@ class WebSocketAppManagerBase {
         }
 
         # Handle multiple process names separated by |
-        $processNames = $processName -split '/|'
+        $processNames = $processName -split '\|'
 
         foreach ($name in $processNames) {
             $name = $name.Trim()
@@ -202,8 +197,7 @@ class WebSocketAppManagerBase {
             }
 
             return $true
-        }
-        catch {
+        } catch {
             if ($this.Logger) {
                 $this.Logger.Error("Failed to start $($this.AppName): $_", $this.AppName.ToUpper())
             }
@@ -229,7 +223,7 @@ class WebSocketAppManagerBase {
 
         try {
             # Handle multiple process names separated by |
-            $processNames = $processName -split '/|'
+            $processNames = $processName -split '\|'
             $shutdownSuccess = $true
 
             foreach ($name in $processNames) {
@@ -253,8 +247,7 @@ class WebSocketAppManagerBase {
                                 $this.Logger.Info("Gracefully stopped $($this.AppName) process: $name", $this.AppName.ToUpper())
                             }
                         }
-                    }
-                    catch {
+                    } catch {
                         if ($this.Logger) {
                             $this.Logger.Error("Failed to stop $($this.AppName) process $name : $_", $this.AppName.ToUpper())
                         }
@@ -264,8 +257,7 @@ class WebSocketAppManagerBase {
             }
 
             return $shutdownSuccess
-        }
-        catch {
+        } catch {
             if ($this.Logger) {
                 $this.Logger.Error("Error during $($this.AppName) shutdown: $_", $this.AppName.ToUpper())
             }
@@ -281,8 +273,7 @@ class WebSocketAppManagerBase {
 
         try {
             return ConvertTo-SecureString -String $PlainText -AsPlainText -Force
-        }
-        catch {
+        } catch {
             if ($this.Logger) {
                 $this.Logger.Warning("ConvertTo-SecureString failed for $($this.AppName), using alternative method: $_", $this.AppName.ToUpper())
             }
