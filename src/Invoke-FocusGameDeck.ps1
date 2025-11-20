@@ -203,57 +203,9 @@ if ("obs" -in $gameConfig.appsToManage) {
     }
 }
 
-# Common cleanup process for game exit
-function Invoke-GameCleanup {
-    param(
-        [bool]$IsInterrupted = $false
-    )
-
-    if ($IsInterrupted) {
-        Write-Host "Cleanup initiated due to user interruption (Ctrl+C)."
-        if ($logger) { $logger.Warning("Cleanup initiated due to interruption", "CLEANUP") }
-    } else {
-        if ($logger) { $logger.Info("Starting game cleanup", "CLEANUP") }
-    }
-
-    # Filter out special apps for normal app manager processing
-    $normalApps = $gameConfig.appsToManage | Where-Object { $_ -notin @("obs", "clibor") }
-
-    # Handle Clibor hotkey toggle (special case)
-    if ("clibor" -in $gameConfig.appsToManage) {
-        $appManager.InvokeAction("clibor", "toggle-hotkeys")
-        if ($logger) { $logger.Info("Clibor hotkeys toggled", "CLEANUP") }
-    }
-
-    # Process normal applications shutdown
-    if ($normalApps.Count -gt 0) {
-        $appManager.ProcessShutdownSequence($normalApps)
-        if ($logger) { $logger.Info("Application shutdown sequence completed", "CLEANUP") }
-    }
-
-    # Handle OBS replay buffer shutdown
-    if ($obsManager -and $config.integrations.obs.replayBuffer) {
-        if ($obsManager.Connect()) {
-            $obsManager.StopReplayBuffer()
-            $obsManager.Disconnect()
-            if ($logger) { $logger.Info("OBS replay buffer stopped", "CLEANUP") }
-        }
-    }
-
-    if ($logger) { $logger.Info("Game cleanup completed", "CLEANUP") }
-}
-
-# Handle Ctrl+C press
-trap [System.Management.Automation.PipelineStoppedException] {
-    Invoke-GameCleanup -IsInterrupted $true
-    if ($logger) { $logger.Info("Application terminated by user", "MAIN") }
-    exit
-}
-
-# Main execution flow
-try {
-    if ($logger) { $logger.LogOperationStart("Multi-Platform Game Launch Sequence", "MAIN") }
-    $startTime = Get-Date
+# Common startup process for game environment
+function Invoke-GameStartup {
+    if ($logger) { $logger.Info("Starting game environment setup", "SETUP") }
 
     # Filter out special apps for normal app manager processing
     $normalApps = $gameConfig.appsToManage | Where-Object { $_ -notin @("obs") }
@@ -270,6 +222,9 @@ try {
                     $obsManager.StartReplayBuffer()
                     $obsManager.Disconnect()
                     if ($logger) { $logger.Info("OBS replay buffer started", "OBS") }
+                } else {
+                    Write-Warning "Failed to connect to OBS for replay buffer"
+                    if ($logger) { $logger.Warning("Failed to connect to OBS for replay buffer", "OBS") }
                 }
             }
         } else {
@@ -284,6 +239,58 @@ try {
         $appManager.ProcessStartupSequence($normalApps)
         if ($logger) { $logger.Info("Application startup sequence completed", "APP") }
     }
+
+    if ($logger) { $logger.Info("Game environment setup completed", "SETUP") }
+}
+
+# Common cleanup process for game exit
+function Invoke-GameCleanup {
+    param(
+        [bool]$IsInterrupted = $false
+    )
+
+    if ($IsInterrupted) {
+        Write-Host "Cleanup initiated due to user interruption (Ctrl+C)."
+        if ($logger) { $logger.Warning("Cleanup initiated due to interruption", "CLEANUP") }
+    } else {
+        if ($logger) { $logger.Info("Starting game cleanup", "CLEANUP") }
+    }
+
+    # Handle OBS replay buffer shutdown
+    if ($obsManager -and $config.integrations.obs.replayBuffer) {
+        if ($obsManager.Connect()) {
+            $obsManager.StopReplayBuffer()
+            $obsManager.Disconnect()
+            if ($logger) { $logger.Info("OBS replay buffer stopped", "OBS") }
+        } else {
+            if ($logger) { $logger.Warning("Failed to stop OBS replay buffer", "OBS") }
+        }
+    }
+
+    # Process normal applications shutdown
+    if ($normalApps.Count -gt 0) {
+        $appManager.ProcessShutdownSequence($normalApps)
+        if ($logger) { $logger.Info("Application shutdown sequence completed", "CLEANUP") }
+    }
+
+
+    if ($logger) { $logger.Info("Game cleanup completed", "CLEANUP") }
+}
+
+# Handle Ctrl+C press
+trap [System.Management.Automation.PipelineStoppedException] {
+    Invoke-GameCleanup -IsInterrupted $true
+    if ($logger) { $logger.Info("Application terminated by user", "MAIN") }
+    exit
+}
+
+# Main execution flow
+try {
+    if ($logger) { $logger.LogOperationStart("Multi-Platform Game Launch Sequence", "MAIN") }
+    $startTime = Get-Date
+
+    # Execute environment setup
+    Invoke-GameStartup
 
     # Launch game via appropriate platform
     if ($msg.mainLaunchingGame) {
