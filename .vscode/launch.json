@@ -19,9 +19,9 @@
             "name": "Mock process Execution",
             "type": "PowerShell",
             "request": "launch",
-            "script": "${workspaceFolder}/src/Main.PS1",
+            "script": "${workspaceFolder}/src/Invoke-FocusGameDeck.ps1",
             "cwd": "${workspaceFolder}",
-            "createTemporaryIntegratedConsole": false,
+            "createTemporaryIntegratedConsole": true,
             "args": [
                 "mock-calc"
             ]

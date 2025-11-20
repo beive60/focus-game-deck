@@ -207,8 +207,7 @@ if ("obs" -in $gameConfig.appsToManage) {
 function Invoke-GameStartup {
     if ($logger) { $logger.Info("Starting game environment setup", "SETUP") }
 
-    # Filter out special apps for normal app manager processing
-    $normalApps = $gameConfig.appsToManage | Where-Object { $_ -notin @("obs") }
+
 
     # Handle OBS startup (special case)
     if ("obs" -in $gameConfig.appsToManage -and $obsManager) {
@@ -242,6 +241,9 @@ function Invoke-GameStartup {
 
     if ($logger) { $logger.Info("Game environment setup completed", "SETUP") }
 }
+
+# Filter out special apps for normal app manager processing
+$normalApps = $gameConfig.appsToManage
 
 # Common cleanup process for game exit
 function Invoke-GameCleanup {
