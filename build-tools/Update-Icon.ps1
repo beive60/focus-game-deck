@@ -22,9 +22,9 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 # --- Configuration ---
-$ProjectRoot = Resolve-Path -Path (Join-Path -Path $PSScriptRoot -ChildPath '..')
-$SvgIconPath = Join-Path -Path $ProjectRoot -ChildPath 'assets/icon.svg'
-$IcoOutputPath = Join-Path -Path $ProjectRoot -ChildPath 'assets/icon.ico'
+$projectRoot = Resolve-Path -Path (Join-Path -Path $PSScriptRoot -ChildPath '..')
+$SvgIconPath = Join-Path -Path $projectRoot -ChildPath 'assets/icon.svg'
+$IcoOutputPath = Join-Path -Path $projectRoot -ChildPath 'assets/icon.ico'
 $Resolutions = @(256, 128, 64, 32, 16)
 
 # --- Pre-flight Checks ---
@@ -33,8 +33,7 @@ try {
     $magickVersion = magick -version
     Write-Host "ImageMagick found."
     # Write-Host $magickVersion # Uncomment for debugging
-}
-catch {
+} catch {
     Write-Error "ImageMagick not found. Please install it and ensure 'magick.exe' is in your system's PATH."
     exit 1
 }

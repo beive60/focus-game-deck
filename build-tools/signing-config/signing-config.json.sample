@@ -9,14 +9,14 @@
         "descriptionUrl": "https://github.com/beive60/focus-game-deck",
         "notes": {
             "setup": [
-                "1. Obtain Extended Validation (EV) certificate from a trusted CA",
+                "1. Obtain an Organization Validation (OV) certificate from a trusted CA",
                 "2. Install certificate in Windows Certificate Store",
                 "3. Update 'certificateThumbprint' with your certificate's thumbprint",
                 "4. Set 'enabled' to true to enable code signing",
                 "5. Run build script with signing enabled"
             ],
             "certificateRequirements": {
-                "type": "Extended Validation (EV) Code Signing Certificate",
+                "type": "Organization Validation (OV) Code Signing Certificate",
                 "recommendedProviders": [
                     "DigiCert",
                     "Sectigo (formerly Comodo)",

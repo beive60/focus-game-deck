@@ -43,18 +43,18 @@ function Invoke-Test {
             Write-Host "  PASSED"
             $script:TestsPassed++
             $script:TestResults += [PSCustomObject]@{
-                TestName    = $TestName
-                Status      = "PASSED"
-                Error       = $null
+                TestName = $TestName
+                Status = "PASSED"
+                Error = $null
                 Description = $Description
             }
         } else {
             Write-Host "  FAILED: $result"
             $script:TestsFailed++
             $script:TestResults += [PSCustomObject]@{
-                TestName    = $TestName
-                Status      = "FAILED"
-                Error       = $result
+                TestName = $TestName
+                Status = "FAILED"
+                Error = $result
                 Description = $Description
             }
         }
@@ -62,9 +62,9 @@ function Invoke-Test {
         Write-Host "  FAILED: $($_.Exception.Message)"
         $script:TestsFailed++
         $script:TestResults += [PSCustomObject]@{
-            TestName    = $TestName
-            Status      = "FAILED"
-            Error       = $_.Exception.Message
+            TestName = $TestName
+            Status = "FAILED"
+            Error = $_.Exception.Message
             Description = $Description
         }
     }
@@ -78,20 +78,20 @@ function New-MockConfigData {
     )
 
     $mockConfig = [PSCustomObject]@{
-        language    = "en"
-        games       = [PSCustomObject]@{}
+        language = "en"
+        games = [PSCustomObject]@{}
         managedApps = [PSCustomObject]@{}
     }
 
     for ($i = 1; $i -le $GameCount; $i++) {
         $gameId = "testGame$i"
         $mockConfig.games | Add-Member -MemberType NoteProperty -Name $gameId -Value ([PSCustomObject]@{
-                name         = "Test Game $i"
-                platform     = if ($i % 3 -eq 1) { "steam" } elseif ($i % 3 -eq 2) { "epic" } else { "riot" }
-                steamAppId   = if ($i % 3 -eq 1) { "123456$i" } else { "" }
-                epicGameId   = if ($i % 3 -eq 2) { "epic-game-$i" } else { "" }
-                riotGameId   = if ($i % 3 -eq 0) { "riot-game-$i" } else { "" }
-                processName  = "testProcess$i.exe"
+                name = "Test Game $i"
+                platform = if ($i % 3 -eq 1) { "steam" } elseif ($i % 3 -eq 2) { "epic" } else { "riot" }
+                steamAppId = if ($i % 3 -eq 1) { "123456$i" } else { "" }
+                epicGameId = if ($i % 3 -eq 2) { "epic-game-$i" } else { "" }
+                riotGameId = if ($i % 3 -eq 0) { "riot-game-$i" } else { "" }
+                processName = "testProcess$i.exe"
                 appsToManage = @()
             })
     }
@@ -102,7 +102,7 @@ function New-MockConfigData {
 # Helper function to load actual messages from messages.json
 function New-MockMessages {
     try {
-        $projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
+        $projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
         $messagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
         if (Test-Path $messagesPath) {
             $messagesData = Get-Content $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -118,22 +118,22 @@ function New-MockMessages {
 
     # Fallback mock messages
     return [PSCustomObject]@{
-        refreshingGameList   = "Refreshing game list..."
-        gameListError        = "Game list error"
-        noGamesFound         = "No configured games found"
-        oneGameReady         = "1 game ready to launch"
-        multipleGamesReady   = "{0} games ready to launch"
-        gameListUpdateError  = "Error occurred updating game list"
-        launchingGame        = "Launching game: {0}"
-        gameNotFound         = "Game '{0}' not found"
-        launchError          = "Launch error"
-        launcherNotFound     = "Game launcher not found"
-        gameLaunched         = "Game '{0}' launched successfully"
-        readyToLaunch        = "Ready to Launch"
-        launcherWelcomeText  = "Focus Game Deck Game Launcher"
+        refreshingGameList = "Refreshing game list..."
+        gameListError = "Game list error"
+        noGamesFound = "No configured games found"
+        oneGameReady = "1 game ready to launch"
+        multipleGamesReady = "{0} games ready to launch"
+        gameListUpdateError = "Error occurred updating game list"
+        launchingGame = "Launching game: {0}"
+        gameNotFound = "Game '{0}' not found"
+        launchError = "Launch error"
+        launcherNotFound = "Game launcher not found"
+        gameLaunched = "Game '{0}' launched successfully"
+        readyToLaunch = "Ready to Launch"
+        launcherWelcomeText = "Focus Game Deck Game Launcher"
         launcherSubtitleText = "Select and launch your configured games"
-        launcherHintText     = "Select a game and click launch, or add new games to get started"
-        noGamesConfigured    = "No games configured"
+        launcherHintText = "Select a game and click launch, or add new games to get started"
+        noGamesConfigured = "No games configured"
     }
 }
 
@@ -653,5 +653,5 @@ Write-Host ("=" * 60)
 return @{
     TestsPassed = $script:TestsPassed
     TestsFailed = $script:TestsFailed
-    Results     = $script:TestResults
+    Results = $script:TestResults
 }

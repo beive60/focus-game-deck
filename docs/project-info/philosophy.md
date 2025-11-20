@@ -53,9 +53,11 @@ The project name **Focus Game Deck** embodies our philosophy.
 
 ### Security First
 
+* **Multi-executable architecture (v3.0+)**: All executed code is contained within digitally signed executables, eliminating external unsigned script vulnerabilities
+* **Code integrity**: Three separate signed executables ensure all execution flows through verified code
 * **Anti-cheat compatibility**: All features are designed to minimize false positive risks
 * **Transparency**: Complete open source for security audit
-* **Digital signatures**: All releases are signed with Extended Validation certificates
+* **Digital signatures**: All releases are signed with Organization Validation certificates
 
 ### Performance First
 

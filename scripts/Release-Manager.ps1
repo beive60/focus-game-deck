@@ -54,13 +54,7 @@ $script:Config = @{
 function Write-StatusMessage {
     param([string]$Message, [string]$Status = "INFO")
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $color = switch ($Status) {
-        "INFO" { "White" }
-        "SUCCESS" { "Green" }
-        "WARNING" { "Yellow" }
-        "ERROR" { "Red" }
-    }
-    Write-Host "[$timestamp] [$Status] $Message" -ForegroundColor $color
+    Write-Host "[$timestamp] [$Status] $Message"
 }
 
 function Get-CurrentGitBranch {

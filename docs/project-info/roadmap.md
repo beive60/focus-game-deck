@@ -215,13 +215,6 @@ Throughout all phases, maintain these core principles:
 * **Support Channels**: Establish Discord, Reddit, and GitHub issue support
 * **Contributor Recognition**: Acknowledge and reward community contributions
 
-## Language Support
-
-This documentation is available in multiple languages:
-
-* **English** (Main): [docs/ROADMAP.md](./ROADMAP.md)
-* **日本語** (Japanese): [docs/ja/ROADMAP.md](./ja/ROADMAP.md)
-
 ---
 
 *This roadmap serves as a living document that will evolve based on user feedback, technical discoveries, and market opportunities while maintaining our core vision of empowering gamers worldwide.*

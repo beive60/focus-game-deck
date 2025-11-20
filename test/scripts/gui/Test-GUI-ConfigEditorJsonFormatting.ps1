@@ -16,9 +16,8 @@ Write-Host "=== ConfigEditor JSON Formatting Integration Test ==="
 Write-Host ""
 
 # Get project root
-$projectRoot = Split-Path $PSScriptRoot -Parent
-$configPath = Join-Path $projectRoot "config/config.json"
-$backupPath = Join-Path $projectRoot "config/config.json.backup-test"
+$projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+$ConfigPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
 
 # Backup original config
 if (Test-Path $configPath) {

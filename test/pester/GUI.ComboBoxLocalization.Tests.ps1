@@ -8,7 +8,7 @@
 
 BeforeAll {
     # Navigate up two levels from test/pester/ to project root
-    $ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+    $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 
     # Load WPF assemblies
     Add-Type -AssemblyName PresentationFramework
@@ -16,8 +16,8 @@ BeforeAll {
     Add-Type -AssemblyName WindowsBase
 
     # Load required modules
-    . (Join-Path -Path $ProjectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1")
-    . (Join-Path -Path $ProjectRoot -ChildPath "gui/ConfigEditor.Localization.ps1")
+    . (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1")
+    . (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Localization.ps1")
 }
 
 Describe "GUI ComboBox Localization Tests" -Tag "GUI", "Localization" {
@@ -50,7 +50,7 @@ Describe "GUI ComboBox Localization Tests" -Tag "GUI", "Localization" {
     Context "Localization Application" {
         BeforeEach {
             # Load XAML
-            $xamlPath = Join-Path -Path $ProjectRoot -ChildPath "gui/MainWindow.xaml"
+            $xamlPath = Join-Path -Path $projectRoot -ChildPath "gui/MainWindow.xaml"
             $xamlContent = Get-Content -Path $xamlPath -Raw -Encoding UTF8
             [xml]$xaml = $xamlContent
 
@@ -67,7 +67,7 @@ Describe "GUI ComboBox Localization Tests" -Tag "GUI", "Localization" {
         }
 
         It "should have message keys for all ComboBox mappings" {
-            $messages = Get-Content -Path (Join-Path -Path $ProjectRoot -ChildPath "localization/messages.json") -Raw -Encoding UTF8 | ConvertFrom-Json
+            $messages = Get-Content -Path (Join-Path -Path $projectRoot -ChildPath "localization/messages.json") -Raw -Encoding UTF8 | ConvertFrom-Json
 
             foreach ($messageKey in $ComboBoxItemMappings.Values) {
                 $messages.ja.$messageKey | Should -Not -BeNullOrEmpty -Because "Message key $messageKey should exist"

@@ -22,12 +22,12 @@ Describe "GUI Tests" -Tag "GUI" {
     Context "ConfigEditor Consistency" {
         It "should have all required UI element mappings" {
             $testScript = Join-Path -Path $script:ProjectRoot -ChildPath "test/scripts/gui/Test-GUI-ConfigEditorConsistency.ps1"
-            $output = & $testScript 2>&1
+            $output = & $testScript *>&1 | Out-String
+            $exitCode = $LASTEXITCODE
 
             # Check if test passed or identify specific issues
-            if ($LASTEXITCODE -ne 0) {
-                $outputText = $output -join "`n"
-                if ($outputText -match "Missing mappings:\s+(\d+)") {
+            if ($exitCode -ne 0) {
+                if ($output -match "Missing mappings:\s+(\d+)") {
                     Set-ItResult -Skipped -Because "Known issue: $($Matches[1]) missing mappings need to be added"
                 }
             }
@@ -37,14 +37,13 @@ Describe "GUI Tests" -Tag "GUI" {
     Context "Element Mapping Completeness" {
         It "should have complete UI element mappings" {
             $testScript = Join-Path -Path $script:ProjectRoot -ChildPath "test/scripts/gui/Test-GUI-ElementMappingCompleteness.ps1"
-            $output = & $testScript 2>&1
+            $output = & $testScript *>&1 | Out-String
 
             # Allow known issues but track them
-            $outputText = $output -join "`n"
-            if ($outputText -match "messages.json.*does not exist") {
+            if ($output -match "messages.json.*does not exist") {
                 Set-ItResult -Skipped -Because "Test script needs path update for messages.json"
             } else {
-                $outputText | Should -Match "\[PASS\]"
+                $output | Should -Match "\[PASS\]"
             }
         }
     }
@@ -52,26 +51,24 @@ Describe "GUI Tests" -Tag "GUI" {
     Context "ComboBox Localization" {
         It "should localize all ComboBox items correctly" {
             $testScript = Join-Path -Path $script:ProjectRoot -ChildPath "test/scripts/gui/Test-GUI-ComboBoxLocalization.ps1"
-            $output = & $testScript 2>&1
-            $outputText = $output -join "`n"
+            $output = & $testScript *>&1 | Out-String
 
-            $outputText | Should -Match "All ComboBoxItem localization tests passed"
+            $output | Should -Match "All ComboBoxItem localization tests passed"
         }
     }
 
     Context "Game Launcher Tab" {
         It "should pass game launcher tab functionality tests" {
             $testScript = Join-Path -Path $script:ProjectRoot -ChildPath "test/scripts/gui/Test-GUI-GameLauncherTab.ps1"
-            $output = & $testScript 2>&1
-            $outputText = $output -join "`n"
+            $output = & $testScript *>&1 | Out-String
 
             # Parse test results
-            if ($outputText -match "Tests Passed:\s+(\d+)") {
+            if ($output -match "Tests Passed:\s+(\d+)") {
                 $passed = [int]$Matches[1]
                 $passed | Should -BeGreaterThan 0 -Because "At least some tests should pass"
             }
 
-            if ($outputText -match "Tests Failed:\s+(\d+)") {
+            if ($output -match "Tests Failed:\s+(\d+)") {
                 $failed = [int]$Matches[1]
                 if ($failed -gt 0) {
                     Set-ItResult -Skipped -Because "Known issue: Message argument replacement needs implementation"
@@ -83,27 +80,33 @@ Describe "GUI Tests" -Tag "GUI" {
     Context "Localization Integrity" {
         It "should pass localization diagnostic analysis" {
             $testScript = Join-Path -Path $script:ProjectRoot -ChildPath "test/scripts/gui/Test-GUI-LocalizationIntegrity.ps1"
-            $output = & $testScript 2>&1
-            $outputText = $output -join "`n"
+            $output = & $testScript *>&1 | Out-String
+            $exitCode = $LASTEXITCODE
 
-            # Localization integrity test is diagnostic, always passes but reports issues
-            $outputText | Should -Match "LOCALIZATION DIAGNOSTIC REPORT"
+            # Test should complete successfully
+            $exitCode | Should -Be 0 -Because "Localization diagnostic should complete without errors"
 
-            # Count issues for visibility
-            if ($outputText -match "Total Issues Found:\s+(\d+)") {
+            # Verify diagnostic report was generated
+            $output | Should -Match "LOCALIZATION DIAGNOSTIC REPORT" -Because "Diagnostic report should be generated"
+
+            # Extract and display issue count
+            if ($output -match "Total Issues Found:\s+(\d+)") {
                 $issueCount = [int]$Matches[1]
-                Write-Host "Localization diagnostic found $issueCount issues (see output for details)"
+                Write-Host "Localization diagnostic found $issueCount issues"
+
+                # Note: This is a diagnostic test that reports issues but doesn't fail
+                # Issues are tracked for visibility and improvement planning
             }
 
-            # Test passes as this is a diagnostic tool, not a pass/fail test
-            $true | Should -Be $true
+            # Verify test result indicator is present
+            $output | Should -Match "\[TEST RESULT\]" -Because "Test should output result summary"
         }
     }
 
     Context "ConfigEditor Debug Mode" {
         It "should initialize ConfigEditor without errors" {
             $testScript = Join-Path -Path $script:ProjectRoot -ChildPath "test/scripts/gui/Test-GUI-ConfigEditorDebug.ps1"
-            $output = & $testScript -AutoCloseSeconds 3 2>&1
+            $output = & $testScript -AutoCloseSeconds 3 *>&1 | Out-String
 
             # Debug test collects warnings but should not fail
             $output | Should -Not -BeNullOrEmpty
@@ -113,10 +116,11 @@ Describe "GUI Tests" -Tag "GUI" {
     Context "JSON Formatting" {
         It "should maintain 4-space indentation in JSON files" {
             $testScript = Join-Path -Path $script:ProjectRoot -ChildPath "test/scripts/gui/Test-GUI-JsonFormatting.ps1"
-            $output = & $testScript 2>&1
+            $output = & $testScript *>&1 | Out-String
+            $exitCode = $LASTEXITCODE
 
             # JSON formatting test verifies indentation consistency
-            if ($LASTEXITCODE -eq 0) {
+            if ($exitCode -eq 0) {
                 $output | Should -Not -BeNullOrEmpty
             } else {
                 Set-ItResult -Skipped -Because "JSON formatting test needs validation"

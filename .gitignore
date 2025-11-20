@@ -33,7 +33,7 @@ launcher-debug.txt
 .vscode/keybindings.json
 
 # User logs
-src/logs/*.log
+*.log
 
 # Temporary backup files
 *.backup
@@ -41,5 +41,7 @@ src/logs/*.log
 
 # Test results
 test/test-results.xml
+test/test-results.html
 test/history/*.xml
+test/test-results/*
 gui/localization-diagnostic-*.json

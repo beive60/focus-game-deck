@@ -71,7 +71,7 @@ class ConfigEditorUI {
             $this.Messages = $localization.Messages
             $this.CurrentLanguage = $localization.CurrentLanguage
             # Store project root for internal file path construction (classes cannot access outer script variables)
-            $this.ProjectRoot = $ProjectRoot
+            $this.ProjectRoot = $projectRoot
             Write-Host "[DEBUG] ConfigEditorUI: State manager, mappings, and localization assigned"
 
             # Load XAML (use project root defined in main script)

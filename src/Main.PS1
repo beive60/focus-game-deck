@@ -9,6 +9,9 @@
     - Command-line game list and help
     - Version information display
 
+    The script automatically detects its execution environment (bundled executable vs. script)
+    and adjusts path resolution accordingly to eliminate code duplication.
+
 .PARAMETER GameId
     The ID of the game to launch (optional, positional parameter)
 
@@ -43,7 +46,7 @@
 .NOTES
     File Name  : Main.PS1
     Author     : Focus Game Deck Team
-    Version    : 2.0.0
+    Version    : 3.0.0 - Multi-Executable Bundle Architecture
     Requires   : PowerShell 5.1 or later
 
 .LINK
@@ -54,15 +57,15 @@
 # PowerShell script that serves as the single entry point for all Focus Game Deck functionality
 #
 # Usage:
-#   Focus-Game-Deck.exe                    # Launch GUI configuration editor
-#   Focus-Game-Deck.exe --config          # Launch GUI configuration editor (explicit)
+#   Focus-Game-Deck.exe                    # Launch Focus Game Deck (GUI)
+#   Focus-Game-Deck.exe --config          # Launch Focus Game Deck (GUI) (explicit)
 #   Focus-Game-Deck.exe <GameId>          # Launch specific game
 #   Focus-Game-Deck.exe --list           # List available games
 #   Focus-Game-Deck.exe --help           # Show help information
 #
-# Author: GitHub Copilot Assistant
-# Version: 2.0.0 - Unified Architecture with Enhanced UX
-# Date: 2025-10-01
+# Author: Focus Game Deck Team
+# Version: 3.0.0 - Multi-Executable Bundle Architecture
+# Date: 2025-11-14
 
 param(
     [Parameter(Position = 0)]
@@ -79,38 +82,70 @@ param(
 # Initialize script variables
 # Handle both script execution and compiled executable scenarios
 
-# Reliable method to detect execution environment and get paths
+# Detect execution environment
 $currentProcess = Get-Process -Id $PID
 $isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
 
+# Define the application root directory
+# This is critical for finding external resources (config, XAML, logs)
 if ($isExecutable) {
-    # Running as compiled executable - use process path
-    $workingDir = Split-Path -Parent $currentProcess.Path
-    $scriptDir = $workingDir
+    # In executable mode, the root is the directory where the .exe file is located
+    # ps2exe extracts to temp, but we need the actual exe location for external files
+    $appRoot = Split-Path -Parent $currentProcess.Path
 } else {
-    # Running as PowerShell script - use traditional methods
-    $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
-    $workingDir = (Get-Location).Path
+    # In development (script) mode, calculate the project root relative to the current script
+    # For ConfigEditor.ps1 in /gui, the root is one level up
+    $appRoot = Split-Path -Parent $PSScriptRoot
 }
 
-# Set up paths based on execution mode
+# Path to external resources relative to $appRoot
+$configPath = Join-Path $appRoot "config/config.json"
+$messagesPath = Join-Path $appRoot "localization/messages.json"
+
 if ($isExecutable) {
-    # For compiled executable, use relative paths from executable location
-    $configPath = Join-Path $workingDir "config/config.json"
-    $languageHelperPath = Join-Path $workingDir "scripts/LanguageHelper.ps1"
-    $messagesPath = Join-Path $workingDir "localization/messages.json"
-    $gameLauncherPath = Join-Path $workingDir "src/Invoke-FocusGameDeck.ps1"
-    $configEditorPath = Join-Path $workingDir "gui/ConfigEditor.ps1"
-    $versionScriptPath = Join-Path $workingDir "build-tools/Version.ps1"
+    # In executable mode, define paths to bundled executables
+    $configEditorExe = Join-Path $appRoot "ConfigEditor.exe"
+    $gameLauncherExe = Join-Path $appRoot "Invoke-FocusGameDeck.exe"
 } else {
-    # For script execution, use paths relative to project root
-    $projectRoot = if ($scriptDir -like "*\src") { Split-Path $scriptDir -Parent } else { $workingDir }
-    $configPath = Join-Path $projectRoot "config/config.json"
-    $languageHelperPath = Join-Path $projectRoot "scripts/LanguageHelper.ps1"
-    $messagesPath = Join-Path $projectRoot "localization/messages.json"
-    $gameLauncherPath = Join-Path $projectRoot "src/Invoke-FocusGameDeck.ps1"
-    $configEditorPath = Join-Path $projectRoot "gui/ConfigEditor.ps1"
-    $versionScriptPath = Join-Path $projectRoot "build-tools/Version.ps1"
+    # In development (script) mode, use project structure paths
+    $gameLauncherPath = Join-Path $appRoot "src/Invoke-FocusGameDeck.ps1"
+    $configEditorPath = Join-Path $appRoot "gui/ConfigEditor.ps1"
+    $versionScriptPath = Join-Path $appRoot "build-tools/Version.ps1"
+    $languageHelperPath = Join-Path $appRoot "scripts/LanguageHelper.ps1"
+
+    # Import version helper if available
+    if ($versionScriptPath -and (Test-Path $versionScriptPath)) {
+        try {
+            . $versionScriptPath
+        } catch {
+            Write-Warning "Failed to load version script: $_"
+        }
+    }
+
+
+    # Import language helper functions if available
+    if ($languageHelperPath -and (Test-Path $languageHelperPath)) {
+        try {
+            . $languageHelperPath
+        } catch {
+            Write-Warning "Failed to load language helper: $_"
+        }
+    }
+}
+
+# Provide fallback version function
+if (-not (Get-Command "Get-ProjectVersionInfo" -ErrorAction SilentlyContinue)) {
+    function Get-ProjectVersionInfo {
+        return @{ FullVersion = "3.0.0" }
+    }
+}
+
+# Provide fallback language helper functions
+if (-not (Get-Command "Get-DetectedLanguage" -ErrorAction SilentlyContinue)) {
+    function Get-DetectedLanguage { param($ConfigData) return "en" }
+}
+if (-not (Get-Command "Get-LocalizedMessages" -ErrorAction SilentlyContinue)) {
+    function Get-LocalizedMessages { param($MessagesPath, $LanguageCode) return $null }
 }
 
 # Import required modules if not already loaded
@@ -120,31 +155,6 @@ if (-not (Get-Module -Name Microsoft.PowerShell.Security)) {
     } catch {
         Write-Warning "Failed to load Microsoft.PowerShell.Security module: $_"
     }
-}
-
-# Import version helper if available
-if ($versionScriptPath -and (Test-Path $versionScriptPath)) {
-    try {
-        . $versionScriptPath
-    } catch {
-        Write-Warning "Failed to load version script: $_"
-    }
-}
-
-# Import language helper functions
-if ($languageHelperPath -and (Test-Path $languageHelperPath)) {
-    try {
-        . $languageHelperPath
-    } catch {
-        Write-Warning "Failed to load language helper: $_"
-    }
-} else {
-    if ($languageHelperPath) {
-        Write-Warning "Language helper not found: $languageHelperPath"
-    }
-    # Provide fallback functions for basic operation
-    function Get-DetectedLanguage { param($ConfigData) return "en" }
-    function Get-LocalizedMessages { param($MessagesPath, $LanguageCode) return $null }
 }
 
 <#
@@ -167,23 +177,22 @@ if ($languageHelperPath -and (Test-Path $languageHelperPath)) {
 function Show-Help {
     param()
 
+    if ( $isExecutable ) {
+        $executionCommand = "Focus-Game-Deck.exe"
+    } else {
+        $executionCommand = "Main.PS1"
+    }
+
     try {
         # Try to load messages for help display
         $config = Get-Content -Path $configPath -Raw -Encoding UTF8 -ErrorAction SilentlyContinue | ConvertFrom-Json -ErrorAction SilentlyContinue
         $langCode = if ($config) { Get-DetectedLanguage -ConfigData $config } else { "en" }
         $msg = if (Test-Path $messagesPath) { Get-LocalizedMessages -MessagesPath $messagesPath -LanguageCode $langCode } else { $null }
 
-        # Get version info if available
-        $versionInfo = if (Get-Command "Get-ProjectVersionInfo" -ErrorAction SilentlyContinue) {
-            Get-ProjectVersionInfo
-        } else {
-            @{ FullVersion = "Unknown" }
-        }
-
-        Write-Host ""
-        Write-Host "Focus Game Deck v$($versionInfo.FullVersion)" -ForegroundColor Cyan
-        Write-Host "==================================" -ForegroundColor Cyan
-        Write-Host ""
+        # Get version info
+        $versionInfo = Get-ProjectVersionInfo
+        Write-Host "Focus Game Deck v$($versionInfo.FullVersion)"
+        Write-Host "=================================="
 
         if ($msg -and $msg.help_description) {
             Write-Host $msg.help_description
@@ -192,30 +201,30 @@ function Show-Help {
         }
 
         Write-Host ""
-        Write-Host "Usage:" -ForegroundColor Yellow
-        Write-Host "  Focus-Game-Deck.exe                    # Launch GUI configuration editor" -ForegroundColor White
-        Write-Host "  Focus-Game-Deck.exe --config          # Launch GUI configuration editor (explicit)" -ForegroundColor White
-        Write-Host "  Focus-Game-Deck.exe <GameId>          # Launch specific game" -ForegroundColor White
-        Write-Host "  Focus-Game-Deck.exe --list           # List available games" -ForegroundColor White
-        Write-Host "  Focus-Game-Deck.exe --help           # Show this help information" -ForegroundColor White
-        Write-Host "  Focus-Game-Deck.exe --version        # Show version information" -ForegroundColor White
+        Write-Host "Usage:"
+        Write-Host "  $executionCommand                  # Launch Focus Game Deck (GUI)"
+        Write-Host "  $executionCommand --config         # Launch Focus Game Deck (GUI) (explicit)"
+        Write-Host "  $executionCommand <GameId>         # Launch specific game"
+        Write-Host "  $executionCommand --list           # List available games"
+        Write-Host "  $executionCommand --help           # Show this help information"
+        Write-Host "  $executionCommand --version        # Show version information"
         Write-Host ""
 
-        Write-Host "Examples:" -ForegroundColor Yellow
-        Write-Host "  Focus-Game-Deck.exe apex              # Launch Apex Legends" -ForegroundColor Gray
-        Write-Host "  Focus-Game-Deck.exe valorant          # Launch Valorant" -ForegroundColor Gray
-        Write-Host "  Focus-Game-Deck.exe dbd               # Launch Dead by Daylight" -ForegroundColor Gray
+        Write-Host "Examples:"
+        Write-Host "  $executionCommand apex              # Launch Apex Legends"
+        Write-Host "  $executionCommand valorant          # Launch Valorant"
+        Write-Host "  $executionCommand dbd               # Launch Dead by Daylight"
         Write-Host ""
 
-        Write-Host "Configuration:" -ForegroundColor Yellow
-        Write-Host "  Configuration file: config/config.json" -ForegroundColor Gray
-        Write-Host "  Use the GUI editor for easy configuration management." -ForegroundColor Gray
+        Write-Host "Configuration:"
+        Write-Host "  Configuration file: config/config.json"
+        Write-Host "  Use the GUI editor for easy configuration management."
         Write-Host ""
 
     } catch {
-        Write-Host "Focus Game Deck - Multi-Platform Game Launcher" -ForegroundColor Cyan
-        Write-Host "Usage: Focus-Game-Deck.exe [GameId|--config|--list|--help|--version]" -ForegroundColor White
-        Write-Host "Run without arguments to open the configuration editor." -ForegroundColor Gray
+        Write-Host "Focus Game Deck - Multi-Platform Game Launcher"
+        Write-Host "Usage: $executionCommand [GameId|--config|--list|--help|--version]"
+        Write-Host "Run without arguments to open the configuration editor."
     }
 }
 
@@ -230,22 +239,17 @@ function Show-Version {
     param()
 
     try {
-        if (Get-Command "Get-ProjectVersionInfo" -ErrorAction SilentlyContinue) {
-            $versionInfo = Get-ProjectVersionInfo
-            Write-Host "Focus Game Deck v$($versionInfo.FullVersion)" -ForegroundColor Cyan
-            if ($versionInfo.BuildDate) {
-                Write-Host "Build Date: $($versionInfo.BuildDate)" -ForegroundColor Gray
-            }
-            if ($versionInfo.GitCommit) {
-                Write-Host "Git Commit: $($versionInfo.GitCommit)" -ForegroundColor Gray
-            }
-        } else {
-            Write-Host "Focus Game Deck" -ForegroundColor Cyan
-            Write-Host "Version information not available." -ForegroundColor Gray
+        $versionInfo = Get-ProjectVersionInfo
+        Write-Host "Focus Game Deck v$($versionInfo.FullVersion)"
+        if ($versionInfo.BuildDate) {
+            Write-Host "Build Date: $($versionInfo.BuildDate)"
         }
+        if ($versionInfo.GitCommit) {
+            Write-Host "Git Commit: $($versionInfo.GitCommit)"
+        }
+        Write-Host "Multi-Executable Bundle Architecture"
     } catch {
-        Write-Host "Focus Game Deck" -ForegroundColor Cyan
-        Write-Host "Version: Unknown" -ForegroundColor Red
+        Write-Host "Version information not available."
     }
 }
 
@@ -263,8 +267,8 @@ function Show-GameList {
     try {
         # Load configuration
         if (-not (Test-Path $configPath)) {
-            Write-Host "Configuration file not found: $configPath" -ForegroundColor Red
-            Write-Host "Please run the configuration editor to set up your games." -ForegroundColor Yellow
+            Write-Host "Configuration file not found: $configPath"
+            Write-Host "Please run the configuration editor to set up your games."
             return
         }
 
@@ -276,22 +280,22 @@ function Show-GameList {
 
         if (-not $config.games -or $config.games.PSObject.Properties.Count -eq 0) {
             if ($msg -and $msg.no_games_configured) {
-                Write-Host $msg.no_games_configured -ForegroundColor Yellow
+                Write-Host $msg.no_games_configured
             } else {
-                Write-Host "No games are configured. Use --config to set up your games." -ForegroundColor Yellow
+                Write-Host "No games are configured. Use --config to set up your games."
             }
             return
         }
 
         Write-Host ""
         if ($msg -and $msg.mainGameListTitle) {
-            Write-Host $msg.mainGameListTitle -ForegroundColor Cyan
+            Write-Host $msg.mainGameListTitle
         } elseif ($msg -and $msg.availableGames) {
-            Write-Host $msg.availableGames -ForegroundColor Cyan
+            Write-Host $msg.availableGames
         } else {
-            Write-Host "Available Games:" -ForegroundColor Cyan
+            Write-Host "Available Games:"
         }
-        Write-Host ("=" * 50) -ForegroundColor Cyan
+        Write-Host ("=" * 50)
         Write-Host ""
 
         # Display each game with formatted output
@@ -305,25 +309,25 @@ function Show-GameList {
             $platformLabel = if ($msg -and $msg.mainGameListPlatform) { $msg.mainGameListPlatform } else { "  Platform: " }
             $processLabel = if ($msg -and $msg.mainGameListProcess) { $msg.mainGameListProcess } else { "  Process: " }
 
-            Write-Host $gameIdLabel -NoNewline -ForegroundColor White
-            Write-Host $gameId -ForegroundColor Green
-            Write-Host $nameLabel -NoNewline -ForegroundColor Gray
-            Write-Host $gameData.name -ForegroundColor White
-            Write-Host $platformLabel -NoNewline -ForegroundColor Gray
-            Write-Host $platform -ForegroundColor Cyan
+            Write-Host $gameIdLabel -NoNewline
+            Write-Host $gameId
+            Write-Host $nameLabel -NoNewline
+            Write-Host $gameData.name
+            Write-Host $platformLabel -NoNewline
+            Write-Host $platform
             if ($gameData.processName) {
-                Write-Host $processLabel -NoNewline -ForegroundColor Gray
-                Write-Host $gameData.processName -ForegroundColor Yellow
+                Write-Host $processLabel -NoNewline
+                Write-Host $gameData.processName
             }
             Write-Host ""
         }
 
-        $usageText = if ($msg -and $msg.mainGameListUsage) { $msg.mainGameListUsage } else { "Usage: Focus-Game-Deck.exe <GameId>" }
-        Write-Host $usageText -ForegroundColor Gray
+        $usageText = if ($msg -and $msg.mainGameListUsage) { $msg.mainGameListUsage } else { "Usage: $executionCommand <GameId>" }
+        Write-Host $usageText
         Write-Host ""
 
     } catch {
-        Write-Host "Failed to load game list: $_" -ForegroundColor Red
+        Write-Host "Failed to load game list: $_"
     }
 }
 
@@ -332,8 +336,8 @@ function Show-GameList {
     Launches the ConfigEditor with enhanced game launcher functionality
 
 .DESCRIPTION
-    Starts the ConfigEditor GUI with optional game launcher mode enabled.
-    This provides a unified interface for both configuration and game launching.
+    Starts the ConfigEditor GUI. In bundled mode, launches the ConfigEditor.exe.
+    In development mode, launches the PowerShell script.
 #>
 function Start-ConfigEditor {
     param(
@@ -341,37 +345,35 @@ function Start-ConfigEditor {
     )
 
     try {
-        # Check if running as compiled executable
         if ($isExecutable) {
-            Write-Host "Configuration Editor Integration (Unified Executable Mode)" -ForegroundColor Cyan
-            Write-Host "=========================================================" -ForegroundColor Cyan
-            Write-Host ""
-            Write-Host "This unified executable includes integrated configuration editing capabilities." -ForegroundColor White
-            Write-Host ""
-            Write-Host "For now, please use the standalone GUI editor for configuration:" -ForegroundColor Yellow
-            Write-Host "  powershell -ExecutionPolicy Bypass -File gui/ConfigEditor.ps1" -ForegroundColor Gray
-            Write-Host ""
-            Write-Host "The full GUI integration is planned for the next release." -ForegroundColor Green
-            return
-        }
-
-        # Original behavior for script execution
-        if (-not (Test-Path $configEditorPath)) {
-            Write-Host "Configuration editor not found: $configEditorPath" -ForegroundColor Red
-            return
-        }
-
-        Write-Host "Starting Focus Game Deck Configuration Editor..." -ForegroundColor Cyan
-
-        if ($WithGameLauncher) {
-            # Future: Pass parameter to enable game launcher tab by default
-            & powershell.exe -ExecutionPolicy Bypass -File $configEditorPath
+            # Running as bundled executable - launch ConfigEditor.exe
+            if (Test-Path $configEditorExe) {
+                Write-Host "[INFO] Starting Configuration Editor..."
+                & $configEditorExe
+            } else {
+                Write-Host "[ERROR] ConfigEditor.exe not found: $configEditorExe"
+                Write-Host "[INFO] Please ensure all executable files are in the same directory."
+                exit 1
+            }
         } else {
-            & powershell.exe -ExecutionPolicy Bypass -File $configEditorPath
+            # Running as script - launch ConfigEditor.ps1
+            if (-not (Test-Path $configEditorPath)) {
+                Write-Host "Configuration editor not found: $configEditorPath"
+                return
+            }
+
+            Write-Host "Starting Focus Game Deck Configuration Editor..."
+
+            if ($WithGameLauncher) {
+                # Future: Pass parameter to enable game launcher tab by default
+                & powershell.exe -ExecutionPolicy Bypass -File $configEditorPath
+            } else {
+                & powershell.exe -ExecutionPolicy Bypass -File $configEditorPath
+            }
         }
 
     } catch {
-        Write-Host "Failed to start configuration editor: $_" -ForegroundColor Red
+        Write-Host "Failed to start configuration editor: $_"
         exit 1
     }
 }
@@ -381,8 +383,8 @@ function Start-ConfigEditor {
     Launches a specific game using the existing game launcher
 
 .DESCRIPTION
-    Validates the game ID and delegates to the existing Invoke-FocusGameDeck.ps1
-    script for actual game launching functionality.
+    Validates the game ID and launches the game. In bundled mode, uses Invoke-FocusGameDeck.exe.
+    In development mode, uses the PowerShell script.
 #>
 function Start-Game {
     param(
@@ -391,28 +393,41 @@ function Start-Game {
     )
 
     try {
-        if (-not (Test-Path $gameLauncherPath)) {
-            Write-Host "Game launcher not found: $gameLauncherPath" -ForegroundColor Red
-            return
-        }
-
         # Validate GameId exists in configuration
         if (Test-Path $configPath) {
             $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
             if (-not $config.games.$GameId) {
-                Write-Host "Game ID '$GameId' not found in configuration." -ForegroundColor Red
-                Write-Host "Use --list to see available games or --config to add new ones." -ForegroundColor Yellow
+                Write-Host "[ERROR] Game ID '$GameId' not found in configuration."
+                Write-Host "[INFO] Use --list to see available games or --config to add new ones."
                 return
             }
         }
 
-        Write-Host "Launching game: $GameId" -ForegroundColor Cyan
+        if ($isExecutable) {
+            # Running as bundled executable - launch Invoke-FocusGameDeck.exe
+            if (Test-Path $gameLauncherExe) {
+                Write-Host "[INFO] Launching game: $GameId"
+                & $gameLauncherExe -GameId $GameId
+            } else {
+                Write-Host "[ERROR] Invoke-FocusGameDeck.exe not found: $gameLauncherExe"
+                Write-Host "[INFO] Please ensure all executable files are in the same directory."
+                exit 1
+            }
+        } else {
+            # Running as script - launch Invoke-FocusGameDeck.ps1
+            if (-not (Test-Path $gameLauncherPath)) {
+                Write-Host "Game launcher not found: $gameLauncherPath"
+                return
+            }
 
-        # Delegate to existing game launcher
-        & powershell.exe -ExecutionPolicy Bypass -File $gameLauncherPath -GameId $GameId
+            Write-Host "Launching game: $GameId"
+
+            # Delegate to existing game launcher
+            & powershell.exe -ExecutionPolicy Bypass -File $gameLauncherPath -GameId $GameId
+        }
 
     } catch {
-        Write-Host "Failed to launch game '$GameId': $_" -ForegroundColor Red
+        Write-Host "Failed to launch game '$GameId': $_"
         exit 1
     }
 }
@@ -430,8 +445,6 @@ function Start-Game {
 #>
 function Main {
     try {
-
-
         # Handle help and version first (these don't require config)
         if ($Help) {
             Show-Help
@@ -482,8 +495,8 @@ function Main {
         Show-Help
 
     } catch {
-        Write-Host "Unexpected error: $_" -ForegroundColor Red
-        Write-Host "Use --help for usage information." -ForegroundColor Yellow
+        Write-Host "Unexpected error: $_"
+        Write-Host "Use --help for usage information."
         exit 1
     }
 }

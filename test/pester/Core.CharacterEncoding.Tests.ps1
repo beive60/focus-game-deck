@@ -8,9 +8,9 @@
 
 BeforeAll {
     # Navigate up two levels from test/pester/ to project root
-    $ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-    $ConfigPath = Join-Path -Path $ProjectRoot -ChildPath "config/config.json"
-    $MessagesPath = Join-Path -Path $ProjectRoot -ChildPath "localization/messages.json"
+    $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+    $ConfigPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
+    $MessagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
 }
 
 Describe "Character Encoding Tests" -Tag "Core", "Encoding" {
@@ -65,17 +65,44 @@ Describe "Character Encoding Tests" -Tag "Core", "Encoding" {
 
     Context "Console Output Safety" {
         It "should use ASCII-safe markers instead of UTF-8 symbols" {
-            $scriptFiles = Get-ChildItem -Path $ProjectRoot -Filter "*.ps1" -Recurse
+            $scriptFiles = Get-ChildItem -Path $projectRoot -Filter "*.ps1" -Recurse
+            $failedFiles = @()
+            $skippedFiles = @()
+            $checkedCount = 0
 
             foreach ($file in $scriptFiles) {
+                $relativePath = $file.FullName.Replace($projectRoot, "").TrimStart("\", "/")
+
+                # Skip self-check
+                if ($relativePath -eq "test/pester/Core.CharacterEncoding.Tests.ps1") {
+                    $skippedFiles += $relativePath
+                    continue
+                }
+
                 $content = Get-Content $file.FullName -Raw -Encoding UTF8
+                $checkedCount++
 
                 # Check that we're not using problematic UTF-8 symbols in console output
                 # Allow them in comments and strings, but not in Write-Host for [OK]/[ERROR]
-                if ($content -match 'Write-Host.*[✓✗❌⚠️]') {
-                    $file.Name | Should -Be $null -Because "Should use [OK]/[ERROR] instead of UTF-8 symbols"
+                if ($content -match 'Write-Host.*[\p{So}\uFE0F]') {
+                    $failedFiles += @{
+                        Name = $file.Name
+                        Path = $relativePath
+                    }
                 }
             }
+
+            # Output summary only after all checks are complete
+            Write-Host "Checked $checkedCount files, skipped $($skippedFiles.Count) file(s)" -ForegroundColor Cyan
+
+            if ($failedFiles.Count -gt 0) {
+                Write-Host "Files with UTF-8 symbols in console output:" -ForegroundColor Yellow
+                $failedFiles | ForEach-Object {
+                    Write-Host "  - $($_.Path)" -ForegroundColor Yellow
+                }
+            }
+
+            $failedFiles | Should -BeNullOrEmpty -Because "These files use UTF-8 symbols in console output: $($failedFiles.Name -join ', ')"
         }
     }
 }
