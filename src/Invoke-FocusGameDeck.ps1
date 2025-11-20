@@ -256,11 +256,11 @@ try {
     $startTime = Get-Date
 
     # Filter out special apps for normal app manager processing
-    $normalApps = $gameConfig.appsToManage | Where-Object { $_ -notin @("obs", "clibor") }
+    $normalApps = $gameConfig.appsToManage | Where-Object { $_ -notin @("obs") }
 
     # Handle OBS startup (special case)
     if ("obs" -in $gameConfig.appsToManage -and $obsManager) {
-        Write-Host "Starting OBS..."
+        Write-Verbose "[INFO] Start OBS management"
         if ($obsManager.StartOBS($config.integrations.obs.path)) {
             if ($logger) { $logger.Info("OBS started successfully", "OBS") }
 
@@ -278,15 +278,9 @@ try {
         }
     }
 
-    # Handle Clibor hotkey toggle (special case)
-    if ("clibor" -in $gameConfig.appsToManage) {
-        $appManager.InvokeAction("clibor", "toggle-hotkeys")
-        if ($logger) { $logger.Info("Clibor hotkeys toggled for game start", "APP") }
-    }
-
     # Process normal applications startup
     if ($normalApps.Count -gt 0) {
-        Write-Host "Starting managed applications..."
+        Write-Host "[INFO] Start managing normal applications..."
         $appManager.ProcessStartupSequence($normalApps)
         if ($logger) { $logger.Info("Application startup sequence completed", "APP") }
     }

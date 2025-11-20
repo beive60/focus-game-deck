@@ -14,11 +14,11 @@
             "name": "Mock process Execution",
             "type": "PowerShell",
             "request": "launch",
-            "script": "${file}",
+            "script": "${workspaceFolder}/src/Main.PS1",
             "cwd": "${workspaceFolder}",
             "createTemporaryIntegratedConsole": false,
             "args": [
-                "calc_mock"
+                "mock-calc"
             ]
         }
     ]
