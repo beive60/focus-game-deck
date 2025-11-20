@@ -13,19 +13,23 @@ class OBSManager {
     OBSManager([object] $obsConfig, [object] $messages) {
         $this.Config = $obsConfig
         $this.Messages = $messages
-        $this.HostName = $obsConfig.websocket.host
-        $this.Port = $obsConfig.websocket.port
 
-        if ($obsConfig.websocket.password) {
-            try {
-                # Try to decrypt DPAPI-encrypted password (new format)
-                $this.Password = ConvertTo-SecureString -String $obsConfig.websocket.password
-                Write-Verbose "OBSManager: Loaded encrypted password from config"
-            } catch {
-                # Fall back to plain text conversion (old format for backward compatibility)
-                Write-Verbose "OBSManager: Password is not encrypted, treating as plain text"
-                $this.Password = $this.ConvertToSecureStringSafe($obsConfig.websocket.password)
-                Write-Warning "Plain text password detected in config - consider using the GUI to re-save with encryption"
+        # WebSocket config is nested in 'websocket' property
+        if ($obsConfig.websocket) {
+            $this.HostName = $obsConfig.websocket.host
+            $this.Port = $obsConfig.websocket.port
+
+            if ($obsConfig.websocket.password) {
+                try {
+                    # Try to decrypt DPAPI-encrypted password (new format)
+                    $this.Password = ConvertTo-SecureString -String $obsConfig.websocket.password
+                    Write-Verbose "OBSManager: Loaded encrypted password from config"
+                } catch {
+                    # Fall back to plain text conversion (old format for backward compatibility)
+                    Write-Verbose "OBSManager: Password is not encrypted, treating as plain text"
+                    $this.Password = $this.ConvertToSecureStringSafe($obsConfig.websocket.password)
+                    Write-Warning "Plain text password detected in config - consider using the GUI to re-save with encryption"
+                }
             }
         }
     }
@@ -229,11 +233,17 @@ class OBSManager {
 
     # Check if OBS process is running
     [bool] IsOBSRunning() {
-        return $null -ne (Get-Process -Name "obs64" -ErrorAction SilentlyContinue)
+        $procName = if ($this.Config.processName) { $this.Config.processName } else { "obs64" }
+        return $null -ne (Get-Process -Name $procName -ErrorAction SilentlyContinue)
     }
 
     # Start OBS application
-    [bool] StartOBS([string] $obsPath) {
+    [bool] StartOBS([string] $obsPath = $null) {
+        # Use configured path if argument is not provided
+        if ([string]::IsNullOrEmpty($obsPath)) {
+            $obsPath = $this.Config.path
+        }
+
         if ($this.IsOBSRunning()) {
             Write-Host $this.Messages.obs_already_running
             return $true
@@ -283,5 +293,3 @@ function New-OBSManager {
 
     return [OBSManager]::new($OBSConfig, $Messages)
 }
-
-# Functions are available via dot-sourcing
