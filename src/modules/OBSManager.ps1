@@ -172,7 +172,7 @@ class OBSManager {
         $json = $message | ConvertTo-Json -Depth 5
         $buffer = [System.Text.Encoding]::UTF8.GetBytes($json)
         $sendSegment = New-Object ArraySegment[byte](, $buffer)
-        $this.WebSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
+        [void] $this.WebSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
     }
 
     # Start OBS Replay Buffer

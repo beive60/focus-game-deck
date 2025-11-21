@@ -210,7 +210,6 @@ function Invoke-GameStartup {
     if ($logger) { $logger.Info("Starting game environment setup", "SETUP") }
 
     # Handle OBS startup (special case)
-    # [修正箇所] $shouldUseOBS フラグを使用するように変更
     if ($shouldUseOBS -and $obsManager) {
         Write-Host "[INFO] Starting OBS integration..."
         if ($obsManager.StartOBS($config.integrations.obs.path)) {
@@ -275,7 +274,6 @@ function Invoke-GameCleanup {
         $appManager.ProcessShutdownSequence($normalApps)
         if ($logger) { $logger.Info("Application shutdown sequence completed", "CLEANUP") }
     }
-
 
     if ($logger) { $logger.Info("Game cleanup completed", "CLEANUP") }
 }
