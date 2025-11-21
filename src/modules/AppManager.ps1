@@ -137,27 +137,6 @@ class AppManager {
             "stop-process" {
                 return $this.StopProcess($appId, $appConfig)
             }
-            "toggle-hotkeys" {
-                return $this.ToggleHotkeys($appId, $appConfig)
-            }
-            "start-vtube-studio" {
-                return $this.StartVTubeStudio($appId, $appConfig)
-            }
-            "stop-vtube-studio" {
-                return $this.StopVTubeStudio($appId, $appConfig)
-            }
-            "set-discord-gaming-mode" {
-                return $this.SetDiscordGamingMode($appId, $appConfig)
-            }
-            "restore-discord-normal" {
-                return $this.RestoreDiscordNormal($appId, $appConfig)
-            }
-            "pause-wallpaper" {
-                return $this.PauseWallpaper($appId, $appConfig)
-            }
-            "play-wallpaper" {
-                return $this.PlayWallpaper($appId, $appConfig)
-            }
             "none" {
                 return $true
             }
