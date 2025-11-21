@@ -193,12 +193,14 @@ if ($logger) {
 $appManager = New-AppManager -Config $config -Messages $msg
 $obsManager = $null
 
-if ("obs" -in $gameConfig.appsToManage) {
+$shouldUseOBS = ($gameConfig.integrations -and $gameConfig.integrations.useOBS)
+
+if ($shouldUseOBS) {
     if ($config.integrations.obs) {
         $obsManager = New-OBSManager -OBSConfig $config.integrations.obs -Messages $msg
         if ($logger) { $logger.Info("OBS manager initialized", "OBS") }
     } else {
-        Write-Warning "OBS is in appsToManage but OBS configuration is missing"
+        Write-Warning "OBS is enabled for this game but OBS configuration is missing"
         if ($logger) { $logger.Warning("OBS configuration missing", "OBS") }
     }
 }
@@ -207,11 +209,10 @@ if ("obs" -in $gameConfig.appsToManage) {
 function Invoke-GameStartup {
     if ($logger) { $logger.Info("Starting game environment setup", "SETUP") }
 
-
-
     # Handle OBS startup (special case)
-    if ("obs" -in $gameConfig.appsToManage -and $obsManager) {
-        Write-Verbose "[INFO] Start OBS management"
+    # [修正箇所] $shouldUseOBS フラグを使用するように変更
+    if ($shouldUseOBS -and $obsManager) {
+        Write-Host "[INFO] Starting OBS integration..."
         if ($obsManager.StartOBS($config.integrations.obs.path)) {
             if ($logger) { $logger.Info("OBS started successfully", "OBS") }
 

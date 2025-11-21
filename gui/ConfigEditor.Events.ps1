@@ -250,6 +250,21 @@
                 # Update apps to manage panel with current game's app list
                 Update-AppsToManagePanel
 
+                $useOBSCheck = $script:Window.FindName("UseOBSIntegrationCheckBox")
+                if ($useOBSCheck) {
+                    $useOBSCheck.IsChecked = ($gameData.integrations -and $gameData.integrations.useOBS) -or ($gameData.appsToManage -contains "obs")
+                }
+
+                $useDiscordCheck = $script:Window.FindName("UseDiscordIntegrationCheckBox")
+                if ($useDiscordCheck) {
+                    $useDiscordCheck.IsChecked = ($gameData.integrations -and $gameData.integrations.useDiscord) -or ($gameData.appsToManage -contains "discord")
+                }
+
+                $useVTubeCheck = $script:Window.FindName("UseVTubeStudioIntegrationCheckBox")
+                if ($useVTubeCheck) {
+                    $useVTubeCheck.IsChecked = ($gameData.integrations -and $gameData.integrations.useVTubeStudio) -or ($gameData.appsToManage -contains "vtubeStudio")
+                }
+
                 # Enable buttons
                 $duplicateGameButton = $script:Window.FindName("DuplicateGameButton")
                 if ($duplicateGameButton) { $duplicateGameButton.IsEnabled = $true }
