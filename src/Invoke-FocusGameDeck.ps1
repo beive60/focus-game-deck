@@ -302,7 +302,7 @@ try {
         Write-Host "Launching game via $($detectedPlatforms[$gamePlatform].Name)..."
     }
     try {
-        $launcherProcess = $platformManager.LaunchGame($gamePlatform, $gameConfig)
+        [void]$platformManager.LaunchGame($gamePlatform, $gameConfig)
         Write-Host ("Starting game: {0}" -f $gameConfig.name)
         if ($logger) { $logger.Info("Game launch command sent to $($detectedPlatforms[$gamePlatform].Name): $($gameConfig.name)", "GAME") }
     } catch {
