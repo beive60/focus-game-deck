@@ -42,14 +42,14 @@ try {
 }
 
 # Test Discord detection
-Write-Host "`n--- Testing Discord Detection ---"
+Write-Host "--- Testing Discord Detection ---"
 $status = $discordManager.GetStatus()
 Write-Host "Discord Path: $($status.Path)"
 Write-Host "Is Running: $($status.IsRunning)"
 Write-Host "Process Count: $($status.ProcessCount)"
 
 # Test Gaming Mode (MVP)
-Write-Host "`n--- Testing Gaming Mode (MVP) ---"
+Write-Host "--- Testing Gaming Mode (MVP) ---"
 $result = $discordManager.SetGamingMode("Test Game")
 if ($result) {
     Write-Host "[OK] Gaming Mode set successfully"
@@ -61,7 +61,7 @@ if ($result) {
 Start-Sleep -Seconds 2
 
 # Test Normal Mode restore
-Write-Host "`n--- Testing Normal Mode Restore ---"
+Write-Host "--- Testing Normal Mode Restore ---"
 $result = $discordManager.RestoreNormalMode()
 if ($result) {
     Write-Host "[OK] Normal Mode restored successfully"
@@ -70,13 +70,13 @@ if ($result) {
 }
 
 # Final status check
-Write-Host "`n--- Final Status Check ---"
+Write-Host "--- Final Status Check ---"
 $finalStatus = $discordManager.GetStatus()
 Write-Host "Final Discord Status:"
 Write-Host "  Is Running: $($finalStatus.IsRunning)"
 Write-Host "  Process Count: $($finalStatus.ProcessCount)"
 
-Write-Host "`n=== MVP Test Complete ==="
+Write-Host "=== MVP Test Complete ==="
 
 if ($finalStatus.IsRunning) {
     Write-Host "[OK] Discord MVP integration working correctly"

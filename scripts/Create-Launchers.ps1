@@ -57,7 +57,7 @@ pause
     Write-Host "Successfully created: $($launcherPath)"
 }
 
-Write-Host "`nAll launchers have been generated!"
+Write-Host "All launchers have been generated!"
 Write-Host "You can now double-click the 'launch_GAMEID.bat' files to start your games."
 if (-not $NoInteractive) {
     pause

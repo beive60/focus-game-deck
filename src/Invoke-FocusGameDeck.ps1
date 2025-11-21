@@ -332,7 +332,7 @@ try {
     } while (-not $gameProcess -and $elapsed.TotalSeconds -lt $processStartTimeout)
 
     if ($gameProcess) {
-        Write-Host ("`nNow monitoring process: {0}. The script will continue after the game exits." -f $gameConfig.name)
+        Write-Host ("Now monitoring process: {0}. The script will continue after the game exits." -f $gameConfig.name)
         if ($logger) { $logger.Info("Game process detected and monitoring started: $($gameConfig.processName)", "GAME") }
 
         # Wait for the game process to end.
@@ -343,7 +343,7 @@ try {
             Wait-Process -InputObject $gameProcess -ErrorAction Stop
         } catch {
             if ($logger) { $logger.Warning("Direct wait failed. Falling back to polling for process exit: $($gameProcess.Name) (PID: $($gameProcess.Id)). This can happen with admin-level processes.", "GAME") }
-            Write-Host "`nDirect process wait failed. Monitoring process in fallback mode (polling every 3s). This can happen with admin-level processes."
+            Write-Host "Direct process wait failed. Monitoring process in fallback mode (polling every 3s). This can happen with admin-level processes."
 
             while ($true) {
                 $processCheck = Get-Process -Id $gameProcess.Id -ErrorAction SilentlyContinue

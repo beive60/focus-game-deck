@@ -34,14 +34,14 @@ try {
 }
 
 # Test VTubeStudioManager
-Write-Host "`n=== Testing VTubeStudioManager ==="
+Write-Host "=== Testing VTubeStudioManager ==="
 
 try {
     $vtubeManager = New-VTubeStudioManager -VTubeConfig $config.managedApps.vtubeStudio -Messages @{}
     Write-Host "[OK] VTubeStudioManager instance created"
 
     # Test installation detection
-    Write-Host "`nTesting VTube Studio installation detection..."
+    Write-Host "Testing VTube Studio installation detection..."
     $status = $vtubeManager.GetStatus()
 
     Write-Host "Current Status:"
@@ -62,14 +62,14 @@ try {
 }
 
 # Test AppManager integration
-Write-Host "`n=== Testing AppManager Integration ==="
+Write-Host "=== Testing AppManager Integration ==="
 
 try {
     $appManager = New-AppManager -Config $config -Messages @{}
     Write-Host "[OK] AppManager instance created"
 
     # Test configuration validation
-    Write-Host "`nTesting VTube Studio configuration validation..."
+    Write-Host "Testing VTube Studio configuration validation..."
     if ($appManager.ValidateAppConfig("vtubeStudio")) {
         Write-Host "[OK] VTube Studio configuration valid"
     } else {
@@ -81,7 +81,7 @@ try {
 }
 
 # Test Configuration Validator
-Write-Host "`n=== Testing Configuration Validator ==="
+Write-Host "=== Testing Configuration Validator ==="
 
 try {
     $configValidatorPath = Join-Path -Path $projectRoot -ChildPath "src/modules/ConfigValidator.ps1"
@@ -121,4 +121,4 @@ try {
     Write-Host "[ERROR] Configuration validator test failed: $_"
 }
 
-Write-Host "`n=== VTube Studio Integration Test Complete ==="
+Write-Host "=== VTube Studio Integration Test Complete ==="

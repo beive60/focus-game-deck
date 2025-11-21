@@ -50,9 +50,9 @@ $TestResults = @{
 
 $StartTime = Get-Date
 
-Write-Host "`n========================================"
+Write-Host "========================================"
 Write-Host "Focus Game Deck - Test Suite Execution"
-Write-Host "========================================`n"
+Write-Host "========================================"
 
 foreach ($category in $TestCategories.Keys) {
     if ($SkipIntegrationTests -and $category -eq "Integration") {
@@ -60,7 +60,7 @@ foreach ($category in $TestCategories.Keys) {
         continue
     }
 
-    Write-Host "`n--- $category Tests ---`n"
+    Write-Host "--- $category Tests ---"
 
     foreach ($testScript in $TestCategories[$category]) {
         $testPath = Join-Path -Path $projectRoot -ChildPath "test/scripts/$category/$testScript"
@@ -108,7 +108,7 @@ $EndTime = Get-Date
 $TestResults.Duration = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
 
 # Generate Summary
-Write-Host "`n========================================"
+Write-Host "========================================"
 Write-Host "Test Execution Summary"
 Write-Host "========================================"
 Write-Host "Total Tests:    $($TestResults.Total)"
@@ -117,7 +117,7 @@ Write-Host "Failed:         $($TestResults.Failed)"
 Write-Host "Skipped:        $($TestResults.Skipped)"
 Write-Host "Duration:       $($TestResults.Duration)s"
 Write-Host "Success Rate:   $([math]::Round(($TestResults.Passed / $TestResults.Total) * 100, 1))%"
-Write-Host "========================================`n"
+Write-Host "========================================"
 
 # Failed tests details
 if ($TestResults.Failed -gt 0) {

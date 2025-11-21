@@ -16,7 +16,7 @@ $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $vtubeManager = New-VTubeStudioManager -VTubeConfig $config.managedApps.vtubeStudio -Messages @{}
 
 # Test startup
-Write-Host "`nTesting VTube Studio startup..."
+Write-Host "Testing VTube Studio startup..."
 $startResult = $vtubeManager.StartVTubeStudio()
 Write-Host "Start result: $startResult"
 
@@ -32,7 +32,7 @@ if ($startResult) {
     Write-Host "Is VTube Studio running: $isRunning"
 
     # Test shutdown
-    Write-Host "`nTesting VTube Studio shutdown..."
+    Write-Host "Testing VTube Studio shutdown..."
     $stopResult = $vtubeManager.StopVTubeStudio()
     Write-Host "Stop result: $stopResult"
 
@@ -51,4 +51,4 @@ if ($startResult) {
     Write-Host "[ERROR] VTube Studio startup failed"
 }
 
-Write-Host "`n=== Test Complete ==="
+Write-Host "=== Test Complete ==="

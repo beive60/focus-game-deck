@@ -123,7 +123,7 @@ try {
 
         # Optional: Test replay buffer commands if enabled
         if ($config.integrations.obs.replayBuffer) {
-            Write-Host "`nTesting Replay Buffer commands..."
+            Write-Host "Testing Replay Buffer commands..."
 
             Write-Host "  Starting Replay Buffer..."
             $startResult = $obsManager.StartReplayBuffer()

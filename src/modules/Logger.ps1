@@ -95,11 +95,11 @@ class Logger {
     Logger([object] $config, [object] $messages) {
         $this.InitializeLogger($config, $messages, $null)
     }
-    
+
     Logger([object] $config, [object] $messages, [string] $appRoot) {
         $this.InitializeLogger($config, $messages, $appRoot)
     }
-    
+
     hidden [void] InitializeLogger([object] $config, [object] $messages, [string] $appRoot) {
         $this.Messages = $messages
         $this.MinimumLevel = [LogLevel]::Info
@@ -401,7 +401,7 @@ class Logger {
     [void] LogException([System.Exception] $exception, [string] $context = "", [string] $component = "MAIN") {
         $message = "Exception in $context : $($exception.Message)"
         if ($exception.StackTrace) {
-            $message += "`nStack Trace: $($exception.StackTrace)"
+            $message += "Stack Trace: $($exception.StackTrace)"
         }
         $this.Error($message, $component)
     }
@@ -897,7 +897,7 @@ function Initialize-Logger {
 
         [Parameter(Mandatory = $true)]
         [object] $Messages,
-        
+
         [Parameter(Mandatory = $false)]
         [string] $AppRoot = $null
     )
