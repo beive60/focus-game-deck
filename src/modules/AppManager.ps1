@@ -282,6 +282,7 @@ class AppManager {
                 }
             } catch {
                 # Process not found, continue to next
+                Write-Host ($this.Messages.app_process_not_found -f $processName)
             }
         }
 
