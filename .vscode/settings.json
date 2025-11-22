@@ -60,6 +60,7 @@
         "DPAPI",
         "Finalizers",
         "LASTEXITCODE",
+        "lifecycles",
         "resourcest's",
         "Sectigo",
         "signtool",

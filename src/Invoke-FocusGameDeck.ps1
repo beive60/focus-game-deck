@@ -190,60 +190,24 @@ if ($logger) {
 }
 
 # Initialize managers
-$appManager = New-AppManager -Config $config -Messages $msg
-$obsManager = $null
+$appManager = New-AppManager -Config $config -Messages $msg -Logger $logger
+$appManager.SetGameContext($gameConfig)
 
-$shouldUseOBS = ($gameConfig.integrations -and $gameConfig.integrations.useOBS)
-
-if ($shouldUseOBS) {
-    if ($config.integrations.obs) {
-        $obsManager = New-OBSManager -OBSConfig $config.integrations.obs -Messages $msg
-        if ($logger) { $logger.Info("OBS manager initialized", "OBS") }
-    } else {
-        Write-Warning "OBS is enabled for this game but OBS configuration is missing"
-        if ($logger) { $logger.Warning("OBS configuration missing", "OBS") }
-    }
-}
+if ($logger) { $logger.Info("Application manager initialized and game context set", "MAIN") }
 
 # Common startup process for game environment
 function Invoke-GameStartup {
     if ($logger) { $logger.Info("Starting game environment setup", "SETUP") }
 
-    # Handle OBS startup (special case)
-    if ($shouldUseOBS -and $obsManager) {
-        Write-Host "[INFO] Starting OBS integration..."
-        if ($obsManager.StartOBS($config.integrations.obs.path)) {
-            if ($logger) { $logger.Info("OBS started successfully", "OBS") }
-
-            # Handle replay buffer if configured
-            if ($config.integrations.obs.replayBuffer) {
-                if ($obsManager.Connect()) {
-                    $obsManager.StartReplayBuffer()
-                    $obsManager.Disconnect()
-                    if ($logger) { $logger.Info("OBS replay buffer started", "OBS") }
-                } else {
-                    Write-Warning "Failed to connect to OBS for replay buffer"
-                    if ($logger) { $logger.Warning("Failed to connect to OBS for replay buffer", "OBS") }
-                }
-            }
-        } else {
-            Write-Warning "Failed to start OBS"
-            if ($logger) { $logger.Warning("Failed to start OBS", "OBS") }
-        }
-    }
-
-    # Process normal applications startup
-    if ($normalApps.Count -gt 0) {
-        Write-Host "[INFO] Start managing normal applications..."
-        [void]$appManager.ProcessStartupSequence($normalApps)
-        if ($logger) { $logger.Info("Application startup sequence completed", "APP") }
-    }
+    # Unified application and integration management
+    Write-Host "[INFO] Starting application management..."
+    [void]$appManager.ProcessStartupSequence()
+    if ($logger) { $logger.Info("Application startup sequence completed", "APP") }
 
     if ($logger) { $logger.Info("Game environment setup completed", "SETUP") }
-}
 
-# Filter out special apps for normal app manager processing
-$normalApps = $gameConfig.appsToManage
+    return
+}
 
 # Common cleanup process for game exit
 function Invoke-GameCleanup {
@@ -258,24 +222,13 @@ function Invoke-GameCleanup {
         if ($logger) { $logger.Info("Starting game cleanup", "CLEANUP") }
     }
 
-    # Handle OBS replay buffer shutdown
-    if ($obsManager -and $config.integrations.obs.replayBuffer) {
-        if ($obsManager.Connect()) {
-            $obsManager.StopReplayBuffer()
-            $obsManager.Disconnect()
-            if ($logger) { $logger.Info("OBS replay buffer stopped", "OBS") }
-        } else {
-            if ($logger) { $logger.Warning("Failed to stop OBS replay buffer", "OBS") }
-        }
-    }
-
-    # Process normal applications shutdown
-    if ($normalApps.Count -gt 0) {
-        $appManager.ProcessShutdownSequence($normalApps)
-        if ($logger) { $logger.Info("Application shutdown sequence completed", "CLEANUP") }
-    }
+    # Unified application and integration shutdown
+    $appManager.ProcessShutdownSequence()
+    if ($logger) { $logger.Info("Application shutdown sequence completed", "CLEANUP") }
 
     if ($logger) { $logger.Info("Game cleanup completed", "CLEANUP") }
+
+    return
 }
 
 # Handle Ctrl+C press
