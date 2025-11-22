@@ -373,7 +373,7 @@ $xslt = @"
 "@
 
 try {
-    Write-Host "Converting test results to HTML..." -ForegroundColor Cyan
+    Write-Host "Converting test results to HTML..."
 
     # Save XSLT file temporarily
     $xsltPath = Join-Path $env:TEMP "test-results-transform.xslt"
@@ -391,12 +391,12 @@ try {
     # Cleanup
     Remove-Item $xsltPath -Force
 
-    Write-Host "[OK] HTML report generated: $OutputHtml" -ForegroundColor Green
-    Write-Host "Opening in browser..." -ForegroundColor Cyan
+    Write-Host "[OK] HTML report generated: $OutputHtml"
+    Write-Host "Opening in browser..."
 
     # Open the generated HTML report
     Start-Process $OutputHtml
 } catch {
-    Write-Host "[ERROR] Failed to convert XML to HTML: $_" -ForegroundColor Red
+    Write-Host "[ERROR] Failed to convert XML to HTML: $_"
     exit 1
 }
