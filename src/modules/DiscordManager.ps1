@@ -85,8 +85,7 @@ class DiscordManager {
             Start-Process -FilePath $this.DiscordPath
             Write-Host "Discord started successfully"
             return $true
-        }
-        catch {
+        } catch {
             Write-Host "Failed to start Discord: $_"
             return $false
         }
@@ -110,8 +109,7 @@ class DiscordManager {
                 Write-Host "Discord is not running"
                 return $true
             }
-        }
-        catch {
+        } catch {
             Write-Host "Failed to stop Discord: $_"
             return $false
         }
@@ -130,8 +128,7 @@ class DiscordManager {
                 } else {
                     Write-Host "Discord RPC Client module not found"
                 }
-            }
-            catch {
+            } catch {
                 Write-Host "Failed to initialize Discord RPC Client: $_"
             }
         }
@@ -186,8 +183,7 @@ class DiscordManager {
             }
 
             return $this.RPCClient.SetRichPresence($activity)
-        }
-        catch {
+        } catch {
             Write-Host "Failed to set Rich Presence: $_"
             return $false
         }
@@ -237,8 +233,7 @@ class DiscordManager {
             }
 
             return $false
-        }
-        catch {
+        } catch {
             Write-Host "Error recovery failed: $_"
             return $false
         }
@@ -293,8 +288,7 @@ class DiscordManager {
                 Write-Host "[OK] Discord Advanced Gaming mode applied successfully"
                 return $true
 
-            }
-            catch {
+            } catch {
                 $retryCount++
                 Write-Host "Attempt $retryCount failed: $_"
 
@@ -353,10 +347,16 @@ class DiscordManager {
     }
 
     # Disconnect RPC when done
-    [void] DisconnectRPC() {
-        if ($this.RPCClient) {
-            $this.RPCClient.Disconnect()
+    [bool] DisconnectRPC() {
+        try {
+            if ($this.RPCClient) {
+                $this.RPCClient.Disconnect()
+            }
+        } catch {
+            Write-Host "Error disconnecting RPC: $_"
+            return $false
         }
+        return $true
     }
 
     # Get Discord status
