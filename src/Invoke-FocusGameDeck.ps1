@@ -235,7 +235,7 @@ function Invoke-GameStartup {
     # Process normal applications startup
     if ($normalApps.Count -gt 0) {
         Write-Host "[INFO] Start managing normal applications..."
-        $appManager.ProcessStartupSequence($normalApps)
+        [void]$appManager.ProcessStartupSequence($normalApps)
         if ($logger) { $logger.Info("Application startup sequence completed", "APP") }
     }
 

@@ -344,29 +344,6 @@ class AppManager {
         }
     }
 
-    # Toggle hotkeys (special case for applications like Clibor)
-    [bool] ToggleHotkeys([string] $appId, [object] $appConfig) {
-        if (-not $appConfig.path -or $appConfig.path -eq "") {
-            Write-Host ($this.Messages.warning_no_path_specified -f $appId)
-            return $false
-        }
-
-        try {
-            $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") {
-                $appConfig.arguments
-            } else {
-                "/hs"
-            }
-
-            Start-Process -FilePath $appConfig.path -ArgumentList $arguments
-            Write-Host ($this.Messages.app_hotkey_toggled -f $appId, $this.Messages.clibor_action_toggled)
-            return $true
-        } catch {
-            Write-Host "Failed to toggle hotkeys for $appId : $_"
-            return $false
-        }
-    }
-
     # Start VTube Studio (special action)
     [bool] StartVTubeStudio([string] $appId, [object] $appConfig) {
         try {
