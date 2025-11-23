@@ -1,10 +1,31 @@
 ﻿# VTube Studio Integration Test Script
-# Test the VTubeStudioManager functionality
+<#
+.SYNOPSIS
+    Runs integration tests for VTubeStudioManager, ensuring it correctly interacts with the application and configuration.
 
+.DESCRIPTION
+    This Pester test script verifies the functionality of the VTubeStudioManager module. It performs the following checks:
+    - Loads the VTubeStudioManager and AppManager modules.
+    - Loads the application's configuration from 'config/config.json'.
+    - Tests the VTubeStudioManager by creating an instance and checking for the VTube Studio installation.
+    - Tests AppManager integration by validating the VTube Studio configuration.
+    - Tests the ConfigValidator by running a full configuration validation and reporting the results.
+
+.EXAMPLE
+    .\Test-Integration-VTubeStudio.ps1
+    Runs all integration tests defined in the script.
+
+.NOTES
+    This script is intended to be run from the 'test/scripts/integration' directory. It requires the main configuration file ('config/config.json') to be present and correctly formatted.
+
+.OUTPUTS
+    Outputs test results to the console, indicating the status of each test (e.g., [OK], [ERROR], [WARNING]).
+#>
 Write-Host "=== VTube Studio Integration Test ==="
 
+$projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+
 # Load required modules
-$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
 try {
     $vtubeStudioManagerPath = Join-Path -Path $projectRoot -ChildPath "src/modules/VTubeStudioManager.ps1"
     . $vtubeStudioManagerPath
@@ -36,8 +57,10 @@ try {
 # Test VTubeStudioManager
 Write-Host "=== Testing VTubeStudioManager ==="
 
+# Create DiscordManager instance
+$messages = @{}  # Mock messages object for testing
 try {
-    $vtubeManager = New-VTubeStudioManager -VTubeConfig $config.managedApps.vtubeStudio -Messages @{}
+    $vtubeManager = New-VTubeStudioManager -VTubeConfig $config.integrations.vtubeStudio -Messages $messages
     Write-Host "[OK] VTubeStudioManager instance created"
 
     # Test installation detection

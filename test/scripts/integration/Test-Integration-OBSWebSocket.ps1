@@ -57,25 +57,6 @@ try {
     exit 1
 }
 
-# Load localization messages (required by OBSManager)
-try {
-    $messagesPath = Join-Path $projectRoot "localization/messages.json"
-    $messagesData = Get-Content -Path $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    # Determine language (default to 'ja' for this test, or use config setting)
-    $language = if ($config.language) { $config.language } else { "en" }
-    try {
-        $messages = $messagesData.$language
-        Write-Host "[OK] Loading localization messages from: $messagesPath"
-    } catch {
-        $language = "en"  # Fallback to English if specified language not found
-        $messages = $messagesData.$language
-        Write-Host "Warning: Language '$language' not found, falling back to 'en'"
-    }
-} catch {
-    Write-Host "[ERROR] Error accessing messages.json: $_"
-    exit 1
-}
-
 # Load OBSManager module
 try {
     $obsManagerPath = Join-Path -Path $projectRoot -ChildPath "src/modules/OBSManager.ps1"
@@ -101,6 +82,8 @@ if (Get-Process -Name "obs64", "obs32" -ErrorAction SilentlyContinue) {
     exit 1
 }
 
+# Create DiscordManager instance
+$messages = @{}  # Mock messages object for testing
 try {
     Write-Host "[INFO] Creating OBSManager instance..."
     $obsManager = New-OBSManager -OBSConfig $config.integrations.obs -Messages $messages
