@@ -10,6 +10,7 @@
 BeforeAll {
     # Navigate up two levels from test/pester/ to project root
     $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+    Write-Information $projectRoot
 }
 
 Describe "Core Functionality Tests" -Tag "Core" {
