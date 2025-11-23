@@ -238,24 +238,21 @@ class OBSManager {
     }
 
     # Start OBS application
-    [bool] StartOBS([string] $obsPath = $null) {
-        # Use configured path if argument is not provided
-        if ([string]::IsNullOrEmpty($obsPath)) {
-            $obsPath = $this.Config.path
-        }
+    [bool] StartOBS( ) {
 
         if ($this.IsOBSRunning()) {
             Write-Host $this.Messages.obs_already_running
             return $true
         }
 
+        $obsPath = $this.Config.path
         if (-not $obsPath -or -not (Test-Path $obsPath)) {
             Write-Host "OBS path not found or invalid: $obsPath"
             return $false
         }
 
         try {
-            Start-Process -FilePath $obsPath
+            Start-Process -FilePath $obsPath -WorkingDirectory (Split-Path -Parent $obsPath)
             Write-Host $this.Messages.starting_obs
 
             # Wait for OBS startup

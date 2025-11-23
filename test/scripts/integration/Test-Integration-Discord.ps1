@@ -8,13 +8,8 @@ $projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScr
 $discordManagerPath = Join-Path -Path $projectRoot -ChildPath "src/modules/DiscordManager.ps1"
 . $discordManagerPath
 
-# Load config for testing
+# Load config
 $configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
-if (-not (Test-Path $configPath)) {
-    Write-Host "Config file not found: $configPath"
-    exit 1
-}
-
 try {
     $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
     Write-Host "[OK] Config loaded successfully"

@@ -221,7 +221,7 @@ class DiscordManager {
         # Note: Discord doesn't provide direct API to disable overlay programmatically
         # This is a placeholder for potential future implementation or registry-based control
 
-        if ($this.DiscordConfig -and $this.DiscordConfig.disableOverlay -ne $null) {
+        if ($this.DiscordConfig -and $null -ne $this.DiscordConfig.disableOverlay) {
             $shouldDisable = $this.DiscordConfig.disableOverlay
             if ($shouldDisable -and $enabled) {
                 Write-Host "Overlay should be disabled according to configuration"

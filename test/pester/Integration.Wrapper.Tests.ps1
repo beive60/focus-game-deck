@@ -30,7 +30,7 @@ Describe "Integration Tests" -Tag "Integration" {
 
             # These tests may fail if Discord is not running - that's OK
             if ($outputText -match "Discord.*not running|not found") {
-                Set-ItResult -Skipped -Because "Discord not available in test environment"
+                Set-ItResult -Skipped -Because "[INFO] terminate OBS with 'Stop-Process -Name obs64,obs32' if you want to test starting OBS from this script."
             } else {
                 $outputText | Should -Match "\[OK\]|\[PASS\]|Success"
             }
@@ -50,7 +50,7 @@ Describe "Integration Tests" -Tag "Integration" {
             $outputText = $output
 
             # OBS tests may fail if OBS is not running
-            if ($outputText -match "OBS.*not running|not found|connection.*failed") {
+            if ($outputText -match "OBS.*not available|not found|connection.*failed") {
                 Set-ItResult -Skipped -Because "OBS Studio not available in test environment"
             } else {
                 $outputText | Should -Match "\[OK\]|\[PASS\]|Success"
