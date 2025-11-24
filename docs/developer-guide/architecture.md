@@ -615,14 +615,14 @@ Due to frequent character encoding issues in PowerShell console environments, es
 
 ```powershell
 # Problematic: UTF-8 special characters cause garbling
-Write-Host "[OK] Success" -ForegroundColor Green
-Write-Host "[ERROR] Failed" -ForegroundColor Red
-Write-Host "Warning" -ForegroundColor Yellow
+Write-Host "[OK] Success"
+Write-Host "[ERROR] Failed"
+Write-Host "Warning"
 
 # Recommended: Use ASCII-compatible alternatives
-Write-Host "[OK] Success" -ForegroundColor Green
-Write-Host "[ERROR] Failed" -ForegroundColor Red
-Write-Host "[WARNING] Warning" -ForegroundColor Yellow
+Write-Host "[OK] Success"
+Write-Host "[ERROR] Failed"
+Write-Host "[WARNING] Warning"
 ```
 
 ##### 2. Avoid Write-Host with Color Parameters
