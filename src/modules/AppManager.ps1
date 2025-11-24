@@ -64,41 +64,6 @@ class AppManager {
 
     <#
     .SYNOPSIS
-        Validates an application configuration.
-
-    .DESCRIPTION
-        Checks if the specified application exists in configuration and has
-        all required properties (processName, etc.).
-
-    .PARAMETER appId
-        The application ID to validate
-
-    .OUTPUTS
-        Boolean indicating whether the configuration is valid
-
-    .EXAMPLE
-        $isValid = $appManager.ValidateAppConfig("discord")
-    #>
-    # Validate application configuration
-    [bool] ValidateAppConfig([string] $appId) {
-        if (-not $this.ManagedApps.$appId) {
-            Write-Host ($this.Messages.warning_app_not_defined -f $appId)
-            return $false
-        }
-
-        $appConfig = $this.ManagedApps.$appId
-
-        # Check required properties
-        if (-not $appConfig.PSObject.Properties.Name -contains "processName") {
-            Write-Host "Application '$appId' is missing 'processName' property"
-            return $false
-        }
-
-        return $true
-    }
-
-    <#
-    .SYNOPSIS
         Sets the game context and initializes integration managers.
 
     .DESCRIPTION
@@ -137,43 +102,31 @@ class AppManager {
 
         # OBS Manager
         if ($this.GameConfig.integrations.useOBS -and $this.Config.integrations.obs) {
-            $obsManagerPath = Join-Path $PSScriptRoot "OBSManager.ps1"
-            if (Test-Path $obsManagerPath) {
-                . $obsManagerPath
-                $this.IntegrationManagers['obs'] = New-OBSManager `
-                    -OBSConfig $this.Config.integrations.obs `
-                    -Messages $this.Messages
-                if ($this.Logger) {
-                    $this.Logger.Info("OBS manager initialized", "APP")
-                }
+            $this.IntegrationManagers['obs'] = New-OBSManager `
+                -OBSConfig $this.Config.integrations.obs `
+                -Messages $this.Messages
+            if ($this.Logger) {
+                $this.Logger.Info("OBS manager initialized", "APP")
             }
         }
 
         # Discord Manager
         if ($this.GameConfig.integrations.useDiscord -and $this.Config.integrations.discord) {
-            $discordManagerPath = Join-Path $PSScriptRoot "DiscordManager.ps1"
-            if (Test-Path $discordManagerPath) {
-                . $discordManagerPath
-                $this.IntegrationManagers['discord'] = New-DiscordManager `
-                    -DiscordConfig $this.Config.integrations.discord `
-                    -Messages $this.Messages
-                if ($this.Logger) {
-                    $this.Logger.Info("Discord manager initialized", "APP")
-                }
+            $this.IntegrationManagers['discord'] = New-DiscordManager `
+                -DiscordConfig $this.Config.integrations.discord `
+                -Messages $this.Messages
+            if ($this.Logger) {
+                $this.Logger.Info("Discord manager initialized", "APP")
             }
         }
 
         # VTube Studio Manager
         if ($this.GameConfig.integrations.useVTubeStudio -and $this.Config.integrations.vtubeStudio) {
-            $vtubeManagerPath = Join-Path $PSScriptRoot "VTubeStudioManager.ps1"
-            if (Test-Path $vtubeManagerPath) {
-                . $vtubeManagerPath
-                $this.IntegrationManagers['vtubeStudio'] = New-VTubeStudioManager `
-                    -VTubeConfig $this.Config.integrations.vtubeStudio `
-                    -Messages $this.Messages
-                if ($this.Logger) {
-                    $this.Logger.Info("VTube Studio manager initialized", "APP")
-                }
+            $this.IntegrationManagers['vtubeStudio'] = New-VTubeStudioManager `
+                -VTubeConfig $this.Config.integrations.vtubeStudio `
+                -Messages $this.Messages
+            if ($this.Logger) {
+                $this.Logger.Info("VTube Studio manager initialized", "APP")
             }
         }
     }
@@ -247,11 +200,6 @@ class AppManager {
         # Check if this is an integration
         if ($this.IntegrationManagers.ContainsKey($appId)) {
             return $this.InvokeIntegrationAction($appId, $action)
-        }
-
-        # Standard app validation
-        if (-not $this.ValidateAppConfig($appId)) {
-            return $false
         }
 
         $appConfig = $this.ManagedApps.$appId

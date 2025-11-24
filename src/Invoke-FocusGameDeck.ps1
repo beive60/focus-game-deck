@@ -29,68 +29,54 @@ if ($isExecutable) {
     # For Invoke-FocusGameDeck.ps1 in /src, the root is one level up
     $appRoot = Split-Path -Parent $PSScriptRoot
 }
-$scriptDir = $PSScriptRoot
 
-# >>> BUILD-TIME-PATCH-START: Path resolution for ps2exe bundling >>>
-# This section will be replaced by the build script (Build-FocusGameDeck.ps1)
-# During build, the script inserts execution mode detection and dynamic path resolution
-# to support both development (.ps1) and bundled executable (.exe) modes
-
-# Initialize path variables - use $appRoot for external files
+# AssetFile paths variables - use $appRoot for external files
 $configPath = Join-Path $appRoot "config/config.json"
+$messagesPath = Join-Path $appRoot "localization/messages.json"
 
-# Import modules
-$modulePaths = @(
-    (Join-Path $scriptDir "modules/Logger.ps1"),
-    (Join-Path $scriptDir "modules/ConfigValidator.ps1"),
-    (Join-Path $scriptDir "modules/AppManager.ps1"),
-    (Join-Path $scriptDir "modules/OBSManager.ps1"),
-    (Join-Path $scriptDir "modules/PlatformManager.ps1")
-)
+# Read Source files using dot-source
+if (-not $isExecutable) {
+    $filesToSources = @(
+        # Modules
+        (Join-Path $appRoot "src/modules/AppManager.ps1"),
+        (Join-Path $appRoot "src/modules/ConfigValidator.ps1"),
+        (Join-Path $appRoot "src/modules/DiscordManager.ps1"),
+        (Join-Path $appRoot "src/modules/DiscordRPCClient.ps1"),
+        (Join-Path $appRoot "src/modules/Logger.ps1"),
+        (Join-Path $appRoot "src/modules/OBSManager.ps1"),
+        (Join-Path $appRoot "src/modules/UpdateChecker.ps1"),
+        (Join-Path $appRoot "src/modules/PlatformManager.ps1"),
+        (Join-Path $appRoot "src/modules/VTubeStudioManager.ps1"),
+        (Join-Path $appRoot "src/modules/WebSocketAppManagerBase.ps1"),
+        # Scripts
+        (Join-Path $appRoot "scripts/LanguageHelper.ps1")
+    )
 
-foreach ($modulePath in $modulePaths) {
-    if (Test-Path $modulePath) {
-        . $modulePath
-    } else {
-        Write-Error "Required module not found: $modulePath"
-        exit 1
+    foreach ($sourcePath in $filesToSources) {
+        try {
+            . $sourcePath
+        } catch {
+            Write-Error "Failed to load module '$sourcePath': $_"
+            exit 1
+        }
     }
 }
 
-# Load configuration and messages
+# Load configuration
 try {
-    # Load configuration
     $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-
-    # Load messages for localization
-    $languageHelperPath = Join-Path $appRoot "scripts/LanguageHelper.ps1"
-    $messagesPath = Join-Path $appRoot "localization/messages.json"
-
-    if (Test-Path $languageHelperPath) {
-        . $languageHelperPath
-        $langCode = Get-DetectedLanguage -ConfigData $config
-        $msg = Get-LocalizedMessages -MessagesPath $messagesPath -LanguageCode $langCode
-    } else {
-        $msg = @{}
-    }
-
-    # Display localized loading messages
-    if ($msg.mainLoadingConfig) {
-        Write-Host $msg.mainLoadingConfig
-    } else {
-        Write-Host "Loading configuration..."
-    }
-
-    if ($msg.mainConfigLoaded) {
-        Write-Host $msg.mainConfigLoaded
-    } else {
-        Write-Host "Configuration loaded successfully."
-    }
 } catch {
     Write-Error "Failed to load configuration: $_"
     exit 1
 }
-# <<< BUILD-TIME-PATCH-END <<<
+# Load localization messages
+try {
+    $msg = Get-Content -Path $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
+} catch {
+    Write-Warning "Failed to load localization messages: $_"
+    Write-Host "Continuing with default messages."
+    $msg = @{}
+}
 
 # Initialize logger
 try {
@@ -101,8 +87,9 @@ try {
     # Log self-authentication information for audit purposes
     $logger.Debug("Self-authentication initialized for log integrity verification", "AUTH")
 } catch {
-    Write-Warning "Failed to initialize logger: $_"
-    # Continue without logging
+    Write-Warning "[ERROR] Failed to initialize logger: $_"
+    Write-Host "[WARNING] Continue without logging"
+    $logger = $null
 }
 
 # Initialize platform manager
