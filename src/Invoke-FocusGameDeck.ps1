@@ -178,7 +178,7 @@ if ($logger) {
 
 # Initialize managers
 $appManager = New-AppManager -Config $config -Messages $msg -Logger $logger
-$appManager.SetGameContext($gameConfig)
+[void] $appManager.SetGameContext($gameConfig)
 
 if ($logger) { $logger.Info("Application manager initialized and game context set", "MAIN") }
 

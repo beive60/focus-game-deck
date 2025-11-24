@@ -78,7 +78,7 @@ class AppManager {
     #>
     [void] SetGameContext([object] $gameConfig) {
         $this.GameConfig = $gameConfig
-        $this.InitializeIntegrationManagers()
+        [void]$this.InitializeIntegrationManagers()
     }
 
     <#
@@ -843,7 +843,7 @@ class AppManager {
         $allSuccess = $true
 
         if ($apps.Count -eq 0) {
-            if ($this.Logger) { $this.Logger.Info("No applications to manage for startup", "APP") }
+            if ($this.Logger) { $this.Logger.Info("No application to manage for startup", "APP") }
             return $true
         }
 
