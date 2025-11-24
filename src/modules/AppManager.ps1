@@ -744,58 +744,6 @@ class AppManager {
         }
     }
 
-    # Control Wallpaper Engine playback
-    [bool] ControlWallpaper([string] $appId, [object] $appConfig, [string] $command) {
-        if (-not $appConfig.path -or $appConfig.path -eq "") {
-            Write-Host "Wallpaper Engine path not specified for $appId"
-            return $false
-        }
-
-        # Check if the path exists
-        if (-not (Test-Path $appConfig.path)) {
-            Write-Host "Wallpaper Engine executable not found at: $($appConfig.path)"
-            return $false
-        }
-
-        try {
-            # Determine the correct executable based on system architecture
-            $executablePath = $appConfig.path
-            $executableName = [System.IO.Path]::GetFileNameWithoutExtension($executablePath)
-            $executableDir = [System.IO.Path]::GetDirectoryName($executablePath)
-
-            # Check if we need to auto-select between 32-bit and 64-bit versions
-            $is64Bit = [Environment]::Is64BitOperatingSystem
-            if ($executableName -eq "wallpaper32" -and $is64Bit) {
-                $wallpaper64Path = Join-Path $executableDir "wallpaper64.exe"
-                if (Test-Path $wallpaper64Path) {
-                    $executablePath = $wallpaper64Path
-                    Write-Host "Auto-selected 64-bit version: $executablePath"
-                }
-            }
-
-            # Execute the control command
-            $arguments = "-control", $command
-            Start-Process -FilePath $executablePath -ArgumentList $arguments -NoNewWindow -Wait
-
-            $actionDescription = if ($command -eq "pause") { "paused" } else { "resumed" }
-            Write-Host "Wallpaper Engine $actionDescription successfully"
-            return $true
-        } catch {
-            Write-Host "Failed to control Wallpaper Engine ($command): $_"
-            return $false
-        }
-    }
-
-    # Pause Wallpaper Engine (special action)
-    [bool] PauseWallpaper([string] $appId, [object] $appConfig) {
-        return $this.ControlWallpaper($appId, $appConfig, "pause")
-    }
-
-    # Resume Wallpaper Engine playback (special action)
-    [bool] PlayWallpaper([string] $appId, [object] $appConfig) {
-        return $this.ControlWallpaper($appId, $appConfig, "play")
-    }
-
     # Check if application process is running
     [bool] IsProcessRunning([string] $processName) {
         return $null -ne (Get-Process -Name $processName -ErrorAction SilentlyContinue)
