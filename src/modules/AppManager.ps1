@@ -146,23 +146,29 @@ class AppManager {
         $apps = $appManager.GetManagedApplications()
     #>
     [array] GetManagedApplications() {
-        $apps = @()
+        $orderedApps = [System.Collections.ArrayList]::new()
+        $addedApps = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 
         if (-not $this.GameConfig) {
-            return $apps
+            return $orderedApps
         }
 
-        # Add game-specific apps
         if ($this.GameConfig.appsToManage) {
-            $apps += $this.GameConfig.appsToManage
+            foreach ($appId in $this.GameConfig.appsToManage) {
+                if ($addedApps.Add($appId)) {
+                    [void]$orderedApps.Add($appId)
+                }
+            }
         }
 
-        # Add enabled integrations
+        # add integration apps that are enabled but not already in the list
         foreach ($integrationKey in $this.IntegrationManagers.Keys) {
-            $apps += $integrationKey
+            if ($addedApps.Add($integrationKey)) {
+                [void]$orderedApps.Add($integrationKey)
+            }
         }
 
-        return $apps
+        return $orderedApps.ToArray()
     }
 
     <#
@@ -211,6 +217,36 @@ class AppManager {
             "stop-process" {
                 return $this.StopProcess($appId, $appConfig)
             }
+            "start-replayBuffer" {
+                $manager = $this.IntegrationManagers[$appId]
+                [void]$manager.Connect()
+                $result = $manager.StartReplayBuffer()
+                [void]$manager.Disconnect()
+                return $result
+            }
+            "stop-replayBuffer" {
+                $manager = $this.IntegrationManagers[$appId]
+                [void]$manager.Connect()
+                $result = $manager.StopReplayBuffer()
+                [void]$manager.Disconnect()
+                return $result
+            }
+            "change-status-dnd" {
+                $manager = $this.IntegrationManagers[$appId]
+                return $manager.SetStatus("dnd")
+            }
+            "change-status-online" {
+                $manager = $this.IntegrationManagers[$appId]
+                return $manager.SetStatus("online")
+            }
+            "start-vtube-studio" {
+                $manager = $this.IntegrationManagers[$appId]
+                return $manager.StartVTubeStudio($appId, $appConfig)
+            }
+            "stop-vtube-studio" {
+                $manager = $this.IntegrationManagers[$appId]
+                return $manager.StopVTubeStudio($appId, $appConfig)
+            }
             "none" {
                 return $true
             }
@@ -219,7 +255,6 @@ class AppManager {
                 return $false
             }
         }
-
         return $false
     }
 
@@ -797,7 +832,11 @@ class AppManager {
 
         foreach ($appId in $apps) {
             $action = $this.GetStartupAction($appId)
+
+            if ($this.Logger) { $this.Logger.Info("Processing startup for $appId (Action: $action)", "APP") }
+
             $success = $this.InvokeAction($appId, $action)
+
             if (-not $success) {
                 $allSuccess = $false
                 Write-Warning "Failed to start $appId with action: $action"
