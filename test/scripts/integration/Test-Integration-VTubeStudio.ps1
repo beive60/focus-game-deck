@@ -64,6 +64,7 @@ try {
     Write-Host "[OK] VTubeStudioManager instance created"
 } catch {
     Write-Host "[ERROR] VTubeStudioManager test failed: $_"
+    exit 1
 }
 
 # Test: IsVTubeStudioRunning
@@ -72,6 +73,7 @@ try {
     Write-Host "[OK] IsVTubeStudioRunning is success: $isRunning"
 } catch {
     Write-Host "[ERROR] Failed to IsVTubeStudioRunning: $_"
+    exit 1
 }
 
 # Test: DetectVTubeStudioInstallation
@@ -80,6 +82,7 @@ try {
     Write-Host "[OK] DetectVTubeStudioInstallation is success: $($installation.Available)"
 } catch {
     Write-Host "[ERROR] Failed to DetectVTubeStudioInstallation: $_"
+    exit 1
 }
 
 # Test: StartVTubeStudio
@@ -88,6 +91,7 @@ try {
     Write-Host "[OK] StartVTubeStudio is success: $started"
 } catch {
     Write-Host "[ERROR] Failed to StartVTubeStudio: $_"
+    exit 1
 }
 
 # Test: StopVTubeStudio
@@ -96,6 +100,7 @@ try {
     Write-Host "[OK] StopVTubeStudio is success: $stopped"
 } catch {
     Write-Host "[ERROR] Failed to StopVTubeStudio: $_"
+    exit 1
 }
 
 # Test: GetSteamPath
@@ -114,6 +119,7 @@ try {
     Write-Host "[OK] DisconnectWebSocket is success"
 } catch {
     Write-Host "[ERROR] Failed to Connect/DisconnectWebSocket: $_"
+    exit 1
 }
 
 # Test: SendCommand
@@ -122,18 +128,6 @@ try {
     Write-Host "[OK] SendCommand is success: $result"
 } catch {
     Write-Host "[ERROR] Failed to SendCommand: $_"
-}
-
-# Test: GetStatus
-try {
-    $status = $vtubeManager.GetStatus()
-    Write-Host "[OK] GetStatus is success: $($status | ConvertTo-Json -Compress)"
-    Write-Host "Current Status:"
-    Write-Host "  - Is Running: $($status.IsRunning)"
-    Write-Host "  - Installation Available: $($status.Installation.Available)"
-    Write-Host "  - Installation Type: $($status.Installation.Type)"
-    Write-Host "  - Installation Path: $($status.Installation.Path)"
-    Write-Host "  - WebSocket Connected: $($status.WebSocketConnected)"
-} catch {
-    Write-Host "[ERROR] Failed to GetStatus: $_"
+    # implement in future
+    # exit 1
 }

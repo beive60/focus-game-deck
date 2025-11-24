@@ -217,36 +217,6 @@ class AppManager {
             "stop-process" {
                 return $this.StopProcess($appId, $appConfig)
             }
-            "start-replayBuffer" {
-                $manager = $this.IntegrationManagers[$appId]
-                [void]$manager.Connect()
-                $result = $manager.StartReplayBuffer()
-                [void]$manager.Disconnect()
-                return $result
-            }
-            "stop-replayBuffer" {
-                $manager = $this.IntegrationManagers[$appId]
-                [void]$manager.Connect()
-                $result = $manager.StopReplayBuffer()
-                [void]$manager.Disconnect()
-                return $result
-            }
-            "change-status-dnd" {
-                $manager = $this.IntegrationManagers[$appId]
-                return $manager.SetStatus("dnd")
-            }
-            "change-status-online" {
-                $manager = $this.IntegrationManagers[$appId]
-                return $manager.SetStatus("online")
-            }
-            "start-vtube-studio" {
-                $manager = $this.IntegrationManagers[$appId]
-                return $manager.StartVTubeStudio($appId, $appConfig)
-            }
-            "stop-vtube-studio" {
-                $manager = $this.IntegrationManagers[$appId]
-                return $manager.StopVTubeStudio($appId, $appConfig)
-            }
             "none" {
                 return $true
             }
@@ -690,15 +660,6 @@ class AppManager {
     # Start VTube Studio (special action)
     [bool] StartVTubeStudio([string] $appId, [object] $appConfig) {
         try {
-            # Load VTubeStudioManager if not already loaded
-            $modulePath = Join-Path $PSScriptRoot "VTubeStudioManager.ps1"
-            if (Test-Path $modulePath) {
-                . $modulePath
-            } else {
-                Write-Host "VTubeStudioManager module not found at: $modulePath"
-                return $false
-            }
-
             # Create VTubeStudioManager instance
             $vtubeManager = New-VTubeStudioManager -VTubeConfig $appConfig -Messages $this.Messages
 

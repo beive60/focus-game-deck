@@ -18,16 +18,10 @@ class VTubeStudioManager {
 
         # Load and initialize base helper for common operations
         try {
-            $baseModulePath = Join-Path $PSScriptRoot "WebSocketAppManagerBase.ps1"
-            if (Test-Path $baseModulePath) {
-                . $baseModulePath
-                $this.BaseHelper = New-WebSocketAppManagerBase -Config $vtubeConfig -Messages $messages -Logger $logger -AppName "VTubeStudio"
-            } else {
-                Write-Warning "WebSocketAppManagerBase.ps1 not found, using fallback methods"
-                $this.BaseHelper = $null
-            }
-        }
-        catch {
+            $this.BaseHelper = New-WebSocketAppManagerBase`
+            -Config $vtubeConfig -Messages $messages -Logger $logger`
+            -AppName "VTubeStudio"
+        } catch {
             Write-Warning "Failed to load WebSocketAppManagerBase: $_"
             $this.BaseHelper = $null
         }
@@ -35,101 +29,8 @@ class VTubeStudioManager {
 
     # Check if VTube Studio process is running
     [bool] IsVTubeStudioRunning() {
-        if ($this.BaseHelper) {
-            return $this.BaseHelper.IsProcessRunning($this.ProcessName)
-        } else {
-            # Fallback to original implementation
-            $process = Get-Process -Name $this.ProcessName -ErrorAction SilentlyContinue
-            return $null -ne $process
-        }
-    }
-
-    # Detect VTube Studio installation type and path
-    [hashtable] DetectVTubeStudioInstallation() {
-        $result = @{
-            Type = $null
-            Path = $null
-            Available = $false
-        }
-
-        # First, check for Steam version
-        try {
-            $steamAppPath = $null
-
-            # Method 1: Check Steam registry
-            $steamPath = Get-ItemProperty -Path "HKCU:/Software/Valve/Steam" -Name "SteamPath" -ErrorAction SilentlyContinue
-            if ($steamPath) {
-                $steamAppsPath = Join-Path $steamPath.SteamPath "steamapps/common/VTube Studio"
-                $steamExePath = Join-Path $steamAppsPath "VTube Studio.exe"
-                if (Test-Path $steamExePath) {
-                    $steamAppPath = $steamExePath
-                }
-            }
-
-            # Method 2: Check common Steam installation paths
-            if (-not $steamAppPath) {
-                $commonSteamPaths = @(
-                    "C:/Program Files (x86)/Steam/steamapps/common/VTube Studio/VTube Studio.exe",
-                    "C:/Program Files/Steam/steamapps/common/VTube Studio/VTube Studio.exe"
-                )
-                foreach ($path in $commonSteamPaths) {
-                    if (Test-Path $path) {
-                        $steamAppPath = $path
-                        break
-                    }
-                }
-            }
-
-            if ($steamAppPath) {
-                $result.Type = "Steam"
-                $result.Path = $steamAppPath
-                $result.Available = $true
-                if ($this.Logger) {
-                    $this.Logger.Info("VTube Studio Steam version detected at: $steamAppPath", "VTUBE")
-                }
-                return $result
-            }
-        }
-        catch {
-            if ($this.Logger) {
-                $this.Logger.Warning("Failed to detect Steam VTube Studio: $_", "VTUBE")
-            }
-        }
-
-        # Check for standalone version if configured
-        if ($this.Config.path -and (Test-Path $this.Config.path)) {
-            $result.Type = "Standalone"
-            $result.Path = $this.Config.path
-            $result.Available = $true
-            if ($this.Logger) {
-                $this.Logger.Info("VTube Studio standalone version detected at: $($this.Config.path)", "VTUBE")
-            }
-            return $result
-        }
-
-        # Check common standalone installation paths
-        $commonStandaloPaths = @(
-            "$env:USERPROFILE/AppData/Local/VTube Studio/VTube Studio.exe",
-            "C:/Program Files/VTube Studio/VTube Studio.exe",
-            "C:/Program Files (x86)/VTube Studio/VTube Studio.exe"
-        )
-
-        foreach ($path in $commonStandaloPaths) {
-            if (Test-Path $path) {
-                $result.Type = "Standalone"
-                $result.Path = $path
-                $result.Available = $true
-                if ($this.Logger) {
-                    $this.Logger.Info("VTube Studio standalone version detected at: $path", "VTUBE")
-                }
-                return $result
-            }
-        }
-
-        if ($this.Logger) {
-            $this.Logger.Warning("VTube Studio installation not found", "VTUBE")
-        }
-        return $result
+        $process = Get-Process -Name $this.ProcessName -ErrorAction SilentlyContinue
+        return $null -ne $process
     }
 
     # Start VTube Studio application
@@ -142,40 +43,17 @@ class VTubeStudioManager {
             return $true
         }
 
-        $installation = $this.DetectVTubeStudioInstallation()
-        if (-not $installation.Available) {
-            Write-Host "VTube Studio installation not found"
-            if ($this.Logger) {
-                $this.Logger.Error("VTube Studio installation not found", "VTUBE")
-            }
-            return $false
-        }
-
         try {
-            if ($installation.Type -eq "Steam") {
-                # Launch via Steam to ensure proper DRM handling
-                $steamPath = $this.GetSteamPath()
-                if ($steamPath -and (Test-Path $steamPath)) {
-                    Write-Host "Starting VTube Studio via Steam..."
-                    Start-Process $steamPath -ArgumentList "-applaunch $($this.SteamAppId)"
-                    if ($this.Logger) {
-                        $this.Logger.Info("Started VTube Studio via Steam (AppID: $($this.SteamAppId))", "VTUBE")
-                    }
-                } else {
-                    Write-Host "Steam not found, launching VTube Studio directly..."
-                    Start-Process -FilePath $installation.Path
-                    if ($this.Logger) {
-                        $this.Logger.Info("Started VTube Studio directly: $($installation.Path)", "VTUBE")
-                    }
+            $steamPath = $this.GetSteamPath()
+            if ($steamPath -and (Test-Path $steamPath)) {
+                Write-Host "Starting VTube Studio via Steam..."
+                Start-Process $steamPath -ArgumentList "-applaunch $($this.SteamAppId)"
+                if ($this.Logger) {
+                    $this.Logger.Info("Started VTube Studio via Steam (AppID: $($this.SteamAppId))", "VTUBE")
                 }
             } else {
-                # Launch standalone version directly
-                Write-Host "Starting VTube Studio (standalone)..."
-                $arguments = $this.Config.arguments -or ""
-                Start-Process -FilePath $installation.Path -ArgumentList $arguments
-                if ($this.Logger) {
-                    $this.Logger.Info("Started VTube Studio standalone: $($installation.Path)", "VTUBE")
-                }
+                Write-Host "Steam not found"
+                return $false
             }
 
             # Wait for VTube Studio to start
@@ -203,8 +81,7 @@ class VTubeStudioManager {
                 }
                 return $false
             }
-        }
-        catch {
+        } catch {
             Write-Host "Failed to start VTube Studio: $_"
             if ($this.Logger) {
                 $this.Logger.Error("Failed to start VTube Studio: $_", "VTUBE")
@@ -255,8 +132,7 @@ class VTubeStudioManager {
                     $this.Logger.Info("VTube Studio stopped successfully", "VTUBE")
                 }
                 return $true
-            }
-            catch {
+            } catch {
                 Write-Host "Failed to stop VTube Studio: $_"
                 if ($this.Logger) {
                     $this.Logger.Error("Failed to stop VTube Studio: $_", "VTUBE")
@@ -269,32 +145,31 @@ class VTubeStudioManager {
     # Get Steam installation path
     [string] GetSteamPath() {
         # Try configured path first
-        if ($this.Config.steamPath -and (Test-Path $this.Config.steamPath)) {
-            return $this.Config.steamPath
+        if ($this.Config.path -and (Test-Path $this.Config.path)) {
+            return $this.Config.path
         }
 
-        # Auto-detect Steam path
-        $steamPaths = @(
-            "C:/Program Files (x86)/Steam/steam.exe",
-            "C:/Program Files/Steam/steam.exe"
-        )
+        # # Auto-detect Steam path
+        # $steamPaths = @(
+        #     "C:/Program Files (x86)/Steam/steam.exe",
+        #     "C:/Program Files/Steam/steam.exe"
+        # )
 
-        foreach ($path in $steamPaths) {
-            if (Test-Path $path) {
-                return $path
-            }
-        }
+        # foreach ($path in $steamPaths) {
+        #     if (Test-Path $path) {
+        #         return $path
+        #     }
+        # }
 
-        # Try registry
-        try {
-            $steamReg = Get-ItemProperty -Path "HKCU:/Software/Valve/Steam" -Name "SteamExe" -ErrorAction SilentlyContinue
-            if ($steamReg -and (Test-Path $steamReg.SteamExe)) {
-                return $steamReg.SteamExe
-            }
-        }
-        catch {
-            # Ignore registry errors
-        }
+        # # Try registry
+        # try {
+        #     $steamReg = Get-ItemProperty -Path "HKCU:/Software/Valve/Steam" -Name "SteamExe" -ErrorAction SilentlyContinue
+        #     if ($steamReg -and (Test-Path $steamReg.SteamExe)) {
+        #         return $steamReg.SteamExe
+        #     }
+        # } catch {
+        #     # Ignore registry errors
+        # }
 
         return $null
     }
@@ -323,11 +198,9 @@ class VTubeStudioManager {
             if ($this.WebSocket) {
                 try {
                     $this.WebSocket.CloseAsync([System.Net.WebSockets.WebSocketCloseStatus]::NormalClosure, "Disconnecting", [System.Threading.CancellationToken]::None).Wait()
-                }
-                catch {
+                } catch {
                     # Ignore errors during disconnect
-                }
-                finally {
+                } finally {
                     $this.WebSocket.Dispose()
                 }
             }
@@ -343,15 +216,6 @@ class VTubeStudioManager {
             $this.Logger.Info("WebSocket command requested: $command (feature pending)", "VTUBE")
         }
         return $false
-    }
-
-    # Get VTube Studio status and information
-    [object] GetStatus() {
-        return @{
-            IsRunning = $this.IsVTubeStudioRunning()
-            Installation = $this.DetectVTubeStudioInstallation()
-            WebSocketConnected = $false  # Will be updated when WebSocket is implemented
-        }
     }
 }
 
