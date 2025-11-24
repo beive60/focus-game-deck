@@ -59,6 +59,7 @@
         "decompiled",
         "DPAPI",
         "Finalizers",
+        "HKCU",
         "LASTEXITCODE",
         "lifecycles",
         "resourcest's",
