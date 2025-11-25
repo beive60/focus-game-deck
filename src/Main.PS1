@@ -423,7 +423,7 @@ function Start-Game {
             Write-Host "Launching game: $GameId"
 
             # Delegate to existing game launcher
-            & powershell.exe -ExecutionPolicy Bypass -File $gameLauncherPath -GameId $GameId
+            & $gameLauncherPath -GameId $GameId
         }
 
     } catch {
