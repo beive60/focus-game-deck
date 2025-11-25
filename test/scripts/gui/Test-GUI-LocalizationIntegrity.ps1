@@ -537,7 +537,7 @@ function Write-LocalizationDiagnosticReport {
     foreach ($sectionName in $Analysis.Keys) {
         $section = $Analysis[$sectionName]
 
-        Write-Host "`n$($sectionName.ToUpper()):"
+        Write-Host "$($sectionName.ToUpper()):"
 
         if ($section.Issues.Count -gt 0) {
             Write-Host "Issues ($($section.Issues.Count)):"
@@ -594,7 +594,7 @@ if ($analysis) {
 
     # Return appropriate exit code
     # Exit with 0 (success) but output issue count for Pester to evaluate
-    Write-Host "`n[TEST RESULT] Total Issues: $totalIssues"
+    Write-Host "[TEST RESULT] Total Issues: $totalIssues"
     if ($totalIssues -eq 0) {
         Write-Host "[PASS] Localization integrity test passed with no issues"
         exit 0

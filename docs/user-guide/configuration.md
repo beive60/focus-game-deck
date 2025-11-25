@@ -129,13 +129,13 @@ Define all applications you want Focus Game Deck to control during gaming sessio
 "clibor": {
     "path": "C:/Apps/clibor/Clibor.exe",
     "processName": "Clibor",
-    "gameStartAction": "toggle-hotkeys",
-    "gameEndAction": "toggle-hotkeys",
-    "arguments": "/hs",
-    "terminationMethod": "graceful",
-    "gracefulTimeoutMs": 5000
+    "gameStartAction": "start-process",
+    "gameEndAction": "start-process",
+    "arguments": "/hs"
 }
 ```
+
+*Note: Previous versions used `toggle-hotkeys` for Clibor. The sample now uses `start-process` for both actions, which is recommended for compatibility. If you require hotkey toggling, you may use `toggle-hotkeys` as the action, but ensure your Clibor setup supports it.*
 
 #### Discord (Communication)
 
@@ -168,22 +168,6 @@ Define all applications you want Focus Game Deck to control during gaming sessio
 }
 ```
 
-#### VTube Studio Integration
-
-```json
-"vtubeStudio": {
-    "path": "",
-    "processName": "VTube Studio",
-    "gameStartAction": "start-vtube-studio",
-    "gameEndAction": "stop-vtube-studio",
-    "websocket": {
-        "host": "localhost",
-        "port": 8001,
-        "enabled": false
-    }
-}
-```
-
 ## Game Configuration
 
 Define the games you want to manage and which applications should be controlled for each game.
@@ -194,14 +178,19 @@ Define the games you want to manage and which applications should be controlled 
 "games": {
     "gameId": {
         "name": "Display Name",
-        "platform": "steam|epic|riot|standalone",
+        "platform": "steam|epic|riot|standalone|direct",
         "steamAppId": "123456",          // For Steam games
         "epicGameId": "epic-game-id",    // For Epic games
         "riotGameId": "game-name",       // For Riot games
-        "executablePath": "path",        // For standalone games
+        "executablePath": "path",        // For standalone or direct games
         "processName": "ProcessName*",   // Process name pattern
         "arguments": "launch-args",      // Optional launch arguments
-        "appsToManage": ["app1", "app2"] // List of managed apps
+        "appsToManage": ["app1", "app2"], // List of managed apps
+        "integrations": {
+            "useOBS": true,
+            "useDiscord": true,
+            "useVTubeStudio": false
+        } // Optional: if omitted, all integrations default to false
     }
 }
 ```
@@ -211,12 +200,12 @@ Define the games you want to manage and which applications should be controlled 
 #### Steam Games
 
 ```json
-"apex": {
-    "name": "Apex Legends",
+"dbd": {
+    "name": "Dead by Daylight",
     "platform": "steam",
-    "steamAppId": "1172470",
-    "processName": "r5apex*",
-    "appsToManage": ["noWinKey", "discord", "obs"]
+    "steamAppId": "381210",
+    "processName": "DeadByDaylight-Win64-Shipping*",
+    "appsToManage": ["clibor", "yapa2"]
 }
 ```
 
@@ -228,7 +217,7 @@ Define the games you want to manage and which applications should be controlled 
     "platform": "epic",
     "epicGameId": "ac2c3d6632504c6b9b0503d8b6c41227",
     "processName": "YuanShen*",
-    "appsToManage": ["obs", "clibor"]
+    "appsToManage": ["clibor"]
 }
 ```
 
@@ -240,7 +229,7 @@ Define the games you want to manage and which applications should be controlled 
     "platform": "riot",
     "riotGameId": "valorant",
     "processName": "VALORANT-Win64-Shipping*",
-    "appsToManage": ["discord", "obs"]
+    "appsToManage": ["clibor", "autoHotkey"]
 }
 ```
 

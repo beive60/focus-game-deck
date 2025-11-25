@@ -73,6 +73,7 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
         BeforeAll {
             . $TestScriptPath
             $analysis = Test-LocalizationControlFlow
+            Write-Information $analysis
         }
 
         It "Should validate mapping table structure" {
@@ -109,6 +110,7 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
         BeforeAll {
             . $TestScriptPath
             $analysis = Test-LocalizationControlFlow
+            Write-Information $analysis
         }
 
         It "Should locate JSON localization files" {
@@ -152,6 +154,7 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
         BeforeAll {
             . $TestScriptPath
             $analysis = Test-LocalizationControlFlow
+            Write-Information $analysis
         }
 
         It "Should detect XAML files in project" {
@@ -197,6 +200,7 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
         BeforeAll {
             . $TestScriptPath
             $analysis = Test-LocalizationControlFlow
+            Write-Information $analysis
         }
 
         It "Should detect localization control functions" {
@@ -239,6 +243,7 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
         BeforeAll {
             . $TestScriptPath
             $analysis = Test-LocalizationControlFlow
+            Write-Information $analysis
         }
 
         It "Should detect ConfigEditor module files" {
@@ -291,6 +296,7 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
         BeforeAll {
             . $TestScriptPath
             $analysis = Test-LocalizationControlFlow
+            Write-Information $analysis
         }
 
         It "Should count total issues across all categories" {

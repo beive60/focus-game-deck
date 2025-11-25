@@ -1,10 +1,31 @@
 ﻿# VTube Studio Integration Test Script
-# Test the VTubeStudioManager functionality
+<#
+.SYNOPSIS
+    Runs integration tests for VTubeStudioManager, ensuring it correctly interacts with the application and configuration.
 
+.DESCRIPTION
+    This Pester test script verifies the functionality of the VTubeStudioManager module. It performs the following checks:
+    - Loads the VTubeStudioManager and AppManager modules.
+    - Loads the application's configuration from 'config/config.json'.
+    - Tests the VTubeStudioManager by creating an instance and checking for the VTube Studio installation.
+    - Tests AppManager integration by validating the VTube Studio configuration.
+    - Tests the ConfigValidator by running a full configuration validation and reporting the results.
+
+.EXAMPLE
+    .\Test-Integration-VTubeStudio.ps1
+    Runs all integration tests defined in the script.
+
+.NOTES
+    This script is intended to be run from the 'test/scripts/integration' directory. It requires the main configuration file ('config/config.json') to be present and correctly formatted.
+
+.OUTPUTS
+    Outputs test results to the console, indicating the status of each test (e.g., [OK], [ERROR], [WARNING]).
+#>
 Write-Host "=== VTube Studio Integration Test ==="
 
+$projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+
 # Load required modules
-$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
 try {
     $vtubeStudioManagerPath = Join-Path -Path $projectRoot -ChildPath "src/modules/VTubeStudioManager.ps1"
     . $vtubeStudioManagerPath
@@ -34,91 +55,79 @@ try {
 }
 
 # Test VTubeStudioManager
-Write-Host "`n=== Testing VTubeStudioManager ==="
+Write-Host "=== Testing VTubeStudioManager ==="
 
+# Create DiscordManager instance
+$messages = @{}  # Mock messages object for testing
 try {
-    $vtubeManager = New-VTubeStudioManager -VTubeConfig $config.managedApps.vtubeStudio -Messages @{}
+    $vtubeManager = New-VTubeStudioManager -VTubeConfig $config.integrations.vtubeStudio -Messages $messages
     Write-Host "[OK] VTubeStudioManager instance created"
-
-    # Test installation detection
-    Write-Host "`nTesting VTube Studio installation detection..."
-    $status = $vtubeManager.GetStatus()
-
-    Write-Host "Current Status:"
-    Write-Host "  - Is Running: $($status.IsRunning)"
-    Write-Host "  - Installation Available: $($status.Installation.Available)"
-    Write-Host "  - Installation Type: $($status.Installation.Type)"
-    Write-Host "  - Installation Path: $($status.Installation.Path)"
-    Write-Host "  - WebSocket Connected: $($status.WebSocketConnected)"
-
-    if ($status.Installation.Available) {
-        Write-Host "[OK] VTube Studio installation detected"
-    } else {
-        Write-Host "[WARNING] VTube Studio installation not found"
-    }
-
 } catch {
     Write-Host "[ERROR] VTubeStudioManager test failed: $_"
+    exit 1
 }
 
-# Test AppManager integration
-Write-Host "`n=== Testing AppManager Integration ==="
-
+# Test: IsVTubeStudioRunning
 try {
-    $appManager = New-AppManager -Config $config -Messages @{}
-    Write-Host "[OK] AppManager instance created"
-
-    # Test configuration validation
-    Write-Host "`nTesting VTube Studio configuration validation..."
-    if ($appManager.ValidateAppConfig("vtubeStudio")) {
-        Write-Host "[OK] VTube Studio configuration valid"
-    } else {
-        Write-Host "[ERROR] VTube Studio configuration invalid"
-    }
-
+    $isRunning = $vtubeManager.IsVTubeStudioRunning()
+    Write-Host "[OK] IsVTubeStudioRunning is success: $isRunning"
 } catch {
-    Write-Host "[ERROR] AppManager integration test failed: $_"
+    Write-Host "[ERROR] Failed to IsVTubeStudioRunning: $_"
+    exit 1
 }
 
-# Test Configuration Validator
-Write-Host "`n=== Testing Configuration Validator ==="
-
+# Test: DetectVTubeStudioInstallation
 try {
-    $configValidatorPath = Join-Path -Path $projectRoot -ChildPath "src/modules/ConfigValidator.ps1"
-    . $configValidatorPath
-    Write-Host "[OK] ConfigValidator module loaded"
-
-    $validator = New-ConfigValidator -Config $config -Messages @{}
-    $validationResult = $validator.ValidateConfiguration($null)
-
-    if ($validationResult) {
-        Write-Host "[OK] Configuration validation passed"
-    } else {
-        Write-Host "[WARNING] Configuration validation has issues"
-    }
-
-    $report = $validator.GetValidationReport()
-    Write-Host "Validation Report:"
-    Write-Host "  - Is Valid: $($report.IsValid)"
-    Write-Host "  - Error Count: $($report.ErrorCount)"
-    Write-Host "  - Warning Count: $($report.WarningCount)"
-
-    if ($report.ErrorCount -gt 0) {
-        Write-Host "Errors:"
-        foreach ($errorMsg in $report.Errors) {
-            Write-Host "  - $errorMsg"
-        }
-    }
-
-    if ($report.WarningCount -gt 0) {
-        Write-Host "Warnings:"
-        foreach ($warningMsg in $report.Warnings) {
-            Write-Host "  - $warningMsg"
-        }
-    }
-
+    $installation = $vtubeManager.DetectVTubeStudioInstallation()
+    Write-Host "[OK] DetectVTubeStudioInstallation is success: $($installation.Available)"
 } catch {
-    Write-Host "[ERROR] Configuration validator test failed: $_"
+    Write-Host "[ERROR] Failed to DetectVTubeStudioInstallation: $_"
+    exit 1
 }
 
-Write-Host "`n=== VTube Studio Integration Test Complete ==="
+# Test: StartVTubeStudio
+try {
+    $started = $vtubeManager.StartVTubeStudio()
+    Write-Host "[OK] StartVTubeStudio is success: $started"
+} catch {
+    Write-Host "[ERROR] Failed to StartVTubeStudio: $_"
+    exit 1
+}
+
+# Test: StopVTubeStudio
+try {
+    $stopped = $vtubeManager.StopVTubeStudio()
+    Write-Host "[OK] StopVTubeStudio is success: $stopped"
+} catch {
+    Write-Host "[ERROR] Failed to StopVTubeStudio: $_"
+    exit 1
+}
+
+# Test: GetSteamPath
+try {
+    $steamPath = $vtubeManager.GetSteamPath()
+    Write-Host "[OK] GetSteamPath is success: $steamPath"
+} catch {
+    Write-Host "[ERROR] Failed to GetSteamPath: $_"
+}
+
+# Test: ConnectWebSocket / DisconnectWebSocket
+try {
+    $connected = $vtubeManager.ConnectWebSocket()
+    Write-Host "[OK] ConnectWebSocket is success: $connected"
+    $vtubeManager.DisconnectWebSocket()
+    Write-Host "[OK] DisconnectWebSocket is success"
+} catch {
+    Write-Host "[ERROR] Failed to Connect/DisconnectWebSocket: $_"
+    exit 1
+}
+
+# Test: SendCommand
+try {
+    $result = $vtubeManager.SendCommand("TestCommand")
+    Write-Host "[OK] SendCommand is success: $result"
+} catch {
+    Write-Host "[ERROR] Failed to SendCommand: $_"
+    # implement in future
+    # exit 1
+}

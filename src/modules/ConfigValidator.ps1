@@ -194,13 +194,13 @@ class ConfigValidator {
             }
             "direct" {
                 if (-not $gameConfig.executablePath) {
-                    $this.Errors += "Game '$gameId' with direct platform requires 'executablePath' property"
+                    $this.Errors += "Game '$gameId' with standalone platform requires 'executablePath' property"
                 } elseif (-not (Test-Path $gameConfig.executablePath)) {
                     $this.Errors += "Game '$gameId' executable path does not exist: '$($gameConfig.executablePath)'"
                 }
             }
             default {
-                $this.Errors += "Game '$gameId' has unsupported platform: '$platform'. Supported platforms: steam, epic, ea, riot, direct"
+                $this.Errors += "Game '$gameId' has unsupported platform: '$platform'. Supported platforms: steam, epic, riot, direct"
             }
         }
 
@@ -274,45 +274,43 @@ class ConfigValidator {
     # Get validation report
     [hashtable] GetValidationReport() {
         return @{
-            IsValid      = ($this.Errors.Count -eq 0)
-            ErrorCount   = $this.Errors.Count
+            IsValid = ($this.Errors.Count -eq 0)
+            ErrorCount = $this.Errors.Count
             WarningCount = $this.Warnings.Count
-            Errors       = $this.Errors
-            Warnings     = $this.Warnings
+            Errors = $this.Errors
+            Warnings = $this.Warnings
         }
     }
 
     # Platform detection validation method
     [hashtable] ValidatePlatformAvailability() {
         $platformResults = @{
-            Available   = @()
+            Available = @()
             Unavailable = @()
-            Errors      = @()
+            Errors = @()
         }
 
         # Platform detection paths
         $platformChecks = @{
             "steam" = @{
-                Paths         = @(
+                Paths = @(
                     "C:/Program Files (x86)/Steam/steam.exe",
                     "C:/Program Files/Steam/steam.exe"
                 )
-                RegistryPath  = "HKCU:/Software/Valve/Steam"
+                RegistryPath = "HKCU:/Software/Valve/Steam"
                 RegistryValue = "SteamExe"
             }
-            "epic"  = @{
+            "epic" = @{
                 Paths = @(
                     "C:/Program Files (x86)/Epic Games/Launcher/Portal/Binaries/Win32/EpicGamesLauncher.exe",
                     "C:/Program Files/Epic Games/Launcher/Portal/Binaries/Win32/EpicGamesLauncher.exe"
                 )
             }
-            "ea"    = @{
+            "ea" = @{
                 Paths = @(
-                    "C:/Program Files/Electronic Arts/EA Desktop/EA Desktop/EADesktop.exe",
-                    "C:/Program Files (x86)/Electronic Arts/EA Desktop/EA Desktop/EADesktop.exe"
                 )
             }
-            "riot"  = @{
+            "riot" = @{
                 Paths = @(
                     "C:\Riot Games\Riot Client\RiotClientServices.exe",
                     "$env:LOCALAPPDATA\Riot Games\Riot Client\RiotClientServices.exe"
@@ -329,8 +327,8 @@ class ConfigValidator {
                 if ($path -and (Test-Path $path)) {
                     $platformResults.Available += @{
                         Platform = $platformKey
-                        Path     = $path
-                        Method   = "File System"
+                        Path = $path
+                        Method = "File System"
                     }
                     $found = $true
                     break
@@ -344,8 +342,8 @@ class ConfigValidator {
                     if ($regValue -and $regValue.($check.RegistryValue) -and (Test-Path $regValue.($check.RegistryValue))) {
                         $platformResults.Available += @{
                             Platform = $platformKey
-                            Path     = $regValue.($check.RegistryValue)
-                            Method   = "Registry"
+                            Path = $regValue.($check.RegistryValue)
+                            Method = "Registry"
                         }
                         $found = $true
                     }

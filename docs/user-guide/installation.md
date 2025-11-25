@@ -129,6 +129,26 @@ If you prefer to edit configuration files directly:
    .\test\Test-ConfigValidation.ps1
    ```
 
+## Administrator Privileges (Optional)
+
+Depending on the applications you manage, Focus Game Deck may require Administrator privileges to function correctly.
+
+### Why is this needed?
+
+Certain tools (e.g., **NoWinKey** for disabling the Windows key) and some competitive games with anti-cheat systems run with high system privileges.
+
+- **The Issue:** If Focus Game Deck runs as a standard user, Windows security will prevent it from stopping these high-privilege tools (Access Denied error) when you finish playing.
+- **The Benefit:** Running as Administrator ensures that your gaming environment is **cleanly and automatically restored** every time.
+
+### How to set up
+
+If you use such tools, please configure the application to run as administrator:
+
+1. Right-click `Focus-Game-Deck.exe` and select **Properties**.
+2. Go to the **Compatibility** tab.
+3. Check **Run this program as an administrator**.
+4. Click **Apply** and **OK**.
+
 ## Integration Setup
 
 ### Steam Integration

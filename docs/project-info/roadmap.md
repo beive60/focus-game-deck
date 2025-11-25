@@ -158,6 +158,19 @@ Based on this vision, this roadmap defines the path to evolve Focus Game Deck fr
 | **Community Marketplace** | **-** | Platform where users can share and download custom profiles, themes, and plugins. |
 | **Cross-Platform Support** | **-** | Expand to Mac and Linux, making it the standard tool for gamers worldwide. |
 
+### Phase 4: Architectural Unification (v4.0)
+
+* **Target Release**: v4.0 (Future Major Update)
+* **Goal**: Achieve the ultimate balance of "Simple Distribution" and "High Performance" by unifying components into a single executable.
+
+This phase addresses the complexity of privilege inheritance in multi-process architectures while maintaining our strict performance standards.
+
+| Major Feature | Priority | Notes |
+| :---- | :---- | :---- |
+| **Single Executable Architecture** | **High** | Merge Router, GUI, and Launcher into one `Focus-Game-Deck.exe`. This solves privilege inheritance issues (UAC) by keeping the launcher in the same process context as the main application. |
+| **Conditional Assembly Loading** | **Critical** | **Performance Optimization**: Dynamically load heavy WPF assemblies *only* when GUI mode is triggered. This ensures the background game launcher remains ultra-lightweight (<50MB) despite being part of the main executable. |
+| **Console Window Control** | **High** | **UX Improvement**: Implement native P/Invoke calls to programmatically hide the console window for GUI users, while preserving stdout logging capabilities for command-line usage. |
+
 ## **Success Metrics**
 
 ### **Phase 0 Success Criteria**

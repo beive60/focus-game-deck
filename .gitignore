@@ -28,11 +28,10 @@ Build-ConfigEditor.ps1
 *.lnk.log
 launcher-debug.txt
 
-# VSCode user settings (but keep workspace config)
-.vscode/settings.json
+# VSCode settings (but keep workspace config)
 .vscode/keybindings.json
 
-# User logs
+# logs
 *.log
 
 # Temporary backup files

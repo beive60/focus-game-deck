@@ -32,7 +32,10 @@
 class AppManager {
     [object] $Config
     [object] $Messages
+    [object] $Logger
+    [object] $GameConfig
     [object] $ManagedApps
+    [hashtable] $IntegrationManagers
 
     <#
     .SYNOPSIS
@@ -51,45 +54,121 @@ class AppManager {
         $appManager = [AppManager]::new($config, $messages)
     #>
     # Constructor
-    AppManager([object] $config, [object] $messages) {
+    AppManager([object] $config, [object] $messages, [object] $logger) {
         $this.Config = $config
         $this.Messages = $messages
+        $this.Logger = $logger
         $this.ManagedApps = $config.managedApps
+        $this.IntegrationManagers = @{}
     }
 
     <#
     .SYNOPSIS
-        Validates an application configuration.
+        Sets the game context and initializes integration managers.
 
     .DESCRIPTION
-        Checks if the specified application exists in configuration and has
-        all required properties (processName, etc.).
+        Configures the AppManager for a specific game by setting the game configuration
+        and initializing integration managers based on the game's integration settings.
 
-    .PARAMETER appId
-        The application ID to validate
-
-    .OUTPUTS
-        Boolean indicating whether the configuration is valid
+    .PARAMETER gameConfig
+        The game configuration object containing integration settings
 
     .EXAMPLE
-        $isValid = $appManager.ValidateAppConfig("discord")
+        $appManager.SetGameContext($gameConfig)
     #>
-    # Validate application configuration
-    [bool] ValidateAppConfig([string] $appId) {
-        if (-not $this.ManagedApps.$appId) {
-            Write-Host ($this.Messages.warning_app_not_defined -f $appId)
-            return $false
+    [void] SetGameContext([object] $gameConfig) {
+        $this.GameConfig = $gameConfig
+        [void]$this.InitializeIntegrationManagers()
+    }
+
+    <#
+    .SYNOPSIS
+        Initializes integration managers based on game configuration.
+
+    .DESCRIPTION
+        Creates manager instances for enabled integrations (OBS, Discord, VTube Studio).
+        Only initializes managers for integrations that are both enabled in the game
+        configuration and properly configured in the main configuration.
+
+    .EXAMPLE
+        $appManager.InitializeIntegrationManagers()
+    #>
+    [void] InitializeIntegrationManagers() {
+        $this.IntegrationManagers.Clear()
+
+        if (-not $this.GameConfig) {
+            return
         }
 
-        $appConfig = $this.ManagedApps.$appId
-
-        # Check required properties
-        if (-not $appConfig.PSObject.Properties.Name -contains "processName") {
-            Write-Host "Application '$appId' is missing 'processName' property"
-            return $false
+        # OBS Manager
+        if ($this.GameConfig.integrations.useOBS -and $this.Config.integrations.obs) {
+            $this.IntegrationManagers['obs'] = New-OBSManager `
+                -OBSConfig $this.Config.integrations.obs `
+                -Messages $this.Messages
+            if ($this.Logger) {
+                $this.Logger.Info("OBS manager initialized", "APP")
+            }
         }
 
-        return $true
+        # Discord Manager
+        if ($this.GameConfig.integrations.useDiscord -and $this.Config.integrations.discord) {
+            $this.IntegrationManagers['discord'] = New-DiscordManager `
+                -DiscordConfig $this.Config.integrations.discord `
+                -Messages $this.Messages
+            if ($this.Logger) {
+                $this.Logger.Info("Discord manager initialized", "APP")
+            }
+        }
+
+        # VTube Studio Manager
+        if ($this.GameConfig.integrations.useVTubeStudio -and $this.Config.integrations.vtubeStudio) {
+            $this.IntegrationManagers['vtubeStudio'] = New-VTubeStudioManager `
+                -VTubeConfig $this.Config.integrations.vtubeStudio `
+                -Messages $this.Messages
+            if ($this.Logger) {
+                $this.Logger.Info("VTube Studio manager initialized", "APP")
+            }
+        }
+    }
+
+    <#
+    .SYNOPSIS
+        Builds the complete list of applications to manage for the current game.
+
+    .DESCRIPTION
+        Combines game-specific applications with enabled integration applications
+        to create a unified list for startup/shutdown sequences.
+
+    .OUTPUTS
+        Array of application IDs to manage
+
+    .EXAMPLE
+        $apps = $appManager.GetManagedApplications()
+    #>
+    [array] GetManagedApplications() {
+        $orderedApps = [System.Collections.ArrayList]::new()
+        $addedApps = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+
+        if (-not $this.GameConfig) {
+            return $orderedApps
+        }
+
+        if ($this.GameConfig.appsToManage) {
+            foreach ($appId in $this.GameConfig.appsToManage) {
+                if ($addedApps.Add($appId)) {
+                    [void]$orderedApps.Add($appId)
+                }
+            }
+        }
+
+        # add integration apps that are enabled but not already in the list
+        foreach ($integrationKey in $this.IntegrationManagers.Keys) {
+            if ($addedApps.Add($integrationKey)) {
+                [void]$orderedApps.Add($integrationKey)
+            }
+        }
+
+        return $orderedApps.ToArray()
     }
 
     <#
@@ -124,8 +203,9 @@ class AppManager {
     #>
     # Execute application action
     [bool] InvokeAction([string] $appId, [string] $action) {
-        if (-not $this.ValidateAppConfig($appId)) {
-            return $false
+        # Check if this is an integration
+        if ($this.IntegrationManagers.ContainsKey($appId)) {
+            return $this.InvokeIntegrationAction($appId, $action)
         }
 
         $appConfig = $this.ManagedApps.$appId
@@ -137,32 +217,254 @@ class AppManager {
             "stop-process" {
                 return $this.StopProcess($appId, $appConfig)
             }
-            "toggle-hotkeys" {
-                return $this.ToggleHotkeys($appId, $appConfig)
-            }
-            "start-vtube-studio" {
-                return $this.StartVTubeStudio($appId, $appConfig)
-            }
-            "stop-vtube-studio" {
-                return $this.StopVTubeStudio($appId, $appConfig)
-            }
-            "set-discord-gaming-mode" {
-                return $this.SetDiscordGamingMode($appId, $appConfig)
-            }
-            "restore-discord-normal" {
-                return $this.RestoreDiscordNormal($appId, $appConfig)
-            }
-            "pause-wallpaper" {
-                return $this.PauseWallpaper($appId, $appConfig)
-            }
-            "play-wallpaper" {
-                return $this.PlayWallpaper($appId, $appConfig)
-            }
             "none" {
                 return $true
             }
             default {
                 Write-Host "Unknown action: $action for app: $appId"
+                return $false
+            }
+        }
+        return $false
+    }
+
+    <#
+    .SYNOPSIS
+        Handles integration-specific actions.
+
+    .DESCRIPTION
+        Routes integration actions to the appropriate handler based on integration type.
+        Supports OBS, Discord, and VTube Studio integrations.
+
+    .PARAMETER integrationId
+        The integration ID (obs, discord, vtubeStudio)
+
+    .PARAMETER action
+        The action to execute
+
+    .OUTPUTS
+        Boolean indicating whether the action was successful
+
+    .EXAMPLE
+        $success = $appManager.InvokeIntegrationAction("obs", "start-process")
+    #>
+    [bool] InvokeIntegrationAction([string] $integrationId, [string] $action) {
+        $manager = $this.IntegrationManagers[$integrationId]
+        $integrationConfig = $this.Config.integrations.$integrationId
+
+        if (-not $manager) {
+            Write-Host "Integration manager not found: $integrationId"
+            return $false
+        }
+
+        switch ($integrationId) {
+            "obs" {
+                return $this.HandleOBSAction($manager, $integrationConfig, $action)
+            }
+            "discord" {
+                return $this.HandleDiscordAction($manager, $integrationConfig, $action)
+            }
+            "vtubeStudio" {
+                return $this.HandleVTubeStudioAction($manager, $integrationConfig, $action)
+            }
+            default {
+                Write-Host "Unknown integration: $integrationId"
+                return $false
+            }
+        }
+
+        return $false
+    }
+
+    <#
+    .SYNOPSIS
+        Handles OBS-specific actions.
+
+    .DESCRIPTION
+        Manages OBS startup and shutdown including replay buffer control.
+
+    .PARAMETER manager
+        The OBS manager instance
+
+    .PARAMETER config
+        The OBS configuration object
+
+    .PARAMETER action
+        The action to execute
+
+    .OUTPUTS
+        Boolean indicating whether the action was successful
+
+    .EXAMPLE
+        $success = $appManager.HandleOBSAction($obsManager, $config, "start-process")
+    #>
+    [bool] HandleOBSAction([object] $manager, [object] $config, [string] $action) {
+        switch ($action) {
+            "start-process" {
+                if ($this.Logger) { $this.Logger.Info("Starting OBS integration", "OBS") }
+
+                $success = $manager.StartOBS()
+                if ($success) {
+                    Write-Host "[INFO] OBS started successfully"
+                    if ($this.Logger) { $this.Logger.Info("OBS started successfully", "OBS") }
+                } else {
+                    Write-Warning "Failed to start OBS"
+                    if ($this.Logger) { $this.Logger.Warning("Failed to start OBS", "OBS") }
+                    return $success
+                }
+
+                if (-not $config.replayBuffer) { return $true }
+
+                # Handle replay buffer if configured
+                Start-Sleep -Milliseconds 2000
+                $success = $manager.Connect()
+                if ($success) {
+                    if ($this.Logger) { $this.Logger.Info("OBS websocket connection established", "OBS") }
+                } else {
+                    Write-Warning "Failed to connect to OBS websocket"
+                    if ($this.Logger) { $this.Logger.Warning("Failed to connect to OBS websocket", "OBS") }
+                    return $false
+                }
+
+                try {
+                    $success = $manager.StartReplayBuffer()
+                    if ($this.Logger) { $this.Logger.Info("OBS replay buffer started", "OBS") }
+                } catch {
+                    Write-Warning "Failed to connect to OBS for replay buffer"
+                    if ($this.Logger) { $this.Logger.Warning("Failed to connect to OBS for replay buffer", "OBS") }
+                    return $false
+                } finally {
+                    [void]$manager.Disconnect()
+                }
+                return $success
+            }
+            "stop-process" {
+                $success = $true
+                # Handle replay buffer shutdown
+                if ($config.replayBuffer) {
+                    if ($manager.Connect()) {
+                        $success = $manager.StopReplayBuffer()
+                        $manager.Disconnect()
+                        if ($this.Logger) { $this.Logger.Info("OBS replay buffer stopped", "OBS") }
+                    } else {
+                        if ($this.Logger) { $this.Logger.Warning("Failed to stop OBS replay buffer", "OBS") }
+                    }
+                }
+                return $success
+
+                # # Stop OBS process
+                # $processConfig = @{
+                #     processName = $config.processName
+                #     terminationMethod = if ($config.terminationMethod) { $config.terminationMethod } else { "graceful" }
+                #     gracefulTimeoutMs = if ($config.gracefulTimeoutMs) { $config.gracefulTimeoutMs } else { 5000 }
+                # }
+                # return $this.StopProcess("obs", $processConfig)
+            }
+            "none" {
+                return $true
+            }
+            default {
+                Write-Host "Unknown OBS action: $action"
+                return $false
+            }
+        }
+        return $false
+    }
+
+    <#
+    .SYNOPSIS
+        Handles Discord-specific actions.
+
+    .DESCRIPTION
+        Manages Discord startup and shutdown including status changes.
+
+    .PARAMETER manager
+        The Discord manager instance
+
+    .PARAMETER config
+        The Discord configuration object
+
+    .PARAMETER action
+        The action to execute
+
+    .OUTPUTS
+        Boolean indicating whether the action was successful
+
+    .EXAMPLE
+        $success = $appManager.HandleDiscordAction($discordManager, $config, "start-process")
+    #>
+    [bool] HandleDiscordAction([object] $manager, [object] $config, [string] $action) {
+        switch ($action) {
+            "start-process" {
+                if ($this.Logger) { $this.Logger.Info("Starting Discord integration", "Discord") }
+
+                $success = $manager.StartDiscord()
+
+                if ($success) {
+                    Write-Host "[INFO] Discord started successfully"
+                    if ($this.Logger) { $this.Logger.Info("Discord started successfully", "Discord") }
+                }
+
+                return $success
+            }
+            "stop-process" {
+                if ($this.Logger) { $this.Logger.Info("Starting Discord integration", "Discord") }
+
+                $success = $manager.StopDiscord()
+
+                if ($success) {
+                    Write-Host "[INFO] Discord stopped successfully"
+                    if ($this.Logger) { $this.Logger.Info("Discord stopped successfully", "Discord") }
+                }
+
+                return $success
+            }
+            "none" {
+                return $true
+            }
+            default {
+                Write-Host "Unknown Discord action: $action"
+                return $false
+            }
+        }
+        return $false
+    }
+
+    <#
+    .SYNOPSIS
+        Handles VTube Studio-specific actions.
+
+    .DESCRIPTION
+        Manages VTube Studio startup and shutdown using the dedicated manager.
+
+    .PARAMETER manager
+        The VTube Studio manager instance
+
+    .PARAMETER config
+        The VTube Studio configuration object
+
+    .PARAMETER action
+        The action to execute
+
+    .OUTPUTS
+        Boolean indicating whether the action was successful
+
+    .EXAMPLE
+        $success = $appManager.HandleVTubeStudioAction($vtubeManager, $config, "start-process")
+    #>
+    [bool] HandleVTubeStudioAction([object] $manager, [object] $config, [string] $action) {
+        switch ($action) {
+            "start-process" {
+                return $manager.StartVTubeStudio()
+            }
+            "stop-process" {
+                return $manager.StopVTubeStudio()
+            }
+            "none" {
+                return $true
+            }
+            default {
+                Write-Host "Unknown VTube Studio action: $action"
                 return $false
             }
         }
@@ -220,8 +522,7 @@ class AppManager {
 
             Write-Host ($this.Messages.app_started -f $appId)
             return $true
-        }
-        catch {
+        } catch {
             Write-Host "Failed to start $appId : $_"
             return $false
         }
@@ -267,7 +568,7 @@ class AppManager {
         $gracefulTimeoutMs = if ($appConfig.gracefulTimeoutMs) { $appConfig.gracefulTimeoutMs } else { 3000 }
 
         # Handle multiple process names separated by |
-        $processNames = $appConfig.processName -split '/|'
+        $processNames = $appConfig.processName -split '\|'
         $processFound = $false
 
         foreach ($processName in $processNames) {
@@ -281,9 +582,9 @@ class AppManager {
                         $processFound = $true
                     }
                 }
-            }
-            catch {
+            } catch {
                 # Process not found, continue to next
+                Write-Host ($this.Messages.app_process_not_found -f $processName)
             }
         }
 
@@ -348,8 +649,7 @@ class AppManager {
             # Timeout reached
             Write-Host ($this.Messages.graceful_shutdown_timeout -f $processName, ($timeoutMs / 1000))
             return $false
-        }
-        catch {
+        } catch {
             Write-Host ($this.Messages.graceful_shutdown_failed -f $processName, $_)
             return $false
         }
@@ -361,33 +661,8 @@ class AppManager {
             Stop-Process -Name $processName -Force -ErrorAction Stop
             Write-Host ($this.Messages.force_termination_success -f $processName)
             return $true
-        }
-        catch {
+        } catch {
             Write-Host ($this.Messages.force_termination_failed -f $processName, $_)
-            return $false
-        }
-    }
-
-    # Toggle hotkeys (special case for applications like Clibor)
-    [bool] ToggleHotkeys([string] $appId, [object] $appConfig) {
-        if (-not $appConfig.path -or $appConfig.path -eq "") {
-            Write-Host ($this.Messages.warning_no_path_specified -f $appId)
-            return $false
-        }
-
-        try {
-            $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") {
-                $appConfig.arguments
-            } else {
-                "/hs"
-            }
-
-            Start-Process -FilePath $appConfig.path -ArgumentList $arguments
-            Write-Host ($this.Messages.app_hotkey_toggled -f $appId, $this.Messages.clibor_action_toggled)
-            return $true
-        }
-        catch {
-            Write-Host "Failed to toggle hotkeys for $appId : $_"
             return $false
         }
     }
@@ -395,22 +670,12 @@ class AppManager {
     # Start VTube Studio (special action)
     [bool] StartVTubeStudio([string] $appId, [object] $appConfig) {
         try {
-            # Load VTubeStudioManager if not already loaded
-            $modulePath = Join-Path $PSScriptRoot "VTubeStudioManager.ps1"
-            if (Test-Path $modulePath) {
-                . $modulePath
-            } else {
-                Write-Host "VTubeStudioManager module not found at: $modulePath"
-                return $false
-            }
-
             # Create VTubeStudioManager instance
             $vtubeManager = New-VTubeStudioManager -VTubeConfig $appConfig -Messages $this.Messages
 
             # Start VTube Studio
             return $vtubeManager.StartVTubeStudio()
-        }
-        catch {
+        } catch {
             Write-Host "Failed to start VTube Studio: $_"
             return $false
         }
@@ -433,8 +698,7 @@ class AppManager {
 
             # Stop VTube Studio
             return $vtubeManager.StopVTubeStudio()
-        }
-        catch {
+        } catch {
             Write-Host "Failed to stop VTube Studio: $_"
             return $false
         }
@@ -457,8 +721,7 @@ class AppManager {
 
             # Set Gaming Mode
             return $discordManager.SetGamingMode($this.gameConfig.name)
-        }
-        catch {
+        } catch {
             Write-Host "Failed to set Discord Gaming Mode: $_"
             return $false
         }
@@ -481,64 +744,10 @@ class AppManager {
 
             # Restore Normal Mode
             return $discordManager.RestoreNormalMode()
-        }
-        catch {
+        } catch {
             Write-Host "Failed to restore Discord Normal Mode: $_"
             return $false
         }
-    }
-
-    # Control Wallpaper Engine playback
-    [bool] ControlWallpaper([string] $appId, [object] $appConfig, [string] $command) {
-        if (-not $appConfig.path -or $appConfig.path -eq "") {
-            Write-Host "Wallpaper Engine path not specified for $appId"
-            return $false
-        }
-
-        # Check if the path exists
-        if (-not (Test-Path $appConfig.path)) {
-            Write-Host "Wallpaper Engine executable not found at: $($appConfig.path)"
-            return $false
-        }
-
-        try {
-            # Determine the correct executable based on system architecture
-            $executablePath = $appConfig.path
-            $executableName = [System.IO.Path]::GetFileNameWithoutExtension($executablePath)
-            $executableDir = [System.IO.Path]::GetDirectoryName($executablePath)
-
-            # Check if we need to auto-select between 32-bit and 64-bit versions
-            $is64Bit = [Environment]::Is64BitOperatingSystem
-            if ($executableName -eq "wallpaper32" -and $is64Bit) {
-                $wallpaper64Path = Join-Path $executableDir "wallpaper64.exe"
-                if (Test-Path $wallpaper64Path) {
-                    $executablePath = $wallpaper64Path
-                    Write-Host "Auto-selected 64-bit version: $executablePath"
-                }
-            }
-
-            # Execute the control command
-            $arguments = "-control", $command
-            Start-Process -FilePath $executablePath -ArgumentList $arguments -NoNewWindow -Wait
-
-            $actionDescription = if ($command -eq "pause") { "paused" } else { "resumed" }
-            Write-Host "Wallpaper Engine $actionDescription successfully"
-            return $true
-        }
-        catch {
-            Write-Host "Failed to control Wallpaper Engine ($command): $_"
-            return $false
-        }
-    }
-
-    # Pause Wallpaper Engine (special action)
-    [bool] PauseWallpaper([string] $appId, [object] $appConfig) {
-        return $this.ControlWallpaper($appId, $appConfig, "pause")
-    }
-
-    # Resume Wallpaper Engine playback (special action)
-    [bool] PlayWallpaper([string] $appId, [object] $appConfig) {
-        return $this.ControlWallpaper($appId, $appConfig, "play")
     }
 
     # Check if application process is running
@@ -548,6 +757,16 @@ class AppManager {
 
     # Get application startup action
     [string] GetStartupAction([string] $appId) {
+        # Check if this is an integration
+        if ($this.IntegrationManagers.ContainsKey($appId)) {
+            $integrationConfig = $this.Config.integrations.$appId
+            if ($integrationConfig -and $integrationConfig.gameStartAction) {
+                return $integrationConfig.gameStartAction
+            }
+            return "none"
+        }
+
+        # Standard managed app
         if ($this.ManagedApps.$appId -and $this.ManagedApps.$appId.gameStartAction) {
             return $this.ManagedApps.$appId.gameStartAction
         }
@@ -556,6 +775,16 @@ class AppManager {
 
     # Get application shutdown action
     [string] GetShutdownAction([string] $appId) {
+        # Check if this is an integration
+        if ($this.IntegrationManagers.ContainsKey($appId)) {
+            $integrationConfig = $this.Config.integrations.$appId
+            if ($integrationConfig -and $integrationConfig.gameEndAction) {
+                return $integrationConfig.gameEndAction
+            }
+            return "none"
+        }
+
+        # Standard managed app
         if ($this.ManagedApps.$appId -and $this.ManagedApps.$appId.gameEndAction) {
             return $this.ManagedApps.$appId.gameEndAction
         }
@@ -563,15 +792,26 @@ class AppManager {
     }
 
     # Process application startup sequence
-    [bool] ProcessStartupSequence([array] $appIds) {
+    [bool] ProcessStartupSequence() {
+        $apps = $this.GetManagedApplications()
         $allSuccess = $true
 
-        foreach ($appId in $appIds) {
+        if ($apps.Count -eq 0) {
+            if ($this.Logger) { $this.Logger.Info("No application to manage for startup", "APP") }
+            return $true
+        }
+
+        foreach ($appId in $apps) {
             $action = $this.GetStartupAction($appId)
+
+            if ($this.Logger) { $this.Logger.Info("Processing startup for $appId (Action: $action)", "APP") }
+
             $success = $this.InvokeAction($appId, $action)
+
             if (-not $success) {
                 $allSuccess = $false
                 Write-Warning "Failed to start $appId with action: $action"
+                if ($this.Logger) { $this.Logger.Warning("Failed to start $appId with action: $action", "APP") }
             }
         }
 
@@ -579,15 +819,22 @@ class AppManager {
     }
 
     # Process application shutdown sequence
-    [bool] ProcessShutdownSequence([array] $appIds) {
+    [bool] ProcessShutdownSequence() {
+        $apps = $this.GetManagedApplications()
         $allSuccess = $true
 
-        foreach ($appId in $appIds) {
+        if ($apps.Count -eq 0) {
+            if ($this.Logger) { $this.Logger.Info("No applications to manage for shutdown", "APP") }
+            return $true
+        }
+
+        foreach ($appId in $apps) {
             $action = $this.GetShutdownAction($appId)
             $success = $this.InvokeAction($appId, $action)
             if (-not $success) {
                 $allSuccess = $false
                 Write-Warning "Failed to shutdown $appId with action: $action"
+                if ($this.Logger) { $this.Logger.Warning("Failed to shutdown $appId with action: $action", "APP") }
             }
         }
 
@@ -602,10 +849,13 @@ function New-AppManager {
         [object] $Config,
 
         [Parameter(Mandatory = $true)]
-        [object] $Messages
+        [object] $Messages,
+
+        [Parameter(Mandatory = $false)]
+        [object] $Logger = $null
     )
 
-    return [AppManager]::new($Config, $Messages)
+    return [AppManager]::new($Config, $Messages, $Logger)
 }
 
 # Functions are available via dot-sourcing

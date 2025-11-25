@@ -203,7 +203,7 @@ try {
         exit 0
     }
 
-    Write-Host "`nFound $($games.Count) games. Generating shortcut launchers..."
+    Write-Host "Found $($games.Count) games. Generating shortcut launchers..."
 
     $successCount = 0
     $failureCount = 0
@@ -240,7 +240,7 @@ try {
     }
 
     # Summary
-    Write-Host "`n" + ("=" * 50)
+    Write-Host "" + ("=" * 50)
     Write-Host "Launcher creation completed!"
     Write-Host "Successfully created: $successCount shortcuts"
 
@@ -248,16 +248,16 @@ try {
         Write-Host "Failed to create: $failureCount shortcuts"
     }
 
-    Write-Host "`nYou can now double-click the 'launch_GAMEID.lnk' files to start your games."
+    Write-Host "You can now double-click the 'launch_GAMEID.lnk' files to start your games."
     Write-Host "The PowerShell window will be minimized automatically for better user experience."
 
 } catch {
-    Write-Host "`nError: Failed to process configuration file."
+    Write-Host "Error: Failed to process configuration file."
     Write-Host "Details: $($_.Exception.Message)"
-    Write-Host "`nPlease check your config.json file for syntax errors."
+    Write-Host "Please check your config.json file for syntax errors."
 } finally {
     if (-not $NoInteractive) {
-        Write-Host "`nPress any key to continue..."
+        Write-Host "Press any key to continue..."
         pause
     }
 }

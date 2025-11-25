@@ -191,7 +191,7 @@ function Test-Assert {
     Updates global $TestResults with all test outcomes.
 #>
 function Test-PlatformManager {
-    Write-Host "`n=== PlatformManager Tests ==="
+    Write-Host "=== PlatformManager Tests ==="
 
     # Create test configuration
     $testConfig = @{
@@ -297,7 +297,7 @@ function Test-PlatformManager {
     Updates global $TestResults with all test outcomes.
 #>
 function Test-ConfigValidator {
-    Write-Host "`n=== ConfigValidator Multi-Platform Tests ==="
+    Write-Host "=== ConfigValidator Multi-Platform Tests ==="
 
     # Test configuration with multi-platform games
     $testConfig = @{
@@ -419,7 +419,7 @@ function Test-ConfigValidator {
     Updates global $TestResults with all test outcomes.
 #>
 function Test-ConfigurationLoading {
-    Write-Host "`n=== Configuration Loading Tests ==="
+    Write-Host "=== Configuration Loading Tests ==="
 
     $configPath = Join-Path $projectRoot "config/config.json"
 
@@ -464,7 +464,7 @@ Test-PlatformManager
 Test-ConfigValidator
 
 # Display Results
-Write-Host "`n======================================================"
+Write-Host "======================================================"
 Write-Host "Test Results Summary"
 Write-Host "======================================================"
 Write-Host "Tests Passed: $($global:TestResults.Passed)"
@@ -472,12 +472,12 @@ Write-Host "Tests Failed: $($global:TestResults.Failed)"
 Write-Host "Total Tests: $($global:TestResults.Passed + $global:TestResults.Failed)"
 
 if ($global:TestResults.Failed -gt 0) {
-    Write-Host "`nFailed Tests:"
+    Write-Host "Failed Tests:"
     $global:TestResults.Details | Where-Object { $_ -like "FAIL*" } | ForEach-Object {
         Write-Host "  $_"
     }
     exit 1
 } else {
-    Write-Host "`nAll tests passed!"
+    Write-Host "All tests passed!"
     exit 0
 }

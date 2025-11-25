@@ -250,6 +250,21 @@
                 # Update apps to manage panel with current game's app list
                 Update-AppsToManagePanel
 
+                $useOBSCheck = $script:Window.FindName("UseOBSIntegrationCheckBox")
+                if ($useOBSCheck) {
+                    $useOBSCheck.IsChecked = ($gameData.integrations -and $gameData.integrations.useOBS) -or ($gameData.appsToManage -contains "obs")
+                }
+
+                $useDiscordCheck = $script:Window.FindName("UseDiscordIntegrationCheckBox")
+                if ($useDiscordCheck) {
+                    $useDiscordCheck.IsChecked = ($gameData.integrations -and $gameData.integrations.useDiscord) -or ($gameData.appsToManage -contains "discord")
+                }
+
+                $useVTubeCheck = $script:Window.FindName("UseVTubeStudioIntegrationCheckBox")
+                if ($useVTubeCheck) {
+                    $useVTubeCheck.IsChecked = ($gameData.integrations -and $gameData.integrations.useVTubeStudio) -or ($gameData.appsToManage -contains "vtubeStudio")
+                }
+
                 # Enable buttons
                 $duplicateGameButton = $script:Window.FindName("DuplicateGameButton")
                 if ($duplicateGameButton) { $duplicateGameButton.IsEnabled = $true }
@@ -1266,7 +1281,7 @@
     }
 
     # Handle window closing
-    [void] HandleWindowClosing([System.ComponentModel.CancelEventArgs]$Event) {
+    [void] HandleWindowClosing([System.ComponentModel.CancelEventArgs]$e) {
         try {
             Write-Host "[DEBUG] ConfigEditorEvents: HandleWindowClosing called"
 
@@ -1321,9 +1336,6 @@
                 $discardButton = $dialogWindow.FindName("DiscardButton")
                 $cancelButton = $dialogWindow.FindName("CancelButton")
 
-                # Store result
-                $dialogResult = $null
-
                 # Add event handlers
                 $saveButton.Add_Click({
                         $dialogWindow.Tag = "Save"
@@ -1344,7 +1356,7 @@
                     })
 
                 # Show dialog
-                $result = $dialogWindow.ShowDialog()
+                [void]$dialogWindow.ShowDialog()
                 $userChoice = $dialogWindow.Tag
 
                 Write-Host "[DEBUG] ConfigEditorEvents: User choice - $userChoice"
@@ -1360,7 +1372,7 @@
                             Write-Host "[ERROR] ConfigEditorEvents: Failed to save changes - $($_.Exception.Message)"
                             # Show error and cancel closing
                             Show-SafeMessage -Key "configSaveFailed" -MessageType "Error"
-                            $Event.Cancel = $true
+                            $e.Cancel = $true
                             return
                         }
                     }
@@ -1371,7 +1383,7 @@
                     default {
                         # Cancel closing (includes "Cancel" and null)
                         Write-Host "[DEBUG] ConfigEditorEvents: User cancelled window closing"
-                        $Event.Cancel = $true
+                        $e.Cancel = $true
                         return
                     }
                 }
@@ -1691,13 +1703,13 @@
             $timer = New-Object System.Windows.Threading.DispatcherTimer
             $timer.Interval = [TimeSpan]::FromSeconds(5)
             $timer.add_Tick({
-                    param($sender, $e)
+                    param($eventSender, $e)
                     $statusText = $uiManagerRef.Window.FindName("LauncherStatusText")
                     if ($statusText) {
                         $statusText.Text = $uiManagerRef.GetLocalizedMessage("readyToLaunch")
                         $statusText.Foreground = "#333333"
                     }
-                    $sender.Stop()
+                    $eventSender.Stop()
                 }.GetNewClosure())
             $timer.Start()
 
@@ -1840,7 +1852,7 @@
 
             # --- Window Events ---
             $this.uiManager.Window.add_Closing({
-                    param($sender, $e)
+                    param($eventSender, $e)
                     try {
                         Write-Host "[DEBUG] ConfigEditorEvents: Window Closing event fired"
                         $self.HandleWindowClosing($e)

@@ -44,7 +44,7 @@ function ConvertTo-SecureStringSafe {
 function Invoke-AppAction {
     param(
         [string]$AppId,
-        [string]$Action,  # "start-process", "stop-process", "toggle-hotkeys", "none"
+        [string]$Action,  # "start-process", "stop-process" and "none"
         [string]$SpecialMode = $null  # For backward compatibility
     )
 
@@ -71,7 +71,7 @@ function Invoke-AppAction {
         "stop-process" {
             if ($appConfig.processName -and $appConfig.processName -ne "") {
                 # Handle multiple process names separated by |
-                $processNames = $appConfig.processName -split '/|'
+                $processNames = $appConfig.processName -split '\|'
 
                 foreach ($processName in $processNames) {
                     $processName = $processName.Trim()
@@ -86,57 +86,6 @@ function Invoke-AppAction {
                 }
             } else {
                 Write-Host "    [WARNING] No process name specified for app '$AppId'"
-            }
-        }
-        "toggle-hotkeys" {
-            # Special handling for applications that need hotkey toggling (like Clibor)
-            if ($appConfig.path -and $appConfig.path -ne "") {
-                $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") { $appConfig.arguments } else { "/hs" }
-                Write-Host "    [SIMULATE] Would toggle hotkeys: $($appConfig.path) $arguments"
-            } else {
-                Write-Host "    [WARNING] No path specified for app '$AppId'"
-            }
-        }
-        "pause-wallpaper" {
-            # Wallpaper Engine pause functionality
-            if ($appConfig.path -and $appConfig.path -ne "") {
-                # Determine correct executable (32-bit vs 64-bit)
-                $executablePath = $appConfig.path
-                $is64Bit = [Environment]::Is64BitOperatingSystem
-                $executableName = [System.IO.Path]::GetFileNameWithoutExtension($executablePath)
-
-                if ($executableName -eq "wallpaper32" -and $is64Bit) {
-                    $wallpaper64Path = Join-Path ([System.IO.Path]::GetDirectoryName($executablePath)) "wallpaper64.exe"
-                    if (Test-Path $wallpaper64Path) {
-                        $executablePath = $wallpaper64Path
-                        Write-Host "    [INFO] Auto-selected 64-bit version: $executablePath"
-                    }
-                }
-
-                Write-Host "    [SIMULATE] Would pause Wallpaper Engine: $executablePath -control pause"
-            } else {
-                Write-Host "    [WARNING] No path specified for Wallpaper Engine app '$AppId'"
-            }
-        }
-        "play-wallpaper" {
-            # Wallpaper Engine resume functionality
-            if ($appConfig.path -and $appConfig.path -ne "") {
-                # Determine correct executable (32-bit vs 64-bit)
-                $executablePath = $appConfig.path
-                $is64Bit = [Environment]::Is64BitOperatingSystem
-                $executableName = [System.IO.Path]::GetFileNameWithoutExtension($executablePath)
-
-                if ($executableName -eq "wallpaper32" -and $is64Bit) {
-                    $wallpaper64Path = Join-Path ([System.IO.Path]::GetDirectoryName($executablePath)) "wallpaper64.exe"
-                    if (Test-Path $wallpaper64Path) {
-                        $executablePath = $wallpaper64Path
-                        Write-Host "    [INFO] Auto-selected 64-bit version: $executablePath"
-                    }
-                }
-
-                Write-Host "    [SIMULATE] Would resume Wallpaper Engine: $executablePath -control play"
-            } else {
-                Write-Host "    [WARNING] No path specified for Wallpaper Engine app '$AppId'"
             }
         }
         "start-vtube-studio" {

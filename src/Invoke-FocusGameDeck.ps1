@@ -29,68 +29,54 @@ if ($isExecutable) {
     # For Invoke-FocusGameDeck.ps1 in /src, the root is one level up
     $appRoot = Split-Path -Parent $PSScriptRoot
 }
-$scriptDir = $PSScriptRoot
 
-# >>> BUILD-TIME-PATCH-START: Path resolution for ps2exe bundling >>>
-# This section will be replaced by the build script (Build-FocusGameDeck.ps1)
-# During build, the script inserts execution mode detection and dynamic path resolution
-# to support both development (.ps1) and bundled executable (.exe) modes
-
-# Initialize path variables - use $appRoot for external files
+# AssetFile paths variables - use $appRoot for external files
 $configPath = Join-Path $appRoot "config/config.json"
+$messagesPath = Join-Path $appRoot "localization/messages.json"
 
-# Import modules
-$modulePaths = @(
-    (Join-Path $scriptDir "modules/Logger.ps1"),
-    (Join-Path $scriptDir "modules/ConfigValidator.ps1"),
-    (Join-Path $scriptDir "modules/AppManager.ps1"),
-    (Join-Path $scriptDir "modules/OBSManager.ps1"),
-    (Join-Path $scriptDir "modules/PlatformManager.ps1")
-)
+# Read Source files using dot-source
+if (-not $isExecutable) {
+    $filesToSources = @(
+        # Modules
+        (Join-Path $appRoot "src/modules/AppManager.ps1"),
+        (Join-Path $appRoot "src/modules/ConfigValidator.ps1"),
+        (Join-Path $appRoot "src/modules/DiscordManager.ps1"),
+        (Join-Path $appRoot "src/modules/DiscordRPCClient.ps1"),
+        (Join-Path $appRoot "src/modules/Logger.ps1"),
+        (Join-Path $appRoot "src/modules/OBSManager.ps1"),
+        (Join-Path $appRoot "src/modules/UpdateChecker.ps1"),
+        (Join-Path $appRoot "src/modules/PlatformManager.ps1"),
+        (Join-Path $appRoot "src/modules/VTubeStudioManager.ps1"),
+        (Join-Path $appRoot "src/modules/WebSocketAppManagerBase.ps1"),
+        # Scripts
+        (Join-Path $appRoot "scripts/LanguageHelper.ps1")
+    )
 
-foreach ($modulePath in $modulePaths) {
-    if (Test-Path $modulePath) {
-        . $modulePath
-    } else {
-        Write-Error "Required module not found: $modulePath"
-        exit 1
+    foreach ($sourcePath in $filesToSources) {
+        try {
+            . $sourcePath
+        } catch {
+            Write-Error "Failed to load module '$sourcePath': $_"
+            exit 1
+        }
     }
 }
 
-# Load configuration and messages
+# Load configuration
 try {
-    # Load configuration
     $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-
-    # Load messages for localization
-    $languageHelperPath = Join-Path $appRoot "scripts/LanguageHelper.ps1"
-    $messagesPath = Join-Path $appRoot "localization/messages.json"
-
-    if (Test-Path $languageHelperPath) {
-        . $languageHelperPath
-        $langCode = Get-DetectedLanguage -ConfigData $config
-        $msg = Get-LocalizedMessages -MessagesPath $messagesPath -LanguageCode $langCode
-    } else {
-        $msg = @{}
-    }
-
-    # Display localized loading messages
-    if ($msg.mainLoadingConfig) {
-        Write-Host $msg.mainLoadingConfig
-    } else {
-        Write-Host "Loading configuration..."
-    }
-
-    if ($msg.mainConfigLoaded) {
-        Write-Host $msg.mainConfigLoaded
-    } else {
-        Write-Host "Configuration loaded successfully."
-    }
 } catch {
     Write-Error "Failed to load configuration: $_"
     exit 1
 }
-# <<< BUILD-TIME-PATCH-END <<<
+# Load localization messages
+try {
+    $msg = Get-Content -Path $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
+} catch {
+    Write-Warning "Failed to load localization messages: $_"
+    Write-Host "Continuing with default messages."
+    $msg = @{}
+}
 
 # Initialize logger
 try {
@@ -101,8 +87,9 @@ try {
     # Log self-authentication information for audit purposes
     $logger.Debug("Self-authentication initialized for log integrity verification", "AUTH")
 } catch {
-    Write-Warning "Failed to initialize logger: $_"
-    # Continue without logging
+    Write-Warning "[ERROR] Failed to initialize logger: $_"
+    Write-Host "[WARNING] Continue without logging"
+    $logger = $null
 }
 
 # Initialize platform manager
@@ -190,17 +177,23 @@ if ($logger) {
 }
 
 # Initialize managers
-$appManager = New-AppManager -Config $config -Messages $msg
-$obsManager = $null
+$appManager = New-AppManager -Config $config -Messages $msg -Logger $logger
+[void] $appManager.SetGameContext($gameConfig)
 
-if ("obs" -in $gameConfig.appsToManage) {
-    if ($config.integrations.obs) {
-        $obsManager = New-OBSManager -OBSConfig $config.integrations.obs -Messages $msg
-        if ($logger) { $logger.Info("OBS manager initialized", "OBS") }
-    } else {
-        Write-Warning "OBS is in appsToManage but OBS configuration is missing"
-        if ($logger) { $logger.Warning("OBS configuration missing", "OBS") }
-    }
+if ($logger) { $logger.Info("Application manager initialized and game context set", "MAIN") }
+
+# Common startup process for game environment
+function Invoke-GameStartup {
+    if ($logger) { $logger.Info("Starting game environment setup", "SETUP") }
+
+    # Unified application and integration management
+    Write-Host "[INFO] Starting application management..."
+    [void]$appManager.ProcessStartupSequence()
+    if ($logger) { $logger.Info("Application startup sequence completed", "APP") }
+
+    if ($logger) { $logger.Info("Game environment setup completed", "SETUP") }
+
+    return
 }
 
 # Common cleanup process for game exit
@@ -216,31 +209,13 @@ function Invoke-GameCleanup {
         if ($logger) { $logger.Info("Starting game cleanup", "CLEANUP") }
     }
 
-    # Filter out special apps for normal app manager processing
-    $normalApps = $gameConfig.appsToManage | Where-Object { $_ -notin @("obs", "clibor") }
-
-    # Handle Clibor hotkey toggle (special case)
-    if ("clibor" -in $gameConfig.appsToManage) {
-        $appManager.InvokeAction("clibor", "toggle-hotkeys")
-        if ($logger) { $logger.Info("Clibor hotkeys toggled", "CLEANUP") }
-    }
-
-    # Process normal applications shutdown
-    if ($normalApps.Count -gt 0) {
-        $appManager.ProcessShutdownSequence($normalApps)
-        if ($logger) { $logger.Info("Application shutdown sequence completed", "CLEANUP") }
-    }
-
-    # Handle OBS replay buffer shutdown
-    if ($obsManager -and $config.integrations.obs.replayBuffer) {
-        if ($obsManager.Connect()) {
-            $obsManager.StopReplayBuffer()
-            $obsManager.Disconnect()
-            if ($logger) { $logger.Info("OBS replay buffer stopped", "CLEANUP") }
-        }
-    }
+    # Unified application and integration shutdown
+    $appManager.ProcessShutdownSequence()
+    if ($logger) { $logger.Info("Application shutdown sequence completed", "CLEANUP") }
 
     if ($logger) { $logger.Info("Game cleanup completed", "CLEANUP") }
+
+    return
 }
 
 # Handle Ctrl+C press
@@ -255,41 +230,8 @@ try {
     if ($logger) { $logger.LogOperationStart("Multi-Platform Game Launch Sequence", "MAIN") }
     $startTime = Get-Date
 
-    # Filter out special apps for normal app manager processing
-    $normalApps = $gameConfig.appsToManage | Where-Object { $_ -notin @("obs", "clibor") }
-
-    # Handle OBS startup (special case)
-    if ("obs" -in $gameConfig.appsToManage -and $obsManager) {
-        Write-Host "Starting OBS..."
-        if ($obsManager.StartOBS($config.integrations.obs.path)) {
-            if ($logger) { $logger.Info("OBS started successfully", "OBS") }
-
-            # Handle replay buffer if configured
-            if ($config.integrations.obs.replayBuffer) {
-                if ($obsManager.Connect()) {
-                    $obsManager.StartReplayBuffer()
-                    $obsManager.Disconnect()
-                    if ($logger) { $logger.Info("OBS replay buffer started", "OBS") }
-                }
-            }
-        } else {
-            Write-Warning "Failed to start OBS"
-            if ($logger) { $logger.Warning("Failed to start OBS", "OBS") }
-        }
-    }
-
-    # Handle Clibor hotkey toggle (special case)
-    if ("clibor" -in $gameConfig.appsToManage) {
-        $appManager.InvokeAction("clibor", "toggle-hotkeys")
-        if ($logger) { $logger.Info("Clibor hotkeys toggled for game start", "APP") }
-    }
-
-    # Process normal applications startup
-    if ($normalApps.Count -gt 0) {
-        Write-Host "Starting managed applications..."
-        $appManager.ProcessStartupSequence($normalApps)
-        if ($logger) { $logger.Info("Application startup sequence completed", "APP") }
-    }
+    # Execute environment setup
+    Invoke-GameStartup
 
     # Launch game via appropriate platform
     if ($msg.mainLaunchingGame) {
@@ -298,7 +240,7 @@ try {
         Write-Host "Launching game via $($detectedPlatforms[$gamePlatform].Name)..."
     }
     try {
-        $launcherProcess = $platformManager.LaunchGame($gamePlatform, $gameConfig)
+        [void]$platformManager.LaunchGame($gamePlatform, $gameConfig)
         Write-Host ("Starting game: {0}" -f $gameConfig.name)
         if ($logger) { $logger.Info("Game launch command sent to $($detectedPlatforms[$gamePlatform].Name): $($gameConfig.name)", "GAME") }
     } catch {
@@ -328,7 +270,7 @@ try {
     } while (-not $gameProcess -and $elapsed.TotalSeconds -lt $processStartTimeout)
 
     if ($gameProcess) {
-        Write-Host ("`nNow monitoring process: {0}. The script will continue after the game exits." -f $gameConfig.name)
+        Write-Host ("Now monitoring process: {0}. The script will continue after the game exits." -f $gameConfig.name)
         if ($logger) { $logger.Info("Game process detected and monitoring started: $($gameConfig.processName)", "GAME") }
 
         # Wait for the game process to end.
@@ -339,7 +281,7 @@ try {
             Wait-Process -InputObject $gameProcess -ErrorAction Stop
         } catch {
             if ($logger) { $logger.Warning("Direct wait failed. Falling back to polling for process exit: $($gameProcess.Name) (PID: $($gameProcess.Id)). This can happen with admin-level processes.", "GAME") }
-            Write-Host "`nDirect process wait failed. Monitoring process in fallback mode (polling every 3s). This can happen with admin-level processes."
+            Write-Host "Direct process wait failed. Monitoring process in fallback mode (polling every 3s). This can happen with admin-level processes."
 
             while ($true) {
                 $processCheck = Get-Process -Id $gameProcess.Id -ErrorAction SilentlyContinue

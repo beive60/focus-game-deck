@@ -476,7 +476,7 @@ try {
     Clear-TestEnvironment
 
     # Summary
-    Write-Host "`n" + "=" * 50
+    Write-Host ("=" * 60)
     Write-Host "Test Summary:"
     Write-Host "Passed: $TestsPassed"
     Write-Host "Failed: $TestsFailed"

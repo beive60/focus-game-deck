@@ -471,7 +471,7 @@ function Show-BuildSummary {
     $endTime = Get-Date
     $duration = $endTime - $script:StartTime
 
-    Write-Host "`n" + ("=" * 60)
+    Write-Host "" + ("=" * 60)
     Write-Host "BUILD SUMMARY"
     Write-Host ("=" * 60)
 
@@ -487,7 +487,7 @@ function Show-BuildSummary {
     Write-Host "Signed: $(if ($IsSigned) { 'Yes' } else { 'No' })"
 
     if ($Success) {
-        Write-Host "`nBuilt executables:"
+        Write-Host "Built executables:"
         $distDir = Join-Path $PSScriptRoot "dist"
         if (Test-Path $distDir) {
             Get-ChildItem $distDir -Filter "*.exe" | ForEach-Object {
@@ -498,7 +498,7 @@ function Show-BuildSummary {
         $projectRoot = Split-Path $PSScriptRoot -Parent
         $releaseDir = Join-Path $projectRoot "release"
         if (Test-Path $releaseDir) {
-            Write-Host "`nRelease package created: $releaseDir"
+            Write-Host "Release package created: $releaseDir"
         }
     }
 
@@ -583,7 +583,7 @@ try {
 
     # Show usage if no workflow specified
     else {
-        Write-Host "`nUsage:"
+        Write-Host "Usage:"
         Write-Host "  ./Release-Manager.ps1 -Development   # Build for development (no signing)"
         Write-Host "  ./Release-Manager.ps1 -Production    # Build for production (with signing)"
         Write-Host "  ./Release-Manager.ps1 -SetupOnly     # Only setup build environment"

@@ -2,23 +2,28 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "GUI Execution",
+            "name": "Launch Main",
             "type": "PowerShell",
             "request": "launch",
             "script": "${workspaceFolder}/src/Main.PS1",
-            "cwd": "${workspaceFolder}",
-            "createTemporaryIntegratedConsole": false,
-            "args": []
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Debug Pester Tests",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${workspaceFolder}/test/runners/Invoke-PesterTests.ps1",
+            "cwd": "${workspaceFolder}"
         },
         {
             "name": "Mock process Execution",
             "type": "PowerShell",
             "request": "launch",
-            "script": "${file}",
+            "script": "${workspaceFolder}/src/Invoke-FocusGameDeck.ps1",
             "cwd": "${workspaceFolder}",
-            "createTemporaryIntegratedConsole": false,
+            "createTemporaryIntegratedConsole": true,
             "args": [
-                "calc_mock"
+                "mock-calc"
             ]
         }
     ]

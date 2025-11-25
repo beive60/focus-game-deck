@@ -41,14 +41,14 @@ function Show-VersionInfo {
     Write-Host "  Pre-release: $(if ($versionInfo.PreRelease) { $versionInfo.PreRelease } else { 'None' })"
     Write-Host "  Build: $(if ($versionInfo.Build) { $versionInfo.Build } else { 'None' })"
 
-    Write-Host "`nRelease Type: " -NoNewline
+    Write-Host "Release Type: " -NoNewline
     if ($versionInfo.IsPreRelease) {
         Write-Host "Pre-release"
     } else {
         Write-Host "Stable"
     }
 
-    Write-Host "`nRepository:"
+    Write-Host "Repository:"
     Write-Host "  Owner: $($repoInfo.Owner)"
     Write-Host "  Name: $($repoInfo.Name)"
     Write-Host "  API URL: $($repoInfo.ApiUrl)"
@@ -125,7 +125,7 @@ function Test-ReleaseValidation {
     }
 
     # Summary
-    Write-Host "`n=== Validation Summary ==="
+    Write-Host "=== Validation Summary ==="
 
     if ($errors.Count -eq 0 -and $warnings.Count -eq 0) {
         Write-Host "[SUCCESS] All validations passed! Ready for release."
@@ -181,7 +181,7 @@ function Show-NextVersions {
     $minor = @{ Major = $current.Major; Minor = $current.Minor + 1; Patch = 0; PreRelease = "" }
     $patch = @{ Major = $current.Major; Minor = $current.Minor; Patch = $current.Patch + 1; PreRelease = "" }
 
-    Write-Host "`nRelease options:"
+    Write-Host "Release options:"
     Write-Host "  Major:  " -NoNewline
     Write-Host "$($major.Major).$($major.Minor).$($major.Patch)"
     Write-Host "  Minor:  " -NoNewline
@@ -189,7 +189,7 @@ function Show-NextVersions {
     Write-Host "  Patch:  " -NoNewline
     Write-Host "$($patch.Major).$($patch.Minor).$($patch.Patch)"
 
-    Write-Host "`nPre-release options:"
+    Write-Host "Pre-release options:"
     if ($current.PreRelease) {
         # Current is pre-release, show next in sequence
         if ($current.PreRelease -match '^(alpha|beta|rc)/.?(/d+)?$') {

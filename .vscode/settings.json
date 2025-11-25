@@ -1,0 +1,88 @@
+{
+    "powershell.codeFormatting.preset": "Custom",
+    "powershell.codeFormatting.openBraceOnSameLine": true,
+    "powershell.codeFormatting.newLineAfterOpenBrace": false,
+    "powershell.codeFormatting.newLineAfterCloseBrace": false,
+    "powershell.codeFormatting.whitespaceBeforeOpenBrace": true,
+    "powershell.codeFormatting.whitespaceBeforeOpenParen": true,
+    "powershell.codeFormatting.whitespaceAroundOperator": true,
+    "powershell.codeFormatting.whitespaceAfterSeparator": true,
+    "powershell.codeFormatting.ignoreOneLineBlock": true,
+    "powershell.integratedConsole.showOnStartup": false,
+    "powershell.developer.bundledModulesPath": "",
+    "files.associations": {
+        "*.ps1": "powershell",
+        "*.psm1": "powershell",
+        "*.psd1": "powershell"
+    },
+    "files.encoding": "utf8",
+    "files.eol": "\r\n",
+    "editor.rulers": [
+        120
+    ],
+    "editor.wordWrap": "bounded",
+    "editor.wordWrapColumn": 120,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4,
+    "editor.detectIndentation": false,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "terminal.integrated.profiles.windows": {
+        "PowerShell": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell"
+        }
+    },
+    "powershell.scriptAnalysis.enable": true,
+    "powershell.scriptAnalysis.settingsPath": "",
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "search.exclude": {
+        "**/build/**": true,
+        "**/release/**": true,
+        "**/signed/**": true,
+        "**/*.exe": true
+    },
+    "files.watcherExclude": {
+        "**/build/**": true,
+        "**/release/**": true,
+        "**/signed/**": true,
+        "**/*.exe": true
+    },
+    "cSpell.words": [
+        "applaunch",
+        "Authenticode",
+        "Battl",
+        "bstr",
+        "Clibor",
+        "decompiled",
+        "DPAPI",
+        "Finalizers",
+        "HKCU",
+        "LASTEXITCODE",
+        "lifecycles",
+        "resourcest's",
+        "Sectigo",
+        "signtool",
+        "steamapps",
+        "timestamping",
+        "valorant",
+        "vtube"
+    ],
+    "powershell.codeFormatting.alignPropertyValuePairs": false,
+    "powershell.codeFormatting.whitespaceBetweenParameters": true,
+    "xml.validation.filters": [
+        {
+            "pattern": "**/test/*.xml",
+            "noGrammar": "ignore",
+            "schema": {
+                "enabled": "never"
+            }
+        },
+        {
+            "pattern": "**{.project,.classpath,plugin.xml,feature.xml,category.xml,.target,.product}",
+            "noGrammar": "ignore"
+        }
+    ]
+}

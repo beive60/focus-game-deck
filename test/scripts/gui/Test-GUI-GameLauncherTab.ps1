@@ -632,21 +632,21 @@ Write-Host "  Failed: $script:TestsFailed"
 Write-Host "  Total:  $($script:TestsPassed + $script:TestsFailed)"
 
 if ($script:TestsFailed -eq 0) {
-    Write-Host "`nAll tests passed! Game Launcher Tab functionality is working correctly."
+    Write-Host "All tests passed! Game Launcher Tab functionality is working correctly."
 } else {
-    Write-Host "`n Some tests failed. Please review the results above."
+    Write-Host " Some tests failed. Please review the results above."
 
     # Show failed tests details
     $failedTests = $script:TestResults | Where-Object { $_.Status -eq "FAILED" }
     if ($failedTests) {
-        Write-Host "`nFailed Tests Details:"
+        Write-Host "Failed Tests Details:"
         foreach ($test in $failedTests) {
             Write-Host "  - $($test.TestName): $($test.Error)"
         }
     }
 }
 
-Write-Host "`nGame Launcher Tab Unit Tests Completed."
+Write-Host "Game Launcher Tab Unit Tests Completed."
 Write-Host ("=" * 60)
 
 # Return results for CI/automation

@@ -5,7 +5,7 @@ class DiscordManager {
     [object] $Config
     [object] $Messages
     [object] $Logger
-    [string] $DiscordPath
+    [string] $DetectedDiscordPath
     [object] $DiscordConfig
     [object] $RPCClient
     [string] $OriginalStatus
@@ -16,7 +16,7 @@ class DiscordManager {
         $this.Messages = $messages
         $this.Logger = $logger
         $this.DiscordConfig = $discordConfig.discord
-        $this.DiscordPath = $this.DetectDiscordPath()
+        $this.DetectedDiscordPath = $this.DetectDiscordPath()
         $this.RPCClient = $null
         $this.OriginalStatus = "online"
 
@@ -28,9 +28,10 @@ class DiscordManager {
 
     # Detect Discord installation path
     [string] DetectDiscordPath() {
+        # Auto detection of Discord path.
+        <#
         $localAppData = [Environment]::GetFolderPath("LocalApplicationData")
         $discordBaseDir = Join-Path $localAppData "Discord"
-
         if (Test-Path $discordBaseDir) {
             # Find the latest Discord app version
             $appDirs = Get-ChildItem -Path $discordBaseDir -Directory -Name "app-*" | Sort-Object -Descending
@@ -42,22 +43,45 @@ class DiscordManager {
                 }
             }
         }
+        #>
 
         # Fallback to configured path
-        if ($this.Config.path -and $this.Config.path -ne "") {
-            $expandedPath = [Environment]::ExpandEnvironmentVariables($this.Config.path)
-            # Handle wildcard paths
-            if ($expandedPath -like "*app-*") {
-                $baseDir = $expandedPath -replace "app-/*.*", ""
-                if (Test-Path $baseDir) {
-                    $appDirs = Get-ChildItem -Path $baseDir -Directory -Name "app-*" | Sort-Object -Descending
+        if ($this.DiscordConfig.Path -and ($this.DiscordConfig.Path -ne "")) {
+            # Handle wildcard paths (e.g., "%LOCALAPPDATA%/Discord/app-*/Discord.exe")
+            $discordPathWithWildcard = $this.DiscordConfig.Path
+
+            # Expand environment variables
+            $expandedPath = [Environment]::ExpandEnvironmentVariables($discordPathWithWildcard)
+
+            # Extract base directory and pattern
+            $parentDir = Split-Path -Parent (Split-Path -Parent $expandedPath)
+            $wildcardPattern = Split-Path -Leaf (Split-Path -Parent $expandedPath)
+
+            if (Test-Path $parentDir) {
+                if ($wildcardPattern -notlike "*`**") {
+                    # No wildcard, return the path directly if it exists
+                    if (Test-Path $expandedPath) {
+                        return $expandedPath
+                    } else {
+                        return ""
+                    }
+                } else {
+                    # Find all directories matching the wildcard pattern (e.g., app-*)
+                    $appDirs = Get-ChildItem -Path $parentDir -Directory -Filter $wildcardPattern -ErrorAction SilentlyContinue |
+                    Sort-Object -Property Name -Descending
+
                     if ($appDirs.Count -gt 0) {
+                        # Get the latest version directory
                         $latestAppDir = $appDirs[0]
-                        return Join-Path $baseDir "$latestAppDir/Discord.exe"
+                        $discordExePath = Join-Path $latestAppDir.FullName "Discord.exe"
+
+                        if (Test-Path $discordExePath) {
+                            return $discordExePath
+                        }
                     }
                 }
+
             }
-            return $expandedPath
         }
 
         return ""
@@ -76,17 +100,16 @@ class DiscordManager {
             return $true
         }
 
-        if (-not $this.DiscordPath -or -not (Test-Path $this.DiscordPath)) {
+        if (-not $this.DetectedDiscordPath -or -not (Test-Path $this.DetectedDiscordPath)) {
             Write-Host "Discord executable not found"
             return $false
         }
 
         try {
-            Start-Process -FilePath $this.DiscordPath
+            Start-Process -FilePath $this.DetectedDiscordPath
             Write-Host "Discord started successfully"
             return $true
-        }
-        catch {
+        } catch {
             Write-Host "Failed to start Discord: $_"
             return $false
         }
@@ -110,8 +133,7 @@ class DiscordManager {
                 Write-Host "Discord is not running"
                 return $true
             }
-        }
-        catch {
+        } catch {
             Write-Host "Failed to stop Discord: $_"
             return $false
         }
@@ -130,8 +152,7 @@ class DiscordManager {
                 } else {
                     Write-Host "Discord RPC Client module not found"
                 }
-            }
-            catch {
+            } catch {
                 Write-Host "Failed to initialize Discord RPC Client: $_"
             }
         }
@@ -186,8 +207,7 @@ class DiscordManager {
             }
 
             return $this.RPCClient.SetRichPresence($activity)
-        }
-        catch {
+        } catch {
             Write-Host "Failed to set Rich Presence: $_"
             return $false
         }
@@ -201,7 +221,7 @@ class DiscordManager {
         # Note: Discord doesn't provide direct API to disable overlay programmatically
         # This is a placeholder for potential future implementation or registry-based control
 
-        if ($this.DiscordConfig -and $this.DiscordConfig.disableOverlay -ne $null) {
+        if ($this.DiscordConfig -and $null -ne $this.DiscordConfig.disableOverlay) {
             $shouldDisable = $this.DiscordConfig.disableOverlay
             if ($shouldDisable -and $enabled) {
                 Write-Host "Overlay should be disabled according to configuration"
@@ -237,8 +257,7 @@ class DiscordManager {
             }
 
             return $false
-        }
-        catch {
+        } catch {
             Write-Host "Error recovery failed: $_"
             return $false
         }
@@ -293,8 +312,7 @@ class DiscordManager {
                 Write-Host "[OK] Discord Advanced Gaming mode applied successfully"
                 return $true
 
-            }
-            catch {
+            } catch {
                 $retryCount++
                 Write-Host "Attempt $retryCount failed: $_"
 
@@ -353,17 +371,23 @@ class DiscordManager {
     }
 
     # Disconnect RPC when done
-    [void] DisconnectRPC() {
-        if ($this.RPCClient) {
-            $this.RPCClient.Disconnect()
+    [bool] DisconnectRPC() {
+        try {
+            if ($this.RPCClient) {
+                $this.RPCClient.Disconnect()
+            }
+        } catch {
+            Write-Host "Error disconnecting RPC: $_"
+            return $false
         }
+        return $true
     }
 
     # Get Discord status
     [object] GetStatus() {
         return @{
             IsRunning = $this.IsDiscordRunning()
-            Path = $this.DiscordPath
+            Path = $this.DetectedDiscordPath
             ProcessCount = (Get-Process -Name "Discord" -ErrorAction SilentlyContinue).Count
         }
     }

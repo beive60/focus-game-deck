@@ -20,7 +20,7 @@ $appManager = New-AppManager -Config $config -Messages @{}
 Write-Host "Testing AppManager VTube Studio integration..."
 
 # Test startup via AppManager
-Write-Host "`nStarting VTube Studio via AppManager..."
+Write-Host "Starting VTube Studio via AppManager..."
 $startResult = $appManager.InvokeAction('vtubeStudio', 'start-vtube-studio')
 Write-Host "Start result: $startResult"
 
@@ -32,7 +32,7 @@ if ($startResult) {
     Start-Sleep -Seconds 3
 
     # Test shutdown via AppManager
-    Write-Host "`nStopping VTube Studio via AppManager..."
+    Write-Host "Stopping VTube Studio via AppManager..."
     $stopResult = $appManager.InvokeAction('vtubeStudio', 'stop-vtube-studio')
     Write-Host "Stop result: $stopResult"
 
@@ -45,4 +45,4 @@ if ($startResult) {
     Write-Host "[ERROR] VTube Studio startup failed via AppManager"
 }
 
-Write-Host "`n=== AppManager Integration Test Complete ==="
+Write-Host "=== AppManager Integration Test Complete ==="

@@ -13,19 +13,23 @@ class OBSManager {
     OBSManager([object] $obsConfig, [object] $messages) {
         $this.Config = $obsConfig
         $this.Messages = $messages
-        $this.HostName = $obsConfig.websocket.host
-        $this.Port = $obsConfig.websocket.port
 
-        if ($obsConfig.websocket.password) {
-            try {
-                # Try to decrypt DPAPI-encrypted password (new format)
-                $this.Password = ConvertTo-SecureString -String $obsConfig.websocket.password
-                Write-Verbose "OBSManager: Loaded encrypted password from config"
-            } catch {
-                # Fall back to plain text conversion (old format for backward compatibility)
-                Write-Verbose "OBSManager: Password is not encrypted, treating as plain text"
-                $this.Password = $this.ConvertToSecureStringSafe($obsConfig.websocket.password)
-                Write-Warning "Plain text password detected in config - consider using the GUI to re-save with encryption"
+        # WebSocket config is nested in 'websocket' property
+        if ($obsConfig.websocket) {
+            $this.HostName = $obsConfig.websocket.host
+            $this.Port = $obsConfig.websocket.port
+
+            if ($obsConfig.websocket.password) {
+                try {
+                    # Try to decrypt DPAPI-encrypted password (new format)
+                    $this.Password = ConvertTo-SecureString -String $obsConfig.websocket.password
+                    Write-Verbose "OBSManager: Loaded encrypted password from config"
+                } catch {
+                    # Fall back to plain text conversion (old format for backward compatibility)
+                    Write-Verbose "OBSManager: Password is not encrypted, treating as plain text"
+                    $this.Password = $this.ConvertToSecureStringSafe($obsConfig.websocket.password)
+                    Write-Warning "Plain text password detected in config - consider using the GUI to re-save with encryption"
+                }
             }
         }
     }
@@ -168,7 +172,7 @@ class OBSManager {
         $json = $message | ConvertTo-Json -Depth 5
         $buffer = [System.Text.Encoding]::UTF8.GetBytes($json)
         $sendSegment = New-Object ArraySegment[byte](, $buffer)
-        $this.WebSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
+        [void] $this.WebSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
     }
 
     # Start OBS Replay Buffer
@@ -229,23 +233,26 @@ class OBSManager {
 
     # Check if OBS process is running
     [bool] IsOBSRunning() {
-        return $null -ne (Get-Process -Name "obs64" -ErrorAction SilentlyContinue)
+        $procName = if ($this.Config.processName) { $this.Config.processName } else { "obs64" }
+        return $null -ne (Get-Process -Name $procName -ErrorAction SilentlyContinue)
     }
 
     # Start OBS application
-    [bool] StartOBS([string] $obsPath) {
+    [bool] StartOBS( ) {
+
         if ($this.IsOBSRunning()) {
             Write-Host $this.Messages.obs_already_running
             return $true
         }
 
+        $obsPath = $this.Config.path
         if (-not $obsPath -or -not (Test-Path $obsPath)) {
             Write-Host "OBS path not found or invalid: $obsPath"
             return $false
         }
 
         try {
-            Start-Process -FilePath $obsPath
+            Start-Process -FilePath $obsPath -WorkingDirectory (Split-Path -Parent $obsPath)
             Write-Host $this.Messages.starting_obs
 
             # Wait for OBS startup
@@ -283,5 +290,3 @@ function New-OBSManager {
 
     return [OBSManager]::new($OBSConfig, $Messages)
 }
-
-# Functions are available via dot-sourcing

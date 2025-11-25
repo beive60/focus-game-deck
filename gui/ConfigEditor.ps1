@@ -931,6 +931,40 @@ function Save-CurrentGameData {
         Set-PropertyValue -Object $gameData -PropertyName "appsToManage" -Value $appsToManage
     }
 
+    if (-not $gameData.PSObject.Properties["integrations"]) {
+        $gameData | Add-Member -NotePropertyName "integrations" -NotePropertyValue ([PSCustomObject]@{}) -Force
+    }
+
+    # save obs setting
+    $useOBSCheck = $script:Window.FindName("UseOBSIntegrationCheckBox")
+    if ($useOBSCheck) {
+        if (-not $gameData.integrations.PSObject.Properties["useOBS"]) {
+            $gameData.integrations | Add-Member -NotePropertyName "useOBS" -NotePropertyValue ([bool]$useOBSCheck.IsChecked) -Force
+        } else {
+            $gameData.integrations.useOBS = [bool]$useOBSCheck.IsChecked
+        }
+    }
+
+    # save discord setting
+    $useDiscordCheck = $script:Window.FindName("UseDiscordIntegrationCheckBox")
+    if ($useDiscordCheck) {
+        if (-not $gameData.integrations.PSObject.Properties["useDiscord"]) {
+            $gameData.integrations | Add-Member -NotePropertyName "useDiscord" -NotePropertyValue ([bool]$useDiscordCheck.IsChecked) -Force
+        } else {
+            $gameData.integrations.useDiscord = [bool]$useDiscordCheck.IsChecked
+        }
+    }
+
+    # save VTube Studio setting
+    $useVTubeCheck = $script:Window.FindName("UseVTubeStudioIntegrationCheckBox")
+    if ($useVTubeCheck) {
+        if (-not $gameData.integrations.PSObject.Properties["useVTubeStudio"]) {
+            $gameData.integrations | Add-Member -NotePropertyName "useVTubeStudio" -NotePropertyValue ([bool]$useVTubeCheck.IsChecked) -Force
+        } else {
+            $gameData.integrations.useVTubeStudio = [bool]$useVTubeCheck.IsChecked
+        }
+    }
+
     # If the ID changed, perform the rename operation on the games object
     if ($idChanged) {
         Write-Verbose "Performing game ID rename operation"

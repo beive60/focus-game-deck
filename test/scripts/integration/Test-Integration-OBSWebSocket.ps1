@@ -45,51 +45,27 @@
     Exit Code 1: Test failed
 #>
 
-# Load configuration file
-$projectRoot = Split-Path $PSScriptRoot -Parent
-$configPath = Join-Path $projectRoot "config/config.json"
+$projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 
-if (-not (Test-Path $configPath)) {
-    Write-Host "Error: config.json not found at $configPath"
-    Write-Host "Please ensure config.json exists in the config/ directory."
+# Load config
+$configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
+try {
+    $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    Write-Host "[OK] Config loaded successfully"
+} catch {
+    Write-Host "[ERROR] Failed to load config: $_"
     exit 1
-}
-
-$config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-
-# Check for OBS configuration
-if (-not $config.integrations.obs) {
-    Write-Host "Error: 'integrations.obs' configuration is missing in config.json"
-    exit 1
-}
-
-# Load localization messages (required by OBSManager)
-$messagesPath = Join-Path $projectRoot "localization/messages.json"
-if (-not (Test-Path $messagesPath)) {
-    Write-Host "Error: messages.json not found at $messagesPath"
-    exit 1
-}
-
-$messagesData = Get-Content -Path $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
-
-# Determine language (default to 'ja' for this test, or use config setting)
-$language = if ($config.language) { $config.language } else { "ja" }
-$messages = $messagesData.$language
-
-if (-not $messages) {
-    Write-Host "Warning: Language '$language' not found in messages.json, falling back to 'ja'"
-    $messages = $messagesData.ja
 }
 
 # Load OBSManager module
-$obsManagerPath = Join-Path $projectRoot "src/modules/OBSManager.ps1"
-if (-not (Test-Path $obsManagerPath)) {
-    Write-Host "Error: OBSManager.ps1 not found at $obsManagerPath"
+try {
+    $obsManagerPath = Join-Path -Path $projectRoot -ChildPath "src/modules/OBSManager.ps1"
+    . $obsManagerPath
+    Write-Host "[OK] OBSManager module loaded successfully form: $obsManagerPath"
+} catch {
+    Write-Host "[ERROR] Failed to load OBSManager module: $_"
     exit 1
 }
-
-Write-Host "Loading OBSManager module from: $obsManagerPath"
-. $obsManagerPath
 
 # Run the test
 Write-Host "--- Starting OBS WebSocket Connection Test ---"
@@ -98,102 +74,114 @@ Write-Host "OBS Config:"
 Write-Host "  Host: $($config.integrations.obs.websocket.host)"
 Write-Host "  Port: $($config.integrations.obs.websocket.port)"
 Write-Host "  Password: $(if ($config.integrations.obs.websocket.password) { '***' } else { '(not set)' })"
-Write-Host ""
+
+if (Get-Process -Name "obs64", "obs32" -ErrorAction SilentlyContinue) {
+    Write-Host "[INFO] OBS process detected running"
+    Write-Host "[INFO] terminate OBS with 'Stop-Process -Name obs64,obs32' if you want to test starting OBS from this script."
+    Write-Host "[INFO] OBS is not available"
+    exit 1
+}
+
+# Create DiscordManager instance
+$messages = @{}  # Mock messages object for testing
+try {
+    Write-Host "[INFO] Creating OBSManager instance..."
+    $obsManager = New-OBSManager -OBSConfig $config.integrations.obs -Messages $messages
+    Write-Host "[INFO] OBSManager instance created successfully"
+} catch {
+    Write-Host "[ERROR] Failed to create OBSManager instance: $_"
+    exit 1
+}
 
 try {
-    # Create OBSManager instance
-    Write-Host "Creating OBSManager instance..."
-    $obsManager = New-OBSManager -OBSConfig $config.integrations.obs -Messages $messages
+    Write-Host "[INFO] Attempting to start OBS Studio..."
+    $obsManager.StartOBS()
+    Write-Host "[INFO] OBS Studio process started."
 
-    if (-not $obsManager) {
-        Write-Host "Error: Failed to create OBSManager instance"
+} catch {
+    Write-Host "[ERROR] Failed to start OBS: $_"
+    exit 1
+}
+
+Write-Host "[INFO] Waiting for OBS to initialize..."
+Start-Sleep 5  # Wait for OBS to start
+
+try {
+    try {
+        Write-Host "[INFO] Checking if OBS process is running with IsOBSRunning()..."
+        $obsManager.IsOBSRunning()
+        Write-Host "[INFO] OBS process is running and IsOBSRunning() is true."
+    } catch {
+        Write-Host "[ERROR] IsOBSRunning() failed: $_"
         exit 1
     }
 
-    Write-Host "OBSManager instance created successfully"
-    Write-Host ""
+    $testSuccessful = $true
 
-    # Test connection
-    Write-Host "Attempting to connect to OBS WebSocket..."
-    $connected = $obsManager.Connect()
+    try {
+        $connected = $obsManager.Connect()
+        if (-not $connected) {
+            Write-Host "[ERROR] Failed to connect or authenticate to OBS WebSocket"
+            exit 1
+        }
+        Write-Host "[OK] OBS WebSocket connection successful!"
 
-    if ($connected) {
-        Write-Host "[OK] Test Result: SUCCESS"
-        Write-Host "OBS WebSocket connection and authentication successful!"
+    } catch {
+        Write-Host "[ERROR] Connect() failed: $_"
+        exit 1
+    }
 
-        # Optional: Test replay buffer commands if enabled
+    try {
+        # Replay Buffer Test
         if ($config.integrations.obs.replayBuffer) {
-            Write-Host "`nTesting Replay Buffer commands..."
+            Write-Host "[INFO] Testing Replay Buffer commands..."
 
-            Write-Host "  Starting Replay Buffer..."
             $startResult = $obsManager.StartReplayBuffer()
-            if ($startResult) {
-                Write-Host "[OK] Replay Buffer started successfully"
-            } else {
+            if ($startResult) { Write-Host "[OK] Replay Buffer started" }
+            else {
                 Write-Host "[ERROR] Failed to start Replay Buffer"
+                $testSuccessful = $false
             }
 
             Start-Sleep -Seconds 2
 
-            Write-Host "  Stopping Replay Buffer..."
             $stopResult = $obsManager.StopReplayBuffer()
-            if ($stopResult) {
-                Write-Host "[OK] Replay Buffer stopped successfully"
-            } else {
+            if ($stopResult) { Write-Host "[OK] Replay Buffer stopped" }
+            else {
                 Write-Host "[ERROR] Failed to stop Replay Buffer"
+                $testSuccessful = $false
             }
         }
 
-        # Disconnect
-        Write-Host "Disconnecting from OBS WebSocket..."
-        $obsManager.Disconnect()
-        Write-Host "Disconnected successfully"
+    } catch {
+        Write-Host "[ERROR] Exception during test execution: $_"
+        $testSuccessful = $false
 
-    } else {
-        Write-Host "[ERROR] Test Result: FAILED"
-        Write-Host "Failed to connect or authenticate to OBS WebSocket"
-        Write-Host ""
-        Write-Host "Troubleshooting steps:"
-        Write-Host "1. Ensure OBS is running"
-        Write-Host "2. Verify WebSocket server is enabled in OBS (Tools -> WebSocket Server Settings)"
-        Write-Host "3. Check that host/port/password in config.json match OBS settings"
-        Write-Host "4. If password was recently changed, re-save it via the GUI to ensure proper encryption"
-        exit 1
+    } finally {
+        if ($obsManager) {
+            Write-Host "[INFO] Disconnecting from OBS WebSocket..."
+            try {
+                $obsManager.Disconnect()
+                Write-Host "[INFO] Disconnected successfully"
+            } catch {
+                Write-Host "[WARNING] Error during disconnect: $_"
+            }
+        }
     }
-
 } catch {
-    Write-Host "[ERROR] Test Result: FAILED"
-    Write-Host "Exception occurred during test: $_"
-    Write-Host $_.Exception.Message
-    Write-Host $_.ScriptStackTrace
-    exit 1
+    Write-Host "[ERROR] Unexpected error during OBS module test: $_"
+    $testSuccessful = $false
+} finally {
+    Write-Host "[INFO] Stopping OBS Studio process..."
+    try {
+        Stop-Process -Name "obs64", "obs32" -ErrorAction SilentlyContinue
+        Write-Host "[INFO] OBS Studio process stopped."
+    } catch {
+        Write-Host "[WARNING] Error stopping OBS: $_"
+    }
 }
 
+
+if (-not $testSuccessful) { exit 1 }
 Write-Host "--- Test Finished ---"
 exit 0
-
-
-# OBSOLETE CODE BELOW - Kept for reference only
-# =============================================================================
-# The following functions were previously used for standalone testing.
-# They are no longer used as we now import OBSManager.ps1 directly.
-# =============================================================================
-
-<#
-function Receive-OBSWebSocketResponse {
-    param (
-        [System.Net.WebSockets.ClientWebSocket]$WebSocket,
-        [int]$TimeoutSeconds = 5
-    )
-    # ... implementation omitted ...
-}
-
-function Connect-OBSWebSocket {
-    param (
-        [string]$HostName = "localhost",
-        [int]$Port = 4455,
-        [System.Security.SecureString]$Password
-    )
-    # ... implementation omitted ...
-}
-#>
