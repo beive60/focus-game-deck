@@ -302,29 +302,40 @@ class AppManager {
         switch ($action) {
             "start-process" {
                 if ($this.Logger) { $this.Logger.Info("Starting OBS integration", "OBS") }
-                $success = $manager.StartOBS()
 
+                $success = $manager.StartOBS()
                 if ($success) {
                     Write-Host "[INFO] OBS started successfully"
                     if ($this.Logger) { $this.Logger.Info("OBS started successfully", "OBS") }
-
-                    # Handle replay buffer if configured
-                    if ($config.replayBuffer) {
-                        Start-Sleep -Milliseconds 2000
-                        if ($manager.Connect()) {
-                            $manager.StartReplayBuffer()
-                            $manager.Disconnect()
-                            if ($this.Logger) { $this.Logger.Info("OBS replay buffer started", "OBS") }
-                        } else {
-                            Write-Warning "Failed to connect to OBS for replay buffer"
-                            if ($this.Logger) { $this.Logger.Warning("Failed to connect to OBS for replay buffer", "OBS") }
-                        }
-                    }
                 } else {
                     Write-Warning "Failed to start OBS"
                     if ($this.Logger) { $this.Logger.Warning("Failed to start OBS", "OBS") }
+                    return $success
                 }
 
+                if (-not $config.replayBuffer) { return $true }
+
+                # Handle replay buffer if configured
+                Start-Sleep -Milliseconds 2000
+                $success = $manager.Connect()
+                if ($success) {
+                    if ($this.Logger) { $this.Logger.Info("OBS websocket connection established", "OBS") }
+                } else {
+                    Write-Warning "Failed to connect to OBS websocket"
+                    if ($this.Logger) { $this.Logger.Warning("Failed to connect to OBS websocket", "OBS") }
+                    return $false
+                }
+
+                try {
+                    $success = $manager.StartReplayBuffer()
+                    if ($this.Logger) { $this.Logger.Info("OBS replay buffer started", "OBS") }
+                } catch {
+                    Write-Warning "Failed to connect to OBS for replay buffer"
+                    if ($this.Logger) { $this.Logger.Warning("Failed to connect to OBS for replay buffer", "OBS") }
+                    return $false
+                } finally {
+                    [void]$manager.Disconnect()
+                }
                 return $success
             }
             "stop-process" {
