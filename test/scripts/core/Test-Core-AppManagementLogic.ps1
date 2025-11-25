@@ -44,7 +44,7 @@ function ConvertTo-SecureStringSafe {
 function Invoke-AppAction {
     param(
         [string]$AppId,
-        [string]$Action,  # "start-process", "stop-process", "toggle-hotkeys", "none"
+        [string]$Action,  # "start-process", "stop-process" and "none"
         [string]$SpecialMode = $null  # For backward compatibility
     )
 

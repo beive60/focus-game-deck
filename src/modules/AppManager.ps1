@@ -302,7 +302,7 @@ class AppManager {
         switch ($action) {
             "start-process" {
                 if ($this.Logger) { $this.Logger.Info("Starting OBS integration", "OBS") }
-                $success = $manager.StartOBS($config.path)
+                $success = $manager.StartOBS()
 
                 if ($success) {
                     Write-Host "[INFO] OBS started successfully"
@@ -328,24 +328,26 @@ class AppManager {
                 return $success
             }
             "stop-process" {
+                $success = $true
                 # Handle replay buffer shutdown
                 if ($config.replayBuffer) {
                     if ($manager.Connect()) {
-                        $manager.StopReplayBuffer()
+                        $success = $manager.StopReplayBuffer()
                         $manager.Disconnect()
                         if ($this.Logger) { $this.Logger.Info("OBS replay buffer stopped", "OBS") }
                     } else {
                         if ($this.Logger) { $this.Logger.Warning("Failed to stop OBS replay buffer", "OBS") }
                     }
                 }
+                return $success
 
-                # Stop OBS process
-                $processConfig = @{
-                    processName = $config.processName
-                    terminationMethod = if ($config.terminationMethod) { $config.terminationMethod } else { "graceful" }
-                    gracefulTimeoutMs = if ($config.gracefulTimeoutMs) { $config.gracefulTimeoutMs } else { 5000 }
-                }
-                return $this.StopProcess("obs", $processConfig)
+                # # Stop OBS process
+                # $processConfig = @{
+                #     processName = $config.processName
+                #     terminationMethod = if ($config.terminationMethod) { $config.terminationMethod } else { "graceful" }
+                #     gracefulTimeoutMs = if ($config.gracefulTimeoutMs) { $config.gracefulTimeoutMs } else { 5000 }
+                # }
+                # return $this.StopProcess("obs", $processConfig)
             }
             "none" {
                 return $true
@@ -383,31 +385,28 @@ class AppManager {
     [bool] HandleDiscordAction([object] $manager, [object] $config, [string] $action) {
         switch ($action) {
             "start-process" {
-                $processConfig = @{
-                    path = $config.path
-                    processName = $config.processName
-                    arguments = if ($config.arguments) { $config.arguments } else { "" }
-                }
-                $success = $this.StartProcess("discord", $processConfig)
+                if ($this.Logger) { $this.Logger.Info("Starting Discord integration", "Discord") }
 
-                if ($success -and $config.statusOnStart) {
-                    Start-Sleep -Milliseconds 1000
-                    $manager.SetStatus($config.statusOnStart)
+                $success = $manager.StartDiscord()
+
+                if ($success) {
+                    Write-Host "[INFO] Discord started successfully"
+                    if ($this.Logger) { $this.Logger.Info("Discord started successfully", "Discord") }
                 }
 
                 return $success
             }
             "stop-process" {
-                if ($config.statusOnEnd) {
-                    $manager.SetStatus($config.statusOnEnd)
+                if ($this.Logger) { $this.Logger.Info("Starting Discord integration", "Discord") }
+
+                $success = $manager.StopDiscord()
+
+                if ($success) {
+                    Write-Host "[INFO] Discord stopped successfully"
+                    if ($this.Logger) { $this.Logger.Info("Discord stopped successfully", "Discord") }
                 }
 
-                $processConfig = @{
-                    processName = $config.processName
-                    terminationMethod = if ($config.terminationMethod) { $config.terminationMethod } else { "graceful" }
-                    gracefulTimeoutMs = if ($config.gracefulTimeoutMs) { $config.gracefulTimeoutMs } else { 8000 }
-                }
-                return $this.StopProcess("discord", $processConfig)
+                return $success
             }
             "none" {
                 return $true
