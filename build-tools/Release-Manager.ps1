@@ -211,9 +211,14 @@ function Initialize-BuildEnvironment {
 function Build-AllExecutables {
     Write-BuildLog "Building all executables..." "INFO" "Yellow"
 
-    # Use specialized build script
+    # Path to the specialized build script
     $buildScript = Join-Path $PSScriptRoot "Build-Executables.ps1"
-    return Invoke-BuildScript -ScriptPath $buildScript -Arguments @() -Description "Building all executables"
+
+    # Forward the parent's Verbose switch to the child script when set
+    $args = @()
+    if ($Verbose) { $args += "-Verbose" }
+
+    return Invoke-BuildScript -ScriptPath $buildScript -Arguments $args -Description "Building all executables"
 }
 
 # Function to sign all executables
