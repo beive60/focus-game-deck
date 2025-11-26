@@ -231,57 +231,15 @@ function Initialize-ConfigEditor {
 
         Write-Verbose "[INFO] ConfigEditor: Initialization started"
 
-        # Step 1: Load WPF assemblies FIRST
-        if (-not (Initialize-WpfAssemblies)) {
-            throw "WPF assemblies loading failed"
-        }
-
-        # Step 2: Load configuration
+        # Step 1: Load configuration
         Import-Configuration
 
-        # Step 3: NOW we can safely dot-source files that contain WPF types
-        Write-Verbose "[INFO] ConfigEditor: Loading script modules"
-
-        # Define module list (order matters - dependencies must be loaded first)
-        $guiModuleNames = @(
-            "ConfigEditor.JsonHelper.ps1",
-            "ConfigEditor.Mappings.ps1",
-            "ConfigEditor.State.ps1",
-            "ConfigEditor.Localization.ps1",
-            "ConfigEditor.UI.ps1",
-            "ConfigEditor.Events.ps1"
-        )
-
-        if (-not $isExecutable) {
-            # In script mode, load modules from file system
-            Write-Verbose "[INFO] ConfigEditor: Running in script mode - loading modules from filesystem"
-
-            foreach ($guiModuleName in $guiModuleNames) {
-                $guiModulePath = Join-Path -Path $appRoot -ChildPath "gui/$guiModuleName"
-                if (Test-Path $guiModulePath) {
-                    Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - $guiModulePath"
-                    . $guiModulePath
-                    Write-Verbose "[OK] ConfigEditor: Module Loaded: $(Split-Path $guiModulePath -Leaf)"
-                } else {
-                    Write-Error "[ERROR] ConfigEditor: Missing required module not found: $guiModulePath"
-                    throw "Missing required module: $guiModuleName"
-                }
-            }
-        }
-
-        Write-Verbose "[OK] ConfigEditor: Script modules loaded successfully"
-
-        # Step 3.5: Validate UI mappings
+        # Step 2: Validate UI mappings
         if (-not (Test-UIMappings)) {
             Write-Host "[WARNING] ConfigEditor: UI mappings validation failed - Some features may not work properly"
         }
 
-        # Step 3.6: Import additional modules (Version, UpdateChecker, etc.)
-        Write-Verbose "[INFO] ConfigEditor: Importing additional modules"
-        Import-AdditionalModules
-        Write-Verbose "[OK] ConfigEditor: Additional modules imported"
-
-        # Step 4: Initialize localization
+        # Step 3: Initialize localization
         Write-Verbose "[INFO] ConfigEditor: Initializing localization"
         try {
             # Pass shared project root into localization class (PowerShell classes cannot access script-scoped variables)
