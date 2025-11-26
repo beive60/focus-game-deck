@@ -221,7 +221,7 @@ try {
     Write-Host ("=" * 60)
 
     $successCount = ($buildResults | Where-Object { $_ -eq $true }).Count
-    $totalCount = $buildResults.Count
+    $totalCount = ($buildResults | Where-Object { $_ -eq $true }).Count + ($buildResults | Where-Object { $_ -eq $false }).Count
 
     Write-Host "Successful builds: $successCount / $totalCount"
 

@@ -215,10 +215,10 @@ function Build-AllExecutables {
     $buildScript = Join-Path $PSScriptRoot "Build-Executables.ps1"
 
     # Forward the parent's Verbose switch to the child script when set
-    $args = @()
-    if ($Verbose) { $args += "-Verbose" }
+    $buildArgs = @()
+    if ($Verbose) { $buildArgs += "-Verbose" }
 
-    return Invoke-BuildScript -ScriptPath $buildScript -Arguments $args -Description "Building all executables"
+    return Invoke-BuildScript -ScriptPath $buildScript -Arguments $buildArgs -Description "Building all executables"
 }
 
 # Function to sign all executables
