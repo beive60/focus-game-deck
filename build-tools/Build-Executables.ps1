@@ -183,6 +183,21 @@ try {
         -STA $true `
         -IconFile $iconFile
 
+    if ($Verbose) {
+        Write-Host ""
+        Write-BuildMessage "Building Config Editor with Console (ConfigEditor-Console.exe) for debugging..." "INFO"
+        $configEditorConsoleExe = Join-Path $OutputDir "ConfigEditor-Console.exe"
+        $buildResults += Build-Executable `
+            -InputScript $configEditorScript `
+            -OutputExe $configEditorConsoleExe `
+            -Title "Focus Game Deck - Configuration Editor (Console)" `
+            -Description "Focus Game Deck GUI Configuration Editor with Console (for debugging)" `
+            -NoConsole $false `
+            -RequireAdmin $false `
+            -STA $true `
+            -IconFile $iconFile
+    }
+
     Write-Host ""
     Write-BuildMessage "Building Game Launcher (Invoke-FocusGameDeck.exe)..." "INFO"
     $gameLauncherScript = Join-Path $BuildDir "Invoke-FocusGameDeck-bundled.ps1"
