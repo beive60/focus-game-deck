@@ -57,12 +57,16 @@
 param(
     [switch]$NoAutoStart,
     [switch]$DebugMode,
-    [int]$AutoCloseSeconds = 0
+    [int]$AutoCloseSeconds = 0,
+    [switch]$Headless  # Headless mode: suppress UI dialogs and window display
 )
 
 if ($DebugMode) {
     $VerbosePreference = 'Continue'
 }
+
+# Expose headless flag to script scope for functions to read
+$script:Headless = [bool]$Headless
 
 # Set system-level encoding settings for proper character display
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
@@ -406,10 +410,14 @@ function Initialize-ConfigEditor {
         Write-Verbose "[OK] ConfigEditor: Initialization completed - UI is ready for user interaction"
 
         # Step 9: Show window
+        # Create a local reference to the window object
+        $window = $script:Window
         Write-Verbose "[INFO] ConfigEditor: Showing window"
         try {
-            # Debug mode: Auto-close after specified seconds
-            if ($DebugMode -and $AutoCloseSeconds -gt 0) {
+            if ($Headless) {
+                Write-Verbose "[INFO] ConfigEditor: Headless mode enabled - skipping window display"
+                # In headless mode, do not show the UI. Initialization verification only.
+            } elseif ($DebugMode -and $AutoCloseSeconds -gt 0) {
                 Write-Verbose "[DEBUG] ConfigEditor: Window will auto-close in $AutoCloseSeconds seconds"
 
                 # Create a timer to auto-close the window
@@ -478,15 +486,17 @@ function Initialize-ConfigEditor {
         }
         Write-Host "[ERROR] ConfigEditor: Location - Line $($_.InvocationInfo.ScriptLineNumber)"
 
-        try {
-            [System.Windows.MessageBox]::Show(
-                "An initialization error occurred: $($_.Exception.Message)",
-                "Error",
-                [System.Windows.MessageBoxButton]::OK,
-                [System.Windows.MessageBoxImage]::Error
-            )
-        } catch {
-            Write-Host "[ERROR] ConfigEditor: Failed to show error dialog - $($_.Exception.Message)"
+        if (-not $Headless) {
+            try {
+                [System.Windows.MessageBox]::Show(
+                    "An initialization error occurred: $($_.Exception.Message)",
+                    "Error",
+                    [System.Windows.MessageBoxButton]::OK,
+                    [System.Windows.MessageBoxImage]::Error
+                )
+            } catch {
+                Write-Host "[ERROR] ConfigEditor: Failed to show error dialog - $($_.Exception.Message)"
+            }
         }
     }
 }
@@ -1969,6 +1979,12 @@ function Show-SafeMessage {
             "Yes" { [System.Windows.MessageBoxResult]::Yes }
             "No" { [System.Windows.MessageBoxResult]::No }
             default { [System.Windows.MessageBoxResult]::OK }
+        }
+
+        # If running in headless mode, print to console and return the default result
+        if ($script:Headless) {
+            Write-Host "[$MessageType] $titleText : $messageText"
+            return $defaultResultType
         }
 
         # Show message box
