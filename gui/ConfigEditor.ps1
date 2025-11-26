@@ -231,15 +231,56 @@ function Initialize-ConfigEditor {
 
         Write-Verbose "[INFO] ConfigEditor: Initialization started"
 
-        # Step 1: Load configuration
+        # Step 1: Load WPF assemblies FIRST
+        if (-not (Initialize-WpfAssemblies)) {
+            throw "WPF assemblies loading failed"
+        }
+
+        # Step 2: Load configuration
         Import-Configuration
 
-        # Step 2: Validate UI mappings
+        # Step 3: Load script modules (must be done before using PowerShell classes)
+        Write-Verbose "[INFO] ConfigEditor: Loading script modules"
+
+        # Define module list (order matters - dependencies must be loaded first)
+        $guiModuleNames = @(
+            "ConfigEditor.JsonHelper.ps1",
+            "ConfigEditor.Mappings.ps1",
+            "ConfigEditor.State.ps1",
+            "ConfigEditor.Localization.ps1",
+            "ConfigEditor.UI.ps1",
+            "ConfigEditor.Events.ps1"
+        )
+
+        if (-not $isExecutable) {
+            # In script mode, load modules from file system
+            Write-Verbose "[INFO] ConfigEditor: Running in script mode - loading modules from filesystem"
+
+            foreach ($guiModuleName in $guiModuleNames) {
+                $guiModulePath = Join-Path -Path $appRoot -ChildPath "gui/$guiModuleName"
+                if (Test-Path $guiModulePath) {
+                    Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - $guiModulePath"
+                    . $guiModulePath
+                    Write-Verbose "[OK] ConfigEditor: Module Loaded: $(Split-Path $guiModulePath -Leaf)"
+                } else {
+                    Write-Error "[ERROR] ConfigEditor: Missing required module not found: $guiModulePath"
+                    throw "Missing required module: $guiModuleName"
+                }
+            }
+        }
+
+        Write-Verbose "[OK] ConfigEditor: Script modules loaded successfully"
+
+        # Step 4: Validate UI mappings
         if (-not (Test-UIMappings)) {
             Write-Host "[WARNING] ConfigEditor: UI mappings validation failed - Some features may not work properly"
         }
 
-        # Step 3: Initialize localization
+        # Step 5: Import additional modules (Version, UpdateChecker, etc.)
+        Write-Verbose "[INFO] ConfigEditor: Importing additional modules"
+        Import-AdditionalModules
+
+        # Step 6: Initialize localization
         Write-Verbose "[INFO] ConfigEditor: Initializing localization"
         try {
             # Pass shared project root into localization class (PowerShell classes cannot access script-scoped variables)
@@ -247,7 +288,6 @@ function Initialize-ConfigEditor {
             Write-Verbose "[OK] ConfigEditor: Localization initialized - Language: $($script:Localization.CurrentLanguage)"
         } catch {
             Write-Error "[ERROR] ConfigEditor: Failed to initialize localization: $($_.Exception.Message)"
-            throw
         }
 
         # Step 5: Initialize state manager with config path
@@ -267,7 +307,7 @@ function Initialize-ConfigEditor {
         # Store state manager in script scope for access from functions
         $script:StateManager = $stateManager
 
-        # Step 6: Initialize UI manager
+        # Step 7: Initialize UI manager
         Write-Verbose "[INFO] ConfigEditor: Initializing UI manager"
         try {
             # Validate mappings are available before creating UI
@@ -328,7 +368,7 @@ function Initialize-ConfigEditor {
             throw
         }
 
-        # Step 7: Initialize event handler
+        # Step 8: Initialize event handler
         # Pass project root into events handler so it can construct file paths without referencing script-scoped variables
         $eventHandler = [ConfigEditorEvents]::new($uiManager, $stateManager, $appRoot)
 
@@ -340,7 +380,7 @@ function Initialize-ConfigEditor {
 
         $eventHandler.RegisterAll()
 
-        # Step 8: Load data to UI
+        # Step 9: Load data to UI
         Write-Verbose "[INFO] ConfigEditor: Loading data to UI"
         try {
             if ($null -eq $uiManager) {
@@ -367,7 +407,7 @@ function Initialize-ConfigEditor {
         $script:IsInitializationComplete = $true
         Write-Verbose "[OK] ConfigEditor: Initialization completed - UI is ready for user interaction"
 
-        # Step 9: Show window
+        # Step 10: Show window
         # Create a local reference to the window object
         $window = $script:Window
         Write-Verbose "[INFO] ConfigEditor: Showing window"

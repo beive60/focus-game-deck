@@ -45,14 +45,8 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$OutputPath,
 
-    [string]$ProjectRoot = (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent),
-
-    [switch]$Verbose
+    [string]$ProjectRoot = (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent)
 )
-
-if ($Verbose) {
-    $VerbosePreference = "Continue"
-}
 
 function Write-BundlerMessage {
     param(
