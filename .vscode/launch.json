@@ -25,6 +25,17 @@
             "args": [
                 "mock-calc"
             ]
+        },
+        {
+            "name": "Build Tests",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${workspaceFolder}/build-tools/Release-Manager.ps1",
+            "args": [
+                "-Development",
+                "-Verbose"
+            ],
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
