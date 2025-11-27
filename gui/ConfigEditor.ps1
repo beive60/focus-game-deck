@@ -88,11 +88,12 @@ try {
 
 # Detect execution environment to determine application root
 $currentProcess = Get-Process -Id $PID
-$isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
+# Make isExecutable script-scoped so functions can access it
+$script:isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
 
 # Define the application root directory
 # This is critical for finding external resources (config, XAML, logs)
-if ($isExecutable) {
+if ($script:isExecutable) {
     # In executable mode, the root is the directory where the .exe file is located
     # ps2exe extracts to temp, but we need the actual exe location for external files
     $appRoot = Split-Path -Parent $currentProcess.Path
@@ -252,8 +253,8 @@ function Initialize-ConfigEditor {
             "ConfigEditor.Events.ps1"
         )
 
-        if (-not $isExecutable) {
-            # In script mode, load modules from file system
+        if (-not $script:isExecutable) {
+            # In script mode, load modules from file system relative to project root
             Write-Verbose "[INFO] ConfigEditor: Running in script mode - loading modules from filesystem"
 
             foreach ($guiModuleName in $guiModuleNames) {
@@ -268,6 +269,28 @@ function Initialize-ConfigEditor {
                 }
             }
         }
+        # else {
+        #     # In executable mode, modules are embedded and extracted to $PSScriptRoot
+        #     Write-Verbose "[INFO] ConfigEditor: Running in executable mode - loading embedded modules"
+
+        #     foreach ($guiModuleName in $guiModuleNames) {
+        #         # Embedded files are flat in PSScriptRoot or preserved if folder structure was kept
+        #         # For GUI modules, ps2exe embeds them. Let's check flat first, then gui/
+        #         $embeddedPath = Join-Path -Path $PSScriptRoot -ChildPath $guiModuleName
+        #         if (-not (Test-Path $embeddedPath)) {
+        #             $embeddedPath = Join-Path -Path $PSScriptRoot -ChildPath "gui/$guiModuleName"
+        #         }
+
+        #         if (Test-Path $embeddedPath) {
+        #             Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing embedded module - $embeddedPath"
+        #             . $embeddedPath
+        #             Write-Verbose "[OK] ConfigEditor: Embedded Module Loaded: $guiModuleName"
+        #         } else {
+        #             Write-Error "[ERROR] ConfigEditor: Embedded module not found: $guiModuleName"
+        #             throw "Missing embedded module: $guiModuleName"
+        #         }
+        #     }
+        # }
 
         Write-Verbose "[OK] ConfigEditor: Script modules loaded successfully"
 
@@ -292,20 +315,25 @@ function Initialize-ConfigEditor {
 
         # Step 5: Initialize state manager with config path
         Write-Verbose "[INFO] ConfigEditor: Initializing state manager"
-        $stateManager = [ConfigEditorState]::new($script:ConfigPath)
-        $stateManager.LoadConfiguration()
+        try {
+            $stateManager = [ConfigEditorState]::new($script:ConfigPath)
+            $stateManager.LoadConfiguration()
 
-        # Validate configuration data
-        if ($null -eq $stateManager.ConfigData) {
-            throw "Configuration data is null after loading"
+            # Validate configuration data
+            if ($null -eq $stateManager.ConfigData) {
+                throw "Configuration data is null after loading"
+            }
+            Write-Verbose "[INFO] ConfigEditor: Configuration data structure - $($stateManager.ConfigData.GetType().Name)"
+
+            $stateManager.SaveOriginalConfig()
+            Write-Verbose "[OK] ConfigEditor: State manager initialized successfully"
+
+            # Store state manager in script scope for access from functions
+            $script:StateManager = $stateManager
+        } catch {
+            Write-Error "[ERROR] ConfigEditor: Failed to initialize state manager: $($_.Exception.Message)"
+            throw
         }
-        Write-Verbose "[INFO] ConfigEditor: Configuration data structure - $($stateManager.ConfigData.GetType().Name)"
-
-        $stateManager.SaveOriginalConfig()
-        Write-Verbose "[OK] ConfigEditor: State manager initialized successfully"
-
-        # Store state manager in script scope for access from functions
-        $script:StateManager = $stateManager
 
         # Step 7: Initialize UI manager
         Write-Verbose "[INFO] ConfigEditor: Initializing UI manager"
@@ -502,8 +530,11 @@ function Initialize-ConfigEditor {
 # Import additional modules after WPF assemblies are loaded
 function Import-AdditionalModules {
     try {
-        # Use $appRoot defined at top of the script (parent of gui folder)
-        Write-Verbose "Project root: $appRoot"
+        # Determine root path for modules based on execution mode
+        # If executable, embedded files are extracted to $PSScriptRoot (temp dir)
+        # If script, they are relative to $appRoot (project root)
+        $moduleRoot = if ($script:isExecutable) { $PSScriptRoot } else { $appRoot }
+        Write-Verbose "Module root path: $moduleRoot"
 
         # Define modules to load and their configurations
         $modulesToLoad = @(
@@ -523,7 +554,7 @@ function Import-AdditionalModules {
 
         # Load modules in a loop
         foreach ($moduleInfo in $modulesToLoad) {
-            $modulePath = Join-Path $appRoot $moduleInfo.Path
+            $modulePath = Join-Path $moduleRoot $moduleInfo.Path
             $moduleName = Split-Path $modulePath -Leaf
 
             if (-not (Test-Path $modulePath)) {
@@ -788,20 +819,20 @@ function Update-TerminationSettingsVisibility {
 
 <#
 .SYNOPSIS
-    Helper function to safely set or add a property to a PSCustomObject.
+Helper function to safely set or add a property to a PSCustomObject.
 
 .DESCRIPTION
-    Checks if a property exists on an object and sets its value, or adds the property if it doesn't exist.
-    This prevents errors when trying to set non-existent properties on PSCustomObject instances.
+Checks if a property exists on an object and sets its value, or adds the property if it doesn't exist.
+This prevents errors when trying to set non-existent properties on PSCustomObject instances.
 
 .PARAMETER Object
-    The PSCustomObject to modify.
+The PSCustomObject to modify.
 
 .PARAMETER PropertyName
-    The name of the property to set or add.
+The name of the property to set or add.
 
 .PARAMETER Value
-    The value to assign to the property.
+The value to assign to the property.
 #>
 function Set-PropertyValue {
     param(
@@ -1191,18 +1222,18 @@ function Save-CurrentAppData {
 
 <#
 .SYNOPSIS
-    Encrypts a plain text password using Windows Data Protection API (DPAPI).
+Encrypts a plain text password using Windows Data Protection API (DPAPI).
 
 .DESCRIPTION
-    Uses ConvertTo-SecureString and ConvertFrom-SecureString to encrypt passwords
-    with DPAPI. The encrypted string can only be decrypted by the same user on
-    the same machine.
+Uses ConvertTo-SecureString and ConvertFrom-SecureString to encrypt passwords
+with DPAPI. The encrypted string can only be decrypted by the same user on
+the same machine.
 
 .PARAMETER PlainTextPassword
-    The plain text password to encrypt.
+The plain text password to encrypt.
 
 .OUTPUTS
-    String - The encrypted password string.
+String - The encrypted password string.
 #>
 function Protect-Password {
     param(
@@ -1228,17 +1259,17 @@ function Protect-Password {
 
 <#
 .SYNOPSIS
-    Decrypts a DPAPI-encrypted password string.
+Decrypts a DPAPI-encrypted password string.
 
 .DESCRIPTION
-    Uses ConvertTo-SecureString to decrypt DPAPI-encrypted passwords.
-    Supports both encrypted strings and plain text (for backward compatibility).
+Uses ConvertTo-SecureString to decrypt DPAPI-encrypted passwords.
+Supports both encrypted strings and plain text (for backward compatibility).
 
 .PARAMETER EncryptedPassword
-    The encrypted password string to decrypt.
+The encrypted password string to decrypt.
 
 .OUTPUTS
-    String - The decrypted plain text password.
+String - The decrypted plain text password.
 #>
 function Unprotect-Password {
     param(
@@ -1660,15 +1691,15 @@ function Set-ConfigModified {
 
 <#
 .SYNOPSIS
-    Shows a message prompting the user to restart the application after changing language.
+Shows a message prompting the user to restart the application after changing language.
 
 .DESCRIPTION
-    Displays a confirmation dialog asking if the user wants to restart the application
-    to apply language changes. If the user agrees, saves the configuration and restarts
-    the application.
+Displays a confirmation dialog asking if the user wants to restart the application
+to apply language changes. If the user agrees, saves the configuration and restarts
+the application.
 
 .OUTPUTS
-    None
+None
 #>
 function Show-LanguageChangeRestartMessage {
     try {
@@ -1806,20 +1837,20 @@ function Show-PathSelectionDialog {
 
 <#
 .SYNOPSIS
-    Gets a localized message for the specified key.
+Gets a localized message for the specified key.
 
 .DESCRIPTION
-    Retrieves a localized message from the loaded messages using the current language.
-    Supports optional format arguments for string formatting.
+Retrieves a localized message from the loaded messages using the current language.
+Supports optional format arguments for string formatting.
 
 .PARAMETER Key
-    The message key to retrieve.
+The message key to retrieve.
 
 .PARAMETER FormatArgs
-    Optional array of arguments for string formatting.
+Optional array of arguments for string formatting.
 
 .OUTPUTS
-    String - The localized message.
+String - The localized message.
 #>
 function Get-SafeLocalizedMessage {
     param(
