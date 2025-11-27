@@ -68,20 +68,56 @@ function Resolve-DotSourcedPath {
     }
 
     $pathExpression = $Matches[1].Trim()
+    $resolvedPath = $null
 
-    $pathExpression = $pathExpression -replace '["'']', ''
-
-    if ($pathExpression -match '\$PSScriptRoot') {
-        $resolvedPath = $pathExpression -replace '\$PSScriptRoot', $CurrentScriptDir
-    } elseif ($pathExpression -match '\$projectRoot') {
-        $resolvedPath = $pathExpression -replace '\$projectRoot', $ProjectRoot
-    } else {
-        $resolvedPath = Join-Path $CurrentScriptDir $pathExpression
+    # Attempt to resolve using original logic first
+    try {
+        $tempPath = $pathExpression -replace '["'']', ''
+        if ($tempPath -match '\$PSScriptRoot') {
+            $resolvedPath = $tempPath -replace '\$PSScriptRoot', $CurrentScriptDir
+        } elseif ($tempPath -match '\$projectRoot') {
+            $resolvedPath = $tempPath -replace '\$projectRoot', $ProjectRoot
+        } else {
+            $resolvedPath = Join-Path $CurrentScriptDir $tempPath
+        }
+        $resolvedPath = [System.IO.Path]::GetFullPath(($resolvedPath -replace '[\\/]+', '/'))
+    } catch {
+        # This can fail on complex expressions, so we nullify and proceed
+        $resolvedPath = $null
     }
 
-    $resolvedPath = $resolvedPath -replace '[\\/]+', '/'
-    $resolvedPath = [System.IO.Path]::GetFullPath($resolvedPath)
 
+    # 1. Test-Path で $resolvedPath が存在するかをチェックし、存在したら return $resolvedPath
+    if ($resolvedPath -and (Test-Path $resolvedPath)) {
+        return $resolvedPath
+    }
+
+    # 2. 存在しない場合、`. (Join-Path ...)` のようなパスを正しくパースする
+    if ($pathExpression -match '^\(Join-Path') {
+        # 2.1. Join-Pathが使用されているかを確認する。(already did)
+        $match = [regex]::Match($pathExpression, '^\(Join-Path\s-Path\s\$(\w+)\s-ChildPath\s"([^"]+)"\)$')
+        if ($match.Success) {
+            $baseVarName = $match.Groups[1].Value
+            # 2.2. -ChildPathに続く引数を抽出する。
+            # 2.3. ダブルクォーテーションを除去する。
+            $childPath = $match.Groups[2].Value
+
+            $basePath = ""
+            if ($baseVarName -eq 'appRoot' -or $baseVarName -eq 'ProjectRoot') {
+                $basePath = $ProjectRoot
+            } elseif ($baseVarName -eq 'PSScriptRoot') {
+                $basePath = $CurrentScriptDir
+            }
+
+            if ($basePath) {
+                $resolvedPath = Join-Path -Path $basePath -ChildPath $childPath
+                $resolvedPath = [System.IO.Path]::GetFullPath(($resolvedPath -replace '[\\/]+', '/'))
+                return $resolvedPath
+            }
+        }
+    }
+
+    # If all else fails, return the original (non-existent) path, which was the original behavior.
     return $resolvedPath
 }
 

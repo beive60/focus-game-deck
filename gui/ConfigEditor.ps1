@@ -139,10 +139,26 @@ function Test-Prerequisites {
 function Initialize-WpfAssemblies {
     try {
         Write-Verbose "[INFO] ConfigEditor: Loading WPF assemblies"
-        Add-Type -AssemblyName PresentationFramework
-        Add-Type -AssemblyName PresentationCore
-        Add-Type -AssemblyName WindowsBase
-        Add-Type -AssemblyName System.Windows.Forms
+
+        # Load required assemblies with guard to prevent duplicate loading
+        $requiredAssemblies = @(
+            'PresentationFramework',
+            'PresentationCore',
+            'WindowsBase',
+            'System.Windows.Forms'
+        )
+        foreach ($assemblyName in $requiredAssemblies) {
+            if (-not ([AppDomain]::CurrentDomain.GetAssemblies().FullName -contains $assemblyName)) {
+                try {
+                    Add-Type -AssemblyName $assemblyName
+                    Write-Verbose "[INFO] Loaded assembly: $assemblyName"
+                } catch {
+                    Write-Warning "[WARNING] Failed to load assembly: $assemblyName - $($_.Exception.Message)"
+                }
+            } else {
+                Write-Verbose "[INFO] Assembly already loaded: $assemblyName"
+            }
+        }
         Write-Verbose "[OK] ConfigEditor: WPF assemblies loaded successfully"
         return $true
     } catch {
@@ -244,29 +260,41 @@ function Initialize-ConfigEditor {
         Write-Verbose "[INFO] ConfigEditor: Loading script modules"
 
         # Define module list (order matters - dependencies must be loaded first)
-        $guiModuleNames = @(
-            "ConfigEditor.JsonHelper.ps1",
-            "ConfigEditor.Mappings.ps1",
-            "ConfigEditor.State.ps1",
-            "ConfigEditor.Localization.ps1",
-            "ConfigEditor.UI.ps1",
-            "ConfigEditor.Events.ps1"
-        )
-
         if (-not $script:isExecutable) {
             # In script mode, load modules from file system relative to project root
             Write-Verbose "[INFO] ConfigEditor: Running in script mode - loading modules from filesystem"
 
-            foreach ($guiModuleName in $guiModuleNames) {
-                $guiModulePath = Join-Path -Path $appRoot -ChildPath "gui/$guiModuleName"
-                if (Test-Path $guiModulePath) {
-                    Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - $guiModulePath"
-                    . $guiModulePath
-                    Write-Verbose "[OK] ConfigEditor: Module Loaded: $(Split-Path $guiModulePath -Leaf)"
-                } else {
-                    Write-Error "[ERROR] ConfigEditor: Missing required module not found: $guiModulePath"
-                    throw "Missing required module: $guiModuleName"
-                }
+            try {
+                Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.JsonHelper.ps1"
+                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.JsonHelper.ps1")
+                Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.JsonHelper.ps1"
+
+                Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Mappings.ps1"
+                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.Mappings.ps1")
+                Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Mappings.ps1"
+
+                Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.State.ps1"
+                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.State.ps1")
+                Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.State.ps1"
+
+                Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Localization.ps1"
+                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.Localization.ps1")
+                Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Localization.ps1"
+
+                Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.UI.ps1"
+                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.UI.ps1")
+                Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.UI.ps1"
+
+                Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Events.ps1"
+                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.Events.ps1")
+                Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Events.ps1"
+            } catch {
+                # The error record ($_) from a dot-sourcing failure contains details
+                # about the file that could not be loaded.
+                Write-Error "[ERROR] ConfigEditor: A required GUI module could not be loaded."
+                Write-Error "Error Details: $($_.Exception.Message)"
+                # Re-throw the exception to halt execution, as the GUI cannot function.
+                throw "Module loading failed. The application cannot continue."
             }
         }
         # else {
@@ -530,57 +558,35 @@ function Initialize-ConfigEditor {
 # Import additional modules after WPF assemblies are loaded
 function Import-AdditionalModules {
     try {
-        # Determine root path for modules based on execution mode
-        # If executable, embedded files are extracted to $PSScriptRoot (temp dir)
-        # If script, they are relative to $appRoot (project root)
-        $moduleRoot = if ($script:isExecutable) { $PSScriptRoot } else { $appRoot }
-        Write-Verbose "Module root path: $moduleRoot"
+        # Load modules individually with dedicated error handling for each.
+        # This makes the loading process more robust, as a failure in one optional
+        # module will not prevent others from being loaded.
 
-        # Define modules to load and their configurations
-        $modulesToLoad = @(
-            @{
-                Path = "scripts/LanguageHelper.ps1"
-                GlobalFunctions = @{}
-            },
-            @{
-                Path = "build-tools/Version.ps1"
-                GlobalFunctions = @{ "Get-ProjectVersion" = "GetProjectVersionFunc" }
-            },
-            @{
-                Path = "src/modules/UpdateChecker.ps1"
-                GlobalFunctions = @{ "Test-UpdateAvailable" = "TestUpdateAvailableFunc" }
-            }
-        )
+        # --- Load LanguageHelper.ps1 ---
+        try {
+            Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing additional module - scripts/LanguageHelper.ps1"
+            . (Join-Path -Path $appRoot -ChildPath "scripts/LanguageHelper.ps1")
+            Write-Verbose "[OK] ConfigEditor: Loaded: LanguageHelper.ps1"
+        } catch {
+            Write-Warning "[WARN] ConfigEditor: Could not load 'scripts/LanguageHelper.ps1'. Some functionality may be affected. Details: $($_.Exception.Message)"
+        }
 
-        # Load modules in a loop
-        foreach ($moduleInfo in $modulesToLoad) {
-            $modulePath = Join-Path $moduleRoot $moduleInfo.Path
-            $moduleName = Split-Path $modulePath -Leaf
+        # --- Load Version.ps1 (for version info) ---
+        try {
+            Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing additional module - build-tools/Version.ps1"
+            . (Join-Path -Path $appRoot -ChildPath "build-tools/Version.ps1")
+            Write-Verbose "[OK] ConfigEditor: Loaded: Version.ps1"
+        } catch {
+            Write-Warning "[WARN] ConfigEditor: Could not load 'build-tools/Version.ps1'. Version info will be unavailable. Details: $($_.Exception.Message)"
+        }
 
-            if (-not (Test-Path $modulePath)) {
-                Write-Warning "Module not found: $modulePath"
-                continue
-            }
-
-            # Load the module with error handling
-            try {
-                . $modulePath
-                Write-Verbose "Loaded: $moduleName"
-            } catch {
-                Write-Host "[WARNING] ConfigEditor: Error loading $($moduleName) - $($_.Exception.Message)"
-                continue # Skip to next module if loading failed
-            }
-
-            # Check for and store global function references if specified
-            foreach ($functionName in $moduleInfo.GlobalFunctions.Keys) {
-                $globalVarName = $moduleInfo.GlobalFunctions[$functionName]
-                if (Test-Path "function:$functionName") {
-                    Write-Verbose "[OK] ConfigEditor: $functionName function loaded successfully"
-                    Set-Variable -Name $globalVarName -Value (Get-Item "function:$functionName") -Scope Global
-                } else {
-                    Write-Host "[WARNING] ConfigEditor: $functionName function not available after loading $moduleName"
-                }
-            }
+        # --- Load UpdateChecker.ps1 (for update checks) ---
+        try {
+            Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing additional module - src/modules/UpdateChecker.ps1"
+            . (Join-Path -Path $appRoot -ChildPath "src/modules/UpdateChecker.ps1")
+            Write-Verbose "[OK] ConfigEditor: Loaded: UpdateChecker.ps1"
+        } catch {
+            Write-Warning "[WARN] ConfigEditor: Could not load 'src/modules/UpdateChecker.ps1'. Update checks will be disabled. Details: $($_.Exception.Message)"
         }
     } catch {
         Write-Host "[WARNING] ConfigEditor: Failed to import additional modules - $($_.Exception.Message)"
