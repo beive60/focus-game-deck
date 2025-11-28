@@ -5,7 +5,7 @@
     [string]$OriginalConfigData
 
     # Additional properties for refactoring from global variables
-    [System.Windows.Window]$Window
+    [Object]$Window
     [string]$CurrentGameId
     [string]$CurrentAppId
     [PSCustomObject]$Messages

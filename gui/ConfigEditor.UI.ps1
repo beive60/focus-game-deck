@@ -29,7 +29,7 @@
 class ConfigEditorUI {
     # Properties
     [ConfigEditorState]$State
-    [System.Windows.Window]$Window
+    [Object]$Window
     [hashtable]$Mappings
     [string]$CurrentGameId
     [string]$CurrentAppId
@@ -98,7 +98,7 @@ class ConfigEditorUI {
             Write-Host "[DEBUG] ConfigEditorUI: Step 5/6 - Adding window event handlers"
             $selfRef = $this
             $this.Window.add_Closed({
-                    param($sender, $e)
+                    param($s, $e)
                     Write-Host "[DEBUG] ConfigEditorUI: Window closed event triggered"
                     try {
                         $selfRef.Cleanup()
@@ -168,7 +168,7 @@ class ConfigEditorUI {
     .SYNOPSIS
         Measures the text width for a button.
     #>
-    [double]MeasureButtonTextWidth([string]$Text, [System.Windows.Controls.Button]$Button) {
+    [double]MeasureButtonTextWidth([string]$Text, [Object]$Button) {
         if ([string]::IsNullOrEmpty($Text) -or -not $Button) { return 0 }
         try {
             $textBlock = New-Object System.Windows.Controls.TextBlock
@@ -280,8 +280,8 @@ class ConfigEditorUI {
 
                     # Set watermark visibility based on text content
                     $appArgumentsTextBox.add_TextChanged({
-                            param($sender, $e)
-                            $watermark.Visibility = if ([string]::IsNullOrEmpty($sender.Text)) {
+                            param($s, $e)
+                            $watermark.Visibility = if ([string]::IsNullOrEmpty($s.Text)) {
                                 [System.Windows.Visibility]::Visible
                             } else {
                                 [System.Windows.Visibility]::Hidden
@@ -291,17 +291,21 @@ class ConfigEditorUI {
                     # Add watermark to parent grid
                     $parent = $appArgumentsTextBox.Parent
                     if ($parent -is [System.Windows.Controls.Grid]) {
-                        $row = [System.Windows.Controls.Grid]::GetRow($appArgumentsTextBox)
-                        $col = [System.Windows.Controls.Grid]::GetColumn($appArgumentsTextBox)
-                        [System.Windows.Controls.Grid]::SetRow($watermark, $row)
-                        [System.Windows.Controls.Grid]::SetColumn($watermark, $col)
+                        $gridType = $parent.GetType()
+
+                        $row = $gridType::GetRow($appArgumentsTextBox)
+                        $col = $gridType::GetColumn($appArgumentsTextBox)
+
+                        $gridType::SetRow($watermark, $row)
+                        $gridType::SetColumn($watermark, $col)
+
                         $parent.Children.Add($watermark) | Out-Null
 
                         # Set initial visibility
                         $watermark.Visibility = if ([string]::IsNullOrEmpty($appArgumentsTextBox.Text)) {
-                            [System.Windows.Visibility]::Visible
+                            "Visible"
                         } else {
-                            [System.Windows.Visibility]::Hidden
+                            "Hidden"
                         }
 
                         Write-Verbose "Placeholder set for AppArgumentsTextBox: '$placeholderText'"
@@ -942,18 +946,18 @@ class ConfigEditorUI {
 
                                 # Add event handler to hide placeholder when user types
                                 $obsPasswordBox.add_PasswordChanged({
-                                        param($sender, $e)
-                                        $placeholder = $sender.Parent.Children | Where-Object { $_.Name -eq "ObsPasswordPlaceholder" }
+                                        param($s, $e)
+                                        $placeholder = $s.Parent.Children | Where-Object { $_.Name -eq "ObsPasswordPlaceholder" }
                                         if ($placeholder) {
-                                            $placeholder.Visibility = if ($sender.Password.Length -eq 0) {
+                                            $placeholder.Visibility = if ($s.Password.Length -eq 0) {
                                                 [System.Windows.Visibility]::Visible
                                             } else {
                                                 [System.Windows.Visibility]::Collapsed
                                             }
                                         }
                                         # Clear SAVED tag when user starts typing
-                                        if ($sender.Password.Length -gt 0) {
-                                            $sender.Tag = $null
+                                        if ($s.Password.Length -gt 0) {
+                                            $s.Tag = $null
                                         }
                                     }.GetNewClosure())
                             }
@@ -1289,15 +1293,15 @@ class ConfigEditorUI {
     .DESCRIPTION
     Updates game action combo boxes when the platform selection changes
     to show appropriate actions for the selected platform.
-    .PARAMETER sender
+    .PARAMETER s
     The ComboBox that triggered the event.
     .PARAMETER e
     Selection changed event arguments.
     #>
-    [void]OnPlatformSelectionChanged([object]$sender, [System.Windows.Controls.SelectionChangedEventArgs]$e) {
+    [void]OnPlatformSelectionChanged([object]$s, [System.Windows.Controls.SelectionChangedEventArgs]$e) {
         try {
-            if ($sender.SelectedItem -and $sender.SelectedItem.Tag) {
-                $selectedPlatform = $sender.SelectedItem.Tag.ToString()
+            if ($s.SelectedItem -and $s.SelectedItem.Tag) {
+                $selectedPlatform = $s.SelectedItem.Tag.ToString()
                 $currentPermissions = $this.GetCurrentUserPermissions()
                 $this.InitializeGameActionCombos($selectedPlatform, $currentPermissions)
             }

@@ -670,7 +670,7 @@ function Update-AppsToManagePanel {
 
                 # Add event handler for checkbox state changes
                 $checkbox.add_Checked({
-                        param($sender, $e)
+                        param($s, $e)
                         # Skip if updating panel
                         if (& $updatingFlag) {
                             return
@@ -679,7 +679,7 @@ function Update-AppsToManagePanel {
                     }.GetNewClosure())
 
                 $checkbox.add_Unchecked({
-                        param($sender, $e)
+                        param($s, $e)
                         # Skip if updating panel
                         if (& $updatingFlag) {
                             return
