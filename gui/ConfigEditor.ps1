@@ -969,7 +969,9 @@ function Save-CurrentGameData {
     if ($appsToManagePanel) {
         $appsToManage = @()
         foreach ($child in $appsToManagePanel.Children) {
-            if ($child -is [System.Windows.Controls.CheckBox] -and $child.IsChecked) {
+            if ($child -and
+                $child.GetType().FullName -eq 'System.Windows.Controls.CheckBox' -and
+                $child.IsChecked) {
                 $appsToManage += $child.Tag
             }
         }
@@ -1733,7 +1735,7 @@ function Show-LanguageChangeRestartMessage {
             [System.Windows.MessageBoxImage]::Question
         )
 
-        if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
+        if ("$result" -eq "Yes") {
             # Save configuration before restarting
             try {
                 Write-Verbose "Saving configuration before restart"

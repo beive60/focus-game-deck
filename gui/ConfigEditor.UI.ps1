@@ -85,8 +85,12 @@ class ConfigEditorUI {
 
             # Parse XAML
             Write-Host "[DEBUG] ConfigEditorUI: Step 3/6 - Parsing XAML"
-            $xmlReader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
-            $this.Window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
+            $xamlLoader = [ScriptBlock]::Create('
+                param($xmlReader)
+                return [System.Windows.Markup.XamlReader]::Load($xmlReader)
+            ')
+            $xmlReader = $null # Initialize to null
+            $this.Window = $xamlLoader.Invoke($xmlReader)[0]
             $xmlReader.Close()
             Write-Host "[DEBUG] ConfigEditorUI: Step 4/6 - XAML parsed successfully"
 
@@ -177,7 +181,7 @@ class ConfigEditorUI {
             $textBlock.FontSize = $Button.FontSize
             $textBlock.FontWeight = $Button.FontWeight
             $textBlock.FontStyle = $Button.FontStyle
-            $textBlock.Measure([System.Windows.Size]::new([double]::PositiveInfinity, [double]::PositiveInfinity))
+            $textBlock.Measure((New-Object System.Windows.Size([double]::PositiveInfinity, [double]::PositiveInfinity)))
             return $textBlock.DesiredSize.Width + 15
         } catch {
             return $Text.Length * 7
@@ -206,12 +210,12 @@ class ConfigEditorUI {
     .SYNOPSIS
         Sets button content with smart tooltip based on text width.
     #>
-    [void]SetButtonContentWithTooltip([System.Windows.Controls.Button]$Button, [string]$FullText) {
+    [void]SetButtonContentWithTooltip([Object]$Button, [string]$FullText) {
         if (-not $Button -or [string]::IsNullOrEmpty($FullText)) { return }
         try {
             $Button.Content = $FullText
             $Button.UpdateLayout()
-            $Button.Dispatcher.Invoke([System.Windows.Threading.DispatcherPriority]::Background, [action] {})
+            $Button.Dispatcher.Invoke("Background", [action] {})
             $buttonWidth = $Button.ActualWidth
             if ($buttonWidth -eq 0) { $buttonWidth = $Button.Width }
             $availableWidth = $buttonWidth - 15
@@ -272,25 +276,25 @@ class ConfigEditorUI {
                     Add-Type -AssemblyName PresentationFramework
                     $watermark = New-Object System.Windows.Controls.TextBlock
                     $watermark.Text = $placeholderText
-                    $watermark.Foreground = [System.Windows.Media.Brushes]::Gray
-                    $watermark.FontStyle = [System.Windows.FontStyles]::Italic
+                    $watermark.Foreground = "Gray"
+                    $watermark.FontStyle = "Italic"
+                    $watermark.VerticalAlignment = "Center"
                     $watermark.Margin = New-Object System.Windows.Thickness(5, 0, 0, 0)
-                    $watermark.VerticalAlignment = [System.Windows.VerticalAlignment]::Center
                     $watermark.IsHitTestVisible = $false
 
                     # Set watermark visibility based on text content
                     $appArgumentsTextBox.add_TextChanged({
                             param($s, $e)
                             $watermark.Visibility = if ([string]::IsNullOrEmpty($s.Text)) {
-                                [System.Windows.Visibility]::Visible
+                                "Visible"
                             } else {
-                                [System.Windows.Visibility]::Hidden
+                                "Hidden"
                             }
                         }.GetNewClosure())
 
                     # Add watermark to parent grid
                     $parent = $appArgumentsTextBox.Parent
-                    if ($parent -is [System.Windows.Controls.Grid]) {
+                    if ($parent -and $parent.GetType() -eq "System.Windows.Controls.Grid") {
                         $gridType = $parent.GetType()
 
                         $row = $gridType::GetRow($appArgumentsTextBox)
@@ -699,7 +703,7 @@ class ConfigEditorUI {
                     # Game info section
                     $infoPanel = New-Object System.Windows.Controls.StackPanel
                     $infoPanel.VerticalAlignment = "Center"
-                    [System.Windows.Controls.Grid]::SetColumn($infoPanel, 0)
+                    ("System.Windows.Controls.Grid" -as [type])::SetColumn($infoPanel, 0)
 
                     # Game name
                     $nameText = New-Object System.Windows.Controls.TextBlock
@@ -755,7 +759,7 @@ class ConfigEditorUI {
                     $launchButton.FontWeight = "SemiBold"
                     $launchButton.FontSize = 12
                     $launchButton.Cursor = "Hand"
-                    [System.Windows.Controls.Grid]::SetColumn($launchButton, 1)
+                    ("System.Windows.Controls.Grid" -as [type])::SetColumn($launchButton, 1)
 
                     # Add hover effects to launch button
                     $launchButton.add_MouseEnter({
@@ -933,14 +937,17 @@ class ConfigEditorUI {
                                 $placeholderText = New-Object System.Windows.Controls.TextBlock
                                 $placeholderText.Name = "ObsPasswordPlaceholder"
                                 $placeholderText.Text = $self.Messages.passwordSavedPlaceholder
-                                $placeholderText.Foreground = [System.Windows.Media.Brushes]::Gray
+                                # use static property reference to string (type converter will handle)
+                                $placeholderText.Foreground = "Gray"
                                 $placeholderText.IsHitTestVisible = $false
                                 $placeholderText.Margin = New-Object System.Windows.Thickness(10, 0, 0, 0)
-                                $placeholderText.VerticalAlignment = [System.Windows.VerticalAlignment]::Center
+                                # use static property reference to string (type converter will handle)
+                                $placeholderText.VerticalAlignment = "Center"
 
                                 # Set Grid position to match PasswordBox
-                                [System.Windows.Controls.Grid]::SetRow($placeholderText, [System.Windows.Controls.Grid]::GetRow($obsPasswordBox))
-                                [System.Windows.Controls.Grid]::SetColumn($placeholderText, [System.Windows.Controls.Grid]::GetColumn($obsPasswordBox))
+                                # use dynamic type resolution for static method calls
+                                ("System.Windows.Controls.Grid" -as [type])::SetRow($placeholderText, ("System.Windows.Controls.Grid" -as [type])::GetRow($obsPasswordBox))
+                                ("System.Windows.Controls.Grid" -as [type])::SetColumn($placeholderText, ("System.Windows.Controls.Grid" -as [type])::GetColumn($obsPasswordBox))
 
                                 $passwordPanel.Children.Add($placeholderText) | Out-Null
 
@@ -949,10 +956,11 @@ class ConfigEditorUI {
                                         param($s, $e)
                                         $placeholder = $s.Parent.Children | Where-Object { $_.Name -eq "ObsPasswordPlaceholder" }
                                         if ($placeholder) {
+                                            # use static property reference to string (type converter will handle)
                                             $placeholder.Visibility = if ($s.Password.Length -eq 0) {
-                                                [System.Windows.Visibility]::Visible
+                                                "Visible"
                                             } else {
-                                                [System.Windows.Visibility]::Collapsed
+                                                "Collapsed"
                                             }
                                         }
                                         # Clear SAVED tag when user starts typing
@@ -1276,7 +1284,7 @@ class ConfigEditorUI {
     .PARAMETER tag
     The tag value for the ComboBoxItem.
     #>
-    [void]AddComboBoxActionItem([System.Windows.Controls.ComboBox]$comboBox, [string]$content, [string]$tag) {
+    [void]AddComboBoxActionItem([Object]$comboBox, [string]$content, [string]$tag) {
         try {
             $item = New-Object System.Windows.Controls.ComboBoxItem
             $item.Content = $content
@@ -1298,7 +1306,7 @@ class ConfigEditorUI {
     .PARAMETER e
     Selection changed event arguments.
     #>
-    [void]OnPlatformSelectionChanged([object]$s, [System.Windows.Controls.SelectionChangedEventArgs]$e) {
+    [void]OnPlatformSelectionChanged([object]$s, [Object]$e) {
         try {
             if ($s.SelectedItem -and $s.SelectedItem.Tag) {
                 $selectedPlatform = $s.SelectedItem.Tag.ToString()
@@ -1366,7 +1374,9 @@ class ConfigEditorUI {
             } else {
                 Write-Warning "Event handler not initialized, cannot launch game"
                 $message = $this.GetLocalizedMessage("launchError")
-                [System.Windows.MessageBox]::Show($message, $this.GetLocalizedMessage("error"), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+
+                # use MessageBox invocation to dynamic resolution and stringified Enum
+                ("System.Windows.MessageBox" -as [type])::Show($message, $this.GetLocalizedMessage("error"), "OK", "Error")
             }
 
         } catch {
@@ -1374,7 +1384,9 @@ class ConfigEditorUI {
 
             # Show error message
             $errorMessage = $this.GetLocalizedMessage("launchFailed") -f $GameId, $_.Exception.Message
-            [System.Windows.MessageBox]::Show($errorMessage, $this.GetLocalizedMessage("launchError"), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+
+            # use MessageBox invocation to dynamic resolution and stringified Enum
+            ("System.Windows.MessageBox" -as [type])::Show($errorMessage, $this.GetLocalizedMessage("launchError"), "OK", "Error")
         }
     }
 }
