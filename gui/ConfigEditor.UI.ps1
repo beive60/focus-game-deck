@@ -89,9 +89,14 @@ class ConfigEditorUI {
                 param($xmlReader)
                 return [System.Windows.Markup.XamlReader]::Load($xmlReader)
             ')
-            $xmlReader = $null # Initialize to null
+
+            # Create XmlReader from content
+            $stringReader = New-Object System.IO.StringReader($xamlContent)
+            $xmlReader = [System.Xml.XmlReader]::Create($stringReader)
+
             $this.Window = $xamlLoader.Invoke($xmlReader)[0]
             $xmlReader.Close()
+            $stringReader.Close()
             Write-Host "[DEBUG] ConfigEditorUI: Step 4/6 - XAML parsed successfully"
 
             if ($null -eq $this.Window) {

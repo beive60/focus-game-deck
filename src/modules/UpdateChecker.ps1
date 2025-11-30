@@ -15,12 +15,15 @@
 # Date: 2025-09-24
 
 # Import version information
-$projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../.."
-$VersionModulePath = Join-Path -Path $projectRoot -ChildPath "build-tools/Version.ps1"
-if (Test-Path $VersionModulePath) {
-    . $VersionModulePath
-} else {
-    Write-Warning "Version module not found: $VersionModulePath"
+# Only attempt to load relative paths if PSScriptRoot is valid (Development mode)
+if (-not [string]::IsNullOrEmpty($PSScriptRoot)) {
+    $projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../.."
+    $VersionModulePath = Join-Path -Path $projectRoot -ChildPath "build-tools/Version.ps1"
+    if (Test-Path $VersionModulePath) {
+        . $VersionModulePath
+    } else {
+        Write-Warning "Version module not found: $VersionModulePath"
+    }
 }
 
 # Get latest release information from GitHub API
