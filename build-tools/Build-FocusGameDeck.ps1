@@ -304,6 +304,21 @@ if ($Build) {
             Write-Host "[ERROR] Config Editor script not found: $configEditorPath"
         }
 
+        # Build 2.5: Config Editor with console for debugging (ConfigEditor-Console.exe)
+        Write-Host ""
+        Write-Host "Building Config Editor (ConfigEditor-Console.exe) with bundled dependencies..."
+
+        $configEditorConsoleOutput = Join-Path $buildDir "ConfigEditor-Console.exe"
+        ps2exeParams.noConsole = $false
+        ps2exeParams.outputFile = $configEditorConsoleOutput
+        ps2exe @ps2exeParams
+
+        if (Test-Path $configEditorConsoleOutput) {
+            Write-Host "[OK] Config Editor executable created: $configEditorConsoleOutput"
+        } else {
+            Write-Host "[ERROR] Failed to create Config Editor executable."
+        }
+
         # Build 3: Game Launcher (Invoke-FocusGameDeck.exe)
         # Bundle all game launcher modules into the executable
         Write-Host ""
@@ -475,6 +490,7 @@ try {
         Write-Host "Multi-Executable Bundle Architecture:"
         Write-Host "  1. Focus-Game-Deck.exe - Main router (launches sub-processes)"
         Write-Host "  2. ConfigEditor.exe - GUI configuration editor (fully bundled)"
+        Write-Host "     ConfigEditor-Console.exe - GUI configuration editor with console (for debugging)"
         Write-Host "  3. Invoke-FocusGameDeck.exe - Game launcher (fully bundled)"
 
         # Copy necessary supporting files to build directory

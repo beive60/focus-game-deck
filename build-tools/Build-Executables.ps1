@@ -183,6 +183,21 @@ try {
         -STA $true `
         -IconFile $iconFile
 
+    if ($Verbose) {
+        Write-Host ""
+        Write-BuildMessage "Building Config Editor with Console (ConfigEditor-Console.exe) for debugging..." "INFO"
+        $configEditorConsoleExe = Join-Path $OutputDir "ConfigEditor-Console.exe"
+        $buildResults += Build-Executable `
+            -InputScript $configEditorScript `
+            -OutputExe $configEditorConsoleExe `
+            -Title "Focus Game Deck - Configuration Editor (Console)" `
+            -Description "Focus Game Deck GUI Configuration Editor with Console (for debugging)" `
+            -NoConsole $false `
+            -RequireAdmin $false `
+            -STA $true `
+            -IconFile $iconFile
+    }
+
     Write-Host ""
     Write-BuildMessage "Building Game Launcher (Invoke-FocusGameDeck.exe)..." "INFO"
     $gameLauncherScript = Join-Path $BuildDir "Invoke-FocusGameDeck-bundled.ps1"
@@ -206,7 +221,7 @@ try {
     Write-Host ("=" * 60)
 
     $successCount = ($buildResults | Where-Object { $_ -eq $true }).Count
-    $totalCount = $buildResults.Count
+    $totalCount = ($buildResults | Where-Object { $_ -eq $true }).Count + ($buildResults | Where-Object { $_ -eq $false }).Count
 
     Write-Host "Successful builds: $successCount / $totalCount"
 

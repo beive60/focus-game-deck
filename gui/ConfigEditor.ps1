@@ -57,12 +57,16 @@
 param(
     [switch]$NoAutoStart,
     [switch]$DebugMode,
-    [int]$AutoCloseSeconds = 0
+    [int]$AutoCloseSeconds = 0,
+    [switch]$Headless  # Headless mode: suppress UI dialogs and window display
 )
 
 if ($DebugMode) {
     $VerbosePreference = 'Continue'
 }
+
+# Expose headless flag to script scope for functions to read
+$script:Headless = [bool]$Headless
 
 # Set system-level encoding settings for proper character display
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
@@ -84,11 +88,12 @@ try {
 
 # Detect execution environment to determine application root
 $currentProcess = Get-Process -Id $PID
-$isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
+# Make isExecutable script-scoped so functions can access it
+$script:isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
 
 # Define the application root directory
 # This is critical for finding external resources (config, XAML, logs)
-if ($isExecutable) {
+if ($script:isExecutable) {
     # In executable mode, the root is the directory where the .exe file is located
     # ps2exe extracts to temp, but we need the actual exe location for external files
     $appRoot = Split-Path -Parent $currentProcess.Path
@@ -134,10 +139,26 @@ function Test-Prerequisites {
 function Initialize-WpfAssemblies {
     try {
         Write-Verbose "[INFO] ConfigEditor: Loading WPF assemblies"
-        Add-Type -AssemblyName PresentationFramework
-        Add-Type -AssemblyName PresentationCore
-        Add-Type -AssemblyName WindowsBase
-        Add-Type -AssemblyName System.Windows.Forms
+
+        # Load required assemblies with guard to prevent duplicate loading
+        $requiredAssemblies = @(
+            'PresentationFramework',
+            'PresentationCore',
+            'WindowsBase',
+            'System.Windows.Forms'
+        )
+        foreach ($assemblyName in $requiredAssemblies) {
+            if (-not ([AppDomain]::CurrentDomain.GetAssemblies().FullName -contains $assemblyName)) {
+                try {
+                    Add-Type -AssemblyName $assemblyName
+                    Write-Verbose "[INFO] Loaded assembly: $assemblyName"
+                } catch {
+                    Write-Warning "[WARNING] Failed to load assembly: $assemblyName - $($_.Exception.Message)"
+                }
+            } else {
+                Write-Verbose "[INFO] Assembly already loaded: $assemblyName"
+            }
+        }
         Write-Verbose "[OK] ConfigEditor: WPF assemblies loaded successfully"
         return $true
     } catch {
@@ -235,49 +256,82 @@ function Initialize-ConfigEditor {
         # Step 2: Load configuration
         Import-Configuration
 
-        # Step 3: NOW we can safely dot-source files that contain WPF types
+        # Step 3: Load script modules (must be done before using PowerShell classes)
         Write-Verbose "[INFO] ConfigEditor: Loading script modules"
 
         # Define module list (order matters - dependencies must be loaded first)
-        $guiModuleNames = @(
-            "ConfigEditor.JsonHelper.ps1",
-            "ConfigEditor.Mappings.ps1",
-            "ConfigEditor.State.ps1",
-            "ConfigEditor.Localization.ps1",
-            "ConfigEditor.UI.ps1",
-            "ConfigEditor.Events.ps1"
-        )
-
-        if (-not $isExecutable) {
-            # In script mode, load modules from file system
+        if (-not $script:isExecutable) {
+            # In script mode, load modules from file system relative to project root
             Write-Verbose "[INFO] ConfigEditor: Running in script mode - loading modules from filesystem"
 
-            foreach ($guiModuleName in $guiModuleNames) {
-                $guiModulePath = Join-Path -Path $appRoot -ChildPath "gui/$guiModuleName"
-                if (Test-Path $guiModulePath) {
-                    Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - $guiModulePath"
-                    . $guiModulePath
-                    Write-Verbose "[OK] ConfigEditor: Module Loaded: $(Split-Path $guiModulePath -Leaf)"
-                } else {
-                    Write-Error "[ERROR] ConfigEditor: Missing required module not found: $guiModulePath"
-                    throw "Missing required module: $guiModuleName"
-                }
+            try {
+                Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.JsonHelper.ps1"
+                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.JsonHelper.ps1")
+                Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.JsonHelper.ps1"
+
+                Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Mappings.ps1"
+                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.Mappings.ps1")
+                Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Mappings.ps1"
+
+                Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.State.ps1"
+                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.State.ps1")
+                Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.State.ps1"
+
+                Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Localization.ps1"
+                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.Localization.ps1")
+                Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Localization.ps1"
+
+                Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.UI.ps1"
+                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.UI.ps1")
+                Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.UI.ps1"
+
+                Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Events.ps1"
+                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.Events.ps1")
+                Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Events.ps1"
+            } catch {
+                # The error record ($_) from a dot-sourcing failure contains details
+                # about the file that could not be loaded.
+                Write-Error "[ERROR] ConfigEditor: A required GUI module could not be loaded."
+                Write-Error "Error Details: $($_.Exception.Message)"
+                # Re-throw the exception to halt execution, as the GUI cannot function.
+                throw "Module loading failed. The application cannot continue."
             }
         }
+        # else {
+        #     # In executable mode, modules are embedded and extracted to $PSScriptRoot
+        #     Write-Verbose "[INFO] ConfigEditor: Running in executable mode - loading embedded modules"
+
+        #     foreach ($guiModuleName in $guiModuleNames) {
+        #         # Embedded files are flat in PSScriptRoot or preserved if folder structure was kept
+        #         # For GUI modules, ps2exe embeds them. Let's check flat first, then gui/
+        #         $embeddedPath = Join-Path -Path $PSScriptRoot -ChildPath $guiModuleName
+        #         if (-not (Test-Path $embeddedPath)) {
+        #             $embeddedPath = Join-Path -Path $PSScriptRoot -ChildPath "gui/$guiModuleName"
+        #         }
+
+        #         if (Test-Path $embeddedPath) {
+        #             Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing embedded module - $embeddedPath"
+        #             . $embeddedPath
+        #             Write-Verbose "[OK] ConfigEditor: Embedded Module Loaded: $guiModuleName"
+        #         } else {
+        #             Write-Error "[ERROR] ConfigEditor: Embedded module not found: $guiModuleName"
+        #             throw "Missing embedded module: $guiModuleName"
+        #         }
+        #     }
+        # }
 
         Write-Verbose "[OK] ConfigEditor: Script modules loaded successfully"
 
-        # Step 3.5: Validate UI mappings
+        # Step 4: Validate UI mappings
         if (-not (Test-UIMappings)) {
             Write-Host "[WARNING] ConfigEditor: UI mappings validation failed - Some features may not work properly"
         }
 
-        # Step 3.6: Import additional modules (Version, UpdateChecker, etc.)
+        # Step 5: Import additional modules (Version, UpdateChecker, etc.)
         Write-Verbose "[INFO] ConfigEditor: Importing additional modules"
         Import-AdditionalModules
-        Write-Verbose "[OK] ConfigEditor: Additional modules imported"
 
-        # Step 4: Initialize localization
+        # Step 6: Initialize localization
         Write-Verbose "[INFO] ConfigEditor: Initializing localization"
         try {
             # Pass shared project root into localization class (PowerShell classes cannot access script-scoped variables)
@@ -285,27 +339,31 @@ function Initialize-ConfigEditor {
             Write-Verbose "[OK] ConfigEditor: Localization initialized - Language: $($script:Localization.CurrentLanguage)"
         } catch {
             Write-Error "[ERROR] ConfigEditor: Failed to initialize localization: $($_.Exception.Message)"
-            throw
         }
 
         # Step 5: Initialize state manager with config path
         Write-Verbose "[INFO] ConfigEditor: Initializing state manager"
-        $stateManager = [ConfigEditorState]::new($script:ConfigPath)
-        $stateManager.LoadConfiguration()
+        try {
+            $stateManager = [ConfigEditorState]::new($script:ConfigPath)
+            $stateManager.LoadConfiguration()
 
-        # Validate configuration data
-        if ($null -eq $stateManager.ConfigData) {
-            throw "Configuration data is null after loading"
+            # Validate configuration data
+            if ($null -eq $stateManager.ConfigData) {
+                throw "Configuration data is null after loading"
+            }
+            Write-Verbose "[INFO] ConfigEditor: Configuration data structure - $($stateManager.ConfigData.GetType().Name)"
+
+            $stateManager.SaveOriginalConfig()
+            Write-Verbose "[OK] ConfigEditor: State manager initialized successfully"
+
+            # Store state manager in script scope for access from functions
+            $script:StateManager = $stateManager
+        } catch {
+            Write-Error "[ERROR] ConfigEditor: Failed to initialize state manager: $($_.Exception.Message)"
+            throw
         }
-        Write-Verbose "[INFO] ConfigEditor: Configuration data structure - $($stateManager.ConfigData.GetType().Name)"
 
-        $stateManager.SaveOriginalConfig()
-        Write-Verbose "[OK] ConfigEditor: State manager initialized successfully"
-
-        # Store state manager in script scope for access from functions
-        $script:StateManager = $stateManager
-
-        # Step 6: Initialize UI manager
+        # Step 7: Initialize UI manager
         Write-Verbose "[INFO] ConfigEditor: Initializing UI manager"
         try {
             # Validate mappings are available before creating UI
@@ -366,7 +424,7 @@ function Initialize-ConfigEditor {
             throw
         }
 
-        # Step 7: Initialize event handler
+        # Step 8: Initialize event handler
         # Pass project root into events handler so it can construct file paths without referencing script-scoped variables
         $eventHandler = [ConfigEditorEvents]::new($uiManager, $stateManager, $appRoot)
 
@@ -378,7 +436,7 @@ function Initialize-ConfigEditor {
 
         $eventHandler.RegisterAll()
 
-        # Step 8: Load data to UI
+        # Step 9: Load data to UI
         Write-Verbose "[INFO] ConfigEditor: Loading data to UI"
         try {
             if ($null -eq $uiManager) {
@@ -405,11 +463,15 @@ function Initialize-ConfigEditor {
         $script:IsInitializationComplete = $true
         Write-Verbose "[OK] ConfigEditor: Initialization completed - UI is ready for user interaction"
 
-        # Step 9: Show window
+        # Step 10: Show window
+        # Create a local reference to the window object
+        $window = $script:Window
         Write-Verbose "[INFO] ConfigEditor: Showing window"
         try {
-            # Debug mode: Auto-close after specified seconds
-            if ($DebugMode -and $AutoCloseSeconds -gt 0) {
+            if ($Headless) {
+                Write-Verbose "[INFO] ConfigEditor: Headless mode enabled - skipping window display"
+                # In headless mode, do not show the UI. Initialization verification only.
+            } elseif ($DebugMode -and $AutoCloseSeconds -gt 0) {
                 Write-Verbose "[DEBUG] ConfigEditor: Window will auto-close in $AutoCloseSeconds seconds"
 
                 # Create a timer to auto-close the window
@@ -478,15 +540,17 @@ function Initialize-ConfigEditor {
         }
         Write-Host "[ERROR] ConfigEditor: Location - Line $($_.InvocationInfo.ScriptLineNumber)"
 
-        try {
-            [System.Windows.MessageBox]::Show(
-                "An initialization error occurred: $($_.Exception.Message)",
-                "Error",
-                [System.Windows.MessageBoxButton]::OK,
-                [System.Windows.MessageBoxImage]::Error
-            )
-        } catch {
-            Write-Host "[ERROR] ConfigEditor: Failed to show error dialog - $($_.Exception.Message)"
+        if (-not $Headless) {
+            try {
+                [System.Windows.MessageBox]::Show(
+                    "An initialization error occurred: $($_.Exception.Message)",
+                    "Error",
+                    [System.Windows.MessageBoxButton]::OK,
+                    [System.Windows.MessageBoxImage]::Error
+                )
+            } catch {
+                Write-Host "[ERROR] ConfigEditor: Failed to show error dialog - $($_.Exception.Message)"
+            }
         }
     }
 }
@@ -494,54 +558,35 @@ function Initialize-ConfigEditor {
 # Import additional modules after WPF assemblies are loaded
 function Import-AdditionalModules {
     try {
-        # Use $appRoot defined at top of the script (parent of gui folder)
-        Write-Verbose "Project root: $appRoot"
+        # Load modules individually with dedicated error handling for each.
+        # This makes the loading process more robust, as a failure in one optional
+        # module will not prevent others from being loaded.
 
-        # Define modules to load and their configurations
-        $modulesToLoad = @(
-            @{
-                Path = "scripts/LanguageHelper.ps1"
-                GlobalFunctions = @{}
-            },
-            @{
-                Path = "build-tools/Version.ps1"
-                GlobalFunctions = @{ "Get-ProjectVersion" = "GetProjectVersionFunc" }
-            },
-            @{
-                Path = "src/modules/UpdateChecker.ps1"
-                GlobalFunctions = @{ "Test-UpdateAvailable" = "TestUpdateAvailableFunc" }
-            }
-        )
+        # --- Load LanguageHelper.ps1 ---
+        try {
+            Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing additional module - scripts/LanguageHelper.ps1"
+            . (Join-Path -Path $appRoot -ChildPath "scripts/LanguageHelper.ps1")
+            Write-Verbose "[OK] ConfigEditor: Loaded: LanguageHelper.ps1"
+        } catch {
+            Write-Warning "[WARN] ConfigEditor: Could not load 'scripts/LanguageHelper.ps1'. Some functionality may be affected. Details: $($_.Exception.Message)"
+        }
 
-        # Load modules in a loop
-        foreach ($moduleInfo in $modulesToLoad) {
-            $modulePath = Join-Path $appRoot $moduleInfo.Path
-            $moduleName = Split-Path $modulePath -Leaf
+        # --- Load Version.ps1 (for version info) ---
+        try {
+            Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing additional module - build-tools/Version.ps1"
+            . (Join-Path -Path $appRoot -ChildPath "build-tools/Version.ps1")
+            Write-Verbose "[OK] ConfigEditor: Loaded: Version.ps1"
+        } catch {
+            Write-Warning "[WARN] ConfigEditor: Could not load 'build-tools/Version.ps1'. Version info will be unavailable. Details: $($_.Exception.Message)"
+        }
 
-            if (-not (Test-Path $modulePath)) {
-                Write-Warning "Module not found: $modulePath"
-                continue
-            }
-
-            # Load the module with error handling
-            try {
-                . $modulePath
-                Write-Verbose "Loaded: $moduleName"
-            } catch {
-                Write-Host "[WARNING] ConfigEditor: Error loading $($moduleName) - $($_.Exception.Message)"
-                continue # Skip to next module if loading failed
-            }
-
-            # Check for and store global function references if specified
-            foreach ($functionName in $moduleInfo.GlobalFunctions.Keys) {
-                $globalVarName = $moduleInfo.GlobalFunctions[$functionName]
-                if (Test-Path "function:$functionName") {
-                    Write-Verbose "[OK] ConfigEditor: $functionName function loaded successfully"
-                    Set-Variable -Name $globalVarName -Value (Get-Item "function:$functionName") -Scope Global
-                } else {
-                    Write-Host "[WARNING] ConfigEditor: $functionName function not available after loading $moduleName"
-                }
-            }
+        # --- Load UpdateChecker.ps1 (for update checks) ---
+        try {
+            Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing additional module - src/modules/UpdateChecker.ps1"
+            . (Join-Path -Path $appRoot -ChildPath "src/modules/UpdateChecker.ps1")
+            Write-Verbose "[OK] ConfigEditor: Loaded: UpdateChecker.ps1"
+        } catch {
+            Write-Warning "[WARN] ConfigEditor: Could not load 'src/modules/UpdateChecker.ps1'. Update checks will be disabled. Details: $($_.Exception.Message)"
         }
     } catch {
         Write-Host "[WARNING] ConfigEditor: Failed to import additional modules - $($_.Exception.Message)"
@@ -625,7 +670,7 @@ function Update-AppsToManagePanel {
 
                 # Add event handler for checkbox state changes
                 $checkbox.add_Checked({
-                        param($sender, $e)
+                        param($s, $e)
                         # Skip if updating panel
                         if (& $updatingFlag) {
                             return
@@ -634,7 +679,7 @@ function Update-AppsToManagePanel {
                     }.GetNewClosure())
 
                 $checkbox.add_Unchecked({
-                        param($sender, $e)
+                        param($s, $e)
                         # Skip if updating panel
                         if (& $updatingFlag) {
                             return
@@ -780,20 +825,20 @@ function Update-TerminationSettingsVisibility {
 
 <#
 .SYNOPSIS
-    Helper function to safely set or add a property to a PSCustomObject.
+Helper function to safely set or add a property to a PSCustomObject.
 
 .DESCRIPTION
-    Checks if a property exists on an object and sets its value, or adds the property if it doesn't exist.
-    This prevents errors when trying to set non-existent properties on PSCustomObject instances.
+Checks if a property exists on an object and sets its value, or adds the property if it doesn't exist.
+This prevents errors when trying to set non-existent properties on PSCustomObject instances.
 
 .PARAMETER Object
-    The PSCustomObject to modify.
+The PSCustomObject to modify.
 
 .PARAMETER PropertyName
-    The name of the property to set or add.
+The name of the property to set or add.
 
 .PARAMETER Value
-    The value to assign to the property.
+The value to assign to the property.
 #>
 function Set-PropertyValue {
     param(
@@ -924,7 +969,9 @@ function Save-CurrentGameData {
     if ($appsToManagePanel) {
         $appsToManage = @()
         foreach ($child in $appsToManagePanel.Children) {
-            if ($child -is [System.Windows.Controls.CheckBox] -and $child.IsChecked) {
+            if ($child -and
+                $child.GetType().FullName -eq 'System.Windows.Controls.CheckBox' -and
+                $child.IsChecked) {
                 $appsToManage += $child.Tag
             }
         }
@@ -1183,18 +1230,18 @@ function Save-CurrentAppData {
 
 <#
 .SYNOPSIS
-    Encrypts a plain text password using Windows Data Protection API (DPAPI).
+Encrypts a plain text password using Windows Data Protection API (DPAPI).
 
 .DESCRIPTION
-    Uses ConvertTo-SecureString and ConvertFrom-SecureString to encrypt passwords
-    with DPAPI. The encrypted string can only be decrypted by the same user on
-    the same machine.
+Uses ConvertTo-SecureString and ConvertFrom-SecureString to encrypt passwords
+with DPAPI. The encrypted string can only be decrypted by the same user on
+the same machine.
 
 .PARAMETER PlainTextPassword
-    The plain text password to encrypt.
+The plain text password to encrypt.
 
 .OUTPUTS
-    String - The encrypted password string.
+String - The encrypted password string.
 #>
 function Protect-Password {
     param(
@@ -1220,17 +1267,17 @@ function Protect-Password {
 
 <#
 .SYNOPSIS
-    Decrypts a DPAPI-encrypted password string.
+Decrypts a DPAPI-encrypted password string.
 
 .DESCRIPTION
-    Uses ConvertTo-SecureString to decrypt DPAPI-encrypted passwords.
-    Supports both encrypted strings and plain text (for backward compatibility).
+Uses ConvertTo-SecureString to decrypt DPAPI-encrypted passwords.
+Supports both encrypted strings and plain text (for backward compatibility).
 
 .PARAMETER EncryptedPassword
-    The encrypted password string to decrypt.
+The encrypted password string to decrypt.
 
 .OUTPUTS
-    String - The decrypted plain text password.
+String - The decrypted plain text password.
 #>
 function Unprotect-Password {
     param(
@@ -1652,15 +1699,15 @@ function Set-ConfigModified {
 
 <#
 .SYNOPSIS
-    Shows a message prompting the user to restart the application after changing language.
+Shows a message prompting the user to restart the application after changing language.
 
 .DESCRIPTION
-    Displays a confirmation dialog asking if the user wants to restart the application
-    to apply language changes. If the user agrees, saves the configuration and restarts
-    the application.
+Displays a confirmation dialog asking if the user wants to restart the application
+to apply language changes. If the user agrees, saves the configuration and restarts
+the application.
 
 .OUTPUTS
-    None
+None
 #>
 function Show-LanguageChangeRestartMessage {
     try {
@@ -1688,7 +1735,7 @@ function Show-LanguageChangeRestartMessage {
             [System.Windows.MessageBoxImage]::Question
         )
 
-        if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
+        if ("$result" -eq "Yes") {
             # Save configuration before restarting
             try {
                 Write-Verbose "Saving configuration before restart"
@@ -1798,20 +1845,20 @@ function Show-PathSelectionDialog {
 
 <#
 .SYNOPSIS
-    Gets a localized message for the specified key.
+Gets a localized message for the specified key.
 
 .DESCRIPTION
-    Retrieves a localized message from the loaded messages using the current language.
-    Supports optional format arguments for string formatting.
+Retrieves a localized message from the loaded messages using the current language.
+Supports optional format arguments for string formatting.
 
 .PARAMETER Key
-    The message key to retrieve.
+The message key to retrieve.
 
 .PARAMETER FormatArgs
-    Optional array of arguments for string formatting.
+Optional array of arguments for string formatting.
 
 .OUTPUTS
-    String - The localized message.
+String - The localized message.
 #>
 function Get-SafeLocalizedMessage {
     param(
@@ -1969,6 +2016,12 @@ function Show-SafeMessage {
             "Yes" { [System.Windows.MessageBoxResult]::Yes }
             "No" { [System.Windows.MessageBoxResult]::No }
             default { [System.Windows.MessageBoxResult]::OK }
+        }
+
+        # If running in headless mode, print to console and return the default result
+        if ($script:Headless) {
+            Write-Host "[$MessageType] $titleText : $messageText"
+            return $defaultResultType
         }
 
         # Show message box

@@ -10,7 +10,7 @@
     }
 
     # Helper method to set ComboBox selection by matching Tag property
-    [void] SetComboBoxSelectionByTag([System.Windows.Controls.ComboBox]$ComboBox, [string]$TagValue) {
+    [void] SetComboBoxSelectionByTag([Object]$ComboBox, [string]$TagValue) {
         if (-not $ComboBox) {
             Write-Warning "ComboBox is null, cannot set selection"
             return
@@ -20,7 +20,11 @@
             # Find the ComboBoxItem with matching Tag
             $matchingItem = $null
             foreach ($item in $ComboBox.Items) {
-                if ($item -is [System.Windows.Controls.ComboBoxItem] -and $item.Tag -eq $TagValue) {
+                if (
+                    $item -and
+                    $item.GetType().FullName -eq 'System.Windows.Controls.ComboBoxItem' -and
+                    $item.Tag -eq $TagValue
+                ) {
                     $matchingItem = $item
                     break
                 }
@@ -937,7 +941,9 @@
                         if ($appsToManagePanel) {
                             $appsToManage = @()
                             foreach ($child in $appsToManagePanel.Children) {
-                                if ($child -is [System.Windows.Controls.CheckBox] -and $child.IsChecked) {
+                                if ($child -and
+                                    $child.GetType().FullName -eq 'System.Windows.Controls.CheckBox' -and
+                                    $child.IsChecked) {
                                     $appsToManage += $child.Tag
                                 }
                             }
@@ -1060,7 +1066,7 @@
                 Write-Host "[WARNING] ConfigEditorEvents: Update checker not available"
                 $message = $this.uiManager.GetLocalizedMessage("updateCheckFailed")
                 $title = $this.uiManager.GetLocalizedMessage("updateCheckTitle")
-                [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
+                ("System.Windows.MessageBox" -as [type])::Show($message, $title, "OK", "Warning")
                 return
             }
 
@@ -1076,9 +1082,9 @@
                     $message = $this.uiManager.GetLocalizedMessage("updateAvailable") -f $updateInfo.LatestVersion, $currentVersion
                     $title = $this.uiManager.GetLocalizedMessage("updateCheckTitle")
 
-                    $result = [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::YesNo, [System.Windows.MessageBoxImage]::Question)
+                    $result = ("System.Windows.MessageBox" -as [type])::Show($message, $title, "YesNo", "Question")
 
-                    if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
+                    if ("$result" -eq "Yes") {
                         # Open the release page
                         if ($updateInfo.ReleaseUrl) {
                             Write-Host "[INFO] ConfigEditorEvents: Opening release page - $($updateInfo.ReleaseUrl)"
@@ -1092,7 +1098,7 @@
                     $message = $this.uiManager.GetLocalizedMessage("noUpdateAvailable") -f $currentVersion
                     $title = $this.uiManager.GetLocalizedMessage("updateCheckTitle")
 
-                    [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+                    ("System.Windows.MessageBox" -as [type])::Show($message, $title, "OK", "Information")
                 }
             } else {
                 Write-Host "[WARNING] ConfigEditorEvents: No update info received"
@@ -1100,7 +1106,7 @@
                 $message = $this.uiManager.GetLocalizedMessage("updateCheckFailed")
                 $title = $this.uiManager.GetLocalizedMessage("updateCheckTitle")
 
-                [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
+                ("System.Windows.MessageBox" -as [type])::Show($message, $title, "OK", "Warning")
             }
 
             Write-Host "[OK] ConfigEditorEvents: Update check completed"
@@ -1112,7 +1118,7 @@
             $message = $this.uiManager.GetLocalizedMessage("updateCheckError") -f $_.Exception.Message
             $title = $this.uiManager.GetLocalizedMessage("updateCheckTitle")
 
-            [System.Windows.MessageBox]::Show($message, $title, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+            ("System.Windows.MessageBox" -as [type])::Show($message, $title, "OK", "Error")
         }
     }
 
@@ -1281,7 +1287,7 @@
     }
 
     # Handle window closing
-    [void] HandleWindowClosing([System.ComponentModel.CancelEventArgs]$e) {
+    [void] HandleWindowClosing([Object]$e) {
         try {
             Write-Host "[DEBUG] ConfigEditorEvents: HandleWindowClosing called"
 
@@ -1309,11 +1315,16 @@
 
                         # Expand a small set of known placeholders so fragment can include $title/$message etc.
                         # Replace literal tokens like $title in the fragment with the runtime values.
-                        $dialogXaml = $dialogXaml -replace '\$title', [System.Text.RegularExpressions.Regex]::Escape($title)
-                        $dialogXaml = $dialogXaml -replace '\$message', [System.Text.RegularExpressions.Regex]::Escape($message)
-                        $dialogXaml = $dialogXaml -replace '\$saveAndClose', [System.Text.RegularExpressions.Regex]::Escape($saveAndClose)
-                        $dialogXaml = $dialogXaml -replace '\$discardAndClose', [System.Text.RegularExpressions.Regex]::Escape($discardAndClose)
-                        $dialogXaml = $dialogXaml -replace '\$cancel', [System.Text.RegularExpressions.Regex]::Escape($cancel)
+                        $dialogXaml = $dialogXaml -replace '\$title',
+                        ("System.Text.RegularExpressions.Regex" -as [type])::Escape($title)
+                        $dialogXaml = $dialogXaml -replace '\$message',
+                        ("System.Text.RegularExpressions.Regex" -as [type])::Escape($message)
+                        $dialogXaml = $dialogXaml -replace '\$saveAndClose',
+                        ("System.Text.RegularExpressions.Regex" -as [type])::Escape($saveAndClose)
+                        $dialogXaml = $dialogXaml -replace '\$discardAndClose',
+                        ("System.Text.RegularExpressions.Regex" -as [type])::Escape($discardAndClose)
+                        $dialogXaml = $dialogXaml -replace '\$cancel',
+                        ("System.Text.RegularExpressions.Regex" -as [type])::Escape($cancel)
                     } catch {
                         Write-Warning "Failed to read dialog XAML fragment at {$dialogXamlPath}: $($_.Exception.Message)"
                         $dialogXaml = $null
@@ -1325,7 +1336,7 @@
 
 
                 $reader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($dialogXaml))
-                $dialogWindow = [Windows.Markup.XamlReader]::Load($reader)
+                $dialogWindow = ("System.Windows.Markup.XamlReader" -as [type])::Load($reader)
                 $reader.Close()
 
                 # Set owner for modal behavior
@@ -1412,7 +1423,9 @@
                     if ($appsToManagePanel) {
                         $appsToManage = @()
                         foreach ($child in $appsToManagePanel.Children) {
-                            if ($child -is [System.Windows.Controls.CheckBox] -and $child.IsChecked) {
+                            if ($child -and
+                                $child.GetType().FullName -eq 'System.Windows.Controls.CheckBox' -and
+                                $child.IsChecked) {
                                 $appsToManage += $child.Tag
                             }
                         }
@@ -1469,7 +1482,9 @@
                     if ($appsToManagePanel) {
                         $appsToManage = @()
                         foreach ($child in $appsToManagePanel.Children) {
-                            if ($child -is [System.Windows.Controls.CheckBox] -and $child.IsChecked) {
+                            if ($child -and
+                                $child.GetType().FullName -eq 'System.Windows.Controls.CheckBox' -and
+                                $child.IsChecked) {
                                 $appsToManage += $child.Tag
                             }
                         }
@@ -1779,7 +1794,7 @@
             Write-Host "[DEBUG] ConfigEditorEvents: About Title - $aboutTitle"
 
             # Show the about dialog
-            [System.Windows.MessageBox]::Show($aboutMessage, $aboutTitle, [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+            ("System.Windows.MessageBox" -as [type])::Show($aboutMessage, $aboutTitle, "OK", "Information")
 
             Write-Host "[OK] ConfigEditorEvents: About dialog completed"
 
@@ -1796,10 +1811,12 @@
             $selectedGames = @()
 
             foreach ($child in $gameLauncherList.Children) {
-                if ($child -is [System.Windows.Controls.Border]) {
+                if ($child -and $child.GetType() -eq "System.Windows.Controls.Border") {
                     $grid = $child.Child
-                    if ($grid -is [System.Windows.Controls.Grid]) {
-                        $checkBox = $grid.Children | Where-Object { $_ -is [System.Windows.Controls.CheckBox] } | Select-Object -First 1
+                    if ($grid -and $grid.GetType() -eq "System.Windows.Controls.Grid") {
+                        $checkBox = $grid.Children |
+                        Where-Object { $_.GetType().FullName -eq "System.Windows.Controls.CheckBox" } |
+                        Select-Object -First 1
                         if ($checkBox -and $checkBox.IsChecked -and $checkBox.Tag) {
                             $selectedGames += $checkBox.Tag
                         }

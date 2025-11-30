@@ -211,9 +211,14 @@ function Initialize-BuildEnvironment {
 function Build-AllExecutables {
     Write-BuildLog "Building all executables..." "INFO" "Yellow"
 
-    # Use specialized build script
+    # Path to the specialized build script
     $buildScript = Join-Path $PSScriptRoot "Build-Executables.ps1"
-    return Invoke-BuildScript -ScriptPath $buildScript -Arguments @() -Description "Building all executables"
+
+    # Forward the parent's Verbose switch to the child script when set
+    $buildArgs = @()
+    if ($Verbose) { $buildArgs += "-Verbose" }
+
+    return Invoke-BuildScript -ScriptPath $buildScript -Arguments $buildArgs -Description "Building all executables"
 }
 
 # Function to sign all executables
@@ -524,6 +529,7 @@ try {
         exit $(if ($success) { 0 } else { 1 })
     }
 
+
     # Development build workflow
     if ($Development) {
         Write-BuildLog "Starting DEVELOPMENT build workflow" "INFO" "Cyan"
@@ -531,17 +537,35 @@ try {
         # Step 1: Install dependencies
         $success = Initialize-BuildEnvironment
 
-        # Step 2: Build executables (bundling is now handled internally by Build-Executables.ps1)
+        # Step 2: Bundle entry-point scripts
+        if ($success) {
+            $bundlerScript = Join-Path $PSScriptRoot "Invoke-PsScriptBundler.ps1"
+            $projectRoot = Split-Path $PSScriptRoot -Parent
+            $buildDir = Join-Path $PSScriptRoot "build"
+            $entryPoints = @(
+                @{ Entry = Join-Path $projectRoot "gui/ConfigEditor.ps1"; Out = Join-Path $buildDir "ConfigEditor-bundled.ps1" },
+                @{ Entry = Join-Path $projectRoot "src/Invoke-FocusGameDeck.ps1"; Out = Join-Path $buildDir "Invoke-FocusGameDeck-bundled.ps1" },
+                @{ Entry = Join-Path $projectRoot "src/Main.PS1"; Out = Join-Path $buildDir "Main-bundled.ps1" }
+            )
+            foreach ($ep in $entryPoints) {
+                $bundlerArgs = @("-EntryPoint", $ep.Entry, "-OutputPath", $ep.Out, "-ProjectRoot", $projectRoot)
+                # Do NOT add -Verbose argument; rely on $VerbosePreference propagation
+                $success = Invoke-BuildScript -ScriptPath $bundlerScript -Arguments $bundlerArgs -Description "Bundling $($ep.Entry)"
+                if (-not $success) { break }
+            }
+        }
+
+        # Step 3: Build executables
         if ($success) {
             $success = Build-AllExecutables
         }
 
-        # Step 3: Copy resources
+        # Step 4: Copy resources
         if ($success) {
             $success = Copy-BuildResources
         }
 
-        # Step 4: Create release package
+        # Step 5: Create release package
         if ($success) {
             $success = New-ReleasePackage -IsSigned $false
         }
@@ -554,17 +578,35 @@ try {
         # Step 1: Install dependencies
         $success = Initialize-BuildEnvironment
 
-        # Step 2: Build executables (bundling is now handled internally by Build-Executables.ps1)
+        # Step 2: Bundle entry-point scripts
+        if ($success) {
+            $bundlerScript = Join-Path $PSScriptRoot "Invoke-PsScriptBundler.ps1"
+            $projectRoot = Split-Path $PSScriptRoot -Parent
+            $buildDir = Join-Path $PSScriptRoot "build"
+            $entryPoints = @(
+                @{ Entry = Join-Path $projectRoot "gui/ConfigEditor.ps1"; Out = Join-Path $buildDir "ConfigEditor-bundled.ps1" },
+                @{ Entry = Join-Path $projectRoot "src/Invoke-FocusGameDeck.ps1"; Out = Join-Path $buildDir "Invoke-FocusGameDeck-bundled.ps1" },
+                @{ Entry = Join-Path $projectRoot "src/Main.PS1"; Out = Join-Path $buildDir "Main-bundled.ps1" }
+            )
+            foreach ($ep in $entryPoints) {
+                $bundlerArgs = @("-EntryPoint", $ep.Entry, "-OutputPath", $ep.Out)
+                if ($Verbose) { $bundlerArgs += "-Verbose" }
+                $success = Invoke-BuildScript -ScriptPath $bundlerScript -Arguments $bundlerArgs -Description "Bundling $($ep.Entry)"
+                if (-not $success) { break }
+            }
+        }
+
+        # Step 3: Build executables
         if ($success) {
             $success = Build-AllExecutables
         }
 
-        # Step 3: Copy resources
+        # Step 4: Copy resources
         if ($success) {
             $success = Copy-BuildResources
         }
 
-        # Step 4: Sign executables
+        # Step 5: Sign executables
         if ($success) {
             $signingSuccess = Add-CodeSignatures
             if ($signingSuccess) {
@@ -575,7 +617,7 @@ try {
             }
         }
 
-        # Step 5: Create release package
+        # Step 6: Create release package
         if ($success) {
             $success = New-ReleasePackage -IsSigned $isSigned
         }
