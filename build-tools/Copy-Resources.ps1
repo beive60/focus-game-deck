@@ -182,6 +182,54 @@ try {
     }
 
     Write-Host ""
+    # Scripts folder copy
+    $scriptsSource = Join-Path $SourceRoot "scripts"
+    $scriptsDest = Join-Path $DestinationDir "scripts"
+    $copyResults += Copy-DirectoryContents -SourcePath $scriptsSource -DestPath $scriptsDest -Description "script files"
+
+    # Build tools version file
+    $versionSource = Join-Path $SourceRoot "build-tools/Version.ps1"
+    $buildToolsDest = Join-Path $DestinationDir "build-tools"
+    if (-not (Test-Path $buildToolsDest)) { New-Item -ItemType Directory -Path $buildToolsDest -Force | Out-Null }
+    if (Test-Path $versionSource) {
+        Copy-Item -Path $versionSource -Destination $buildToolsDest -Force
+        Write-CopyMessage "Copied: Version.ps1" "SUCCESS"
+    }
+
+    Write-Host ""
+    # 1. Copy scripts directory (LanguageHelper.ps1 etc.)
+    $scriptsSource = Join-Path $SourceRoot "scripts"
+    $scriptsDest = Join-Path $DestinationDir "scripts"
+    $copyResults += Copy-DirectoryContents `
+        -SourcePath $scriptsSource `
+        -DestPath $scriptsDest `
+        -Description "utility scripts"
+
+    # 2. Copy build-tools/Version.ps1
+    $versionSource = Join-Path $SourceRoot "build-tools/Version.ps1"
+    $buildToolsDest = Join-Path $DestinationDir "build-tools"
+    if (-not (Test-Path $buildToolsDest)) {
+        New-Item -ItemType Directory -Path $buildToolsDest -Force | Out-Null
+    }
+    if (Test-Path $versionSource) {
+        Copy-Item -Path $versionSource -Destination $buildToolsDest -Force
+        Write-CopyMessage "Copied: Version.ps1" "SUCCESS"
+    } else {
+        Write-CopyMessage "Version.ps1 not found" "WARNING"
+    }
+
+    # 3. Copy src/modules/UpdateChecker.ps1 (Loaded dynamically)
+    $updateCheckerSource = Join-Path $SourceRoot "src/modules/UpdateChecker.ps1"
+    $srcModulesDest = Join-Path $DestinationDir "src/modules"
+    if (-not (Test-Path $srcModulesDest)) {
+        New-Item -ItemType Directory -Path $srcModulesDest -Force | Out-Null
+    }
+    if (Test-Path $updateCheckerSource) {
+        Copy-Item -Path $updateCheckerSource -Destination $srcModulesDest -Force
+        Write-CopyMessage "Copied: UpdateChecker.ps1" "SUCCESS"
+    }
+
+    Write-Host ""
     Write-Host ("=" * 60)
     Write-Host "COPY SUMMARY"
     Write-Host ("=" * 60)

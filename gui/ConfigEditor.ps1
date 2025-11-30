@@ -91,6 +91,19 @@ $currentProcess = Get-Process -Id $PID
 # Make isExecutable script-scoped so functions can access it
 $script:isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
 
+Write-Host "--- DEBUG: Path Resolution Info ---"
+Write-Host "isExecutable: $script:isExecutable"
+Write-Host "PID: $PID"
+Write-Host "ProcessName: $($currentProcess.ProcessName)"
+Write-Host "ProcessPath (Get-Process): '$($currentProcess.Path)'"
+try {
+    # Alternative method to get path, often more reliable in some contexts
+    Write-Host "MainModule.FileName: '$([System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName)'"
+} catch {
+    Write-Host "MainModule.FileName: [Failed to get - $($_.Exception.Message)]"
+}
+Write-Host "PSScriptRoot: '$PSScriptRoot'"
+
 # Define the application root directory
 # This is critical for finding external resources (config, XAML, logs)
 if ($script:isExecutable) {
@@ -101,6 +114,11 @@ if ($script:isExecutable) {
     # In development (script) mode, calculate the project root relative to the current script
     # For ConfigEditor.ps1 in /gui, the root is one level up
     $appRoot = Split-Path -Parent $PSScriptRoot
+}
+
+Write-Host "Calculated appRoot: '$appRoot'"
+if ([string]::IsNullOrEmpty($appRoot)) {
+    Write-Host "ERROR: appRoot is NULL or EMPTY! Join-Path will fail." -ForegroundColor Red
 }
 
 # Prerequisites check function
