@@ -184,10 +184,13 @@ $script:ComboBoxItemMappings = @{
 # These are not x:Name values but message keys used in InitializeGameActionCombos()
 # Simplified to core actions only: none, start-process, stop-process
 # Application-specific integrations (OBS, Discord, VTube Studio) are configured in dedicated tabs
+# and use abstract actions: enter-game-mode, exit-game-mode
 $script:GameActionMessageKeys = @{
-    "none"          = "gameActionNone"
-    "start-process" = "gameActionStartProcess"
-    "stop-process"  = "gameActionStopProcess"
+    "none"            = "gameActionNone"
+    "start-process"   = "gameActionStartProcess"
+    "stop-process"    = "gameActionStopProcess"
+    "enter-game-mode" = "gameActionEnterGameMode"
+    "exit-game-mode"  = "gameActionExitGameMode"
 }
 
 # Termination method options mapping

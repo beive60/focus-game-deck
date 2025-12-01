@@ -1513,6 +1513,8 @@ function Save-OBSSettingsData {
         $obsPasswordBox = $script:Window.FindName("OBSPasswordBox")
         $replayBufferCheckBox = $script:Window.FindName("OBSReplayBufferCheckBox")
         $obsPathTextBox = $script:Window.FindName("OBSPathTextBox")
+        $obsAutoStartCheckBox = $script:Window.FindName("OBSAutoStartCheckBox")
+        $obsAutoStopCheckBox = $script:Window.FindName("OBSAutoStopCheckBox")
 
         # Ensure integrations section exists
         if (-not $script:StateManager.ConfigData.integrations) {
@@ -1589,6 +1591,27 @@ function Save-OBSSettingsData {
             Write-Verbose "Saved OBS path: $normalizedPath"
         }
 
+        # Save OBS game start/end actions based on checkboxes
+        if ($obsAutoStartCheckBox) {
+            $gameStartAction = if ($obsAutoStartCheckBox.IsChecked) { "enter-game-mode" } else { "none" }
+            if (-not $script:StateManager.ConfigData.integrations.obs.PSObject.Properties["gameStartAction"]) {
+                $script:StateManager.ConfigData.integrations.obs | Add-Member -NotePropertyName "gameStartAction" -NotePropertyValue $gameStartAction -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.obs.gameStartAction = $gameStartAction
+            }
+            Write-Verbose "Saved OBS gameStartAction: $gameStartAction"
+        }
+
+        if ($obsAutoStopCheckBox) {
+            $gameEndAction = if ($obsAutoStopCheckBox.IsChecked) { "exit-game-mode" } else { "none" }
+            if (-not $script:StateManager.ConfigData.integrations.obs.PSObject.Properties["gameEndAction"]) {
+                $script:StateManager.ConfigData.integrations.obs | Add-Member -NotePropertyName "gameEndAction" -NotePropertyValue $gameEndAction -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.obs.gameEndAction = $gameEndAction
+            }
+            Write-Verbose "Saved OBS gameEndAction: $gameEndAction"
+        }
+
         # Mark configuration as modified
         $script:StateManager.SetModified()
 
@@ -1604,23 +1627,37 @@ function Save-DiscordSettingsData {
     Write-Verbose "Save-DiscordSettingsData: Starting to save Discord settings"
 
     try {
-        # Ensure discord section exists
-        if (-not $script:StateManager.ConfigData.discord) {
-            $script:StateManager.ConfigData | Add-Member -NotePropertyName "discord" -NotePropertyValue @{} -Force
+        # Ensure integrations section exists
+        if (-not $script:StateManager.ConfigData.integrations) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "integrations" -NotePropertyValue @{} -Force
+        }
+
+        # Ensure integrations.discord section exists
+        if (-not $script:StateManager.ConfigData.integrations.discord) {
+            $script:StateManager.ConfigData.integrations | Add-Member -NotePropertyName "discord" -NotePropertyValue @{} -Force
         }
 
         # Get Discord path from UI
         $discordPathTextBox = $script:Window.FindName("DiscordPathTextBox")
         if ($discordPathTextBox -and $discordPathTextBox.Text) {
-            $script:StateManager.ConfigData.discord.path = $discordPathTextBox.Text
+            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["path"]) {
+                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "path" -NotePropertyValue $discordPathTextBox.Text -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.discord.path = $discordPathTextBox.Text
+            }
             Write-Verbose "Save-DiscordSettingsData: Discord path set to $($discordPathTextBox.Text)"
         }
 
-        # Get game mode checkbox
+        # Get game mode checkbox and map to gameStartAction
         $enableGameModeCheckBox = $script:Window.FindName("DiscordEnableGameModeCheckBox")
         if ($enableGameModeCheckBox) {
-            $script:StateManager.ConfigData.discord.enableGameMode = $enableGameModeCheckBox.IsChecked
-            Write-Verbose "Save-DiscordSettingsData: Enable game mode set to $($enableGameModeCheckBox.IsChecked)"
+            $gameStartAction = if ($enableGameModeCheckBox.IsChecked) { "enter-game-mode" } else { "none" }
+            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["gameStartAction"]) {
+                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "gameStartAction" -NotePropertyValue $gameStartAction -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.discord.gameStartAction = $gameStartAction
+            }
+            Write-Verbose "Save-DiscordSettingsData: gameStartAction set to $gameStartAction"
         }
 
         # Get status settings
@@ -1677,12 +1714,51 @@ function Save-VTubeStudioSettingsData {
     Write-Verbose "Save-VTubeStudioSettingsData: Starting to save VTube Studio settings"
 
     try {
-        # TODO: Implement VTube Studio settings save logic once UI controls are defined
-        # Placeholder for VTube Studio-specific settings
+        # Get references to UI controls from VTube Studio tab
+        $vtubePathTextBox = $script:Window.FindName("VTubePathTextBox")
+        $vtubeAutoStartCheckBox = $script:Window.FindName("VTubeAutoStartCheckBox")
+        $vtubeAutoStopCheckBox = $script:Window.FindName("VTubeAutoStopCheckBox")
 
-        # Ensure vtubeStudio section exists
-        if (-not $script:StateManager.ConfigData.vtubeStudio) {
-            $script:StateManager.ConfigData | Add-Member -NotePropertyName "vtubeStudio" -NotePropertyValue @{} -Force
+        # Ensure integrations section exists
+        if (-not $script:StateManager.ConfigData.integrations) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "integrations" -NotePropertyValue @{} -Force
+        }
+
+        # Ensure integrations.vtubeStudio section exists
+        if (-not $script:StateManager.ConfigData.integrations.vtubeStudio) {
+            $script:StateManager.ConfigData.integrations | Add-Member -NotePropertyName "vtubeStudio" -NotePropertyValue @{} -Force
+        }
+
+        # Save VTube Studio executable path
+        if ($vtubePathTextBox) {
+            $normalizedPath = $vtubePathTextBox.Text -replace '\\', '/'
+            if (-not $script:StateManager.ConfigData.integrations.vtubeStudio.PSObject.Properties["path"]) {
+                $script:StateManager.ConfigData.integrations.vtubeStudio | Add-Member -NotePropertyName "path" -NotePropertyValue $normalizedPath -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.vtubeStudio.path = $normalizedPath
+            }
+            Write-Verbose "Saved VTube Studio path: $normalizedPath"
+        }
+
+        # Save VTube Studio game start/end actions based on checkboxes
+        if ($vtubeAutoStartCheckBox) {
+            $gameStartAction = if ($vtubeAutoStartCheckBox.IsChecked) { "enter-game-mode" } else { "none" }
+            if (-not $script:StateManager.ConfigData.integrations.vtubeStudio.PSObject.Properties["gameStartAction"]) {
+                $script:StateManager.ConfigData.integrations.vtubeStudio | Add-Member -NotePropertyName "gameStartAction" -NotePropertyValue $gameStartAction -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.vtubeStudio.gameStartAction = $gameStartAction
+            }
+            Write-Verbose "Saved VTube Studio gameStartAction: $gameStartAction"
+        }
+
+        if ($vtubeAutoStopCheckBox) {
+            $gameEndAction = if ($vtubeAutoStopCheckBox.IsChecked) { "exit-game-mode" } else { "none" }
+            if (-not $script:StateManager.ConfigData.integrations.vtubeStudio.PSObject.Properties["gameEndAction"]) {
+                $script:StateManager.ConfigData.integrations.vtubeStudio | Add-Member -NotePropertyName "gameEndAction" -NotePropertyValue $gameEndAction -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.vtubeStudio.gameEndAction = $gameEndAction
+            }
+            Write-Verbose "Saved VTube Studio gameEndAction: $gameEndAction"
         }
 
         # Mark configuration as modified

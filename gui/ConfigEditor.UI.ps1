@@ -987,6 +987,17 @@ class ConfigEditorUI {
                     $replayBufferCheckBox.IsChecked = [bool]$ConfigData.integrations.obs.replayBuffer
                 }
 
+                # Load OBS auto start/stop checkboxes based on gameStartAction/gameEndAction
+                $obsAutoStartCheckBox = $self.Window.FindName("OBSAutoStartCheckBox")
+                if ($obsAutoStartCheckBox -and $ConfigData.integrations.obs) {
+                    $obsAutoStartCheckBox.IsChecked = ($ConfigData.integrations.obs.gameStartAction -eq "enter-game-mode")
+                }
+
+                $obsAutoStopCheckBox = $self.Window.FindName("OBSAutoStopCheckBox")
+                if ($obsAutoStopCheckBox -and $ConfigData.integrations.obs) {
+                    $obsAutoStopCheckBox.IsChecked = ($ConfigData.integrations.obs.gameEndAction -eq "exit-game-mode")
+                }
+
                 if ($ConfigData.paths) {
                     $steamPathTextBox = $self.Window.FindName("SteamPathTextBox")
                     if ($steamPathTextBox) { $steamPathTextBox.Text = $ConfigData.paths.steam }
@@ -1004,22 +1015,23 @@ class ConfigEditorUI {
                 }
 
                 # Load Discord settings
-                if ($ConfigData.discord) {
+                if ($ConfigData.integrations.discord) {
                     $discordPathTextBox = $self.Window.FindName("DiscordPathTextBox")
                     if ($discordPathTextBox) {
-                        $discordPathTextBox.Text = $ConfigData.discord.path
-                        Write-Verbose "Loaded Discord path: $($ConfigData.discord.path)"
+                        $discordPathTextBox.Text = $ConfigData.integrations.discord.path
+                        Write-Verbose "Loaded Discord path: $($ConfigData.integrations.discord.path)"
                     }
 
+                    # Load Discord game mode checkbox based on gameStartAction
                     $enableGameModeCheckBox = $self.Window.FindName("DiscordEnableGameModeCheckBox")
                     if ($enableGameModeCheckBox) {
-                        $enableGameModeCheckBox.IsChecked = [bool]$ConfigData.discord.enableGameMode
+                        $enableGameModeCheckBox.IsChecked = ($ConfigData.integrations.discord.gameStartAction -eq "enter-game-mode")
                     }
 
                     $statusOnStartCombo = $self.Window.FindName("DiscordStatusOnStartCombo")
-                    if ($statusOnStartCombo -and $ConfigData.discord.statusOnStart) {
+                    if ($statusOnStartCombo -and $ConfigData.integrations.discord.statusOnStart) {
                         for ($i = 0; $i -lt $statusOnStartCombo.Items.Count; $i++) {
-                            if ($statusOnStartCombo.Items[$i].Tag -eq $ConfigData.discord.statusOnStart) {
+                            if ($statusOnStartCombo.Items[$i].Tag -eq $ConfigData.integrations.discord.statusOnStart) {
                                 $statusOnStartCombo.SelectedIndex = $i
                                 break
                             }
@@ -1027,9 +1039,9 @@ class ConfigEditorUI {
                     }
 
                     $statusOnEndCombo = $self.Window.FindName("DiscordStatusOnEndCombo")
-                    if ($statusOnEndCombo -and $ConfigData.discord.statusOnEnd) {
+                    if ($statusOnEndCombo -and $ConfigData.integrations.discord.statusOnEnd) {
                         for ($i = 0; $i -lt $statusOnEndCombo.Items.Count; $i++) {
-                            if ($statusOnEndCombo.Items[$i].Tag -eq $ConfigData.discord.statusOnEnd) {
+                            if ($statusOnEndCombo.Items[$i].Tag -eq $ConfigData.integrations.discord.statusOnEnd) {
                                 $statusOnEndCombo.SelectedIndex = $i
                                 break
                             }
@@ -1038,20 +1050,40 @@ class ConfigEditorUI {
 
                     $disableOverlayCheckBox = $self.Window.FindName("DiscordDisableOverlayCheckBox")
                     if ($disableOverlayCheckBox) {
-                        $disableOverlayCheckBox.IsChecked = [bool]$ConfigData.discord.disableOverlay
+                        $disableOverlayCheckBox.IsChecked = [bool]$ConfigData.integrations.discord.disableOverlay
                     }
 
                     # Load Rich Presence settings
-                    if ($ConfigData.discord.rpc) {
+                    if ($ConfigData.integrations.discord.rpc) {
                         $rpcEnableCheckBox = $self.Window.FindName("DiscordRPCEnableCheckBox")
                         if ($rpcEnableCheckBox) {
-                            $rpcEnableCheckBox.IsChecked = [bool]$ConfigData.discord.rpc.enabled
+                            $rpcEnableCheckBox.IsChecked = [bool]$ConfigData.integrations.discord.rpc.enabled
                         }
 
                         $rpcAppIdTextBox = $self.Window.FindName("DiscordRPCAppIdTextBox")
                         if ($rpcAppIdTextBox) {
-                            $rpcAppIdTextBox.Text = $ConfigData.discord.rpc.applicationId
+                            $rpcAppIdTextBox.Text = $ConfigData.integrations.discord.rpc.applicationId
                         }
+                    }
+                }
+
+                # Load VTube Studio settings
+                if ($ConfigData.integrations.vtubeStudio) {
+                    $vtubePathTextBox = $self.Window.FindName("VTubePathTextBox")
+                    if ($vtubePathTextBox) {
+                        $vtubePathTextBox.Text = $ConfigData.integrations.vtubeStudio.path
+                        Write-Verbose "Loaded VTube Studio path: $($ConfigData.integrations.vtubeStudio.path)"
+                    }
+
+                    # Load VTube Studio auto start/stop checkboxes based on gameStartAction/gameEndAction
+                    $vtubeAutoStartCheckBox = $self.Window.FindName("VTubeAutoStartCheckBox")
+                    if ($vtubeAutoStartCheckBox) {
+                        $vtubeAutoStartCheckBox.IsChecked = ($ConfigData.integrations.vtubeStudio.gameStartAction -eq "enter-game-mode")
+                    }
+
+                    $vtubeAutoStopCheckBox = $self.Window.FindName("VTubeAutoStopCheckBox")
+                    if ($vtubeAutoStopCheckBox) {
+                        $vtubeAutoStopCheckBox.IsChecked = ($ConfigData.integrations.vtubeStudio.gameEndAction -eq "exit-game-mode")
                     }
                 }
 

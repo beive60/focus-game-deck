@@ -34,8 +34,10 @@ class ConfigValidator {
             $this.ValidateGameConfiguration($gameId)
         }
 
-        # Validate OBS configuration if OBS is used
+        # Validate integrations
         $this.ValidateOBSConfiguration()
+        $this.ValidateDiscordConfiguration()
+        $this.ValidateVTubeStudioConfiguration()
 
         # Return true if no errors (warnings are acceptable)
         return $this.Errors.Count -eq 0
@@ -267,6 +269,111 @@ class ConfigValidator {
         if ($this.Config.integrations.obs.PSObject.Properties.Name -contains "replayBuffer") {
             if ($this.Config.integrations.obs.replayBuffer -isnot [bool]) {
                 $this.Warnings += "OBS replayBuffer should be a boolean value (true/false)"
+            }
+        }
+
+        # Validate gameStartAction and gameEndAction
+        $validIntegrationActions = @("enter-game-mode", "exit-game-mode", "none")
+
+        if ($this.Config.integrations.obs.gameStartAction) {
+            if ($this.Config.integrations.obs.gameStartAction -notin $validIntegrationActions) {
+                $this.Errors += "OBS has invalid gameStartAction: '$($this.Config.integrations.obs.gameStartAction)'. Valid values: $($validIntegrationActions -join ', ')"
+            }
+        }
+
+        if ($this.Config.integrations.obs.gameEndAction) {
+            if ($this.Config.integrations.obs.gameEndAction -notin $validIntegrationActions) {
+                $this.Errors += "OBS has invalid gameEndAction: '$($this.Config.integrations.obs.gameEndAction)'. Valid values: $($validIntegrationActions -join ', ')"
+            }
+        }
+    }
+
+    # Validate Discord configuration
+    [void] ValidateDiscordConfiguration() {
+        # Check if any game uses Discord
+        $discordUsed = $false
+        if ($this.Config.games) {
+            foreach ($gameProperty in $this.Config.games.PSObject.Properties) {
+                $gameConfig = $gameProperty.Value
+                if ($gameConfig.integrations -and $gameConfig.integrations.useDiscord) {
+                    $discordUsed = $true
+                    break
+                }
+            }
+        }
+
+        if (-not $discordUsed) {
+            return
+        }
+
+        # Validate Discord integration exists
+        if (-not $this.Config.integrations.discord) {
+            $this.Errors += "Discord is used but 'integrations.discord' configuration section is missing"
+            return
+        }
+
+        # Validate Discord path
+        if (-not $this.Config.integrations.discord.path) {
+            $this.Warnings += "Discord path not configured in 'integrations.discord.path' - will attempt auto-detection"
+        }
+
+        # Validate gameStartAction and gameEndAction
+        $validIntegrationActions = @("enter-game-mode", "exit-game-mode", "none")
+
+        if ($this.Config.integrations.discord.gameStartAction) {
+            if ($this.Config.integrations.discord.gameStartAction -notin $validIntegrationActions) {
+                $this.Errors += "Discord has invalid gameStartAction: '$($this.Config.integrations.discord.gameStartAction)'. Valid values: $($validIntegrationActions -join ', ')"
+            }
+        }
+
+        if ($this.Config.integrations.discord.gameEndAction) {
+            if ($this.Config.integrations.discord.gameEndAction -notin $validIntegrationActions) {
+                $this.Errors += "Discord has invalid gameEndAction: '$($this.Config.integrations.discord.gameEndAction)'. Valid values: $($validIntegrationActions -join ', ')"
+            }
+        }
+    }
+
+    # Validate VTube Studio configuration
+    [void] ValidateVTubeStudioConfiguration() {
+        # Check if any game uses VTube Studio
+        $vtubeUsed = $false
+        if ($this.Config.games) {
+            foreach ($gameProperty in $this.Config.games.PSObject.Properties) {
+                $gameConfig = $gameProperty.Value
+                if ($gameConfig.integrations -and $gameConfig.integrations.useVTubeStudio) {
+                    $vtubeUsed = $true
+                    break
+                }
+            }
+        }
+
+        if (-not $vtubeUsed) {
+            return
+        }
+
+        # Validate VTube Studio integration exists
+        if (-not $this.Config.integrations.vtubeStudio) {
+            $this.Errors += "VTube Studio is used but 'integrations.vtubeStudio' configuration section is missing"
+            return
+        }
+
+        # Validate VTube Studio path
+        if (-not $this.Config.integrations.vtubeStudio.path) {
+            $this.Warnings += "VTube Studio path not configured in 'integrations.vtubeStudio.path' - will attempt auto-detection"
+        }
+
+        # Validate gameStartAction and gameEndAction
+        $validIntegrationActions = @("enter-game-mode", "exit-game-mode", "none")
+
+        if ($this.Config.integrations.vtubeStudio.gameStartAction) {
+            if ($this.Config.integrations.vtubeStudio.gameStartAction -notin $validIntegrationActions) {
+                $this.Errors += "VTube Studio has invalid gameStartAction: '$($this.Config.integrations.vtubeStudio.gameStartAction)'. Valid values: $($validIntegrationActions -join ', ')"
+            }
+        }
+
+        if ($this.Config.integrations.vtubeStudio.gameEndAction) {
+            if ($this.Config.integrations.vtubeStudio.gameEndAction -notin $validIntegrationActions) {
+                $this.Errors += "VTube Studio has invalid gameEndAction: '$($this.Config.integrations.vtubeStudio.gameEndAction)'. Valid values: $($validIntegrationActions -join ', ')"
             }
         }
     }
