@@ -2005,22 +2005,48 @@ function Get-SafeLocalizedMessage {
     }
 }
 
-# Shows a localized message dialog
-#
-# Displays a message box using localized messages from the messages.json file.
-# Supports multiple parameter styles for backward compatibility.
-#
-# @param Key - Message key for localization (new style)
-# @param MessageType - Type of message: Information, Warning, Error, Question (new style)
-# @param FormatArgs - Arguments for string formatting (new style)
-# @param Button - Button type (e.g., "YesNo", "YesNoCancel")
-# @param DefaultResult - Default button result
-# @param Message - Direct message text (alternative style)
-# @param MessageKey - Message key (old style, for compatibility)
-# @param TitleKey - Title key (old style, for compatibility)
-# @param Arguments - Format arguments (old style, for compatibility)
-# @param Icon - Icon type (old style, for compatibility)
-# @return MessageBoxResult if button is specified, otherwise void
+<#
+.SYNOPSIS
+Shows a localized message dialog.
+
+.DESCRIPTION
+Displays a message box using localized messages from the messages.json file.
+Supports multiple parameter styles for backward compatibility.
+
+.PARAMETER Key
+Message key for localization (new style).
+
+.PARAMETER MessageType
+Type of message: Information, Warning, Error, Question (new style).
+
+.PARAMETER FormatArgs
+Arguments for string formatting (new style).
+
+.PARAMETER Button
+Button type (e.g., "YesNo", "YesNoCancel").
+
+.PARAMETER DefaultResult
+Default button result.
+
+.PARAMETER Message
+Direct message text (alternative style).
+
+.PARAMETER MessageKey
+Message key (old style, for compatibility).
+
+.PARAMETER TitleKey
+Title key (old style, for compatibility).
+
+.PARAMETER Arguments
+Format arguments (old style, for compatibility).
+
+.PARAMETER Icon
+Icon type (old style, for compatibility).
+
+.OUTPUTS
+System.Windows.MessageBoxResult
+Returns MessageBoxResult if button is specified, otherwise void.
+#>
 function Show-SafeMessage {
     param(
         [string]$Key,
@@ -2128,17 +2154,31 @@ function Show-SafeMessage {
     }
 }
 
-# Generates a unique ID for configuration items
-#
-# Creates a unique identifier with the specified prefix, ensuring no collision
-# with existing items in the provided collection. Uses random number generation
-# with collision detection for uniqueness.
-#
-# @param Collection - The collection to check for existing IDs
-# @param Prefix - The prefix for the new ID (default: "new")
-# @param MinRandom - Minimum random number (default: 1000)
-# @param MaxRandom - Maximum random number (default: 9999)
-# @return string - A unique identifier
+<#
+.SYNOPSIS
+Generates a unique ID for configuration items.
+
+.DESCRIPTION
+Creates a unique identifier with the specified prefix, ensuring no collision
+with existing items in the provided collection. Uses random number generation
+with collision detection for uniqueness.
+
+.PARAMETER Collection
+The collection to check for existing IDs.
+
+.PARAMETER Prefix
+The prefix for the new ID (default: "new").
+
+.PARAMETER MinRandom
+Minimum random number (default: 1000).
+
+.PARAMETER MaxRandom
+Maximum random number (default: 9999).
+
+.OUTPUTS
+String
+Returns a unique identifier.
+#>
 function New-UniqueConfigId {
     param(
         [Parameter(Mandatory)]
@@ -2155,15 +2195,27 @@ function New-UniqueConfigId {
     return $newId
 }
 
-# Validates the selected item for duplication operations
-#
-# Checks if an item is selected and if its source data exists in the configuration.
-# Returns validation result and displays appropriate error messages.
-#
-# @param SelectedItem - The ID of the selected item
-# @param SourceData - The source data object
-# @param ItemType - The type of item ("Game" or "App")
-# @return bool - True if validation passes, false otherwise
+<#
+.SYNOPSIS
+Validates the selected item for duplication operations.
+
+.DESCRIPTION
+Checks if an item is selected and if its source data exists in the configuration.
+Returns validation result and displays appropriate error messages.
+
+.PARAMETER SelectedItem
+The ID of the selected item.
+
+.PARAMETER SourceData
+The source data object.
+
+.PARAMETER ItemType
+The type of item ("Game" or "App").
+
+.OUTPUTS
+Boolean
+Returns true if validation passes, false otherwise.
+#>
 function Test-DuplicateSource {
     param(
         [string]$SelectedItem,
@@ -2186,16 +2238,29 @@ function Test-DuplicateSource {
     return $true
 }
 
-# Shows duplication result messages
-#
-# Displays success or error messages for duplication operations with proper
-# localization and error handling.
-#
-# @param OriginalId - The ID of the original item
-# @param NewId - The ID of the new duplicated item
-# @param ItemType - The type of item ("Game" or "App")
-# @param Success - Whether the duplication was successful
-# @param ErrorMessage - Optional error message if duplication failed
+<#
+.SYNOPSIS
+Shows duplication result messages.
+
+.DESCRIPTION
+Displays success or error messages for duplication operations with proper
+localization and error handling.
+
+.PARAMETER OriginalId
+The ID of the original item.
+
+.PARAMETER NewId
+The ID of the new duplicated item.
+
+.PARAMETER ItemType
+The type of item ("Game" or "App").
+
+.PARAMETER Success
+Whether the duplication was successful.
+
+.PARAMETER ErrorMessage
+Optional error message if duplication failed.
+#>
 function Show-DuplicateResult {
     param(
         [string]$OriginalId,
