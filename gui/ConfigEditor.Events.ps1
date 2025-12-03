@@ -756,7 +756,8 @@
         # Mark as modified
         Set-ConfigModified
 
-        Show-SafeMessage -Key "appAdded" -MessageType "Information"
+        $message = $this.uiManager.GetLocalizedMessage("appAdded")
+        $this.uiManager.ShowNotification($message, "Success")
         Write-Verbose "Added new app: $newAppId"
     }
 
@@ -843,7 +844,8 @@
 
 
 
-            Show-SafeMessage -Key "appDeleted" -MessageType "Information"
+            $message = $this.uiManager.GetLocalizedMessage("appDeleted")
+            $this.uiManager.ShowNotification($message, "Success")
             Write-Verbose "Deleted app: $selectedApp"
         }
     }
@@ -972,7 +974,8 @@
             Save-OriginalConfig
             $this.stateManager.ClearModified()
 
-            Show-SafeMessage -Key "configSaved" -MessageType "Information"
+            $message = $this.uiManager.GetLocalizedMessage("configSaved")
+            $this.uiManager.ShowNotification($message, "Success")
             Write-Verbose "Configuration saved to: $script:ConfigPath"
 
         } catch {
@@ -1398,6 +1401,106 @@
         }
     }
 
+    # Validate Game ID on blur
+    [void] ValidateGameIdOnBlur() {
+        $gameIdTextBox = $script:Window.FindName("GameIdTextBox")
+        $gameId = $gameIdTextBox.Text.Trim()
+
+        if ([string]::IsNullOrWhiteSpace($gameId)) {
+            $this.uiManager.SetInputError("GameIdTextBox", $this.uiManager.GetLocalizedMessage("gameIdRequired"))
+        } elseif ($gameId -notmatch '^[a-zA-Z0-9_-]+$') {
+            $this.uiManager.SetInputError("GameIdTextBox", $this.uiManager.GetLocalizedMessage("gameIdInvalidCharacters"))
+        } else {
+            $this.uiManager.SetInputError("GameIdTextBox", "")
+        }
+    }
+
+    # Validate Steam App ID on blur
+    [void] ValidateSteamAppIdOnBlur() {
+        $platformCombo = $script:Window.FindName("PlatformComboBox")
+
+        # Only validate if platform is Steam
+        if ($platformCombo.SelectedItem -and $platformCombo.SelectedItem.Tag -eq "steam") {
+            $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
+            $steamAppId = $steamAppIdTextBox.Text.Trim()
+
+            if ([string]::IsNullOrWhiteSpace($steamAppId)) {
+                $this.uiManager.SetInputError("SteamAppIdTextBox", $this.uiManager.GetLocalizedMessage("steamAppIdRequired"))
+            } elseif ($steamAppId -notmatch '^\d{7}$') {
+                $this.uiManager.SetInputError("SteamAppIdTextBox", $this.uiManager.GetLocalizedMessage("steamAppIdMust7Digits"))
+            } else {
+                $this.uiManager.SetInputError("SteamAppIdTextBox", "")
+            }
+        } else {
+            # Clear error if not Steam platform
+            $this.uiManager.SetInputError("SteamAppIdTextBox", "")
+        }
+    }
+
+    # Clear error on text input (for Game ID)
+    [void] ClearGameIdErrorOnInput() {
+        $this.uiManager.SetInputError("GameIdTextBox", "")
+    }
+
+    # Clear error on text input (for Steam App ID)
+    [void] ClearSteamAppIdErrorOnInput() {
+        $this.uiManager.SetInputError("SteamAppIdTextBox", "")
+    }
+
+    # Validate Epic Game ID on blur
+    [void] ValidateEpicGameIdOnBlur() {
+        $platformCombo = $script:Window.FindName("PlatformComboBox")
+
+        # Only validate if platform is Epic
+        if ($platformCombo.SelectedItem -and $platformCombo.SelectedItem.Tag -eq "epic") {
+            $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
+            $epicGameId = $epicGameIdTextBox.Text.Trim()
+
+            if ([string]::IsNullOrWhiteSpace($epicGameId)) {
+                $this.uiManager.SetInputError("EpicGameIdTextBox", $this.uiManager.GetLocalizedMessage("epicGameIdRequired"))
+            } elseif ($epicGameId -notmatch '^(com\.epicgames\.launcher://)?apps/') {
+                $this.uiManager.SetInputError("EpicGameIdTextBox", $this.uiManager.GetLocalizedMessage("epicGameIdInvalidFormat"))
+            } else {
+                $this.uiManager.SetInputError("EpicGameIdTextBox", "")
+            }
+        } else {
+            # Clear error if not Epic platform
+            $this.uiManager.SetInputError("EpicGameIdTextBox", "")
+        }
+    }
+
+    # Clear error on text input (for Epic Game ID)
+    [void] ClearEpicGameIdErrorOnInput() {
+        $this.uiManager.SetInputError("EpicGameIdTextBox", "")
+    }
+
+    # Validate Executable Path on blur
+    [void] ValidateExecutablePathOnBlur() {
+        $platformCombo = $script:Window.FindName("PlatformComboBox")
+
+        # Only validate if platform is standalone or direct
+        if ($platformCombo.SelectedItem -and ($platformCombo.SelectedItem.Tag -eq "standalone" -or $platformCombo.SelectedItem.Tag -eq "direct")) {
+            $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
+            $executablePath = $executablePathTextBox.Text.Trim()
+
+            if ([string]::IsNullOrWhiteSpace($executablePath)) {
+                $this.uiManager.SetInputError("ExecutablePathTextBox", $this.uiManager.GetLocalizedMessage("executablePathRequired"))
+            } elseif (-not (Test-Path -Path $executablePath -PathType Leaf)) {
+                $this.uiManager.SetInputError("ExecutablePathTextBox", $this.uiManager.GetLocalizedMessage("executablePathNotFound"))
+            } else {
+                $this.uiManager.SetInputError("ExecutablePathTextBox", "")
+            }
+        } else {
+            # Clear error if not standalone/direct platform
+            $this.uiManager.SetInputError("ExecutablePathTextBox", "")
+        }
+    }
+
+    # Clear error on text input (for Executable Path)
+    [void] ClearExecutablePathErrorOnInput() {
+        $this.uiManager.SetInputError("ExecutablePathTextBox", "")
+    }
+
     # Handle save game settings
     [void] HandleSaveGameSettings() {
         try {
@@ -1438,7 +1541,8 @@
             # Refresh games list to reflect any changes
             $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
 
-            Show-SafeMessage -Key "gameSettingsSaved" -MessageType "Information"
+            $message = $this.uiManager.GetLocalizedMessage("gameSettingsSaved")
+            $this.uiManager.ShowNotification($message, "Success")
             Write-Verbose "Game settings saved"
 
         } catch {
@@ -1509,7 +1613,8 @@
                 }
             }
 
-            Show-SafeMessage -Key "managedAppsSaved" -MessageType "Information"
+            $message = $this.uiManager.GetLocalizedMessage("managedAppsSaved")
+            $this.uiManager.ShowNotification($message, "Success")
             Write-Verbose "Managed apps settings saved"
 
         } catch {
@@ -1531,7 +1636,8 @@
             Save-OriginalConfig
             $this.stateManager.ClearModified()
 
-            Show-SafeMessage -Key "globalSettingsSaved" -MessageType "Information"
+            $message = $this.uiManager.GetLocalizedMessage("globalSettingsSaved")
+            $this.uiManager.ShowNotification($message, "Success")
             Write-Verbose "Global settings saved"
 
         } catch {
@@ -1553,7 +1659,8 @@
             Save-OriginalConfig
             $this.stateManager.ClearModified()
 
-            Show-SafeMessage -Key "obsSettingsSaved" -MessageType "Information"
+            $message = $this.uiManager.GetLocalizedMessage("obsSettingsSaved")
+            $this.uiManager.ShowNotification($message, "Success")
             Write-Verbose "OBS settings saved"
 
         } catch {
@@ -1575,7 +1682,8 @@
             Save-OriginalConfig
             $this.stateManager.ClearModified()
 
-            Show-SafeMessage -Key "discordSettingsSaved" -MessageType "Information"
+            $message = $this.uiManager.GetLocalizedMessage("discordSettingsSaved")
+            $this.uiManager.ShowNotification($message, "Success")
             Write-Verbose "Discord settings saved"
 
         } catch {
@@ -1597,7 +1705,8 @@
             Save-OriginalConfig
             $this.stateManager.ClearModified()
 
-            Show-SafeMessage -Key "vtubeStudioSettingsSaved" -MessageType "Information"
+            $message = $this.uiManager.GetLocalizedMessage("vtubeStudioSettingsSaved")
+            $this.uiManager.ShowNotification($message, "Success")
             Write-Verbose "VTube Studio settings saved"
 
         } catch {
@@ -1862,7 +1971,8 @@
                 }.GetNewClosure())
 
             # --- Game Launcher Tab ---
-            $this.uiManager.Window.FindName("GenerateLaunchersButton").add_Click({ $self.HandleGenerateLaunchers() }.GetNewClosure())
+            $genLaunchersBtn = $this.uiManager.Window.FindName("GenerateLaunchersButton")
+            if ($genLaunchersBtn) { $genLaunchersBtn.add_Click({ $self.HandleGenerateLaunchers() }.GetNewClosure()) } else { Write-Verbose "GenerateLaunchersButton not found" }
 
             # Add tab selection event to update game list when switching to launcher tab
             $mainTabControl = $this.uiManager.Window.FindName("MainTabControl")
@@ -1889,18 +1999,46 @@
                             Write-Warning "Error in tab selection changed: $($_.Exception.Message)"
                         }
                     }.GetNewClosure())
-            }
+            } else { Write-Verbose "MainTabControl not found" }
 
             # --- Game Settings Tab ---
-            $this.uiManager.Window.FindName("GamesList").add_SelectionChanged({ $self.HandleGameSelectionChanged() }.GetNewClosure())
-            $this.uiManager.Window.FindName("PlatformComboBox").add_SelectionChanged({ $self.HandlePlatformSelectionChanged() }.GetNewClosure())
-            $this.uiManager.Window.FindName("GameStartActionCombo").add_SelectionChanged({ $self.UpdateTerminationMethodState() }.GetNewClosure())
-            $this.uiManager.Window.FindName("GameEndActionCombo").add_SelectionChanged({ $self.UpdateTerminationMethodState() }.GetNewClosure())
-            $this.uiManager.Window.FindName("AddGameButton").add_Click({ $self.HandleAddGame() }.GetNewClosure())
-            $this.uiManager.Window.FindName("DuplicateGameButton").add_Click({ $self.HandleDuplicateGame() }.GetNewClosure())
-            $this.uiManager.Window.FindName("DeleteGameButton").add_Click({ $self.HandleDeleteGame() }.GetNewClosure())
-            $this.uiManager.Window.FindName("BrowseExecutablePathButton").add_Click({ $self.HandleBrowseExecutablePath() }.GetNewClosure())
-            $this.uiManager.Window.FindName("SaveGameSettingsButton").add_Click({ $self.HandleSaveGameSettings() }.GetNewClosure())
+            $gamesListCtrl = $this.uiManager.Window.FindName("GamesList"); if ($gamesListCtrl) { $gamesListCtrl.add_SelectionChanged({ $self.HandleGameSelectionChanged() }.GetNewClosure()) } else { Write-Verbose "GamesList not found" }
+            $platformCombo = $this.uiManager.Window.FindName("PlatformComboBox"); if ($platformCombo) { $platformCombo.add_SelectionChanged({ $self.HandlePlatformSelectionChanged() }.GetNewClosure()) } else { Write-Verbose "PlatformComboBox not found" }
+
+            # Validation event handlers for Game ID
+            $gameIdTextBox = $this.uiManager.Window.FindName("GameIdTextBox")
+            if ($gameIdTextBox) {
+                $gameIdTextBox.add_LostFocus({ $self.ValidateGameIdOnBlur() }.GetNewClosure())
+                $gameIdTextBox.add_TextChanged({ $self.ClearGameIdErrorOnInput() }.GetNewClosure())
+            }
+
+            # Validation event handlers for Steam App ID
+            $steamAppIdTextBox = $this.uiManager.Window.FindName("SteamAppIdTextBox")
+            if ($steamAppIdTextBox) {
+                $steamAppIdTextBox.add_LostFocus({ $self.ValidateSteamAppIdOnBlur() }.GetNewClosure())
+                $steamAppIdTextBox.add_TextChanged({ $self.ClearSteamAppIdErrorOnInput() }.GetNewClosure())
+            }
+
+            # Validation event handlers for Epic Game ID
+            $epicGameIdTextBox = $this.uiManager.Window.FindName("EpicGameIdTextBox")
+            if ($epicGameIdTextBox) {
+                $epicGameIdTextBox.add_LostFocus({ $self.ValidateEpicGameIdOnBlur() }.GetNewClosure())
+                $epicGameIdTextBox.add_TextChanged({ $self.ClearEpicGameIdErrorOnInput() }.GetNewClosure())
+            }
+
+            # Validation event handlers for Executable Path
+            $executablePathTextBox = $this.uiManager.Window.FindName("ExecutablePathTextBox")
+            if ($executablePathTextBox) {
+                $executablePathTextBox.add_LostFocus({ $self.ValidateExecutablePathOnBlur() }.GetNewClosure())
+                $executablePathTextBox.add_TextChanged({ $self.ClearExecutablePathErrorOnInput() }.GetNewClosure())
+            }
+            $gameStartCombo = $this.uiManager.Window.FindName("GameStartActionCombo"); if ($gameStartCombo) { $gameStartCombo.add_SelectionChanged({ $self.UpdateTerminationMethodState() }.GetNewClosure()) } else { Write-Verbose "GameStartActionCombo not found" }
+            $gameEndCombo = $this.uiManager.Window.FindName("GameEndActionCombo"); if ($gameEndCombo) { $gameEndCombo.add_SelectionChanged({ $self.UpdateTerminationMethodState() }.GetNewClosure()) } else { Write-Verbose "GameEndActionCombo not found" }
+            $addGameBtn = $this.uiManager.Window.FindName("AddGameButton"); if ($addGameBtn) { $addGameBtn.add_Click({ $self.HandleAddGame() }.GetNewClosure()) } else { Write-Verbose "AddGameButton not found" }
+            $dupGameBtn = $this.uiManager.Window.FindName("DuplicateGameButton"); if ($dupGameBtn) { $dupGameBtn.add_Click({ $self.HandleDuplicateGame() }.GetNewClosure()) } else { Write-Verbose "DuplicateGameButton not found" }
+            $delGameBtn = $this.uiManager.Window.FindName("DeleteGameButton"); if ($delGameBtn) { $delGameBtn.add_Click({ $self.HandleDeleteGame() }.GetNewClosure()) } else { Write-Verbose "DeleteGameButton not found" }
+            $browseExecBtn = $this.uiManager.Window.FindName("BrowseExecutablePathButton"); if ($browseExecBtn) { $browseExecBtn.add_Click({ $self.HandleBrowseExecutablePath() }.GetNewClosure()) } else { Write-Verbose "BrowseExecutablePathButton not found" }
+            $saveGameBtn = $this.uiManager.Window.FindName("SaveGameSettingsButton"); if ($saveGameBtn) { $saveGameBtn.add_Click({ $self.HandleSaveGameSettings() }.GetNewClosure()) } else { Write-Verbose "SaveGameSettingsButton not found" }
             $this.uiManager.Window.FindName("MoveGameTopButton").add_Click({ $self.HandleMoveGame("Top") }.GetNewClosure())
             $this.uiManager.Window.FindName("MoveGameUpButton").add_Click({ $self.HandleMoveGame("Up") }.GetNewClosure())
             $this.uiManager.Window.FindName("MoveGameDownButton").add_Click({ $self.HandleMoveGame("Down") }.GetNewClosure())
