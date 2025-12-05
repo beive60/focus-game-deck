@@ -59,6 +59,7 @@
         "Consolas",
         "decompiled",
         "DPAPI",
+        "epicgames",
         "Finalizers",
         "hashtables",
         "HKCU",
@@ -66,11 +67,13 @@
         "lifecycles",
         "resourcest's",
         "Sectigo",
+        "Segoe",
         "signtool",
         "steamapps",
         "timestamping",
         "valorant",
-        "vtube"
+        "vtube",
+        "VTUBESTUDIOTAB"
     ],
     "powershell.codeFormatting.alignPropertyValuePairs": false,
     "powershell.codeFormatting.whitespaceBetweenParameters": true,

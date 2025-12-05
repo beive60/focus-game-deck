@@ -38,6 +38,7 @@ class ConfigEditorUI {
     [bool]$HasUnsavedChanges
     [PSObject]$EventHandler
     [string]$ProjectRoot
+    [Object]$NotificationTimer
 
     <#
     .SYNOPSIS
@@ -119,6 +120,7 @@ class ConfigEditorUI {
             # Initialize other components
             Write-Host "[DEBUG] ConfigEditorUI: Step 6/6 - Initializing other components"
             $this.InitializeComponents()
+            $this.InitializeNotificationTimer()
             # NOTE: InitializeGameActionCombos moved to LoadDataToUI to avoid premature SelectedIndex setting
             Write-Host "[OK] ConfigEditorUI: Constructor completed successfully"
 
@@ -150,6 +152,112 @@ class ConfigEditorUI {
         } catch {
             Write-Host "[ERROR] ConfigEditorUI: InitializeComponents failed - $($_.Exception.Message)"
             throw
+        }
+    }
+
+    [void] InitializeNotificationTimer() {
+        try {
+            $this.NotificationTimer = New-Object System.Windows.Threading.DispatcherTimer
+            $this.NotificationTimer.Interval = [TimeSpan]::FromSeconds(3)
+
+            $overlay = $this.Window.FindName("NotificationOverlay")
+            $timer = $this.NotificationTimer
+
+            $this.NotificationTimer.add_Tick({
+                    if ($overlay) {
+                        $overlay.Visibility = ("System.Windows.Visibility" -as [type])::Collapsed
+                    }
+                    $timer.Stop()
+                }.GetNewClosure())
+        } catch {
+            Write-Warning "[InitializeNotificationTimer] Failed to initialize notification timer: $($_.Exception.Message)"
+        }
+    }
+
+    [void] ShowNotification([string]$Message, [string]$Type = "Info") {
+        try {
+            $overlay = $this.Window.FindName("NotificationOverlay")
+            $textBlock = $this.Window.FindName("NotificationText")
+
+            if (-not $overlay -or -not $textBlock) { return }
+
+            $textBlock.Text = $Message
+
+            switch ($Type) {
+                "Error" {
+                    $overlay.Background = ("System.Windows.Media.Brushes" -as [type])::White
+                    $overlay.BorderBrush = ("System.Windows.Media.Brushes" -as [type])::Red
+                    $textBlock.Foreground = ("System.Windows.Media.Brushes" -as [type])::Red
+                }
+                "Success" {
+                    $overlay.Background = ("System.Windows.Media.Brushes" -as [type])::White
+                    $overlay.BorderBrush = ("System.Windows.Media.Brushes" -as [type])::Green
+                    $textBlock.Foreground = ("System.Windows.Media.Brushes" -as [type])::Green
+                }
+                default {
+                    $overlay.Background = ("System.Windows.Media.Brushes" -as [type])::White
+                    $overlay.BorderBrush = ("System.Windows.Media.Brushes" -as [type])::Black
+                    $textBlock.Foreground = ("System.Windows.Media.Brushes" -as [type])::Black
+                }
+            }
+
+            $overlay.Visibility = ("System.Windows.Visibility" -as [type])::Visible
+
+            $this.NotificationTimer.Stop()
+            $this.NotificationTimer.Start()
+        } catch {
+            Write-Warning "[ShowNotification] Error displaying notification: $($_.Exception.Message)"
+        }
+    }
+
+    <#
+    .SYNOPSIS
+        Toggles error state for an input control.
+
+    .DESCRIPTION
+        Shows or hides an error message below an input control and updates the control's
+        border styling to indicate validation errors. Error TextBlock must be named
+        "{ControlName}ErrorText" by convention.
+
+    .PARAMETER ControlName
+        Name of the input control (TextBox, ComboBox, etc.)
+
+    .PARAMETER Message
+        Error message to display. If empty or null, clears the error state.
+
+    .EXAMPLE
+        $this.SetInputError("GameIdTextBox", "Game ID cannot be empty")
+        $this.SetInputError("GameIdTextBox", "") # Clear error
+
+    .NOTES
+        Requires error TextBlock in XAML named "{ControlName}ErrorText"
+    #>
+    [void] SetInputError([string]$ControlName, [string]$Message) {
+        try {
+            $errorTextName = "${ControlName}ErrorText"
+
+            $inputControl = $this.Window.FindName($ControlName)
+            $errorTextBlock = $this.Window.FindName($errorTextName)
+
+            if (-not $inputControl -or -not $errorTextBlock) {
+                Write-Verbose "[SetInputError] Control '$ControlName' or error text '$errorTextName' not found"
+                return
+            }
+
+            if ([string]::IsNullOrEmpty($Message)) {
+                $errorTextBlock.Visibility = ("System.Windows.Visibility" -as [type])::Collapsed
+                $inputControl.BorderBrush = ("System.Windows.Media.Brushes" -as [type])::Gray
+                $inputControl.BorderThickness = ("System.Windows.Thickness" -as [type])::new(1)
+                Write-Verbose "[SetInputError] Cleared error for '$ControlName'"
+            } else {
+                $errorTextBlock.Text = $Message
+                $errorTextBlock.Visibility = ("System.Windows.Visibility" -as [type])::Visible
+                $inputControl.BorderBrush = ("System.Windows.Media.Brushes" -as [type])::Red
+                $inputControl.BorderThickness = ("System.Windows.Thickness" -as [type])::new(2)
+                Write-Verbose "[SetInputError] Set error for '$ControlName': $Message"
+            }
+        } catch {
+            Write-Warning "[SetInputError] Failed to set error state for '$ControlName': $($_.Exception.Message)"
         }
     }
 
@@ -987,6 +1095,17 @@ class ConfigEditorUI {
                     $replayBufferCheckBox.IsChecked = [bool]$ConfigData.integrations.obs.replayBuffer
                 }
 
+                # Load OBS auto start/stop checkboxes based on gameStartAction/gameEndAction
+                $obsAutoStartCheckBox = $self.Window.FindName("OBSAutoStartCheckBox")
+                if ($obsAutoStartCheckBox -and $ConfigData.integrations.obs) {
+                    $obsAutoStartCheckBox.IsChecked = ($ConfigData.integrations.obs.gameStartAction -eq "enter-game-mode")
+                }
+
+                $obsAutoStopCheckBox = $self.Window.FindName("OBSAutoStopCheckBox")
+                if ($obsAutoStopCheckBox -and $ConfigData.integrations.obs) {
+                    $obsAutoStopCheckBox.IsChecked = ($ConfigData.integrations.obs.gameEndAction -eq "exit-game-mode")
+                }
+
                 if ($ConfigData.paths) {
                     $steamPathTextBox = $self.Window.FindName("SteamPathTextBox")
                     if ($steamPathTextBox) { $steamPathTextBox.Text = $ConfigData.paths.steam }
@@ -1004,22 +1123,23 @@ class ConfigEditorUI {
                 }
 
                 # Load Discord settings
-                if ($ConfigData.discord) {
+                if ($ConfigData.integrations.discord) {
                     $discordPathTextBox = $self.Window.FindName("DiscordPathTextBox")
                     if ($discordPathTextBox) {
-                        $discordPathTextBox.Text = $ConfigData.discord.path
-                        Write-Verbose "Loaded Discord path: $($ConfigData.discord.path)"
+                        $discordPathTextBox.Text = $ConfigData.integrations.discord.path
+                        Write-Verbose "Loaded Discord path: $($ConfigData.integrations.discord.path)"
                     }
 
+                    # Load Discord game mode checkbox based on gameStartAction
                     $enableGameModeCheckBox = $self.Window.FindName("DiscordEnableGameModeCheckBox")
                     if ($enableGameModeCheckBox) {
-                        $enableGameModeCheckBox.IsChecked = [bool]$ConfigData.discord.enableGameMode
+                        $enableGameModeCheckBox.IsChecked = ($ConfigData.integrations.discord.gameStartAction -eq "enter-game-mode")
                     }
 
                     $statusOnStartCombo = $self.Window.FindName("DiscordStatusOnStartCombo")
-                    if ($statusOnStartCombo -and $ConfigData.discord.statusOnStart) {
+                    if ($statusOnStartCombo -and $ConfigData.integrations.discord.statusOnStart) {
                         for ($i = 0; $i -lt $statusOnStartCombo.Items.Count; $i++) {
-                            if ($statusOnStartCombo.Items[$i].Tag -eq $ConfigData.discord.statusOnStart) {
+                            if ($statusOnStartCombo.Items[$i].Tag -eq $ConfigData.integrations.discord.statusOnStart) {
                                 $statusOnStartCombo.SelectedIndex = $i
                                 break
                             }
@@ -1027,9 +1147,9 @@ class ConfigEditorUI {
                     }
 
                     $statusOnEndCombo = $self.Window.FindName("DiscordStatusOnEndCombo")
-                    if ($statusOnEndCombo -and $ConfigData.discord.statusOnEnd) {
+                    if ($statusOnEndCombo -and $ConfigData.integrations.discord.statusOnEnd) {
                         for ($i = 0; $i -lt $statusOnEndCombo.Items.Count; $i++) {
-                            if ($statusOnEndCombo.Items[$i].Tag -eq $ConfigData.discord.statusOnEnd) {
+                            if ($statusOnEndCombo.Items[$i].Tag -eq $ConfigData.integrations.discord.statusOnEnd) {
                                 $statusOnEndCombo.SelectedIndex = $i
                                 break
                             }
@@ -1038,20 +1158,40 @@ class ConfigEditorUI {
 
                     $disableOverlayCheckBox = $self.Window.FindName("DiscordDisableOverlayCheckBox")
                     if ($disableOverlayCheckBox) {
-                        $disableOverlayCheckBox.IsChecked = [bool]$ConfigData.discord.disableOverlay
+                        $disableOverlayCheckBox.IsChecked = [bool]$ConfigData.integrations.discord.disableOverlay
                     }
 
                     # Load Rich Presence settings
-                    if ($ConfigData.discord.rpc) {
+                    if ($ConfigData.integrations.discord.rpc) {
                         $rpcEnableCheckBox = $self.Window.FindName("DiscordRPCEnableCheckBox")
                         if ($rpcEnableCheckBox) {
-                            $rpcEnableCheckBox.IsChecked = [bool]$ConfigData.discord.rpc.enabled
+                            $rpcEnableCheckBox.IsChecked = [bool]$ConfigData.integrations.discord.rpc.enabled
                         }
 
                         $rpcAppIdTextBox = $self.Window.FindName("DiscordRPCAppIdTextBox")
                         if ($rpcAppIdTextBox) {
-                            $rpcAppIdTextBox.Text = $ConfigData.discord.rpc.applicationId
+                            $rpcAppIdTextBox.Text = $ConfigData.integrations.discord.rpc.applicationId
                         }
+                    }
+                }
+
+                # Load VTube Studio settings
+                if ($ConfigData.integrations.vtubeStudio) {
+                    $vtubePathTextBox = $self.Window.FindName("VTubePathTextBox")
+                    if ($vtubePathTextBox) {
+                        $vtubePathTextBox.Text = $ConfigData.integrations.vtubeStudio.path
+                        Write-Verbose "Loaded VTube Studio path: $($ConfigData.integrations.vtubeStudio.path)"
+                    }
+
+                    # Load VTube Studio auto start/stop checkboxes based on gameStartAction/gameEndAction
+                    $vtubeAutoStartCheckBox = $self.Window.FindName("VTubeAutoStartCheckBox")
+                    if ($vtubeAutoStartCheckBox) {
+                        $vtubeAutoStartCheckBox.IsChecked = ($ConfigData.integrations.vtubeStudio.gameStartAction -eq "enter-game-mode")
+                    }
+
+                    $vtubeAutoStopCheckBox = $self.Window.FindName("VTubeAutoStopCheckBox")
+                    if ($vtubeAutoStopCheckBox) {
+                        $vtubeAutoStopCheckBox.IsChecked = ($ConfigData.integrations.vtubeStudio.gameEndAction -eq "exit-game-mode")
                     }
                 }
 

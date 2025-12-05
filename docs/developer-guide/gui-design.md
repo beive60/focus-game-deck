@@ -332,9 +332,9 @@ The following design decisions were made for implementing this GUI configuration
 
 Regarding Japanese character garbling issues in PowerShell's `[System.Windows.MessageBox]`, the following methods were verified:
 
-1. **Direct Unicode Code Point Specification** ✅
+1. **Direct Unicode Code Point Specification** [VERIFIED]
 2. **JSON External Resource Files** (Adopted)
-3. **PowerShell Embedded Strings** ❌
+3. **PowerShell Embedded Strings** [NOT VIABLE]
 
 **Adoption Decision:**
 

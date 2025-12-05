@@ -300,7 +300,7 @@ class AppManager {
     #>
     [bool] HandleOBSAction([object] $manager, [object] $config, [string] $action) {
         switch ($action) {
-            "start-process" {
+            "enter-game-mode" {
                 if ($this.Logger) { $this.Logger.Info("Starting OBS integration", "OBS") }
 
                 $success = $manager.StartOBS()
@@ -338,7 +338,7 @@ class AppManager {
                 }
                 return $success
             }
-            "stop-process" {
+            "exit-game-mode" {
                 $success = $true
                 # Handle replay buffer shutdown
                 if ($config.replayBuffer) {
@@ -395,7 +395,7 @@ class AppManager {
     #>
     [bool] HandleDiscordAction([object] $manager, [object] $config, [string] $action) {
         switch ($action) {
-            "start-process" {
+            "enter-game-mode" {
                 if ($this.Logger) { $this.Logger.Info("Starting Discord integration", "Discord") }
 
                 $success = $manager.StartDiscord()
@@ -407,8 +407,8 @@ class AppManager {
 
                 return $success
             }
-            "stop-process" {
-                if ($this.Logger) { $this.Logger.Info("Starting Discord integration", "Discord") }
+            "exit-game-mode" {
+                if ($this.Logger) { $this.Logger.Info("Stopping Discord integration", "Discord") }
 
                 $success = $manager.StopDiscord()
 
@@ -454,10 +454,10 @@ class AppManager {
     #>
     [bool] HandleVTubeStudioAction([object] $manager, [object] $config, [string] $action) {
         switch ($action) {
-            "start-process" {
+            "enter-game-mode" {
                 return $manager.StartVTubeStudio()
             }
-            "stop-process" {
+            "exit-game-mode" {
                 return $manager.StopVTubeStudio()
             }
             "none" {

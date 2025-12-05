@@ -560,11 +560,11 @@ function Initialize-ConfigEditor {
 
         if (-not $Headless) {
             try {
-                [System.Windows.MessageBox]::Show(
+                ("System.Windows.MessageBox" -as [type])::Show(
                     "An initialization error occurred: $($_.Exception.Message)",
                     "Error",
-                    [System.Windows.MessageBoxButton]::OK,
-                    [System.Windows.MessageBoxImage]::Error
+                    "OK",
+                    "Error"
                 )
             } catch {
                 Write-Host "[ERROR] ConfigEditor: Failed to show error dialog - $($_.Exception.Message)"
@@ -736,19 +736,19 @@ function Update-PlatformFields {
         # Disable all platform fields and set gray background
         if ($steamAppIdTextBox) {
             $steamAppIdTextBox.IsEnabled = $false
-            $steamAppIdTextBox.Background = [System.Windows.Media.Brushes]::LightGray
+            $steamAppIdTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::LightGray
         }
         if ($epicGameIdTextBox) {
             $epicGameIdTextBox.IsEnabled = $false
-            $epicGameIdTextBox.Background = [System.Windows.Media.Brushes]::LightGray
+            $epicGameIdTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::LightGray
         }
         if ($riotGameIdTextBox) {
             $riotGameIdTextBox.IsEnabled = $false
-            $riotGameIdTextBox.Background = [System.Windows.Media.Brushes]::LightGray
+            $riotGameIdTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::LightGray
         }
         if ($executablePathTextBox) {
             $executablePathTextBox.IsEnabled = $false
-            $executablePathTextBox.Background = [System.Windows.Media.Brushes]::LightGray
+            $executablePathTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::LightGray
         }
         if ($browseExecutablePathButton) {
             $browseExecutablePathButton.IsEnabled = $false
@@ -759,7 +759,7 @@ function Update-PlatformFields {
             "steam" {
                 if ($steamAppIdTextBox) {
                     $steamAppIdTextBox.IsEnabled = $true
-                    $steamAppIdTextBox.Background = [System.Windows.Media.Brushes]::White
+                    $steamAppIdTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::White
                 }
                 if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
                 if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
@@ -769,7 +769,7 @@ function Update-PlatformFields {
             "epic" {
                 if ($epicGameIdTextBox) {
                     $epicGameIdTextBox.IsEnabled = $true
-                    $epicGameIdTextBox.Background = [System.Windows.Media.Brushes]::White
+                    $epicGameIdTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::White
                 }
                 if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = "" }
                 if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
@@ -779,7 +779,7 @@ function Update-PlatformFields {
             "riot" {
                 if ($riotGameIdTextBox) {
                     $riotGameIdTextBox.IsEnabled = $true
-                    $riotGameIdTextBox.Background = [System.Windows.Media.Brushes]::White
+                    $riotGameIdTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::White
                 }
                 if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = "" }
                 if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
@@ -789,7 +789,7 @@ function Update-PlatformFields {
             "standalone" {
                 if ($executablePathTextBox) {
                     $executablePathTextBox.IsEnabled = $true
-                    $executablePathTextBox.Background = [System.Windows.Media.Brushes]::White
+                    $executablePathTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::White
                 }
                 if ($browseExecutablePathButton) {
                     $browseExecutablePathButton.IsEnabled = $true
@@ -803,7 +803,7 @@ function Update-PlatformFields {
                 Write-Warning "Unknown platform: $Platform, defaulting to standalone"
                 if ($executablePathTextBox) {
                     $executablePathTextBox.IsEnabled = $true
-                    $executablePathTextBox.Background = [System.Windows.Media.Brushes]::White
+                    $executablePathTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::White
                 }
                 if ($browseExecutablePathButton) {
                     $browseExecutablePathButton.IsEnabled = $true
@@ -876,6 +876,77 @@ function Set-PropertyValue {
         $Object | Add-Member -NotePropertyName $PropertyName -NotePropertyValue $Value -Force
     }
 }
+function Get-GameValidationErrors {
+    param(
+        [string]$GameId,
+        [string]$Platform,
+        [string]$SteamAppId,
+        [string]$EpicGameId,
+        [string]$ExecutablePath
+    )
+
+    $errors = @()
+
+    # Game ID: required + alphanumeric/hyphen/underscore
+    if ([string]::IsNullOrWhiteSpace($GameId)) {
+        $errors += @{
+            Control = 'GameIdTextBox'
+            Key = 'gameIdRequired'
+        }
+    } elseif ($GameId -notmatch '^[A-Za-z0-9_-]+$') {
+        $errors += @{
+            Control = 'GameIdTextBox'
+            Key = 'gameIdInvalidCharacters'
+        }
+    }
+
+    # Steam AppID: only when platform=steam; required + 7-digit numeric
+    if ($Platform -eq 'steam') {
+        if ([string]::IsNullOrWhiteSpace($SteamAppId)) {
+            $errors += @{
+                Control = 'SteamAppIdTextBox'
+                Key = 'steamAppIdRequired'
+            }
+        } elseif ($SteamAppId -notmatch '^[0-9]{7}$') {
+            $errors += @{
+                Control = 'SteamAppIdTextBox'
+                Key = 'steamAppIdMust7Digits'
+            }
+        }
+    }
+
+    # Epic Game ID: only when platform=epic; must start with expected prefix
+    if ($Platform -eq 'epic') {
+        if ([string]::IsNullOrWhiteSpace($EpicGameId)) {
+            $errors += @{
+                Control = 'EpicGameIdTextBox'
+                Key = 'epicGameIdRequired'
+            }
+        } elseif ($EpicGameId -notmatch '^(com\.epicgames\.launcher://)?apps/') {
+            $errors += @{
+                Control = 'EpicGameIdTextBox'
+                Key = 'epicGameIdInvalidFormat'
+            }
+        }
+    }
+
+    # Executable Path: only when platform=standalone; validate file existence
+    if ($Platform -eq 'standalone' -or $Platform -eq 'direct') {
+        if ([string]::IsNullOrWhiteSpace($ExecutablePath)) {
+            $errors += @{
+                Control = 'ExecutablePathTextBox'
+                Key = 'executablePathRequired'
+            }
+        } elseif (-not (Test-Path -Path $ExecutablePath -PathType Leaf)) {
+            $errors += @{
+                Control = 'ExecutablePathTextBox'
+                Key = 'executablePathNotFound'
+            }
+        }
+    }
+
+    return $errors
+}
 function Save-CurrentGameData {
     if (-not $script:CurrentGameId) {
         Write-Verbose "No game selected, skipping save"
@@ -895,11 +966,26 @@ function Save-CurrentGameData {
         $script:CurrentGameId
     }
 
-    # 2. Validate the new game ID
-    if ([string]::IsNullOrWhiteSpace($newGameId)) {
-        Write-Warning "Game ID cannot be empty"
-        # Note: Add key "gameIdCannotBeEmpty" to localization/messages.json
-        Show-SafeMessage -Key "gameIdCannotBeEmpty" -MessageType "Warning"
+    # 2. Validate game inputs (Game ID, Steam AppID, Epic Game ID, Executable Path depending on platform)
+    $platformCombo = $script:Window.FindName("PlatformComboBox")
+    $platform = if ($platformCombo -and $platformCombo.SelectedItem) { $platformCombo.SelectedItem.Tag } else { "" }
+
+    $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
+    $steamAppId = if ($steamAppIdTextBox) { $steamAppIdTextBox.Text.Trim() } else { "" }
+
+    $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
+    $epicGameId = if ($epicGameIdTextBox) { $epicGameIdTextBox.Text.Trim() } else { "" }
+
+    $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
+    $executablePath = if ($executablePathTextBox) { $executablePathTextBox.Text.Trim() } else { "" }
+
+    $validationErrors = Get-GameValidationErrors -GameId $newGameId -Platform $platform -SteamAppId $steamAppId -EpicGameId $epicGameId -ExecutablePath $executablePath
+
+    if ($validationErrors.Count -gt 0) {
+        foreach ($err in $validationErrors) {
+            $script:UIManager.SetInputError($err.Control, $script:Localization.Get($err.Key))
+        }
+        Show-SafeMessage -Key $validationErrors[0].Key -MessageType "Warning"
         return
     }
 
@@ -1262,6 +1348,7 @@ The plain text password to encrypt.
 String - The encrypted password string.
 #>
 function Protect-Password {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPlainTextForPassword', '', Justification = 'Function purpose is to encrypt plain text passwords')]
     param(
         [Parameter(Mandatory = $true)]
         [string]$PlainTextPassword
@@ -1298,6 +1385,7 @@ The encrypted password string to decrypt.
 String - The decrypted plain text password.
 #>
 function Unprotect-Password {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPlainTextForPassword', '', Justification = 'Parameter contains encrypted string, not plain text password')]
     param(
         [Parameter(Mandatory = $false)]
         [string]$EncryptedPassword
@@ -1513,6 +1601,8 @@ function Save-OBSSettingsData {
         $obsPasswordBox = $script:Window.FindName("OBSPasswordBox")
         $replayBufferCheckBox = $script:Window.FindName("OBSReplayBufferCheckBox")
         $obsPathTextBox = $script:Window.FindName("OBSPathTextBox")
+        $obsAutoStartCheckBox = $script:Window.FindName("OBSAutoStartCheckBox")
+        $obsAutoStopCheckBox = $script:Window.FindName("OBSAutoStopCheckBox")
 
         # Ensure integrations section exists
         if (-not $script:StateManager.ConfigData.integrations) {
@@ -1589,6 +1679,27 @@ function Save-OBSSettingsData {
             Write-Verbose "Saved OBS path: $normalizedPath"
         }
 
+        # Save OBS game start/end actions based on checkboxes
+        if ($obsAutoStartCheckBox) {
+            $gameStartAction = if ($obsAutoStartCheckBox.IsChecked) { "enter-game-mode" } else { "none" }
+            if (-not $script:StateManager.ConfigData.integrations.obs.PSObject.Properties["gameStartAction"]) {
+                $script:StateManager.ConfigData.integrations.obs | Add-Member -NotePropertyName "gameStartAction" -NotePropertyValue $gameStartAction -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.obs.gameStartAction = $gameStartAction
+            }
+            Write-Verbose "Saved OBS gameStartAction: $gameStartAction"
+        }
+
+        if ($obsAutoStopCheckBox) {
+            $gameEndAction = if ($obsAutoStopCheckBox.IsChecked) { "exit-game-mode" } else { "none" }
+            if (-not $script:StateManager.ConfigData.integrations.obs.PSObject.Properties["gameEndAction"]) {
+                $script:StateManager.ConfigData.integrations.obs | Add-Member -NotePropertyName "gameEndAction" -NotePropertyValue $gameEndAction -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.obs.gameEndAction = $gameEndAction
+            }
+            Write-Verbose "Saved OBS gameEndAction: $gameEndAction"
+        }
+
         # Mark configuration as modified
         $script:StateManager.SetModified()
 
@@ -1604,23 +1715,37 @@ function Save-DiscordSettingsData {
     Write-Verbose "Save-DiscordSettingsData: Starting to save Discord settings"
 
     try {
-        # Ensure discord section exists
-        if (-not $script:StateManager.ConfigData.discord) {
-            $script:StateManager.ConfigData | Add-Member -NotePropertyName "discord" -NotePropertyValue @{} -Force
+        # Ensure integrations section exists
+        if (-not $script:StateManager.ConfigData.integrations) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "integrations" -NotePropertyValue @{} -Force
+        }
+
+        # Ensure integrations.discord section exists
+        if (-not $script:StateManager.ConfigData.integrations.discord) {
+            $script:StateManager.ConfigData.integrations | Add-Member -NotePropertyName "discord" -NotePropertyValue @{} -Force
         }
 
         # Get Discord path from UI
         $discordPathTextBox = $script:Window.FindName("DiscordPathTextBox")
         if ($discordPathTextBox -and $discordPathTextBox.Text) {
-            $script:StateManager.ConfigData.discord.path = $discordPathTextBox.Text
+            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["path"]) {
+                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "path" -NotePropertyValue $discordPathTextBox.Text -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.discord.path = $discordPathTextBox.Text
+            }
             Write-Verbose "Save-DiscordSettingsData: Discord path set to $($discordPathTextBox.Text)"
         }
 
-        # Get game mode checkbox
+        # Get game mode checkbox and map to gameStartAction
         $enableGameModeCheckBox = $script:Window.FindName("DiscordEnableGameModeCheckBox")
         if ($enableGameModeCheckBox) {
-            $script:StateManager.ConfigData.discord.enableGameMode = $enableGameModeCheckBox.IsChecked
-            Write-Verbose "Save-DiscordSettingsData: Enable game mode set to $($enableGameModeCheckBox.IsChecked)"
+            $gameStartAction = if ($enableGameModeCheckBox.IsChecked) { "enter-game-mode" } else { "none" }
+            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["gameStartAction"]) {
+                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "gameStartAction" -NotePropertyValue $gameStartAction -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.discord.gameStartAction = $gameStartAction
+            }
+            Write-Verbose "Save-DiscordSettingsData: gameStartAction set to $gameStartAction"
         }
 
         # Get status settings
@@ -1677,12 +1802,51 @@ function Save-VTubeStudioSettingsData {
     Write-Verbose "Save-VTubeStudioSettingsData: Starting to save VTube Studio settings"
 
     try {
-        # TODO: Implement VTube Studio settings save logic once UI controls are defined
-        # Placeholder for VTube Studio-specific settings
+        # Get references to UI controls from VTube Studio tab
+        $vtubePathTextBox = $script:Window.FindName("VTubePathTextBox")
+        $vtubeAutoStartCheckBox = $script:Window.FindName("VTubeAutoStartCheckBox")
+        $vtubeAutoStopCheckBox = $script:Window.FindName("VTubeAutoStopCheckBox")
 
-        # Ensure vtubeStudio section exists
-        if (-not $script:StateManager.ConfigData.vtubeStudio) {
-            $script:StateManager.ConfigData | Add-Member -NotePropertyName "vtubeStudio" -NotePropertyValue @{} -Force
+        # Ensure integrations section exists
+        if (-not $script:StateManager.ConfigData.integrations) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "integrations" -NotePropertyValue @{} -Force
+        }
+
+        # Ensure integrations.vtubeStudio section exists
+        if (-not $script:StateManager.ConfigData.integrations.vtubeStudio) {
+            $script:StateManager.ConfigData.integrations | Add-Member -NotePropertyName "vtubeStudio" -NotePropertyValue @{} -Force
+        }
+
+        # Save VTube Studio executable path
+        if ($vtubePathTextBox) {
+            $normalizedPath = $vtubePathTextBox.Text -replace '\\', '/'
+            if (-not $script:StateManager.ConfigData.integrations.vtubeStudio.PSObject.Properties["path"]) {
+                $script:StateManager.ConfigData.integrations.vtubeStudio | Add-Member -NotePropertyName "path" -NotePropertyValue $normalizedPath -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.vtubeStudio.path = $normalizedPath
+            }
+            Write-Verbose "Saved VTube Studio path: $normalizedPath"
+        }
+
+        # Save VTube Studio game start/end actions based on checkboxes
+        if ($vtubeAutoStartCheckBox) {
+            $gameStartAction = if ($vtubeAutoStartCheckBox.IsChecked) { "enter-game-mode" } else { "none" }
+            if (-not $script:StateManager.ConfigData.integrations.vtubeStudio.PSObject.Properties["gameStartAction"]) {
+                $script:StateManager.ConfigData.integrations.vtubeStudio | Add-Member -NotePropertyName "gameStartAction" -NotePropertyValue $gameStartAction -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.vtubeStudio.gameStartAction = $gameStartAction
+            }
+            Write-Verbose "Saved VTube Studio gameStartAction: $gameStartAction"
+        }
+
+        if ($vtubeAutoStopCheckBox) {
+            $gameEndAction = if ($vtubeAutoStopCheckBox.IsChecked) { "exit-game-mode" } else { "none" }
+            if (-not $script:StateManager.ConfigData.integrations.vtubeStudio.PSObject.Properties["gameEndAction"]) {
+                $script:StateManager.ConfigData.integrations.vtubeStudio | Add-Member -NotePropertyName "gameEndAction" -NotePropertyValue $gameEndAction -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.vtubeStudio.gameEndAction = $gameEndAction
+            }
+            Write-Verbose "Saved VTube Studio gameEndAction: $gameEndAction"
         }
 
         # Mark configuration as modified
@@ -1746,11 +1910,11 @@ function Show-LanguageChangeRestartMessage {
         }
 
         # Show confirmation dialog
-        $result = [System.Windows.MessageBox]::Show(
+        $result = ("System.Windows.MessageBox" -as [type])::Show(
             $message,
             $title,
-            [System.Windows.MessageBoxButton]::YesNo,
-            [System.Windows.MessageBoxImage]::Question
+            "YesNo",
+            "Question"
         )
 
         if ("$result" -eq "Yes") {
@@ -1784,14 +1948,14 @@ function Show-LanguageChangeRestartMessage {
                     $continueMessage = "Failed to save configuration before restart. Continue with restart anyway?"
                 }
 
-                $continueResult = [System.Windows.MessageBox]::Show(
+                $continueResult = ("System.Windows.MessageBox" -as [type])::Show(
                     "$errorMessage`n`n$continueMessage",
                     $errorTitle,
-                    [System.Windows.MessageBoxButton]::YesNo,
-                    [System.Windows.MessageBoxImage]::Warning
+                    "YesNo",
+                    "Warning"
                 )
 
-                if ($continueResult -ne [System.Windows.MessageBoxResult]::Yes) {
+                if ($continueResult -ne ("System.Windows.MessageBoxResult" -as [type])::Yes) {
                     Write-Verbose "User cancelled restart due to save error"
                     return
                 }
@@ -1929,22 +2093,48 @@ function Get-SafeLocalizedMessage {
     }
 }
 
-# Shows a localized message dialog
-#
-# Displays a message box using localized messages from the messages.json file.
-# Supports multiple parameter styles for backward compatibility.
-#
-# @param Key - Message key for localization (new style)
-# @param MessageType - Type of message: Information, Warning, Error, Question (new style)
-# @param FormatArgs - Arguments for string formatting (new style)
-# @param Button - Button type (e.g., "YesNo", "YesNoCancel")
-# @param DefaultResult - Default button result
-# @param Message - Direct message text (alternative style)
-# @param MessageKey - Message key (old style, for compatibility)
-# @param TitleKey - Title key (old style, for compatibility)
-# @param Arguments - Format arguments (old style, for compatibility)
-# @param Icon - Icon type (old style, for compatibility)
-# @return MessageBoxResult if button is specified, otherwise void
+<#
+.SYNOPSIS
+Shows a localized message dialog.
+
+.DESCRIPTION
+Displays a message box using localized messages from the messages.json file.
+Supports multiple parameter styles for backward compatibility.
+
+.PARAMETER Key
+Message key for localization (new style).
+
+.PARAMETER MessageType
+Type of message: Information, Warning, Error, Question (new style).
+
+.PARAMETER FormatArgs
+Arguments for string formatting (new style).
+
+.PARAMETER Button
+Button type (e.g., "YesNo", "YesNoCancel").
+
+.PARAMETER DefaultResult
+Default button result.
+
+.PARAMETER Message
+Direct message text (alternative style).
+
+.PARAMETER MessageKey
+Message key (old style, for compatibility).
+
+.PARAMETER TitleKey
+Title key (old style, for compatibility).
+
+.PARAMETER Arguments
+Format arguments (old style, for compatibility).
+
+.PARAMETER Icon
+Icon type (old style, for compatibility).
+
+.OUTPUTS
+System.Windows.MessageBoxResult
+Returns MessageBoxResult if button is specified, otherwise void.
+#>
 function Show-SafeMessage {
     param(
         [string]$Key,
@@ -2011,29 +2201,29 @@ function Show-SafeMessage {
 
         # Map MessageType to icon
         $iconType = switch ($MessageType) {
-            "Information" { [System.Windows.MessageBoxImage]::Information }
-            "Warning" { [System.Windows.MessageBoxImage]::Warning }
-            "Error" { [System.Windows.MessageBoxImage]::Error }
-            "Question" { [System.Windows.MessageBoxImage]::Question }
-            default { [System.Windows.MessageBoxImage]::Information }
+            "Information" { ("System.Windows.MessageBoxImage" -as [type])::Information }
+            "Warning" { ("System.Windows.MessageBoxImage" -as [type])::Warning }
+            "Error" { ("System.Windows.MessageBoxImage" -as [type])::Error }
+            "Question" { ("System.Windows.MessageBoxImage" -as [type])::Question }
+            default { ("System.Windows.MessageBoxImage" -as [type])::Information }
         }
 
         # Map Button string to MessageBoxButton
         $buttonType = switch ($Button) {
-            "OK" { [System.Windows.MessageBoxButton]::OK }
-            "OKCancel" { [System.Windows.MessageBoxButton]::OKCancel }
-            "YesNo" { [System.Windows.MessageBoxButton]::YesNo }
-            "YesNoCancel" { [System.Windows.MessageBoxButton]::YesNoCancel }
-            default { [System.Windows.MessageBoxButton]::OK }
+            "OK" { ("System.Windows.MessageBoxButton" -as [type])::OK }
+            "OKCancel" { ("System.Windows.MessageBoxButton" -as [type])::OKCancel }
+            "YesNo" { ("System.Windows.MessageBoxButton" -as [type])::YesNo }
+            "YesNoCancel" { ("System.Windows.MessageBoxButton" -as [type])::YesNoCancel }
+            default { ("System.Windows.MessageBoxButton" -as [type])::OK }
         }
 
         # Map DefaultResult to MessageBoxResult
         $defaultResultType = switch ($DefaultResult) {
-            "OK" { [System.Windows.MessageBoxResult]::OK }
-            "Cancel" { [System.Windows.MessageBoxResult]::Cancel }
-            "Yes" { [System.Windows.MessageBoxResult]::Yes }
-            "No" { [System.Windows.MessageBoxResult]::No }
-            default { [System.Windows.MessageBoxResult]::OK }
+            "OK" { ("System.Windows.MessageBoxResult" -as [type])::OK }
+            "Cancel" { ("System.Windows.MessageBoxResult" -as [type])::Cancel }
+            "Yes" { ("System.Windows.MessageBoxResult" -as [type])::Yes }
+            "No" { ("System.Windows.MessageBoxResult" -as [type])::No }
+            default { ("System.Windows.MessageBoxResult" -as [type])::OK }
         }
 
         # If running in headless mode, print to console and return the default result
@@ -2043,26 +2233,40 @@ function Show-SafeMessage {
         }
 
         # Show message box
-        return [System.Windows.MessageBox]::Show($messageText, $titleText, $buttonType, $iconType, $defaultResultType)
+        return ("System.Windows.MessageBox" -as [type])::Show($messageText, $titleText, $buttonType, $iconType, $defaultResultType)
 
     } catch {
         Write-Warning "Show-SafeMessage failed: $($_.Exception.Message)"
         # Fallback to simple message box
-        return [System.Windows.MessageBox]::Show($Key, "Message", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+        return ("System.Windows.MessageBox" -as [type])::Show($Key, "Message", "OK", "Information")
     }
 }
 
-# Generates a unique ID for configuration items
-#
-# Creates a unique identifier with the specified prefix, ensuring no collision
-# with existing items in the provided collection. Uses random number generation
-# with collision detection for uniqueness.
-#
-# @param Collection - The collection to check for existing IDs
-# @param Prefix - The prefix for the new ID (default: "new")
-# @param MinRandom - Minimum random number (default: 1000)
-# @param MaxRandom - Maximum random number (default: 9999)
-# @return string - A unique identifier
+<#
+.SYNOPSIS
+Generates a unique ID for configuration items.
+
+.DESCRIPTION
+Creates a unique identifier with the specified prefix, ensuring no collision
+with existing items in the provided collection. Uses random number generation
+with collision detection for uniqueness.
+
+.PARAMETER Collection
+The collection to check for existing IDs.
+
+.PARAMETER Prefix
+The prefix for the new ID (default: "new").
+
+.PARAMETER MinRandom
+Minimum random number (default: 1000).
+
+.PARAMETER MaxRandom
+Maximum random number (default: 9999).
+
+.OUTPUTS
+String
+Returns a unique identifier.
+#>
 function New-UniqueConfigId {
     param(
         [Parameter(Mandatory)]
@@ -2079,15 +2283,27 @@ function New-UniqueConfigId {
     return $newId
 }
 
-# Validates the selected item for duplication operations
-#
-# Checks if an item is selected and if its source data exists in the configuration.
-# Returns validation result and displays appropriate error messages.
-#
-# @param SelectedItem - The ID of the selected item
-# @param SourceData - The source data object
-# @param ItemType - The type of item ("Game" or "App")
-# @return bool - True if validation passes, false otherwise
+<#
+.SYNOPSIS
+Validates the selected item for duplication operations.
+
+.DESCRIPTION
+Checks if an item is selected and if its source data exists in the configuration.
+Returns validation result and displays appropriate error messages.
+
+.PARAMETER SelectedItem
+The ID of the selected item.
+
+.PARAMETER SourceData
+The source data object.
+
+.PARAMETER ItemType
+The type of item ("Game" or "App").
+
+.OUTPUTS
+Boolean
+Returns true if validation passes, false otherwise.
+#>
 function Test-DuplicateSource {
     param(
         [string]$SelectedItem,
@@ -2110,16 +2326,29 @@ function Test-DuplicateSource {
     return $true
 }
 
-# Shows duplication result messages
-#
-# Displays success or error messages for duplication operations with proper
-# localization and error handling.
-#
-# @param OriginalId - The ID of the original item
-# @param NewId - The ID of the new duplicated item
-# @param ItemType - The type of item ("Game" or "App")
-# @param Success - Whether the duplication was successful
-# @param ErrorMessage - Optional error message if duplication failed
+<#
+.SYNOPSIS
+Shows duplication result messages.
+
+.DESCRIPTION
+Displays success or error messages for duplication operations with proper
+localization and error handling.
+
+.PARAMETER OriginalId
+The ID of the original item.
+
+.PARAMETER NewId
+The ID of the new duplicated item.
+
+.PARAMETER ItemType
+The type of item ("Game" or "App").
+
+.PARAMETER Success
+Whether the duplication was successful.
+
+.PARAMETER ErrorMessage
+Optional error message if duplication failed.
+#>
 function Show-DuplicateResult {
     param(
         [string]$OriginalId,
