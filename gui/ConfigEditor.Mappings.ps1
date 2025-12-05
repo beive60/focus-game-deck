@@ -168,7 +168,7 @@ $script:TooltipMappings = @{
     "RiotGameIdLabelPanel" = "tooltip_riot_game_id"
     "ExecutablePathLabelPanel" = "tooltip_executable_path"
     "ProcessNameLabelPanel" = "tooltip_process_name"
-    "CommentLabelPanel" = "tooltip_comment"
+    "GameCommentLabel" = "tooltip_comment"
     "AppsToManageLabelPanel" = "tooltip_apps_to_manage"
     "IntegrationsLabelPanel" = "tooltip_integrations"
 }

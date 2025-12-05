@@ -273,5 +273,66 @@ function Get-LocalizedMessages {
     }
 }
 
+<#
+.SYNOPSIS
+    Writes a localized message to the host console
+
+.PARAMETER Messages
+    The messages object (PSCustomObject) containing localized strings
+
+.PARAMETER Key
+    The message key to look up in the messages object
+
+.PARAMETER Args
+    Optional array of arguments to format into the message
+
+.PARAMETER Default
+    Default text to use if the key is not found in the messages object
+
+.PARAMETER Color
+    Console color for the output (default: White)
+
+.EXAMPLE
+    Write-LocalizedHost -Messages $msg -Key "cli_loading_config" -Default "Loading configuration..." -Color "Cyan"
+
+.EXAMPLE
+    Write-LocalizedHost -Messages $msg -Key "cli_game_not_found" -Args @($GameId) -Default "Game ID '{0}' not found"
+#>
+function Write-LocalizedHost {
+    param(
+        [Parameter(Mandatory = $false)]
+        [PSCustomObject]$Messages = $null,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Key,
+
+        [Parameter(Mandatory = $false)]
+        [object[]]$Args = @(),
+
+        [Parameter(Mandatory = $false)]
+        [string]$Default = "",
+
+        [Parameter(Mandatory = $false)]
+        [string]$Color = "White"
+    )
+
+    $message = $Default
+    if ($Messages -and $Messages.PSObject.Properties[$Key]) {
+        $message = $Messages.$Key
+    } elseif ([string]::IsNullOrEmpty($Default)) {
+        $message = $Key
+    }
+
+    if ($Args.Count -gt 0) {
+        try {
+            $message = $message -f $Args
+        } catch {
+            Write-Warning "Format failed for key '$Key': $_"
+        }
+    }
+
+    Write-Host $message -ForegroundColor $Color
+}
+
 # Export functions for module usage
-# Export-ModuleMember -Function Get-DetectedLanguage, Get-OSLanguage, Set-CultureByLanguage, Get-LocalizedMessages
+# Export-ModuleMember -Function Get-DetectedLanguage, Get-OSLanguage, Set-CultureByLanguage, Get-LocalizedMessages, Write-LocalizedHost

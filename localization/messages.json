@@ -320,7 +320,13 @@
         "mainSessionCompletedMessage": "Focus Game Deck セッションが完了しました。",
         "mainFinalizingLog": "セッションログを最終処理しています...",
         "mainLogNotarizedSuccess": "[OK] ログが正常に公証化されました。証明書ID: {0}",
-        "mainLogFinalized": "ログが最終処理されました（公証化は無効または失敗）"
+        "mainLogFinalized": "ログが最終処理されました（公証化は無効または失敗）",
+        "missing_game_launcher_exe": "エラー: Invoke-FocusGameDeck.exe が見つかりません: {0}",
+        "missing_game_launcher_hint": "ヒント: すべての実行ファイルが同じディレクトリにあることを確認してください。",
+        "missing_game_launcher_script": "ゲームランチャースクリプトが見つかりません: {0}",
+        "cli_available_platforms": "利用可能なプラットフォーム: {0}",
+        "app_management_start": "アプリ管理を開始しています...",
+        "starting_game_name": "ゲームを開始します: {0}"
     },
     "en": {
         "textLabel": "Text",
@@ -643,7 +649,13 @@
         "mainSessionCompletedMessage": "Focus Game Deck session completed.",
         "mainFinalizingLog": "Finalizing session log...",
         "mainLogNotarizedSuccess": "[OK] Log successfully notarized. Certificate ID: {0}",
-        "mainLogFinalized": "Log finalized (notarization disabled or failed)"
+        "mainLogFinalized": "Log finalized (notarization disabled or failed)",
+        "missing_game_launcher_exe": "[ERROR] Invoke-FocusGameDeck.exe not found: {0}",
+        "missing_game_launcher_hint": "[INFO] Please ensure all executable files are in the same directory.",
+        "missing_game_launcher_script": "Game launcher not found: {0}",
+        "cli_available_platforms": "Available platforms: {0}",
+        "app_management_start": "Starting application management...",
+        "starting_game_name": "Starting game: {0}"
     },
     "zh-CN": {
         "textLabel": "文本",
