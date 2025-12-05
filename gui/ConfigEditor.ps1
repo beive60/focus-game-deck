@@ -876,6 +876,77 @@ function Set-PropertyValue {
         $Object | Add-Member -NotePropertyName $PropertyName -NotePropertyValue $Value -Force
     }
 }
+function Get-GameValidationErrors {
+    param(
+        [string]$GameId,
+        [string]$Platform,
+        [string]$SteamAppId,
+        [string]$EpicGameId,
+        [string]$ExecutablePath
+    )
+
+    $errors = @()
+
+    # Game ID: required + alphanumeric/hyphen/underscore
+    if ([string]::IsNullOrWhiteSpace($GameId)) {
+        $errors += @{
+            Control = 'GameIdTextBox'
+            Key     = 'gameIdRequired'
+        }
+    } elseif ($GameId -notmatch '^[A-Za-z0-9_-]+$') {
+        $errors += @{
+            Control = 'GameIdTextBox'
+            Key     = 'gameIdInvalidCharacters'
+        }
+    }
+
+    # Steam AppID: only when platform=steam; required + 7-digit numeric
+    if ($Platform -eq 'steam') {
+        if ([string]::IsNullOrWhiteSpace($SteamAppId)) {
+            $errors += @{
+                Control = 'SteamAppIdTextBox'
+                Key     = 'steamAppIdRequired'
+            }
+        } elseif ($SteamAppId -notmatch '^[0-9]{7}$') {
+            $errors += @{
+                Control = 'SteamAppIdTextBox'
+                Key     = 'steamAppIdMust7Digits'
+            }
+        }
+    }
+
+    # Epic Game ID: only when platform=epic; must start with expected prefix
+    if ($Platform -eq 'epic') {
+        if ([string]::IsNullOrWhiteSpace($EpicGameId)) {
+            $errors += @{
+                Control = 'EpicGameIdTextBox'
+                Key     = 'epicGameIdRequired'
+            }
+        } elseif ($EpicGameId -notmatch '^(com\.epicgames\.launcher://)?apps/') {
+            $errors += @{
+                Control = 'EpicGameIdTextBox'
+                Key     = 'epicGameIdInvalidFormat'
+            }
+        }
+    }
+
+    # Executable Path: only when platform=standalone; validate file existence
+    if ($Platform -eq 'standalone' -or $Platform -eq 'direct') {
+        if ([string]::IsNullOrWhiteSpace($ExecutablePath)) {
+            $errors += @{
+                Control = 'ExecutablePathTextBox'
+                Key     = 'executablePathRequired'
+            }
+        } elseif (-not (Test-Path -Path $ExecutablePath -PathType Leaf)) {
+            $errors += @{
+                Control = 'ExecutablePathTextBox'
+                Key     = 'executablePathNotFound'
+            }
+        }
+    }
+
+    return $errors
+}
 function Save-CurrentGameData {
     if (-not $script:CurrentGameId) {
         Write-Verbose "No game selected, skipping save"
@@ -895,11 +966,26 @@ function Save-CurrentGameData {
         $script:CurrentGameId
     }
 
-    # 2. Validate the new game ID
-    if ([string]::IsNullOrWhiteSpace($newGameId)) {
-        Write-Warning "Game ID cannot be empty"
-        # Note: Add key "gameIdCannotBeEmpty" to localization/messages.json
-        Show-SafeMessage -Key "gameIdCannotBeEmpty" -MessageType "Warning"
+    # 2. Validate game inputs (Game ID, Steam AppID, Epic Game ID, Executable Path depending on platform)
+    $platformCombo = $script:Window.FindName("PlatformComboBox")
+    $platform = if ($platformCombo -and $platformCombo.SelectedItem) { $platformCombo.SelectedItem.Tag } else { "" }
+
+    $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
+    $steamAppId = if ($steamAppIdTextBox) { $steamAppIdTextBox.Text.Trim() } else { "" }
+
+    $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
+    $epicGameId = if ($epicGameIdTextBox) { $epicGameIdTextBox.Text.Trim() } else { "" }
+
+    $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
+    $executablePath = if ($executablePathTextBox) { $executablePathTextBox.Text.Trim() } else { "" }
+
+    $validationErrors = Get-GameValidationErrors -GameId $newGameId -Platform $platform -SteamAppId $steamAppId -EpicGameId $epicGameId -ExecutablePath $executablePath
+
+    if ($validationErrors.Count -gt 0) {
+        foreach ($err in $validationErrors) {
+            $script:UIManager.SetInputError($err.Control, $script:Localization.Get($err.Key))
+        }
+        Show-SafeMessage -Key $validationErrors[0].Key -MessageType "Warning"
         return
     }
 
