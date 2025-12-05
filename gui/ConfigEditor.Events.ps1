@@ -144,9 +144,9 @@
 
                 $gameIdTextBox = $script:Window.FindName("GameIdTextBox")
                 if ($gameIdTextBox) {
-                    $appId = if ($gameData.appId) { $gameData.appId } else { $selectedGame }
-                    $gameIdTextBox.Text = $appId
-                    Write-Verbose "  Set GameIdTextBox: $appId"
+                    # The game ID is the dictionary key, never use appId property (legacy bug)
+                    $gameIdTextBox.Text = $selectedGame
+                    Write-Verbose "  Set GameIdTextBox: $selectedGame"
                 }
 
                 $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
@@ -217,9 +217,9 @@
                 Update-PlatformFields -Platform $platform
 
                 # Update available actions for this game
-                $appId = if ($gameData.appId) { $gameData.appId } else { $selectedGame }
+                # The game ID is the dictionary key, never use appId property (legacy bug)
                 $executablePath = if ($gameData.executablePath) { $gameData.executablePath } else { "" }
-                Update-ActionComboBoxes -AppId $appId -ExecutablePath $executablePath
+                Update-ActionComboBoxes -AppId $selectedGame -ExecutablePath $executablePath
 
                 # Load managed apps settings
                 $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
@@ -531,7 +531,6 @@
         $newGame = @{
             displayName = "New Game"
             platform = "standalone"
-            appId = $newGameId
             managedApps = @{
                 gameStartAction = "none"
                 gameEndAction = "none"
@@ -581,6 +580,11 @@
             # Deep copy the selected game data
             $originalGameData = $this.stateManager.ConfigData.games.$selectedGame
             $duplicatedGameData = $originalGameData | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+
+            # Remove the appId property if it exists (it should never be on game objects)
+            if ($duplicatedGameData.PSObject.Properties.Name -contains "appId") {
+                $duplicatedGameData.PSObject.Properties.Remove("appId")
+            }
 
             # Modify the display/name to indicate it's a copy (games historically use 'name')
             $originalDisplayName = if ($duplicatedGameData.displayName) { $duplicatedGameData.displayName } elseif ($duplicatedGameData.name) { $duplicatedGameData.name } else { $selectedGame }
