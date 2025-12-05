@@ -165,7 +165,7 @@ class ConfigEditorUI {
 
             $this.NotificationTimer.add_Tick({
                     if ($overlay) {
-                        $overlay.Visibility = [System.Windows.Visibility]::Collapsed
+                        $overlay.Visibility = ("System.Windows.Visibility" -as [type])::Collapsed
                     }
                     $timer.Stop()
                 }.GetNewClosure())
@@ -185,23 +185,23 @@ class ConfigEditorUI {
 
             switch ($Type) {
                 "Error" {
-                    $overlay.Background = [System.Windows.Media.Brushes]::White
-                    $overlay.BorderBrush = [System.Windows.Media.Brushes]::Red
-                    $textBlock.Foreground = [System.Windows.Media.Brushes]::Red
+                    $overlay.Background = ("System.Windows.Media.Brushes" -as [type])::White
+                    $overlay.BorderBrush = ("System.Windows.Media.Brushes" -as [type])::Red
+                    $textBlock.Foreground = ("System.Windows.Media.Brushes" -as [type])::Red
                 }
                 "Success" {
-                    $overlay.Background = [System.Windows.Media.Brushes]::White
-                    $overlay.BorderBrush = [System.Windows.Media.Brushes]::Green
-                    $textBlock.Foreground = [System.Windows.Media.Brushes]::Green
+                    $overlay.Background = ("System.Windows.Media.Brushes" -as [type])::White
+                    $overlay.BorderBrush = ("System.Windows.Media.Brushes" -as [type])::Green
+                    $textBlock.Foreground = ("System.Windows.Media.Brushes" -as [type])::Green
                 }
                 default {
-                    $overlay.Background = [System.Windows.Media.Brushes]::White
-                    $overlay.BorderBrush = [System.Windows.Media.Brushes]::Black
-                    $textBlock.Foreground = [System.Windows.Media.Brushes]::Black
+                    $overlay.Background = ("System.Windows.Media.Brushes" -as [type])::White
+                    $overlay.BorderBrush = ("System.Windows.Media.Brushes" -as [type])::Black
+                    $textBlock.Foreground = ("System.Windows.Media.Brushes" -as [type])::Black
                 }
             }
 
-            $overlay.Visibility = [System.Windows.Visibility]::Visible
+            $overlay.Visibility = ("System.Windows.Visibility" -as [type])::Visible
 
             $this.NotificationTimer.Stop()
             $this.NotificationTimer.Start()
@@ -245,15 +245,15 @@ class ConfigEditorUI {
             }
 
             if ([string]::IsNullOrEmpty($Message)) {
-                $errorTextBlock.Visibility = [System.Windows.Visibility]::Collapsed
-                $inputControl.BorderBrush = [System.Windows.Media.Brushes]::Gray
-                $inputControl.BorderThickness = [System.Windows.Thickness]::new(1)
+                $errorTextBlock.Visibility = ("System.Windows.Visibility" -as [type])::Collapsed
+                $inputControl.BorderBrush = ("System.Windows.Media.Brushes" -as [type])::Gray
+                $inputControl.BorderThickness = ("System.Windows.Thickness" -as [type])::new(1)
                 Write-Verbose "[SetInputError] Cleared error for '$ControlName'"
             } else {
                 $errorTextBlock.Text = $Message
-                $errorTextBlock.Visibility = [System.Windows.Visibility]::Visible
-                $inputControl.BorderBrush = [System.Windows.Media.Brushes]::Red
-                $inputControl.BorderThickness = [System.Windows.Thickness]::new(2)
+                $errorTextBlock.Visibility = ("System.Windows.Visibility" -as [type])::Visible
+                $inputControl.BorderBrush = ("System.Windows.Media.Brushes" -as [type])::Red
+                $inputControl.BorderThickness = ("System.Windows.Thickness" -as [type])::new(2)
                 Write-Verbose "[SetInputError] Set error for '$ControlName': $Message"
             }
         } catch {

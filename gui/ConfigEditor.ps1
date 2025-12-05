@@ -560,11 +560,11 @@ function Initialize-ConfigEditor {
 
         if (-not $Headless) {
             try {
-                [System.Windows.MessageBox]::Show(
+                ("System.Windows.MessageBox" -as [type])::Show(
                     "An initialization error occurred: $($_.Exception.Message)",
                     "Error",
-                    [System.Windows.MessageBoxButton]::OK,
-                    [System.Windows.MessageBoxImage]::Error
+                    "OK",
+                    "Error"
                 )
             } catch {
                 Write-Host "[ERROR] ConfigEditor: Failed to show error dialog - $($_.Exception.Message)"
@@ -736,19 +736,19 @@ function Update-PlatformFields {
         # Disable all platform fields and set gray background
         if ($steamAppIdTextBox) {
             $steamAppIdTextBox.IsEnabled = $false
-            $steamAppIdTextBox.Background = [System.Windows.Media.Brushes]::LightGray
+            $steamAppIdTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::LightGray
         }
         if ($epicGameIdTextBox) {
             $epicGameIdTextBox.IsEnabled = $false
-            $epicGameIdTextBox.Background = [System.Windows.Media.Brushes]::LightGray
+            $epicGameIdTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::LightGray
         }
         if ($riotGameIdTextBox) {
             $riotGameIdTextBox.IsEnabled = $false
-            $riotGameIdTextBox.Background = [System.Windows.Media.Brushes]::LightGray
+            $riotGameIdTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::LightGray
         }
         if ($executablePathTextBox) {
             $executablePathTextBox.IsEnabled = $false
-            $executablePathTextBox.Background = [System.Windows.Media.Brushes]::LightGray
+            $executablePathTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::LightGray
         }
         if ($browseExecutablePathButton) {
             $browseExecutablePathButton.IsEnabled = $false
@@ -759,7 +759,7 @@ function Update-PlatformFields {
             "steam" {
                 if ($steamAppIdTextBox) {
                     $steamAppIdTextBox.IsEnabled = $true
-                    $steamAppIdTextBox.Background = [System.Windows.Media.Brushes]::White
+                    $steamAppIdTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::White
                 }
                 if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
                 if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
@@ -769,7 +769,7 @@ function Update-PlatformFields {
             "epic" {
                 if ($epicGameIdTextBox) {
                     $epicGameIdTextBox.IsEnabled = $true
-                    $epicGameIdTextBox.Background = [System.Windows.Media.Brushes]::White
+                    $epicGameIdTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::White
                 }
                 if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = "" }
                 if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
@@ -779,7 +779,7 @@ function Update-PlatformFields {
             "riot" {
                 if ($riotGameIdTextBox) {
                     $riotGameIdTextBox.IsEnabled = $true
-                    $riotGameIdTextBox.Background = [System.Windows.Media.Brushes]::White
+                    $riotGameIdTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::White
                 }
                 if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = "" }
                 if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
@@ -789,7 +789,7 @@ function Update-PlatformFields {
             "standalone" {
                 if ($executablePathTextBox) {
                     $executablePathTextBox.IsEnabled = $true
-                    $executablePathTextBox.Background = [System.Windows.Media.Brushes]::White
+                    $executablePathTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::White
                 }
                 if ($browseExecutablePathButton) {
                     $browseExecutablePathButton.IsEnabled = $true
@@ -803,7 +803,7 @@ function Update-PlatformFields {
                 Write-Warning "Unknown platform: $Platform, defaulting to standalone"
                 if ($executablePathTextBox) {
                     $executablePathTextBox.IsEnabled = $true
-                    $executablePathTextBox.Background = [System.Windows.Media.Brushes]::White
+                    $executablePathTextBox.Background = ("System.Windows.Media.Brushes" -as [type])::White
                 }
                 if ($browseExecutablePathButton) {
                     $browseExecutablePathButton.IsEnabled = $true
@@ -1908,11 +1908,11 @@ function Show-LanguageChangeRestartMessage {
         }
 
         # Show confirmation dialog
-        $result = [System.Windows.MessageBox]::Show(
+        $result = ("System.Windows.MessageBox" -as [type])::Show(
             $message,
             $title,
-            [System.Windows.MessageBoxButton]::YesNo,
-            [System.Windows.MessageBoxImage]::Question
+            "YesNo",
+            "Question"
         )
 
         if ("$result" -eq "Yes") {
@@ -1946,14 +1946,14 @@ function Show-LanguageChangeRestartMessage {
                     $continueMessage = "Failed to save configuration before restart. Continue with restart anyway?"
                 }
 
-                $continueResult = [System.Windows.MessageBox]::Show(
+                $continueResult = ("System.Windows.MessageBox" -as [type])::Show(
                     "$errorMessage`n`n$continueMessage",
                     $errorTitle,
-                    [System.Windows.MessageBoxButton]::YesNo,
-                    [System.Windows.MessageBoxImage]::Warning
+                    "YesNo",
+                    "Warning"
                 )
 
-                if ($continueResult -ne [System.Windows.MessageBoxResult]::Yes) {
+                if ($continueResult -ne ("System.Windows.MessageBoxResult" -as [type])::Yes) {
                     Write-Verbose "User cancelled restart due to save error"
                     return
                 }
@@ -2199,29 +2199,29 @@ function Show-SafeMessage {
 
         # Map MessageType to icon
         $iconType = switch ($MessageType) {
-            "Information" { [System.Windows.MessageBoxImage]::Information }
-            "Warning" { [System.Windows.MessageBoxImage]::Warning }
-            "Error" { [System.Windows.MessageBoxImage]::Error }
-            "Question" { [System.Windows.MessageBoxImage]::Question }
-            default { [System.Windows.MessageBoxImage]::Information }
+            "Information" { ("System.Windows.MessageBoxImage" -as [type])::Information }
+            "Warning" { ("System.Windows.MessageBoxImage" -as [type])::Warning }
+            "Error" { ("System.Windows.MessageBoxImage" -as [type])::Error }
+            "Question" { ("System.Windows.MessageBoxImage" -as [type])::Question }
+            default { ("System.Windows.MessageBoxImage" -as [type])::Information }
         }
 
         # Map Button string to MessageBoxButton
         $buttonType = switch ($Button) {
-            "OK" { [System.Windows.MessageBoxButton]::OK }
-            "OKCancel" { [System.Windows.MessageBoxButton]::OKCancel }
-            "YesNo" { [System.Windows.MessageBoxButton]::YesNo }
-            "YesNoCancel" { [System.Windows.MessageBoxButton]::YesNoCancel }
-            default { [System.Windows.MessageBoxButton]::OK }
+            "OK" { ("System.Windows.MessageBoxButton" -as [type])::OK }
+            "OKCancel" { ("System.Windows.MessageBoxButton" -as [type])::OKCancel }
+            "YesNo" { ("System.Windows.MessageBoxButton" -as [type])::YesNo }
+            "YesNoCancel" { ("System.Windows.MessageBoxButton" -as [type])::YesNoCancel }
+            default { ("System.Windows.MessageBoxButton" -as [type])::OK }
         }
 
         # Map DefaultResult to MessageBoxResult
         $defaultResultType = switch ($DefaultResult) {
-            "OK" { [System.Windows.MessageBoxResult]::OK }
-            "Cancel" { [System.Windows.MessageBoxResult]::Cancel }
-            "Yes" { [System.Windows.MessageBoxResult]::Yes }
-            "No" { [System.Windows.MessageBoxResult]::No }
-            default { [System.Windows.MessageBoxResult]::OK }
+            "OK" { ("System.Windows.MessageBoxResult" -as [type])::OK }
+            "Cancel" { ("System.Windows.MessageBoxResult" -as [type])::Cancel }
+            "Yes" { ("System.Windows.MessageBoxResult" -as [type])::Yes }
+            "No" { ("System.Windows.MessageBoxResult" -as [type])::No }
+            default { ("System.Windows.MessageBoxResult" -as [type])::OK }
         }
 
         # If running in headless mode, print to console and return the default result
@@ -2231,12 +2231,12 @@ function Show-SafeMessage {
         }
 
         # Show message box
-        return [System.Windows.MessageBox]::Show($messageText, $titleText, $buttonType, $iconType, $defaultResultType)
+        return ("System.Windows.MessageBox" -as [type])::Show($messageText, $titleText, $buttonType, $iconType, $defaultResultType)
 
     } catch {
         Write-Warning "Show-SafeMessage failed: $($_.Exception.Message)"
         # Fallback to simple message box
-        return [System.Windows.MessageBox]::Show($Key, "Message", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+        return ("System.Windows.MessageBox" -as [type])::Show($Key, "Message", "OK", "Information")
     }
 }
 
