@@ -891,12 +891,12 @@ function Get-GameValidationErrors {
     if ([string]::IsNullOrWhiteSpace($GameId)) {
         $errors += @{
             Control = 'GameIdTextBox'
-            Key     = 'gameIdRequired'
+            Key = 'gameIdRequired'
         }
     } elseif ($GameId -notmatch '^[A-Za-z0-9_-]+$') {
         $errors += @{
             Control = 'GameIdTextBox'
-            Key     = 'gameIdInvalidCharacters'
+            Key = 'gameIdInvalidCharacters'
         }
     }
 
@@ -905,12 +905,12 @@ function Get-GameValidationErrors {
         if ([string]::IsNullOrWhiteSpace($SteamAppId)) {
             $errors += @{
                 Control = 'SteamAppIdTextBox'
-                Key     = 'steamAppIdRequired'
+                Key = 'steamAppIdRequired'
             }
         } elseif ($SteamAppId -notmatch '^[0-9]{7}$') {
             $errors += @{
                 Control = 'SteamAppIdTextBox'
-                Key     = 'steamAppIdMust7Digits'
+                Key = 'steamAppIdMust7Digits'
             }
         }
     }
@@ -920,12 +920,12 @@ function Get-GameValidationErrors {
         if ([string]::IsNullOrWhiteSpace($EpicGameId)) {
             $errors += @{
                 Control = 'EpicGameIdTextBox'
-                Key     = 'epicGameIdRequired'
+                Key = 'epicGameIdRequired'
             }
         } elseif ($EpicGameId -notmatch '^(com\.epicgames\.launcher://)?apps/') {
             $errors += @{
                 Control = 'EpicGameIdTextBox'
-                Key     = 'epicGameIdInvalidFormat'
+                Key = 'epicGameIdInvalidFormat'
             }
         }
     }
@@ -935,12 +935,12 @@ function Get-GameValidationErrors {
         if ([string]::IsNullOrWhiteSpace($ExecutablePath)) {
             $errors += @{
                 Control = 'ExecutablePathTextBox'
-                Key     = 'executablePathRequired'
+                Key = 'executablePathRequired'
             }
         } elseif (-not (Test-Path -Path $ExecutablePath -PathType Leaf)) {
             $errors += @{
                 Control = 'ExecutablePathTextBox'
-                Key     = 'executablePathNotFound'
+                Key = 'executablePathNotFound'
             }
         }
     }
@@ -1348,6 +1348,7 @@ The plain text password to encrypt.
 String - The encrypted password string.
 #>
 function Protect-Password {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPlainTextForPassword', '', Justification = 'Function purpose is to encrypt plain text passwords')]
     param(
         [Parameter(Mandatory = $true)]
         [string]$PlainTextPassword
@@ -1384,6 +1385,7 @@ The encrypted password string to decrypt.
 String - The decrypted plain text password.
 #>
 function Unprotect-Password {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPlainTextForPassword', '', Justification = 'Parameter contains encrypted string, not plain text password')]
     param(
         [Parameter(Mandatory = $false)]
         [string]$EncryptedPassword
