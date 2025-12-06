@@ -37,19 +37,38 @@ class ConfigEditorLocalization {
     #>
     [void]DetectLanguage() {
         try {
+            Write-Host "[DEBUG] ConfigEditorLocalization: DetectLanguage() called"
+            Write-Host "[DEBUG] ConfigEditorLocalization: script:ConfigData exists = $($null -ne $script:ConfigData)"
+
+            # Priority 1: Config file language setting
             if ($script:ConfigData -and $script:ConfigData.PSObject.Properties["language"]) {
                 $configLang = $script:ConfigData.language
+                Write-Host "[DEBUG] ConfigEditorLocalization: Config language = '$configLang'"
+
                 if ($this.IsLanguageSupported($configLang)) {
                     $this.CurrentLanguage = $configLang
+                    Write-Host "[INFO] ConfigEditorLocalization: Using config language: $($this.CurrentLanguage)"
                     return
+                } else {
+                    Write-Host "[WARNING] ConfigEditorLocalization: Config language '$configLang' not supported"
                 }
+            } else {
+                Write-Host "[DEBUG] ConfigEditorLocalization: No language in config, trying system language"
             }
+
+            # Priority 2: System UI language
             $systemLang = (Get-Culture).TwoLetterISOLanguageName
+            Write-Host "[DEBUG] ConfigEditorLocalization: System language = '$systemLang'"
+
             if ($this.IsLanguageSupported($systemLang)) {
                 $this.CurrentLanguage = $systemLang
+                Write-Host "[INFO] ConfigEditorLocalization: Using system language: $($this.CurrentLanguage)"
                 return
             }
+
+            # Priority 3: English fallback
             $this.CurrentLanguage = "en"
+            Write-Host "[INFO] ConfigEditorLocalization: Using fallback language: en"
         } catch {
             Write-Warning "Language detection failed, using English: $($_.Exception.Message)"
             $this.CurrentLanguage = "en"
