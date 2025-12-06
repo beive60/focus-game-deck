@@ -526,6 +526,118 @@ class ConfigEditorUI {
 
     <#
     .SYNOPSIS
+        Checks for application updates asynchronously on startup.
+
+    .DESCRIPTION
+        Runs a non-blocking asynchronous update check when the application starts.
+        If an update is available, displays a notification to the user with the option
+        to download it. This method uses PowerShell Tasks to prevent UI freezing.
+
+    .OUTPUTS
+        None
+
+    .NOTES
+        This method is automatically called from LoadDataToUI and runs asynchronously
+        to avoid blocking UI initialization. Uses the global Test-UpdateAvailable function
+        if available through $global:TestUpdateAvailableFunc.
+    #>
+    [void]CheckUpdateOnStartup() {
+        try {
+            # Verify that required functions are available globally
+            if (-not $global:GetProjectVersionFunc) {
+                Write-Verbose "[CheckUpdateOnStartup] Get-ProjectVersion function not available, skipping startup update check"
+                return
+            }
+
+            if (-not $global:TestUpdateAvailableFunc) {
+                Write-Verbose "[CheckUpdateOnStartup] Test-UpdateAvailable function not available, skipping startup update check"
+                return
+            }
+
+            Write-Verbose "[CheckUpdateOnStartup] Starting asynchronous update check on startup"
+
+            # Create and start an async task for update checking
+            $updateCheckTask = [System.Threading.Tasks.Task]::Run({
+                    try {
+                        # Capture necessary context for the task
+                        $getVersionFunc = $using:global:GetProjectVersionFunc
+                        $testUpdateFunc = $using:global:TestUpdateAvailableFunc
+
+                        # Get current version
+                        $currentVersion = & $getVersionFunc
+
+                        Write-Verbose "[CheckUpdateOnStartup-Task] Current version: $currentVersion"
+
+                        # Check for updates
+                        $updateInfo = & $testUpdateFunc
+
+                        if ($updateInfo -and $updateInfo.UpdateAvailable) {
+                            Write-Verbose "[CheckUpdateOnStartup-Task] Update available: $($updateInfo.LatestVersion)"
+                            return $updateInfo
+                        } else {
+                            Write-Verbose "[CheckUpdateOnStartup-Task] No update available"
+                            return $null
+                        }
+
+                    } catch {
+                        Write-Verbose "[CheckUpdateOnStartup-Task] Error during update check: $($_.Exception.Message)"
+                        return $null
+                    }
+                })
+
+            # Handle task completion without blocking UI
+            $updateCheckTask.ContinueWith({
+                    param($task)
+                    try {
+                        if ($task.IsCompletedSuccessfully) {
+                            $updateInfo = $task.Result
+
+                            if ($updateInfo) {
+                                # Marshal back to UI thread for MessageBox
+                                $this.Window.Dispatcher.Invoke([System.Action] {
+                                        try {
+                                            $message = $this.GetLocalizedMessage("updateAvailable") -f $updateInfo.LatestVersion, (& $global:GetProjectVersionFunc)
+                                            $title = $this.GetLocalizedMessage("updateCheckTitle")
+
+                                            $result = ("System.Windows.MessageBox" -as [type])::Show(
+                                                $this.Window,
+                                                $message,
+                                                $title,
+                                                "YesNo",
+                                                "Question"
+                                            )
+
+                                            if ($result -eq "Yes") {
+                                                if ($updateInfo.ReleaseUrl) {
+                                                    Write-Host "[INFO] CheckUpdateOnStartup: Opening release page - $($updateInfo.ReleaseUrl)"
+                                                    Start-Process $updateInfo.ReleaseUrl
+                                                }
+                                            }
+
+                                            Write-Verbose "[CheckUpdateOnStartup] Update notification completed"
+
+                                        } catch {
+                                            Write-Verbose "[CheckUpdateOnStartup-UIThread] Error showing update notification: $($_.Exception.Message)"
+                                        }
+                                    })
+                            }
+                        } else {
+                            Write-Verbose "[CheckUpdateOnStartup] Task did not complete successfully"
+                        }
+
+                    } catch {
+                        Write-Verbose "[CheckUpdateOnStartup-Continuation] Error in task continuation: $($_.Exception.Message)"
+                    }
+
+                }) | Out-Null
+
+        } catch {
+            Write-Verbose "[CheckUpdateOnStartup] Error starting async update check: $($_.Exception.Message)"
+        }
+    }
+
+    <#
+    .SYNOPSIS
         Loads configuration data into UI controls.
 
     .DESCRIPTION
@@ -560,6 +672,9 @@ class ConfigEditorUI {
             # Other initialization
             $this.InitializeLauncherTabTexts()
             $this.InitializeVersionDisplay()
+
+            # Start automatic update check asynchronously (non-blocking)
+            $this.CheckUpdateOnStartup()
 
             Write-Verbose "Data loaded to UI successfully"
         } catch {
