@@ -24,7 +24,7 @@ $script:BrowserButtonMappings = @{
     "BrowseSteamPathButton" = "browseButton"
     "BrowseEpicPathButton" = "browseButton"
     "BrowseRiotPathButton" = "browseButton"
-    "BrowseObsPathButton" = "browseButton"
+    "BrowseOBSPathButton" = "browseButton"
 }
 
 # Auto-detection buttons
@@ -32,7 +32,7 @@ $script:AutoDetectButtonMappings = @{
     "AutoDetectSteamButton" = "autoDetectButton"
     "AutoDetectEpicButton" = "autoDetectButton"
     "AutoDetectRiotButton" = "autoDetectButton"
-    "AutoDetectObsButton" = "autoDetectButton"
+    "AutoDetectOBSButton" = "autoDetectButton"
 }
 
 # Save and action buttons
@@ -132,7 +132,7 @@ $script:TextMappings = @{
 
 # CheckBox content mappings
 $script:CheckBoxMappings = @{
-    "ReplayBufferCheckBox" = "replayBufferLabel"
+    "OBSReplayBufferCheckBox" = "replayBufferLabel"
     "EnableLogNotarizationCheckBox" = "enableLogNotarization"
 }
 
@@ -149,28 +149,61 @@ $script:MenuItemMappings = @{
 
 # Tooltip mappings for elements that don't have visible text but need tooltips
 $script:TooltipMappings = @{
+    # Movement button tooltips (Games tab)
     "MoveGameTopButton" = "moveTopTooltip"
     "MoveGameUpButton" = "moveUpTooltip"
     "MoveGameDownButton" = "moveDownTooltip"
     "MoveGameBottomButton" = "moveBottomTooltip"
+    # Movement button tooltips (Managed Apps tab)
     "MoveAppTopButton" = "moveTopTooltip"
     "MoveAppUpButton" = "moveUpTooltip"
     "MoveAppDownButton" = "moveDownTooltip"
     "MoveAppBottomButton" = "moveBottomTooltip"
+
+    # Auto-detect tooltip TextBlocks
+    "AutoDetectSteamTooltip" = "autoDetectSteamTooltip"
+    "AutoDetectEpicTooltip" = "autoDetectEpicTooltip"
+    "AutoDetectRiotTooltip" = "autoDetectRiotTooltip"
     "AutoDetectObsTooltip" = "autoDetectObsTooltip"
     "AutoDetectDiscordTooltip" = "autoDetectDiscordTooltip"
     "AutoDetectVTubeStudioTooltip" = "autoDetectVTubeStudioTooltip"
-    "GameIdLabelPanel" = "tooltip_game_id"
-    "GameNameLabelPanel" = "tooltip_display_name"
-    "PlatformLabel" = "tooltip_platform"
-    "SteamAppIdLabelPanel" = "tooltip_steam_app_id"
-    "EpicGameIdLabelPanel" = "tooltip_epic_game_id"
-    "RiotGameIdLabelPanel" = "tooltip_riot_game_id"
-    "ExecutablePathLabelPanel" = "tooltip_executable_path"
-    "ProcessNameLabelPanel" = "tooltip_process_name"
-    "GameCommentLabel" = "tooltip_comment"
+
+    # Game configuration tooltip TextBlocks (? icons)
+    "GameIdTooltip" = "tooltipGameId"
+    "GameNameTooltip" = "tooltipDisplayName"
+    "SteamAppIdTooltip" = "tooltipSteamAppId"
+    "EpicGameIdTooltip" = "tooltipEpicGameId"
+    "RiotGameIdTooltip" = "tooltipRiotGameId"
+    "ExecutablePathTooltip" = "tooltipExecutablePath"
+    "ProcessNameTooltip" = "tooltipProcessName"
+
+    # Managed App configuration tooltip TextBlocks (? icons)
+    "AppIdTooltip" = "tooltipAppId"
+    "AppProcessNameTooltip" = "tooltipProcessName"
+    "GameStartActionTooltip" = "tooltipGameActions"
+    "GameEndActionTooltip" = "tooltipGameActions"
+    "AppArgumentsTooltip" = "tooltipLaunchArguments"
+    "TerminationMethodTooltip" = "tooltipTerminationMethod"
+    "GracefulTimeoutTooltip" = "tooltipGracefulTimeout"
+
+    # StackPanel tooltips (for entire label+tooltip rows)
+    "GameIdLabelPanel" = "tooltipGameId"
+    "GameNameLabelPanel" = "tooltipDisplayName"
+    "SteamAppIdLabelPanel" = "tooltipSteamAppId"
+    "EpicGameIdLabelPanel" = "tooltipEpicGameId"
+    "RiotGameIdLabelPanel" = "tooltipRiotGameId"
+    "ExecutablePathLabelPanel" = "tooltipExecutablePath"
+    "ProcessNameLabelPanel" = "tooltipProcessName"
+    "GameCommentLabelPanel" = "tooltip_comment"
     "AppsToManageLabelPanel" = "tooltip_apps_to_manage"
     "IntegrationsLabelPanel" = "tooltip_integrations"
+    "AppIdLabelPanel" = "tooltipAppId"
+    "AppProcessNameLabelPanel" = "tooltipProcessName"
+    "GameStartActionLabelPanel" = "tooltipGameActions"
+    "GameEndActionLabelPanel" = "tooltipGameActions"
+    "AppArgumentsLabelPanel" = "tooltipLaunchArguments"
+    "TerminationMethodLabelPanel" = "tooltipTerminationMethod"
+    "GracefulTimeoutLabelPanel" = "tooltipGracefulTimeout"
 }
 
 # ComboBoxItem content mappings
