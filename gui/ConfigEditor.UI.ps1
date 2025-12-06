@@ -144,11 +144,13 @@ class ConfigEditorUI {
             Write-Host "[DEBUG] ConfigEditorUI: InitializeComponents started"
             $this.CurrentGameId = ""
             $this.CurrentAppId = ""
-            $this.CurrentLanguage = "en"
+            # NOTE: Do NOT reset CurrentLanguage here - it was properly initialized in the constructor
+            # from the localization object. Resetting it to "en" breaks language change detection.
+            # $this.CurrentLanguage = "en"  # REMOVED - breaks HandleLanguageSelectionChanged()
             $this.HasUnsavedChanges = $false
             # messages are now passed in constructor
             $this.Window.DataContext = $this
-            Write-Host "[OK] ConfigEditorUI: InitializeComponents completed"
+            Write-Host "[OK] ConfigEditorUI: InitializeComponents completed - CurrentLanguage preserved: $($this.CurrentLanguage)"
         } catch {
             Write-Host "[ERROR] ConfigEditorUI: InitializeComponents failed - $($_.Exception.Message)"
             throw
@@ -1197,9 +1199,10 @@ class ConfigEditorUI {
 
                 $langCombo = $self.Window.FindName("LanguageCombo")
                 if ($langCombo) {
-                    # Temporarily disable SelectionChanged event during initialization
+                    # Disconnect SelectionChanged event during initialization
                     # This prevents HandleLanguageSelectionChanged from triggering during UI setup
-                    $langCombo.IsEnabled = $false
+                    # Note: Events are registered in ConfigEditor.ps1 AFTER LoadDataToUI is called
+                    # But we need to ensure no events fire during the initial population
 
                     # Clear existing items
                     $langCombo.Items.Clear()
@@ -1232,9 +1235,16 @@ class ConfigEditorUI {
                         $langCombo.SelectedIndex = $selectedIndex
                     }
 
-                    # Re-enable the ComboBox after initialization
-                    $langCombo.IsEnabled = $true
+                    # IMPORTANT: Update UIManager.CurrentLanguage to match the config language
+                    # This ensures consistency between the combobox selection and the CurrentLanguage property
+                    # This must be done BEFORE events are registered
+                    if ($ConfigData.language) {
+                        $self.CurrentLanguage = $ConfigData.language
+                        Write-Verbose "UIManager.CurrentLanguage updated to: $($self.CurrentLanguage)"
+                    }
                 }
+
+                Write-Verbose "Language combo initialized - events will be registered after LoadDataToUI completes"
 
                 $launcherTypeCombo = $self.Window.FindName("LauncherTypeCombo")
                 if ($launcherTypeCombo) {
