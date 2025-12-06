@@ -300,7 +300,7 @@
         "cli_game_not_found": "ゲームID '{0}' が設定に見つかりません。",
         "cli_available_games": "利用可能なゲームID: {0}",
         "cli_platform_not_supported": "プラットフォーム '{0}' は利用できないかサポートされていません。",
-        "cli_launching_game": "{0} 経由でゲームを起動しています...",
+        "cli_launching_game": "[INFO] GameLauncher: {0}経由でゲームを起動します",
         "cli_waiting_process": "ゲームプロセスの起動を待っています...",
         "cli_monitoring_process": "プロセス '{0}' (PID: {1}) を監視しています。",
         "cli_process_exited": "ゲームプロセスが終了しました: {0}",
