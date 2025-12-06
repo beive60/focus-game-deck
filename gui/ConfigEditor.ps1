@@ -185,32 +185,6 @@ function Initialize-WpfAssemblies {
     }
 }
 
-# Load configuration function
-function Import-Configuration {
-    try {
-        $configPath = Join-Path -Path $appRoot -ChildPath "config/config.json"
-
-        if (-not (Test-Path $configPath)) {
-            # Try sample config
-            $samplePath = "$configPath.sample"
-            if (Test-Path $samplePath) {
-                Copy-Item $samplePath $configPath
-                Write-Verbose "[INFO] ConfigEditor: Created config.json from sample"
-            } else {
-                throw "Configuration file not found: $configPath"
-            }
-        }
-
-        $script:ConfigData = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-        $script:ConfigPath = $configPath
-        Write-Verbose "[OK] ConfigEditor: Configuration loaded successfully"
-
-    } catch {
-        Write-Error "Failed to load configuration: $($_.Exception.Message)"
-        throw
-    }
-}
-
 # Validate UI mappings function
 function Test-UIMappings {
     param()
@@ -271,10 +245,7 @@ function Initialize-ConfigEditor {
             throw "WPF assemblies loading failed"
         }
 
-        # Step 2: Load configuration
-        Import-Configuration
-
-        # Step 3: Load script modules (must be done before using PowerShell classes)
+        # Step 2: Load script modules (must be done before using PowerShell classes)
         Write-Verbose "[INFO] ConfigEditor: Loading script modules"
 
         # Define module list (order matters - dependencies must be loaded first)
@@ -315,51 +286,22 @@ function Initialize-ConfigEditor {
                 throw "Module loading failed. The application cannot continue."
             }
         }
-        # else {
-        #     # In executable mode, modules are embedded and extracted to $PSScriptRoot
-        #     Write-Verbose "[INFO] ConfigEditor: Running in executable mode - loading embedded modules"
-
-        #     foreach ($guiModuleName in $guiModuleNames) {
-        #         # Embedded files are flat in PSScriptRoot or preserved if folder structure was kept
-        #         # For GUI modules, ps2exe embeds them. Let's check flat first, then gui/
-        #         $embeddedPath = Join-Path -Path $PSScriptRoot -ChildPath $guiModuleName
-        #         if (-not (Test-Path $embeddedPath)) {
-        #             $embeddedPath = Join-Path -Path $PSScriptRoot -ChildPath "gui/$guiModuleName"
-        #         }
-
-        #         if (Test-Path $embeddedPath) {
-        #             Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing embedded module - $embeddedPath"
-        #             . $embeddedPath
-        #             Write-Verbose "[OK] ConfigEditor: Embedded Module Loaded: $guiModuleName"
-        #         } else {
-        #             Write-Error "[ERROR] ConfigEditor: Embedded module not found: $guiModuleName"
-        #             throw "Missing embedded module: $guiModuleName"
-        #         }
-        #     }
-        # }
 
         Write-Verbose "[OK] ConfigEditor: Script modules loaded successfully"
+
+        # Step 3: Prepare configuration path
+        # Note: Actual config loading and generation happens in ConfigEditorState.LoadConfiguration()
+        Write-Verbose "[INFO] ConfigEditor: Preparing configuration path"
+        $script:ConfigPath = Join-Path -Path $appRoot -ChildPath "config/config.json"
+        Write-Verbose "[INFO] ConfigEditor: Config path set to: $($script:ConfigPath)"
 
         # Step 4: Validate UI mappings
         if (-not (Test-UIMappings)) {
             Write-Host "[WARNING] ConfigEditor: UI mappings validation failed - Some features may not work properly"
         }
 
-        # Step 5: Import additional modules (Version, UpdateChecker, etc.)
-        Write-Verbose "[INFO] ConfigEditor: Importing additional modules"
-        Import-AdditionalModules
-
-        # Step 6: Initialize localization
-        Write-Verbose "[INFO] ConfigEditor: Initializing localization"
-        try {
-            # Pass shared project root into localization class (PowerShell classes cannot access script-scoped variables)
-            $script:Localization = [ConfigEditorLocalization]::new($appRoot)
-            Write-Verbose "[OK] ConfigEditor: Localization initialized - Language: $($script:Localization.CurrentLanguage)"
-        } catch {
-            Write-Error "[ERROR] ConfigEditor: Failed to initialize localization: $($_.Exception.Message)"
-        }
-
         # Step 5: Initialize state manager with config path
+        # This will load existing config.json or generate a new one with defaults
         Write-Verbose "[INFO] ConfigEditor: Initializing state manager"
         try {
             $stateManager = [ConfigEditorState]::new($script:ConfigPath)
@@ -381,7 +323,21 @@ function Initialize-ConfigEditor {
             throw
         }
 
-        # Step 7: Initialize UI manager
+        # Step 6: Import additional modules (Version, UpdateChecker, etc.)
+        Write-Verbose "[INFO] ConfigEditor: Importing additional modules"
+        Import-AdditionalModules
+
+        # Step 7: Initialize localization
+        Write-Verbose "[INFO] ConfigEditor: Initializing localization"
+        try {
+            # Pass shared project root into localization class (PowerShell classes cannot access script-scoped variables)
+            $script:Localization = [ConfigEditorLocalization]::new($appRoot)
+            Write-Verbose "[OK] ConfigEditor: Localization initialized - Language: $($script:Localization.CurrentLanguage)"
+        } catch {
+            Write-Error "[ERROR] ConfigEditor: Failed to initialize localization: $($_.Exception.Message)"
+        }
+
+        # Step 8: Initialize UI manager
         Write-Verbose "[INFO] ConfigEditor: Initializing UI manager"
         try {
             # Validate mappings are available before creating UI
@@ -442,7 +398,7 @@ function Initialize-ConfigEditor {
             throw
         }
 
-        # Step 8: Initialize event handler
+        # Step 9: Initialize event handler
         # Pass project root into events handler so it can construct file paths without referencing script-scoped variables
         $eventHandler = [ConfigEditorEvents]::new($uiManager, $stateManager, $appRoot)
 
@@ -454,7 +410,7 @@ function Initialize-ConfigEditor {
 
         $eventHandler.RegisterAll()
 
-        # Step 9: Load data to UI
+        # Step 10: Load data to UI
         Write-Verbose "[INFO] ConfigEditor: Loading data to UI"
         try {
             if ($null -eq $uiManager) {
@@ -481,7 +437,7 @@ function Initialize-ConfigEditor {
         $script:IsInitializationComplete = $true
         Write-Verbose "[OK] ConfigEditor: Initialization completed - UI is ready for user interaction"
 
-        # Step 10: Show window
+        # Step 11: Show window
         # Create a local reference to the window object
         $window = $script:Window
         Write-Verbose "[INFO] ConfigEditor: Showing window"

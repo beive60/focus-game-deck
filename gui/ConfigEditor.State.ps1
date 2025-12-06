@@ -45,18 +45,27 @@
                 $this.ConfigData = $jsonContent | ConvertFrom-Json
                 Write-Verbose "[INFO] Loaded config from: $($this.ConfigPath)"
             } else {
-                Write-Verbose "[INFO] Config file not found, loading from sample"
-                # Load from sample if config doesn't exist
-                $configSamplePath = Join-Path (Split-Path $PSScriptRoot) "config/config.json.sample"
-                Write-Verbose "[INFO] Sample path: '$configSamplePath'"
+                Write-Verbose "[INFO] Config file not found, generating default configuration"
 
-                if (Test-Path $configSamplePath) {
-                    $jsonContent = Get-Content $configSamplePath -Raw -Encoding UTF8
-                    $this.ConfigData = $jsonContent | ConvertFrom-Json
-                    Write-Verbose "[INFO] Loaded config from sample: $configSamplePath"
-                } else {
-                    Write-Error "[ERROR] Sample config file not found at: $configSamplePath"
-                    throw "configNotFound"
+                # Generate default configuration programmatically
+                $this.ConfigData = $this.GetDefaultConfig()
+                Write-Verbose "[INFO] Default configuration created"
+
+                # Auto-save the default configuration to disk
+                try {
+                    # Ensure the config directory exists
+                    $configDir = Split-Path $this.ConfigPath -Parent
+                    if (-not (Test-Path $configDir)) {
+                        New-Item -ItemType Directory -Path $configDir -Force | Out-Null
+                        Write-Verbose "[INFO] Created config directory: $configDir"
+                    }
+
+                    # Save the configuration using the JSON helper
+                    Save-ConfigJson -ConfigData $this.ConfigData -ConfigPath $this.ConfigPath
+                    Write-Verbose "[INFO] Auto-saved default configuration to: $($this.ConfigPath)"
+                } catch {
+                    Write-Warning "[WARNING] Failed to auto-save default configuration: $($_.Exception.Message)"
+                    # Continue anyway - the in-memory config is still valid
                 }
             }
 
@@ -114,6 +123,178 @@
 
     [bool] TestHasUnsavedChanges() {
         return $this.HasUnsavedChanges
+    }
+
+    <#
+    .SYNOPSIS
+        Returns the default configuration structure.
+
+    .DESCRIPTION
+        Provides a programmatically-defined default configuration as a PSCustomObject.
+        This eliminates the need for an external config.json.sample file.
+
+    .OUTPUTS
+        PSCustomObject - Complete default configuration structure
+    #>
+    hidden [PSCustomObject] GetDefaultConfig() {
+        Write-Verbose "[INFO] Creating default configuration structure"
+
+        $defaultConfig = [PSCustomObject]@{
+            managedApps = [PSCustomObject]@{
+                _order = @("noWinKey")
+                noWinKey = [PSCustomObject]@{
+                    path = "C:/Apps/NoWinKey/NoWinKey.exe"
+                    processName = "NoWinKey"
+                    arguments = ""
+                    gameStartAction = "start-process"
+                    gameEndAction = "stop-process"
+                    terminationMethod = "force"
+                    gracefulTimeoutMs = 5000
+                    displayName = "noWinKey"
+                    _comment = ""
+                }
+            }
+            games = [PSCustomObject]@{
+                _order = @("mock-calc", "apex", "valorant", "fallguys")
+                "mock-calc" = [PSCustomObject]@{
+                    _comment = "A lightweight mock game for development and testing. Uses the calculator instead of a real game"
+                    name = "Test Game (Calculator)"
+                    platform = "direct"
+                    executablePath = "C:/Windows/System32/calc.exe"
+                    processName = "CalculatorApp*"
+                    appsToManage = @()
+                    steamAppId = ""
+                    epicGameId = ""
+                    riotGameId = ""
+                    integrations = [PSCustomObject]@{
+                        useOBS = $true
+                        useDiscord = $false
+                        useVTubeStudio = $false
+                    }
+                }
+                valorant = [PSCustomObject]@{
+                    name = "VALORANT"
+                    platform = "riot"
+                    riotGameId = "valorant"
+                    processName = "VALORANT-Win64-Shipping*"
+                    appsToManage = @()
+                    integrations = [PSCustomObject]@{
+                        useOBS = $true
+                        useDiscord = $false
+                        useVTubeStudio = $true
+                    }
+                    steamAppId = ""
+                    epicGameId = ""
+                    executablePath = ""
+                }
+                apex = [PSCustomObject]@{
+                    name = "Apex Legends"
+                    platform = "steam"
+                    steamAppId = "1172470"
+                    processName = "r5apex*"
+                    appsToManage = @()
+                    epicGameId = ""
+                    riotGameId = ""
+                    executablePath = ""
+                    integrations = [PSCustomObject]@{
+                        useOBS = $true
+                        useDiscord = $false
+                        useVTubeStudio = $false
+                    }
+                }
+                "fall-guys" = [PSCustomObject]@{
+                    name = "Fall Guys"
+                    platform = "epic"
+                    steamAppId = ""
+                    epicGameId = "apps/50118b7f954e450f8823df1614b24e80%3A38ec4849ea4f4de6aa7b6fb0f2d278e1%3A0a2d9f6403244d12969e11da6713137b?action=launch&silent=true"
+                    riotGameId = ""
+                    processName = "FallGuys*"
+                    appsToManage = @()
+                    executablePath = ""
+                    integrations = [PSCustomObject]@{
+                        useOBS = $false
+                        useDiscord = $false
+                        useVTubeStudio = $false
+                    }
+                }
+            }
+            paths = [PSCustomObject]@{
+                steam = "C:/Program Files (x86)/Steam/steam.exe"
+                epic = "C:/Program Files (x86)/Epic Games/Launcher/Engine/Binaries/Win64/EpicGamesLauncher.exe"
+                riot = "C:/Riot Games/Riot Client/RiotClientElectron/Riot Client.exe"
+            }
+            integrations = [PSCustomObject]@{
+                obs = [PSCustomObject]@{
+                    path = "C:/Program Files/obs-studio/bin/64bit/obs64.exe"
+                    processName = "obs64"
+                    gameStartAction = "enter-game-mode"
+                    gameEndAction = "exit-game-mode"
+                    arguments = ""
+                    terminationMethod = "graceful"
+                    gracefulTimeoutMs = 5000
+                    websocket = [PSCustomObject]@{
+                        host = "127.0.0.1"
+                        port = 4455
+                        password = ""
+                    }
+                    replayBuffer = $true
+                }
+                discord = [PSCustomObject]@{
+                    path = "%LOCALAPPDATA%/Discord/app-*/Discord.exe"
+                    processName = "Discord"
+                    gameStartAction = "enter-game-mode"
+                    gameEndAction = "stop-process"
+                    arguments = ""
+                    terminationMethod = "graceful"
+                    gracefulTimeoutMs = 8000
+                    _comment = "Set a longer timeout in graceful mode for Discord, as it may be in the middle of a call or saving settings."
+                    discord = [PSCustomObject]@{
+                        statusOnGameStart = "dnd"
+                        statusOnGameEnd = "online"
+                        disableOverlay = $true
+                        customPresence = [PSCustomObject]@{
+                            enabled = $false
+                            state = "Focus Gaming Mode"
+                        }
+                        rpc = [PSCustomObject]@{
+                            enabled = $false
+                            applicationId = ""
+                        }
+                    }
+                }
+                vtubeStudio = [PSCustomObject]@{
+                    path = "C:/Program Files (x86)/Steam/steam.exe"
+                    processName = "VTube Studio"
+                    gameStartAction = "enter-game-mode"
+                    gameEndAction = "exit-game-mode"
+                    arguments = ""
+                    steamPath = ""
+                    websocket = [PSCustomObject]@{
+                        host = "127.0.0.1"
+                        port = 8001
+                        enabled = $false
+                    }
+                }
+            }
+            logging = [PSCustomObject]@{
+                level = "Debug"
+                _comment = "Logging levels: Trace, Debug, Info, Warning, Error, Critical"
+                enableFileLogging = $true
+                enableConsoleLogging = $true
+                filePath = ""
+                logRetentionDays = 30
+                enableNotarization = $false
+                firebase = [PSCustomObject]@{
+                    projectId = ""
+                    apiKey = ""
+                    databaseURL = ""
+                }
+            }
+            language = ""
+        }
+
+        Write-Verbose "[INFO] Default configuration structure created successfully"
+        return $defaultConfig
     }
 
     # Initialize games._order array with enhanced version structure

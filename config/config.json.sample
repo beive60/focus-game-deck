@@ -1,11 +1,7 @@
 {
     "managedApps": {
         "_order": [
-            "noWinKey",
-            "autoHotkey",
-            "clibor",
-            "luna",
-            "yapa2"
+            "noWinKey"
         ],
         "noWinKey": {
             "path": "C:/Apps/NoWinKey/NoWinKey.exe",
@@ -14,46 +10,17 @@
             "gameStartAction": "start-process",
             "gameEndAction": "stop-process",
             "terminationMethod": "force",
-            "gracefulTimeoutMs": null,
-            "displayName": "NoWinKey"
-        },
-        "autoHotkey": {
-            "path": "C:/Users/{username}/autohotkey/my-autohotkey.ahk",
-            "processName": "AutoHotkeyU64|AutoHotkey|AutoHotkey64",
-            "gameStartAction": "stop-process",
-            "gameEndAction": "start-process",
-            "arguments": "",
-            "terminationMethod": "force",
-            "gracefulTimeoutMs": null,
-            "displayName": "[AHK]my-autohotkey"
-        },
-        "clibor": {
-            "path": "C:/Apps/clibor/Clibor.exe",
-            "processName": "Clibor",
-            "gameStartAction": "start-process",
-            "gameEndAction": "start-process",
-            "arguments": "/hs"
-        },
-        "yapa2": {
-            "startAction": "start-process",
-            "arguments": "/start",
-            "processName": "YAPA|YAPA 2|YAPA 2 (32 bit)",
-            "gameStartAction": "start-process",
-            "gameEndAction": "stop-process",
             "gracefulTimeoutMs": 5000,
-            "gracefulTimeout": 5,
-            "terminationMethod": "auto",
-            "path": "%LOCALAPPDATA%/YAPA2/app-2.0.190/YAPA.exe",
-            "endAction": "stop-process",
-            "displayName": "yapa2"
+            "displayName": "noWinKey",
+            "_comment": ""
         }
     },
     "games": {
         "_order": [
-            "dbd",
-            "genshin",
+            "mock-calc",
+            "apex",
             "valorant",
-            "mock-calc"
+            "fallguys"
         ],
         "mock-calc": {
             "_comment": "A lightweight mock game for development and testing. Uses the calculator instead of a real game",
@@ -61,51 +28,12 @@
             "platform": "direct",
             "executablePath": "C:/Windows/System32/calc.exe",
             "processName": "CalculatorApp*",
-            "appsToManage": [
-                "clibor",
-                "yapa2"
-            ],
+            "appsToManage": [],
             "steamAppId": "",
             "epicGameId": "",
             "riotGameId": "",
             "integrations": {
                 "useOBS": true,
-                "useDiscord": true,
-                "useVTubeStudio": false
-            }
-        },
-        "dbd": {
-            "name": "Dead by Daylight",
-            "platform": "steam",
-            "steamAppId": "381210",
-            "processName": "DeadByDaylight-Win64-Shipping*",
-            "appsToManage": [
-                "clibor",
-                "yapa2"
-            ],
-            "epicGameId": "",
-            "riotGameId": "",
-            "executablePath": "",
-            "integrations": {
-                "useOBS": false,
-                "useDiscord": true,
-                "useVTubeStudio": false
-            }
-        },
-        "genshin": {
-            "name": "原神 (Genshin Impact)",
-            "platform": "epic",
-            "epicGameId": "apps/879b0d8776ab46a59a129983ba78f0ce%3A7d690c122fde4c60bed85405f343ad10%3A41869934302e4b8cafac2d3c0e7c293d?action=launch\u0026silent=true",
-            "processName": "GenshinImpact*",
-            "appsToManage": [
-                "clibor",
-                "yapa2"
-            ],
-            "steamAppId": "",
-            "riotGameId": "",
-            "executablePath": "",
-            "integrations": {
-                "useOBS": false,
                 "useDiscord": false,
                 "useVTubeStudio": false
             }
@@ -115,13 +43,44 @@
             "platform": "riot",
             "riotGameId": "valorant",
             "processName": "VALORANT-Win64-Shipping*",
-            "appsToManage": [
-                "clibor"
-            ],
+            "appsToManage": [],
             "integrations": {
                 "useOBS": true,
-                "useDiscord": true,
+                "useDiscord": false,
                 "useVTubeStudio": true
+            },
+            "steamAppId": "",
+            "epicGameId": "",
+            "executablePath": ""
+        },
+        "apex": {
+            "name": "Apex Legends",
+            "platform": "steam",
+            "steamAppId": "1172470",
+            "processName": "r5apex*",
+            "appsToManage": [],
+            "epicGameId": "",
+            "riotGameId": "",
+            "executablePath": "",
+            "integrations": {
+                "useOBS": true,
+                "useDiscord": false,
+                "useVTubeStudio": false
+            }
+        },
+        "fall-guys": {
+            "name": "Fall Guys",
+            "platform": "epic",
+            "steamAppId": "",
+            "epicGameId": "apps/50118b7f954e450f8823df1614b24e80%3A38ec4849ea4f4de6aa7b6fb0f2d278e1%3A0a2d9f6403244d12969e11da6713137b?action=launch&silent=true",
+            "riotGameId": "",
+            "processName": "FallGuys*",
+            "appsToManage": [],
+            "executablePath": "",
+            "integrations": {
+                "useOBS": false,
+                "useDiscord": false,
+                "useVTubeStudio": false
             }
         }
     },
@@ -134,23 +93,23 @@
         "obs": {
             "path": "C:/Program Files/obs-studio/bin/64bit/obs64.exe",
             "processName": "obs64",
-            "gameStartAction": "none",
-            "gameEndAction": "none",
+            "gameStartAction": "enter-game-mode",
+            "gameEndAction": "exit-game-mode",
             "arguments": "",
             "terminationMethod": "graceful",
             "gracefulTimeoutMs": 5000,
             "websocket": {
                 "host": "127.0.0.1",
                 "port": 4455,
-                "password": "encrypted-password"
+                "password": ""
             },
             "replayBuffer": true
         },
         "discord": {
             "path": "%LOCALAPPDATA%/Discord/app-*/Discord.exe",
             "processName": "Discord",
-            "gameStartAction": "none",
-            "gameEndAction": "none",
+            "gameStartAction": "enter-game-mode",
+            "gameEndAction": "stop-process",
             "arguments": "",
             "terminationMethod": "graceful",
             "gracefulTimeoutMs": 8000,
@@ -164,20 +123,20 @@
                     "state": "Focus Gaming Mode"
                 },
                 "rpc": {
-                    "enabled": true,
+                    "enabled": false,
                     "applicationId": ""
                 }
             }
         },
         "vtubeStudio": {
-            "path": "",
+            "path": "C:/Program Files (x86)/Steam/steam.exe",
             "processName": "VTube Studio",
-            "gameStartAction": "none",
-            "gameEndAction": "none",
+            "gameStartAction": "enter-game-mode",
+            "gameEndAction": "exit-game-mode",
             "arguments": "",
             "steamPath": "",
             "websocket": {
-                "host": "localhost",
+                "host": "127.0.0.1",
                 "port": 8001,
                 "enabled": false
             }
@@ -185,6 +144,7 @@
     },
     "logging": {
         "level": "Debug",
+        "_comment": "Logging levels: Trace, Debug, Info, Warning, Error, Critical",
         "enableFileLogging": true,
         "enableConsoleLogging": true,
         "filePath": "",
@@ -196,14 +156,5 @@
             "databaseURL": ""
         }
     },
-    "language": "",
-    "appsToManage": [],
-    "discord": {
-        "disableOverlay": false,
-        "path": "C:\\Users\\{username}\\AppData\\Local/Discord/app-*/Discord.exe",
-        "statusOnEnd": "online",
-        "enableGameMode": true,
-        "statusOnStart": "dnd"
-    },
-    "vtubeStudio": {}
+    "language": ""
 }

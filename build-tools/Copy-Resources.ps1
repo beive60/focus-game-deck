@@ -131,15 +131,12 @@ try {
     $copyResults += Copy-DirectoryContents `
         -SourcePath $configSource `
         -DestPath $configDest `
-        -Include @("*.json", "*.json.sample") `
+        -Include @("*.json") `
+        -Exclude @("*.json.sample") `
         -Description "configuration files"
 
-    if (Test-Path (Join-Path $configSource "config.json.sample")) {
-        $samplePath = Join-Path $configSource "config.json.sample"
-        $destPath = Join-Path $configDest "config.json"
-        Copy-Item -Path $samplePath -Destination $destPath -Force
-        Write-Verbose "  Copied config.json.sample as config.json"
-    }
+    # Note: config.json.sample is no longer needed in distribution
+    # Default configuration is now generated programmatically by ConfigEditor.State.ps1
 
     Write-Host ""
     $localizationSource = Join-Path $SourceRoot "localization"
