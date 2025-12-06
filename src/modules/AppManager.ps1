@@ -221,7 +221,7 @@ class AppManager {
                 return $true
             }
             default {
-                Write-Host "Unknown action: $action for app: $appId"
+                Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_action" -Args @($action, $appId) -Default ("Unknown action '{0}' for app '{1}'" -f $action, $appId) -Level "WARNING" -Component "AppManager"
                 return $false
             }
         }
@@ -253,7 +253,7 @@ class AppManager {
         $integrationConfig = $this.Config.integrations.$integrationId
 
         if (-not $manager) {
-            Write-Host "Integration manager not found: $integrationId"
+            Write-LocalizedHost -Messages $this.Messages -Key "console_integration_not_found" -Args @($integrationId) -Default ("Integration manager not found: {0}" -f $integrationId) -Level "WARNING" -Component "AppManager"
             return $false
         }
 
@@ -268,7 +268,7 @@ class AppManager {
                 return $this.HandleVTubeStudioAction($manager, $integrationConfig, $action)
             }
             default {
-                Write-Host "Unknown integration: $integrationId"
+                Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_integration" -Args @($integrationId) -Default ("Unknown integration: {0}" -f $integrationId) -Level "WARNING" -Component "AppManager"
                 return $false
             }
         }
@@ -305,10 +305,10 @@ class AppManager {
 
                 $success = $manager.StartOBS()
                 if ($success) {
-                    Write-Host "[INFO] OBS started successfully"
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_obs_started" -Default "OBS started successfully" -Level "OK" -Component "OBSManager"
                     if ($this.Logger) { $this.Logger.Info("OBS started successfully", "OBS") }
                 } else {
-                    Write-Warning "Failed to start OBS"
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_obs_failed" -Default "Failed to start OBS" -Level "WARNING" -Component "OBSManager"
                     if ($this.Logger) { $this.Logger.Warning("Failed to start OBS", "OBS") }
                     return $success
                 }
@@ -321,7 +321,7 @@ class AppManager {
                 if ($success) {
                     if ($this.Logger) { $this.Logger.Info("OBS websocket connection established", "OBS") }
                 } else {
-                    Write-Warning "Failed to connect to OBS websocket"
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_obs_websocket_failed" -Default "Failed to connect to OBS websocket" -Level "WARNING" -Component "OBSManager"
                     if ($this.Logger) { $this.Logger.Warning("Failed to connect to OBS websocket", "OBS") }
                     return $false
                 }
@@ -330,7 +330,7 @@ class AppManager {
                     $success = $manager.StartReplayBuffer()
                     if ($this.Logger) { $this.Logger.Info("OBS replay buffer started", "OBS") }
                 } catch {
-                    Write-Warning "Failed to connect to OBS for replay buffer"
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_obs_replay_failed" -Default "Failed to connect to OBS for replay buffer" -Level "WARNING" -Component "OBSManager"
                     if ($this.Logger) { $this.Logger.Warning("Failed to connect to OBS for replay buffer", "OBS") }
                     return $false
                 } finally {
@@ -364,7 +364,7 @@ class AppManager {
                 return $true
             }
             default {
-                Write-Host "Unknown OBS action: $action"
+                Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_obs_action" -Args @($action) -Default ("Unknown action: {0}" -f $action) -Level "WARNING" -Component "OBSManager"
                 return $false
             }
         }
@@ -401,7 +401,7 @@ class AppManager {
                 $success = $manager.StartDiscord()
 
                 if ($success) {
-                    Write-Host "[INFO] Discord started successfully"
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_discord_started" -Default "Discord started successfully" -Level "OK" -Component "DiscordManager"
                     if ($this.Logger) { $this.Logger.Info("Discord started successfully", "Discord") }
                 }
 
@@ -413,7 +413,7 @@ class AppManager {
                 $success = $manager.StopDiscord()
 
                 if ($success) {
-                    Write-Host "[INFO] Discord stopped successfully"
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_discord_stopped" -Default "Discord stopped successfully" -Level "OK" -Component "DiscordManager"
                     if ($this.Logger) { $this.Logger.Info("Discord stopped successfully", "Discord") }
                 }
 
@@ -423,7 +423,7 @@ class AppManager {
                 return $true
             }
             default {
-                Write-Host "Unknown Discord action: $action"
+                Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_discord_action" -Args @($action) -Default ("Unknown action: {0}" -f $action) -Level "WARNING" -Component "DiscordManager"
                 return $false
             }
         }
@@ -464,7 +464,7 @@ class AppManager {
                 return $true
             }
             default {
-                Write-Host "Unknown VTube Studio action: $action"
+                Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_vtube_action" -Args @($action) -Default ("Unknown action: {0}" -f $action) -Level "WARNING" -Component "VTubeStudioManager"
                 return $false
             }
         }
@@ -498,12 +498,12 @@ class AppManager {
     # Start application process
     [bool] StartProcess([string] $appId, [object] $appConfig) {
         if (-not $appConfig.path -or $appConfig.path -eq "") {
-            Write-Host ($this.Messages.warning_no_path_specified -f $appId)
+            Write-LocalizedHost -Messages $this.Messages -Key "console_app_no_path" -Args @($appId) -Default ("No path specified for app '{0}'" -f $appId) -Level "WARNING" -Component "AppManager"
             return $false
         }
 
         if (-not (Test-Path $appConfig.path)) {
-            Write-Host "Application path not found: $($appConfig.path)"
+            Write-LocalizedHost -Messages $this.Messages -Key "console_app_path_not_found" -Args @($appConfig.path) -Default ("Application path not found: {0}" -f $appConfig.path) -Level "WARNING" -Component "AppManager"
             return $false
         }
 
@@ -519,11 +519,10 @@ class AppManager {
             } else {
                 Start-Process -FilePath $appConfig.path
             }
-
-            Write-Host ($this.Messages.app_started -f $appId)
+            Write-LocalizedHost -Messages $this.Messages -Key "console_app_started" -Args @($appId) -Default ("Application started: {0}" -f $appId) -Level "OK" -Component "AppManager"
             return $true
         } catch {
-            Write-Host "Failed to start $appId : $_"
+            Write-LocalizedHost -Messages $this.Messages -Key "console_app_start_failed" -Args @($appId) -Default ("Failed to start app: {0}" -f $appId) -Level "WARNING" -Component "AppManager"
             return $false
         }
     }
@@ -557,7 +556,7 @@ class AppManager {
     # Stop application process
     [bool] StopProcess([string] $appId, [object] $appConfig) {
         if (-not $appConfig.processName -or $appConfig.processName -eq "") {
-            Write-Host ($this.Messages.warning_no_process_name -f $appId)
+            Write-LocalizedHost -Messages $this.Messages -Key "console_app_no_process" -Args @($appId) -Default ("No process name specified for app '{0}'" -f $appId) -Level "WARNING" -Component "AppManager"
             return $false
         }
 
@@ -578,18 +577,18 @@ class AppManager {
                 if ($processes) {
                     $success = $this.TerminateProcess($processName, $terminationMethod, $gracefulTimeoutMs, $appId)
                     if ($success) {
-                        Write-Host ($this.Messages.app_process_stopped -f $appId, $processName)
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_app_process_stopped" -Args @($appId, $processName) -Default ("Application process stopped: {0} ({1})" -f $appId, $processName) -Level "OK" -Component "AppManager"
                         $processFound = $true
                     }
                 }
             } catch {
                 # Process not found, continue to next
-                Write-Host ($this.Messages.app_process_not_found -f $processName)
+                Write-LocalizedHost -Messages $this.Messages -Key "console_app_process_not_found" -Args @($processName) -Default ("Application process not found: {0}" -f $processName) -Level "INFO" -Component "AppManager"
             }
         }
 
         if (-not $processFound) {
-            Write-Host ($this.Messages.app_process_not_running -f $appId)
+            Write-LocalizedHost -Messages $this.Messages -Key "console_app_process_not_running" -Args @($appId) -Default ("Application process not running: {0}" -f $appId) -Level "INFO" -Component "AppManager"
         }
 
         return $true
@@ -608,13 +607,13 @@ class AppManager {
                 # Try graceful first, then force if needed
                 $gracefulSuccess = $this.GracefulTermination($processName, $timeoutMs, $appId)
                 if (-not $gracefulSuccess) {
-                    Write-Host ($this.Messages.graceful_failed_using_force -f $processName)
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_graceful_failed_using_force" -Args @($processName) -Default ("Graceful shutdown failed, attempting force termination for {0}" -f $processName) -Level "WARNING" -Component "AppManager"
                     return $this.ForceTermination($processName, $appId)
                 }
                 return $true
             }
             default {
-                Write-Host "Unknown termination method '$method' for $appId. Using 'auto' as fallback."
+                Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_termination_method" -Args @($method, $appId) -Default ("Unknown termination method '{0}' for app '{1}' - Using 'auto' as fallback" -f $method, $appId) -Level "WARNING" -Component "AppManager"
                 return $this.TerminateProcess($processName, "auto", $timeoutMs, $appId)
             }
         }
@@ -628,7 +627,7 @@ class AppManager {
             # Send graceful termination signal
             Stop-Process -Name $processName -ErrorAction Stop
 
-            Write-Host ($this.Messages.graceful_shutdown_initiated -f $processName, ($timeoutMs / 1000))
+            Write-LocalizedHost -Messages $this.Messages -Key "console_graceful_shutdown_initiated" -Args @($processName, ($timeoutMs / 1000)) -Default ("Graceful shutdown initiated for {0} ({1}s timeout)" -f $processName, ($timeoutMs / 1000)) -Level "INFO" -Component "AppManager"
 
             # Wait for process to exit gracefully
             $waitInterval = 100  # Check every 100ms
@@ -641,16 +640,16 @@ class AppManager {
                 # Check if process still exists
                 $remainingProcesses = Get-Process -Name $processName -ErrorAction SilentlyContinue
                 if (-not $remainingProcesses) {
-                    Write-Host ($this.Messages.graceful_shutdown_success -f $processName)
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_graceful_shutdown_success" -Args @($processName) -Default ("Graceful shutdown successful: {0}" -f $processName) -Level "OK" -Component "AppManager"
                     return $true
                 }
             }
 
             # Timeout reached
-            Write-Host ($this.Messages.graceful_shutdown_timeout -f $processName, ($timeoutMs / 1000))
+            Write-LocalizedHost -Messages $this.Messages -Key "console_graceful_shutdown_timeout" -Args @($processName, ($timeoutMs / 1000)) -Default ("Graceful shutdown timeout for {0} ({1}s)" -f $processName, ($timeoutMs / 1000)) -Level "WARNING" -Component "AppManager"
             return $false
         } catch {
-            Write-Host ($this.Messages.graceful_shutdown_failed -f $processName, $_)
+            Write-LocalizedHost -Messages $this.Messages -Key "console_graceful_shutdown_failed" -Args @($processName, $_) -Default ("Graceful shutdown failed for {0}: {1}" -f $processName, $_) -Level "WARNING" -Component "AppManager"
             return $false
         }
     }
@@ -659,10 +658,10 @@ class AppManager {
     [bool] ForceTermination([string] $processName, [string] $appId) {
         try {
             Stop-Process -Name $processName -Force -ErrorAction Stop
-            Write-Host ($this.Messages.force_termination_success -f $processName)
+            Write-LocalizedHost -Messages $this.Messages -Key "console_force_termination_success" -Args @($processName) -Default ("Process forcefully terminated: {0}" -f $processName) -Level "OK" -Component "AppManager"
             return $true
         } catch {
-            Write-Host ($this.Messages.force_termination_failed -f $processName, $_)
+            Write-LocalizedHost -Messages $this.Messages -Key "console_force_termination_failed" -Args @($processName, $_) -Default ("Force termination failed for {0}: {1}" -f $processName, $_) -Level "WARNING" -Component "AppManager"
             return $false
         }
     }
@@ -810,7 +809,7 @@ class AppManager {
 
             if (-not $success) {
                 $allSuccess = $false
-                Write-Warning "Failed to start $appId with action: $action"
+                Write-LocalizedHost -Messages $this.Messages -Key "console_app_start_action_failed" -Args @($appId, $action) -Default ("Failed to start app '{0}' with action: {1}" -f $appId, $action) -Level "WARNING" -Component "AppManager"
                 if ($this.Logger) { $this.Logger.Warning("Failed to start $appId with action: $action", "APP") }
             }
         }
@@ -833,7 +832,7 @@ class AppManager {
             $success = $this.InvokeAction($appId, $action)
             if (-not $success) {
                 $allSuccess = $false
-                Write-Warning "Failed to shutdown $appId with action: $action"
+                Write-LocalizedHost -Messages $this.Messages -Key "console_app_shutdown_action_failed" -Args @($appId, $action) -Default ("Failed to shutdown app '{0}' with action: {1}" -f $appId, $action) -Level "WARNING" -Component "AppManager"
                 if ($this.Logger) { $this.Logger.Warning("Failed to shutdown $appId with action: $action", "APP") }
             }
         }

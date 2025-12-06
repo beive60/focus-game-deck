@@ -23,12 +23,10 @@ class OBSManager {
                 try {
                     # Try to decrypt DPAPI-encrypted password (new format)
                     $this.Password = ConvertTo-SecureString -String $obsConfig.websocket.password
-                    Write-Verbose "OBSManager: Loaded encrypted password from config"
                 } catch {
                     # Fall back to plain text conversion (old format for backward compatibility)
-                    Write-Verbose "OBSManager: Password is not encrypted, treating as plain text"
                     $this.Password = $this.ConvertToSecureStringSafe($obsConfig.websocket.password)
-                    Write-Warning "Plain text password detected in config - consider using the GUI to re-save with encryption"
+                    Write-LocalizedHost -Messages $this.Messages -Key "plaintext_password_detected" -Default "Plain text password detected in config - consider using the GUI to re-save with encryption" -Level "WARNING" -Component "OBSManager"
                 }
             }
         }
@@ -39,7 +37,7 @@ class OBSManager {
         try {
             return ConvertTo-SecureString -String $PlainText -AsPlainText -Force
         } catch {
-            Write-Warning "ConvertTo-SecureString failed, attempting alternative method: $_"
+            Write-LocalizedHost -Messages $this.Messages -Key "secure_string_conversion_failed" -Args @($_) -Default "ConvertTo-SecureString failed, attempting alternative method: {0}" -Level "WARNING" -Component "OBSManager"
             $secureString = New-Object System.Security.SecureString
             foreach ($char in $PlainText.ToCharArray()) {
                 $secureString.AppendChar($char)
@@ -71,7 +69,7 @@ class OBSManager {
             }
             return $resultText | ConvertFrom-Json
         } catch {
-            Write-Host ($this.Messages.error_receive_websocket -f $_)
+            Write-LocalizedHost -Messages $this.Messages -Key "error_receive_websocket" -Args @($_) -Default "WebSocket receive error: {0}" -Level "WARNING" -Component "OBSManager"
             return $null
         }
     }
@@ -87,16 +85,16 @@ class OBSManager {
             $this.WebSocket.ConnectAsync($uri, $cts.Token).Wait()
 
             if ($this.WebSocket.State -ne [System.Net.WebSockets.WebSocketState]::Open) {
-                Write-Host $this.Messages.failed_connect_obs
+                Write-LocalizedHost -Messages $this.Messages -Key "failed_connect_obs" -Default "Failed to connect to OBS" -Level "WARNING" -Component "OBSManager"
                 return $false
             }
 
-            Write-Host $this.Messages.connected_obs_websocket
+            Write-LocalizedHost -Messages $this.Messages -Key "connected_obs_websocket" -Default "Connected to OBS WebSocket" -Level "OK" -Component "OBSManager"
 
             # Wait for Hello message (Op 0)
             $hello = $this.ReceiveWebSocketResponse(5)
             if (-not $hello -or $hello.op -ne 0) {
-                Write-Host $this.Messages.error_receive_hello
+                Write-LocalizedHost -Messages $this.Messages -Key "error_receive_hello" -Default "Error receiving Hello message" -Level "WARNING" -Component "OBSManager"
                 $this.Disconnect()
                 return $false
             }
@@ -111,7 +109,7 @@ class OBSManager {
 
             # Handle authentication if required
             if ($hello.d.authentication) {
-                Write-Host $this.Messages.auth_required
+                Write-LocalizedHost -Messages $this.Messages -Key "auth_required" -Default "Authentication required" -Level "INFO" -Component "OBSManager"
                 $authResponse = $this.HandleAuthentication($hello.d.authentication)
                 if (-not $authResponse) {
                     $this.Disconnect()
@@ -126,15 +124,15 @@ class OBSManager {
             # Wait for Identified message (Op 2)
             $identified = $this.ReceiveWebSocketResponse(5)
             if (-not $identified -or $identified.op -ne 2) {
-                Write-Host $this.Messages.obs_auth_failed
+                Write-LocalizedHost -Messages $this.Messages -Key "obs_auth_failed" -Default "OBS authentication failed" -Level "WARNING" -Component "OBSManager"
                 $this.Disconnect()
                 return $false
             }
 
-            Write-Host $this.Messages.obs_auth_successful
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_auth_successful" -Default "OBS authentication successful" -Level "OK" -Component "OBSManager"
             return $true
         } catch {
-            Write-Host ($this.Messages.obs_connection_error -f $_)
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_connection_error" -Args @($_) -Default "OBS connection error: {0}" -Level "WARNING" -Component "OBSManager"
             return $false
         }
     }
@@ -162,7 +160,7 @@ class OBSManager {
             $authResponseBytes = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($secret + $challenge))
             return [System.Convert]::ToBase64String($authResponseBytes)
         } catch {
-            Write-Warning "Authentication calculation failed: $_"
+            Write-LocalizedHost -Messages $this.Messages -Key "authentication_calculation_failed" -Args @($_) -Default "Authentication calculation failed: {0}" -Level "WARNING" -Component "OBSManager"
             return $null
         }
     }
@@ -188,10 +186,10 @@ class OBSManager {
             }
 
             $this.SendMessage($command)
-            Write-Host $this.Messages.obs_replay_buffer_started
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_replay_buffer_started" -Default "OBS replay buffer started" -Level "OK" -Component "OBSManager"
             return $true
         } catch {
-            Write-Host ($this.Messages.replay_buffer_start_error -f $_)
+            Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_start_error" -Args @($_) -Default "Replay buffer start error: {0}" -Level "WARNING" -Component "OBSManager"
             return $false
         }
     }
@@ -209,10 +207,10 @@ class OBSManager {
             }
 
             $this.SendMessage($command)
-            Write-Host $this.Messages.obs_replay_buffer_stopped
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_replay_buffer_stopped" -Default "OBS replay buffer stopped" -Level "OK" -Component "OBSManager"
             return $true
         } catch {
-            Write-Host ($this.Messages.replay_buffer_stop_error -f $_)
+            Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_stop_error" -Args @($_) -Default "Replay buffer stop error: {0}" -Level "WARNING" -Component "OBSManager"
             return $false
         }
     }
@@ -241,19 +239,19 @@ class OBSManager {
     [bool] StartOBS( ) {
 
         if ($this.IsOBSRunning()) {
-            Write-Host $this.Messages.obs_already_running
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_already_running" -Default "OBS is already running" -Level "INFO" -Component "OBSManager"
             return $true
         }
 
         $obsPath = $this.Config.path
         if (-not $obsPath -or -not (Test-Path $obsPath)) {
-            Write-Host "OBS path not found or invalid: $obsPath"
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_path_not_found_or_invalid" -Args @($obsPath) -Default "OBS path not found or invalid: {0}" -Level "WARNING" -Component "OBSManager"
             return $false
         }
 
         try {
             Start-Process -FilePath $obsPath -WorkingDirectory (Split-Path -Parent $obsPath)
-            Write-Host $this.Messages.starting_obs
+            Write-LocalizedHost -Messages $this.Messages -Key "starting_obs" -Default "Starting OBS..." -Level "INFO" -Component "OBSManager"
 
             # Wait for OBS startup
             $retryCount = 0
@@ -264,15 +262,15 @@ class OBSManager {
             }
 
             if ($this.IsOBSRunning()) {
-                Write-Host $this.Messages.obs_startup_complete
+                Write-LocalizedHost -Messages $this.Messages -Key "obs_startup_complete" -Default "OBS startup complete" -Level "OK" -Component "OBSManager"
                 Start-Sleep -Seconds 5  # Wait for WebSocket server startup
                 return $true
             } else {
-                Write-Host $this.Messages.obs_startup_failed
+                Write-LocalizedHost -Messages $this.Messages -Key "obs_startup_failed" -Default "OBS startup failed" -Level "WARNING" -Component "OBSManager"
                 return $false
             }
         } catch {
-            Write-Host "Failed to start OBS: $_"
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_startup_failed" -Default "Failed to start OBS" -Level "WARNING" -Component "OBSManager"
             return $false
         }
     }

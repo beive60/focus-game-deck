@@ -101,7 +101,8 @@ try {
     if ($messages.en -and $messages.ja) {
         $enCount = ($messages.en.PSObject.Properties | Measure-Object).Count
         $jaCount = ($messages.ja.PSObject.Properties | Measure-Object).Count
-        Test-Result "Message key consistency" ($enCount -eq $jaCount) "EN=$enCount, JA=$jaCount"
+        $zhCnCount = ($messages."zh-cn".PSObject.Properties | Measure-Object).Count
+        Test-Result "Message key consistency" ($enCount -eq $jaCount -and $jaCount -eq $zhCnCount) "EN=$enCount, JA=$jaCount, ZH-CN=$zhCnCount"
 
         # Test Japanese text
         $sampleText = $messages.ja.errorMessage

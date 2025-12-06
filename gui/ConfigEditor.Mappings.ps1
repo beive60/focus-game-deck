@@ -9,53 +9,53 @@
 
 # CRUD operation buttons (Add, Duplicate, Delete)
 $script:CrudButtonMappings = @{
-    "AddGameButton"       = "addButton"
+    "AddGameButton" = "addButton"
     "DuplicateGameButton" = "duplicateButton"
-    "DeleteGameButton"    = "deleteButton"
-    "AddAppButton"        = "addButton"
-    "DuplicateAppButton"  = "duplicateButton"
-    "DeleteAppButton"     = "deleteButton"
+    "DeleteGameButton" = "deleteButton"
+    "AddAppButton" = "addButton"
+    "DuplicateAppButton" = "duplicateButton"
+    "DeleteAppButton" = "deleteButton"
 }
 
 # File browser buttons
 $script:BrowserButtonMappings = @{
-    "BrowseAppPathButton"        = "browseButton"
+    "BrowseAppPathButton" = "browseButton"
     "BrowseExecutablePathButton" = "browseButton"
-    "BrowseSteamPathButton"      = "browseButton"
-    "BrowseEpicPathButton"       = "browseButton"
-    "BrowseRiotPathButton"       = "browseButton"
-    "BrowseObsPathButton"        = "browseButton"
+    "BrowseSteamPathButton" = "browseButton"
+    "BrowseEpicPathButton" = "browseButton"
+    "BrowseRiotPathButton" = "browseButton"
+    "BrowseOBSPathButton" = "browseButton"
 }
 
 # Auto-detection buttons
 $script:AutoDetectButtonMappings = @{
     "AutoDetectSteamButton" = "autoDetectButton"
-    "AutoDetectEpicButton"  = "autoDetectButton"
-    "AutoDetectRiotButton"  = "autoDetectButton"
-    "AutoDetectObsButton"   = "autoDetectButton"
+    "AutoDetectEpicButton" = "autoDetectButton"
+    "AutoDetectRiotButton" = "autoDetectButton"
+    "AutoDetectOBSButton" = "autoDetectButton"
 }
 
 # Save and action buttons
 $script:ActionButtonMappings = @{
-    "SaveGameSettingsButton"        = "saveButton"
-    "SaveManagedAppsButton"         = "saveButton"
-    "SaveGlobalSettingsButton"      = "saveButton"
-    "SaveOBSSettingsButton"         = "saveButton"
-    "SaveDiscordSettingsButton"     = "saveButton"
+    "SaveGameSettingsButton" = "saveButton"
+    "SaveManagedAppsButton" = "saveButton"
+    "SaveGlobalSettingsButton" = "saveButton"
+    "SaveOBSSettingsButton" = "saveButton"
+    "SaveDiscordSettingsButton" = "saveButton"
     "SaveVTubeStudioSettingsButton" = "saveButton"
-    "GenerateLaunchersButton"       = "generateLaunchers"
+    "GenerateLaunchersButton" = "generateLaunchers"
 }
 
 # List movement buttons
 $script:MovementButtonMappings = @{
-    "MoveGameTopButton"    = "moveTopButton"
-    "MoveGameUpButton"     = "moveUpButton"
-    "MoveGameDownButton"   = "moveDownButton"
+    "MoveGameTopButton" = "moveTopButton"
+    "MoveGameUpButton" = "moveUpButton"
+    "MoveGameDownButton" = "moveDownButton"
     "MoveGameBottomButton" = "moveBottomButton"
-    "MoveAppTopButton"     = "moveTopButton"
-    "MoveAppUpButton"      = "moveUpButton"
-    "MoveAppDownButton"    = "moveDownButton"
-    "MoveAppBottomButton"  = "moveBottomButton"
+    "MoveAppTopButton" = "moveTopButton"
+    "MoveAppUpButton" = "moveUpButton"
+    "MoveAppDownButton" = "moveDownButton"
+    "MoveAppBottomButton" = "moveBottomButton"
 }
 
 # Combined mapping for backward compatibility
@@ -68,116 +68,160 @@ $script:MovementButtonMappings.GetEnumerator() | ForEach-Object { $script:Button
 
 # Label and GroupBox header mappings
 $script:LabelMappings = @{
-    "GamesListLabel"         = "gamesListLabel"
-    "GameDetailsLabel"       = "gameDetailsLabel"
-    "GameIdLabel"            = "gameIdLabel"
-    "GameNameLabel"          = "gameNameLabel"
-    "PlatformLabel"          = "platformLabel"
-    "SteamAppIdLabel"        = "steamAppIdLabel"
-    "EpicGameIdLabel"        = "epicGameIdLabel"
-    "RiotGameIdLabel"        = "riotGameIdLabel"
-    "ProcessNameLabel"       = "processNameLabel"
-    "AppsToManageLabel"      = "appsToManageLabel"
-    "ObsSettingsGroup"       = "obsSettingsGroup"
-    "PathSettingsGroup"      = "pathSettingsGroup"
-    "GeneralSettingsGroup"   = "generalSettingsGroup"
-    "HostLabel"              = "hostLabel"
-    "PortLabel"              = "portLabel"
-    "PasswordLabel"          = "passwordLabel"
-    "SteamPathLabel"         = "steamPathLabel"
-    "EpicPathLabel"          = "epicPathLabel"
-    "RiotPathLabel"          = "riotPathLabel"
-    "ObsPathLabel"           = "obsPathLabel"
-    "LanguageLabel"          = "languageLabel"
-    "AppsListLabel"          = "appsListLabel"
-    "AppDetailsLabel"        = "appDetailsLabel"
-    "AppIdLabel"             = "appIdLabel"
-    "AppPathLabel"           = "appPathLabel"
-    "AppDisplayNameLabel"    = "appDisplayNameLabel"
-    "AppProcessNameLabel"    = "processNameLabel"
-    "GameStartActionLabel"   = "gameStartActionLabel"
-    "GameEndActionLabel"     = "gameEndActionLabel"
-    "AppArgumentsLabel"      = "argumentsLabel"
+    "GamesListLabel" = "gamesListLabel"
+    "GameDetailsLabel" = "gameDetailsLabel"
+    "GameIdLabel" = "gameIdLabel"
+    "GameNameLabel" = "gameNameLabel"
+    "PlatformLabel" = "platformLabel"
+    "SteamAppIdLabel" = "steamAppIdLabel"
+    "EpicGameIdLabel" = "epicGameIdLabel"
+    "RiotGameIdLabel" = "riotGameIdLabel"
+    "ProcessNameLabel" = "processNameLabel"
+    "AppsToManageLabel" = "appsToManageLabel"
+    "ObsSettingsGroup" = "obsSettingsGroup"
+    "PathSettingsGroup" = "pathSettingsGroup"
+    "GeneralSettingsGroup" = "generalSettingsGroup"
+    "HostLabel" = "hostLabel"
+    "PortLabel" = "portLabel"
+    "PasswordLabel" = "passwordLabel"
+    "SteamPathLabel" = "steamPathLabel"
+    "EpicPathLabel" = "epicPathLabel"
+    "RiotPathLabel" = "riotPathLabel"
+    "ObsPathLabel" = "obsPathLabel"
+    "LanguageLabel" = "languageLabel"
+    "AppsListLabel" = "appsListLabel"
+    "AppDetailsLabel" = "appDetailsLabel"
+    "AppIdLabel" = "appIdLabel"
+    "AppPathLabel" = "appPathLabel"
+    "AppDisplayNameLabel" = "appDisplayNameLabel"
+    "AppProcessNameLabel" = "processNameLabel"
+    "GameStartActionLabel" = "gameStartActionLabel"
+    "GameEndActionLabel" = "gameEndActionLabel"
+    "AppArgumentsLabel" = "argumentsLabel"
     "TerminationMethodLabel" = "terminationMethodLabel"
-    "GracefulTimeoutLabel"   = "gracefulTimeoutLabel"
-    "AppCommentLabel"        = "commentLabel"
-    "GameCommentLabel"       = "commentLabel"
-    "LauncherTypeLabel"      = "launcherTypeLabel"
-    "LauncherTypeLabel2"     = "launcherTypeLabel"
-    "LogRetentionLabel"      = "logRetentionLabel"
-    "ExecutablePathLabel"    = "executablePathLabel"
+    "GracefulTimeoutLabel" = "gracefulTimeoutLabel"
+    "AppCommentLabel" = "commentLabel"
+    "GameCommentLabel" = "commentLabel"
+    "LauncherTypeLabel" = "launcherTypeLabel"
+    "LauncherTypeLabel2" = "launcherTypeLabel"
+    "LogRetentionLabel" = "logRetentionLabel"
+    "ExecutablePathLabel" = "executablePathLabel"
 }
 
 # Tab header mappings
 $script:TabMappings = @{
-    "GameLauncherTab"   = "gameLauncherTabHeader"
-    "GamesTab"          = "gamesTabHeader"
-    "ManagedAppsTab"    = "managedAppsTabHeader"
-    "OBSTab"            = "obsTabHeader"
-    "DiscordTab"        = "discordTabHeader"
-    "VTubeStudioTab"    = "vtubestudioTabHeader"
+    "GameLauncherTab" = "gameLauncherTabHeader"
+    "GamesTab" = "gamesTabHeader"
+    "ManagedAppsTab" = "managedAppsTabHeader"
+    "OBSTab" = "obsTabHeader"
+    "DiscordTab" = "discordTabHeader"
+    "VTubeStudioTab" = "vtubestudioTabHeader"
     "GlobalSettingsTab" = "globalSettingsTabHeader"
 }
 
 # TextBlock and Text element mappings
 $script:TextMappings = @{
-    "VersionLabel"         = "versionLabel"
-    "LauncherWelcomeText"  = "launcherWelcomeText"
+    "VersionLabel" = "versionLabel"
+    "LauncherWelcomeText" = "launcherWelcomeText"
     "LauncherSubtitleText" = "launcherSubtitleText"
-    "LauncherStatusText"   = "readyToLaunch"
-    "LauncherHintText"     = "launcherHintText"
-    "LauncherHelpText"     = "launcherHelpText"
-    "DiscordPathInfoText"  = "discordPathInfo"
+    "LauncherStatusText" = "readyToLaunch"
+    "LauncherHintText" = "launcherHintText"
+    "LauncherHelpText" = "launcherHelpText"
+    "DiscordPathInfoText" = "discordPathInfo"
 }
 
 # CheckBox content mappings
 $script:CheckBoxMappings = @{
-    "ReplayBufferCheckBox"          = "replayBufferLabel"
+    "OBSReplayBufferCheckBox" = "replayBufferLabel"
     "EnableLogNotarizationCheckBox" = "enableLogNotarization"
 }
 
 # MenuItem mappings
 $script:MenuItemMappings = @{
-    "RefreshMenu"                   = "refreshMenuHeader"
-    "RefreshGameListMenuItem"       = "refreshGameListMenuItem"
+    "RefreshMenu" = "refreshMenuHeader"
+    "RefreshGameListMenuItem" = "refreshGameListMenuItem"
     "RefreshManagedAppsListMenuItem" = "refreshManagedAppsListMenuItem"
-    "RefreshAllMenuItem"            = "refreshAllMenuItem"
-    "HelpMenu"                      = "helpMenuHeader"
-    "CheckUpdateMenuItem"           = "checkUpdateMenuItem"
-    "AboutMenuItem"                 = "aboutMenuItem"
+    "RefreshAllMenuItem" = "refreshAllMenuItem"
+    "HelpMenu" = "helpMenuHeader"
+    "CheckUpdateMenuItem" = "checkUpdateMenuItem"
+    "AboutMenuItem" = "aboutMenuItem"
 }
 
 # Tooltip mappings for elements that don't have visible text but need tooltips
 $script:TooltipMappings = @{
-    "MoveGameTopButton"              = "moveTopTooltip"
-    "MoveGameUpButton"               = "moveUpTooltip"
-    "MoveGameDownButton"             = "moveDownTooltip"
-    "MoveGameBottomButton"           = "moveBottomTooltip"
-    "MoveAppTopButton"               = "moveTopTooltip"
-    "MoveAppUpButton"                = "moveUpTooltip"
-    "MoveAppDownButton"              = "moveDownTooltip"
-    "MoveAppBottomButton"            = "moveBottomTooltip"
-    "AutoDetectObsTooltip"           = "autoDetectObsTooltip"
-    "AutoDetectDiscordTooltip"       = "autoDetectDiscordTooltip"
-    "AutoDetectVTubeStudioTooltip"   = "autoDetectVTubeStudioTooltip"
+    # Movement button tooltips (Games tab)
+    "MoveGameTopButton" = "moveTopTooltip"
+    "MoveGameUpButton" = "moveUpTooltip"
+    "MoveGameDownButton" = "moveDownTooltip"
+    "MoveGameBottomButton" = "moveBottomTooltip"
+    # Movement button tooltips (Managed Apps tab)
+    "MoveAppTopButton" = "moveTopTooltip"
+    "MoveAppUpButton" = "moveUpTooltip"
+    "MoveAppDownButton" = "moveDownTooltip"
+    "MoveAppBottomButton" = "moveBottomTooltip"
+
+    # Auto-detect tooltip TextBlocks
+    "AutoDetectSteamTooltip" = "autoDetectSteamTooltip"
+    "AutoDetectEpicTooltip" = "autoDetectEpicTooltip"
+    "AutoDetectRiotTooltip" = "autoDetectRiotTooltip"
+    "AutoDetectObsTooltip" = "autoDetectObsTooltip"
+    "AutoDetectDiscordTooltip" = "autoDetectDiscordTooltip"
+    "AutoDetectVTubeStudioTooltip" = "autoDetectVTubeStudioTooltip"
+
+    # Game configuration tooltip TextBlocks (? icons)
+    "GameIdTooltip" = "tooltipGameId"
+    "GameNameTooltip" = "tooltipDisplayName"
+    "SteamAppIdTooltip" = "tooltipSteamAppId"
+    "EpicGameIdTooltip" = "tooltipEpicGameId"
+    "RiotGameIdTooltip" = "tooltipRiotGameId"
+    "ExecutablePathTooltip" = "tooltipExecutablePath"
+    "ProcessNameTooltip" = "tooltipProcessName"
+
+    # Managed App configuration tooltip TextBlocks (? icons)
+    "AppIdTooltip" = "tooltipAppId"
+    "AppProcessNameTooltip" = "tooltipProcessName"
+    "GameStartActionTooltip" = "tooltipGameActions"
+    "GameEndActionTooltip" = "tooltipGameActions"
+    "AppArgumentsTooltip" = "tooltipLaunchArguments"
+    "TerminationMethodTooltip" = "tooltipTerminationMethod"
+    "GracefulTimeoutTooltip" = "tooltipGracefulTimeout"
+
+    # StackPanel tooltips (for entire label+tooltip rows)
+    "GameIdLabelPanel" = "tooltipGameId"
+    "GameNameLabelPanel" = "tooltipDisplayName"
+    "SteamAppIdLabelPanel" = "tooltipSteamAppId"
+    "EpicGameIdLabelPanel" = "tooltipEpicGameId"
+    "RiotGameIdLabelPanel" = "tooltipRiotGameId"
+    "ExecutablePathLabelPanel" = "tooltipExecutablePath"
+    "ProcessNameLabelPanel" = "tooltipProcessName"
+    "GameCommentLabelPanel" = "tooltip_comment"
+    "AppsToManageLabelPanel" = "tooltip_apps_to_manage"
+    "IntegrationsLabelPanel" = "tooltip_integrations"
+    "AppIdLabelPanel" = "tooltipAppId"
+    "AppProcessNameLabelPanel" = "tooltipProcessName"
+    "GameStartActionLabelPanel" = "tooltipGameActions"
+    "GameEndActionLabelPanel" = "tooltipGameActions"
+    "AppArgumentsLabelPanel" = "tooltipLaunchArguments"
+    "TerminationMethodLabelPanel" = "tooltipTerminationMethod"
+    "GracefulTimeoutLabelPanel" = "tooltipGracefulTimeout"
 }
 
 # ComboBoxItem content mappings
 # Note: Only includes ComboBoxItems that are statically defined in MainWindow.xaml
 # Dynamic ComboBoxItems (e.g., game actions) are localized separately in InitializeGameActionCombos()
 $script:ComboBoxItemMappings = @{
-    "LogRetention7Item"               = "logRetention7"
-    "LogRetention30Item"              = "logRetention30"
-    "LogRetention180Item"             = "logRetention180"
-    "LogRetentionUnlimitedItem"       = "logRetentionUnlimited"
-    "LauncherTypeEnhancedItem"        = "enhancedShortcuts"
-    "LauncherTypeTraditionalItem"     = "traditionalBatch"
-    "GameLauncherTypeEnhancedItem"    = "enhancedShortcuts"
+    "LogRetention7Item" = "logRetention7"
+    "LogRetention30Item" = "logRetention30"
+    "LogRetention180Item" = "logRetention180"
+    "LogRetentionUnlimitedItem" = "logRetentionUnlimited"
+    "LauncherTypeEnhancedItem" = "enhancedShortcuts"
+    "LauncherTypeTraditionalItem" = "traditionalBatch"
+    "GameLauncherTypeEnhancedItem" = "enhancedShortcuts"
     "GameLauncherTypeTraditionalItem" = "traditionalBatch"
-    "PlatformStandaloneItem"          = "standalonePlatform"
-    "PlatformSteamItem"               = "steamPlatform"
-    "PlatformEpicItem"                = "epicPlatform"
-    "PlatformRiotItem"                = "riotPlatform"
+    "PlatformStandaloneItem" = "standalonePlatform"
+    "PlatformSteamItem" = "steamPlatform"
+    "PlatformEpicItem" = "epicPlatform"
+    "PlatformRiotItem" = "riotPlatform"
 }
 
 # Game action message key mappings (used for dynamic ComboBoxItem creation)
@@ -186,18 +230,18 @@ $script:ComboBoxItemMappings = @{
 # Application-specific integrations (OBS, Discord, VTube Studio) are configured in dedicated tabs
 # and use abstract actions: enter-game-mode, exit-game-mode
 $script:GameActionMessageKeys = @{
-    "none"            = "gameActionNone"
-    "start-process"   = "gameActionStartProcess"
-    "stop-process"    = "gameActionStopProcess"
+    "none" = "gameActionNone"
+    "start-process" = "gameActionStartProcess"
+    "stop-process" = "gameActionStopProcess"
     "enter-game-mode" = "gameActionEnterGameMode"
-    "exit-game-mode"  = "gameActionExitGameMode"
+    "exit-game-mode" = "gameActionExitGameMode"
 }
 
 # Termination method options mapping
 $script:TerminationMethodMessageKeys = @{
-    "auto"     = "terminationMethodAuto"
+    "auto" = "terminationMethodAuto"
     "graceful" = "terminationMethodGraceful"
-    "force"    = "terminationMethodForce"
+    "force" = "terminationMethodForce"
 }
 
 <#

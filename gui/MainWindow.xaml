@@ -1134,7 +1134,8 @@
 
                                 <!-- WebSocket設定 -->
                                 <GroupBox
-                                    Header="WebSocket接続"
+                                    x:Name="ObsSettingsGroup"
+                                    Header="[OBS_SETTINGS_GROUP]"
                                     Margin="0,0,0,15">
                                     <Grid Margin="10">
                                         <Grid.ColumnDefinitions>
@@ -1148,7 +1149,8 @@
                                         </Grid.RowDefinitions>
 
                                         <Label
-                                            Content="ホスト:"
+                                            x:Name="HostLabel"
+                                            Content="[HOST_LABEL]"
                                             Grid.Row="0"
                                             Grid.Column="0"
                                             VerticalAlignment="Center"/>
@@ -1160,7 +1162,8 @@
                                             Margin="5"/>
 
                                         <Label
-                                            Content="ポート:"
+                                            x:Name="PortLabel"
+                                            Content="[PORT_LABEL]"
                                             Grid.Row="1"
                                             Grid.Column="0"
                                             VerticalAlignment="Center"/>
@@ -1172,7 +1175,8 @@
                                             Margin="5"/>
 
                                         <Label
-                                            Content="パスワード:"
+                                            x:Name="PasswordLabel"
+                                            Content="[PASSWORD_LABEL]"
                                             Grid.Row="2"
                                             Grid.Column="0"
                                             VerticalAlignment="Center"/>
@@ -1199,7 +1203,7 @@
                                             Margin="0,5"/>
                                         <CheckBox
                                             x:Name="OBSReplayBufferCheckBox"
-                                            Content="ゲーム中にリプレイバッファを有効化"
+                                            Content="[REPLAY_BUFFER_LABEL]"
                                             Margin="0,5"/>
                                     </StackPanel>
                                 </GroupBox>
@@ -1208,41 +1212,48 @@
                                 <GroupBox
                                     Header="実行ファイル"
                                     Margin="0,0,0,15">
-                                    <Grid Margin="10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="80"/>
-                                            <ColumnDefinition Width="90"/>
-                                            <ColumnDefinition Width="25"/>
-                                        </Grid.ColumnDefinitions>
+                                    <StackPanel Margin="10">
+                                        <Label
+                                            x:Name="ObsPathLabel"
+                                            Content="[OBS_PATH_LABEL]"
+                                            Margin="0,0,0,5"/>
 
-                                        <TextBox
-                                            x:Name="OBSPathTextBox"
-                                            Grid.Column="0"
-                                            VerticalContentAlignment="Center"
-                                            Margin="0,0,5,0"/>
-                                        <Button
-                                            x:Name="BrowseOBSPathButton"
-                                            Content="参照"
-                                            Grid.Column="1"
-                                            Width="70"
-                                            Height="25"
-                                            Margin="0,0,5,0"/>
-                                        <Button
-                                            x:Name="AutoDetectOBSButton"
-                                            Content="自動検出"
-                                            Grid.Column="2"
-                                            Width="85"
-                                            Height="25"/>
-                                        <TextBlock
-                                            x:Name="AutoDetectObsTooltip"
-                                            Text="?"
-                                            Grid.Column="3"
-                                            FontWeight="Bold"
-                                            Foreground="#0078D4"
-                                            Margin="3,0,0,0"
-                                            VerticalAlignment="Center"/>
-                                    </Grid>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="80"/>
+                                                <ColumnDefinition Width="90"/>
+                                                <ColumnDefinition Width="25"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBox
+                                                x:Name="OBSPathTextBox"
+                                                Grid.Column="0"
+                                                VerticalContentAlignment="Center"
+                                                Margin="0,0,5,0"/>
+                                            <Button
+                                                x:Name="BrowseOBSPathButton"
+                                                Content="[BROWSE_BUTTON]"
+                                                Grid.Column="1"
+                                                Width="70"
+                                                Height="25"
+                                                Margin="0,0,5,0"/>
+                                            <Button
+                                                x:Name="AutoDetectOBSButton"
+                                                Content="[AUTO_DETECT_BUTTON]"
+                                                Grid.Column="2"
+                                                Width="85"
+                                                Height="25"/>
+                                            <TextBlock
+                                                x:Name="AutoDetectObsTooltip"
+                                                Text="?"
+                                                Grid.Column="3"
+                                                FontWeight="Bold"
+                                                Foreground="#0078D4"
+                                                Margin="3,0,0,0"
+                                                VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </StackPanel>
                                 </GroupBox>
                             </StackPanel>
                         </ScrollViewer>

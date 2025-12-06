@@ -201,12 +201,7 @@ class Logger {
         $levelStr = $level.ToString().ToUpper().PadRight(8)
         $logEntry = "[$timestamp] [$levelStr] [$component] $message"
 
-        # Console logging
-        if ($this.EnableConsoleLogging) {
-            $this.WriteToConsole($level, $logEntry)
-        }
-
-        # File logging
+        # File logging only - console output is handled by application code with localization
         if ($this.EnableFileLogging) {
             try {
                 Add-Content -Path $this.LogFilePath -Value $logEntry -Encoding UTF8
@@ -216,44 +211,7 @@ class Logger {
         }
     }
 
-    <#
-    .SYNOPSIS
-        Writes a log entry to the console with appropriate colors.
 
-    .DESCRIPTION
-        Outputs log entries to the console with color coding based on severity level.
-
-    .PARAMETER level
-        The severity level (determines output color)
-
-    .PARAMETER logEntry
-        The formatted log entry text to display
-
-    .EXAMPLE
-        $logger.WriteToConsole([LogLevel]::Warning, "[2024-01-01] [WARNING] Test warning")
-    #>
-    [void] WriteToConsole([LogLevel] $level, [string] $logEntry) {
-        switch ($level) {
-            ([LogLevel]::Trace) {
-                Write-Host $logEntry
-            }
-            ([LogLevel]::Debug) {
-                Write-Host $logEntry
-            }
-            ([LogLevel]::Info) {
-                Write-Host $logEntry
-            }
-            ([LogLevel]::Warning) {
-                Write-Host $logEntry
-            }
-            ([LogLevel]::Error) {
-                Write-Host $logEntry
-            }
-            ([LogLevel]::Critical) {
-                Write-Host $logEntry
-            }
-        }
-    }
 
     <#
     .SYNOPSIS

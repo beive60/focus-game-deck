@@ -200,7 +200,7 @@
             "detail": "Run Pester tests for the project"
         },
         {
-            "label": "[TEST] Show test result summary in browser",
+            "label": "[SHOW] Show test result summary in browser",
             "type": "shell",
             "command": "powershell",
             "args": [

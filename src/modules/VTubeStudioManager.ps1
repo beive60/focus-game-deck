@@ -22,7 +22,7 @@ class VTubeStudioManager {
             -Config $vtubeConfig -Messages $messages -Logger $logger`
             -AppName "VTubeStudio"
         } catch {
-            Write-Warning "Failed to load WebSocketAppManagerBase: $_"
+            Write-LocalizedHost -Messages $messages -Key "vtube_startup_failed_error" -Args @($_) -Default "Failed to start VTube Studio: {0}" -Level "WARNING" -Component "VTubeStudioManager"
             $this.BaseHelper = $null
         }
     }
@@ -36,7 +36,7 @@ class VTubeStudioManager {
     # Start VTube Studio application
     [bool] StartVTubeStudio() {
         if ($this.IsVTubeStudioRunning()) {
-            Write-Host "VTube Studio is already running"
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_already_running" -Default "VTube Studio is already running" -Level "INFO" -Component "VTubeStudioManager"
             if ($this.Logger) {
                 $this.Logger.Info("VTube Studio already running, skipping startup", "VTUBE")
             }
@@ -46,20 +46,20 @@ class VTubeStudioManager {
         try {
             $steamPath = $this.GetSteamPath()
             if ($steamPath -and (Test-Path $steamPath)) {
-                Write-Host "Starting VTube Studio via Steam..."
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_starting_via_steam" -Default "Starting VTube Studio via Steam..." -Level "INFO" -Component "VTubeStudioManager"
                 Start-Process $steamPath -ArgumentList "-applaunch $($this.SteamAppId)"
                 if ($this.Logger) {
                     $this.Logger.Info("Started VTube Studio via Steam (AppID: $($this.SteamAppId))", "VTUBE")
                 }
             } else {
-                Write-Host "Steam not found"
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_steam_not_found" -Default "Steam not found" -Level "WARNING" -Component "VTubeStudioManager"
                 return $false
             }
 
             # Wait for VTube Studio to start
             $retryCount = 0
             $maxRetries = 15  # VTube Studio can take longer to start than OBS
-            Write-Host "Waiting for VTube Studio to start..."
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_waiting_for_startup" -Default "Waiting for VTube Studio to start..." -Level "INFO" -Component "VTubeStudioManager"
 
             while (-not $this.IsVTubeStudioRunning() -and ($retryCount -lt $maxRetries)) {
                 Start-Sleep -Seconds 2
@@ -67,7 +67,7 @@ class VTubeStudioManager {
             }
 
             if ($this.IsVTubeStudioRunning()) {
-                Write-Host "VTube Studio startup complete"
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_startup_complete" -Default "VTube Studio startup complete" -Level "OK" -Component "VTubeStudioManager"
                 if ($this.Logger) {
                     $this.Logger.Info("VTube Studio startup completed successfully", "VTUBE")
                 }
@@ -75,14 +75,14 @@ class VTubeStudioManager {
                 Start-Sleep -Seconds 3
                 return $true
             } else {
-                Write-Host "VTube Studio startup failed or timed out"
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_startup_failed" -Default "VTube Studio startup failed or timed out" -Level "WARNING" -Component "VTubeStudioManager"
                 if ($this.Logger) {
                     $this.Logger.Error("VTube Studio startup failed or timed out", "VTUBE")
                 }
                 return $false
             }
         } catch {
-            Write-Host "Failed to start VTube Studio: $_"
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_startup_failed_error" -Args @($_) -Default "Failed to start VTube Studio: {0}" -Level "WARNING" -Component "VTubeStudioManager"
             if ($this.Logger) {
                 $this.Logger.Error("Failed to start VTube Studio: $_", "VTUBE")
             }
@@ -92,23 +92,23 @@ class VTubeStudioManager {
 
     # Stop VTube Studio application
     [bool] StopVTubeStudio() {
-        Write-Host "Stopping VTube Studio..."
+        Write-LocalizedHost -Messages $this.Messages -Key "vtube_stopping" -Default "Stopping VTube Studio..." -Level "INFO" -Component "VTubeStudioManager"
 
         if ($this.BaseHelper) {
             # Use base helper for advanced shutdown
             $result = $this.BaseHelper.StopApplicationGracefully($this.ProcessName, 5000)
 
             if ($result) {
-                Write-Host "VTube Studio stopped successfully"
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_stopped_successfully" -Default "VTube Studio stopped successfully" -Level "OK" -Component "VTubeStudioManager"
             } else {
-                Write-Host "Failed to stop VTube Studio"
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_failed_to_stop" -Default "Failed to stop VTube Studio" -Level "WARNING" -Component "VTubeStudioManager"
             }
 
             return $result
         } else {
             # Fallback to original implementation
             if (-not $this.IsVTubeStudioRunning()) {
-                Write-Host "VTube Studio is not running"
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_not_running" -Default "VTube Studio is not running" -Level "INFO" -Component "VTubeStudioManager"
                 if ($this.Logger) {
                     $this.Logger.Info("VTube Studio not running, skipping shutdown", "VTUBE")
                 }
@@ -127,13 +127,13 @@ class VTubeStudioManager {
                     }
                 }
 
-                Write-Host "VTube Studio stopped successfully"
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_stopped_successfully" -Default "VTube Studio stopped successfully" -Level "OK" -Component "VTubeStudioManager"
                 if ($this.Logger) {
                     $this.Logger.Info("VTube Studio stopped successfully", "VTUBE")
                 }
                 return $true
             } catch {
-                Write-Host "Failed to stop VTube Studio: $_"
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_failed_to_stop_error" -Args @($_) -Default "Failed to stop VTube Studio: {0}" -Level "WARNING" -Component "VTubeStudioManager"
                 if ($this.Logger) {
                     $this.Logger.Error("Failed to stop VTube Studio: $_", "VTUBE")
                 }
@@ -181,7 +181,7 @@ class VTubeStudioManager {
     [bool] ConnectWebSocket() {
         # Future implementation: Connect to ws://localhost:8001
         # This will be implemented when WebSocket features are needed
-        Write-Host "WebSocket connection feature coming soon..."
+        Write-LocalizedHost -Messages $this.Messages -Key "vtube_websocket_feature_coming_soon" -Default "WebSocket connection feature coming soon..." -Level "INFO" -Component "VTubeStudioManager"
         if ($this.Logger) {
             $this.Logger.Info("WebSocket connection requested (feature pending)", "VTUBE")
         }
@@ -211,7 +211,7 @@ class VTubeStudioManager {
     # Send command to VTube Studio (placeholder for future WebSocket commands)
     [bool] SendCommand([string] $command, [object] $parameters = $null) {
         # Future implementation: Send WebSocket commands to VTube Studio API
-        Write-Host "WebSocket command feature coming soon: $command"
+        Write-LocalizedHost -Messages $this.Messages -Key "vtube_websocket_command_coming_soon" -Args @($command) -Default "WebSocket command feature coming soon: {0}" -Level "INFO" -Component "VTubeStudioManager"
         if ($this.Logger) {
             $this.Logger.Info("WebSocket command requested: $command (feature pending)", "VTUBE")
         }
