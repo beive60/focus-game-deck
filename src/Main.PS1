@@ -400,9 +400,9 @@ function Start-Game {
             $langCode = Get-DetectedLanguage -ConfigData $config
             $msg = Get-LocalizedMessages -MessagesPath $messagesPath -LanguageCode $langCode
             if (-not $config.games.$GameId) {
-                Write-LocalizedHost -Messages $msg -Key "cli_game_not_found" -Args @($GameId) -Default "[ERROR] Game ID '$GameId' not found in configuration."
+                Write-LocalizedHost -Messages $msg -Key "cli_game_not_found" -Args @($GameId) -Default "Game ID '$GameId' not found in configuration." -Level "WARNING" -Component "GameLauncher"
                 $availableIds = ($config.games.PSObject.Properties.Name -join ', ')
-                Write-LocalizedHost -Messages $msg -Key "cli_available_games" -Args @($availableIds) -Default ("Available game IDs: {0}" -f $availableIds)
+                Write-LocalizedHost -Messages $msg -Key "cli_available_games" -Args @($availableIds) -Default ("Available game IDs: {0}" -f $availableIds) -Level "INFO" -Component "GameLauncher"
                 return
             }
             $platformName = if ($config.games.$GameId.platform) { $config.games.$GameId.platform } else { "standalone" }
@@ -411,21 +411,21 @@ function Start-Game {
         if ($isExecutable) {
             # Running as bundled executable - launch Invoke-FocusGameDeck.exe
             if (Test-Path $gameLauncherExe) {
-                Write-LocalizedHost -Messages $msg -Key "cli_launching_game" -Args @($platformName) -Default ("[INFO] GameLauncher: Launching game via {0}" -f $platformName)
+                Write-LocalizedHost -Messages $msg -Key "cli_launching_game" -Args @($platformName) -Default ("Launching game via {0}" -f $platformName) -Level "INFO" -Component "GameLauncher"
                 & $gameLauncherExe -GameId $GameId
             } else {
-                Write-LocalizedHost -Messages $msg -Key "missing_game_launcher_exe" -Args @($gameLauncherExe) -Default "[ERROR] Invoke-FocusGameDeck.exe not found: $gameLauncherExe"
-                Write-LocalizedHost -Messages $msg -Key "missing_game_launcher_hint" -Default "[INFO] Please ensure all executable files are in the same directory."
+                Write-LocalizedHost -Messages $msg -Key "missing_game_launcher_exe" -Args @($gameLauncherExe) -Default "Invoke-FocusGameDeck.exe not found: $gameLauncherExe" -Level "WARNING" -Component "GameLauncher"
+                Write-LocalizedHost -Messages $msg -Key "missing_game_launcher_hint" -Default "Please ensure all executable files are in the same directory." -Level "INFO" -Component "GameLauncher"
                 exit 1
             }
         } else {
             # Running as script - launch Invoke-FocusGameDeck.ps1
             if (-not (Test-Path $gameLauncherPath)) {
-                Write-LocalizedHost -Messages $msg -Key "missing_game_launcher_script" -Args @($gameLauncherPath) -Default "Game launcher not found: $gameLauncherPath"
+                Write-LocalizedHost -Messages $msg -Key "missing_game_launcher_script" -Args @($gameLauncherPath) -Default "Game launcher not found: $gameLauncherPath" -Level "WARNING" -Component "GameLauncher"
                 return
             }
 
-            Write-LocalizedHost -Messages $msg -Key "cli_launching_game" -Args @($platformName) -Default ("[INFO] GameLauncher: Launching game via {0}" -f $platformName)
+            Write-LocalizedHost -Messages $msg -Key "cli_launching_game" -Args @($platformName) -Default ("Launching game via {0}" -f $platformName) -Level "INFO" -Component "GameLauncher"
 
             # Delegate to existing game launcher
             & $gameLauncherPath -GameId $GameId

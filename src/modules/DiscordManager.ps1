@@ -96,21 +96,21 @@ class DiscordManager {
     # Start Discord process
     [bool] StartDiscord() {
         if ($this.IsDiscordRunning()) {
-            Write-Host "Discord is already running"
+            Write-LocalizedHost -Messages $this.Messages -Key "discord_already_running" -Default "Discord is already running" -Level "INFO" -Component "DiscordManager"
             return $true
         }
 
         if (-not $this.DetectedDiscordPath -or -not (Test-Path $this.DetectedDiscordPath)) {
-            Write-Host "Discord executable not found"
+            Write-LocalizedHost -Messages $this.Messages -Key "discord_executable_not_found" -Default "Discord executable not found" -Level "WARNING" -Component "DiscordManager"
             return $false
         }
 
         try {
             Start-Process -FilePath $this.DetectedDiscordPath
-            Write-Host "Discord started successfully"
+            Write-LocalizedHost -Messages $this.Messages -Key "discord_started_successfully" -Default "Discord started successfully" -Level "OK" -Component "DiscordManager"
             return $true
         } catch {
-            Write-Host "Failed to start Discord: $_"
+            Write-LocalizedHost -Messages $this.Messages -Key "discord_failed_to_start" -Args @($_) -Default "Failed to start Discord: {0}" -Level "WARNING" -Component "DiscordManager"
             return $false
         }
     }
@@ -127,14 +127,14 @@ class DiscordManager {
                         $process.Kill()
                     }
                 }
-                Write-Host "Discord stopped successfully"
+                Write-LocalizedHost -Messages $this.Messages -Key "discord_stopped_successfully" -Default "Discord stopped successfully" -Level "OK" -Component "DiscordManager"
                 return $true
             } else {
-                Write-Host "Discord is not running"
+                Write-LocalizedHost -Messages $this.Messages -Key "discord_not_running" -Default "Discord is not running" -Level "INFO" -Component "DiscordManager"
                 return $true
             }
         } catch {
-            Write-Host "Failed to stop Discord: $_"
+            Write-LocalizedHost -Messages $this.Messages -Key "discord_failed_to_stop" -Args @($_) -Default "Failed to stop Discord: {0}" -Level "WARNING" -Component "DiscordManager"
             return $false
         }
     }
@@ -148,12 +148,12 @@ class DiscordManager {
                 if (Test-Path $rpcModulePath) {
                     . $rpcModulePath
                     $this.RPCClient = New-DiscordRPCClient -ApplicationId $this.DiscordConfig.rpc.applicationId -Logger $this.Logger
-                    Write-Host "Discord RPC Client initialized"
+                    Write-LocalizedHost -Messages $this.Messages -Key "discord_rpc_client_initialized" -Default "Discord RPC Client initialized" -Level "OK" -Component "DiscordManager"
                 } else {
-                    Write-Host "Discord RPC Client module not found"
+                    Write-LocalizedHost -Messages $this.Messages -Key "discord_rpc_client_module_not_found" -Default "Discord RPC Client module not found" -Level "WARNING" -Component "DiscordManager"
                 }
             } catch {
-                Write-Host "Failed to initialize Discord RPC Client: $_"
+                Write-LocalizedHost -Messages $this.Messages -Key "discord_rpc_client_initialization_failed" -Args @($_) -Default "Failed to initialize Discord RPC Client: {0}" -Level "WARNING" -Component "DiscordManager"
             }
         }
     }
@@ -175,19 +175,19 @@ class DiscordManager {
                 return $this.RPCClient.SetStatus($status)
             }
         }
-        Write-Host "Discord RPC not available - status change skipped"
+        Write-LocalizedHost -Messages $this.Messages -Key "discord_rpc_not_available" -Default "Discord RPC not available - status change skipped" -Level "INFO" -Component "DiscordManager"
         return $false
     }
 
     # Set Rich Presence with game details (Advanced)
     [bool] SetRichPresence([string] $gameName, [string] $gameDetails = "", [string] $gameState = "") {
         if (-not $this.RPCClient) {
-            Write-Host "Discord RPC not available for Rich Presence"
+            Write-LocalizedHost -Messages $this.Messages -Key "discord_rpc_not_available_for_presence" -Default "Discord RPC not available for Rich Presence" -Level "WARNING" -Component "DiscordManager"
             return $false
         }
 
         if (-not $this.RPCClient.Connected -and -not $this.ConnectRPC()) {
-            Write-Host "Failed to connect to Discord RPC for Rich Presence"
+            Write-LocalizedHost -Messages $this.Messages -Key "discord_failed_connect_to_rpc" -Default "Failed to connect to Discord RPC for Rich Presence" -Level "WARNING" -Component "DiscordManager"
             return $false
         }
 
@@ -208,7 +208,7 @@ class DiscordManager {
 
             return $this.RPCClient.SetRichPresence($activity)
         } catch {
-            Write-Host "Failed to set Rich Presence: $_"
+            Write-LocalizedHost -Messages $this.Messages -Key "discord_failed_set_rich_presence" -Args @($_) -Default "Failed to set Rich Presence: {0}" -Level "WARNING" -Component "DiscordManager"
             return $false
         }
     }
@@ -216,7 +216,7 @@ class DiscordManager {
     # Control Discord overlay (Advanced)
     [bool] SetOverlayEnabled([bool] $enabled) {
         $status = if ($enabled) { 'Enabled' } else { 'Disabled' }
-        Write-Host "Discord overlay control: $status"
+        Write-LocalizedHost -Messages $this.Messages -Key "discord_overlay_control" -Args @($status) -Default "Discord overlay control: {0}" -Level "INFO" -Component "DiscordManager"
 
         # Note: Discord doesn't provide direct API to disable overlay programmatically
         # This is a placeholder for potential future implementation or registry-based control
@@ -224,18 +224,18 @@ class DiscordManager {
         if ($this.DiscordConfig -and $null -ne $this.DiscordConfig.disableOverlay) {
             $shouldDisable = $this.DiscordConfig.disableOverlay
             if ($shouldDisable -and $enabled) {
-                Write-Host "Overlay should be disabled according to configuration"
+                Write-LocalizedHost -Messages $this.Messages -Key "discord_overlay_should_be_disabled" -Default "Overlay should be disabled according to configuration" -Level "WARNING" -Component "DiscordManager"
                 return $false
             }
         }
 
-        Write-Host "Overlay setting applied (Advanced feature - manual user configuration may be required)"
+        Write-LocalizedHost -Messages $this.Messages -Key "discord_overlay_setting_applied" -Default "Overlay setting applied (Advanced feature - manual user configuration may be required)" -Level "INFO" -Component "DiscordManager"
         return $true
     }
 
     # Advanced error recovery
     [bool] RecoverFromError() {
-        Write-Host "Attempting Discord error recovery..."
+        Write-LocalizedHost -Messages $this.Messages -Key "discord_attempting_error_recovery" -Default "Attempting Discord error recovery..." -Level "INFO" -Component "DiscordManager"
 
         try {
             # Disconnect and reconnect RPC
@@ -243,14 +243,14 @@ class DiscordManager {
                 $this.RPCClient.Disconnect()
                 Start-Sleep -Seconds 2
                 if ($this.ConnectRPC()) {
-                    Write-Host "[OK] Discord RPC reconnected successfully"
+                    Write-LocalizedHost -Messages $this.Messages -Key "discord_rpc_reconnected_successfully" -Default "Discord RPC reconnected successfully" -Level "OK" -Component "DiscordManager"
                     return $true
                 }
             }
 
             # If RPC fails, try process restart
             if ($this.IsDiscordRunning()) {
-                Write-Host "Attempting Discord process recovery..."
+                Write-LocalizedHost -Messages $this.Messages -Key "discord_attempting_process_recovery" -Default "Attempting Discord process recovery..." -Level "INFO" -Component "DiscordManager"
                 $this.StopDiscord()
                 Start-Sleep -Seconds 3
                 return $this.StartDiscord()
@@ -258,14 +258,14 @@ class DiscordManager {
 
             return $false
         } catch {
-            Write-Host "Error recovery failed: $_"
+            Write-LocalizedHost -Messages $this.Messages -Key "discord_error_recovery_failed" -Args @($_) -Default "Error recovery failed: {0}" -Level "WARNING" -Component "DiscordManager"
             return $false
         }
     }
 
     # Set Discord to Gaming Mode (Advanced - Full feature integration)
     [bool] SetGamingMode([string] $gameName = "Focus Game Deck") {
-        Write-Host "Setting Discord to Gaming Mode (Advanced: Full integration)"
+        Write-LocalizedHost -Messages $this.Messages -Key "discord_setting_gaming_mode" -Default "Setting Discord to Gaming Mode (Advanced: Full integration)" -Level "INFO" -Component "DiscordManager"
 
         $success = $true
         $retryCount = 0
@@ -275,9 +275,9 @@ class DiscordManager {
             try {
                 # Ensure Discord is running
                 if (-not $this.IsDiscordRunning()) {
-                    Write-Host "Discord is not running, starting it..."
+                    Write-LocalizedHost -Messages $this.Messages -Key "discord_not_running_starting" -Default "Discord is not running, starting it..." -Level "INFO" -Component "DiscordManager"
                     if (-not $this.StartDiscord()) {
-                        throw "Failed to start Discord"
+                        throw "Discord startup failed"
                     }
                     # Wait for Discord to fully start
                     Start-Sleep -Seconds 3
@@ -296,30 +296,30 @@ class DiscordManager {
                         $gameState = $this.DiscordConfig.customPresence.state
 
                         if (-not $this.SetRichPresence($gameName, $gameDetails, $gameState)) {
-                            Write-Host "Failed to set Rich Presence, falling back to simple status"
+                            Write-LocalizedHost -Messages $this.Messages -Key "discord_failed_set_rich_presence" -Default "Failed to set Rich Presence, falling back to simple status" -Level "WARNING" -Component "DiscordManager"
                             if (-not $this.SetDiscordStatus("Gaming Mode - $gameName")) {
-                                throw "Failed to set Discord status"
+                                throw "Discord status setup failed"
                             }
                         }
                     } else {
                         # Simple status update
                         if (-not $this.SetDiscordStatus("Gaming Mode - $gameName")) {
-                            throw "Failed to set Discord status"
+                            throw "Discord status setup failed"
                         }
                     }
                 }
 
-                Write-Host "[OK] Discord Advanced Gaming mode applied successfully"
+                Write-LocalizedHost -Messages $this.Messages -Key "discord_gaming_mode_applied_successfully" -Default "Discord Advanced Gaming mode applied successfully" -Level "OK" -Component "DiscordManager"
                 return $true
 
             } catch {
                 $retryCount++
-                Write-Host "Attempt $retryCount failed: $_"
+                Write-LocalizedHost -Messages $this.Messages -Key "discord_attempt_failed" -Args @($retryCount, $_) -Default "Attempt {0} failed: {1}" -Level "WARNING" -Component "DiscordManager"
 
                 if ($retryCount -lt $maxRetries) {
-                    Write-Host "Attempting error recovery..."
+                    Write-LocalizedHost -Messages $this.Messages -Key "discord_attempting_recovery" -Default "Attempting error recovery..." -Level "INFO" -Component "DiscordManager"
                     if ($this.RecoverFromError()) {
-                        Write-Host "Recovery successful, retrying..."
+                        Write-LocalizedHost -Messages $this.Messages -Key "discord_recovery_successful_retrying" -Default "Recovery successful, retrying..." -Level "INFO" -Component "DiscordManager"
                         continue
                     }
                 }
@@ -331,7 +331,7 @@ class DiscordManager {
         }
 
         if (-not $success) {
-            Write-Host "Discord Gaming mode applied with limitations"
+            Write-LocalizedHost -Messages $this.Messages -Key "discord_gaming_mode_applied_with_limitations" -Default "Discord Gaming mode applied with limitations" -Level "WARNING" -Component "DiscordManager"
         }
 
         return $success
@@ -339,17 +339,17 @@ class DiscordManager {
 
     # Restore Discord to normal mode (Enhanced - RPC + Process control)
     [bool] RestoreNormalMode() {
-        Write-Host "Restoring Discord to normal mode (Enhanced: RPC + Process control)"
+        Write-LocalizedHost -Messages $this.Messages -Key "discord_restoring_normal_mode" -Default "Restoring Discord to normal mode (Enhanced: RPC + Process control)" -Level "INFO" -Component "DiscordManager"
 
         $success = $true
 
         # Restore RPC-based status if enabled
         if ($this.DiscordConfig -and $this.DiscordConfig.rpc -and $this.DiscordConfig.rpc.enabled) {
-            Write-Host "Clearing Discord custom status"
+            Write-LocalizedHost -Messages $this.Messages -Key "discord_clearing_custom_status" -Default "Clearing Discord custom status" -Level "INFO" -Component "DiscordManager"
 
             if ($this.RPCClient -and $this.RPCClient.Connected) {
                 if (-not $this.RPCClient.ClearActivity()) {
-                    Write-Host "Failed to clear Discord activity"
+                    Write-LocalizedHost -Messages $this.Messages -Key "discord_failed_clear_activity" -Default "Failed to clear Discord activity" -Level "WARNING" -Component "DiscordManager"
                     $success = $false
                 }
             }
@@ -357,14 +357,14 @@ class DiscordManager {
 
         # Ensure Discord is still running
         if (-not $this.IsDiscordRunning()) {
-            Write-Host "Discord is not running, starting it..."
+            Write-LocalizedHost -Messages $this.Messages -Key "discord_starting_for_normal_mode" -Default "Discord is not running, starting it..." -Level "INFO" -Component "DiscordManager"
             if (-not $this.StartDiscord()) {
                 return $false
             }
         }
 
         if ($success) {
-            Write-Host "[OK] Discord normal mode restored successfully"
+            Write-LocalizedHost -Messages $this.Messages -Key "discord_normal_mode_restored_successfully" -Default "Discord normal mode restored successfully" -Level "OK" -Component "DiscordManager"
         }
 
         return $success
@@ -377,7 +377,7 @@ class DiscordManager {
                 $this.RPCClient.Disconnect()
             }
         } catch {
-            Write-Host "Error disconnecting RPC: $_"
+            Write-LocalizedHost -Messages $this.Messages -Key "discord_error_disconnecting_rpc" -Args @($_) -Default "Error disconnecting RPC: {0}" -Level "WARNING" -Component "DiscordManager"
             return $false
         }
         return $true

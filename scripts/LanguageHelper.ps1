@@ -275,7 +275,7 @@ function Get-LocalizedMessages {
 
 <#
 .SYNOPSIS
-    Writes a localized message to the host console
+    Writes a localized message to the host console with optional prefix
 
 .PARAMETER Messages
     The messages object (PSCustomObject) containing localized strings
@@ -289,14 +289,28 @@ function Get-LocalizedMessages {
 .PARAMETER Default
     Default text to use if the key is not found in the messages object
 
-.PARAMETER Color
-    Console color for the output (default: White)
+.PARAMETER Level
+    Optional log level prefix (e.g., "OK", "ERROR", "WARNING", "INFO")
+    When specified, outputs "[LEVEL] Component: " prefix
+    - "OK": Uses Write-Host
+    - "ERROR": Uses Write-Error (stops script execution)
+    - "WARNING": Uses Write-Warning
+    - "INFO": Uses Write-Host
+    - Other: Uses Write-Host
+
+.PARAMETER Component
+    Optional component name for the prefix (e.g., "AppManager", "OBSManager")
+    Only used if Level is specified
 
 .EXAMPLE
-    Write-LocalizedHost -Messages $msg -Key "cli_loading_config" -Default "Loading configuration..." -Color "Cyan"
+    Write-LocalizedHost -Messages $msg -Key "cli_loading_config" -Default "Loading configuration..."
 
 .EXAMPLE
     Write-LocalizedHost -Messages $msg -Key "cli_game_not_found" -Args @($GameId) -Default "Game ID '{0}' not found"
+
+.EXAMPLE
+    Write-LocalizedHost -Messages $msg -Key "console_app_started" -Args @("discord") -Default "Application started: {0}" -Level "OK" -Component "AppManager"
+    # Outputs: [OK] AppManager: Application started: discord
 #>
 function Write-LocalizedHost {
     param(
@@ -313,7 +327,10 @@ function Write-LocalizedHost {
         [string]$Default = "",
 
         [Parameter(Mandatory = $false)]
-        [string]$Color = "White"
+        [string]$Level = "",
+
+        [Parameter(Mandatory = $false)]
+        [string]$Component = ""
     )
 
     $message = $Default
@@ -331,7 +348,39 @@ function Write-LocalizedHost {
         }
     }
 
-    Write-Host $message -ForegroundColor $Color
+    # Build the output with prefix if Level is specified
+    if ($Level) {
+        if ($Component) {
+            $output = "[$Level] $Component`: $message"
+        } else {
+            $output = "[$Level] $message"
+        }
+    } else {
+        $output = $message
+    }
+
+    # Output using appropriate cmdlet based on Level
+    switch ($Level.ToUpper()) {
+        "ERROR" {
+            Write-Error $output
+        }
+        "WARNING" {
+            Write-Warning $output
+        }
+        "OK" {
+            Write-Host $output
+        }
+        "INFO" {
+            Write-Host $output
+        }
+        default {
+            if ($Level) {
+                Write-Host $output
+            } else {
+                Write-Host $message
+            }
+        }
+    }
 }
 
 # Export functions for module usage

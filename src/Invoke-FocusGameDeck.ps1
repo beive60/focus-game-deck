@@ -62,13 +62,11 @@ if (-not $isExecutable) {
     }
 }
 
-Write-Host "[INFO] ConfigLoader: " -NoNewline
-Write-LocalizedHost -Messages $msg -Key "cli_loading_config" -Default "Loading configuration..."
+Write-LocalizedHost -Messages $msg -Key "cli_loading_config" -Default "Loading configuration..." -Level "INFO" -Component "ConfigLoader"
 # Load configuration
 try {
     $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    Write-Host "[OK] ConfigLoader: " -NoNewline
-    Write-LocalizedHost -Messages $msg -Key "cli_config_loaded" -Default "Configuration loaded."
+    Write-LocalizedHost -Messages $msg -Key "cli_config_loaded" -Default "Configuration loaded." -Level "OK" -Component "ConfigLoader"
 } catch {
     Write-Error "Failed to load configuration: $_"
     exit 1
@@ -134,31 +132,26 @@ try {
 }
 
 # Validate configuration
-Write-Host "[INFO] ConfigValidator: " -NoNewline
-Write-LocalizedHost -Messages $msg -Key "cli_validating_config" -Default "Validating configuration..."
+Write-LocalizedHost -Messages $msg -Key "cli_validating_config" -Default "Validating configuration..." -Level "INFO" -Component "ConfigValidator"
 $validator = New-ConfigValidator -Config $config -Messages $msg
 if (-not $validator.ValidateConfiguration($GameId)) {
     $validator.DisplayResults()
-    Write-Host "[ERROR] ConfigValidator: " -NoNewline
-    Write-LocalizedHost -Messages $msg -Key "cli_validation_failed" -Default "Configuration validation failed."
+    Write-LocalizedHost -Messages $msg -Key "cli_validation_failed" -Default "Configuration validation failed." -Level "WARNING" -Component "ConfigValidator"
     if ($logger) { $logger.Error("Configuration validation failed", "CONFIG") }
     exit 1
 }
 $validator.DisplayResults()
-Write-Host "[OK] ConfigValidator: " -NoNewline
-Write-LocalizedHost -Messages $msg -Key "console_config_validation_passed" -Default "Configuration validation passed"
+Write-LocalizedHost -Messages $msg -Key "console_config_validation_passed" -Default "Configuration validation passed" -Level "OK" -Component "ConfigValidator"
 if ($logger) { $logger.Info("Configuration validation passed", "CONFIG") }
 
 # Get game configuration
 $gameConfig = $config.games.$GameId
 if (-not $gameConfig) {
     $errorMsg = "Error: Game ID '{0}' not found in configuration." -f $GameId
-    Write-Host "[ERROR] GameLauncher: " -NoNewline
-    Write-LocalizedHost -Messages $msg -Key "cli_game_not_found" -Args @($GameId) -Default $errorMsg
+    Write-LocalizedHost -Messages $msg -Key "cli_game_not_found" -Args @($GameId) -Default $errorMsg -Level "WARNING" -Component "GameLauncher"
 
     $availableIds = ($config.games.PSObject.Properties.Name -join ', ')
-    Write-Host "[INFO] GameLauncher: " -NoNewline
-    Write-LocalizedHost -Messages $msg -Key "cli_available_games" -Args @($availableIds) -Default ("Available game IDs: {0}" -f $availableIds)
+    Write-LocalizedHost -Messages $msg -Key "cli_available_games" -Args @($availableIds) -Default ("Available game IDs: {0}" -f $availableIds) -Level "INFO" -Component "GameLauncher"
     if ($logger) { $logger.Error($errorMsg, "MAIN") }
     exit 1
 }
@@ -172,10 +165,8 @@ if (-not $gamePlatform) {
 
 if (-not $platformManager.IsPlatformAvailable($gamePlatform)) {
     $errorMsg = "Platform '$gamePlatform' is not available or supported for game '$($gameConfig.name)'"
-    Write-Host "[ERROR] PlatformManager: " -NoNewline
-    Write-LocalizedHost -Messages $msg -Key "cli_platform_not_supported" -Args @($gamePlatform) -Default $errorMsg
-    Write-Host "[INFO] PlatformManager: " -NoNewline
-    Write-LocalizedHost -Messages $msg -Key "cli_available_platforms" -Args @($availablePlatforms -join ', ') -Default ("Available platforms: {0}" -f ($availablePlatforms -join ', '))
+    Write-LocalizedHost -Messages $msg -Key "cli_platform_not_supported" -Args @($gamePlatform) -Default $errorMsg -Level "WARNING" -Component "PlatformManager"
+    Write-LocalizedHost -Messages $msg -Key "cli_available_platforms" -Args @($availablePlatforms -join ', ') -Default ("Available platforms: {0}" -f ($availablePlatforms -join ', ')) -Level "INFO" -Component "PlatformManager"
     if ($logger) { $logger.Error($errorMsg, "PLATFORM") }
     exit 1
 }
@@ -183,33 +174,27 @@ if (-not $platformManager.IsPlatformAvailable($gamePlatform)) {
 if ($logger) {
     $logger.Info("Game configuration loaded: $($gameConfig.name) (Platform: $gamePlatform)", "MAIN")
 }
-Write-Host "[INFO] GameLauncher: " -NoNewline
-Write-LocalizedHost -Messages $msg -Key "console_game_config_loaded" -Args @($gameConfig.name, $gamePlatform) -Default ("Game configuration loaded: {0} (Platform: {1})" -f $gameConfig.name, $gamePlatform)
+Write-LocalizedHost -Messages $msg -Key "console_game_config_loaded" -Args @($gameConfig.name, $gamePlatform) -Default ("Game configuration loaded: {0} (Platform: {1})" -f $gameConfig.name, $gamePlatform) -Level "INFO" -Component "GameLauncher"
 
 # Initialize managers
 $appManager = New-AppManager -Config $config -Messages $msg -Logger $logger
 [void] $appManager.SetGameContext($gameConfig)
 
-Write-Host "[INFO] GameLauncher: " -NoNewline
-Write-LocalizedHost -Messages $msg -Key "console_app_manager_initialized" -Default "Application manager initialized"
+Write-LocalizedHost -Messages $msg -Key "console_app_manager_initialized" -Default "Application manager initialized" -Level "INFO" -Component "GameLauncher"
 if ($logger) { $logger.Info("Application manager initialized and game context set", "MAIN") }
 
 # Common startup process for game environment
 function Invoke-GameStartup {
-    Write-Host "[INFO] GameLauncher: " -NoNewline
-    Write-LocalizedHost -Messages $msg -Key "console_game_environment_setup" -Default "Starting game environment setup"
+    Write-LocalizedHost -Messages $msg -Key "console_game_environment_setup" -Default "Starting game environment setup" -Level "INFO" -Component "GameLauncher"
     if ($logger) { $logger.Info("Starting game environment setup", "SETUP") }
 
     # Unified application and integration management
-    Write-Host "[INFO] AppManager: " -NoNewline
-    Write-LocalizedHost -Messages $msg -Key "app_management_start" -Default "Starting application management..."
+    Write-LocalizedHost -Messages $msg -Key "app_management_start" -Default "Starting application management..." -Level "INFO" -Component "AppManager"
     [void]$appManager.ProcessStartupSequence()
-    Write-Host "[OK] AppManager: " -NoNewline
-    Write-LocalizedHost -Messages $msg -Key "console_startup_sequence_complete" -Default "Startup sequence completed"
+    Write-LocalizedHost -Messages $msg -Key "console_startup_sequence_complete" -Default "Startup sequence completed" -Level "OK" -Component "AppManager"
     if ($logger) { $logger.Info("Application startup sequence completed", "APP") }
 
-    Write-Host "[OK] GameLauncher: " -NoNewline
-    Write-LocalizedHost -Messages $msg -Key "console_game_environment_ready" -Default "Game environment ready"
+    Write-LocalizedHost -Messages $msg -Key "console_game_environment_ready" -Default "Game environment ready" -Level "OK" -Component "GameLauncher"
     if ($logger) { $logger.Info("Game environment setup completed", "SETUP") }
 
     return
@@ -222,19 +207,16 @@ function Invoke-GameCleanup {
     )
 
     if ($IsInterrupted) {
-        Write-Host "[WARNING] GameLauncher: " -NoNewline
-        Write-LocalizedHost -Messages $msg -Key "cli_cleanup_interrupted" -Default "Cleanup initiated due to user interruption (Ctrl+C)."
+        Write-LocalizedHost -Messages $msg -Key "cli_cleanup_interrupted" -Default "Cleanup initiated due to user interruption (Ctrl+C)." -Level "WARNING" -Component "GameLauncher"
         if ($logger) { $logger.Warning("Cleanup initiated due to interruption", "CLEANUP") }
     } else {
-        Write-Host "[INFO] GameLauncher: " -NoNewline
-        Write-LocalizedHost -Messages $msg -Key "console_cleanup_starting" -Default "Starting cleanup..."
+        Write-LocalizedHost -Messages $msg -Key "console_cleanup_starting" -Default "Starting cleanup..." -Level "INFO" -Component "GameLauncher"
         if ($logger) { $logger.Info("Starting game cleanup", "CLEANUP") }
     }
 
     # Unified application and integration shutdown
-    $appManager.ProcessShutdownSequence()
-    Write-Host "[OK] GameLauncher: " -NoNewline
-    Write-LocalizedHost -Messages $msg -Key "console_cleanup_complete" -Default "Cleanup completed"
+    [void]$appManager.ProcessShutdownSequence()
+    Write-LocalizedHost -Messages $msg -Key "console_cleanup_complete" -Default "Cleanup completed" -Level "OK" -Component "GameLauncher"
     if ($logger) { $logger.Info("Application shutdown sequence completed", "CLEANUP") }
 
     if ($logger) { $logger.Info("Game cleanup completed", "CLEANUP") }
@@ -258,12 +240,10 @@ try {
     Invoke-GameStartup
 
     # Launch game via appropriate platform
-    Write-Host "[INFO] GameLauncher: " -NoNewline
-    Write-LocalizedHost -Messages $msg -Key "console_launching_via_platform" -Args @($detectedPlatforms[$gamePlatform].Name) -Default ("Launching game via {0}..." -f $detectedPlatforms[$gamePlatform].Name)
+    Write-LocalizedHost -Messages $msg -Key "console_launching_via_platform" -Args @($detectedPlatforms[$gamePlatform].Name) -Default ("Launching game via {0}..." -f $detectedPlatforms[$gamePlatform].Name) -Level "INFO" -Component "GameLauncher"
     try {
         [void]$platformManager.LaunchGame($gamePlatform, $gameConfig)
-        Write-Host "[OK] GameLauncher: " -NoNewline
-        Write-LocalizedHost -Messages $msg -Key "starting_game_name" -Args @($gameConfig.name) -Default ("Starting game: {0}" -f $gameConfig.name)
+        Write-LocalizedHost -Messages $msg -Key "starting_game_name" -Args @($gameConfig.name) -Default ("Starting game: {0}" -f $gameConfig.name) -Level "INFO" -Component "GameLauncher"
         if ($logger) { $logger.Info("Game launch command sent to $($detectedPlatforms[$gamePlatform].Name): $($gameConfig.name)", "GAME") }
     } catch {
         $errorMsg = "Failed to launch game via $($detectedPlatforms[$gamePlatform].Name): $_"
@@ -273,8 +253,7 @@ try {
     }
 
     # Wait for actual game process to start (not the launcher)
-    Write-Host "[INFO] GameMonitor: " -NoNewline
-    Write-LocalizedHost -Messages $msg -Key "cli_waiting_process" -Default "Waiting for game process to start..."
+    Write-LocalizedHost -Messages $msg -Key "cli_waiting_process" -Default "Waiting for game process to start..." -Level "INFO" -Component "GameMonitor"
     $gameProcess = $null
     $processStartTimeout = 300  # 5 minutes timeout
     $startTime = Get-Date
@@ -289,8 +268,7 @@ try {
     } while (-not $gameProcess -and $elapsed.TotalSeconds -lt $processStartTimeout)
 
     if ($gameProcess) {
-        Write-Host "[OK] GameMonitor: " -NoNewline
-        Write-LocalizedHost -Messages $msg -Key "console_game_process_detected" -Args @($gameConfig.name) -Default ("Game process detected: {0}" -f $gameConfig.name)
+        Write-LocalizedHost -Messages $msg -Key "console_game_process_detected" -Args @($gameConfig.name) -Default ("Game process detected: {0}" -f $gameConfig.name) -Level "OK" -Component "GameMonitor"
         if ($logger) { $logger.Info("Game process detected and monitoring started: $($gameConfig.processName)", "GAME") }
 
         # Wait for the game process to end.
@@ -301,8 +279,7 @@ try {
             Wait-Process -InputObject $gameProcess -ErrorAction Stop
         } catch {
             if ($logger) { $logger.Warning("Direct wait failed. Falling back to polling for process exit: $($gameProcess.Name) (PID: $($gameProcess.Id)). This can happen with admin-level processes.", "GAME") }
-            Write-Host "[WARNING] GameMonitor: " -NoNewline
-            Write-LocalizedHost -Messages $msg -Key "console_process_wait_fallback" -Default "Direct process wait failed - Monitoring in fallback mode (polling every 3s)"
+            Write-LocalizedHost -Messages $msg -Key "console_process_wait_fallback" -Default "Direct process wait failed - Monitoring in fallback mode (polling every 3s)" -Level "WARNING" -Component "GameMonitor"
 
             while ($true) {
                 $processCheck = Get-Process -Id $gameProcess.Id -ErrorAction SilentlyContinue
@@ -314,12 +291,10 @@ try {
             }
         }
 
-        Write-Host "[INFO] GameMonitor: " -NoNewline
-        Write-LocalizedHost -Messages $msg -Key "console_game_process_ended" -Args @($gameConfig.name) -Default ("Game process ended: {0}" -f $gameConfig.name)
+        Write-LocalizedHost -Messages $msg -Key "console_game_process_ended" -Args @($gameConfig.name) -Default ("Game process ended: {0}" -f $gameConfig.name) -Level "INFO" -Component "GameMonitor"
         if ($logger) { $logger.Info("Game process ended: $($gameConfig.name)", "GAME") }
     } else {
-        Write-Host "[WARNING] GameMonitor: " -NoNewline
-        Write-LocalizedHost -Messages $msg -Key "cli_process_timeout" -Args @($gameConfig.processName) -Default ("Game process '{0}' was not detected within timeout period" -f $gameConfig.processName)
+        Write-LocalizedHost -Messages $msg -Key "cli_process_timeout" -Args @($gameConfig.processName) -Default ("Game process '{0}' was not detected within timeout period" -f $gameConfig.processName) -Level "WARNING" -Component "GameMonitor"
         if ($logger) { $logger.Warning("Game process not detected within timeout: $($gameConfig.processName)", "GAME") }
     }
 
@@ -331,8 +306,7 @@ try {
         $logger.Info("Focus Game Deck session completed successfully", "MAIN")
     }
 
-    Write-Host "[OK] GameLauncher: " -NoNewline
-    Write-LocalizedHost -Messages $msg -Key "console_session_complete" -Default "Focus Game Deck session completed"
+    Write-LocalizedHost -Messages $msg -Key "console_session_complete" -Default "Focus Game Deck session completed" -Level "OK" -Component "GameLauncher"
 } catch {
     $errorMsg = "Unexpected error during execution: $_"
     Write-Error $errorMsg

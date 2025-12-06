@@ -470,26 +470,25 @@ class ConfigValidator {
     # Display validation results
     [void] DisplayResults() {
         if ($this.Errors.Count -eq 0 -and $this.Warnings.Count -eq 0) {
-            Write-Host $this.Messages.config_validation_passed
+            Write-Host "[OK] ConfigValidator: $($this.Messages.config_validation_passed)"
             return
         }
 
         if ($this.Errors.Count -gt 0) {
-            Write-Host $this.Messages.config_validation_failed
+            Write-Host "[ERROR] ConfigValidator: $($this.Messages.config_validation_failed)"
             foreach ($errorMsg in $this.Errors) {
-                Write-Host "  ERROR: $errorMsg"
+                Write-Host "[ERROR] ConfigValidator: $errorMsg"
             }
         }
 
         if ($this.Warnings.Count -gt 0) {
-            Write-Host "Configuration Warnings:"
             foreach ($warning in $this.Warnings) {
-                Write-Host "  WARNING: $warning"
+                Write-Host "[WARN] ConfigValidator: $warning"
             }
         }
 
         if ($this.Errors.Count -eq 0) {
-            Write-Host "Configuration is valid (with warnings)"
+            Write-Host "[OK] ConfigValidator: $($this.Messages.config_validation_passed)"
         }
     }
 }
