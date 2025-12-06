@@ -327,7 +327,7 @@ function Show-GameList {
         Write-Host ""
 
     } catch {
-        Write-Host "Failed to load game list: $_"
+        Write-Host "[ERROR] GameList: Failed to load game list - $_"
     }
 }
 
@@ -373,7 +373,7 @@ function Start-ConfigEditor {
         }
 
     } catch {
-        Write-Host "Failed to start configuration editor: $_"
+        Write-Host "[ERROR] ConfigEditor: Failed to start configuration editor - $_"
         exit 1
     }
 }
@@ -432,7 +432,7 @@ function Start-Game {
         }
 
     } catch {
-        Write-Host "Failed to launch game '$GameId': $_"
+        Write-Host "[ERROR] GameLauncher: Failed to launch game '$GameId' - $_"
         exit 1
     }
 }

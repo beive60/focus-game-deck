@@ -62,21 +62,29 @@ if (-not $isExecutable) {
     }
 }
 
-Write-LocalizedHost -Messages $msg -Key "cli_loading_config" -Default "Loading configuration..." -Color "Cyan"
+Write-Host "[INFO] ConfigLoader: " -NoNewline
+Write-LocalizedHost -Messages $msg -Key "cli_loading_config" -Default "Loading configuration..."
 # Load configuration
 try {
     $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    Write-LocalizedHost -Messages $msg -Key "cli_config_loaded" -Default "Configuration loaded." -Color "Green"
+    Write-Host "[OK] ConfigLoader: " -NoNewline
+    Write-LocalizedHost -Messages $msg -Key "cli_config_loaded" -Default "Configuration loaded."
 } catch {
     Write-Error "Failed to load configuration: $_"
     exit 1
 }
 # Load localization messages
 try {
-    $msg = Get-Content -Path $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    $messagesData = Get-Content -Path $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    $langCode = Get-DetectedLanguage -ConfigData $config
+    $msg = if ($messagesData.PSObject.Properties.Name -contains $langCode) {
+        $messagesData.$langCode
+    } else {
+        $messagesData.en  # Fallback to English
+    }
 } catch {
     Write-Warning "Failed to load localization messages: $_"
-    Write-LocalizedHost -Messages $msg -Key "cli_config_loaded" -Default "Continuing with default messages." -Color "Yellow"
+    Write-Host "Continuing with default messages."
     $msg = @{}
 }
 
@@ -126,25 +134,30 @@ try {
 }
 
 # Validate configuration
-Write-LocalizedHost -Messages $msg -Key "cli_validating_config" -Default "Validating configuration..." -Color "Cyan"
+Write-Host "[INFO] ConfigValidator: " -NoNewline
+Write-LocalizedHost -Messages $msg -Key "cli_validating_config" -Default "Validating configuration..."
 $validator = New-ConfigValidator -Config $config -Messages $msg
 if (-not $validator.ValidateConfiguration($GameId)) {
     $validator.DisplayResults()
-    Write-LocalizedHost -Messages $msg -Key "cli_validation_failed" -Default "Configuration validation failed." -Color "Red"
+    Write-Host "[ERROR] ConfigValidator: " -NoNewline
+    Write-LocalizedHost -Messages $msg -Key "cli_validation_failed" -Default "Configuration validation failed."
     if ($logger) { $logger.Error("Configuration validation failed", "CONFIG") }
     exit 1
 }
 $validator.DisplayResults()
-Write-LocalizedHost -Messages $msg -Key "cli_validation_passed" -Default "Configuration validation passed." -Color "Green"
+Write-Host "[OK] ConfigValidator: " -NoNewline
+Write-LocalizedHost -Messages $msg -Key "console_config_validation_passed" -Default "Configuration validation passed"
 if ($logger) { $logger.Info("Configuration validation passed", "CONFIG") }
 
 # Get game configuration
 $gameConfig = $config.games.$GameId
 if (-not $gameConfig) {
     $errorMsg = "Error: Game ID '{0}' not found in configuration." -f $GameId
-    Write-LocalizedHost -Messages $msg -Key "cli_game_not_found" -Args @($GameId) -Default $errorMsg -Color "Red"
+    Write-Host "[ERROR] GameLauncher: " -NoNewline
+    Write-LocalizedHost -Messages $msg -Key "cli_game_not_found" -Args @($GameId) -Default $errorMsg
 
     $availableIds = ($config.games.PSObject.Properties.Name -join ', ')
+    Write-Host "[INFO] GameLauncher: " -NoNewline
     Write-LocalizedHost -Messages $msg -Key "cli_available_games" -Args @($availableIds) -Default ("Available game IDs: {0}" -f $availableIds)
     if ($logger) { $logger.Error($errorMsg, "MAIN") }
     exit 1
@@ -159,7 +172,9 @@ if (-not $gamePlatform) {
 
 if (-not $platformManager.IsPlatformAvailable($gamePlatform)) {
     $errorMsg = "Platform '$gamePlatform' is not available or supported for game '$($gameConfig.name)'"
-    Write-LocalizedHost -Messages $msg -Key "cli_platform_not_supported" -Args @($gamePlatform) -Default $errorMsg -Color "Red"
+    Write-Host "[ERROR] PlatformManager: " -NoNewline
+    Write-LocalizedHost -Messages $msg -Key "cli_platform_not_supported" -Args @($gamePlatform) -Default $errorMsg
+    Write-Host "[INFO] PlatformManager: " -NoNewline
     Write-LocalizedHost -Messages $msg -Key "cli_available_platforms" -Args @($availablePlatforms -join ', ') -Default ("Available platforms: {0}" -f ($availablePlatforms -join ', '))
     if ($logger) { $logger.Error($errorMsg, "PLATFORM") }
     exit 1
@@ -168,22 +183,33 @@ if (-not $platformManager.IsPlatformAvailable($gamePlatform)) {
 if ($logger) {
     $logger.Info("Game configuration loaded: $($gameConfig.name) (Platform: $gamePlatform)", "MAIN")
 }
+Write-Host "[INFO] GameLauncher: " -NoNewline
+Write-LocalizedHost -Messages $msg -Key "console_game_config_loaded" -Args @($gameConfig.name, $gamePlatform) -Default ("Game configuration loaded: {0} (Platform: {1})" -f $gameConfig.name, $gamePlatform)
 
 # Initialize managers
 $appManager = New-AppManager -Config $config -Messages $msg -Logger $logger
 [void] $appManager.SetGameContext($gameConfig)
 
+Write-Host "[INFO] GameLauncher: " -NoNewline
+Write-LocalizedHost -Messages $msg -Key "console_app_manager_initialized" -Default "Application manager initialized"
 if ($logger) { $logger.Info("Application manager initialized and game context set", "MAIN") }
 
 # Common startup process for game environment
 function Invoke-GameStartup {
+    Write-Host "[INFO] GameLauncher: " -NoNewline
+    Write-LocalizedHost -Messages $msg -Key "console_game_environment_setup" -Default "Starting game environment setup"
     if ($logger) { $logger.Info("Starting game environment setup", "SETUP") }
 
     # Unified application and integration management
-    Write-LocalizedHost -Messages $msg -Key "app_management_start" -Default "Starting application management..." -Color "Cyan"
+    Write-Host "[INFO] AppManager: " -NoNewline
+    Write-LocalizedHost -Messages $msg -Key "app_management_start" -Default "Starting application management..."
     [void]$appManager.ProcessStartupSequence()
+    Write-Host "[OK] AppManager: " -NoNewline
+    Write-LocalizedHost -Messages $msg -Key "console_startup_sequence_complete" -Default "Startup sequence completed"
     if ($logger) { $logger.Info("Application startup sequence completed", "APP") }
 
+    Write-Host "[OK] GameLauncher: " -NoNewline
+    Write-LocalizedHost -Messages $msg -Key "console_game_environment_ready" -Default "Game environment ready"
     if ($logger) { $logger.Info("Game environment setup completed", "SETUP") }
 
     return
@@ -196,15 +222,19 @@ function Invoke-GameCleanup {
     )
 
     if ($IsInterrupted) {
-        Write-LocalizedHost -Messages $msg -Key "cli_cleanup_interrupted" -Default "Cleanup initiated due to user interruption (Ctrl+C)." -Color "Yellow"
+        Write-Host "[WARNING] GameLauncher: " -NoNewline
+        Write-LocalizedHost -Messages $msg -Key "cli_cleanup_interrupted" -Default "Cleanup initiated due to user interruption (Ctrl+C)."
         if ($logger) { $logger.Warning("Cleanup initiated due to interruption", "CLEANUP") }
     } else {
-        Write-LocalizedHost -Messages $msg -Key "cli_cleanup_started" -Default "Starting game cleanup..." -Color "Cyan"
+        Write-Host "[INFO] GameLauncher: " -NoNewline
+        Write-LocalizedHost -Messages $msg -Key "console_cleanup_starting" -Default "Starting cleanup..."
         if ($logger) { $logger.Info("Starting game cleanup", "CLEANUP") }
     }
 
     # Unified application and integration shutdown
     $appManager.ProcessShutdownSequence()
+    Write-Host "[OK] GameLauncher: " -NoNewline
+    Write-LocalizedHost -Messages $msg -Key "console_cleanup_complete" -Default "Cleanup completed"
     if ($logger) { $logger.Info("Application shutdown sequence completed", "CLEANUP") }
 
     if ($logger) { $logger.Info("Game cleanup completed", "CLEANUP") }
@@ -228,9 +258,11 @@ try {
     Invoke-GameStartup
 
     # Launch game via appropriate platform
-    Write-LocalizedHost -Messages $msg -Key "cli_launching_game" -Args @($detectedPlatforms[$gamePlatform].Name) -Default ("Launching game via {0}..." -f $detectedPlatforms[$gamePlatform].Name) -Color "Cyan"
+    Write-Host "[INFO] GameLauncher: " -NoNewline
+    Write-LocalizedHost -Messages $msg -Key "console_launching_via_platform" -Args @($detectedPlatforms[$gamePlatform].Name) -Default ("Launching game via {0}..." -f $detectedPlatforms[$gamePlatform].Name)
     try {
         [void]$platformManager.LaunchGame($gamePlatform, $gameConfig)
+        Write-Host "[OK] GameLauncher: " -NoNewline
         Write-LocalizedHost -Messages $msg -Key "starting_game_name" -Args @($gameConfig.name) -Default ("Starting game: {0}" -f $gameConfig.name)
         if ($logger) { $logger.Info("Game launch command sent to $($detectedPlatforms[$gamePlatform].Name): $($gameConfig.name)", "GAME") }
     } catch {
@@ -241,7 +273,8 @@ try {
     }
 
     # Wait for actual game process to start (not the launcher)
-    Write-LocalizedHost -Messages $msg -Key "cli_waiting_process" -Default "Waiting for game process to start..." -Color "Cyan"
+    Write-Host "[INFO] GameMonitor: " -NoNewline
+    Write-LocalizedHost -Messages $msg -Key "cli_waiting_process" -Default "Waiting for game process to start..."
     $gameProcess = $null
     $processStartTimeout = 300  # 5 minutes timeout
     $startTime = Get-Date
@@ -256,7 +289,8 @@ try {
     } while (-not $gameProcess -and $elapsed.TotalSeconds -lt $processStartTimeout)
 
     if ($gameProcess) {
-        Write-LocalizedHost -Messages $msg -Key "cli_monitoring_process" -Args @($gameProcess.Name, $gameProcess.Id) -Default ("Now monitoring process: {0}." -f $gameConfig.name)
+        Write-Host "[OK] GameMonitor: " -NoNewline
+        Write-LocalizedHost -Messages $msg -Key "console_game_process_detected" -Args @($gameConfig.name) -Default ("Game process detected: {0}" -f $gameConfig.name)
         if ($logger) { $logger.Info("Game process detected and monitoring started: $($gameConfig.processName)", "GAME") }
 
         # Wait for the game process to end.
@@ -267,7 +301,8 @@ try {
             Wait-Process -InputObject $gameProcess -ErrorAction Stop
         } catch {
             if ($logger) { $logger.Warning("Direct wait failed. Falling back to polling for process exit: $($gameProcess.Name) (PID: $($gameProcess.Id)). This can happen with admin-level processes.", "GAME") }
-            Write-Host "Direct process wait failed. Monitoring process in fallback mode (polling every 3s). This can happen with admin-level processes."
+            Write-Host "[WARNING] GameMonitor: " -NoNewline
+            Write-LocalizedHost -Messages $msg -Key "console_process_wait_fallback" -Default "Direct process wait failed - Monitoring in fallback mode (polling every 3s)"
 
             while ($true) {
                 $processCheck = Get-Process -Id $gameProcess.Id -ErrorAction SilentlyContinue
@@ -279,10 +314,12 @@ try {
             }
         }
 
-        Write-LocalizedHost -Messages $msg -Key "cli_process_exited" -Args @($gameConfig.name) -Default ("Game has exited: {0}" -f $gameConfig.name)
+        Write-Host "[INFO] GameMonitor: " -NoNewline
+        Write-LocalizedHost -Messages $msg -Key "console_game_process_ended" -Args @($gameConfig.name) -Default ("Game process ended: {0}" -f $gameConfig.name)
         if ($logger) { $logger.Info("Game process ended: $($gameConfig.name)", "GAME") }
     } else {
-        Write-LocalizedHost -Messages $msg -Key "cli_process_timeout" -Args @($gameConfig.processName) -Default ("Game process '{0}' was not detected within timeout period" -f $gameConfig.processName) -Color "Yellow"
+        Write-Host "[WARNING] GameMonitor: " -NoNewline
+        Write-LocalizedHost -Messages $msg -Key "cli_process_timeout" -Args @($gameConfig.processName) -Default ("Game process '{0}' was not detected within timeout period" -f $gameConfig.processName)
         if ($logger) { $logger.Warning("Game process not detected within timeout: $($gameConfig.processName)", "GAME") }
     }
 
@@ -294,7 +331,8 @@ try {
         $logger.Info("Focus Game Deck session completed successfully", "MAIN")
     }
 
-    Write-LocalizedHost -Messages $msg -Key "cli_session_completed" -Default "Focus Game Deck session completed." -Color "Green"
+    Write-Host "[OK] GameLauncher: " -NoNewline
+    Write-LocalizedHost -Messages $msg -Key "console_session_complete" -Default "Focus Game Deck session completed"
 } catch {
     $errorMsg = "Unexpected error during execution: $_"
     Write-Error $errorMsg
@@ -314,36 +352,21 @@ try {
 } finally {
     # Finalize and notarize log file if logging is enabled
     if ($logger) {
+        Write-Host "[INFO] Logger: " -NoNewline
+        Write-LocalizedHost -Messages $msg -Key "console_finalizing_log" -Default "Finalizing session log..."
+
         try {
-            if ($msg.mainFinalizingLog) {
-                Write-Host $msg.mainFinalizingLog
-            } else {
-                Write-Host "Finalizing session log..."
-            }
             $certificateId = $logger.FinalizeAndNotarizeLogAsync()
 
             if ($certificateId) {
-                if ($msg.mainLogNotarizedSuccess) {
-                    Write-Host ($msg.mainLogNotarizedSuccess -f $certificateId)
-                } else {
-                    Write-Host "[OK] " -NoNewline
-                    Write-Host "Log successfully notarized. Certificate ID: " -NoNewline
-                    Write-Host $certificateId
-                }
-                if ($msg.mainLogNotarizationInfo) {
-                    Write-Host $msg.mainLogNotarizationInfo
-                } else {
-                    Write-Host "  This certificate can be used to verify log integrity if needed."
-                }
+                Write-Host "[OK] Logger: " -NoNewline
+                Write-LocalizedHost -Messages $msg -Key "mainLogNotarizedSuccess" -Args @($certificateId) -Default ("[OK] Log notarized successfully. Certificate ID: {0}" -f $certificateId)
             } else {
-                if ($msg.mainLogFinalized) {
-                    Write-Host $msg.mainLogFinalized
-                } else {
-                    Write-Host "Log finalized (notarization disabled or failed)"
-                }
+                Write-Host "[INFO] Logger: " -NoNewline
+                Write-LocalizedHost -Messages $msg -Key "console_log_finalized" -Default "Log finalization completed"
             }
         } catch {
-            Write-Warning "Failed to notarize log: $_"
+            Write-Host "[WARNING] Logger: Failed to notarize log - $_"
         }
     }
 }

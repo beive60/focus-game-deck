@@ -221,7 +221,8 @@ class AppManager {
                 return $true
             }
             default {
-                Write-Host "Unknown action: $action for app: $appId"
+                Write-Host "[ERROR] AppManager: " -NoNewline
+                Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_action" -Args @($action, $appId) -Default ("Unknown action '{0}' for app '{1}'" -f $action, $appId)
                 return $false
             }
         }
@@ -253,7 +254,8 @@ class AppManager {
         $integrationConfig = $this.Config.integrations.$integrationId
 
         if (-not $manager) {
-            Write-Host "Integration manager not found: $integrationId"
+            Write-Host "[ERROR] AppManager: " -NoNewline
+            Write-LocalizedHost -Messages $this.Messages -Key "console_integration_not_found" -Args @($integrationId) -Default ("Integration manager not found: {0}" -f $integrationId)
             return $false
         }
 
@@ -268,7 +270,8 @@ class AppManager {
                 return $this.HandleVTubeStudioAction($manager, $integrationConfig, $action)
             }
             default {
-                Write-Host "Unknown integration: $integrationId"
+                Write-Host "[ERROR] AppManager: " -NoNewline
+                Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_integration" -Args @($integrationId) -Default ("Unknown integration: {0}" -f $integrationId)
                 return $false
             }
         }
@@ -305,10 +308,12 @@ class AppManager {
 
                 $success = $manager.StartOBS()
                 if ($success) {
-                    Write-Host "[INFO] OBS started successfully"
+                    Write-Host "[OK] OBSManager: " -NoNewline
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_obs_started" -Default "OBS started successfully"
                     if ($this.Logger) { $this.Logger.Info("OBS started successfully", "OBS") }
                 } else {
-                    Write-Warning "Failed to start OBS"
+                    Write-Host "[WARNING] OBSManager: " -NoNewline
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_obs_failed" -Default "Failed to start OBS"
                     if ($this.Logger) { $this.Logger.Warning("Failed to start OBS", "OBS") }
                     return $success
                 }
@@ -321,7 +326,8 @@ class AppManager {
                 if ($success) {
                     if ($this.Logger) { $this.Logger.Info("OBS websocket connection established", "OBS") }
                 } else {
-                    Write-Warning "Failed to connect to OBS websocket"
+                    Write-Host "[WARNING] OBSManager: " -NoNewline
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_obs_websocket_failed" -Default "Failed to connect to OBS websocket"
                     if ($this.Logger) { $this.Logger.Warning("Failed to connect to OBS websocket", "OBS") }
                     return $false
                 }
@@ -330,7 +336,8 @@ class AppManager {
                     $success = $manager.StartReplayBuffer()
                     if ($this.Logger) { $this.Logger.Info("OBS replay buffer started", "OBS") }
                 } catch {
-                    Write-Warning "Failed to connect to OBS for replay buffer"
+                    Write-Host "[WARNING] OBSManager: " -NoNewline
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_obs_replay_failed" -Default "Failed to connect to OBS for replay buffer"
                     if ($this.Logger) { $this.Logger.Warning("Failed to connect to OBS for replay buffer", "OBS") }
                     return $false
                 } finally {
@@ -364,7 +371,8 @@ class AppManager {
                 return $true
             }
             default {
-                Write-Host "Unknown OBS action: $action"
+                Write-Host "[ERROR] OBSManager: " -NoNewline
+                Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_obs_action" -Args @($action) -Default ("Unknown action: {0}" -f $action)
                 return $false
             }
         }
@@ -401,7 +409,8 @@ class AppManager {
                 $success = $manager.StartDiscord()
 
                 if ($success) {
-                    Write-Host "[INFO] Discord started successfully"
+                    Write-Host "[OK] DiscordManager: " -NoNewline
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_discord_started" -Default "Discord started successfully"
                     if ($this.Logger) { $this.Logger.Info("Discord started successfully", "Discord") }
                 }
 
@@ -413,7 +422,8 @@ class AppManager {
                 $success = $manager.StopDiscord()
 
                 if ($success) {
-                    Write-Host "[INFO] Discord stopped successfully"
+                    Write-Host "[OK] DiscordManager: " -NoNewline
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_discord_stopped" -Default "Discord stopped successfully"
                     if ($this.Logger) { $this.Logger.Info("Discord stopped successfully", "Discord") }
                 }
 
@@ -423,7 +433,8 @@ class AppManager {
                 return $true
             }
             default {
-                Write-Host "Unknown Discord action: $action"
+                Write-Host "[ERROR] DiscordManager: " -NoNewline
+                Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_discord_action" -Args @($action) -Default ("Unknown action: {0}" -f $action)
                 return $false
             }
         }
@@ -464,7 +475,8 @@ class AppManager {
                 return $true
             }
             default {
-                Write-Host "Unknown VTube Studio action: $action"
+                Write-Host "[ERROR] VTubeStudioManager: " -NoNewline
+                Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_vtube_action" -Args @($action) -Default ("Unknown action: {0}" -f $action)
                 return $false
             }
         }
@@ -498,12 +510,14 @@ class AppManager {
     # Start application process
     [bool] StartProcess([string] $appId, [object] $appConfig) {
         if (-not $appConfig.path -or $appConfig.path -eq "") {
+            Write-Host "[WARNING] AppManager: " -NoNewline
             Write-Host ($this.Messages.warning_no_path_specified -f $appId)
             return $false
         }
 
         if (-not (Test-Path $appConfig.path)) {
-            Write-Host "Application path not found: $($appConfig.path)"
+            Write-Host "[ERROR] AppManager: " -NoNewline
+            Write-LocalizedHost -Messages $this.Messages -Key "console_app_path_not_found" -Args @($appConfig.path) -Default ("Application path not found: {0}" -f $appConfig.path)
             return $false
         }
 
@@ -523,7 +537,8 @@ class AppManager {
             Write-Host ($this.Messages.app_started -f $appId)
             return $true
         } catch {
-            Write-Host "Failed to start $appId : $_"
+            Write-Host "[ERROR] AppManager: " -NoNewline
+            Write-LocalizedHost -Messages $this.Messages -Key "console_app_start_failed" -Args @($appId) -Default ("Failed to start app: {0}" -f $appId)
             return $false
         }
     }
@@ -557,6 +572,7 @@ class AppManager {
     # Stop application process
     [bool] StopProcess([string] $appId, [object] $appConfig) {
         if (-not $appConfig.processName -or $appConfig.processName -eq "") {
+            Write-Host "[WARNING] AppManager: " -NoNewline
             Write-Host ($this.Messages.warning_no_process_name -f $appId)
             return $false
         }
@@ -608,13 +624,15 @@ class AppManager {
                 # Try graceful first, then force if needed
                 $gracefulSuccess = $this.GracefulTermination($processName, $timeoutMs, $appId)
                 if (-not $gracefulSuccess) {
+                    Write-Host "[WARNING] AppManager: " -NoNewline
                     Write-Host ($this.Messages.graceful_failed_using_force -f $processName)
                     return $this.ForceTermination($processName, $appId)
                 }
                 return $true
             }
             default {
-                Write-Host "Unknown termination method '$method' for $appId. Using 'auto' as fallback."
+                Write-Host "[WARNING] AppManager: " -NoNewline
+                Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_termination_method" -Args @($method, $appId) -Default ("Unknown termination method '{0}' for app '{1}' - Using 'auto' as fallback" -f $method, $appId)
                 return $this.TerminateProcess($processName, "auto", $timeoutMs, $appId)
             }
         }
@@ -810,7 +828,8 @@ class AppManager {
 
             if (-not $success) {
                 $allSuccess = $false
-                Write-Warning "Failed to start $appId with action: $action"
+                Write-Host "[WARNING] AppManager: " -NoNewline
+                Write-LocalizedHost -Messages $this.Messages -Key "console_app_start_action_failed" -Args @($appId, $action) -Default ("Failed to start app '{0}' with action: {1}" -f $appId, $action)
                 if ($this.Logger) { $this.Logger.Warning("Failed to start $appId with action: $action", "APP") }
             }
         }
@@ -833,7 +852,8 @@ class AppManager {
             $success = $this.InvokeAction($appId, $action)
             if (-not $success) {
                 $allSuccess = $false
-                Write-Warning "Failed to shutdown $appId with action: $action"
+                Write-Host "[WARNING] AppManager: " -NoNewline
+                Write-LocalizedHost -Messages $this.Messages -Key "console_app_shutdown_action_failed" -Args @($appId, $action) -Default ("Failed to shutdown app '{0}' with action: {1}" -f $appId, $action)
                 if ($this.Logger) { $this.Logger.Warning("Failed to shutdown $appId with action: $action", "APP") }
             }
         }
