@@ -46,6 +46,14 @@ Welcome to Focus Game Deck documentation! This index provides a comprehensive ov
 | **[Build System](developer-guide/build-system.md)** | Development and distribution infrastructure | Developers and maintainers |
 | **[GUI Design Specifications](developer-guide/gui-design.md)** | Interface design and implementation | GUI developers |
 | **[Developer Release Guide](developer-guide/release-process.md)** | Release process and workflows | Maintainers |
+| **[v3 Migration Guide](developer-guide/v3-migration-guide.md)** | Multi-executable architecture migration | Developers upgrading from v2.x |
+
+**Archived/Deprecated Documents:**
+
+| Document | Status | Replacement |
+|----------|--------|-------------|
+| `developer-guide/json-formatting-fix.md` | Deprecated (2025-12-07) | Consolidated into [Architecture Guide - JSON Formatting Standards](developer-guide/architecture.md#json-formatting-standards) |
+| `developer-guide/bundling-implementation.md` | Deprecated (2025-12-07) | Content distributed to [Architecture Guide](developer-guide/architecture.md) and [Build System](developer-guide/build-system.md) |
 
 ### Project Planning & Information
 

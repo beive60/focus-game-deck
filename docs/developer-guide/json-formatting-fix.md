@@ -1,5 +1,10 @@
 # JSON Formatting Fix - Technical Documentation
 
+> **⚠️ DEPRECATED**: This document has been consolidated into [architecture.md](architecture.md) as of 2025-12-07.
+>
+> Please refer to:
+> - [Architecture Guide - JSON Formatting Standards](architecture.md#json-formatting-standards) - For current JSON formatting guidelines and usage
+
 ## Issue Description
 
 When using the ConfigEditor GUI to update `config.json`, the file's indentation was being corrupted. Specifically, the indentation was not using a consistent multiple of 4 spaces as required by the project's coding standards.

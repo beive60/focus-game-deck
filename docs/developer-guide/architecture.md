@@ -987,6 +987,83 @@ Write-Host "[OK] Messages file restored successfully"
    $config | ConvertTo-Json -Depth 10 | Set-Content $configPath -Encoding UTF8
    ```
 
+### JSON Formatting Standards
+
+#### Problem: PowerShell ConvertTo-Json Indentation Inconsistency
+
+PowerShell's built-in `ConvertTo-Json` cmdlet has inconsistent indentation behavior for nested objects. While it claims to use 2-space indentation, the actual output uses a complex alignment pattern that doesn't follow consistent rules, especially for deeply nested objects.
+
+**Project Standard (4-space indentation):**
+
+```json
+{
+    "level1": "value1",
+    "nested": {
+        "level2": "value2",
+        "level3": "value3"
+    }
+}
+```
+
+**PowerShell ConvertTo-Json Output (problematic):**
+
+```json
+{
+    "level1":  "value1",
+    "nested":  {
+                   "level2":  "value2",
+                   "level3":  "value3"
+               }
+}
+```
+
+Issues with PowerShell's output:
+- Double space after colon
+- Indentation not a multiple of 4 spaces
+- Inconsistent nesting levels
+
+#### Solution: Custom JSON Formatter
+
+The project uses a custom JSON formatter (`ConfigEditor.JsonHelper.ps1`) that:
+
+1. **Compresses JSON first**: Uses `ConvertTo-Json -Compress` to remove all whitespace
+2. **Manual formatting**: Parses compressed JSON character by character with proper 4-space indentation
+3. **String awareness**: Correctly handles strings containing special characters like `{`, `}`, `[`, `]`
+4. **Consistent indentation**: Ensures all indentation levels are exact multiples of 4 spaces
+
+#### Usage
+
+**For saving configuration files:**
+
+```powershell
+# Instead of:
+$configJson = $config | ConvertTo-Json -Depth 10
+Set-Content -Path $configPath -Value $configJson -Encoding UTF8
+
+# Use:
+Save-ConfigJson -ConfigData $config -ConfigPath $configPath -Depth 10
+```
+
+**For formatting JSON in memory:**
+
+```powershell
+# Convert object to properly formatted JSON string
+$formattedJson = ConvertTo-Json4Space -InputObject $config -Depth 10
+```
+
+#### Benefits
+
+- **Consistent formatting**: All saved JSON files use 4-space indentation
+- **Better version control**: Consistent formatting reduces unnecessary diffs
+- **Improved readability**: Properly formatted JSON is easier to read and edit manually
+- **Standards compliance**: Matches project coding standards
+
+#### Implementation Files
+
+- `gui/ConfigEditor.JsonHelper.ps1` - JSON formatting functions
+- `test/Test-JsonFormatting.ps1` - Unit tests
+- `test/Test-ConfigEditorJsonFormatting.ps1` - Integration tests
+
 ## Performance Considerations
 
 ### Startup Time Optimization
@@ -1079,6 +1156,7 @@ To maintain this design philosophy, please prioritize the following:
 | 2.1.0 | 2025-11-03 | Console output guidelines: Added prohibition of Write-Host color parameters to respect user console customization and improve accessibility |
 | 3.0.0 | 2025-11-13 | Multi-Executable Bundle Architecture: Security-first redesign with three separate signed executables (Main Router, ConfigEditor, Game Launcher) eliminating external unsigned script vulnerability, improving efficiency through process isolation, and establishing foundation for future extensibility |
 | 3.0.1 | 2025-11-15 | Build-Time Patching Unification: Refactored build system to use unified build-time patching approach for both ConfigEditor and Invoke-FocusGameDeck, eliminating duplicate -Bundled.ps1 files and improving maintainability through single-source architecture |
+| 3.0.2 | 2025-12-07 | Documentation Consolidation: Merged JSON formatting standards from json-formatting-fix.md into architecture.md Implementation Guidelines section for centralized technical documentation |
 
 ---
 
