@@ -33,6 +33,9 @@
                 <MenuItem
                     x:Name="CheckUpdateMenuItem"
                     Header="[CHECK_UPDATE]"/>
+                <MenuItem
+                    x:Name="FeedbackMenuItem"
+                    Header="[FEEDBACK_MENU_ITEM]"/>
                 <Separator/>
                 <MenuItem
                     x:Name="AboutMenuItem"

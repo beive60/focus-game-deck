@@ -144,6 +144,7 @@ $script:MenuItemMappings = @{
     "RefreshAllMenuItem" = "refreshAllMenuItem"
     "HelpMenu" = "helpMenuHeader"
     "CheckUpdateMenuItem" = "checkUpdateMenuItem"
+    "FeedbackMenuItem" = "feedbackMenuItem"
     "AboutMenuItem" = "aboutMenuItem"
 }
 
