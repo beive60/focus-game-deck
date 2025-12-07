@@ -95,25 +95,22 @@ function New-ReleaseReadme {
 
 ## Files Included
 
-- **Focus-Game-Deck.exe**: Main router executable
-- **ConfigEditor.exe**: GUI configuration editor (bundled)
-- **Invoke-FocusGameDeck.exe**: Game launcher engine (bundled)
-- **config/**: Configuration files and templates
-- **localization/**: Localization resources
-- **gui/**: GUI XAML files
+- **Focus-Game-Deck.exe**: Main application executable (bundled with all functionality)
+- **localization/**: Localization resources for multi-language support
+- **gui/**: GUI XAML files for the configuration editor
 
 ## Installation
 
 1. Extract all files to a directory of your choice
-2. Run Focus-Game-Deck.exe (without arguments) to open the configuration editor
-3. Use Focus-Game-Deck.exe [GameId] to launch games with optimized settings
+2. Run Focus-Game-Deck.exe to start the application
+3. Configuration files will be automatically generated on first run
 
-## Multi-Executable Bundle Architecture
+## Architecture
 
-This release uses a secure multi-executable architecture:
-- All executed code is contained within digitally signed executables
-- No external unsigned scripts are executed
-- Each component is a fully bundled, self-contained executable
+This release uses a bundled executable architecture:
+- All PowerShell scripts are bundled into the executable
+- Configuration files are automatically generated when needed
+- Self-contained with minimal external dependencies
 
 ## Documentation
 
@@ -126,46 +123,6 @@ This software is released under the MIT License.
 "@
 
     return $readme
-}
-
-function New-VersionInfo {
-    param(
-        [string]$Version,
-        [bool]$IsSigned,
-        [string]$BuildDate,
-        [string]$ReleaseDir
-    )
-
-    $versionInfo = @{
-        version = $Version
-        buildDate = $BuildDate
-        isSigned = $IsSigned
-        architecture = "multi-executable-bundle"
-        executables = @()
-        resources = @()
-    }
-
-    Get-ChildItem $ReleaseDir -Recurse -File | ForEach-Object {
-        $relativePath = $_.FullName.Replace($ReleaseDir, "").TrimStart('\', '/')
-        $fileInfo = @{
-            path = $relativePath
-            size = $_.Length
-            lastModified = $_.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
-        }
-
-        if ($_.Extension -eq ".exe") {
-            $signature = Get-AuthenticodeSignature -FilePath $_.FullName
-            $fileInfo.Add("signatureStatus", $signature.Status.ToString())
-            if ($signature.SignerCertificate) {
-                $fileInfo.Add("signerCertificate", $signature.SignerCertificate.Subject)
-            }
-            $versionInfo.executables += $fileInfo
-        } else {
-            $versionInfo.resources += $fileInfo
-        }
-    }
-
-    return $versionInfo
 }
 
 try {
@@ -209,11 +166,6 @@ try {
     $readmePath = Join-Path $DestinationDir "README.txt"
     Set-Content -Path $readmePath -Value $readmeContent -Encoding UTF8
     Write-Verbose "  Created: README.txt"
-
-    $versionInfo = New-VersionInfo -Version $Version -IsSigned $IsSigned -BuildDate $buildDate -ReleaseDir $DestinationDir
-    $versionInfoPath = Join-Path $DestinationDir "version-info.json"
-    $versionInfo | ConvertTo-Json -Depth 10 | Set-Content -Path $versionInfoPath -Encoding UTF8
-    Write-Verbose "  Created: version-info.json"
 
     Write-Host ""
     Write-Host ("=" * 60)
