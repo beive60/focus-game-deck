@@ -1061,7 +1061,7 @@
 
             # Get current version - use global function reference
             $currentVersion = if ($global:GetProjectVersionFunc) {
-                & $global:GetProjectVersionFunc
+                & $global:GetProjectVersionFunc -IncludePreRelease $true
             } else {
                 Write-Host "[WARNING] ConfigEditorEvents: Get-ProjectVersion not available"
                 "Unknown"
@@ -1078,7 +1078,7 @@
             }
 
             Write-Host "[INFO] ConfigEditorEvents: Checking for updates"
-            $updateInfo = & $global:TestUpdateAvailableFunc -CurrentVersion $currentVersion
+            $updateInfo = & $global:TestUpdateAvailableFunc
 
             if ($updateInfo) {
                 Write-Host "[DEBUG] ConfigEditorEvents: Update info received"
@@ -1093,9 +1093,9 @@
 
                     if ("$result" -eq "Yes") {
                         # Open the release page
-                        if ($updateInfo.ReleaseUrl) {
-                            Write-Host "[INFO] ConfigEditorEvents: Opening release page - $($updateInfo.ReleaseUrl)"
-                            Start-Process $updateInfo.ReleaseUrl
+                        if ($updateInfo.ReleaseInfo -and $updateInfo.ReleaseInfo.HtmlUrl) {
+                            Write-Host "[INFO] ConfigEditorEvents: Opening release page - $($updateInfo.ReleaseInfo.HtmlUrl)"
+                            Start-Process $updateInfo.ReleaseInfo.HtmlUrl
                         } else {
                             Write-Host "[WARNING] ConfigEditorEvents: No release URL provided in update info"
                         }
