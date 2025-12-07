@@ -118,7 +118,7 @@ class I18n {
 
     async loadMessages() {
         try {
-            const response = await fetch('./messages.json');
+            const response = await fetch('./messages-website.json');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             this.messages = await response.json();
         } catch (error) {
@@ -165,6 +165,17 @@ class I18n {
                 } else {
                     element.textContent = translation;
                 }
+            }
+        });
+
+        // Handle data-i18n-alt for image alt attributes
+        const altElements = document.querySelectorAll('[data-i18n-alt]');
+        altElements.forEach(element => {
+            const key = element.getAttribute('data-i18n-alt');
+            const translation = currentMessages[key];
+
+            if (translation && element.tagName === 'IMG') {
+                element.alt = translation;
             }
         });
 
