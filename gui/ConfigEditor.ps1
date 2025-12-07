@@ -327,6 +327,19 @@ function Initialize-ConfigEditor {
         Write-Verbose "[INFO] ConfigEditor: Importing additional modules"
         Import-AdditionalModules
 
+        # Step 6.5: Verify global function references are set
+        Write-Host "[INFO] ConfigEditor: Verifying global function references"
+        if ($global:GetProjectVersionFunc) {
+            Write-Host "[OK] ConfigEditor: GetProjectVersionFunc is set"
+        } else {
+            Write-Host "[WARN] ConfigEditor: GetProjectVersionFunc is NOT set"
+        }
+        if ($global:TestUpdateAvailableFunc) {
+            Write-Host "[OK] ConfigEditor: TestUpdateAvailableFunc is set"
+        } else {
+            Write-Host "[WARN] ConfigEditor: TestUpdateAvailableFunc is NOT set"
+        }
+
         # Step 7: Initialize localization
         Write-Verbose "[INFO] ConfigEditor: Initializing localization"
         try {
@@ -567,22 +580,78 @@ function Import-AdditionalModules {
             Write-Warning "[WARN] ConfigEditor: Could not load 'scripts/LanguageHelper.ps1'. Some functionality may be affected. Details: $($_.Exception.Message)"
         }
 
-        # --- Load Version.ps1 (for version info) ---
+        # --- Load Version.ps1 (for version info) - Load to GLOBAL scope ---
         try {
-            Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing additional module - build-tools/Version.ps1"
-            . (Join-Path -Path $appRoot -ChildPath "build-tools/Version.ps1")
-            Write-Verbose "[OK] ConfigEditor: Loaded: Version.ps1"
+            Write-Host "[DEBUG] ConfigEditor: Dot-sourcing additional module - build-tools/Version.ps1"
+            $versionPath = Join-Path -Path $appRoot -ChildPath "build-tools/Version.ps1"
+            Write-Host "[DEBUG] ConfigEditor: Version.ps1 path: $versionPath"
+            Write-Host "[DEBUG] ConfigEditor: Version.ps1 exists: $(Test-Path $versionPath)"
+
+            if (Test-Path $versionPath) {
+                # Load the script content and execute it in the global scope
+                $versionScript = Get-Content -Path $versionPath -Raw
+                # Replace 'function' with 'function global:' to make functions globally available
+                $versionScript = $versionScript -replace '(?m)^(\s*)function\s+([A-Za-z-]+)', '$1function global:$2'
+                # Replace '$script:' with '$global:' for variables
+                $versionScript = $versionScript -replace '\$script:', '$global:'
+
+                . ([ScriptBlock]::Create($versionScript))
+                Write-Host "[OK] ConfigEditor: Loaded: Version.ps1 with global scope"
+
+                # Verify functions are available
+                if (Test-Path function:\Get-ProjectVersion) {
+                    Write-Host "[OK] ConfigEditor: Get-ProjectVersion function is available globally"
+                    $global:GetProjectVersionFunc = { param($IncludePreRelease)
+                        if ($IncludePreRelease) {
+                            Get-ProjectVersion -IncludePreRelease
+                        } else {
+                            Get-ProjectVersion
+                        }
+                    }
+                    Write-Host "[OK] ConfigEditor: Get-ProjectVersion global reference set"
+                } else {
+                    Write-Host "[WARN] ConfigEditor: Get-ProjectVersion function not found after loading Version.ps1"
+                }
+            } else {
+                Write-Host "[WARN] ConfigEditor: Version.ps1 not found at: $versionPath"
+            }
         } catch {
-            Write-Warning "[WARN] ConfigEditor: Could not load 'build-tools/Version.ps1'. Version info will be unavailable. Details: $($_.Exception.Message)"
+            Write-Host "[WARN] ConfigEditor: Could not load 'build-tools/Version.ps1'. Version info will be unavailable. Details: $($_.Exception.Message)"
         }
 
-        # --- Load UpdateChecker.ps1 (for update checks) ---
+        # --- Load UpdateChecker.ps1 (for update checks) - Load to GLOBAL scope ---
         try {
-            Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing additional module - src/modules/UpdateChecker.ps1"
-            . (Join-Path -Path $appRoot -ChildPath "src/modules/UpdateChecker.ps1")
-            Write-Verbose "[OK] ConfigEditor: Loaded: UpdateChecker.ps1"
+            Write-Host "[DEBUG] ConfigEditor: Dot-sourcing additional module - src/modules/UpdateChecker.ps1"
+            $updateCheckerPath = Join-Path -Path $appRoot -ChildPath "src/modules/UpdateChecker.ps1"
+            Write-Host "[DEBUG] ConfigEditor: UpdateChecker.ps1 path: $updateCheckerPath"
+            Write-Host "[DEBUG] ConfigEditor: UpdateChecker.ps1 exists: $(Test-Path $updateCheckerPath)"
+
+            if (Test-Path $updateCheckerPath) {
+                # Load the script content and execute it in the global scope
+                $updateCheckerScript = Get-Content -Path $updateCheckerPath -Raw
+                # Replace 'function' with 'function global:' to make functions globally available
+                $updateCheckerScript = $updateCheckerScript -replace '(?m)^(\s*)function\s+([A-Za-z-]+)', '$1function global:$2'
+                # Replace '$script:' with '$global:' for variables
+                $updateCheckerScript = $updateCheckerScript -replace '\$script:', '$global:'
+
+                . ([ScriptBlock]::Create($updateCheckerScript))
+                Write-Host "[OK] ConfigEditor: Loaded: UpdateChecker.ps1 with global scope"
+
+                # Verify functions are available
+                if (Test-Path function:\Test-UpdateAvailable) {
+                    Write-Host "[OK] ConfigEditor: Test-UpdateAvailable function is available globally"
+                    $global:TestUpdateAvailableFunc = {
+                        Test-UpdateAvailable
+                    }
+                    Write-Host "[OK] ConfigEditor: Test-UpdateAvailable global reference set"
+                } else {
+                    Write-Host "[WARN] ConfigEditor: Test-UpdateAvailable function not found after loading UpdateChecker.ps1"
+                }
+            } else {
+                Write-Host "[WARN] ConfigEditor: UpdateChecker.ps1 not found at: $updateCheckerPath"
+            }
         } catch {
-            Write-Warning "[WARN] ConfigEditor: Could not load 'src/modules/UpdateChecker.ps1'. Update checks will be disabled. Details: $($_.Exception.Message)"
+            Write-Host "[WARN] ConfigEditor: Could not load 'src/modules/UpdateChecker.ps1'. Update checks will be disabled. Details: $($_.Exception.Message)"
         }
     } catch {
         Write-Host "[WARNING] ConfigEditor: Failed to import additional modules - $($_.Exception.Message)"
