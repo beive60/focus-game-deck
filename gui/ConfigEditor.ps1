@@ -961,7 +961,7 @@ function Save-CurrentGameData {
 
     if ($validationErrors.Count -gt 0) {
         foreach ($err in $validationErrors) {
-            $script:UIManager.SetInputError($err.Control, $script:Localization.Get($err.Key))
+            $script:UIManager.SetInputError($err.Control, $script:Localization.GetMessage($err.Key))
         }
         Show-SafeMessage -Key $validationErrors[0].Key -MessageType "Warning"
         return
@@ -1949,56 +1949,110 @@ function Show-LanguageChangeRestartMessage {
 
             Write-Host "[ERROR] ConfigEditor: Restarting application to apply language changes"
 
-            # Get the current script path
-            $currentScript = $PSCommandPath
-            if (-not $currentScript) {
-                $currentScript = Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.ps1"
-            }
+            # Determine execution context and prepare restart command
+            if ($script:isExecutable) {
+                # In executable mode: restart the .exe directly
+                Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Executable mode detected"
 
-            # Start new instance with proper process configuration
-            $startInfo = New-Object System.Diagnostics.ProcessStartInfo
-            $startInfo.FileName = "powershell.exe"
-            $startInfo.Arguments = "-ExecutionPolicy Bypass -NoProfile -Command `"& { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; & '$currentScript' }`""
-            $startInfo.UseShellExecute = $false
-            $startInfo.CreateNoWindow = $false
-            # Note: StandardOutputEncoding is only valid when UseShellExecute = $true or RedirectStandardOutput = $true
-            # For UI applications, we don't need it since we're not capturing output
+                $currentProcess = Get-Process -Id $PID
+                $executablePath = $currentProcess.Path
 
-            Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Starting new ConfigEditor instance"
-            Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Command: $($startInfo.FileName) $($startInfo.Arguments)"
+                Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Executable path: $executablePath"
 
-            try {
-                $newProcess = [System.Diagnostics.Process]::Start($startInfo)
-                if ($newProcess) {
-                    Write-Host "[OK] ConfigEditor: New instance started successfully - PID: $($newProcess.Id)"
-                    Write-Verbose "[OK] ConfigEditor: New instance started successfully - PID: $($newProcess.Id)"
-                } else {
-                    Write-Host "[ERROR] ConfigEditor: Process.Start returned null"
-                    throw "Process.Start returned null"
-                }
-            } catch {
-                Write-Host "[ERROR] ConfigEditor: Failed to start new instance with ProcessStartInfo"
-                Write-Host "[DEBUG] ConfigEditor: Exception - $($_.Exception.Message)"
-                Write-Host "[DEBUG] ConfigEditor: Exception Type - $($_.Exception.GetType().Name)"
+                # Start new instance with proper process configuration
+                $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+                $startInfo.FileName = $executablePath
+                $startInfo.UseShellExecute = $false
+                $startInfo.CreateNoWindow = $false
 
-                # Try alternative method: Use Start-Process cmdlet instead
-                Write-Host "[INFO] ConfigEditor: Attempting alternative restart method using Start-Process"
+                Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Starting new ConfigEditor instance (executable mode)"
+                Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Command: $($startInfo.FileName)"
+
                 try {
-                    Start-Process -FilePath "powershell.exe" `
-                        -ArgumentList "-ExecutionPolicy Bypass -NoProfile -Command `"& { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; & '$currentScript' }`"" `
-                        -WindowStyle Normal `
-                        -ErrorAction Stop
-                    Write-Host "[OK] ConfigEditor: Alternative restart method succeeded"
+                    $newProcess = [System.Diagnostics.Process]::Start($startInfo)
+                    if ($newProcess) {
+                        Write-Host "[OK] ConfigEditor: New instance started successfully - PID: $($newProcess.Id)"
+                        Write-Verbose "[OK] ConfigEditor: New instance started successfully - PID: $($newProcess.Id)"
+                    } else {
+                        Write-Host "[ERROR] ConfigEditor: Process.Start returned null"
+                        throw "Process.Start returned null"
+                    }
                 } catch {
-                    Write-Host "[ERROR] ConfigEditor: Alternative restart method also failed - $($_.Exception.Message)"
-                    Write-Host "[ERROR] ConfigEditor: Unable to restart application. User must restart manually."
+                    Write-Host "[ERROR] ConfigEditor: Failed to start new instance (executable mode) - $($_.Exception.Message)"
+                    Write-Host "[DEBUG] ConfigEditor: Exception Type - $($_.Exception.GetType().Name)"
 
-                    # Show error dialog to user
-                    $errorMsg = "Failed to restart the configuration editor automatically. Please restart the application manually to apply language changes."
-                    $errorTitle = "Restart Failed"
-                    ("System.Windows.MessageBox" -as [type])::Show($errorMsg, $errorTitle, "OK", "Error") | Out-Null
+                    # Try alternative method: Use Start-Process cmdlet
+                    Write-Host "[INFO] ConfigEditor: Attempting alternative restart method using Start-Process"
+                    try {
+                        Start-Process -FilePath $executablePath -WindowStyle Normal -ErrorAction Stop
+                        Write-Host "[OK] ConfigEditor: Alternative restart method succeeded"
+                    } catch {
+                        Write-Host "[ERROR] ConfigEditor: Alternative restart method also failed - $($_.Exception.Message)"
+                        Write-Host "[ERROR] ConfigEditor: Unable to restart application. User must restart manually."
 
-                    return
+                        # Show error dialog to user
+                        $errorMsg = "Failed to restart the configuration editor automatically. Please restart the application manually to apply language changes."
+                        $errorTitle = "Restart Failed"
+                        ("System.Windows.MessageBox" -as [type])::Show($errorMsg, $errorTitle, "OK", "Error") | Out-Null
+
+                        return
+                    }
+                }
+            } else {
+                # In script mode: restart via PowerShell
+                Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Script mode detected"
+
+                # Get the current script path
+                $currentScript = $PSCommandPath
+                if (-not $currentScript) {
+                    $currentScript = Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.ps1"
+                }
+
+                # Start new instance with proper process configuration
+                $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+                $startInfo.FileName = "powershell.exe"
+                $startInfo.Arguments = "-ExecutionPolicy Bypass -NoProfile -Command `"& { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; & '$currentScript' }`""
+                $startInfo.UseShellExecute = $false
+                $startInfo.CreateNoWindow = $false
+                # Note: StandardOutputEncoding is only valid when UseShellExecute = $true or RedirectStandardOutput = $true
+                # For UI applications, we don't need it since we're not capturing output
+
+                Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Starting new ConfigEditor instance (script mode)"
+                Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Command: $($startInfo.FileName) $($startInfo.Arguments)"
+
+                try {
+                    $newProcess = [System.Diagnostics.Process]::Start($startInfo)
+                    if ($newProcess) {
+                        Write-Host "[OK] ConfigEditor: New instance started successfully - PID: $($newProcess.Id)"
+                        Write-Verbose "[OK] ConfigEditor: New instance started successfully - PID: $($newProcess.Id)"
+                    } else {
+                        Write-Host "[ERROR] ConfigEditor: Process.Start returned null"
+                        throw "Process.Start returned null"
+                    }
+                } catch {
+                    Write-Host "[ERROR] ConfigEditor: Failed to start new instance (script mode) with ProcessStartInfo"
+                    Write-Host "[DEBUG] ConfigEditor: Exception - $($_.Exception.Message)"
+                    Write-Host "[DEBUG] ConfigEditor: Exception Type - $($_.Exception.GetType().Name)"
+
+                    # Try alternative method: Use Start-Process cmdlet instead
+                    Write-Host "[INFO] ConfigEditor: Attempting alternative restart method using Start-Process"
+                    try {
+                        Start-Process -FilePath "powershell.exe" `
+                            -ArgumentList "-ExecutionPolicy Bypass -NoProfile -Command `"& { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; & '$currentScript' }`"" `
+                            -WindowStyle Normal `
+                            -ErrorAction Stop
+                        Write-Host "[OK] ConfigEditor: Alternative restart method succeeded"
+                    } catch {
+                        Write-Host "[ERROR] ConfigEditor: Alternative restart method also failed - $($_.Exception.Message)"
+                        Write-Host "[ERROR] ConfigEditor: Unable to restart application. User must restart manually."
+
+                        # Show error dialog to user
+                        $errorMsg = "Failed to restart the configuration editor automatically. Please restart the application manually to apply language changes."
+                        $errorTitle = "Restart Failed"
+                        ("System.Windows.MessageBox" -as [type])::Show($errorMsg, $errorTitle, "OK", "Error") | Out-Null
+
+                        return
+                    }
                 }
             }
 
