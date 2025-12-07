@@ -1,0 +1,74 @@
+name: CI/CD Pipeline
+
+on:
+    push:
+        branches: ["main"]
+        tags: ["v*"]
+    pull_request:
+        branches: ["main"]
+
+permissions:
+    contents: write
+
+jobs:
+    build-and-test:
+        name: Build and Test (Windows)
+        runs-on: windows-latest
+
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0 # Fetch full history in case version information retrieval requires it
+
+            - name: Install Pester (Test Dependency)
+              shell: powershell
+              run: |
+                  Write-Host "Installing Pester module..."
+                  Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+                  Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser
+
+            - name: Install Build Dependencies (ps2exe)
+              shell: powershell
+              run: |
+                  # Use the dependency installation script within the project
+                  .\build-tools\Install-BuildDependencies.ps1 -Force -Verbose
+
+            - name: Run Tests
+              shell: powershell
+              run: |
+                  # Exit immediately if an error occurs
+
+                  $ErrorActionPreference = "Stop"
+                  .\test\runners\Invoke-PesterTests.ps1
+
+            - name: Build Application (Development Mode)
+              shell: powershell
+              run: |
+                  # Execute build in Development mode without cloud signing
+
+                  .\build-tools\Release-Manager.ps1 -Development -Verbose
+
+            - name: Archive Release Artifacts
+              shell: powershell
+              run: |
+                  $source = "release\*"
+                  $destination = "FocusGameDeck-Unsigned.zip"
+                  Write-Host "Compressing artifacts from $source to $destination"
+                  Compress-Archive -Path $source -DestinationPath $destination -Force
+
+            - name: Upload Build Artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: FocusGameDeck-Unsigned
+                  path: FocusGameDeck-Unsigned.zip
+                  retention-days: 7
+
+            - name: Create GitHub Release
+              if: startsWith(github.ref, 'refs/tags/v')
+              uses: softprops/action-gh-release@v1
+              with:
+                  files: FocusGameDeck-Unsigned.zip
+                  generate_release_notes: true
+                  draft: false
+                  prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}

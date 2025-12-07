@@ -16,7 +16,7 @@ BeforeAll {
 Describe "Character Encoding Tests" -Tag "Core", "Encoding" {
 
     Context "JSON File Encoding" {
-        It "config.json should be UTF-8 without BOM" {
+        It "config.json should be UTF-8 without BOM" -Skip:(-not (Test-Path $ConfigPath)) {
             $bytes = [System.IO.File]::ReadAllBytes($ConfigPath)
             # UTF-8 BOM is EF BB BF
             $hasBOM = (
@@ -27,7 +27,7 @@ Describe "Character Encoding Tests" -Tag "Core", "Encoding" {
             $hasBOM | Should -Be $false
         }
 
-        It "config.json should be valid UTF-8" {
+        It "config.json should be valid UTF-8" -Skip:(-not (Test-Path $ConfigPath)) {
             {
                 $content = Get-Content $ConfigPath -Raw -Encoding UTF8
                 $content | ConvertFrom-Json
