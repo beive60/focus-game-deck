@@ -989,6 +989,8 @@ Write-Host "[OK] Messages file restored successfully"
 
 ### JSON Formatting Standards
 
+> **Note**: This section was added in v3.0.2 (2025-12-07) by consolidating content from the standalone `json-formatting-fix.md` document to reduce documentation fragmentation and centralize technical implementation details.
+
 #### Problem: PowerShell ConvertTo-Json Indentation Inconsistency
 
 PowerShell's built-in `ConvertTo-Json` cmdlet has inconsistent indentation behavior for nested objects. While it claims to use 2-space indentation, the actual output uses a complex alignment pattern that doesn't follow consistent rules, especially for deeply nested objects.

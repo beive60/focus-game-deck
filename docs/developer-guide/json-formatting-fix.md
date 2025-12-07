@@ -1,6 +1,6 @@
 # JSON Formatting Fix - Technical Documentation
 
-> **⚠️ DEPRECATED**: This document has been consolidated into [architecture.md](architecture.md) as of 2025-12-07.
+> **⚠️ DEPRECATED**: This document has been consolidated into [architecture.md](architecture.md) as of 2025-12-07 to reduce documentation fragmentation and centralize technical implementation details.
 >
 > Please refer to:
 > - [Architecture Guide - JSON Formatting Standards](architecture.md#json-formatting-standards) - For current JSON formatting guidelines and usage
