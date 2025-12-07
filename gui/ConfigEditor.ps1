@@ -961,7 +961,7 @@ function Save-CurrentGameData {
 
     if ($validationErrors.Count -gt 0) {
         foreach ($err in $validationErrors) {
-            $script:UIManager.SetInputError($err.Control, $script:Localization.Get($err.Key))
+            $script:UIManager.SetInputError($err.Control, $script:Localization.GetMessage($err.Key))
         }
         Show-SafeMessage -Key $validationErrors[0].Key -MessageType "Warning"
         return
