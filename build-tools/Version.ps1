@@ -91,7 +91,7 @@ $script:ProjectVersion = @{
     Major = 1
     Minor = 0
     Patch = 1
-    PreRelease = "alpha"  # Can be "", "alpha", "beta", "rc1", etc.
+    PreRelease = "beta"  # Can be "", "alpha", "beta", "rc1", etc.
     Build = ""
 }
 

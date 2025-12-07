@@ -151,8 +151,11 @@ function Invoke-BuildScript {
         $argumentString = $Arguments -join " "
         Write-BuildLog "Executing: $(Split-Path $ScriptPath -Leaf) $argumentString" "DEBUG" "Gray"
 
+        # Use the current PowerShell host (pwsh or powershell) to maintain session context
+        $pwshPath = if ($PSVersionTable.PSVersion.Major -ge 6) { "pwsh" } else { "powershell" }
+
         $allArguments = @("-ExecutionPolicy", "Bypass", "-File", $ScriptPath) + $Arguments
-        $process = Start-Process -FilePath "powershell" -ArgumentList $allArguments -Wait -PassThru -NoNewWindow
+        $process = Start-Process -FilePath $pwshPath -ArgumentList $allArguments -Wait -PassThru -NoNewWindow
 
         if ($process.ExitCode -eq 0) {
             Write-BuildLog "Completed: $Description" "SUCCESS" "Green"
@@ -227,6 +230,7 @@ function Add-CodeSignatures {
 
     $signingScript = Join-Path $PSScriptRoot "Sign-Executables.ps1"
     $projectRoot = Split-Path $PSScriptRoot -Parent
+    $distDir = Join-Path $PSScriptRoot "dist"
 
     # Check if signing is configured
     $signingConfigPath = Join-Path $projectRoot "config/signing-config.json"
@@ -244,7 +248,8 @@ function Add-CodeSignatures {
         }
     }
 
-    $signingResult = Invoke-BuildScript -ScriptPath $signingScript -Arguments @("-SignAll") -Description "Code signing process"
+    # Pass the correct build path (dist directory) to the signing script
+    $signingResult = Invoke-BuildScript -ScriptPath $signingScript -Arguments @("-SignAll", "-BuildPath", $distDir) -Description "Code signing process"
 
     # If signing was successful, register signature hashes for log authentication
     if ($signingResult) {
@@ -279,7 +284,7 @@ function Register-SignatureHashes {
 
         # Define paths for signed executables
         $projectRoot = Split-Path $PSScriptRoot -Parent
-        $releaseDir = Join-Path $projectRoot "release"
+        $distDir = Join-Path $PSScriptRoot "dist"
         $executables = @{
             "Focus-Game-Deck.exe" = "Unified application executable with integrated GUI configuration editor and multi-platform support"
         }
@@ -305,7 +310,7 @@ function Register-SignatureHashes {
         # Register signature hash for each executable
         $allSuccessful = $true
         foreach ($exeName in $executables.Keys) {
-            $exePath = Join-Path $releaseDir $exeName
+            $exePath = Join-Path $distDir $exeName
 
             if (Test-Path $exePath) {
                 try {
@@ -589,7 +594,7 @@ try {
                 @{ Entry = Join-Path $projectRoot "src/Main.PS1"; Out = Join-Path $buildDir "Main-bundled.ps1" }
             )
             foreach ($ep in $entryPoints) {
-                $bundlerArgs = @("-EntryPoint", $ep.Entry, "-OutputPath", $ep.Out)
+                $bundlerArgs = @("-EntryPoint", $ep.Entry, "-OutputPath", $ep.Out, "-ProjectRoot", $projectRoot)
                 if ($Verbose) { $bundlerArgs += "-Verbose" }
                 $success = Invoke-BuildScript -ScriptPath $bundlerScript -Arguments $bundlerArgs -Description "Bundling $($ep.Entry)"
                 if (-not $success) { break }

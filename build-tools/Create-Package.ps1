@@ -181,8 +181,14 @@ try {
     Write-Host "Executables:"
     Get-ChildItem $DestinationDir -Filter "*.exe" -Recurse | ForEach-Object {
         $fileSize = [math]::Round($_.Length / 1KB, 1)
-        $signature = Get-AuthenticodeSignature -FilePath $_.FullName
-        $signStatus = if ($signature.Status -eq "Valid") { "(signed)" } else { "(unsigned)" }
+        $signStatus = "(unknown)"
+        try {
+            $signature = Get-AuthenticodeSignature -FilePath $_.FullName -ErrorAction Stop
+            $signStatus = if ($signature.Status -eq "Valid") { "(signed)" } else { "(unsigned)" }
+        } catch {
+            Write-Verbose "Could not check signature for $($_.Name): $($_.Exception.Message)"
+            $signStatus = "(signature check failed)"
+        }
         Write-Host "  $($_.Name) ($fileSize KB) $signStatus"
     }
 
