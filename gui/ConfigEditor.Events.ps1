@@ -1129,6 +1129,21 @@
         }
     }
 
+    # Handle send feedback
+    [void] HandleSendFeedback() {
+        try {
+            Write-Verbose "[INFO] ConfigEditorEvents: Opening feedback page"
+            # Open GitHub issue creation page
+            Start-Process "https://github.com/beive60/focus-game-deck/issues/new/choose"
+        } catch {
+            Write-Verbose "[ERROR] ConfigEditorEvents: Failed to open feedback page - $($_.Exception.Message)"
+
+            # Show error message (reuse existing key 'browserOpenError')
+            $message = $this.uiManager.GetLocalizedMessage("browserOpenError")
+            Show-SafeMessage -Message $message -MessageType "Error"
+        }
+    }
+
     # Handle auto detect path
     [void] HandleAutoDetectPath([string]$Platform) {
         try {
@@ -1258,19 +1273,26 @@
         # Skip if still initializing to avoid triggering restart during startup
         if (-not $script:IsInitializationComplete) {
             Write-Verbose "Skipping language change handler - initialization not complete"
+            Write-Host "[DEBUG] ConfigEditorEvents: IsInitializationComplete = $script:IsInitializationComplete"
             return
         }
 
         $languageCombo = $this.uiManager.Window.FindName("LanguageCombo")
         if (-not $languageCombo.SelectedItem) {
+            Write-Host "[DEBUG] ConfigEditorEvents: LanguageCombo.SelectedItem is null"
             return
         }
 
         $selectedLanguageCode = $languageCombo.SelectedItem.Tag
+        Write-Host "[DEBUG] ConfigEditorEvents: LanguageCombo.SelectedItem.Tag = '$selectedLanguageCode'"
+        Write-Host "[DEBUG] ConfigEditorEvents: UIManager.CurrentLanguage = '$($this.uiManager.CurrentLanguage)'"
+        Write-Host "[DEBUG] ConfigEditorEvents: Config.language = '$($this.stateManager.ConfigData.language)'"
+        Write-Host "[DEBUG] ConfigEditorEvents: Are combo and UIManager equal? $($selectedLanguageCode -eq $this.uiManager.CurrentLanguage)"
 
         # Check if language actually changed
         if ($selectedLanguageCode -eq $this.uiManager.CurrentLanguage) {
             Write-Verbose "Language not changed, skipping restart prompt"
+            Write-Host "[INFO] ConfigEditorEvents: Language selection unchanged (both = '$selectedLanguageCode')"
             return
         }
 
@@ -2107,6 +2129,12 @@
             $this.uiManager.Window.FindName("RefreshManagedAppsListMenuItem").add_Click({ $self.HandleRefreshManagedAppsList() }.GetNewClosure())
             $this.uiManager.Window.FindName("RefreshAllMenuItem").add_Click({ $self.HandleRefreshAll() }.GetNewClosure())
             $this.uiManager.Window.FindName("CheckUpdateMenuItem").add_Click({ $self.HandleCheckUpdate() }.GetNewClosure())
+            $feedbackMenuItem = $this.uiManager.Window.FindName("FeedbackMenuItem")
+            if ($feedbackMenuItem) {
+                $feedbackMenuItem.add_Click({ $self.HandleSendFeedback() }.GetNewClosure())
+            } else {
+                Write-Verbose "FeedbackMenuItem not found"
+            }
             $this.uiManager.Window.FindName("AboutMenuItem").add_Click({ $self.HandleAbout() }.GetNewClosure())
 
             Write-Host "[OK] ConfigEditorEvents: All UI event handlers registered successfully"

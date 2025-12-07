@@ -33,6 +33,9 @@
                 <MenuItem
                     x:Name="CheckUpdateMenuItem"
                     Header="[CHECK_UPDATE]"/>
+                <MenuItem
+                    x:Name="FeedbackMenuItem"
+                    Header="[FEEDBACK_MENU_ITEM]"/>
                 <Separator/>
                 <MenuItem
                     x:Name="AboutMenuItem"
@@ -1195,11 +1198,11 @@
                                     <StackPanel Margin="10">
                                         <CheckBox
                                             x:Name="OBSAutoStartCheckBox"
-                                            Content="ゲーム開始時にOBSを自動起動"
+                                            Content="[GAME_START_OBS_LABEL]"
                                             Margin="0,5"/>
                                         <CheckBox
                                             x:Name="OBSAutoStopCheckBox"
-                                            Content="ゲーム終了時にOBSを停止"
+                                            Content="[GAME_STOP_REPLAY_BUFFER_LABEL]"
                                             Margin="0,5"/>
                                         <CheckBox
                                             x:Name="OBSReplayBufferCheckBox"

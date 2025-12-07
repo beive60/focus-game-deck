@@ -191,6 +191,32 @@ h1 {
     text-decoration: underline;
 }
 
+/* Hero Image Section */
+.hero-section {
+    text-align: center;
+    margin: 30px 0 40px 0;
+}
+
+.hero-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--shadow);
+    border: 1px solid var(--border-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hero-image:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 16px var(--shadow);
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        margin: 20px 0 30px 0;
+    }
+}
+
 /* Download Section */
 .download-section {
     background-color: var(--bg-secondary);
@@ -236,6 +262,35 @@ h1 {
 .download-btn.secondary:hover {
     background-color: var(--link-color);
     color: var(--bg-primary);
+}
+
+/* Feedback Section */
+.feedback-section {
+    background-color: var(--bg-secondary);
+    padding: 30px;
+    border-radius: 8px;
+    margin: 40px 0;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    transition: background-color 0.3s ease;
+}
+
+.feedback-section h2 {
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin-bottom: 15px;
+    color: var(--text-primary);
+}
+
+.feedback-section p {
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .feedback-section {
+        padding: 20px;
+    }
 }
 
 /* Features Section */

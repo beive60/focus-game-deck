@@ -38,7 +38,11 @@
         "footer_issues": "課題",
         "footer_license": "ライセンス",
         "footer_roadmap": "ロードマップ",
-        "footer_copyright": "Copyright (c) 2025 Focus Game Deck. MITライセンスの下でリリースされています。"
+        "footer_copyright": "Copyright (c) 2025 Focus Game Deck. MITライセンスの下でリリースされています。",
+        "hero_image_alt": "Focus Game Deck アプリケーションのスクリーンショット",
+        "feedback_title": "フィードバックをお待ちしています",
+        "feedback_description": "バグ報告や機能要望は大歓迎です！あなたの意見や体験を共有して、Focus Game Deckの改善にご協力ください。",
+        "feedback_button": "フィードバックを送る (GitHub Issues)"
     },
     "zh-CN": {
         "site_title": "Focus Game Deck",
@@ -79,7 +83,11 @@
         "footer_issues": "问题",
         "footer_license": "许可证",
         "footer_roadmap": "路线图",
-        "footer_copyright": "版权所有 (c) 2025 Focus Game Deck. 在MIT许可证下发布。"
+        "footer_copyright": "版权所有 (c) 2025 Focus Game Deck. 在MIT许可证下发布。",
+        "hero_image_alt": "Focus Game Deck 应用程序截图",
+        "feedback_title": "我们重视您的反馈",
+        "feedback_description": "我们欢迎错误报告和功能请求！通过分享您的想法和体验来帮助我们改进 Focus Game Deck。",
+        "feedback_button": "发送反馈 (GitHub Issues)"
     },
     "en": {
         "site_title": "Focus Game Deck",
@@ -122,6 +130,10 @@
         "footer_license": "License",
         "footer_roadmap": "Roadmap",
         "footer_copyright": "Copyright (c) 2025 Focus Game Deck. Released under the MIT License.",
+        "hero_image_alt": "Focus Game Deck application screenshot",
+        "feedback_title": "We Value Your Feedback",
+        "feedback_description": "Bug reports and feature requests are always welcome! Help us improve Focus Game Deck by sharing your thoughts and experiences.",
+        "feedback_button": "Send Feedback (GitHub Issues)",
         "manual_title": "Focus Game Deck - GUI Manual",
         "manual_subtitle": "Complete guide to the unified gaming environment interface",
         "back_to_main": "← Back to Main Page",
