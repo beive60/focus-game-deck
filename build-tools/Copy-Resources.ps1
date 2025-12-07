@@ -125,19 +125,7 @@ try {
 
     $copyResults = @()
 
-    Write-Host ""
-    $configSource = Join-Path $SourceRoot "config"
-    $configDest = Join-Path $DestinationDir "config"
-    $copyResults += Copy-DirectoryContents `
-        -SourcePath $configSource `
-        -DestPath $configDest `
-        -Include @("*.json") `
-        -Exclude @("*.json.sample") `
-        -Description "configuration files"
-
-    # Note: config.json.sample is no longer needed in distribution
-    # Default configuration is now generated programmatically by ConfigEditor.State.ps1
-
+    # Copy localization files (runtime resources)
     Write-Host ""
     $localizationSource = Join-Path $SourceRoot "localization"
     $localizationDest = Join-Path $DestinationDir "localization"
@@ -148,6 +136,7 @@ try {
         -Exclude @("*.backup", "*diagnostic*") `
         -Description "localization files"
 
+    # Copy GUI XAML files (runtime resources)
     Write-Host ""
     $guiSource = Join-Path $SourceRoot "gui"
     $guiDest = Join-Path $DestinationDir "gui"
@@ -156,75 +145,6 @@ try {
         -DestPath $guiDest `
         -Include @("*.xaml") `
         -Description "GUI XAML files"
-
-    Write-Host ""
-    $assetsSource = Join-Path $SourceRoot "assets"
-    if (Test-Path $assetsSource) {
-        $assetsDest = Join-Path $DestinationDir "assets"
-        $copyResults += Copy-DirectoryContents `
-            -SourcePath $assetsSource `
-            -DestPath $assetsDest `
-            -Include @("*.ico", "*.png", "*.jpg") `
-            -Description "asset files"
-    }
-
-    Write-Host ""
-    $docsFiles = @("README.md", "LICENSE.md")
-    foreach ($docFile in $docsFiles) {
-        $sourcePath = Join-Path $SourceRoot $docFile
-        if (Test-Path $sourcePath) {
-            Copy-Item -Path $sourcePath -Destination $DestinationDir -Force
-            Write-CopyMessage "Copied: $docFile" "SUCCESS"
-        }
-    }
-
-    Write-Host ""
-    # Scripts folder copy
-    $scriptsSource = Join-Path $SourceRoot "scripts"
-    $scriptsDest = Join-Path $DestinationDir "scripts"
-    $copyResults += Copy-DirectoryContents -SourcePath $scriptsSource -DestPath $scriptsDest -Description "script files"
-
-    # Build tools version file
-    $versionSource = Join-Path $SourceRoot "build-tools/Version.ps1"
-    $buildToolsDest = Join-Path $DestinationDir "build-tools"
-    if (-not (Test-Path $buildToolsDest)) { New-Item -ItemType Directory -Path $buildToolsDest -Force | Out-Null }
-    if (Test-Path $versionSource) {
-        Copy-Item -Path $versionSource -Destination $buildToolsDest -Force
-        Write-CopyMessage "Copied: Version.ps1" "SUCCESS"
-    }
-
-    Write-Host ""
-    # 1. Copy scripts directory (LanguageHelper.ps1 etc.)
-    $scriptsSource = Join-Path $SourceRoot "scripts"
-    $scriptsDest = Join-Path $DestinationDir "scripts"
-    $copyResults += Copy-DirectoryContents `
-        -SourcePath $scriptsSource `
-        -DestPath $scriptsDest `
-        -Description "utility scripts"
-
-    # 2. Copy build-tools/Version.ps1
-    $versionSource = Join-Path $SourceRoot "build-tools/Version.ps1"
-    $buildToolsDest = Join-Path $DestinationDir "build-tools"
-    if (-not (Test-Path $buildToolsDest)) {
-        New-Item -ItemType Directory -Path $buildToolsDest -Force | Out-Null
-    }
-    if (Test-Path $versionSource) {
-        Copy-Item -Path $versionSource -Destination $buildToolsDest -Force
-        Write-CopyMessage "Copied: Version.ps1" "SUCCESS"
-    } else {
-        Write-CopyMessage "Version.ps1 not found" "WARNING"
-    }
-
-    # 3. Copy src/modules/UpdateChecker.ps1 (Loaded dynamically)
-    $updateCheckerSource = Join-Path $SourceRoot "src/modules/UpdateChecker.ps1"
-    $srcModulesDest = Join-Path $DestinationDir "src/modules"
-    if (-not (Test-Path $srcModulesDest)) {
-        New-Item -ItemType Directory -Path $srcModulesDest -Force | Out-Null
-    }
-    if (Test-Path $updateCheckerSource) {
-        Copy-Item -Path $updateCheckerSource -Destination $srcModulesDest -Force
-        Write-CopyMessage "Copied: UpdateChecker.ps1" "SUCCESS"
-    }
 
     Write-Host ""
     Write-Host ("=" * 60)
