@@ -178,7 +178,7 @@ try {
         -OutputExe $configEditorExe `
         -Title "Focus Game Deck - Configuration Editor" `
         -Description "Focus Game Deck GUI Configuration Editor" `
-        -NoConsole $true `
+        -NoConsole $false `
         -RequireAdmin $false `
         -STA $true `
         -IconFile $iconFile
