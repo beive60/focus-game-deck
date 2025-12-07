@@ -144,6 +144,16 @@ class ConfigEditorLocalization {
 
     <#
     .SYNOPSIS
+        Backward-compatible alias for GetMessage.
+    .NOTES
+        Some callers still use Get(); keep this to avoid breaking saves.
+    #>
+    [string]Get([string]$Key, [array]$Arguments = @()) {
+        return $this.GetMessage($Key, $Arguments)
+    }
+
+    <#
+    .SYNOPSIS
         Changes the current language and reloads messages.
     .PARAMETER NewLanguage
         New language code.
