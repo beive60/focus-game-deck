@@ -80,9 +80,24 @@ function Convert-XamlFileToVariable {
 
         $baseName = [System.IO.Path]::GetFileNameWithoutExtension($FileName)
         $baseName = $baseName -replace '[^a-zA-Z0-9_]', '_'
+        
+        # Ensure variable name doesn't start with a number
+        if ($baseName -match '^[0-9]') {
+            $baseName = '_' + $baseName
+        }
+        
         $variableName = "Global:Xaml_$baseName"
 
-        $variableDefinition = "`$$variableName = @`"`n$xamlContent`n`"@"
+        # Check if XAML content contains the Here-String terminator sequence
+        if ($xamlContent -match '\"@') {
+            Write-Verbose "  XAML contains Here-String terminator, using alternative string construction"
+            # Use single-quoted here-string which doesn't interpret escape sequences
+            $escapedContent = $xamlContent -replace "'", "''"
+            $variableDefinition = "`$$variableName = @'`n$escapedContent`n'@"
+        } else {
+            # Use standard double-quoted here-string
+            $variableDefinition = "`$$variableName = @`"`n$xamlContent`n`"@"
+        }
 
         Write-Verbose "  Variable name: $variableName"
         Write-Verbose "  Content length: $($xamlContent.Length) characters"
