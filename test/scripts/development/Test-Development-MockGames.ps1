@@ -54,6 +54,10 @@
     - System applications (notepad.exe, calc.exe, etc.) must be available
 #>
 
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+
+
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]

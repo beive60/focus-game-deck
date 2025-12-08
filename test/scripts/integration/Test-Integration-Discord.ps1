@@ -1,3 +1,6 @@
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+
 # Discord Integration MVP Test Script
 # Test basic Discord process control functionality
 

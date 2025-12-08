@@ -30,6 +30,9 @@ param(
     [string]$Verbosity = 'Detailed'
 )
 
+# Import the BuildLogger
+. "$PSScriptRoot/../../build-tools/utils/BuildLogger.ps1"
+
 $ErrorActionPreference = "Stop"
 
 # Check if Pester 5.0+ is installed

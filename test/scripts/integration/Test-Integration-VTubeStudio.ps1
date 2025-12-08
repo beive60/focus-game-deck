@@ -21,6 +21,10 @@
 .OUTPUTS
     Outputs test results to the console, indicating the status of each test (e.g., [OK], [ERROR], [WARNING]).
 #>
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+
 Write-BuildLog "=== VTube Studio Integration Test ==="
 
 $projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))

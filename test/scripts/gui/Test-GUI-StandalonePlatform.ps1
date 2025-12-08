@@ -1,3 +1,6 @@
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+
 # Test Script for Standalone Platform GUI Functionality
 # This script tests the newly implemented Standalone platform features in the GUI
 

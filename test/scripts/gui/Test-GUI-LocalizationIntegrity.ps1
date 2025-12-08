@@ -7,6 +7,10 @@
     specific problems with XAML element mapping and string replacement control.
 #>
 
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+
+
 # Determine paths - test is now in test/scripts/gui/ directory
 $projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $MappingsPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1"

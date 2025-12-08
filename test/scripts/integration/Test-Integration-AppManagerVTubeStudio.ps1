@@ -1,3 +1,6 @@
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+
 # AppManager VTube Studio Integration Test Script
 # Tests VTube Studio startup/shutdown through AppManager
 
