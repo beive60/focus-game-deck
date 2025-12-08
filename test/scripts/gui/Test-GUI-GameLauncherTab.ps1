@@ -4,6 +4,9 @@
 # Author: GitHub Copilot Assistant
 # Date: 2025-10-02
 
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+
 # Set execution policy and encoding
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
@@ -32,9 +35,6 @@ function Invoke-Test {
         [string]$Description = ""
     )
 
-
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     Write-BuildLog "Running Test: $TestName"
     if ($Description) {
         Write-BuildLog "  Description: $Description" -Level Debug
