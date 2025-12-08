@@ -134,16 +134,20 @@ function Test-Prerequisites {
 
     # Define required external files based on execution mode
     $mainWindowPath = Join-Path -Path $appRoot -ChildPath "gui/MainWindow.xaml"
-    # Check MainWindow.xaml first (fatal if missing)
-    if (-not (Test-Path $mainWindowPath)) {
-        throw "Fatal error: Required file not found: $mainWindowPath"
+    # Check MainWindow.xaml - only fatal if missing AND embedded XAML not available
+    if (-not (Test-Path $mainWindowPath) -and -not $Global:Xaml_MainWindow) {
+        throw "Fatal error: Required file not found and no embedded XAML available: $mainWindowPath"
     }
 
     $requiredFiles = @(
-        $mainWindowPath,
         (Join-Path -Path $appRoot -ChildPath "localization/messages.json"),
         (Join-Path -Path $appRoot -ChildPath "config/config.json")
     )
+
+    # Add MainWindow.xaml to required files list only if it exists (optional in bundled mode)
+    if (Test-Path $mainWindowPath) {
+        $requiredFiles += $mainWindowPath
+    }
 
     foreach ($file in $requiredFiles) {
         if (-not (Test-Path $file)) {

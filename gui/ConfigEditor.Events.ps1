@@ -1334,16 +1334,38 @@
                 # Create custom dialog window
                 Add-Type -AssemblyName PresentationFramework
 
-                # Try to load XAML fragment from project GUI files (allows editing dialog XAML separately)
-                $dialogXamlPath = Join-Path -Path $this.ProjectRoot -ChildPath "gui/ConfirmSaveChangesDialog.fragment.xaml"
+                # Try to load XAML fragment from embedded variable or project GUI files
                 $dialogXaml = $null
-                if (Test-Path $dialogXamlPath) {
-                    try {
-                        $dialogXaml = Get-Content -Path $dialogXamlPath -Raw
-                        Write-Verbose "Loaded dialog fragment from: $dialogXamlPath"
 
-                        # Expand a small set of known placeholders so fragment can include $title/$message etc.
-                        # Replace literal tokens like $title in the fragment with the runtime values.
+                # Check if embedded XAML variable exists (production/bundled mode)
+                if ($Global:Xaml_ConfirmSaveChangesDialog_fragment) {
+                    Write-Verbose "Using embedded dialog XAML from `$Global:Xaml_ConfirmSaveChangesDialog_fragment"
+                    $dialogXaml = $Global:Xaml_ConfirmSaveChangesDialog_fragment
+                } else {
+                    # Fallback to file-based loading (development mode)
+                    $dialogXamlPath = Join-Path -Path $this.ProjectRoot -ChildPath "gui/ConfirmSaveChangesDialog.fragment.xaml"
+                    if (Test-Path $dialogXamlPath) {
+                        try {
+                            $dialogXaml = Get-Content -Path $dialogXamlPath -Raw
+                            Write-Verbose "Loaded dialog fragment from: $dialogXamlPath"
+                        } catch {
+                            Write-Warning "Failed to read dialog XAML fragment at {$dialogXamlPath}: $($_.Exception.Message)"
+                            $dialogXaml = $null
+                        }
+                    } else {
+                        Write-Verbose "Dialog fragment not found at: $dialogXamlPath"
+                    }
+                }
+
+                if ([string]::IsNullOrWhiteSpace($dialogXaml)) {
+                    Write-Warning "No dialog XAML available (neither embedded nor file-based)"
+                    # Continue with fallback logic below
+                }
+
+                # Expand placeholders in dialog XAML
+                if (-not [string]::IsNullOrWhiteSpace($dialogXaml)) {
+                    try {
+                        # Replace literal tokens like $title in the fragment with the runtime values
                         $dialogXaml = $dialogXaml -replace '\$title',
                         ("System.Text.RegularExpressions.Regex" -as [type])::Escape($title)
                         $dialogXaml = $dialogXaml -replace '\$message',
@@ -1355,11 +1377,9 @@
                         $dialogXaml = $dialogXaml -replace '\$cancel',
                         ("System.Text.RegularExpressions.Regex" -as [type])::Escape($cancel)
                     } catch {
-                        Write-Warning "Failed to read dialog XAML fragment at {$dialogXamlPath}: $($_.Exception.Message)"
+                        Write-Warning "Failed to expand placeholders in dialog XAML: $($_.Exception.Message)"
                         $dialogXaml = $null
                     }
-                } else {
-                    Write-Verbose "Dialog fragment not found at: $dialogXamlPath"
                 }
 
 
