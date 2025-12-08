@@ -136,15 +136,11 @@ try {
         -Exclude @("*.backup", "*diagnostic*") `
         -Description "localization files"
 
-    # Copy GUI XAML files (runtime resources)
+    # NOTE: GUI XAML files are no longer copied to release directory
+    # They are embedded in the executable via Embed-XamlResources.ps1 and XamlResources.ps1
+    # This reduces release package size and removes external file dependencies
     Write-Host ""
-    $guiSource = Join-Path $SourceRoot "gui"
-    $guiDest = Join-Path $DestinationDir "gui"
-    $copyResults += Copy-DirectoryContents `
-        -SourcePath $guiSource `
-        -DestPath $guiDest `
-        -Include @("*.xaml") `
-        -Description "GUI XAML files"
+    Write-Verbose "Skipping GUI XAML files (embedded in executable)"
 
     Write-Host ""
     Write-Host ("=" * 60)
