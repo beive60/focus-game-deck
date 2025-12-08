@@ -14,7 +14,7 @@
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-Write-Host "=== JSON Formatting Test ==="
+Write-BuildLog "=== JSON Formatting Test ==="
 Write-Host ""
 
 # Get project root
@@ -23,12 +23,12 @@ $projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScr
 # Load the JSON helper
 $jsonHelperPath = Join-Path $projectRoot "gui/ConfigEditor.JsonHelper.ps1"
 if (-not (Test-Path $jsonHelperPath)) {
-    Write-Host "[FAIL] JSON helper not found: $jsonHelperPath"
+    Write-BuildLog "[FAIL] JSON helper not found: $jsonHelperPath"
     exit 1
 }
 
 . $jsonHelperPath
-Write-Host "[OK] JSON helper loaded"
+Write-BuildLog "[OK] JSON helper loaded"
 
 # Create test data
 $testData = [PSCustomObject]@{
@@ -43,7 +43,7 @@ $testData = [PSCustomObject]@{
     simpleArray = @(1, 2, 3, 4, 5)
 }
 
-Write-Host "[INFO] Testing ConvertTo-Json4Space function..."
+Write-BuildLog "[INFO] Testing ConvertTo-Json4Space function..."
 
 # Convert to JSON with 4-space indentation
 $json = ConvertTo-Json4Space -InputObject $testData -Depth 5
@@ -62,33 +62,33 @@ foreach ($line in $lines) {
 }
 
 if ($indentationIssues.Count -eq 0) {
-    Write-Host "[PASS] All indentation is correct (multiples of 4 spaces)"
+    Write-BuildLog "[PASS] All indentation is correct (multiples of 4 spaces)"
 } else {
-    Write-Host "[FAIL] Found indentation issues:"
+    Write-BuildLog "[FAIL] Found indentation issues:"
     foreach ($issue in $indentationIssues) {
-        Write-Host "  - $issue"
+        Write-BuildLog "  - $issue"
     }
     exit 1
 }
 
 # Display sample of the formatted JSON
 Write-Host ""
-Write-Host "Sample JSON output (first 15 lines):"
+Write-BuildLog "Sample JSON output (first 15 lines):"
 $lines[0..14] | ForEach-Object {
     # Highlight indentation
     if ($_ -match '^( +)(.*)$') {
         $indent = $matches[1]
         $content = $matches[2]
-        Write-Host "$indent" -NoNewline
-        Write-Host "$content"
+        Write-BuildLog "$indent" -NoNewline
+        Write-BuildLog "$content"
     } else {
-        Write-Host $_
+        Write-BuildLog $_
     }
 }
 
 # Test Save-ConfigJson function
 Write-Host ""
-Write-Host "[INFO] Testing Save-ConfigJson function..."
+Write-BuildLog "[INFO] Testing Save-ConfigJson function..."
 
 $tempConfigPath = Join-Path $env:TEMP "test-config-$(Get-Random).json"
 
@@ -96,7 +96,7 @@ try {
     Save-ConfigJson -ConfigData $testData -ConfigPath $tempConfigPath -Depth 5
 
     if (Test-Path $tempConfigPath) {
-        Write-Host "[PASS] Configuration saved successfully to: $tempConfigPath"
+        Write-BuildLog "[PASS] Configuration saved successfully to: $tempConfigPath"
 
         # Verify the saved file has correct indentation
         $savedJson = Get-Content $tempConfigPath -Raw
@@ -113,32 +113,32 @@ try {
         }
 
         if ($savedIndentationIssues.Count -eq 0) {
-            Write-Host "[PASS] Saved file has correct indentation (multiples of 4 spaces)"
+            Write-BuildLog "[PASS] Saved file has correct indentation (multiples of 4 spaces)"
         } else {
-            Write-Host "[FAIL] Saved file has indentation issues:"
+            Write-BuildLog "[FAIL] Saved file has indentation issues:"
             foreach ($issue in $savedIndentationIssues) {
-                Write-Host "  - $issue"
+                Write-BuildLog "  - $issue"
             }
             exit 1
         }
 
         # Clean up
         Remove-Item $tempConfigPath -Force
-        Write-Host "[OK] Temporary file cleaned up"
+        Write-BuildLog "[OK] Temporary file cleaned up"
     } else {
-        Write-Host "[FAIL] Configuration file was not created"
+        Write-BuildLog "[FAIL] Configuration file was not created"
         exit 1
     }
 } catch {
-    Write-Host "[FAIL] Error during Save-ConfigJson test: $($_.Exception.Message)"
+    Write-BuildLog "[FAIL] Error during Save-ConfigJson test: $($_.Exception.Message)"
     exit 1
 }
 
 Write-Host ""
-Write-Host "=== Test Summary ==="
-Write-Host "[PASS] All JSON formatting tests passed!"
-Write-Host "  - ConvertTo-Json4Space produces 4-space indentation"
-Write-Host "  - Save-ConfigJson saves files with 4-space indentation"
+Write-BuildLog "=== Test Summary ==="
+Write-BuildLog "[PASS] All JSON formatting tests passed!"
+Write-BuildLog "  - ConvertTo-Json4Space produces 4-space indentation"
+Write-BuildLog "  - Save-ConfigJson saves files with 4-space indentation"
 Write-Host ""
 
 exit 0

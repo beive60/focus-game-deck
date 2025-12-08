@@ -66,6 +66,9 @@ $modulesPath = Join-Path -Path $projectRoot -ChildPath "src/modules"
 function Get-ConfigJson {
     param([string]$Path)
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
     if (-not (Test-Path $Path)) {
         throw "Configuration file not found: $Path"
     }
@@ -104,12 +107,12 @@ function Invoke-ConfigMigration {
         $Config
     )
 
-    Write-Host "Starting configuration migration..."
+    Write-BuildLog "Starting configuration migration..."
 
     # Check if already migrated
     if ($Config.PSObject.Properties.Name -contains "integrations") {
-        Write-Host "Configuration appears to already be migrated (integrations section exists)"
-        Write-Host "Skipping migration to avoid data loss"
+        Write-BuildLog "Configuration appears to already be migrated (integrations section exists)"
+        Write-BuildLog "Skipping migration to avoid data loss"
         return $null
     }
 
@@ -123,7 +126,7 @@ function Invoke-ConfigMigration {
     if ($Config.managedApps) {
         foreach ($appName in $specializedApps) {
             if ($Config.managedApps.PSObject.Properties.Name -contains $appName) {
-                Write-Host "  Migrating '$appName' from managedApps to integrations..."
+                Write-BuildLog "  Migrating '$appName' from managedApps to integrations..."
 
                 # Copy the app configuration to integrations
                 $integrations[$appName] = $Config.managedApps.$appName
@@ -152,7 +155,7 @@ function Invoke-ConfigMigration {
     # Add integrations section to config if we migrated anything
     if ($migrated) {
         $Config | Add-Member -NotePropertyName "integrations" -NotePropertyValue ([PSCustomObject]$integrations) -Force
-        Write-Host "  Created 'integrations' section"
+        Write-BuildLog "  Created 'integrations' section"
     }
 
     # Update games to use new integrations structure
@@ -182,17 +185,17 @@ function Invoke-ConfigMigration {
                 # Remove specialized apps from appsToManage
                 $game.appsToManage = @($game.appsToManage | Where-Object { $_ -notin $specializedApps })
 
-                Write-Host "  Updated game '$gameId' with integrations"
+                Write-BuildLog "  Updated game '$gameId' with integrations"
                 $migrated = $true
             }
         }
     }
 
     if ($migrated) {
-        Write-Host "Migration completed successfully!"
+        Write-BuildLog "Migration completed successfully!"
         return $Config
     } else {
-        Write-Host "No changes needed - configuration is already in correct format"
+        Write-BuildLog "No changes needed - configuration is already in correct format"
         return $null
     }
 }
@@ -200,19 +203,19 @@ function Invoke-ConfigMigration {
 # Main execution
 try {
     Write-Host ""
-    Write-Host "========================================"
-    Write-Host "  Config Structure Migration Tool"
-    Write-Host "========================================"
+    Write-BuildLog "========================================"
+    Write-BuildLog "  Config Structure Migration Tool"
+    Write-BuildLog "========================================"
     Write-Host ""
 
     # Resolve full path
     $ConfigPath = Resolve-Path $ConfigPath -ErrorAction Stop
 
-    Write-Host "Configuration file: $ConfigPath"
+    Write-BuildLog "Configuration file: $ConfigPath"
     Write-Host ""
 
     # Load current configuration
-    Write-Host "Loading configuration..."
+    Write-BuildLog "Loading configuration..."
     $config = Get-ConfigJson -Path $ConfigPath
 
     # Create backup
@@ -221,19 +224,19 @@ try {
         $BackupPath = $ConfigPath -replace '\.json$', "_backup_$timestamp.json"
     }
 
-    Write-Host "Creating backup: $BackupPath"
+    Write-BuildLog "Creating backup: $BackupPath"
     Copy-Item -Path $ConfigPath -Destination $BackupPath -Force
-    Write-Host "Backup created successfully"
+    Write-BuildLog "Backup created successfully"
     Write-Host ""
 
     # Confirm migration unless -Force is used
     if (-not $Force) {
-        Write-Host "This will migrate your configuration to the new structure."
-        Write-Host "A backup has been created at: $BackupPath"
+        Write-BuildLog "This will migrate your configuration to the new structure."
+        Write-BuildLog "A backup has been created at: $BackupPath"
         Write-Host ""
         $response = Read-Host "Do you want to proceed? (Y/N)"
         if ($response -notmatch '^[Yy]') {
-            Write-Host "Migration cancelled by user"
+            Write-BuildLog "Migration cancelled by user"
             exit 0
         }
     }
@@ -244,38 +247,38 @@ try {
     if ($migratedConfig) {
         # Save migrated configuration
         Write-Host ""
-        Write-Host "Saving migrated configuration..."
+        Write-BuildLog "Saving migrated configuration..."
         Save-ConfigJson -ConfigData $migratedConfig -Path $ConfigPath
 
         Write-Host ""
-        Write-Host "========================================"
-        Write-Host "  Migration completed successfully!"
-        Write-Host "========================================"
+        Write-BuildLog "========================================"
+        Write-BuildLog "  Migration completed successfully!"
+        Write-BuildLog "========================================"
         Write-Host ""
-        Write-Host "Original config backed up to:"
-        Write-Host "  $BackupPath"
+        Write-BuildLog "Original config backed up to:"
+        Write-BuildLog "  $BackupPath"
         Write-Host ""
-        Write-Host "Updated config saved to:"
-        Write-Host "  $ConfigPath"
+        Write-BuildLog "Updated config saved to:"
+        Write-BuildLog "  $ConfigPath"
         Write-Host ""
     } else {
         Write-Host ""
-        Write-Host "No migration performed"
+        Write-BuildLog "No migration performed"
         Write-Host ""
     }
 
 } catch {
     Write-Host ""
-    Write-Host "========================================"
-    Write-Host "  Migration failed!"
-    Write-Host "========================================"
+    Write-BuildLog "========================================"
+    Write-BuildLog "  Migration failed!"
+    Write-BuildLog "========================================"
     Write-Host ""
-    Write-Host "Error: $($_.Exception.Message)"
+    Write-BuildLog "Error: $($_.Exception.Message)"
     Write-Host ""
 
     if ($BackupPath -and (Test-Path $BackupPath)) {
-        Write-Host "Your original configuration is safe at:"
-        Write-Host "  $BackupPath"
+        Write-BuildLog "Your original configuration is safe at:"
+        Write-BuildLog "  $BackupPath"
         Write-Host ""
     }
 

@@ -61,7 +61,10 @@ function Write-PackageMessage {
         [string]$Message,
         [string]$Level = "INFO"
     )
-    Write-Host "[$Level] $Message"
+
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
+    Write-BuildLog "[$Level] $Message"
 }
 
 function Get-ProjectVersion {
@@ -86,6 +89,9 @@ function New-ReleaseReadme {
         [string]$BuildDate
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
     $readme = @"
 # Focus Game Deck - Release Package
 
@@ -126,8 +132,8 @@ This software is released under the MIT License.
 }
 
 try {
-    Write-Host "Focus Game Deck - Package Creator"
-    Write-Host ("=" * 60)
+    Write-BuildLog "Focus Game Deck - Package Creator"
+    # Separator removed
 
     if (-not (Test-Path $SourceDir)) {
         Write-PackageMessage "Source directory not found: $SourceDir" "ERROR"
@@ -168,17 +174,17 @@ try {
     Write-Verbose "  Created: README.txt"
 
     Write-Host ""
-    Write-Host ("=" * 60)
-    Write-Host "PACKAGE SUMMARY"
-    Write-Host ("=" * 60)
+    # Separator removed
+    Write-BuildLog "PACKAGE SUMMARY"
+    # Separator removed
 
-    Write-Host "Version: $Version"
-    Write-Host "Build Date: $buildDate"
-    Write-Host "Signed: $(if ($IsSigned) { 'Yes' } else { 'No' })"
-    Write-Host "Location: $DestinationDir"
+    Write-BuildLog "Version: $Version"
+    Write-BuildLog "Build Date: $buildDate"
+    Write-BuildLog "Signed: $(if ($IsSigned) { 'Yes' } else { 'No' })"
+    Write-BuildLog "Location: $DestinationDir"
 
     Write-Host ""
-    Write-Host "Executables:"
+    Write-BuildLog "Executables:"
     Get-ChildItem $DestinationDir -Filter "*.exe" -Recurse | ForEach-Object {
         $fileSize = [math]::Round($_.Length / 1KB, 1)
         $signStatus = "(unknown)"
@@ -189,11 +195,11 @@ try {
             Write-Verbose "Could not check signature for $($_.Name): $($_.Exception.Message)"
             $signStatus = "(signature check failed)"
         }
-        Write-Host "  $($_.Name) ($fileSize KB) $signStatus"
+        Write-BuildLog "  $($_.Name) ($fileSize KB) $signStatus"
     }
 
     Write-Host ""
-    Write-Host "Total package size: $([math]::Round((Get-ChildItem $DestinationDir -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB, 2)) MB"
+    Write-BuildLog "Total package size: $([math]::Round((Get-ChildItem $DestinationDir -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB, 2)) MB"
 
     Write-Host ""
     Write-PackageMessage "Release package created successfully!" "SUCCESS"

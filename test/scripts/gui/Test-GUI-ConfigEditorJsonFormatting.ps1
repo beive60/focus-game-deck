@@ -12,7 +12,7 @@
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-Write-Host "=== ConfigEditor JSON Formatting Integration Test ==="
+Write-BuildLog "=== ConfigEditor JSON Formatting Integration Test ==="
 Write-Host ""
 
 # Get project root
@@ -22,9 +22,9 @@ $ConfigPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
 # Backup original config
 if (Test-Path $configPath) {
     Copy-Item $configPath $backupPath -Force
-    Write-Host "[OK] Original config backed up to: $backupPath"
+    Write-BuildLog "[OK] Original config backed up to: $backupPath"
 } else {
-    Write-Host "[FAIL] Config file not found: $configPath"
+    Write-BuildLog "[FAIL] Config file not found: $configPath"
     exit 1
 }
 
@@ -40,14 +40,14 @@ try {
         $config._test = $testTimestamp
     }
 
-    Write-Host "[INFO] Modified config with test timestamp: $testTimestamp"
+    Write-BuildLog "[INFO] Modified config with test timestamp: $testTimestamp"
 
     # Save using the JsonHelper
     $jsonHelperPath = Join-Path $projectRoot "gui/ConfigEditor.JsonHelper.ps1"
     . $jsonHelperPath
 
     Save-ConfigJson -ConfigData $config -ConfigPath $configPath -Depth 10
-    Write-Host "[OK] Config saved using Save-ConfigJson"
+    Write-BuildLog "[OK] Config saved using Save-ConfigJson"
 
     # Verify the indentation
     $savedJson = Get-Content $configPath -Raw
@@ -64,43 +64,43 @@ try {
     }
 
     if ($indentationIssues.Count -eq 0) {
-        Write-Host "[PASS] Saved config.json has correct 4-space indentation"
+        Write-BuildLog "[PASS] Saved config.json has correct 4-space indentation"
     } else {
-        Write-Host "[FAIL] Found indentation issues in saved config.json:"
+        Write-BuildLog "[FAIL] Found indentation issues in saved config.json:"
         foreach ($issue in $indentationIssues) {
-            Write-Host "  - $issue"
+            Write-BuildLog "  - $issue"
         }
 
         # Restore backup
         Copy-Item $backupPath $configPath -Force
-        Write-Host "[INFO] Restored original config"
+        Write-BuildLog "[INFO] Restored original config"
         Remove-Item $backupPath -Force
         exit 1
     }
 
     # Sample check - show first 20 lines
     Write-Host ""
-    Write-Host "Sample of saved config.json (first 20 lines):"
+    Write-BuildLog "Sample of saved config.json (first 20 lines):"
     $lines[0..19] | ForEach-Object {
         if ($_ -match '^( +)') {
             $indent = $matches[1]
             $content = $_ -replace '^( +)', ''
             Write-Host ("{0}{1}" -f (' ' * $indent.Length), $content)
         } else {
-            Write-Host $_
+            Write-BuildLog $_
         }
     }
 
     Write-Host ""
-    Write-Host "=== Test Summary ==="
-    Write-Host "[PASS] ConfigEditor JSON formatting integration test passed!"
+    Write-BuildLog "=== Test Summary ==="
+    Write-BuildLog "[PASS] ConfigEditor JSON formatting integration test passed!"
 
 } finally {
     # Restore original config
     if (Test-Path $backupPath) {
         Copy-Item $backupPath $configPath -Force
         Remove-Item $backupPath -Force
-        Write-Host "[OK] Original config restored"
+        Write-BuildLog "[OK] Original config restored"
     }
 }
 

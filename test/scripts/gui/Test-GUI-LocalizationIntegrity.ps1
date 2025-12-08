@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Diagnostic script to identify specific localization control issues.
 
@@ -15,7 +15,7 @@ $MappingsPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Mappin
 if (Test-Path $MappingsPath) {
     . $MappingsPath
 } else {
-    Write-Warning "ConfigEditor.Mappings.ps1 not found at: $MappingsPath"
+    Write-BuildLog "ConfigEditor.Mappings.ps1 not found at: $MappingsPath" -Level Warning
 }
 
 <#
@@ -40,33 +40,33 @@ function Test-LocalizationControlFlow {
         }
 
         # 1. Test mapping table integrity
-        Write-Host "=== Testing Mapping Table Integrity ==="
+        Write-BuildLog "=== Testing Mapping Table Integrity ==="
 
         $analysis.MappingIntegrity = Test-MappingTableIntegrity
 
         # 2. Validate JSON key structure
-        Write-Host "=== Validating JSON Key Structure ==="
+        Write-BuildLog "=== Validating JSON Key Structure ==="
 
         $analysis.JsonKeyValidation = Test-JsonKeyStructure
 
         # 3. Test XAML element access
-        Write-Host "=== Testing XAML Element Access ==="
+        Write-BuildLog "=== Testing XAML Element Access ==="
 
         $analysis.XamlElementAccess = Test-XamlElementAccess
 
         # 4. Analyze string replacement flow
-        Write-Host "=== Analyzing String Replacement Flow ==="
+        Write-BuildLog "=== Analyzing String Replacement Flow ==="
 
         $analysis.StringReplacementFlow = Test-StringReplacementFlow
 
         # 5. Assess modularization impact
-        Write-Host "=== Assessing Modularization Impact ==="
+        Write-BuildLog "=== Assessing Modularization Impact ==="
 
         $analysis.ModularizationImpact = Test-ModularizationImpact
 
         return $analysis
     } catch {
-        Write-Error "Error in localization control flow analysis: $($_.Exception.Message)"
+        Write-BuildLog "Error in localization control flow analysis: $($_.Exception.Message)" -Level Error
         return $null
     }
 }
@@ -518,9 +518,9 @@ function Write-LocalizationDiagnosticReport {
         [hashtable]$Analysis
     )
 
-    Write-Host ("=" * 60)
-    Write-Host "LOCALIZATION DIAGNOSTIC REPORT"
-    Write-Host ("=" * 60)
+    # Separator removed
+    Write-BuildLog "LOCALIZATION DIAGNOSTIC REPORT"
+    # Separator removed
 
     # Summary
     $totalIssues = 0
@@ -530,49 +530,49 @@ function Write-LocalizationDiagnosticReport {
         }
     }
 
-    Write-Host "SUMMARY:"
-    Write-Host "Total Issues Found: $totalIssues"
+    Write-BuildLog "SUMMARY:"
+    Write-BuildLog "Total Issues Found: $totalIssues"
 
     # Detailed sections
     foreach ($sectionName in $Analysis.Keys) {
         $section = $Analysis[$sectionName]
 
-        Write-Host "$($sectionName.ToUpper()):"
+        Write-BuildLog "$($sectionName.ToUpper()):"
 
         if ($section.Issues.Count -gt 0) {
-            Write-Host "Issues ($($section.Issues.Count)):"
+            Write-BuildLog "Issues ($($section.Issues.Count)):"
             foreach ($issue in $section.Issues) {
-                Write-Host "  - $issue"
+                Write-BuildLog "  - $issue"
             }
         } else {
-            Write-Host "  No issues found"
+            Write-BuildLog "  No issues found"
         }
 
         # Additional details for each section
         foreach ($key in $section.Keys) {
             if ($key -ne 'Issues' -and $section[$key]) {
-                Write-Host "$key :"
+                Write-BuildLog "$key :"
                 if ($section[$key] -is [hashtable]) {
                     foreach ($subKey in $section[$key].Keys) {
-                        Write-Host "  $subKey`: $($section[$key][$subKey])"
+                        Write-BuildLog "  $subKey`: $($section[$key][$subKey])"
                     }
                 } elseif ($section[$key] -is [array]) {
                     foreach ($item in $section[$key]) {
-                        Write-Host "  - $item"
+                        Write-BuildLog "  - $item"
                     }
                 }
             }
         }
     }
 
-    Write-Host ("=" * 60)
+    # Separator removed
 }
 
 # Run the diagnostic if script is executed directly
 if ($MyInvocation.InvocationName -ne '.') {
-    write-Host "(MyInvocation.InvocationName -ne '.') is TRUE"
+    Write-BuildLog "(MyInvocation.InvocationName -ne '.') is TRUE"
 }
-Write-Host "Starting localization diagnostic..."
+Write-BuildLog "Starting localization diagnostic..."
 $analysis = Test-LocalizationControlFlow
 
 if ($analysis) {
@@ -582,7 +582,7 @@ if ($analysis) {
     $outputDir = Join-Path -Path $projectRoot -ChildPath "gui"
     $outputPath = Join-Path -Path $outputDir -ChildPath "localization-diagnostic-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
     $analysis | ConvertTo-Json -Depth 5 | Out-File -FilePath $outputPath -Encoding UTF8
-    Write-Host "Detailed analysis saved to: $outputPath"
+    Write-BuildLog "Detailed analysis saved to: $outputPath"
 
     # Calculate total issues for test result
     $totalIssues = 0
@@ -594,15 +594,15 @@ if ($analysis) {
 
     # Return appropriate exit code
     # Exit with 0 (success) but output issue count for Pester to evaluate
-    Write-Host "[TEST RESULT] Total Issues: $totalIssues"
+    Write-BuildLog "[TEST RESULT] Total Issues: $totalIssues"
     if ($totalIssues -eq 0) {
-        Write-Host "[PASS] Localization integrity test passed with no issues"
+        Write-BuildLog "[PASS] Localization integrity test passed with no issues"
         exit 0
     } else {
-        Write-Host "[INFO] Localization diagnostic completed with $totalIssues issues (see report for details)"
+        Write-BuildLog "[INFO] Localization diagnostic completed with $totalIssues issues (see report for details)"
         exit 0
     }
 } else {
-    Write-Host "[FAIL] Diagnostic failed to complete"
+    Write-BuildLog "[FAIL] Diagnostic failed to complete"
     exit 1
 }

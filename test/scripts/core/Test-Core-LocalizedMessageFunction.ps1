@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Direct test of Get-LocalizedMessage function placeholder replacement.
 
@@ -63,6 +63,9 @@ param(
     [switch]$Verbose
 )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
 # Enable verbose output
 $VerbosePreference = "Continue"
 
@@ -72,7 +75,7 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
-Write-Host "=== Direct Get-LocalizedMessage Function Test ==="
+Write-BuildLog "=== Direct Get-LocalizedMessage Function Test ==="
 
 try {
     # Import required modules
@@ -92,13 +95,16 @@ try {
 
     # Get version info
     $versionInfo = Get-ProjectVersionInfo
-    Write-Host "Version to use: '$($versionInfo.FullVersion)'"
+    Write-BuildLog "Version to use: '$($versionInfo.FullVersion)'"
 
     # Define the Get-LocalizedMessage function exactly as it is in ConfigEditor.ps1
     function Get-LocalizedMessage {
         param(
             [string]$Key,
             [array]$Arguments = @()
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
         )
 
         Write-Verbose "Debug: Function called with Key='$Key', Arguments.Length=$($Arguments.Length)"
@@ -146,59 +152,59 @@ try {
             return $message
         } else {
             # Fallback to English if message not found
-            Write-Warning "Debug: Message key '$Key' not found in current language messages"
+            Write-BuildLog "Debug: Message key '$Key' not found in current language messages" -Level Warning
             return $Key
         }
     }
 
     # Test the function
-    Write-Host "--- Testing Get-LocalizedMessage function ---"
-    Write-Host "Message template before calling function:"
-    Write-Host "'$($script:Messages.aboutMessage)'"
+    Write-BuildLog "--- Testing Get-LocalizedMessage function ---"
+    Write-BuildLog "Message template before calling function:"
+    Write-BuildLog "'$($script:Messages.aboutMessage)'"
     Write-Host ""
 
     # Create args array and examine it
     $argsArray = @($versionInfo.FullVersion)
-    Write-Host "Args Array Details:"
-    Write-Host "  - Array type: $($argsArray.GetType().Name)"
-    Write-Host "  - Array length: $($argsArray.Length)"
-    Write-Host "  - Array count: $($argsArray.Count)"
-    Write-Host "  - First element: '$($argsArray[0])'"
-    Write-Host "  - First element type: $($argsArray[0].GetType().Name)"
+    Write-BuildLog "Args Array Details:"
+    Write-BuildLog "  - Array type: $($argsArray.GetType().Name)"
+    Write-BuildLog "  - Array length: $($argsArray.Length)"
+    Write-BuildLog "  - Array count: $($argsArray.Count)"
+    Write-BuildLog "  - First element: '$($argsArray[0])'"
+    Write-BuildLog "  - First element type: $($argsArray[0].GetType().Name)"
     Write-Host ""
 
-    Write-Host "Calling function with args..."
+    Write-BuildLog "Calling function with args..."
     $result = Get-LocalizedMessage -Key "aboutMessage" -Arguments $argsArray
 
     Write-Host ""
-    Write-Host "Final result:"
-    Write-Host "'$result'"
+    Write-BuildLog "Final result:"
+    Write-BuildLog "'$result'"
     Write-Host ""
 
     # Check if replacement worked
     $hasPlaceholder = $result -like '*{0}*'
     $hasVersionNumber = $result -like "*$($versionInfo.FullVersion)*"
 
-    Write-Host "Analysis:"
+    Write-BuildLog "Analysis:"
     if ($hasPlaceholder) {
-        Write-Host "  [ERROR] - Result contains {0}: $hasPlaceholder"
+        Write-BuildLog "  [ERROR] - Result contains {0}: $hasPlaceholder"
     } else {
-        Write-Host "  [OK] - Result contains {0}: $hasPlaceholder"
+        Write-BuildLog "  [OK] - Result contains {0}: $hasPlaceholder"
     }
 
     if ($hasVersionNumber) {
-        Write-Host "  [OK] - Result contains version: $hasVersionNumber"
+        Write-BuildLog "  [OK] - Result contains version: $hasVersionNumber"
     } else {
-        Write-Host "  [ERROR] - Result contains version: $hasVersionNumber"
+        Write-BuildLog "  [ERROR] - Result contains version: $hasVersionNumber"
     }
 
     if ((-not $hasPlaceholder) -and $hasVersionNumber) {
-        Write-Host "  [OK] - Replacement successful: True"
+        Write-BuildLog "  [OK] - Replacement successful: True"
     } else {
-        Write-Host "  [ERROR] - Replacement successful: False"
+        Write-BuildLog "  [ERROR] - Replacement successful: False"
     }
 
 } catch {
-    Write-Host "[ERROR] Test failed: $($_.Exception.Message)"
-    Write-Host $_.Exception
+    Write-BuildLog "[ERROR] Test failed: $($_.Exception.Message)"
+    Write-BuildLog $_.Exception
 }

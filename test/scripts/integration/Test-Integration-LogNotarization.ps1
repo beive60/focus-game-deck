@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.1
+#Requires -Version 5.1
 
 <#
 .SYNOPSIS
@@ -25,6 +25,9 @@ param(
     [switch]$NoCleanup
 )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
 # Set up error handling and verbose preference
 $ErrorActionPreference = "Stop"
 if ($Verbose) { $VerbosePreference = "Continue" }
@@ -48,10 +51,13 @@ $testResults = @{
 function Write-TestHeader {
     param([string]$Title)
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     Write-Host ""
-    Write-Host ("=" * 60)
-    Write-Host " $Title"
-    Write-Host ("=" * 60)
+    # Separator removed
+    Write-BuildLog " $Title"
+    # Separator removed
 }
 
 function Write-TestResult {
@@ -61,21 +67,24 @@ function Write-TestResult {
         [string]$Message = ""
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     $testResults.Total++
 
     if ($Passed) {
         $testResults.Passed++
-        Write-Host "[OK] " -NoNewline
-        Write-Host "$TestName"
+        Write-BuildLog "[OK] " -NoNewline
+        Write-BuildLog "$TestName"
         if ($Message) {
-            Write-Host "  $Message"
+            Write-BuildLog "  $Message"
         }
     } else {
         $testResults.Failed++
-        Write-Host "[ERROR] " -NoNewline
-        Write-Host "$TestName"
+        Write-BuildLog "[ERROR] " -NoNewline
+        Write-BuildLog "$TestName"
         if ($Message) {
-            Write-Host "  Error: $Message"
+            Write-BuildLog "  Error: $Message"
         }
     }
 }
@@ -86,11 +95,14 @@ function Write-TestSkipped {
         [string]$Reason
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     $testResults.Total++
     $testResults.Skipped++
-    Write-Host "- " -NoNewline
-    Write-Host "$TestName"
-    Write-Host "  Skipped: $Reason"
+    Write-BuildLog "- " -NoNewline
+    Write-BuildLog "$TestName"
+    Write-BuildLog "  Skipped: $Reason"
 }
 
 function Test-Prerequisites {
@@ -172,19 +184,19 @@ function Test-ConfigurationLoading {
                 } else {
                     Write-TestSkipped "Firebase required fields present" "Missing fields: $($missingFields -join ', '). Configure Firebase settings in config.json"
                     Write-Host ""
-                    Write-Host "Log notarization not found - Firebase configuration is incomplete"
+                    Write-BuildLog "Log notarization not found - Firebase configuration is incomplete"
                     return $null
                 }
             } else {
                 Write-TestSkipped "Firebase configuration section exists" "Firebase section missing in config.json"
                 Write-Host ""
-                Write-Host "Log notarization not found - Firebase section missing in config.json"
+                Write-BuildLog "Log notarization not found - Firebase section missing in config.json"
                 return $null
             }
         } else {
             Write-TestSkipped "Logging section exists" "Logging section missing in config.json"
             Write-Host ""
-            Write-Host "Log notarization not found - Logging section missing in config.json"
+            Write-BuildLog "Log notarization not found - Logging section missing in config.json"
             return $null
         }
 
@@ -198,6 +210,9 @@ function Test-ConfigurationLoading {
 function Test-LoggerInitialization {
     param([object]$Config)
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     Write-TestHeader "Testing Logger Initialization"
 
     try {
@@ -230,6 +245,9 @@ function Test-LoggerInitialization {
 function Test-LogFileCreation {
     param($Logger)
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     Write-TestHeader "Testing Log File Creation"
 
     try {
@@ -273,6 +291,9 @@ function Test-LogFileCreation {
 function Test-HashCalculation {
     param($Logger)
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     Write-TestHeader "Testing Hash Calculation"
 
     try {
@@ -303,6 +324,9 @@ function Test-HashCalculation {
 function Test-SelfAuthentication {
     param($Logger)
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     Write-TestHeader "Testing Self-Authentication Features"
 
     try {
@@ -358,24 +382,27 @@ function Test-SelfAuthentication {
 function Test-FirebaseIntegration {
     param($Logger)
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     Write-TestHeader "Testing Firebase Integration with Enhanced Data"
 
     try {
         # Test the full notarization process
-        Write-Host "Attempting to notarize log file with self-authentication data..."
+        Write-BuildLog "Attempting to notarize log file with self-authentication data..."
 
         $certificateId = $Logger.FinalizeAndNotarizeLogAsync()
 
         if ($certificateId) {
             Write-TestResult "Firebase log notarization with authentication data" $true "Certificate ID: $certificateId"
-            Write-Host "  You can verify this record in your Firebase Console"
-            Write-Host "  The record should include:"
-            Write-Host "    - logHash: SHA256 hash of the log file"
-            Write-Host "    - appSignatureHash: Digital signature hash of the executable"
-            Write-Host "    - appVersion: Application version from Version.ps1"
-            Write-Host "    - executablePath: Path to the running executable"
-            Write-Host "    - clientTimestamp: Client-side timestamp"
-            Write-Host "    - serverTimestamp: Server-side timestamp"
+            Write-BuildLog "  You can verify this record in your Firebase Console"
+            Write-BuildLog "  The record should include:"
+            Write-BuildLog "    - logHash: SHA256 hash of the log file"
+            Write-BuildLog "    - appSignatureHash: Digital signature hash of the executable"
+            Write-BuildLog "    - appVersion: Application version from Version.ps1"
+            Write-BuildLog "    - executablePath: Path to the running executable"
+            Write-BuildLog "    - clientTimestamp: Client-side timestamp"
+            Write-BuildLog "    - serverTimestamp: Server-side timestamp"
             return $certificateId
         } else {
             Write-TestResult "Firebase log notarization with authentication data" $false "No certificate ID returned"
@@ -400,25 +427,25 @@ function Test-Cleanup {
             Write-TestResult "Test files cleanup" $false $_.Exception.Message
         }
     } else {
-        Write-Host "Cleanup skipped due to -NoCleanup flag"
-        Write-Host "Test files location: $testLogDir"
+        Write-BuildLog "Cleanup skipped due to -NoCleanup flag"
+        Write-BuildLog "Test files location: $testLogDir"
     }
 }
 
 function Show-TestSummary {
     Write-TestHeader "Test Summary"
 
-    Write-Host "Total Tests: " -NoNewline
-    Write-Host $testResults.Total
+    Write-BuildLog "Total Tests: " -NoNewline
+    Write-BuildLog $testResults.Total
 
-    Write-Host "Passed: " -NoNewline
-    Write-Host $testResults.Passed
+    Write-BuildLog "Passed: " -NoNewline
+    Write-BuildLog $testResults.Passed
 
-    Write-Host "Failed: " -NoNewline
-    Write-Host $testResults.Failed
+    Write-BuildLog "Failed: " -NoNewline
+    Write-BuildLog $testResults.Failed
 
-    Write-Host "Skipped: " -NoNewline
-    Write-Host $testResults.Skipped
+    Write-BuildLog "Skipped: " -NoNewline
+    Write-BuildLog $testResults.Skipped
 
     $successRate = if ($testResults.Total -gt 0) {
         [math]::Round(($testResults.Passed / $testResults.Total) * 100, 1)
@@ -426,55 +453,55 @@ function Show-TestSummary {
         0
     }
 
-    Write-Host "Success Rate: " -NoNewline
+    Write-BuildLog "Success Rate: " -NoNewline
     if ($successRate -ge 80) {
-        Write-Host "[OK] $successRate%"
+        Write-BuildLog "[OK] $successRate%"
     } elseif ($successRate -ge 60) {
-        Write-Host "[WARNING] $successRate%"
+        Write-BuildLog "[WARNING] $successRate%"
     } else {
-        Write-Host "[ERROR] $successRate%"
+        Write-BuildLog "[ERROR] $successRate%"
     }
 
     if ($testResults.Failed -eq 0 -and $testResults.Passed -gt 0) {
         Write-Host ""
-        Write-Host "[OK] All tests passed! Log notarization system is working correctly."
+        Write-BuildLog "[OK] All tests passed! Log notarization system is working correctly."
     } elseif ($testResults.Failed -gt 0) {
         Write-Host ""
-        Write-Host "[WARNING] Some tests failed. Please check the configuration and Firebase setup."
+        Write-BuildLog "[WARNING] Some tests failed. Please check the configuration and Firebase setup."
     }
 }
 
 # Main test execution
 try {
-    Write-Host "Focus Game Deck - Log Notarization Test"
-    Write-Host "Testing Firebase integration and log integrity verification"
-    Write-Host "Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    Write-BuildLog "Focus Game Deck - Log Notarization Test"
+    Write-BuildLog "Testing Firebase integration and log integrity verification"
+    Write-BuildLog "Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 
     # Run test sequence
     $prerequisitesOk = Test-Prerequisites
     if (-not $prerequisitesOk) {
-        Write-Host "Prerequisites test failed. Aborting remaining tests."
+        Write-BuildLog "Prerequisites test failed. Aborting remaining tests."
         Show-TestSummary
         exit 1
     }
 
     $config = Test-ConfigurationLoading
     if (-not $config) {
-        Write-Host "Configuration test failed or Firebase not configured. Skipping remaining tests."
+        Write-BuildLog "Configuration test failed or Firebase not configured. Skipping remaining tests."
         Show-TestSummary
         exit 0
     }
 
     $logger = Test-LoggerInitialization -Config $config
     if (-not $logger) {
-        Write-Host "Logger initialization failed. Aborting remaining tests."
+        Write-BuildLog "Logger initialization failed. Aborting remaining tests."
         Show-TestSummary
         exit 1
     }
 
     $logFileOk = Test-LogFileCreation -Logger $logger
     if (-not $logFileOk) {
-        Write-Host "Log file creation failed. Aborting remaining tests."
+        Write-BuildLog "Log file creation failed. Aborting remaining tests."
         Show-TestSummary
         exit 1
     }
@@ -499,9 +526,9 @@ try {
 
 } catch {
     Write-Host ""
-    Write-Host "Unexpected error during test execution:"
-    Write-Host $_.Exception.Message
-    Write-Host $_.ScriptStackTrace
+    Write-BuildLog "Unexpected error during test execution:"
+    Write-BuildLog $_.Exception.Message
+    Write-BuildLog $_.ScriptStackTrace
 
     Test-Cleanup
     Show-TestSummary

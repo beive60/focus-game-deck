@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.1
+#Requires -Version 5.1
 
 <#
 .SYNOPSIS
@@ -71,71 +71,71 @@ $configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
 $configSamplePath = Join-Path -Path $projectRoot -ChildPath "config/config.json.sample"
 $mainScriptPath = Join-Path -Path $projectRoot -ChildPath "src/Invoke-FocusGameDeck.ps1"
 
-Write-Host "=== Focus Game Deck - Development Mock Game Test ==="
-Write-Host "Mock Game ID: $MockGameId"
+Write-BuildLog "=== Focus Game Deck - Development Mock Game Test ==="
+Write-BuildLog "Mock Game ID: $MockGameId"
 Write-Host ""
 
 # Determine which config file to use
 $actualConfigPath = $configPath
 if (-not (Test-Path $configPath)) {
-    Write-Host "[INFO] config.json not found, using sample configuration"
+    Write-BuildLog "[INFO] config.json not found, using sample configuration"
     $actualConfigPath = $configSamplePath
 }
 
-Write-Host "Config File: $actualConfigPath"
+Write-BuildLog "Config File: $actualConfigPath"
 Write-Host ""
 
 # Validate configuration exists
 if (-not (Test-Path $actualConfigPath)) {
-    Write-Host "[ERROR] Configuration file not found: $actualConfigPath"
-    Write-Host "Please ensure config.json or config.json.sample exists in the config directory."
+    Write-BuildLog "[ERROR] Configuration file not found: $actualConfigPath"
+    Write-BuildLog "Please ensure config.json or config.json.sample exists in the config directory."
     exit 1
 }
 
 # Load configuration
 try {
     $config = Get-Content -Path $actualConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    Write-Host "[OK] Configuration loaded successfully"
+    Write-BuildLog "[OK] Configuration loaded successfully"
 } catch {
-    Write-Host "[ERROR] Failed to load configuration: $_"
+    Write-BuildLog "[ERROR] Failed to load configuration: $_"
     exit 1
 }
 
 # Validate mock game exists in config
 if (-not $config.games.$MockGameId) {
-    Write-Host "[ERROR] Mock game '$MockGameId' not found in configuration"
+    Write-BuildLog "[ERROR] Mock game '$MockGameId' not found in configuration"
     $availableGames = $config.games.PSObject.Properties | Where-Object { $_.Name -like "mock-*" } | Select-Object -ExpandProperty Name
-    Write-Host "Available mock games: $($availableGames -join ', ')"
+    Write-BuildLog "Available mock games: $($availableGames -join ', ')"
     exit 1
 }
 
 $mockGame = $config.games.$MockGameId
-Write-Host "[INFO] Mock Game: $($mockGame.name)"
-Write-Host "[INFO] Target Process: $($mockGame.processName)"
-Write-Host "[INFO] Apps to Manage: $($mockGame.appsToManage -join ', ')"
+Write-BuildLog "[INFO] Mock Game: $($mockGame.name)"
+Write-BuildLog "[INFO] Target Process: $($mockGame.processName)"
+Write-BuildLog "[INFO] Apps to Manage: $($mockGame.appsToManage -join ', ')"
 
 if ($DryRun) {
     Write-Host ""
-    Write-Host "=== DRY RUN MODE - No actual execution ==="
-    Write-Host "Would execute: $mainScriptPath -GameId $MockGameId"
+    Write-BuildLog "=== DRY RUN MODE - No actual execution ==="
+    Write-BuildLog "Would execute: $mainScriptPath -GameId $MockGameId"
     Write-Host ""
-    Write-Host "Mock game details:"
-    Write-Host "- Name: $($mockGame.name)"
-    Write-Host "- Executable: $($mockGame.executablePath)"
-    Write-Host "- Process: $($mockGame.processName)"
-    Write-Host "- Managed Apps: $($mockGame.appsToManage -join ', ')"
+    Write-BuildLog "Mock game details:"
+    Write-BuildLog "- Name: $($mockGame.name)"
+    Write-BuildLog "- Executable: $($mockGame.executablePath)"
+    Write-BuildLog "- Process: $($mockGame.processName)"
+    Write-BuildLog "- Managed Apps: $($mockGame.appsToManage -join ', ')"
     Write-Host ""
-    Write-Host "This would provide fast testing without:"
-    Write-Host "[OK] Long game startup times"
-    Write-Host "[OK] Display occupation"
-    Write-Host "[OK] Resource-intensive processes"
+    Write-BuildLog "This would provide fast testing without:"
+    Write-BuildLog "[OK] Long game startup times"
+    Write-BuildLog "[OK] Display occupation"
+    Write-BuildLog "[OK] Resource-intensive processes"
     Write-Host ""
     exit 0
 }
 
 Write-Host ""
-Write-Host "=== Starting Mock Game Test ==="
-Write-Host "Press Ctrl+C to abort before game launch..."
+Write-BuildLog "=== Starting Mock Game Test ==="
+Write-BuildLog "Press Ctrl+C to abort before game launch..."
 Start-Sleep -Seconds 2
 
 # Execute the main script with mock game
@@ -151,30 +151,30 @@ try {
         $arguments += "-Verbose"
     }
 
-    Write-Host "[INFO] Executing: powershell.exe $($arguments -join ' ')"
+    Write-BuildLog "[INFO] Executing: powershell.exe $($arguments -join ' ')"
     Write-Host ""
 
     & powershell.exe @arguments
 
     Write-Host ""
-    Write-Host "[OK] Mock game test completed"
+    Write-BuildLog "[OK] Mock game test completed"
 
 } catch {
     Write-Host ""
-    Write-Host "[ERROR] Mock game test failed: $_"
+    Write-BuildLog "[ERROR] Mock game test failed: $_"
     exit 1
 }
 
 Write-Host ""
-Write-Host "=== Test Summary ==="
-Write-Host "Mock Game: $($mockGame.name)"
-Write-Host "Benefits demonstrated:"
-Write-Host "  [OK] Fast startup (< 5 seconds)"
-Write-Host "  [OK] No display occupation"
-Write-Host "  [OK] Minimal resource usage"
-Write-Host "  [OK] Real app management testing"
+Write-BuildLog "=== Test Summary ==="
+Write-BuildLog "Mock Game: $($mockGame.name)"
+Write-BuildLog "Benefits demonstrated:"
+Write-BuildLog "  [OK] Fast startup (< 5 seconds)"
+Write-BuildLog "  [OK] No display occupation"
+Write-BuildLog "  [OK] Minimal resource usage"
+Write-BuildLog "  [OK] Real app management testing"
 Write-Host ""
-Write-Host "For production testing, use actual game IDs (apex, dbd, genshin, valorant, etc.)"
-Write-Host "Mock games are now integrated into the main config.json for easier maintenance."
-Write-Host "Press any key to continue..."
+Write-BuildLog "For production testing, use actual game IDs (apex, dbd, genshin, valorant, etc.)"
+Write-BuildLog "Mock games are now integrated into the main config.json for easier maintenance."
+Write-BuildLog "Press any key to continue..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

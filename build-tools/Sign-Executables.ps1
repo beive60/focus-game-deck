@@ -88,8 +88,11 @@ param(
 function Get-SigningConfig {
     param([string]$SigningConfigPath)
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
     if (-not (Test-Path $SigningConfigPath)) {
-        Write-Error "Signing configuration not found: $SigningConfigPath"
+        Write-BuildLog "Signing configuration not found: $SigningConfigPath" -Level Error
         return $null
     }
 
@@ -97,15 +100,15 @@ function Get-SigningConfig {
         $config = Get-Content $SigningConfigPath -Raw | ConvertFrom-Json
         return $config.codeSigningSettings
     } catch {
-        Write-Error "Failed to load signing configuration: $($_.Exception.Message)"
+        Write-BuildLog "Failed to load signing configuration: $($_.Exception.Message)" -Level Error
         return $null
     }
 }
 
 # List available code signing certificates
 function Get-CodeSigningCertificates {
-    Write-Host "Available Code Signing Certificates:"
-    Write-Host "======================================"
+    Write-BuildLog "Available Code Signing Certificates:"
+    Write-BuildLog "======================================"
 
     $certs = Get-ChildItem -Path "Cert:/CurrentUser/My" | Where-Object {
         $_.Extensions | Where-Object {
@@ -115,27 +118,27 @@ function Get-CodeSigningCertificates {
     }
 
     if ($certs.Count -eq 0) {
-        Write-Host "No code signing certificates found in CurrentUser/My store."
-        Write-Host "Please install an Extended Validation certificate first."
+        Write-BuildLog "No code signing certificates found in CurrentUser/My store."
+        Write-BuildLog "Please install an Extended Validation certificate first."
         return $null
     }
 
     foreach ($cert in $certs) {
-        Write-Host "Certificate Details:"
-        Write-Host "Subject: $($cert.Subject)"
-        Write-Host "Issuer: $($cert.Issuer)"
-        Write-Host "Thumbprint: $($cert.Thumbprint)"
-        Write-Host "Valid From: $($cert.NotBefore)"
-        Write-Host "Valid To: $($cert.NotAfter)"
-        Write-Host "Has Private Key: $($cert.HasPrivateKey)"
+        Write-BuildLog "Certificate Details:"
+        Write-BuildLog "Subject: $($cert.Subject)"
+        Write-BuildLog "Issuer: $($cert.Issuer)"
+        Write-BuildLog "Thumbprint: $($cert.Thumbprint)"
+        Write-BuildLog "Valid From: $($cert.NotBefore)"
+        Write-BuildLog "Valid To: $($cert.NotAfter)"
+        Write-BuildLog "Has Private Key: $($cert.HasPrivateKey)"
 
         # Check if certificate is expired
         if ($cert.NotAfter -lt (Get-Date)) {
-            Write-Host "Status: EXPIRED"
+            Write-BuildLog "Status: EXPIRED"
         } elseif ($cert.NotBefore -gt (Get-Date)) {
-            Write-Host "Status: NOT YET VALID"
+            Write-BuildLog "Status: NOT YET VALID"
         } else {
-            Write-Host "Status: VALID"
+            Write-BuildLog "Status: VALID"
         }
 
         Write-Host ("-" * 50)
@@ -148,56 +151,59 @@ function Get-CodeSigningCertificates {
 function Test-Certificate {
     param([object]$SigningConfig)
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
     if (-not $SigningConfig) {
-        Write-Error "Signing configuration is required for certificate testing"
+        Write-BuildLog "Signing configuration is required for certificate testing" -Level Error
         return $false
     }
 
     if ([string]::IsNullOrEmpty($SigningConfig.certificateThumbprint)) {
-        Write-Host "No certificate thumbprint configured. Available certificates:"
+        Write-BuildLog "No certificate thumbprint configured. Available certificates:"
         Get-CodeSigningCertificates
         return $false
     }
 
-    Write-Host "Testing certificate: $($SigningConfig.certificateThumbprint)"
+    Write-BuildLog "Testing certificate: $($SigningConfig.certificateThumbprint)"
 
     try {
         $cert = Get-ChildItem -Path $SigningConfig.certificateStorePath |
         Where-Object { $_.Thumbprint -eq $SigningConfig.certificateThumbprint }
 
         if (-not $cert) {
-            Write-Error "Certificate not found with thumbprint: $($SigningConfig.certificateThumbprint)"
+            Write-BuildLog "Certificate not found with thumbprint: $($SigningConfig.certificateThumbprint)" -Level Error
             return $false
         }
 
-        Write-Host "Certificate found and accessible:"
-        Write-Host "Subject: $($cert.Subject)"
-        Write-Host "Valid To: $($cert.NotAfter)"
-        Write-Host "Has Private Key: $($cert.HasPrivateKey)"
+        Write-BuildLog "Certificate found and accessible:"
+        Write-BuildLog "Subject: $($cert.Subject)"
+        Write-BuildLog "Valid To: $($cert.NotAfter)"
+        Write-BuildLog "Has Private Key: $($cert.HasPrivateKey)"
 
         if (-not $cert.HasPrivateKey) {
-            Write-Error "Certificate does not have an associated private key"
+            Write-BuildLog "Certificate does not have an associated private key" -Level Error
             return $false
         }
 
         if ($cert.NotAfter -lt (Get-Date)) {
-            Write-Error "Certificate has expired"
+            Write-BuildLog "Certificate has expired" -Level Error
             return $false
         }
 
         # Test timestamp server connectivity
-        Write-Host "Testing timestamp server connectivity..."
+        Write-BuildLog "Testing timestamp server connectivity..."
         try {
             $null = Invoke-WebRequest -Uri $SigningConfig.timestampServer -Method Head -TimeoutSec 10
-            Write-Host "Timestamp server is accessible"
+            Write-BuildLog "Timestamp server is accessible"
         } catch {
-            Write-Warning "Timestamp server test failed: $($_.Exception.Message)"
+            Write-BuildLog "Timestamp server test failed: $($_.Exception.Message)" -Level Warning
         }
 
         return $true
 
     } catch {
-        Write-Error "Certificate test failed: $($_.Exception.Message)"
+        Write-BuildLog "Certificate test failed: $($_.Exception.Message)" -Level Error
         return $false
     }
 }
@@ -209,17 +215,20 @@ function Add-CodeSignature {
         [object]$SigningConfig
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
     if (-not (Test-Path $FilePath)) {
-        Write-Error "File not found: $FilePath"
+        Write-BuildLog "File not found: $FilePath" -Level Error
         return $false
     }
 
     if (-not $SigningConfig.enabled) {
-        Write-Host "Code signing is disabled in configuration."
+        Write-BuildLog "Code signing is disabled in configuration."
         return $false
     }
 
-    Write-Host "Signing file: $(Split-Path $FilePath -Leaf)"
+    Write-BuildLog "Signing file: $(Split-Path $FilePath -Leaf)"
 
     try {
         $signParams = @{
@@ -244,30 +253,32 @@ function Add-CodeSignature {
         # Check if signature is trusted (Valid status)
         $isSignatureTrusted = $signature.Status -eq "Valid"
 
-        Write-Host "Signature analysis for: $fileName"
-        Write-Host "Signature applied: $($isSignatureApplied)" -ForegroundColor $(if ($isSignatureApplied) { "Green" } else { "Red" })
-        Write-Host "Signature trusted: $($isSignatureTrusted)" -ForegroundColor $(if ($isSignatureTrusted) { "Green" } else { "Yellow" })
-        Write-Host "Signature status: $($signature.Status)"
+        Write-BuildLog "Signature analysis for: $fileName"
+        $signatureLevel = if ($isSignatureApplied) { "Success" } else { "Error" }
+        Write-BuildLog "Signature applied: $($isSignatureApplied)" -Level $signatureLevel
+        $trustLevel = if ($isSignatureTrusted) { "Success" } else { "Warning" }
+        Write-BuildLog "Signature trusted: $($isSignatureTrusted)" -Level $trustLevel
+        Write-BuildLog "Signature status: $($signature.Status)"
 
         if ($signature.SignerCertificate) {
-            Write-Host "Certificate subject: $($signature.SignerCertificate.Subject)"
+            Write-BuildLog "Certificate subject: $($signature.SignerCertificate.Subject)"
         }
 
         if ($isSignatureApplied) {
             if ($isSignatureTrusted) {
-                Write-Host "Successfully signed with trusted certificate: $fileName"
+                Write-BuildLog "Successfully signed with trusted certificate: $fileName"
             } else {
-                Write-Host "Successfully signed with test/self-signed certificate: $fileName"
-                Write-Host "Note: Certificate is not trusted by system (expected for test certificates)"
+                Write-BuildLog "Successfully signed with test/self-signed certificate: $fileName"
+                Write-BuildLog "Note: Certificate is not trusted by system (expected for test certificates)"
             }
             return $true
         } else {
-            Write-Error "Failed to apply signature to: $fileName"
+            Write-BuildLog "Failed to apply signature to: $fileName" -Level Error
             return $false
         }
 
     } catch {
-        Write-Error "Failed to sign file: $($_.Exception.Message)"
+        Write-BuildLog "Failed to sign file: $($_.Exception.Message)" -Level Error
         return $false
     }
 }
@@ -279,19 +290,22 @@ function Add-AllCodeSignatures {
         [object]$SigningConfig
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
     if (-not (Test-Path $BuildPath)) {
-        Write-Error "Build directory not found: $BuildPath"
+        Write-BuildLog "Build directory not found: $BuildPath" -Level Error
         return $false
     }
 
     $exeFiles = Get-ChildItem -Path $BuildPath -Filter "*.exe" -Recurse
 
     if ($exeFiles.Count -eq 0) {
-        Write-Host "No executable files found in build directory."
+        Write-BuildLog "No executable files found in build directory."
         return $true
     }
 
-    Write-Host "Found $($exeFiles.Count) executable files to sign:"
+    Write-BuildLog "Found $($exeFiles.Count) executable files to sign:"
 
     $successCount = 0
     $failCount = 0
@@ -304,12 +318,12 @@ function Add-AllCodeSignatures {
         }
     }
 
-    Write-Host "Signing Summary:"
-    Write-Host "Successfully signed: $successCount"
+    Write-BuildLog "Signing Summary:"
+    Write-BuildLog "Successfully signed: $successCount"
     if ($failCount -gt 0) {
-        Write-Host "Failed to sign: $failCount"
+        Write-BuildLog "Failed to sign: $failCount"
     } elseif ($failCount -eq 0) {
-        Write-Host "All files signed successfully!"
+        Write-BuildLog "All files signed successfully!"
     }
 
     return $failCount -eq 0
@@ -322,13 +336,16 @@ function New-SignedDistribution {
         [object]$BuildConfig
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
     $distDir = Join-Path (Split-Path $BuildPath -Parent) "dist"
 
     if (-not (Test-Path $distDir)) {
         New-Item -ItemType Directory -Path $distDir -Force | Out-Null
     }
 
-    Write-Host "Signed distribution package created: $distDir"
+    Write-BuildLog "Signed distribution package created: $distDir"
 
     # Create version info file
     $versionInfo = @{
@@ -352,15 +369,15 @@ function New-SignedDistribution {
     $versionInfoPath = Join-Path $distDir "signature-info.json"
     $versionInfo | ConvertTo-Json -Depth 4 | Set-Content -Path $versionInfoPath -Encoding UTF8
 
-    Write-Host "Signature information saved to: signature-info.json"
+    Write-BuildLog "Signature information saved to: signature-info.json"
 
     return $distDir
 }
 
 # Main script execution
 try {
-    Write-Host "Focus Game Deck - Code Signing Tool"
-    Write-Host "===================================="
+    Write-BuildLog "Focus Game Deck - Code Signing Tool"
+    Write-BuildLog "===================================="
 
     # Load configuration
     $fullConfig = Get-Content $SigningConfigPath -Raw | ConvertFrom-Json
@@ -378,9 +395,9 @@ try {
     # Test certificate if requested
     if ($TestCertificate) {
         if (Test-Certificate -SigningConfig $signingConfig) {
-            Write-Host "Certificate test passed!"
+            Write-BuildLog "Certificate test passed!"
         } else {
-            Write-Host "Certificate test failed!"
+            Write-BuildLog "Certificate test failed!"
             exit 1
         }
         exit 0
@@ -389,9 +406,9 @@ try {
     # Sign specific file if requested
     if (-not [string]::IsNullOrEmpty($SignFile)) {
         if (Add-CodeSignature -FilePath $SignFile -SigningConfig $signingConfig) {
-            Write-Host "File signed successfully!"
+            Write-BuildLog "File signed successfully!"
         } else {
-            Write-Host "Failed to sign file!"
+            Write-BuildLog "Failed to sign file!"
             exit 1
         }
         exit 0
@@ -400,8 +417,8 @@ try {
     # Sign all files if requested
     if ($SignAll) {
         if (-not $signingConfig.enabled) {
-            Write-Host "Code signing is disabled in configuration."
-            Write-Host "Please enable signing and configure certificate thumbprint."
+            Write-BuildLog "Code signing is disabled in configuration."
+            Write-BuildLog "Please enable signing and configure certificate thumbprint."
             exit 1
         }
 
@@ -412,42 +429,42 @@ try {
 
                 if ($buildConfig.createDistribution) {
                     $distributionPath = New-SignedDistribution -BuildPath $BuildPath -BuildConfig $buildConfig
-                    Write-Host "Signed distribution package created: $distributionPath"
+                    Write-BuildLog "Signed distribution package created: $distributionPath"
                 }
 
-                Write-Host "All files signed successfully!"
+                Write-BuildLog "All files signed successfully!"
             } else {
-                Write-Host "Some files failed to sign!"
+                Write-BuildLog "Some files failed to sign!"
                 exit 1
             }
         } else {
-            Write-Host "Certificate validation failed!"
+            Write-BuildLog "Certificate validation failed!"
             exit 1
         }
         exit 0
     }
 
     # Show usage if no specific action requested
-    Write-Host "Usage:"
-    Write-Host "./Sign-Executables.ps1 -ListCertificates      # List available certificates"
-    Write-Host "./Sign-Executables.ps1 -TestCertificate       # Test configured certificate"
-    Write-Host "./Sign-Executables.ps1 -SignAll               # Sign all executables in build directory"
-    Write-Host "./Sign-Executables.ps1 -SignFile <path>       # Sign specific file"
+    Write-BuildLog "Usage:"
+    Write-BuildLog "./Sign-Executables.ps1 -ListCertificates      # List available certificates"
+    Write-BuildLog "./Sign-Executables.ps1 -TestCertificate       # Test configured certificate"
+    Write-BuildLog "./Sign-Executables.ps1 -SignAll               # Sign all executables in build directory"
+    Write-BuildLog "./Sign-Executables.ps1 -SignFile <path>       # Sign specific file"
     Write-Host ""
-    Write-Host "Configuration:"
-    Write-Host "Signing Config file: $SigningConfigPath"
-    Write-Host "Build path: $BuildPath"
-    Write-Host "Signing enabled: $($signingConfig.enabled)"
+    Write-BuildLog "Configuration:"
+    Write-BuildLog "Signing Config file: $SigningConfigPath"
+    Write-BuildLog "Build path: $BuildPath"
+    Write-BuildLog "Signing enabled: $($signingConfig.enabled)"
     Write-Host ""
-    Write-Host "Setup Instructions:"
-    Write-Host "1. Install Extended Validation certificate in Windows Certificate Store"
-    Write-Host "2. Run: ./Sign-Executables.ps1 -ListCertificates"
-    Write-Host "3. Copy certificate thumbprint to signing-config.json"
-    Write-Host "4. Set 'enabled: true' in signing-config.json"
-    Write-Host "5. Run: ./Sign-Executables.ps1 -TestCertificate"
-    Write-Host "6. Run: ./Sign-Executables.ps1 -SignAll"
+    Write-BuildLog "Setup Instructions:"
+    Write-BuildLog "1. Install Extended Validation certificate in Windows Certificate Store"
+    Write-BuildLog "2. Run: ./Sign-Executables.ps1 -ListCertificates"
+    Write-BuildLog "3. Copy certificate thumbprint to signing-config.json"
+    Write-BuildLog "4. Set 'enabled: true' in signing-config.json"
+    Write-BuildLog "5. Run: ./Sign-Executables.ps1 -TestCertificate"
+    Write-BuildLog "6. Run: ./Sign-Executables.ps1 -SignAll"
 
 } catch {
-    Write-Error "Unexpected error: $($_.Exception.Message)"
+    Write-BuildLog "Unexpected error: $($_.Exception.Message)" -Level Error
     exit 1
 }

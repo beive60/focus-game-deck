@@ -53,7 +53,10 @@ function Write-BundlerMessage {
         [string]$Message,
         [string]$Level = "INFO"
     )
-    Write-Host "[$Level] $Message"
+
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
+    Write-BuildLog "[$Level] $Message"
 }
 
 function Resolve-DotSourcedPath {
@@ -63,6 +66,9 @@ function Resolve-DotSourcedPath {
         [string]$ProjectRoot
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
     if ($Line -notmatch '^\s*\.\s+(.+)') {
         return $null
     }
@@ -128,6 +134,9 @@ function Get-ScriptDependencies {
         [hashtable]$ProcessedFiles = @{}
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
     if ($ProcessedFiles.ContainsKey($ScriptPath)) {
         Write-Verbose "Already processed: $ScriptPath"
         return @()
@@ -170,6 +179,9 @@ function New-BundledScript {
         [string]$ProjectRoot
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
     if (-not (Test-Path $EntryPointPath)) {
         Write-BundlerMessage "Entry point not found: $EntryPointPath" "ERROR"
         return $false
@@ -253,8 +265,8 @@ $mainScriptContent
 }
 
 try {
-    Write-Host "Focus Game Deck - Script Bundler"
-    Write-Host ("=" * 60)
+    Write-BuildLog "Focus Game Deck - Script Bundler"
+    # Separator removed
 
     $entryPointFull = Join-Path $ProjectRoot $EntryPoint
     if (-not (Test-Path $entryPointFull)) {

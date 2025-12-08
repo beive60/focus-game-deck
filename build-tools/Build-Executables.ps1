@@ -57,7 +57,10 @@ function Write-BuildMessage {
         [string]$Level = "INFO"
     )
 
-    Write-Host "[$Level] $Message"
+
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
+    Write-BuildLog "[$Level] $Message"
 }
 
 function Test-PS2EXE {
@@ -81,6 +84,9 @@ function Build-Executable {
         [string]$IconFile = $null
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
     if (-not (Test-Path $InputScript)) {
         Write-BuildMessage "Input script not found: $InputScript" "ERROR"
         return $false
@@ -126,8 +132,8 @@ function Build-Executable {
 }
 
 try {
-    Write-Host "Focus Game Deck - Executable Builder"
-    Write-Host ("=" * 60)
+    Write-BuildLog "Focus Game Deck - Executable Builder"
+    # Separator removed
 
     if (-not (Test-PS2EXE)) {
         Write-BuildMessage "ps2exe module not found. Please run Install-BuildDependencies.ps1 first." "ERROR"
@@ -216,23 +222,23 @@ try {
         -IconFile $iconFile
 
     Write-Host ""
-    Write-Host ("=" * 60)
-    Write-Host "BUILD SUMMARY"
-    Write-Host ("=" * 60)
+    # Separator removed
+    Write-BuildLog "BUILD SUMMARY"
+    # Separator removed
 
     $successCount = ($buildResults | Where-Object { $_ -eq $true }).Count
     $totalCount = ($buildResults | Where-Object { $_ -eq $true }).Count + ($buildResults | Where-Object { $_ -eq $false }).Count
 
-    Write-Host "Successful builds: $successCount / $totalCount"
+    Write-BuildLog "Successful builds: $successCount / $totalCount"
 
     if ($successCount -eq $totalCount) {
         Write-BuildMessage "All executables built successfully!" "SUCCESS"
 
         Write-Host ""
-        Write-Host "Built executables:"
+        Write-BuildLog "Built executables:"
         Get-ChildItem $OutputDir -Filter "*.exe" | ForEach-Object {
             $fileSize = [math]::Round($_.Length / 1KB, 1)
-            Write-Host "  $($_.Name) ($fileSize KB)"
+            Write-BuildLog "  $($_.Name) ($fileSize KB)"
         }
 
         exit 0

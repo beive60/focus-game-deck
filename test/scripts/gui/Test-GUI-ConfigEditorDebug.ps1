@@ -7,12 +7,15 @@ param(
     [switch]$Verbose
 )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
 # Set encoding
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-Write-Host "=== ConfigEditor Debug Test ==="
-Write-Host "Auto-close timer: $AutoCloseSeconds seconds"
+Write-BuildLog "=== ConfigEditor Debug Test ==="
+Write-BuildLog "Auto-close timer: $AutoCloseSeconds seconds"
 Write-Host ""
 
 # Prepare warning collection
@@ -45,17 +48,17 @@ try {
 
     # Display collected information
     Write-Host ""
-    Write-Host "=== Test Results ==="
+    Write-BuildLog "=== Test Results ==="
     Write-Host ""
 
     if ($errorVar.Count -gt 0) {
-        Write-Host "ERRORS ($($errorVar.Count)):"
-        $errorVar | ForEach-Object { Write-Host "  $_" }
+        Write-BuildLog "ERRORS ($($errorVar.Count)):"
+        $errorVar | ForEach-Object { Write-BuildLog "  $_" }
         Write-Host ""
     }
 
     if ($warningVar.Count -gt 0) {
-        Write-Host "WARNINGS ($($warningVar.Count)):"
+        Write-BuildLog "WARNINGS ($($warningVar.Count)):"
 
         # Group warnings by type
         $localizationWarnings = $warningVar | Where-Object { $_ -match 'GetLocalizedMessage' }
@@ -63,13 +66,13 @@ try {
 
         if ($otherWarnings.Count -gt 0) {
             Write-Host ""
-            Write-Host "  Other Warnings:"
-            $otherWarnings | ForEach-Object { Write-Host "    $_" }
+            Write-BuildLog "  Other Warnings:"
+            $otherWarnings | ForEach-Object { Write-BuildLog "    $_" }
         }
 
         if ($localizationWarnings.Count -gt 0) {
             Write-Host ""
-            Write-Host "  Localization Warnings ($($localizationWarnings.Count)):"
+            Write-BuildLog "  Localization Warnings ($($localizationWarnings.Count)):"
 
             # Extract unique missing keys
             $missingKeys = $localizationWarnings | ForEach-Object {
@@ -78,38 +81,40 @@ try {
                 }
             } | Select-Object -Unique | Sort-Object
 
-            Write-Host "    Missing localization keys: $($missingKeys.Count)"
+            Write-BuildLog "    Missing localization keys: $($missingKeys.Count)"
 
             if ($Verbose) {
-                $missingKeys | ForEach-Object { Write-Host "      - $_" }
+                $missingKeys | ForEach-Object { Write-BuildLog "      - $_" }
             } else {
-                Write-Host "    (Use -Verbose to see all missing keys)"
+                Write-BuildLog "    (Use -Verbose to see all missing keys)"
             }
         }
     } else {
-        Write-Host "No warnings detected!"
+        Write-BuildLog "No warnings detected!"
     }
 
-    Write-Host ""
-    Write-Host "=== Summary ==="
-    Write-Host "  Errors:   $($errorVar.Count)" -ForegroundColor $(if ($errorVar.Count -eq 0) { "Green" } else { "Red" })
-    Write-Host "  Warnings: $($warningVar.Count)" -ForegroundColor $(if ($warningVar.Count -eq 0) { "Green" } else { "Yellow" })
-    Write-Host ""
+    Write-BuildLog ""
+    Write-BuildLog "=== Summary ==="
+    $errorLevel = if ($errorVar.Count -eq 0) { "Success" } else { "Error" }
+    Write-BuildLog "  Errors:   $($errorVar.Count)" -Level $errorLevel
+    $warningLevel = if ($warningVar.Count -eq 0) { "Success" } else { "Warning" }
+    Write-BuildLog "  Warnings: $($warningVar.Count)" -Level $warningLevel
+    Write-BuildLog ""
 
     if ($errorVar.Count -eq 0 -and $warningVar.Count -eq 0) {
-        Write-Host "Test PASSED - No issues detected!"
+        Write-BuildLog "Test PASSED - No issues detected!"
         exit 0
     } elseif ($errorVar.Count -eq 0) {
-        Write-Host "Test PASSED with warnings"
+        Write-BuildLog "Test PASSED with warnings"
         exit 0
     } else {
-        Write-Host "Test FAILED - Errors detected"
+        Write-BuildLog "Test FAILED - Errors detected"
         exit 1
     }
 
 } catch {
     Write-Host ""
-    Write-Host "Test FAILED with exception:"
-    Write-Host $_.Exception.Message
+    Write-BuildLog "Test FAILED with exception:"
+    Write-BuildLog $_.Exception.Message
     exit 1
 }
