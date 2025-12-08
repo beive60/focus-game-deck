@@ -4,6 +4,7 @@ build-tools/build/
 release/
 *.exe
 build-tools/signing-config/signing-config.json
+src/generated/
 
 # User-specific configuration files
 config/config.json

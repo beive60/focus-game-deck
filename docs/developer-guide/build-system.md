@@ -22,6 +22,7 @@ The build system consists of specialized tool scripts, each with a single respon
 ```text
 Release-Manager.ps1 (Orchestrator)
 ├── Install-BuildDependencies.ps1  (Tool: Dependency installation)
+├── Embed-XamlResources.ps1        (Tool: XAML embedding)
 ├── Invoke-PsScriptBundler.ps1    (Tool: Script bundling)
 ├── Build-Executables.ps1          (Tool: Executable compilation)
 ├── Copy-Resources.ps1             (Tool: Resource copying)
@@ -277,6 +278,34 @@ To add a new entry point that requires build-time patching:
 ./build-tools/Install-BuildDependencies.ps1 -Verbose
 ```
 
+#### Embed-XamlResources.ps1
+
+**Purpose**: Convert XAML UI files to embedded PowerShell string variables.
+
+**Responsibility**: Reads all .xaml files from the gui/ directory and converts them into PowerShell Here-String format variables in src/generated/XamlResources.ps1. This eliminates external XAML file dependencies in production builds.
+
+**Usage**:
+
+```powershell
+# Embed all XAML files
+./build-tools/Embed-XamlResources.ps1
+
+# Verbose output
+./build-tools/Embed-XamlResources.ps1 -Verbose
+
+# Custom output path
+./build-tools/Embed-XamlResources.ps1 -OutputPath "custom/path/XamlResources.ps1"
+```
+
+**Features**:
+
+- Converts XAML files to `$Global:Xaml_<FileName>` variables
+- Automatically creates src/generated/ directory if needed
+- Sanitizes variable names (replaces special characters with underscores)
+- Generates UTF-8 encoded output with descriptive headers
+
+**Note**: The generated XamlResources.ps1 file must be dot-sourced before loading ConfigEditor classes to enable embedded XAML mode. The ConfigEditor automatically falls back to file-based XAML loading in development mode when embedded variables are not available.
+
 #### Invoke-PsScriptBundler.ps1
 
 **Purpose**: Handle PowerShell script preprocessing and bundling.
@@ -316,7 +345,7 @@ To add a new entry point that requires build-time patching:
 
 **Purpose**: Copy all non-executable assets.
 
-**Responsibility**: Copies runtime files not compiled into executables (JSON, XAML, documentation).
+**Responsibility**: Copies runtime files not compiled into executables (JSON files, documentation). Note that XAML files are no longer copied as they are embedded via Embed-XamlResources.ps1.
 
 **Usage**:
 
