@@ -4,7 +4,7 @@ build-tools/build/
 release/
 *.exe
 build-tools/signing-config/signing-config.json
-src/generated/
+src/generated/*.ps1
 
 # User-specific configuration files
 config/config.json
