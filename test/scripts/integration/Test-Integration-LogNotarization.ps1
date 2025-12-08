@@ -26,9 +26,9 @@ param(
 )
 
 
+# Set up error handling and verbose preference
 # Import the BuildLogger
 . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
-# Set up error handling and verbose preference
 $ErrorActionPreference = "Stop"
 if ($Verbose) { $VerbosePreference = "Continue" }
 
@@ -52,8 +52,6 @@ function Write-TestHeader {
     param([string]$Title)
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     Write-Host ""
     # Separator removed
     Write-BuildLog " $Title"
@@ -68,21 +66,17 @@ function Write-TestResult {
     )
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     $testResults.Total++
 
     if ($Passed) {
         $testResults.Passed++
-        Write-BuildLog "[OK] " -NoNewline
-        Write-BuildLog "$TestName"
+        Write-BuildLog "[OK] $TestName" -Level Success
         if ($Message) {
             Write-BuildLog "  $Message"
         }
     } else {
         $testResults.Failed++
-        Write-BuildLog "[ERROR] " -NoNewline
-        Write-BuildLog "$TestName"
+        Write-BuildLog "[ERROR] $TestName" -Level Error
         if ($Message) {
             Write-BuildLog "  Error: $Message"
         }
@@ -96,12 +90,9 @@ function Write-TestSkipped {
     )
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     $testResults.Total++
     $testResults.Skipped++
-    Write-BuildLog "- " -NoNewline
-    Write-BuildLog "$TestName"
+    Write-BuildLog "- $TestName" -Level Warning
     Write-BuildLog "  Skipped: $Reason"
 }
 
@@ -211,8 +202,6 @@ function Test-LoggerInitialization {
     param([object]$Config)
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     Write-TestHeader "Testing Logger Initialization"
 
     try {
@@ -246,8 +235,6 @@ function Test-LogFileCreation {
     param($Logger)
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     Write-TestHeader "Testing Log File Creation"
 
     try {
@@ -292,8 +279,6 @@ function Test-HashCalculation {
     param($Logger)
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     Write-TestHeader "Testing Hash Calculation"
 
     try {
@@ -325,8 +310,6 @@ function Test-SelfAuthentication {
     param($Logger)
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     Write-TestHeader "Testing Self-Authentication Features"
 
     try {
@@ -383,8 +366,6 @@ function Test-FirebaseIntegration {
     param($Logger)
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     Write-TestHeader "Testing Firebase Integration with Enhanced Data"
 
     try {
@@ -435,17 +416,10 @@ function Test-Cleanup {
 function Show-TestSummary {
     Write-TestHeader "Test Summary"
 
-    Write-BuildLog "Total Tests: " -NoNewline
-    Write-BuildLog $testResults.Total
-
-    Write-BuildLog "Passed: " -NoNewline
-    Write-BuildLog $testResults.Passed
-
-    Write-BuildLog "Failed: " -NoNewline
-    Write-BuildLog $testResults.Failed
-
-    Write-BuildLog "Skipped: " -NoNewline
-    Write-BuildLog $testResults.Skipped
+    Write-BuildLog "Total Tests: $($testResults.Total)"
+    Write-BuildLog "Passed: $($testResults.Passed)"
+    Write-BuildLog "Failed: $($testResults.Failed)"
+    Write-BuildLog "Skipped: $($testResults.Skipped)"
 
     $successRate = if ($testResults.Total -gt 0) {
         [math]::Round(($testResults.Passed / $testResults.Total) * 100, 1)
@@ -453,13 +427,12 @@ function Show-TestSummary {
         0
     }
 
-    Write-BuildLog "Success Rate: " -NoNewline
     if ($successRate -ge 80) {
-        Write-BuildLog "[OK] $successRate%"
+        Write-BuildLog "Success Rate: [OK] $successRate%" -Level Success
     } elseif ($successRate -ge 60) {
-        Write-BuildLog "[WARNING] $successRate%"
+        Write-BuildLog "Success Rate: [WARNING] $successRate%" -Level Warning
     } else {
-        Write-BuildLog "[ERROR] $successRate%"
+        Write-BuildLog "Success Rate: [ERROR] $successRate%" -Level Error
     }
 
     if ($testResults.Failed -eq 0 -and $testResults.Passed -gt 0) {

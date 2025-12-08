@@ -37,7 +37,7 @@ function Invoke-Test {
 . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     Write-BuildLog "Running Test: $TestName"
     if ($Description) {
-        Write-BuildLog "  Description: $Description" -[\p { Emoji_Presentation }\p { Extended_Pictographic }]\u { FE0F }?\sForegroundColor Gray
+        Write-BuildLog "  Description: $Description" -Level Debug
     }
 
     try {
