@@ -51,14 +51,7 @@ function Write-CopyMessage {
         [string]$Level = "INFO"
     )
 
-    $color = switch ($Level) {
-        "SUCCESS" { "Green" }
-        "ERROR" { "Red" }
-        "WARNING" { "Yellow" }
-        default { "White" }
-    }
-
-    Write-Host "[$Level] $Message" -ForegroundColor $color
+    Write-Host "[$Level] $Message"
 }
 
 function Copy-DirectoryContents {
