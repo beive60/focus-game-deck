@@ -16,8 +16,12 @@ This directory contains auto-generated PowerShell files created during the build
 ```
 
 **Variables**:
-- `$Global:Xaml_MainWindow` - Main application window XAML
-- `$Global:Xaml_ConfirmSaveChangesDialog_fragment` - Dialog fragment XAML
+- All XAML files from `gui/` directory are embedded as `$Global:Xaml_<FileName>` variables
+- Examples:
+  - `$Global:Xaml_MainWindow` - Main application window XAML
+  - `$Global:Xaml_ConfirmSaveChangesDialog_fragment` - Dialog fragment XAML
+  - `$Global:Xaml_NewTabs_xaml` - New tabs fragment XAML
+- Variable names are derived from file names with special characters replaced by underscores
 
 **Note**: 
 - This directory and its contents are excluded from version control (see .gitignore)

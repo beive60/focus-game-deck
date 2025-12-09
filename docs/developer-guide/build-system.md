@@ -282,7 +282,7 @@ To add a new entry point that requires build-time patching:
 
 **Purpose**: Convert XAML UI files to embedded PowerShell string variables.
 
-**Responsibility**: Reads all .xaml files from the gui/ directory and converts them into PowerShell Here-String format variables in src/generated/XamlResources.ps1. This eliminates external XAML file dependencies in production builds.
+**Responsibility**: Reads all XAML and XAML-related files (*.xaml, *.xaml.fragment, etc.) from the gui/ directory and converts them into PowerShell Here-String format variables in src/generated/XamlResources.ps1. This eliminates external XAML file dependencies in production builds.
 
 **Usage**:
 
@@ -299,7 +299,7 @@ To add a new entry point that requires build-time patching:
 
 **Features**:
 
-- Converts XAML files to `$Global:Xaml_<FileName>` variables
+- Automatically finds and converts all XAML files (*.xaml, *.xaml.fragment, etc.) to `$Global:Xaml_<FileName>` variables
 - Automatically creates src/generated/ directory if needed
 - Sanitizes variable names (replaces special characters with underscores)
 - Generates UTF-8 encoded output with descriptive headers

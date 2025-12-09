@@ -125,7 +125,10 @@ try {
         New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
     }
 
-    $xamlFiles = Get-ChildItem -Path $guiPath -Filter "*.xaml" -File | Sort-Object Name
+    # Get all XAML and XAML-related files (*.xaml, *.xaml.fragment, etc.)
+    $xamlFiles = Get-ChildItem -Path $guiPath -File | Where-Object { 
+        $_.Name -match '\.xaml($|\.)'
+    } | Sort-Object Name
 
     if ($xamlFiles.Count -eq 0) {
         Write-EmbedMessage "No XAML files found in: $guiPath" "WARNING"
