@@ -1,6 +1,6 @@
 # Implementation Summary: Secure Multi-Executable Bundle Architecture
 
-> **⚠️ DEPRECATED**: This document has been consolidated into [architecture.md](architecture.md) and [build-system.md](build-system.md) as of 2025-12-07 to reduce documentation duplication, as the content was already comprehensively covered in the architecture and build system documentation.
+> **DEPRECATED**: This document has been consolidated into [architecture.md](architecture.md) and [build-system.md](build-system.md) as of 2025-12-07 to reduce documentation duplication, as the content was already comprehensively covered in the architecture and build system documentation.
 >
 > Please refer to:
 > - [Architecture Guide](architecture.md) - For multi-executable architecture design and rationale
