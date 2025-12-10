@@ -1,6 +1,6 @@
 # Focus Game Deck
 
-**One-click gaming environment automation for competitive PC gamers.**
+**Unified gaming environment automation for competitive PC gamers.**
 
 Focus Game Deck automates your gaming session from start to finish - handling tedious environment setup before you play and automatically restoring everything when you're done. Let the tool handle the noise, so you can focus solely on winning.
 
@@ -66,9 +66,9 @@ All three executables are digitally signed to ensure code integrity. See [Archit
 
 **Required:**
 
-- Windows 11
+- Windows 10 (1903+) / Windows 11
 - PowerShell 5.1+ (included with Windows)
-- .NET Framework 4.7.2+ (included with Windows 11)
+- .NET Framework 4.7.2+ (included with Windows 10/11)
 
 **Integration recommendations:**
 
