@@ -303,6 +303,16 @@ Get-ChildItem -Path ".\test\Test-*.ps1" | ForEach-Object { & $_.FullName }
 
 ## Pull Request Process
 
+### Automated CI/CD Testing
+
+When you create a pull request, GitHub Actions automatically:
+
+- **Runs all tests**: The CI/CD pipeline executes the full test suite using Pester
+- **Builds the application**: Creates a development build to verify compilation
+- **Reports results**: Test and build results are displayed directly in the PR
+
+You can monitor the CI/CD workflow progress in the "Checks" tab of your pull request. All checks must pass before the PR can be merged.
+
 ### Before Submitting
 
 1. **Ensure tests pass**
@@ -316,6 +326,7 @@ Get-ChildItem -Path ".\test\Test-*.ps1" | ForEach-Object { & $_.FullName }
 - **Link to related issues** (if applicable)
 - **Screenshots/demos** for UI changes
 - **Test results** for significant changes
+- **Passing CI/CD checks**: All automated tests and builds must pass
 
 ### PR Template
 
@@ -334,6 +345,7 @@ Brief description of changes
 - [ ] Tests pass locally
 - [ ] Added new tests (if applicable)
 - [ ] Manual testing completed
+- [ ] CI/CD checks pass
 
 ## Checklist
 - [ ] Code follows project standards

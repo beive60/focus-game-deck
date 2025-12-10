@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Multi-platform support unit tests for Focus Game Deck.
 
@@ -87,6 +87,9 @@ param(
     [switch]$Verbose
 )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
 #Requires -Version 5.1
 
 # Test Configuration
@@ -104,7 +107,7 @@ foreach ($modulePath in $modulePaths) {
     if (Test-Path $modulePath) {
         . $modulePath
     } else {
-        Write-Error "Required module not found: $modulePath"
+        Write-BuildLog "Required module not found: $modulePath" -Level Error
         exit 1
     }
 }
@@ -149,6 +152,9 @@ function Test-Assert {
         [string]$Message = ""
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     if ($Condition) {
         $global:TestResults.Passed++
         $status = "[OK] PASS"
@@ -163,7 +169,7 @@ function Test-Assert {
     }
 
     $global:TestResults.Details += $result
-    Write-Host $result
+    Write-BuildLog $result
 }
 
 <#
@@ -191,7 +197,7 @@ function Test-Assert {
     Updates global $TestResults with all test outcomes.
 #>
 function Test-PlatformManager {
-    Write-Host "=== PlatformManager Tests ==="
+    Write-BuildLog "=== PlatformManager Tests ==="
 
     # Create test configuration
     $testConfig = @{
@@ -297,7 +303,7 @@ function Test-PlatformManager {
     Updates global $TestResults with all test outcomes.
 #>
 function Test-ConfigValidator {
-    Write-Host "=== ConfigValidator Multi-Platform Tests ==="
+    Write-BuildLog "=== ConfigValidator Multi-Platform Tests ==="
 
     # Test configuration with multi-platform games
     $testConfig = @{
@@ -386,8 +392,8 @@ function Test-ConfigValidator {
         }
 
         if ($Verbose -and ($validator.Errors.Count -gt 0 -or $validator.Warnings.Count -gt 0)) {
-            Write-Host "  Errors: $($validator.Errors -join '; ')"
-            Write-Host "  Warnings: $($validator.Warnings -join '; ')"
+            Write-BuildLog "  Errors: $($validator.Errors -join '; ')"
+            Write-BuildLog "  Warnings: $($validator.Warnings -join '; ')"
         }
     }
 }
@@ -419,7 +425,7 @@ function Test-ConfigValidator {
     Updates global $TestResults with all test outcomes.
 #>
 function Test-ConfigurationLoading {
-    Write-Host "=== Configuration Loading Tests ==="
+    Write-BuildLog "=== Configuration Loading Tests ==="
 
     $configPath = Join-Path $projectRoot "config/config.json"
 
@@ -455,29 +461,29 @@ function Test-ConfigurationLoading {
 }
 
 # Execute Tests
-Write-Host "Focus Game Deck - Multi-Platform Support Unit Tests"
-Write-Host "Testing Epic Games & Riot Client Integration (v1.0)"
-Write-Host "======================================================"
+Write-BuildLog "Focus Game Deck - Multi-Platform Support Unit Tests"
+Write-BuildLog "Testing Epic Games & Riot Client Integration (v1.0)"
+Write-BuildLog "======================================================"
 
 Test-ConfigurationLoading
 Test-PlatformManager
 Test-ConfigValidator
 
 # Display Results
-Write-Host "======================================================"
-Write-Host "Test Results Summary"
-Write-Host "======================================================"
-Write-Host "Tests Passed: $($global:TestResults.Passed)"
-Write-Host "Tests Failed: $($global:TestResults.Failed)"
-Write-Host "Total Tests: $($global:TestResults.Passed + $global:TestResults.Failed)"
+Write-BuildLog "======================================================"
+Write-BuildLog "Test Results Summary"
+Write-BuildLog "======================================================"
+Write-BuildLog "Tests Passed: $($global:TestResults.Passed)"
+Write-BuildLog "Tests Failed: $($global:TestResults.Failed)"
+Write-BuildLog "Total Tests: $($global:TestResults.Passed + $global:TestResults.Failed)"
 
 if ($global:TestResults.Failed -gt 0) {
-    Write-Host "Failed Tests:"
+    Write-BuildLog "Failed Tests:"
     $global:TestResults.Details | Where-Object { $_ -like "FAIL*" } | ForEach-Object {
-        Write-Host "  $_"
+        Write-BuildLog "  $_"
     }
     exit 1
 } else {
-    Write-Host "All tests passed!"
+    Write-BuildLog "All tests passed!"
     exit 0
 }

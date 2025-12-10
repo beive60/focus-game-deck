@@ -33,16 +33,11 @@ param(
     [switch]$Verbose
 )
 
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
+
 if ($Verbose) {
     $VerbosePreference = "Continue"
-}
-
-function Write-BuildMessage {
-    param(
-        [string]$Message,
-        [string]$Level = "INFO"
-    )
-    Write-Host "[$Level] $Message"
 }
 
 function Test-PS2EXE {
@@ -57,55 +52,53 @@ function Test-PS2EXE {
 function Install-PS2EXE {
     param([bool]$ForceReinstall = $false)
 
-    Write-BuildMessage "Checking ps2exe module..." "INFO"
+    Write-BuildLog "Checking ps2exe module..."
 
     $isInstalled = Test-PS2EXE
 
     if ($isInstalled -and -not $ForceReinstall) {
-        Write-BuildMessage "ps2exe module is already installed" "SUCCESS"
+        Write-BuildLog "ps2exe module is already installed" -Level Success
 
         $module = Get-Module -ListAvailable -Name ps2exe | Select-Object -First 1
-        Write-Verbose "Version: $($module.Version)"
-        Write-Verbose "Path: $($module.ModuleBase)"
+        Write-BuildLog "Version: $($module.Version)" -Level Debug
+        Write-BuildLog "Path: $($module.ModuleBase)" -Level Debug
 
         return $true
     }
 
     if ($ForceReinstall) {
-        Write-BuildMessage "Force reinstalling ps2exe module..." "INFO"
+        Write-BuildLog "Force reinstalling ps2exe module..."
     } else {
-        Write-BuildMessage "Installing ps2exe module..." "INFO"
+        Write-BuildLog "Installing ps2exe module..."
     }
 
     try {
         Install-Module -Name ps2exe -Scope CurrentUser -Force -ErrorAction Stop
-        Write-BuildMessage "ps2exe module installed successfully" "SUCCESS"
+        Write-BuildLog "ps2exe module installed successfully" -Level Success
 
         $module = Get-Module -ListAvailable -Name ps2exe | Select-Object -First 1
-        Write-Verbose "Installed version: $($module.Version)"
+        Write-BuildLog "Installed version: $($module.Version)" -Level Debug
 
         return $true
     } catch {
-        Write-BuildMessage "Failed to install ps2exe: $($_.Exception.Message)" "ERROR"
+        Write-BuildLog "Failed to install ps2exe: $($_.Exception.Message)" -Level Error
         return $false
     }
 }
 
 try {
-    Write-Host "Focus Game Deck - Build Dependencies Installer"
-    Write-Host ("=" * 60)
+    Write-BuildLog "Focus Game Deck - Build Dependencies Installer"
 
     $success = Install-PS2EXE -ForceReinstall $Force
 
-    Write-Host ""
     if ($success) {
-        Write-BuildMessage "Build environment setup completed successfully" "SUCCESS"
+        Write-BuildLog "Build environment setup completed successfully" -Level Success
         exit 0
     } else {
-        Write-BuildMessage "Build environment setup failed" "ERROR"
+        Write-BuildLog "Build environment setup failed" -Level Error
         exit 1
     }
 } catch {
-    Write-BuildMessage "Unexpected error: $($_.Exception.Message)" "ERROR"
+    Write-BuildLog "Unexpected error: $($_.Exception.Message)" -Level Error
     exit 1
 }

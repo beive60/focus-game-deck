@@ -1,4 +1,4 @@
-﻿# VTube Studio Integration Test Script
+# VTube Studio Integration Test Script
 <#
 .SYNOPSIS
     Runs integration tests for VTubeStudioManager, ensuring it correctly interacts with the application and configuration.
@@ -21,7 +21,11 @@
 .OUTPUTS
     Outputs test results to the console, indicating the status of each test (e.g., [OK], [ERROR], [WARNING]).
 #>
-Write-Host "=== VTube Studio Integration Test ==="
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+
+Write-BuildLog "=== VTube Studio Integration Test ==="
 
 $projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 
@@ -29,18 +33,18 @@ $projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScr
 try {
     $vtubeStudioManagerPath = Join-Path -Path $projectRoot -ChildPath "src/modules/VTubeStudioManager.ps1"
     . $vtubeStudioManagerPath
-    Write-Host "[OK] VTubeStudioManager module loaded"
+    Write-BuildLog "[OK] VTubeStudioManager module loaded"
 } catch {
-    Write-Host "[ERROR] Failed to load VTubeStudioManager: $_"
+    Write-BuildLog "[ERROR] Failed to load VTubeStudioManager: $_"
     exit 1
 }
 
 try {
     $appManagerPath = Join-Path -Path $projectRoot -ChildPath "src/modules/AppManager.ps1"
     . $appManagerPath
-    Write-Host "[OK] AppManager module loaded"
+    Write-BuildLog "[OK] AppManager module loaded"
 } catch {
-    Write-Host "[ERROR] Failed to load AppManager: $_"
+    Write-BuildLog "[ERROR] Failed to load AppManager: $_"
     exit 1
 }
 
@@ -48,86 +52,86 @@ try {
 try {
     $configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
     $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    Write-Host "[OK] Configuration loaded"
+    Write-BuildLog "[OK] Configuration loaded"
 } catch {
-    Write-Host "[ERROR] Failed to load configuration: $_"
+    Write-BuildLog "[ERROR] Failed to load configuration: $_"
     exit 1
 }
 
 # Test VTubeStudioManager
-Write-Host "=== Testing VTubeStudioManager ==="
+Write-BuildLog "=== Testing VTubeStudioManager ==="
 
 # Create DiscordManager instance
 $messages = @{}  # Mock messages object for testing
 try {
     $vtubeManager = New-VTubeStudioManager -VTubeConfig $config.integrations.vtubeStudio -Messages $messages
-    Write-Host "[OK] VTubeStudioManager instance created"
+    Write-BuildLog "[OK] VTubeStudioManager instance created"
 } catch {
-    Write-Host "[ERROR] VTubeStudioManager test failed: $_"
+    Write-BuildLog "[ERROR] VTubeStudioManager test failed: $_"
     exit 1
 }
 
 # Test: IsVTubeStudioRunning
 try {
     $isRunning = $vtubeManager.IsVTubeStudioRunning()
-    Write-Host "[OK] IsVTubeStudioRunning is success: $isRunning"
+    Write-BuildLog "[OK] IsVTubeStudioRunning is success: $isRunning"
 } catch {
-    Write-Host "[ERROR] Failed to IsVTubeStudioRunning: $_"
+    Write-BuildLog "[ERROR] Failed to IsVTubeStudioRunning: $_"
     exit 1
 }
 
 # Test: DetectVTubeStudioInstallation
 try {
     $installation = $vtubeManager.DetectVTubeStudioInstallation()
-    Write-Host "[OK] DetectVTubeStudioInstallation is success: $($installation.Available)"
+    Write-BuildLog "[OK] DetectVTubeStudioInstallation is success: $($installation.Available)"
 } catch {
-    Write-Host "[ERROR] Failed to DetectVTubeStudioInstallation: $_"
+    Write-BuildLog "[ERROR] Failed to DetectVTubeStudioInstallation: $_"
     exit 1
 }
 
 # Test: StartVTubeStudio
 try {
     $started = $vtubeManager.StartVTubeStudio()
-    Write-Host "[OK] StartVTubeStudio is success: $started"
+    Write-BuildLog "[OK] StartVTubeStudio is success: $started"
 } catch {
-    Write-Host "[ERROR] Failed to StartVTubeStudio: $_"
+    Write-BuildLog "[ERROR] Failed to StartVTubeStudio: $_"
     exit 1
 }
 
 # Test: StopVTubeStudio
 try {
     $stopped = $vtubeManager.StopVTubeStudio()
-    Write-Host "[OK] StopVTubeStudio is success: $stopped"
+    Write-BuildLog "[OK] StopVTubeStudio is success: $stopped"
 } catch {
-    Write-Host "[ERROR] Failed to StopVTubeStudio: $_"
+    Write-BuildLog "[ERROR] Failed to StopVTubeStudio: $_"
     exit 1
 }
 
 # Test: GetSteamPath
 try {
     $steamPath = $vtubeManager.GetSteamPath()
-    Write-Host "[OK] GetSteamPath is success: $steamPath"
+    Write-BuildLog "[OK] GetSteamPath is success: $steamPath"
 } catch {
-    Write-Host "[ERROR] Failed to GetSteamPath: $_"
+    Write-BuildLog "[ERROR] Failed to GetSteamPath: $_"
 }
 
 # Test: ConnectWebSocket / DisconnectWebSocket
 try {
     $connected = $vtubeManager.ConnectWebSocket()
-    Write-Host "[OK] ConnectWebSocket is success: $connected"
+    Write-BuildLog "[OK] ConnectWebSocket is success: $connected"
     $vtubeManager.DisconnectWebSocket()
-    Write-Host "[OK] DisconnectWebSocket is success"
+    Write-BuildLog "[OK] DisconnectWebSocket is success"
 } catch {
-    Write-Host "[ERROR] Failed to Connect/DisconnectWebSocket: $_"
+    Write-BuildLog "[ERROR] Failed to Connect/DisconnectWebSocket: $_"
     exit 1
 }
 
 # Test: SendCommand
 try {
     $result = $vtubeManager.SendCommand("TestCommand")
-    Write-Host "[OK] SendCommand is success: $result"
+    Write-BuildLog "[OK] SendCommand is success: $result"
 } catch {
-    Write-Host "[ERROR] Failed to SendCommand: $_"
+    Write-BuildLog "[ERROR] Failed to SendCommand: $_"
     # implement in future
     # exit 1
 }

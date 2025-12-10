@@ -1,5 +1,12 @@
 # Implementation Summary: Secure Multi-Executable Bundle Architecture
 
+> **DEPRECATED**: This document has been consolidated into [architecture.md](architecture.md) and [build-system.md](build-system.md) as of 2025-12-07 to reduce documentation duplication, as the content was already comprehensively covered in the architecture and build system documentation.
+>
+> Please refer to:
+> - [Architecture Guide](architecture.md) - For multi-executable architecture design and rationale
+> - [Build System Guide](build-system.md) - For build process, tool scripts, and SRP refactoring details
+> - [v3 Migration Guide](v3-migration-guide.md) - For migration instructions and testing procedures
+
 ## Overview
 
 This document summarizes the complete implementation of the secure multi-executable bundle architecture as specified in issue #44 and the detailed architecture specification.

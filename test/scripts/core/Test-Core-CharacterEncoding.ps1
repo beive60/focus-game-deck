@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.1
+#Requires -Version 5.1
 
 <#
 .SYNOPSIS
@@ -19,15 +19,18 @@ param(
     [switch]$Verbose
 )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
 $ErrorActionPreference = "Stop"
 if ($Verbose) { $VerbosePreference = "Continue" }
 
 # Initialize project root path
 $projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 
-Write-Host "Focus Game Deck - Character Encoding Validation Test"
-Write-Host "Validating implementation guidelines from ARCHITECTURE.md"
-Write-Host "Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+Write-BuildLog "Focus Game Deck - Character Encoding Validation Test"
+Write-BuildLog "Validating implementation guidelines from ARCHITECTURE.md"
+Write-BuildLog "Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 Write-Host ""
 
 $results = @{ Total = 0; Passed = 0; Failed = 0 }
@@ -58,19 +61,22 @@ $results = @{ Total = 0; Passed = 0; Failed = 0 }
 #>
 function Test-Result {
     param([string]$Name, [bool]$Pass, [string]$Message = "")
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     $results.Total++
     if ($Pass) {
         $results.Passed++
-        Write-Host "[OK] $Name"
-        if ($Message) { Write-Host "  $Message" }
+        Write-BuildLog "[OK] $Name"
+        if ($Message) { Write-BuildLog "  $Message" }
     } else {
         $results.Failed++
-        Write-Host "[ERROR] $Name"
-        if ($Message) { Write-Host "  Error: $Message" }
+        Write-BuildLog "[ERROR] $Name"
+        if ($Message) { Write-BuildLog "  Error: $Message" }
     }
 }
 
-Write-Host "Testing JSON File Encoding..."
+Write-BuildLog "Testing JSON File Encoding..."
 
 # Test config.json
 try {
@@ -113,10 +119,10 @@ try {
     Test-Result "messages.json validation" $false $_.Exception.Message
 }
 
-Write-Host "Testing Console Output Safety..."
+Write-BuildLog "Testing Console Output Safety..."
 Test-Result "ASCII-safe console output" $true "Using [OK]/[ERROR] instead of UTF-8 symbols"
 
-Write-Host "Testing Logger Compatibility..."
+Write-BuildLog "Testing Logger Compatibility..."
 try {
     $loggerPath = Join-Path $projectRoot "src/modules/Logger.ps1"
     if (Test-Path $loggerPath) {
@@ -165,28 +171,28 @@ try {
 }
 
 Write-Host ""
-Write-Host ("=" * 60)
-Write-Host " Test Summary"
-Write-Host ("=" * 60)
-Write-Host "Total Tests: $($results.Total)"
-Write-Host "Passed: $($results.Passed)"
-Write-Host "Failed: $($results.Failed)"
+# Separator removed
+Write-BuildLog " Test Summary"
+# Separator removed
+Write-BuildLog "Total Tests: $($results.Total)"
+Write-BuildLog "Passed: $($results.Passed)"
+Write-BuildLog "Failed: $($results.Failed)"
 
 $successRate = [math]::Round(($results.Passed / $results.Total) * 100, 1)
 if ($successRate -gt 90) {
-    Write-Host "[OK] Success Rate: $successRate%"
+    Write-BuildLog "[OK] Success Rate: $successRate%"
 } elseif ($successRate -gt 70) {
-    Write-Host "[WARNING] Success Rate: $successRate%"
+    Write-BuildLog "[WARNING] Success Rate: $successRate%"
 } else {
-    Write-Host "[ERROR] Success Rate: $successRate%"
+    Write-BuildLog "[ERROR] Success Rate: $successRate%"
 }
 
 if ($results.Failed -eq 0) {
     Write-Host ""
-    Write-Host "All character encoding tests passed! Project follows ARCHITECTURE.md guidelines."
+    Write-BuildLog "All character encoding tests passed! Project follows ARCHITECTURE.md guidelines."
     exit 0
 } else {
     Write-Host ""
-    Write-Host "Some tests failed. Please review character encoding guidelines in ARCHITECTURE.md"
+    Write-BuildLog "Some tests failed. Please review character encoding guidelines in ARCHITECTURE.md"
     exit 1
 }

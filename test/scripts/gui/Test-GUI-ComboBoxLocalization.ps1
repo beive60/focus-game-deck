@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Test script to verify ComboBoxItem localization functionality.
 
@@ -62,6 +62,9 @@ param(
     [string]$Language = "ja"
 )
 
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+
 $ErrorActionPreference = "Stop"
 $VerbosePreference = "Continue"
 
@@ -72,40 +75,40 @@ $MessagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.j
 $XamlPath = Join-Path -Path $projectRoot -ChildPath "gui/MainWindow.xaml"
 $ConfigEditorPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.ps1"
 
-Write-Host "=== ComboBoxItem Localization Test ==="
-Write-Host "Testing language: $Language"
+Write-BuildLog "=== ComboBoxItem Localization Test ==="
+Write-BuildLog "Testing language: $Language"
 Write-Host ""
 
 # Load WPF assemblies
-Write-Host "[1/6] Loading WPF assemblies..."
+Write-BuildLog "[1/6] Loading WPF assemblies..."
 Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
 
 # Load mappings
-Write-Host "[2/6] Loading mappings..."
+Write-BuildLog "[2/6] Loading mappings..."
 . $MappingsPath
 
 # Load messages
-Write-Host "[3/6] Loading messages..."
+Write-BuildLog "[3/6] Loading messages..."
 $messagesJson = Get-Content $MessagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $messages = $messagesJson.$Language
 
-Write-Host "Messages loaded for '$Language'. Total message count: $($messages.PSObject.Properties.Count)"
+Write-BuildLog "Messages loaded for '$Language'. Total message count: $($messages.PSObject.Properties.Count)"
 Write-Host ""
 
 # Load XAML
-Write-Host "[4/6] Loading and parsing XAML..."
+Write-BuildLog "[4/6] Loading and parsing XAML..."
 $xamlContent = Get-Content $XamlPath -Raw -Encoding UTF8
 $xmlReader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
 $window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
 $xmlReader.Close()
 
-Write-Host "XAML parsed successfully"
+Write-BuildLog "XAML parsed successfully"
 Write-Host ""
 
 # Test ComboBoxItem localization
-Write-Host "[5/6] Testing ComboBoxItem localization..."
+Write-BuildLog "[5/6] Testing ComboBoxItem localization..."
 $comboBoxItemMappings = $script:ComboBoxItemMappings
 
 $testResults = @{
@@ -143,56 +146,56 @@ foreach ($itemName in $comboBoxItemMappings.Keys) {
             if ($element.Content -eq $localizedText) {
                 $result.Success = $true
                 $testResults.Success++
-                Write-Host "  [OK] $itemName"
-                Write-Host "       Before: '$($result.BeforeContent)'"
-                Write-Host "       After : '$($result.AfterContent)'"
+                Write-BuildLog "  [OK] $itemName"
+                Write-BuildLog "       Before: '$($result.BeforeContent)'"
+                Write-BuildLog "       After : '$($result.AfterContent)'"
             } else {
                 $testResults.Failed++
-                Write-Host "  [FAIL] $itemName - Content not updated correctly"
+                Write-BuildLog "  [FAIL] $itemName - Content not updated correctly"
             }
         } else {
             $testResults.Failed++
-            Write-Host "  [FAIL] $itemName - Message key '$messageKey' not found in messages"
+            Write-BuildLog "  [FAIL] $itemName - Message key '$messageKey' not found in messages"
         }
     } else {
         $testResults.Failed++
-        Write-Host "  [FAIL] $itemName - Element not found in XAML"
+        Write-BuildLog "  [FAIL] $itemName - Element not found in XAML"
     }
 
     $testResults.Details += $result
 }
 
 Write-Host ""
-Write-Host "[6/6] Test Summary"
-Write-Host "=================="
-Write-Host "Total ComboBoxItems tested: $($testResults.Total)"
-Write-Host "Successful: $($testResults.Success)"
+Write-BuildLog "[6/6] Test Summary"
+Write-BuildLog "=================="
+Write-BuildLog "Total ComboBoxItems tested: $($testResults.Total)"
+Write-BuildLog "Successful: $($testResults.Success)"
 if ($testResults.Failed -eq 0) {
-    Write-Host "[OK] Failed: $($testResults.Failed)"
+    Write-BuildLog "[OK] Failed: $($testResults.Failed)"
 } else {
-    Write-Host "[ERROR] Failed: $($testResults.Failed)"
+    Write-BuildLog "[ERROR] Failed: $($testResults.Failed)"
 }
 
 if ($testResults.Failed -gt 0) {
     Write-Host ""
-    Write-Host "Failed items:"
+    Write-BuildLog "Failed items:"
     foreach ($detail in $testResults.Details | Where-Object { -not $_.Success }) {
-        Write-Host "  - $($detail.ItemName)"
+        Write-BuildLog "  - $($detail.ItemName)"
         if (-not $detail.Found) {
-            Write-Host "    Reason: Element not found in XAML"
+            Write-BuildLog "    Reason: Element not found in XAML"
         } elseif (-not $detail.HasMessage) {
-            Write-Host "    Reason: Message key '$($detail.MessageKey)' not found"
+            Write-BuildLog "    Reason: Message key '$($detail.MessageKey)' not found"
         } else {
-            Write-Host "    Reason: Content update failed"
+            Write-BuildLog "    Reason: Content update failed"
         }
     }
 }
 
 Write-Host ""
 if ($testResults.Failed -eq 0) {
-    Write-Host "[OK] All ComboBoxItem localization tests passed!"
+    Write-BuildLog "[OK] All ComboBoxItem localization tests passed!"
     exit 0
 } else {
-    Write-Host "[ERROR] Some ComboBoxItem localization tests failed."
+    Write-BuildLog "[ERROR] Some ComboBoxItem localization tests failed."
     exit 1
 }

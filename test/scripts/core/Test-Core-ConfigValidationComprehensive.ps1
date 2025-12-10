@@ -1,4 +1,4 @@
-﻿# =============================================================================
+# =============================================================================
 # Test-ConfigValidation.ps1
 #
 # This script tests the configuration validation logic from the FocusGameDeck
@@ -19,7 +19,7 @@ $configValidatorPath = Join-Path -Path $projectRoot -ChildPath "src/modules/Conf
 if (Test-Path $configValidatorPath) {
     . $configValidatorPath
 } else {
-    Write-Error "ConfigValidator module not found: $configValidatorPath"
+    Write-BuildLog "ConfigValidator module not found: $configValidatorPath" -Level Error
     exit 1
 }
 
@@ -30,10 +30,13 @@ function Test-ConfigStructure {
         [string]$GameId
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     $errors = @()
     $gameConfig = $Config.games.$GameId
 
-    Write-Host "Validating configuration structure for game: $GameId"
+    Write-BuildLog "Validating configuration structure for game: $GameId"
 
     # Use the updated ConfigValidator for validation
     $messages = @{
@@ -47,18 +50,18 @@ function Test-ConfigStructure {
 
     # Show validation details
     if ($report.Errors.Count -gt 0) {
-        Write-Host "Game '$GameId' has $($report.Errors.Count) error(s):"
+        Write-BuildLog "Game '$GameId' has $($report.Errors.Count) error(s):"
         foreach ($error in $report.Errors) {
-            Write-Host "  - $error"
+            Write-BuildLog "  - $error"
         }
     } else {
-        Write-Host "  [OK] Game '$GameId' configuration is valid"
+        Write-BuildLog "  [OK] Game '$GameId' configuration is valid"
     }
 
     if ($report.Warnings.Count -gt 0) {
-        Write-Host "Game '$GameId' has $($report.Warnings.Count) warning(s):"
+        Write-BuildLog "Game '$GameId' has $($report.Warnings.Count) warning(s):"
         foreach ($warning in $report.Warnings) {
-            Write-Host "  - $warning"
+            Write-BuildLog "  - $warning"
         }
     }
 
@@ -70,35 +73,35 @@ function Test-ConfigStructure {
 
 # --- Main Test Logic ---
 
-Write-Host "=== FocusGameDeck Configuration Validation Test ==="
+Write-BuildLog "=== FocusGameDeck Configuration Validation Test ==="
 Write-Host ""
 
 # Load configuration file
 $configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
 
 if (-not (Test-Path $configPath)) {
-    Write-Host "Error: config.json not found at $configPath"
-    Write-Host "Please create it from config.json.sample."
+    Write-BuildLog "Error: config.json not found at $configPath"
+    Write-BuildLog "Please create it from config.json.sample."
     exit 1
 }
 
 try {
     $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    Write-Host "Configuration loaded successfully"
+    Write-BuildLog "Configuration loaded successfully"
 } catch {
-    Write-Host "Error loading configuration: $_"
+    Write-BuildLog "Error loading configuration: $_"
     exit 1
 }
 
 Write-Host ""
-Write-Host "Available games:"
+Write-BuildLog "Available games:"
 foreach ($gameId in $config.games.PSObject.Properties.Name) {
     $gameName = $config.games.$gameId.name
-    Write-Host "  - $gameId ($gameName)"
+    Write-BuildLog "  - $gameId ($gameName)"
 }
 
 Write-Host ""
-Write-Host "--- VALIDATING ALL GAME CONFIGURATIONS ---"
+Write-BuildLog "--- VALIDATING ALL GAME CONFIGURATIONS ---"
 Write-Host ""
 
 $allErrors = @()
@@ -107,26 +110,26 @@ foreach ($gameId in $config.games.PSObject.Properties.Name) {
     $gameErrors = Test-ConfigStructure -Config $config -GameId $gameId
     if ($gameErrors.Count -gt 0) {
         $allErrors += $gameErrors
-        Write-Host "Game '$gameId' has $($gameErrors.Count) error(s):"
+        Write-BuildLog "Game '$gameId' has $($gameErrors.Count) error(s):"
         foreach ($errorMsg in $gameErrors) {
-            Write-Host "  - $errorMsg"
+            Write-BuildLog "  - $errorMsg"
         }
     } else {
-        Write-Host "Game '$gameId' configuration is valid"
+        Write-BuildLog "Game '$gameId' configuration is valid"
     }
     Write-Host ""
 }
 
-Write-Host "--- VALIDATION SUMMARY ---"
+Write-BuildLog "--- VALIDATION SUMMARY ---"
 if ($allErrors.Count -eq 0) {
-    Write-Host "All configurations are valid!"
+    Write-BuildLog "All configurations are valid!"
     Write-Host ""
-    Write-Host "Your configuration is ready to use."
+    Write-BuildLog "Your configuration is ready to use."
 } else {
-    Write-Host "Found $($allErrors.Count) validation error(s)"
+    Write-BuildLog "Found $($allErrors.Count) validation error(s)"
     Write-Host ""
-    Write-Host "Please fix the errors above before using the script."
+    Write-BuildLog "Please fix the errors above before using the script."
 }
 
 Write-Host ""
-Write-Host "=== Validation Complete ==="
+Write-BuildLog "=== Validation Complete ==="

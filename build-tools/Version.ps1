@@ -179,7 +179,14 @@ function Compare-Version {
         return [string]::Compare($v1Pre, $v2Pre)
 
     } catch {
-        Write-Warning "[WARNING] comparing versions '$Version1' and '$Version2': $($_.Exception.Message)"
+        # Import BuildLogger if available for better error handling
+        $loggerPath = Join-Path $PSScriptRoot "utils/BuildLogger.ps1"
+        if (Test-Path $loggerPath) {
+            . $loggerPath
+            Write-BuildLog "comparing versions '$Version1' and '$Version2': $($_.Exception.Message)" -Level Warning
+        } else {
+            Write-Warning "[WARN] comparing versions '$Version1' and '$Version2': $($_.Exception.Message)"
+        }
         return 0
     }
 }

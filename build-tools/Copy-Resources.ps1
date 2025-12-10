@@ -41,6 +41,9 @@ param(
     [switch]$Verbose
 )
 
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
+
 if ($Verbose) {
     $VerbosePreference = "Continue"
 }
@@ -64,13 +67,13 @@ function Copy-DirectoryContents {
     )
 
     if (-not (Test-Path $SourcePath)) {
-        Write-CopyMessage "Source not found: $SourcePath" "WARNING"
+        Write-BuildLog "Source not found: $SourcePath" -Level Warning
         return $false
     }
 
-    Write-CopyMessage "Copying $Description..." "INFO"
-    Write-Verbose "  From: $SourcePath"
-    Write-Verbose "  To: $DestPath"
+    Write-BuildLog "Copying $Description..."
+    Write-BuildLog "  From: $SourcePath" -Level Debug
+    Write-BuildLog "  To: $DestPath" -Level Debug
 
     if (-not (Test-Path $DestPath)) {
         New-Item -ItemType Directory -Path $DestPath -Force | Out-Null
@@ -93,33 +96,31 @@ function Copy-DirectoryContents {
 
                 if (-not $shouldExclude) {
                     Copy-Item -Path $file.FullName -Destination $DestPath -Force
-                    Write-Verbose "  Copied: $($file.Name)"
+                    Write-BuildLog "  Copied: $($file.Name)" -Level Debug
                     $fileCount++
                 }
             }
         }
 
-        Write-CopyMessage "Copied $fileCount file(s) for $Description" "SUCCESS"
+        Write-BuildLog "Copied $fileCount file(s) for $Description" -Level Success
         return $true
     } catch {
-        Write-CopyMessage "Failed to copy $Description : $($_.Exception.Message)" "ERROR"
+        Write-BuildLog "Failed to copy $Description : $($_.Exception.Message)" -Level Error
         return $false
     }
 }
 
 try {
-    Write-Host "Focus Game Deck - Resource Copier"
-    Write-Host ("=" * 60)
+    Write-BuildLog "Focus Game Deck - Resource Copier"
 
     if (-not (Test-Path $DestinationDir)) {
         New-Item -ItemType Directory -Path $DestinationDir -Force | Out-Null
-        Write-Verbose "Created destination directory: $DestinationDir"
+        Write-BuildLog "Created destination directory: $DestinationDir" -Level Debug
     }
 
     $copyResults = @()
 
     # Copy localization files (runtime resources)
-    Write-Host ""
     $localizationSource = Join-Path $SourceRoot "localization"
     $localizationDest = Join-Path $DestinationDir "localization"
     $copyResults += Copy-DirectoryContents `
@@ -135,26 +136,23 @@ try {
     Write-Host ""
     Write-Verbose "Skipping GUI XAML files (embedded in executable)"
 
-    Write-Host ""
-    Write-Host ("=" * 60)
-    Write-Host "COPY SUMMARY"
-    Write-Host ("=" * 60)
+    Write-BuildLog "COPY SUMMARY"
 
     $successCount = ($copyResults | Where-Object { $_ -eq $true }).Count
     $totalCount = $copyResults.Count
 
-    Write-Host "Successful operations: $successCount / $totalCount"
+    Write-BuildLog "Successful operations: $successCount / $totalCount"
 
     if ($successCount -eq $totalCount) {
-        Write-CopyMessage "All resources copied successfully!" "SUCCESS"
+        Write-BuildLog "All resources copied successfully!" -Level Success
         exit 0
     } else {
-        Write-CopyMessage "Some copy operations failed. Check errors above." "WARNING"
+        Write-BuildLog "Some copy operations failed. Check errors above." -Level Warning
         exit 1
     }
 
 } catch {
-    Write-CopyMessage "Unexpected error: $($_.Exception.Message)" "ERROR"
-    Write-Verbose $_.ScriptStackTrace
+    Write-BuildLog "Unexpected error: $($_.Exception.Message)" -Level Error
+    Write-BuildLog $_.ScriptStackTrace -Level Debug
     exit 1
 }

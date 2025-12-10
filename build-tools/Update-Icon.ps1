@@ -17,6 +17,9 @@ Date: 2025-10-22
 #>
 param()
 
+# Import the BuildLogger at script level
+. "$PSScriptRoot/utils/BuildLogger.ps1"
+
 # Set strict mode
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -28,23 +31,23 @@ $IcoOutputPath = Join-Path -Path $projectRoot -ChildPath 'assets/icon.ico'
 $Resolutions = @(256, 128, 64, 32, 16)
 
 # --- Pre-flight Checks ---
-Write-Host "Checking for ImageMagick..."
+Write-BuildLog "Checking for ImageMagick..."
 try {
     $magickVersion = magick -version
-    Write-Host "ImageMagick found."
-    # Write-Host $magickVersion # Uncomment for debugging
+    Write-BuildLog "ImageMagick found."
+    # Write-BuildLog $magickVersion # Uncomment for debugging
 } catch {
-    Write-Error "ImageMagick not found. Please install it and ensure 'magick.exe' is in your system's PATH."
+    Write-BuildLog "ImageMagick not found. Please install it and ensure 'magick.exe' is in your system's PATH." -Level Error
     exit 1
 }
 
 if (-not (Test-Path -Path $SvgIconPath)) {
-    Write-Error "Source icon not found at: $SvgIconPath"
+    Write-BuildLog "Source icon not found at: $SvgIconPath" -Level Error
     exit 1
 }
 
 # --- Conversion Logic ---
-Write-Host "Starting icon conversion..."
+Write-BuildLog "Starting icon conversion..."
 $tempDir = Join-Path -Path $env:TEMP -ChildPath "icon-temp-$($PID)"
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 
@@ -52,17 +55,17 @@ $tempPngFiles = @()
 foreach ($res in $Resolutions) {
     $tempPngPath = Join-Path -Path $tempDir -ChildPath "icon_${res}x${res}.png"
     $tempPngFiles += $tempPngPath
-    Write-Host "Generating ${res}x${res} PNG..."
+    Write-BuildLog "Generating ${res}x${res} PNG..."
     magick -background none -size "${res}x${res}" "$SvgIconPath" "$tempPngPath"
 }
 
-Write-Host "Assembling ICO file from PNGs..."
+Write-BuildLog "Assembling ICO file from PNGs..."
 magick $tempPngFiles "$IcoOutputPath"
 
 # --- Cleanup ---
-Write-Host "Cleaning up temporary files..."
+Write-BuildLog "Cleaning up temporary files..."
 Remove-Item -Path $tempDir -Recurse -Force
 
-Write-Host "--------------------------------------------------"
-Write-Host "Successfully created '$IcoOutputPath' with resolutions: $($Resolutions -join ', ')."
-Write-Host "Please review the new icon and commit both 'icon.svg' and 'icon.ico' if the changes are correct."
+Write-BuildLog "--------------------------------------------------"
+Write-BuildLog "Successfully created '$IcoOutputPath' with resolutions: $($Resolutions -join ', ')."
+Write-BuildLog "Please review the new icon and commit both 'icon.svg' and 'icon.ico' if the changes are correct."

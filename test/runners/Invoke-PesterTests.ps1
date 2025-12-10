@@ -30,22 +30,25 @@ param(
     [string]$Verbosity = 'Detailed'
 )
 
+# Import the BuildLogger
+. "$PSScriptRoot/../../build-tools/utils/BuildLogger.ps1"
+
 $ErrorActionPreference = "Stop"
 
 # Check if Pester 5.0+ is installed
 $pesterModule = Get-Module -ListAvailable -Name Pester | Where-Object { $_.Version -ge [Version]"5.0.0" }
 
 if (-not $pesterModule) {
-    Write-Host "[INFO] PesterRunner: Pester 5.0+ not found. Installing Pester module"
+    Write-BuildLog "[INFO] PesterRunner: Pester 5.0+ not found. Installing Pester module"
     try {
         Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser -ErrorAction Stop
-        Write-Host "[INFO] PesterRunner: Pester module installed successfully"
+        Write-BuildLog "[INFO] PesterRunner: Pester module installed successfully"
     } catch {
-        Write-Host "[ERROR] PesterRunner: Failed to install Pester module"
-        Write-Host "[ERROR] Error: $($_.Exception.Message)"
+        Write-BuildLog "[ERROR] PesterRunner: Failed to install Pester module"
+        Write-BuildLog "[ERROR] Error: $($_.Exception.Message)"
         Write-Host ""
-        Write-Host "Please install Pester manually:"
-        Write-Host "  Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser"
+        Write-BuildLog "Please install Pester manually:"
+        Write-BuildLog "  Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser"
         Write-Host ""
         exit 1
     }
@@ -53,13 +56,13 @@ if (-not $pesterModule) {
 
 try {
     Import-Module Pester -MinimumVersion 5.0 -ErrorAction Stop
-    Write-Host "[INFO] PesterRunner: Pester module loaded successfully"
+    Write-BuildLog "[INFO] PesterRunner: Pester module loaded successfully"
 } catch {
-    Write-Host "[ERROR] PesterRunner: Failed to import Pester module"
-    Write-Host "[ERROR] Error: $($_.Exception.Message)"
+    Write-BuildLog "[ERROR] PesterRunner: Failed to import Pester module"
+    Write-BuildLog "[ERROR] Error: $($_.Exception.Message)"
     Write-Host ""
-    Write-Host "Pester 5.0 or higher is required. Please install it:"
-    Write-Host "  Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser"
+    Write-BuildLog "Pester 5.0 or higher is required. Please install it:"
+    Write-BuildLog "  Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser"
     Write-Host ""
     exit 1
 }
@@ -99,19 +102,19 @@ $config.TestResult.OutputFormat = 'NUnitXml'
 $config.TestResult.OutputPath = Join-Path -Path $projectRoot -ChildPath "test/test-results.xml"
 
 Write-Host ""
-Write-Host "========================================"
-Write-Host "Running Pester Tests"
+Write-BuildLog "========================================"
+Write-BuildLog "Running Pester Tests"
 if ($OnlyWrappers) {
-    Write-Host "(Wrapper mode - using existing Test-*.ps1 scripts)"
+    Write-BuildLog "(Wrapper mode - using existing Test-*.ps1 scripts)"
 }
-Write-Host "========================================"
+Write-BuildLog "========================================"
 Write-Host ""
 
 if ($Tag.Count -gt 0) {
-    Write-Host "Tags: $($Tag -join ', ')"
+    Write-BuildLog "Tags: $($Tag -join ', ')"
 }
 if ($ExcludeTag.Count -gt 0) {
-    Write-Host "Excluding: $($ExcludeTag -join ', ')"
+    Write-BuildLog "Excluding: $($ExcludeTag -join ', ')"
 }
 
 # Run tests
@@ -119,25 +122,25 @@ $result = Invoke-Pester -Configuration $config
 
 # Summary
 Write-Host ""
-Write-Host "========================================"
-Write-Host "Test Summary"
-Write-Host "========================================"
-Write-Host "Total:   $($result.TotalCount)"
-Write-Host "Passed:  $($result.PassedCount)"
-Write-Host "Failed:  $($result.FailedCount)"
-Write-Host "Skipped: $($result.SkippedCount)"
-Write-Host "Duration: $($result.Duration.TotalSeconds)s"
+Write-BuildLog "========================================"
+Write-BuildLog "Test Summary"
+Write-BuildLog "========================================"
+Write-BuildLog "Total:   $($result.TotalCount)"
+Write-BuildLog "Passed:  $($result.PassedCount)"
+Write-BuildLog "Failed:  $($result.FailedCount)"
+Write-BuildLog "Skipped: $($result.SkippedCount)"
+Write-BuildLog "Duration: $($result.Duration.TotalSeconds)s"
 
 if ($result.FailedCount -gt 0) {
     Write-Host ""
-    Write-Host "Failed Tests:"
+    Write-BuildLog "Failed Tests:"
     foreach ($test in $result.Failed) {
-        Write-Host "  - $($test.ExpandedPath)"
+        Write-BuildLog "  - $($test.ExpandedPath)"
     }
 }
 
-Write-Host "Test results: test/test-results.xml"
-Write-Host "========================================"
+Write-BuildLog "Test results: test/test-results.xml"
+Write-BuildLog "========================================"
 Write-Host ""
 
 # Exit with appropriate code

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Tests consistency between MainWindow.xaml and ConfigEditor.Mappings.ps1
 
@@ -27,6 +27,9 @@ param(
     [switch]$ShowDetails
 )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
 # Set error action preference
 $ErrorActionPreference = 'Stop'
 
@@ -37,31 +40,31 @@ $MessagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.j
 $XamlPath = Join-Path -Path $projectRoot -ChildPath "gui/MainWindow.xaml"
 $ConfigEditorPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.ps1"
 
-Write-Host "=== Focus Game Deck - ConfigEditor Consistency Test ==="
+Write-BuildLog "=== Focus Game Deck - ConfigEditor Consistency Test ==="
 
 # Check if required files exist
 if (-not (Test-Path $XamlPath)) {
-    Write-Error "MainWindow.xaml not found at: $XamlPath"
+    Write-BuildLog "MainWindow.xaml not found at: $XamlPath" -Level Error
     exit 1
 }
 
 if (-not (Test-Path $MappingsPath)) {
-    Write-Error "ConfigEditor.Mappings.ps1 not found at: $MappingsPath"
+    Write-BuildLog "ConfigEditor.Mappings.ps1 not found at: $MappingsPath" -Level Error
     exit 1
 }
 
-Write-Host "Checking files:"
-Write-Host "- MainWindow.xaml: $MainWindowPath"
-Write-Host "- Mappings file:   $MappingsPath"
+Write-BuildLog "Checking files:"
+Write-BuildLog "- MainWindow.xaml: $MainWindowPath"
+Write-BuildLog "- Mappings file:   $MappingsPath"
 
 try {
     # Load mappings
-    Write-Host "Loading ConfigEditor mappings"
+    Write-BuildLog "Loading ConfigEditor mappings"
     . $MappingsPath
-    Write-Host "[OK] Mappings loaded successfully"
+    Write-BuildLog "[OK] Mappings loaded successfully"
 
     # Extract UI elements and their placeholders from MainWindow.xaml
-    Write-Host "Analyzing MainWindow.xaml"
+    Write-BuildLog "Analyzing MainWindow.xaml"
     $content = Get-Content -Path $MainWindowPath -Encoding UTF8 -Raw
     $regex = '<[\w\.:]+\s+(?=[^>]*\bx:Name\s*=\s*"[^"]*")(?=[^>]*\b(Content|Text|Header|ToolTip)\s*=\s*"[^"]*")[^>]*?/?>'
     $matches = [regex]::Matches($content, $regex)
@@ -79,19 +82,19 @@ try {
         }
     }
 
-    Write-Host "[OK] Extracted $($uiElements.Count) UI elements with placeholders"
+    Write-BuildLog "[OK] Extracted $($uiElements.Count) UI elements with placeholders"
 
     if ($ShowDetails) {
         Write-Host ""
-        Write-Host "UI Elements found:"
+        Write-BuildLog "UI Elements found:"
         $uiElements.GetEnumerator() | Sort-Object Key | ForEach-Object {
-            Write-Host "$($_.Key) -> [$($_.Value)]"
+            Write-BuildLog "$($_.Key) -> [$($_.Value)]"
         }
     }
     Write-Host ""
 
     # Check mapping completeness
-    Write-Host "Checking mapping completeness"
+    Write-BuildLog "Checking mapping completeness"
     $missingMappings = @()
     $foundMappings = @()
 
@@ -136,50 +139,50 @@ try {
     $foundMappingsCount = $foundMappings.Count
     $missingMappingsCount = $missingMappings.Count
 
-    Write-Host "Mapping Analysis Results:"
-    Write-Host "- Total UI elements: $($uiElementsCount)"
-    Write-Host "- Mapped elements:   $($foundMappingsCount)"
+    Write-BuildLog "Mapping Analysis Results:"
+    Write-BuildLog "- Total UI elements: $($uiElementsCount)"
+    Write-BuildLog "- Mapped elements:   $($foundMappingsCount)"
     if ($missingMappingsCount -eq 0) {
-        Write-Host "[OK] - Missing mappings:  $($missingMappingsCount)"
+        Write-BuildLog "[OK] - Missing mappings:  $($missingMappingsCount)"
     } else {
-        Write-Host "[ERROR] - Missing mappings:  $($missingMappingsCount)"
+        Write-BuildLog "[ERROR] - Missing mappings:  $($missingMappingsCount)"
     }
     Write-Host ""
 
     if ($ShowDetails -and $foundMappingsCount -gt 0) {
-        Write-Host "[OK] Successfully mapped elements:"
+        Write-BuildLog "[OK] Successfully mapped elements:"
         $foundMappings | Sort-Object ElementName | ForEach-Object {
-            Write-Host "   [$($_.Type)] $($_.ElementName) -> $($_.MappingKey)"
+            Write-BuildLog "   [$($_.Type)] $($_.ElementName) -> $($_.MappingKey)"
         }
         Write-Host ""
     }
 
     # Show mapping statistics by type
     if ($ShowDetails) {
-        Write-Host "Mapping statistics by type:"
+        Write-BuildLog "Mapping statistics by type:"
         $foundMappings | Group-Object Type | Sort-Object Name | ForEach-Object {
-            Write-Host "   $($_.Name): $($_.Count) elements"
+            Write-BuildLog "   $($_.Name): $($_.Count) elements"
         }
         Write-Host ""
     }
 
     # Final result
     if ($missingMappingsCount -eq 0) {
-        Write-Host "[OK] TEST PASSED: All UI elements have corresponding mappings!"
-        Write-Host "[OK] - ConfigEditor localization system is consistent"
+        Write-BuildLog "[OK] TEST PASSED: All UI elements have corresponding mappings!"
+        Write-BuildLog "[OK] - ConfigEditor localization system is consistent"
         exit 0
     } else {
-        Write-Host "[ERROR] TEST FAILED: Missing mappings detected!"
-        Write-Host "[ERROR] Elements requiring mappings:"
+        Write-BuildLog "[ERROR] TEST FAILED: Missing mappings detected!"
+        Write-BuildLog "[ERROR] Elements requiring mappings:"
         $missingMappings | Sort-Object ElementName | ForEach-Object {
-            Write-Host "   - $($_.ElementName) [Placeholder: $($_.Placeholder)]"
+            Write-BuildLog "   - $($_.ElementName) [Placeholder: $($_.Placeholder)]"
         }
-        Write-Host "Please add the missing mappings to ConfigEditor.Mappings.ps1"
+        Write-BuildLog "Please add the missing mappings to ConfigEditor.Mappings.ps1"
         exit 1
     }
 
 } catch {
-    Write-Host "[NG] TEST ERROR: $($_.Exception.Message)"
-    Write-Host "Stack trace: $($_.ScriptStackTrace)"
+    Write-BuildLog "[NG] TEST ERROR: $($_.Exception.Message)"
+    Write-BuildLog "Stack trace: $($_.ScriptStackTrace)"
     exit 1
 }
