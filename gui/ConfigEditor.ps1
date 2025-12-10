@@ -91,18 +91,18 @@ $currentProcess = Get-Process -Id $PID
 # Make isExecutable script-scoped so functions can access it
 $script:isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
 
-Write-Host "--- DEBUG: Path Resolution Info ---"
-Write-Host "isExecutable: $script:isExecutable"
-Write-Host "PID: $PID"
-Write-Host "ProcessName: $($currentProcess.ProcessName)"
-Write-Host "ProcessPath (Get-Process): '$($currentProcess.Path)'"
+Write-Verbose "--- DEBUG: Path Resolution Info ---"
+Write-Verbose "isExecutable: $script:isExecutable"
+Write-Verbose "PID: $PID"
+Write-Verbose "ProcessName: $($currentProcess.ProcessName)"
+Write-Verbose "ProcessPath (Get-Process): '$($currentProcess.Path)'"
 try {
     # Alternative method to get path, often more reliable in some contexts
-    Write-Host "MainModule.FileName: '$([System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName)'"
+    Write-Verbose "MainModule.FileName: '$([System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName)'"
 } catch {
-    Write-Host "MainModule.FileName: [Failed to get - $($_.Exception.Message)]"
+    Write-Verbose "MainModule.FileName: [Failed to get - $($_.Exception.Message)]"
 }
-Write-Host "PSScriptRoot: '$PSScriptRoot'"
+Write-Verbose "PSScriptRoot: '$PSScriptRoot'"
 
 # Define the application root directory
 # This is critical for finding external resources (config, XAML, logs)
@@ -116,9 +116,9 @@ if ($script:isExecutable) {
     $appRoot = Split-Path -Parent $PSScriptRoot
 }
 
-Write-Host "Calculated appRoot: '$appRoot'"
+Write-Verbose "Calculated appRoot: '$appRoot'"
 if ([string]::IsNullOrEmpty($appRoot)) {
-    Write-Host "ERROR: appRoot is NULL or EMPTY! Join-Path will fail." -ForegroundColor Red
+    Write-Verbose "ERROR: appRoot is NULL or EMPTY! Join-Path will fail."
 }
 
 # Prerequisites check function
@@ -208,14 +208,14 @@ function Test-UIMappings {
         }
 
         if ($missingMappings.Count -gt 0) {
-            Write-Host "[WARNING] ConfigEditor: Missing UI mappings - $($missingMappings -join ', ')"
+            Write-Verbose "[WARNING] ConfigEditor: Missing UI mappings - $($missingMappings -join ', ')"
             return $false
         }
 
         # Validate mapping structure
         # [fix] Change Scope to Script from Global
         if ((Get-Variable -Name 'ButtonMappings' -Scope Script -ErrorAction SilentlyContinue).Value.Count -eq 0) {
-            Write-Host "[WARNING] ConfigEditor: ButtonMappings is empty"
+            Write-Verbose "[WARNING] ConfigEditor: ButtonMappings is empty"
             return $false
         }
 
@@ -297,7 +297,7 @@ function Initialize-ConfigEditor {
 
         # Step 4: Validate UI mappings
         if (-not (Test-UIMappings)) {
-            Write-Host "[WARNING] ConfigEditor: UI mappings validation failed - Some features may not work properly"
+            Write-Verbose "[WARNING] ConfigEditor: UI mappings validation failed - Some features may not work properly"
         }
 
         # Step 5: Initialize state manager with config path
@@ -328,16 +328,16 @@ function Initialize-ConfigEditor {
         Import-AdditionalModules
 
         # Step 6.5: Verify global function references are set
-        Write-Host "[INFO] ConfigEditor: Verifying global function references"
+        Write-Verbose "[INFO] ConfigEditor: Verifying global function references"
         if ($global:GetProjectVersionFunc) {
-            Write-Host "[OK] ConfigEditor: GetProjectVersionFunc is set"
+            Write-Verbose "[OK] ConfigEditor: GetProjectVersionFunc is set"
         } else {
-            Write-Host "[WARN] ConfigEditor: GetProjectVersionFunc is NOT set"
+            Write-Verbose "[WARN] ConfigEditor: GetProjectVersionFunc is NOT set"
         }
         if ($global:TestUpdateAvailableFunc) {
-            Write-Host "[OK] ConfigEditor: TestUpdateAvailableFunc is set"
+            Write-Verbose "[OK] ConfigEditor: TestUpdateAvailableFunc is set"
         } else {
-            Write-Host "[WARN] ConfigEditor: TestUpdateAvailableFunc is NOT set"
+            Write-Verbose "[WARN] ConfigEditor: TestUpdateAvailableFunc is NOT set"
         }
 
         # Step 7: Initialize localization
@@ -346,7 +346,7 @@ function Initialize-ConfigEditor {
             # Set script:ConfigData for localization to access
             # This must be done BEFORE creating the Localization instance
             $script:ConfigData = $stateManager.ConfigData
-            Write-Host "[DEBUG] ConfigEditor: script:ConfigData.language = '$($script:ConfigData.language)'"
+            Write-Verbose "[DEBUG] ConfigEditor: script:ConfigData.language = '$($script:ConfigData.language)'"
 
             # Remove any existing localization instance to avoid type conflicts
             # This prevents PowerShell class type mismatch errors when scripts are re-run
@@ -362,8 +362,8 @@ function Initialize-ConfigEditor {
             $script:Localization.DetectLanguage()
 
             Write-Verbose "[OK] ConfigEditor: Localization initialized - Language: $($script:Localization.CurrentLanguage)"
-            Write-Host "[DEBUG] ConfigEditor: Localization.CurrentLanguage = '$($script:Localization.CurrentLanguage)'"
-            Write-Host "[DEBUG] ConfigEditor: Localization type = '$($script:Localization.GetType().FullName)'"
+            Write-Verbose "[DEBUG] ConfigEditor: Localization.CurrentLanguage = '$($script:Localization.CurrentLanguage)'"
+            Write-Verbose "[DEBUG] ConfigEditor: Localization type = '$($script:Localization.GetType().FullName)'"
         } catch {
             Write-Error "[ERROR] ConfigEditor: Failed to initialize localization: $($_.Exception.Message)"
         }
@@ -373,12 +373,12 @@ function Initialize-ConfigEditor {
         try {
             # Validate mappings are available before creating UI
             if (-not (Get-Variable -Name "ButtonMappings" -Scope Script -ErrorAction SilentlyContinue)) {
-                Write-Host "[WARNING] ConfigEditor: Button mappings not loaded - UI functionality may be limited"
+                Write-Verbose "[WARNING] ConfigEditor: Button mappings not loaded - UI functionality may be limited"
             }
 
             Write-Verbose "[DEBUG] ConfigEditor: Creating ConfigEditorUI instance"
-            Write-Host "[DEBUG] ConfigEditor: Localization instance type = '$($script:Localization.GetType().FullName)'"
-            Write-Host "[DEBUG] ConfigEditor: StateManager instance type = '$($stateManager.GetType().FullName)'"
+            Write-Verbose "[DEBUG] ConfigEditor: Localization instance type = '$($script:Localization.GetType().FullName)'"
+            Write-Verbose "[DEBUG] ConfigEditor: StateManager instance type = '$($stateManager.GetType().FullName)'"
 
             $allMappings = @{
                 Button = $ButtonMappings
@@ -462,7 +462,7 @@ function Initialize-ConfigEditor {
 
             Write-Verbose "[OK] ConfigEditor: Data loaded to UI successfully"
         } catch {
-            Write-Host "[ERROR] ConfigEditor: Failed to load data to UI - $($_.Exception.Message)"
+            Write-Verbose "[ERROR] ConfigEditor: Failed to load data to UI - $($_.Exception.Message)"
             Write-Verbose "[DEBUG] ConfigEditor: UIManager exists - $($null -ne $uiManager)"
             Write-Verbose "[DEBUG] ConfigEditor: ConfigData exists - $($null -ne $stateManager.ConfigData)"
             throw
@@ -514,7 +514,7 @@ function Initialize-ConfigEditor {
                     Write-Verbose "[DEBUG] ConfigEditor: Final UI manager cleanup"
                     $uiManager.Cleanup()
                 } catch {
-                    Write-Host "[WARNING] ConfigEditor: Error in final UI manager cleanup - $($_.Exception.Message)"
+                    Write-Verbose "[WARNING] ConfigEditor: Error in final UI manager cleanup - $($_.Exception.Message)"
                 }
             }
             if ($window) {
@@ -522,7 +522,7 @@ function Initialize-ConfigEditor {
                     Write-Verbose "[DEBUG] ConfigEditor: Final window cleanup"
                     $window = $null
                 } catch {
-                    Write-Host "[WARNING] ConfigEditor: Error in final window cleanup - $($_.Exception.Message)"
+                    Write-Verbose "[WARNING] ConfigEditor: Error in final window cleanup - $($_.Exception.Message)"
                 }
             }
 
@@ -539,15 +539,15 @@ function Initialize-ConfigEditor {
         Write-Verbose "[OK] ConfigEditor: Initialization completed"
 
     } catch {
-        Write-Host "[ERROR] ConfigEditor: Initialization failed - $($_.Exception.Message)"
+        Write-Verbose "[ERROR] ConfigEditor: Initialization failed - $($_.Exception.Message)"
         if ($_.InvocationInfo.ScriptName) {
             $relativePath = $_.InvocationInfo.ScriptName -replace [regex]::Escape($appRoot), "."
             $relativePath = $relativePath -replace "\\", "/"  # Convert to forward slashes
-            Write-Host "[ERROR] ConfigEditor: Module - $relativePath"
+            Write-Verbose "[ERROR] ConfigEditor: Module - $relativePath"
         } else {
-            Write-Host "[ERROR] ConfigEditor: Module - <Main Script>"
+            Write-Verbose "[ERROR] ConfigEditor: Module - <Main Script>"
         }
-        Write-Host "[ERROR] ConfigEditor: Location - Line $($_.InvocationInfo.ScriptLineNumber)"
+        Write-Verbose "[ERROR] ConfigEditor: Location - Line $($_.InvocationInfo.ScriptLineNumber)"
 
         if (-not $Headless) {
             try {
@@ -558,7 +558,7 @@ function Initialize-ConfigEditor {
                     "Error"
                 )
             } catch {
-                Write-Host "[ERROR] ConfigEditor: Failed to show error dialog - $($_.Exception.Message)"
+                Write-Verbose "[ERROR] ConfigEditor: Failed to show error dialog - $($_.Exception.Message)"
             }
         }
     }
@@ -582,10 +582,10 @@ function Import-AdditionalModules {
 
         # --- Load Version.ps1 (for version info) - Load to GLOBAL scope ---
         try {
-            Write-Host "[DEBUG] ConfigEditor: Dot-sourcing additional module - build-tools/Version.ps1"
+            Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing additional module - build-tools/Version.ps1"
             $versionPath = Join-Path -Path $appRoot -ChildPath "build-tools/Version.ps1"
-            Write-Host "[DEBUG] ConfigEditor: Version.ps1 path: $versionPath"
-            Write-Host "[DEBUG] ConfigEditor: Version.ps1 exists: $(Test-Path $versionPath)"
+            Write-Verbose "[DEBUG] ConfigEditor: Version.ps1 path: $versionPath"
+            Write-Verbose "[DEBUG] ConfigEditor: Version.ps1 exists: $(Test-Path $versionPath)"
 
             if (Test-Path $versionPath) {
                 # Load the script content and execute it in the global scope
@@ -596,11 +596,11 @@ function Import-AdditionalModules {
                 $versionScript = $versionScript -replace '\$script:', '$global:'
 
                 . ([ScriptBlock]::Create($versionScript))
-                Write-Host "[OK] ConfigEditor: Loaded: Version.ps1 with global scope"
+                Write-Verbose "[OK] ConfigEditor: Loaded: Version.ps1 with global scope"
 
                 # Verify functions are available
                 if (Test-Path function:\Get-ProjectVersion) {
-                    Write-Host "[OK] ConfigEditor: Get-ProjectVersion function is available globally"
+                    Write-Verbose "[OK] ConfigEditor: Get-ProjectVersion function is available globally"
                     $global:GetProjectVersionFunc = { param($IncludePreRelease)
                         if ($IncludePreRelease) {
                             Get-ProjectVersion -IncludePreRelease
@@ -608,23 +608,23 @@ function Import-AdditionalModules {
                             Get-ProjectVersion
                         }
                     }
-                    Write-Host "[OK] ConfigEditor: Get-ProjectVersion global reference set"
+                    Write-Verbose "[OK] ConfigEditor: Get-ProjectVersion global reference set"
                 } else {
-                    Write-Host "[WARN] ConfigEditor: Get-ProjectVersion function not found after loading Version.ps1"
+                    Write-Verbose "[WARN] ConfigEditor: Get-ProjectVersion function not found after loading Version.ps1"
                 }
             } else {
-                Write-Host "[WARN] ConfigEditor: Version.ps1 not found at: $versionPath"
+                Write-Verbose "[WARN] ConfigEditor: Version.ps1 not found at: $versionPath"
             }
         } catch {
-            Write-Host "[WARN] ConfigEditor: Could not load 'build-tools/Version.ps1'. Version info will be unavailable. Details: $($_.Exception.Message)"
+            Write-Verbose "[WARN] ConfigEditor: Could not load 'build-tools/Version.ps1'. Version info will be unavailable. Details: $($_.Exception.Message)"
         }
 
         # --- Load UpdateChecker.ps1 (for update checks) - Load to GLOBAL scope ---
         try {
-            Write-Host "[DEBUG] ConfigEditor: Dot-sourcing additional module - src/modules/UpdateChecker.ps1"
+            Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing additional module - src/modules/UpdateChecker.ps1"
             $updateCheckerPath = Join-Path -Path $appRoot -ChildPath "src/modules/UpdateChecker.ps1"
-            Write-Host "[DEBUG] ConfigEditor: UpdateChecker.ps1 path: $updateCheckerPath"
-            Write-Host "[DEBUG] ConfigEditor: UpdateChecker.ps1 exists: $(Test-Path $updateCheckerPath)"
+            Write-Verbose "[DEBUG] ConfigEditor: UpdateChecker.ps1 path: $updateCheckerPath"
+            Write-Verbose "[DEBUG] ConfigEditor: UpdateChecker.ps1 exists: $(Test-Path $updateCheckerPath)"
 
             if (Test-Path $updateCheckerPath) {
                 # Load the script content and execute it in the global scope
@@ -635,26 +635,26 @@ function Import-AdditionalModules {
                 $updateCheckerScript = $updateCheckerScript -replace '\$script:', '$global:'
 
                 . ([ScriptBlock]::Create($updateCheckerScript))
-                Write-Host "[OK] ConfigEditor: Loaded: UpdateChecker.ps1 with global scope"
+                Write-Verbose "[OK] ConfigEditor: Loaded: UpdateChecker.ps1 with global scope"
 
                 # Verify functions are available
                 if (Test-Path function:\Test-UpdateAvailable) {
-                    Write-Host "[OK] ConfigEditor: Test-UpdateAvailable function is available globally"
+                    Write-Verbose "[OK] ConfigEditor: Test-UpdateAvailable function is available globally"
                     $global:TestUpdateAvailableFunc = {
                         Test-UpdateAvailable
                     }
-                    Write-Host "[OK] ConfigEditor: Test-UpdateAvailable global reference set"
+                    Write-Verbose "[OK] ConfigEditor: Test-UpdateAvailable global reference set"
                 } else {
-                    Write-Host "[WARN] ConfigEditor: Test-UpdateAvailable function not found after loading UpdateChecker.ps1"
+                    Write-Verbose "[WARN] ConfigEditor: Test-UpdateAvailable function not found after loading UpdateChecker.ps1"
                 }
             } else {
-                Write-Host "[WARN] ConfigEditor: UpdateChecker.ps1 not found at: $updateCheckerPath"
+                Write-Verbose "[WARN] ConfigEditor: UpdateChecker.ps1 not found at: $updateCheckerPath"
             }
         } catch {
-            Write-Host "[WARN] ConfigEditor: Could not load 'src/modules/UpdateChecker.ps1'. Update checks will be disabled. Details: $($_.Exception.Message)"
+            Write-Verbose "[WARN] ConfigEditor: Could not load 'src/modules/UpdateChecker.ps1'. Update checks will be disabled. Details: $($_.Exception.Message)"
         }
     } catch {
-        Write-Host "[WARNING] ConfigEditor: Failed to import additional modules - $($_.Exception.Message)"
+        Write-Verbose "[WARNING] ConfigEditor: Failed to import additional modules - $($_.Exception.Message)"
     }
 }
 
@@ -1969,7 +1969,7 @@ function Show-LanguageChangeRestartMessage {
             # This ensures the language change is properly tracked
             if ($script:ConfigEditorForm) {
                 $newLanguageCode = $script:Window.FindName("LanguageCombo").SelectedItem.Tag
-                Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Updating UIManager.CurrentLanguage from '$($script:ConfigEditorForm.CurrentLanguage)' to '$newLanguageCode'"
+                Write-Verbose "[DEBUG] Show-LanguageChangeRestartMessage: Updating UIManager.CurrentLanguage from '$($script:ConfigEditorForm.CurrentLanguage)' to '$newLanguageCode'"
                 $script:ConfigEditorForm.CurrentLanguage = $newLanguageCode
             }
 
@@ -2016,17 +2016,17 @@ function Show-LanguageChangeRestartMessage {
                 }
             }
 
-            Write-Host "[ERROR] ConfigEditor: Restarting application to apply language changes"
+            Write-Verbose "[ERROR] ConfigEditor: Restarting application to apply language changes"
 
             # Determine execution context and prepare restart command
             if ($script:isExecutable) {
                 # In executable mode: restart the .exe directly
-                Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Executable mode detected"
+                Write-Verbose "[DEBUG] Show-LanguageChangeRestartMessage: Executable mode detected"
 
                 $currentProcess = Get-Process -Id $PID
                 $executablePath = $currentProcess.Path
 
-                Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Executable path: $executablePath"
+                Write-Verbose "[DEBUG] Show-LanguageChangeRestartMessage: Executable path: $executablePath"
 
                 # Start new instance with proper process configuration
                 $startInfo = New-Object System.Diagnostics.ProcessStartInfo
@@ -2034,30 +2034,30 @@ function Show-LanguageChangeRestartMessage {
                 $startInfo.UseShellExecute = $false
                 $startInfo.CreateNoWindow = $false
 
-                Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Starting new ConfigEditor instance (executable mode)"
-                Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Command: $($startInfo.FileName)"
+                Write-Verbose "[DEBUG] Show-LanguageChangeRestartMessage: Starting new ConfigEditor instance (executable mode)"
+                Write-Verbose "[DEBUG] Show-LanguageChangeRestartMessage: Command: $($startInfo.FileName)"
 
                 try {
                     $newProcess = [System.Diagnostics.Process]::Start($startInfo)
                     if ($newProcess) {
-                        Write-Host "[OK] ConfigEditor: New instance started successfully - PID: $($newProcess.Id)"
+                        Write-Verbose "[OK] ConfigEditor: New instance started successfully - PID: $($newProcess.Id)"
                         Write-Verbose "[OK] ConfigEditor: New instance started successfully - PID: $($newProcess.Id)"
                     } else {
-                        Write-Host "[ERROR] ConfigEditor: Process.Start returned null"
+                        Write-Verbose "[ERROR] ConfigEditor: Process.Start returned null"
                         throw "Process.Start returned null"
                     }
                 } catch {
-                    Write-Host "[ERROR] ConfigEditor: Failed to start new instance (executable mode) - $($_.Exception.Message)"
-                    Write-Host "[DEBUG] ConfigEditor: Exception Type - $($_.Exception.GetType().Name)"
+                    Write-Verbose "[ERROR] ConfigEditor: Failed to start new instance (executable mode) - $($_.Exception.Message)"
+                    Write-Verbose "[DEBUG] ConfigEditor: Exception Type - $($_.Exception.GetType().Name)"
 
                     # Try alternative method: Use Start-Process cmdlet
-                    Write-Host "[INFO] ConfigEditor: Attempting alternative restart method using Start-Process"
+                    Write-Verbose "[INFO] ConfigEditor: Attempting alternative restart method using Start-Process"
                     try {
                         Start-Process -FilePath $executablePath -WindowStyle Normal -ErrorAction Stop
-                        Write-Host "[OK] ConfigEditor: Alternative restart method succeeded"
+                        Write-Verbose "[OK] ConfigEditor: Alternative restart method succeeded"
                     } catch {
-                        Write-Host "[ERROR] ConfigEditor: Alternative restart method also failed - $($_.Exception.Message)"
-                        Write-Host "[ERROR] ConfigEditor: Unable to restart application. User must restart manually."
+                        Write-Verbose "[ERROR] ConfigEditor: Alternative restart method also failed - $($_.Exception.Message)"
+                        Write-Verbose "[ERROR] ConfigEditor: Unable to restart application. User must restart manually."
 
                         # Show error dialog to user
                         $errorMsg = "Failed to restart the configuration editor automatically. Please restart the application manually to apply language changes."
@@ -2069,7 +2069,7 @@ function Show-LanguageChangeRestartMessage {
                 }
             } else {
                 # In script mode: restart via PowerShell
-                Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Script mode detected"
+                Write-Verbose "[DEBUG] Show-LanguageChangeRestartMessage: Script mode detected"
 
                 # Get the current script path
                 $currentScript = $PSCommandPath
@@ -2086,34 +2086,34 @@ function Show-LanguageChangeRestartMessage {
                 # Note: StandardOutputEncoding is only valid when UseShellExecute = $true or RedirectStandardOutput = $true
                 # For UI applications, we don't need it since we're not capturing output
 
-                Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Starting new ConfigEditor instance (script mode)"
-                Write-Host "[DEBUG] Show-LanguageChangeRestartMessage: Command: $($startInfo.FileName) $($startInfo.Arguments)"
+                Write-Verbose "[DEBUG] Show-LanguageChangeRestartMessage: Starting new ConfigEditor instance (script mode)"
+                Write-Verbose "[DEBUG] Show-LanguageChangeRestartMessage: Command: $($startInfo.FileName) $($startInfo.Arguments)"
 
                 try {
                     $newProcess = [System.Diagnostics.Process]::Start($startInfo)
                     if ($newProcess) {
-                        Write-Host "[OK] ConfigEditor: New instance started successfully - PID: $($newProcess.Id)"
+                        Write-Verbose "[OK] ConfigEditor: New instance started successfully - PID: $($newProcess.Id)"
                         Write-Verbose "[OK] ConfigEditor: New instance started successfully - PID: $($newProcess.Id)"
                     } else {
-                        Write-Host "[ERROR] ConfigEditor: Process.Start returned null"
+                        Write-Verbose "[ERROR] ConfigEditor: Process.Start returned null"
                         throw "Process.Start returned null"
                     }
                 } catch {
-                    Write-Host "[ERROR] ConfigEditor: Failed to start new instance (script mode) with ProcessStartInfo"
-                    Write-Host "[DEBUG] ConfigEditor: Exception - $($_.Exception.Message)"
-                    Write-Host "[DEBUG] ConfigEditor: Exception Type - $($_.Exception.GetType().Name)"
+                    Write-Verbose "[ERROR] ConfigEditor: Failed to start new instance (script mode) with ProcessStartInfo"
+                    Write-Verbose "[DEBUG] ConfigEditor: Exception - $($_.Exception.Message)"
+                    Write-Verbose "[DEBUG] ConfigEditor: Exception Type - $($_.Exception.GetType().Name)"
 
                     # Try alternative method: Use Start-Process cmdlet instead
-                    Write-Host "[INFO] ConfigEditor: Attempting alternative restart method using Start-Process"
+                    Write-Verbose "[INFO] ConfigEditor: Attempting alternative restart method using Start-Process"
                     try {
                         Start-Process -FilePath "powershell.exe" `
                             -ArgumentList "-ExecutionPolicy Bypass -NoProfile -Command `"& { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; & '$currentScript' }`"" `
                             -WindowStyle Normal `
                             -ErrorAction Stop
-                        Write-Host "[OK] ConfigEditor: Alternative restart method succeeded"
+                        Write-Verbose "[OK] ConfigEditor: Alternative restart method succeeded"
                     } catch {
-                        Write-Host "[ERROR] ConfigEditor: Alternative restart method also failed - $($_.Exception.Message)"
-                        Write-Host "[ERROR] ConfigEditor: Unable to restart application. User must restart manually."
+                        Write-Verbose "[ERROR] ConfigEditor: Alternative restart method also failed - $($_.Exception.Message)"
+                        Write-Verbose "[ERROR] ConfigEditor: Unable to restart application. User must restart manually."
 
                         # Show error dialog to user
                         $errorMsg = "Failed to restart the configuration editor automatically. Please restart the application manually to apply language changes."
@@ -2368,7 +2368,7 @@ function Show-SafeMessage {
 
         # If running in headless mode, print to console and return the default result
         if ($script:Headless) {
-            Write-Host "[$MessageType] $titleText : $messageText"
+            Write-Verbose "[$MessageType] $titleText : $messageText"
             return $defaultResultType
         }
 
@@ -2523,25 +2523,25 @@ $script:IsInitializationComplete = $false
 
 # Debug helper function to show usage information
 function Show-DebugHelp {
-    Write-Host ""
+    Write-Verbose ""
     Write-Verbose "[INFO] ConfigEditor: Debug Mode Usage"
-    Write-Host ""
-    Write-Host "Start with debug mode (manual close):"
-    Write-Host "  gui\ConfigEditor.ps1 -DebugMode"
-    Write-Host ""
-    Write-Host "Start with auto-close (3 seconds):"
-    Write-Host "  gui\ConfigEditor.ps1 -DebugMode -AutoCloseSeconds 3"
-    Write-Host ""
-    Write-Host "Start with auto-close (10 seconds):"
-    Write-Host "  gui\ConfigEditor.ps1 -DebugMode -AutoCloseSeconds 10"
-    Write-Host ""
-    Write-Host "Normal mode (no debug output):"
-    Write-Host "  gui\ConfigEditor.ps1"
-    Write-Host ""
-    Write-Host "Show this help:"
-    Write-Host "  gui\ConfigEditor.ps1 -NoAutoStart"
-    Write-Host "  Then call: Show-DebugHelp"
-    Write-Host ""
+    Write-Verbose ""
+    Write-Verbose "Start with debug mode (manual close):"
+    Write-Verbose "  gui\ConfigEditor.ps1 -DebugMode"
+    Write-Verbose ""
+    Write-Verbose "Start with auto-close (3 seconds):"
+    Write-Verbose "  gui\ConfigEditor.ps1 -DebugMode -AutoCloseSeconds 3"
+    Write-Verbose ""
+    Write-Verbose "Start with auto-close (10 seconds):"
+    Write-Verbose "  gui\ConfigEditor.ps1 -DebugMode -AutoCloseSeconds 10"
+    Write-Verbose ""
+    Write-Verbose "Normal mode (no debug output):"
+    Write-Verbose "  gui\ConfigEditor.ps1"
+    Write-Verbose ""
+    Write-Verbose "Show this help:"
+    Write-Verbose "  gui\ConfigEditor.ps1 -NoAutoStart"
+    Write-Verbose "  Then call: Show-DebugHelp"
+    Write-Verbose ""
 }
 
 # Start the application
@@ -2549,7 +2549,7 @@ if (-not $NoAutoStart) {
     if (Test-Prerequisites) {
         Initialize-ConfigEditor
     } else {
-        Write-Host "[ERROR] ConfigEditor: Cannot start due to missing prerequisites"
+        Write-Verbose "[ERROR] ConfigEditor: Cannot start due to missing prerequisites"
         exit 1
     }
 }

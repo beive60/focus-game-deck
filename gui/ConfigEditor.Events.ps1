@@ -1057,32 +1057,32 @@
     # Handle check update
     [void] HandleCheckUpdate() {
         try {
-            Write-Host "[DEBUG] ConfigEditorEvents: Update check started"
+            Write-Verbose "[DEBUG] ConfigEditorEvents: Update check started"
 
             # Get current version - use global function reference
             $currentVersion = if ($global:GetProjectVersionFunc) {
                 & $global:GetProjectVersionFunc -IncludePreRelease $true
             } else {
-                Write-Host "[WARNING] ConfigEditorEvents: Get-ProjectVersion not available"
+                Write-Verbose "[WARNING] ConfigEditorEvents: Get-ProjectVersion not available"
                 "Unknown"
             }
-            Write-Host "[INFO] ConfigEditorEvents: Current version - $currentVersion"
+            Write-Verbose "[INFO] ConfigEditorEvents: Current version - $currentVersion"
 
             # Check for updates - use global function reference
             if (-not $global:TestUpdateAvailableFunc) {
-                Write-Host "[WARNING] ConfigEditorEvents: Update checker not available"
+                Write-Verbose "[WARNING] ConfigEditorEvents: Update checker not available"
                 $message = $this.uiManager.GetLocalizedMessage("updateCheckFailed")
                 $title = $this.uiManager.GetLocalizedMessage("updateCheckTitle")
                 ("System.Windows.MessageBox" -as [type])::Show($message, $title, "OK", "Warning")
                 return
             }
 
-            Write-Host "[INFO] ConfigEditorEvents: Checking for updates"
+            Write-Verbose "[INFO] ConfigEditorEvents: Checking for updates"
             $updateInfo = & $global:TestUpdateAvailableFunc
 
             if ($updateInfo) {
-                Write-Host "[DEBUG] ConfigEditorEvents: Update info received"
-                Write-Host "[DEBUG] ConfigEditorEvents: Update details - $($updateInfo | ConvertTo-Json -Depth 3)"
+                Write-Verbose "[DEBUG] ConfigEditorEvents: Update info received"
+                Write-Verbose "[DEBUG] ConfigEditorEvents: Update details - $($updateInfo | ConvertTo-Json -Depth 3)"
 
                 if ($updateInfo.UpdateAvailable) {
                     # Show update available dialog
@@ -1094,10 +1094,10 @@
                     if ("$result" -eq "Yes") {
                         # Open the release page
                         if ($updateInfo.ReleaseInfo -and $updateInfo.ReleaseInfo.HtmlUrl) {
-                            Write-Host "[INFO] ConfigEditorEvents: Opening release page - $($updateInfo.ReleaseInfo.HtmlUrl)"
+                            Write-Verbose "[INFO] ConfigEditorEvents: Opening release page - $($updateInfo.ReleaseInfo.HtmlUrl)"
                             Start-Process $updateInfo.ReleaseInfo.HtmlUrl
                         } else {
-                            Write-Host "[WARNING] ConfigEditorEvents: No release URL provided in update info"
+                            Write-Verbose "[WARNING] ConfigEditorEvents: No release URL provided in update info"
                         }
                     }
                 } else {
@@ -1108,7 +1108,7 @@
                     ("System.Windows.MessageBox" -as [type])::Show($message, $title, "OK", "Information")
                 }
             } else {
-                Write-Host "[WARNING] ConfigEditorEvents: No update info received"
+                Write-Verbose "[WARNING] ConfigEditorEvents: No update info received"
                 # Handle case where update check failed
                 $message = $this.uiManager.GetLocalizedMessage("updateCheckFailed")
                 $title = $this.uiManager.GetLocalizedMessage("updateCheckTitle")
@@ -1116,10 +1116,10 @@
                 ("System.Windows.MessageBox" -as [type])::Show($message, $title, "OK", "Warning")
             }
 
-            Write-Host "[OK] ConfigEditorEvents: Update check completed"
+            Write-Verbose "[OK] ConfigEditorEvents: Update check completed"
 
         } catch {
-            Write-Host "[ERROR] ConfigEditorEvents: Update check failed - $($_.Exception.Message)"
+            Write-Verbose "[ERROR] ConfigEditorEvents: Update check failed - $($_.Exception.Message)"
 
             # Show error message
             $message = $this.uiManager.GetLocalizedMessage("updateCheckError") -f $_.Exception.Message
@@ -1273,30 +1273,30 @@
         # Skip if still initializing to avoid triggering restart during startup
         if (-not $script:IsInitializationComplete) {
             Write-Verbose "Skipping language change handler - initialization not complete"
-            Write-Host "[DEBUG] ConfigEditorEvents: IsInitializationComplete = $script:IsInitializationComplete"
+            Write-Verbose "[DEBUG] ConfigEditorEvents: IsInitializationComplete = $script:IsInitializationComplete"
             return
         }
 
         $languageCombo = $this.uiManager.Window.FindName("LanguageCombo")
         if (-not $languageCombo.SelectedItem) {
-            Write-Host "[DEBUG] ConfigEditorEvents: LanguageCombo.SelectedItem is null"
+            Write-Verbose "[DEBUG] ConfigEditorEvents: LanguageCombo.SelectedItem is null"
             return
         }
 
         $selectedLanguageCode = $languageCombo.SelectedItem.Tag
-        Write-Host "[DEBUG] ConfigEditorEvents: LanguageCombo.SelectedItem.Tag = '$selectedLanguageCode'"
-        Write-Host "[DEBUG] ConfigEditorEvents: UIManager.CurrentLanguage = '$($this.uiManager.CurrentLanguage)'"
-        Write-Host "[DEBUG] ConfigEditorEvents: Config.language = '$($this.stateManager.ConfigData.language)'"
-        Write-Host "[DEBUG] ConfigEditorEvents: Are combo and UIManager equal? $($selectedLanguageCode -eq $this.uiManager.CurrentLanguage)"
+        Write-Verbose "[DEBUG] ConfigEditorEvents: LanguageCombo.SelectedItem.Tag = '$selectedLanguageCode'"
+        Write-Verbose "[DEBUG] ConfigEditorEvents: UIManager.CurrentLanguage = '$($this.uiManager.CurrentLanguage)'"
+        Write-Verbose "[DEBUG] ConfigEditorEvents: Config.language = '$($this.stateManager.ConfigData.language)'"
+        Write-Verbose "[DEBUG] ConfigEditorEvents: Are combo and UIManager equal? $($selectedLanguageCode -eq $this.uiManager.CurrentLanguage)"
 
         # Check if language actually changed
         if ($selectedLanguageCode -eq $this.uiManager.CurrentLanguage) {
             Write-Verbose "Language not changed, skipping restart prompt"
-            Write-Host "[INFO] ConfigEditorEvents: Language selection unchanged (both = '$selectedLanguageCode')"
+            Write-Verbose "[INFO] ConfigEditorEvents: Language selection unchanged (both = '$selectedLanguageCode')"
             return
         }
 
-        Write-Host "[INFO] ConfigEditorEvents: Language changed from '$($this.uiManager.CurrentLanguage)' to '$selectedLanguageCode'"
+        Write-Verbose "[INFO] ConfigEditorEvents: Language changed from '$($this.uiManager.CurrentLanguage)' to '$selectedLanguageCode'"
 
         # Save the language setting to configuration
         if (-not $this.stateManager.ConfigData.PSObject.Properties["language"]) {
@@ -1318,11 +1318,11 @@
     # Handle window closing
     [void] HandleWindowClosing([Object]$e) {
         try {
-            Write-Host "[DEBUG] ConfigEditorEvents: HandleWindowClosing called"
+            Write-Verbose "[DEBUG] ConfigEditorEvents: HandleWindowClosing called"
 
             # Check if there are unsaved changes
             if ($this.stateManager.TestHasUnsavedChanges()) {
-                Write-Host "[DEBUG] ConfigEditorEvents: Unsaved changes detected"
+                Write-Verbose "[DEBUG] ConfigEditorEvents: Unsaved changes detected"
 
                 # Get localized messages
                 $message = $this.uiManager.GetLocalizedMessage("saveBeforeClosePrompt")
@@ -1399,17 +1399,17 @@
                 [void]$dialogWindow.ShowDialog()
                 $userChoice = $dialogWindow.Tag
 
-                Write-Host "[DEBUG] ConfigEditorEvents: User choice - $userChoice"
+                Write-Verbose "[DEBUG] ConfigEditorEvents: User choice - $userChoice"
 
                 switch ($userChoice) {
                     "Save" {
                         # Save and close
-                        Write-Host "[DEBUG] ConfigEditorEvents: Saving changes before closing"
+                        Write-Verbose "[DEBUG] ConfigEditorEvents: Saving changes before closing"
                         try {
                             $this.HandleSaveConfig()
-                            Write-Host "[DEBUG] ConfigEditorEvents: Changes saved successfully"
+                            Write-Verbose "[DEBUG] ConfigEditorEvents: Changes saved successfully"
                         } catch {
-                            Write-Host "[ERROR] ConfigEditorEvents: Failed to save changes - $($_.Exception.Message)"
+                            Write-Verbose "[ERROR] ConfigEditorEvents: Failed to save changes - $($_.Exception.Message)"
                             # Show error and cancel closing
                             Show-SafeMessage -Key "configSaveFailed" -MessageType "Error"
                             $e.Cancel = $true
@@ -1418,22 +1418,22 @@
                     }
                     "Discard" {
                         # Discard and close
-                        Write-Host "[DEBUG] ConfigEditorEvents: Discarding changes and closing"
+                        Write-Verbose "[DEBUG] ConfigEditorEvents: Discarding changes and closing"
                     }
                     default {
                         # Cancel closing (includes "Cancel" and null)
-                        Write-Host "[DEBUG] ConfigEditorEvents: User cancelled window closing"
+                        Write-Verbose "[DEBUG] ConfigEditorEvents: User cancelled window closing"
                         $e.Cancel = $true
                         return
                     }
                 }
             } else {
-                Write-Host "[DEBUG] ConfigEditorEvents: No unsaved changes, closing directly"
+                Write-Verbose "[DEBUG] ConfigEditorEvents: No unsaved changes, closing directly"
             }
 
-            Write-Host "[DEBUG] ConfigEditorEvents: Window closing approved"
+            Write-Verbose "[DEBUG] ConfigEditorEvents: Window closing approved"
         } catch {
-            Write-Host "[WARNING] ConfigEditorEvents: Error in HandleWindowClosing - $($_.Exception.Message)"
+            Write-Verbose "[WARNING] ConfigEditorEvents: Error in HandleWindowClosing - $($_.Exception.Message)"
             # Don't cancel on error - allow window to close
         }
     }
@@ -1827,7 +1827,7 @@
                 return
             }
 
-            Write-Host "[INFO] ConfigEditorEvents: Launching game from GUI - $GameId"
+            Write-Verbose "[INFO] ConfigEditorEvents: Launching game from GUI - $GameId"
 
             # Launch the game using PowerShell - bypass Main.ps1 to prevent recursive ConfigEditor launch
             $process = Start-Process -FilePath "powershell.exe" -ArgumentList @(
@@ -1907,34 +1907,34 @@
     # Handle about dialog
     [void] HandleAbout() {
         try {
-            Write-Host "[DEBUG] ConfigEditorEvents: About dialog started"
+            Write-Verbose "[DEBUG] ConfigEditorEvents: About dialog started"
 
             # Get version information - use global function reference
             $version = if ($global:GetProjectVersionFunc) {
                 & $global:GetProjectVersionFunc
             } else {
-                Write-Host "[WARNING] ConfigEditorEvents: Get-ProjectVersion not available"
+                Write-Verbose "[WARNING] ConfigEditorEvents: Get-ProjectVersion not available"
                 "Unknown"
             }
             $buildDate = Get-Date -Format "yyyy-MM-dd"
 
-            Write-Host "[INFO] ConfigEditorEvents: Version - $version"
-            Write-Host "[INFO] ConfigEditorEvents: Build Date - $buildDate"
+            Write-Verbose "[INFO] ConfigEditorEvents: Version - $version"
+            Write-Verbose "[INFO] ConfigEditorEvents: Build Date - $buildDate"
 
             # Create about message
             $aboutMessage = $this.uiManager.GetLocalizedMessage("aboutMessage") -f $version, $buildDate
             $aboutTitle = $this.uiManager.GetLocalizedMessage("aboutTitle")
 
-            Write-Host "[DEBUG] ConfigEditorEvents: About Message - $aboutMessage"
-            Write-Host "[DEBUG] ConfigEditorEvents: About Title - $aboutTitle"
+            Write-Verbose "[DEBUG] ConfigEditorEvents: About Message - $aboutMessage"
+            Write-Verbose "[DEBUG] ConfigEditorEvents: About Title - $aboutTitle"
 
             # Show the about dialog
             ("System.Windows.MessageBox" -as [type])::Show($aboutMessage, $aboutTitle, "OK", "Information")
 
-            Write-Host "[OK] ConfigEditorEvents: About dialog completed"
+            Write-Verbose "[OK] ConfigEditorEvents: About dialog completed"
 
         } catch {
-            Write-Host "[ERROR] ConfigEditorEvents: About dialog error - $($_.Exception.Message)"
+            Write-Verbose "[ERROR] ConfigEditorEvents: About dialog error - $($_.Exception.Message)"
         }
     }
 
@@ -1978,7 +1978,7 @@
 
             # Execute the launcher creation script
             $gameIds = $selectedGames -join ","
-            Write-Host "[INFO] ConfigEditorEvents: Creating launchers for games - $gameIds"
+            Write-Verbose "[INFO] ConfigEditorEvents: Creating launchers for games - $gameIds"
 
             try {
                 & $launcherScriptPath -GameIds $gameIds -ConfigPath $script:ConfigPath
@@ -1998,7 +1998,7 @@
     # Register all UI event handlers
     [void] RegisterAll() {
         try {
-            Write-Host "[INFO] ConfigEditorEvents: Registering all UI event handlers"
+            Write-Verbose "[INFO] ConfigEditorEvents: Registering all UI event handlers"
 
             $self = $this
 
@@ -2006,10 +2006,10 @@
             $this.uiManager.Window.add_Closing({
                     param($eventSender, $e)
                     try {
-                        Write-Host "[DEBUG] ConfigEditorEvents: Window Closing event fired"
+                        Write-Verbose "[DEBUG] ConfigEditorEvents: Window Closing event fired"
                         $self.HandleWindowClosing($e)
                     } catch {
-                        Write-Host "[WARNING] ConfigEditorEvents: Error in window closing event - $($_.Exception.Message)"
+                        Write-Verbose "[WARNING] ConfigEditorEvents: Error in window closing event - $($_.Exception.Message)"
                     }
                 }.GetNewClosure())
 
@@ -2137,9 +2137,9 @@
             }
             $this.uiManager.Window.FindName("AboutMenuItem").add_Click({ $self.HandleAbout() }.GetNewClosure())
 
-            Write-Host "[OK] ConfigEditorEvents: All UI event handlers registered successfully"
+            Write-Verbose "[OK] ConfigEditorEvents: All UI event handlers registered successfully"
         } catch {
-            Write-Host "[ERROR] ConfigEditorEvents: Failed to register event handlers - $($_.Exception.Message)"
+            Write-Verbose "[ERROR] ConfigEditorEvents: Failed to register event handlers - $($_.Exception.Message)"
             throw $_
         }
     }
