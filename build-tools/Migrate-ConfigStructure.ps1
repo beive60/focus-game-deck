@@ -59,6 +59,9 @@ if (-not $ConfigPath) {
     $ConfigPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
 }
 
+# Import the BuildLogger at script level
+. "$scriptDir/utils/BuildLogger.ps1"
+
 # Import required modules
 $modulesPath = Join-Path -Path $projectRoot -ChildPath "src/modules"
 
@@ -66,9 +69,6 @@ $modulesPath = Join-Path -Path $projectRoot -ChildPath "src/modules"
 function Get-ConfigJson {
     param([string]$Path)
 
-
-# Import the BuildLogger
-. "$PSScriptRoot/utils/BuildLogger.ps1"
     if (-not (Test-Path $Path)) {
         throw "Configuration file not found: $Path"
     }

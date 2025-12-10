@@ -52,6 +52,9 @@ param(
     [switch]$Verbose
 )
 
+# Import the BuildLogger at script level
+. "$PSScriptRoot/utils/BuildLogger.ps1"
+
 if ($Verbose) {
     $VerbosePreference = "Continue"
 }
@@ -62,8 +65,6 @@ function Write-PackageMessage {
         [string]$Level = "INFO"
     )
 
-# Import the BuildLogger
-. "$PSScriptRoot/utils/BuildLogger.ps1"
     Write-BuildLog "[$Level] $Message"
 }
 
@@ -89,9 +90,6 @@ function New-ReleaseReadme {
         [string]$BuildDate
     )
 
-
-# Import the BuildLogger
-. "$PSScriptRoot/utils/BuildLogger.ps1"
     $readme = @"
 # Focus Game Deck - Release Package
 

@@ -48,14 +48,15 @@ param(
     [string]$ProjectRoot = (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent)
 )
 
+# Import the BuildLogger at script level
+. "$PSScriptRoot/utils/BuildLogger.ps1"
+
 function Write-BundlerMessage {
     param(
         [string]$Message,
         [string]$Level = "INFO"
     )
 
-# Import the BuildLogger
-. "$PSScriptRoot/utils/BuildLogger.ps1"
     Write-BuildLog "[$Level] $Message"
 }
 
@@ -66,9 +67,6 @@ function Resolve-DotSourcedPath {
         [string]$ProjectRoot
     )
 
-
-# Import the BuildLogger
-. "$PSScriptRoot/utils/BuildLogger.ps1"
     if ($Line -notmatch '^\s*\.\s+(.+)') {
         return $null
     }
@@ -134,9 +132,6 @@ function Get-ScriptDependencies {
         [hashtable]$ProcessedFiles = @{}
     )
 
-
-# Import the BuildLogger
-. "$PSScriptRoot/utils/BuildLogger.ps1"
     if ($ProcessedFiles.ContainsKey($ScriptPath)) {
         Write-Verbose "Already processed: $ScriptPath"
         return @()
@@ -179,9 +174,6 @@ function New-BundledScript {
         [string]$ProjectRoot
     )
 
-
-# Import the BuildLogger
-. "$PSScriptRoot/utils/BuildLogger.ps1"
     if (-not (Test-Path $EntryPointPath)) {
         Write-BundlerMessage "Entry point not found: $EntryPointPath" "ERROR"
         return $false

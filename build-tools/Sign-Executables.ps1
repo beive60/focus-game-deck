@@ -84,13 +84,12 @@ param(
     [string]$SignFile
 )
 
+# Import the BuildLogger at script level
+. "$PSScriptRoot/utils/BuildLogger.ps1"
+
 # Load signing configuration
 function Get-SigningConfig {
     param([string]$SigningConfigPath)
-
-
-# Import the BuildLogger
-. "$PSScriptRoot/utils/BuildLogger.ps1"
     if (-not (Test-Path $SigningConfigPath)) {
         Write-BuildLog "Signing configuration not found: $SigningConfigPath" -Level Error
         return $null
@@ -151,9 +150,6 @@ function Get-CodeSigningCertificates {
 function Test-Certificate {
     param([object]$SigningConfig)
 
-
-# Import the BuildLogger
-. "$PSScriptRoot/utils/BuildLogger.ps1"
     if (-not $SigningConfig) {
         Write-BuildLog "Signing configuration is required for certificate testing" -Level Error
         return $false
@@ -215,9 +211,6 @@ function Add-CodeSignature {
         [object]$SigningConfig
     )
 
-
-# Import the BuildLogger
-. "$PSScriptRoot/utils/BuildLogger.ps1"
     if (-not (Test-Path $FilePath)) {
         Write-BuildLog "File not found: $FilePath" -Level Error
         return $false
@@ -290,9 +283,6 @@ function Add-AllCodeSignatures {
         [object]$SigningConfig
     )
 
-
-# Import the BuildLogger
-. "$PSScriptRoot/utils/BuildLogger.ps1"
     if (-not (Test-Path $BuildPath)) {
         Write-BuildLog "Build directory not found: $BuildPath" -Level Error
         return $false
@@ -336,9 +326,6 @@ function New-SignedDistribution {
         [object]$BuildConfig
     )
 
-
-# Import the BuildLogger
-. "$PSScriptRoot/utils/BuildLogger.ps1"
     $distDir = Join-Path (Split-Path $BuildPath -Parent) "dist"
 
     if (-not (Test-Path $distDir)) {

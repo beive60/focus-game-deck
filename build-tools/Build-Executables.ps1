@@ -47,6 +47,9 @@ param(
     [switch]$Verbose
 )
 
+# Import the BuildLogger at script level
+. "$PSScriptRoot/utils/BuildLogger.ps1"
+
 if ($Verbose) {
     $VerbosePreference = "Continue"
 }
@@ -57,9 +60,6 @@ function Write-BuildMessage {
         [string]$Level = "INFO"
     )
 
-
-# Import the BuildLogger
-. "$PSScriptRoot/utils/BuildLogger.ps1"
     Write-BuildLog "[$Level] $Message"
 }
 
@@ -85,8 +85,8 @@ function Build-Executable {
     )
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/utils/BuildLogger.ps1"
+    # Import the BuildLogger
+    . "$PSScriptRoot/utils/BuildLogger.ps1"
     if (-not (Test-Path $InputScript)) {
         Write-BuildMessage "Input script not found: $InputScript" "ERROR"
         return $false

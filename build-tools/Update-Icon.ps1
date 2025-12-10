@@ -17,9 +17,9 @@ Date: 2025-10-22
 #>
 param()
 
-
-# Import the BuildLogger
+# Import the BuildLogger at script level
 . "$PSScriptRoot/utils/BuildLogger.ps1"
+
 # Set strict mode
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'

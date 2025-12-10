@@ -85,9 +85,9 @@ param(
     [switch]$All
 )
 
-
-# Import the BuildLogger
+# Import the BuildLogger at script level
 . "$PSScriptRoot/utils/BuildLogger.ps1"
+
 # Display deprecation warning
 function Show-DeprecationWarning {
     Write-Host ""
