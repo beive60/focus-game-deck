@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Test script for log file automatic deletion functionality.
 
@@ -70,6 +70,9 @@ param(
     [switch]$Verbose
 )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
 # Set execution policy and encoding
 $ErrorActionPreference = "Stop"
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
@@ -122,13 +125,16 @@ function Write-TestResult {
         [string]$Message = ""
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     if ($Passed) {
-        Write-Host "PASS: $TestName"
-        if ($Message) { Write-Host "   $Message" }
+        Write-BuildLog "PASS: $TestName"
+        if ($Message) { Write-BuildLog "   $Message" }
         $script:TestsPassed++
     } else {
-        Write-Host "FAIL: $TestName"
-        if ($Message) { Write-Host "   $Message" }
+        Write-BuildLog "FAIL: $TestName"
+        if ($Message) { Write-BuildLog "   $Message" }
         $script:TestsFailed++
     }
 }
@@ -152,6 +158,9 @@ function Write-TestResult {
 function Clear-TestEnvironment {
     param()
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     try {
         if (Test-Path $TestLogDir) {
             Remove-Item -Path $TestLogDir -Recurse -Force
@@ -160,7 +169,7 @@ function Clear-TestEnvironment {
             Remove-Item -Path $TestConfigPath -Force
         }
     } catch {
-        Write-Warning "Failed to cleanup test environment: $($_.Exception.Message)"
+        Write-BuildLog "Failed to cleanup test environment: $($_.Exception.Message)" -Level Warning
     }
 }
 
@@ -192,6 +201,9 @@ function New-TestLogFiles {
         [string]$LogDirectory
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     # Ensure directory exists
     if (-not (Test-Path $LogDirectory)) {
         New-Item -ItemType Directory -Path $LogDirectory -Force | Out-Null
@@ -218,7 +230,7 @@ function New-TestLogFiles {
         (Get-Item $filePath).LastWriteTime = $oldDate
 
         if ($Verbose) {
-            Write-Host "Created test file: $($file.Name) (Age: $($file.DaysOld) days)"
+            Write-BuildLog "Created test file: $($file.Name) (Age: $($file.DaysOld) days)"
         }
     }
 
@@ -253,6 +265,9 @@ function New-TestConfig {
         [int]$RetentionDays
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     $config = @{
         logging = @{
             level = "Debug"
@@ -301,8 +316,11 @@ function Test-LogRetention {
         [string]$TestDescription
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     try {
-        Write-Host "`Testing: $TestDescription"
+        Write-BuildLog "`Testing: $TestDescription"
 
         # Create fresh test environment
         Clear-TestEnvironment
@@ -324,7 +342,7 @@ function Test-LogRetention {
         $filesDeleted = $filesBefore - $filesAfter
 
         if ($Verbose) {
-            Write-Host "Files before: $filesBefore, Files after: $filesAfter, Deleted: $filesDeleted"
+            Write-BuildLog "Files before: $filesBefore, Files after: $filesAfter, Deleted: $filesDeleted"
         }
 
         # Calculate expected deletions based on retention period
@@ -388,8 +406,11 @@ function Test-LogRetention {
 function Invoke-LogRotationTests {
     param()
 
-    Write-Host "Starting Log Rotation Tests"
-    Write-Host ("=" * 60)
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+    Write-BuildLog "Starting Log Rotation Tests"
+    # Separator removed
 
     # Test 1: 30-day retention
     Test-LogRetention -RetentionDays 30 -TestDescription "30-day retention policy"
@@ -405,7 +426,7 @@ function Invoke-LogRotationTests {
 
     # Test 5: Invalid configuration (should default to 90 days)
     try {
-        Write-Host "`Testing: Invalid configuration handling"
+        Write-BuildLog "`Testing: Invalid configuration handling"
 
         Clear-TestEnvironment
         New-TestLogFiles -LogDirectory $TestLogDir
@@ -441,7 +462,7 @@ function Invoke-LogRotationTests {
 
     # Test 6: Missing logging configuration
     try {
-        Write-Host "`Testing: Missing logging configuration"
+        Write-BuildLog "`Testing: Missing logging configuration"
 
         Clear-TestEnvironment
         New-TestLogFiles -LogDirectory $TestLogDir
@@ -476,27 +497,27 @@ try {
     Clear-TestEnvironment
 
     # Summary
-    Write-Host ("=" * 60)
-    Write-Host "Test Summary:"
-    Write-Host "Passed: $TestsPassed"
-    Write-Host "Failed: $TestsFailed"
+    # Separator removed
+    Write-BuildLog "Test Summary:"
+    Write-BuildLog "Passed: $TestsPassed"
+    Write-BuildLog "Failed: $TestsFailed"
     $successRate = [math]::Round(($TestsPassed / ($TestsPassed + $TestsFailed)) * 100, 1)
     if ($TestsFailed -eq 0) {
-        Write-Host "[OK] Success Rate: $successRate%"
+        Write-BuildLog "[OK] Success Rate: $successRate%"
     } else {
-        Write-Host "[WARNING] Success Rate: $successRate%"
+        Write-BuildLog "[WARNING] Success Rate: $successRate%"
     }
 
     if ($TestsFailed -eq 0) {
-        Write-Host "[OK] All tests passed! Log rotation feature is working correctly."
+        Write-BuildLog "[OK] All tests passed! Log rotation feature is working correctly."
         exit 0
     } else {
-        Write-Host "[WARNING] Some tests failed. Please review the implementation."
+        Write-BuildLog "[WARNING] Some tests failed. Please review the implementation."
         exit 1
     }
 
 } catch {
-    Write-Host "[ERROR] Test execution failed: $($_.Exception.Message)"
+    Write-BuildLog "[ERROR] Test execution failed: $($_.Exception.Message)"
     Clear-TestEnvironment
     exit 1
 }

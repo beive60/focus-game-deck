@@ -105,6 +105,9 @@ param(
     [switch]$Verbose
 )
 
+# Import the BuildLogger
+. "$PSScriptRoot/utils/BuildLogger.ps1"
+
 # Set verbose preference if requested
 if ($Verbose) {
     $VerbosePreference = "Continue"
@@ -115,21 +118,25 @@ $script:Version = "1.0.0"
 $script:BuildDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $script:StartTime = Get-Date
 
-Write-Host "Focus Game Deck - Master Build Script v$script:Version"
-Write-Host "Build started at: $script:BuildDate"
-Write-Host ("=" * 60)
+Write-BuildLog "Focus Game Deck - Master Build Script v$script:Version"
+Write-BuildLog "Build started at: $script:BuildDate"
 
-# Function to log messages with timestamps
-function Write-BuildLog {
+# Helper function to add timestamp to messages (legacy compatibility)
+function Write-BuildLogWithTimestamp {
     param(
         [string]$Message,
-        [string]$Level = "INFO",
-        [string]$Color = "White"
+        [string]$Level = "INFO"
     )
-
+    
     $timestamp = (Get-Date).ToString("HH:mm:ss")
-    $prefix = "[$timestamp] [$Level]"
-    Write-Host "$prefix $Message" -ForegroundColor $Color
+    $levelMapped = switch ($Level) {
+        "SUCCESS" { "Success" }
+        "ERROR" { "Error" }
+        "WARNING" { "Warning" }
+        "DEBUG" { "Debug" }
+        default { "Info" }
+    }
+    Write-BuildLog "[$timestamp] $Message" -Level $levelMapped
 }
 
 # Function to execute script with error handling
@@ -140,16 +147,16 @@ function Invoke-BuildScript {
         [string]$Description
     )
 
-    Write-BuildLog "Starting: $Description" "INFO" "Yellow"
+    Write-BuildLogWithTimestamp "Starting: $Description" "INFO"
 
     if (-not (Test-Path $ScriptPath)) {
-        Write-BuildLog "Script not found: $ScriptPath" "ERROR" "Red"
+        Write-BuildLogWithTimestamp "Script not found: $ScriptPath" "ERROR"
         return $false
     }
 
     try {
         $argumentString = $Arguments -join " "
-        Write-BuildLog "Executing: $(Split-Path $ScriptPath -Leaf) $argumentString" "DEBUG" "Gray"
+        Write-BuildLogWithTimestamp "Executing: $(Split-Path $ScriptPath -Leaf) $argumentString" "DEBUG"
 
         # Use the current PowerShell host (pwsh or powershell) to maintain session context
         $pwshPath = if ($PSVersionTable.PSVersion.Major -ge 6) { "pwsh" } else { "powershell" }
@@ -158,21 +165,21 @@ function Invoke-BuildScript {
         $process = Start-Process -FilePath $pwshPath -ArgumentList $allArguments -Wait -PassThru -NoNewWindow
 
         if ($process.ExitCode -eq 0) {
-            Write-BuildLog "Completed: $Description" "SUCCESS" "Green"
+            Write-BuildLogWithTimestamp "Completed: $Description" "SUCCESS"
             return $true
         } else {
-            Write-BuildLog "Failed: $Description (Exit Code: $($process.ExitCode))" "ERROR" "Red"
+            Write-BuildLogWithTimestamp "Failed: $Description (Exit Code: $($process.ExitCode))" "ERROR"
             return $false
         }
     } catch {
-        Write-BuildLog "Exception in $Description : $($_.Exception.Message)" "ERROR" "Red"
+        Write-BuildLogWithTimestamp "Exception in $Description : $($_.Exception.Message)" "ERROR"
         return $false
     }
 }
 
 # Function to clean all build artifacts
 function Clear-BuildArtifacts {
-    Write-BuildLog "Cleaning build artifacts..." "INFO" "Yellow"
+    Write-BuildLogWithTimestamp "Cleaning build artifacts..." "INFO"
 
     # Get project root directory (parent of build-tools)
     $projectRoot = Split-Path $PSScriptRoot -Parent
@@ -189,13 +196,13 @@ function Clear-BuildArtifacts {
             try {
                 if ((Get-Item $path) -is [System.IO.DirectoryInfo]) {
                     Remove-Item $path -Recurse -Force
-                    Write-BuildLog "Removed directory: $path" "SUCCESS" "Green"
+                    Write-BuildLogWithTimestamp "Removed directory: $path" "SUCCESS"
                 } else {
                     Get-Item $path | Remove-Item -Force
-                    Write-BuildLog "Removed files: $path" "SUCCESS" "Green"
+                    Write-BuildLogWithTimestamp "Removed files: $path" "SUCCESS"
                 }
             } catch {
-                Write-BuildLog "Failed to remove: $path - $($_.Exception.Message)" "ERROR" "Red"
+                Write-BuildLogWithTimestamp "Failed to remove: $path - $($_.Exception.Message)" "ERROR"
             }
         }
     }
@@ -203,7 +210,7 @@ function Clear-BuildArtifacts {
 
 # Function to setup development environment
 function Initialize-BuildEnvironment {
-    Write-BuildLog "Setting up build environment..." "INFO" "Yellow"
+    Write-BuildLogWithTimestamp "Setting up build environment..." "INFO"
 
     # Install ps2exe module using specialized tool script
     $installScript = Join-Path $PSScriptRoot "Install-BuildDependencies.ps1"
@@ -212,7 +219,7 @@ function Initialize-BuildEnvironment {
 
 # Function to build all executables
 function Build-AllExecutables {
-    Write-BuildLog "Building all executables..." "INFO" "Yellow"
+    Write-BuildLogWithTimestamp "Building all executables..." "INFO"
 
     # Path to the specialized build script
     $buildScript = Join-Path $PSScriptRoot "Build-Executables.ps1"
@@ -226,7 +233,7 @@ function Build-AllExecutables {
 
 # Function to sign all executables
 function Add-CodeSignatures {
-    Write-BuildLog "Signing all executables..." "INFO" "Yellow"
+    Write-BuildLogWithTimestamp "Signing all executables..." "INFO"
 
     $signingScript = Join-Path $PSScriptRoot "Sign-Executables.ps1"
     $projectRoot = Split-Path $PSScriptRoot -Parent
@@ -238,12 +245,12 @@ function Add-CodeSignatures {
         try {
             $signingConfig = Get-Content $signingConfigPath -Raw | ConvertFrom-Json
             if (-not $signingConfig.codeSigningSettings.enabled) {
-                Write-BuildLog "Code signing is disabled in configuration" "WARNING" "Yellow"
-                Write-BuildLog "To enable signing, update config/signing-config.json" "INFO" "Cyan"
+                Write-BuildLogWithTimestamp "Code signing is disabled in configuration" "WARNING"
+                Write-BuildLogWithTimestamp "To enable signing, update config/signing-config.json" "INFO"
                 return $true  # Not an error, just disabled
             }
         } catch {
-            Write-BuildLog "Failed to read signing configuration" "ERROR" "Red"
+            Write-BuildLogWithTimestamp "Failed to read signing configuration" "ERROR"
             return $false
         }
     }
@@ -261,13 +268,13 @@ function Add-CodeSignatures {
 
 # Function to register signature hashes in official registry for log authentication
 function Register-SignatureHashes {
-    Write-BuildLog "Registering signature hashes for log authentication..." "INFO" "Yellow"
+    Write-BuildLogWithTimestamp "Registering signature hashes for log authentication..." "INFO"
 
     try {
         # Load version information
         $versionScript = Join-Path $PSScriptRoot "Version.ps1"
         if (-not (Test-Path $versionScript)) {
-            Write-BuildLog "Version.ps1 not found, cannot record signature hashes" "ERROR" "Red"
+            Write-BuildLogWithTimestamp "Version.ps1 not found, cannot record signature hashes" "ERROR"
             return $false
         }
 
@@ -278,7 +285,7 @@ function Register-SignatureHashes {
         }
 
         if (-not $currentVersion) {
-            Write-BuildLog "Failed to get version information" "ERROR" "Red"
+            Write-BuildLogWithTimestamp "Failed to get version information" "ERROR"
             return $false
         }
 
@@ -292,7 +299,7 @@ function Register-SignatureHashes {
         # Load existing signature hash registry
         $registryPath = Join-Path $projectRoot "docs/official_signature_hashes.json"
         if (-not (Test-Path $registryPath)) {
-            Write-BuildLog "Signature hash registry not found: $registryPath" "ERROR" "Red"
+            Write-BuildLogWithTimestamp "Signature hash registry not found: $registryPath" "ERROR"
             return $false
         }
 
@@ -331,17 +338,17 @@ function Register-SignatureHashes {
 
                         $registry.releases.$currentVersion.executables | Add-Member -MemberType NoteProperty -Name $exeName -Value $executableInfo -Force
 
-                        Write-BuildLog "Registered signature for $exeName : $signatureHash" "SUCCESS" "Green"
+                        Write-BuildLogWithTimestamp "Registered signature for $exeName : $signatureHash" "SUCCESS"
                     } else {
-                        Write-BuildLog "Invalid signature for $exeName (Status: $($signature.Status))" "ERROR" "Red"
+                        Write-BuildLogWithTimestamp "Invalid signature for $exeName (Status: $($signature.Status))" "ERROR"
                         $allSuccessful = $false
                     }
                 } catch {
-                    Write-BuildLog "Failed to get signature for $exeName : $($_.Exception.Message)" "ERROR" "Red"
+                    Write-BuildLogWithTimestamp "Failed to get signature for $exeName : $($_.Exception.Message)" "ERROR"
                     $allSuccessful = $false
                 }
             } else {
-                Write-BuildLog "Executable not found: $exePath" "ERROR" "Red"
+                Write-BuildLogWithTimestamp "Executable not found: $exePath" "ERROR"
                 $allSuccessful = $false
             }
         }
@@ -352,22 +359,22 @@ function Register-SignatureHashes {
 
             # Save updated registry
             $registry | ConvertTo-Json -Depth 10 | Set-Content -Path $registryPath -Encoding UTF8
-            Write-BuildLog "Signature hash registry updated successfully for version $currentVersion" "SUCCESS" "Green"
+            Write-BuildLogWithTimestamp "Signature hash registry updated successfully for version $currentVersion" "SUCCESS"
         } else {
-            Write-BuildLog "Some signature registrations failed, registry not updated" "ERROR" "Red"
+            Write-BuildLogWithTimestamp "Some signature registrations failed, registry not updated" "ERROR"
         }
 
         return $allSuccessful
 
     } catch {
-        Write-BuildLog "Failed to register signature hashes: $($_.Exception.Message)" "ERROR" "Red"
+        Write-BuildLogWithTimestamp "Failed to register signature hashes: $($_.Exception.Message)" "ERROR"
         return $false
     }
 }
 
 # Function to copy resources
 function Copy-BuildResources {
-    Write-BuildLog "Copying build resources..." "INFO" "Yellow"
+    Write-BuildLogWithTimestamp "Copying build resources..." "INFO"
 
     # Use specialized resource copier
     $copyScript = Join-Path $PSScriptRoot "Copy-Resources.ps1"
@@ -378,7 +385,7 @@ function Copy-BuildResources {
 function New-ReleasePackage {
     param([bool]$IsSigned = $false)
 
-    Write-BuildLog "Creating release package..." "INFO" "Yellow"
+    Write-BuildLogWithTimestamp "Creating release package..." "INFO"
 
     # Use specialized package creator
     $packageScript = Join-Path $PSScriptRoot "Create-Package.ps1"
@@ -394,14 +401,14 @@ function New-ReleasePackage {
 function New-LegacyReleasePackage {
     param([bool]$IsSigned = $false)
 
-    Write-BuildLog "Creating legacy release package..." "INFO" "Yellow"
+    Write-BuildLogWithTimestamp "Creating legacy release package..." "INFO"
 
     $projectRoot = Split-Path $PSScriptRoot -Parent
     $releaseDir = Join-Path $projectRoot "release"
     $sourceDir = Join-Path $PSScriptRoot "dist"
 
     if (-not (Test-Path $sourceDir)) {
-        Write-BuildLog "Source directory not found: $sourceDir" "ERROR" "Red"
+        Write-BuildLogWithTimestamp "Source directory not found: $sourceDir" "ERROR"
         return $false
     }
 
@@ -465,11 +472,11 @@ This software is released under the MIT License.
 
         $versionInfo | ConvertTo-Json -Depth 4 | Set-Content -Path (Join-Path $releaseDir "version-info.json") -Encoding UTF8
 
-        Write-BuildLog "Release package created: $releaseDir" "SUCCESS" "Green"
+        Write-BuildLogWithTimestamp "Release package created: $releaseDir" "SUCCESS"
         return $true
 
     } catch {
-        Write-BuildLog "Failed to create release package: $($_.Exception.Message)" "ERROR" "Red"
+        Write-BuildLogWithTimestamp "Failed to create release package: $($_.Exception.Message)" "ERROR"
         return $false
     }
 }
@@ -523,7 +530,7 @@ try {
     # Clean if requested
     if ($Clean) {
         Clear-BuildArtifacts
-        Write-BuildLog "Clean completed" "SUCCESS" "Green"
+        Write-BuildLogWithTimestamp "Clean completed" "SUCCESS"
         exit 0
     }
 
@@ -537,7 +544,7 @@ try {
 
     # Development build workflow
     if ($Development) {
-        Write-BuildLog "Starting DEVELOPMENT build workflow" "INFO" "Cyan"
+        Write-BuildLogWithTimestamp "Starting DEVELOPMENT build workflow" "INFO"
 
         # Step 1: Install dependencies
         $success = Initialize-BuildEnvironment
@@ -578,7 +585,7 @@ try {
 
     # Production build workflow
     elseif ($Production) {
-        Write-BuildLog "Starting PRODUCTION build workflow" "INFO" "Cyan"
+        Write-BuildLogWithTimestamp "Starting PRODUCTION build workflow" "INFO"
 
         # Step 1: Install dependencies
         $success = Initialize-BuildEnvironment
@@ -616,9 +623,9 @@ try {
             $signingSuccess = Add-CodeSignatures
             if ($signingSuccess) {
                 $isSigned = $true
-                Write-BuildLog "Code signing completed successfully" "SUCCESS" "Green"
+                Write-BuildLogWithTimestamp "Code signing completed successfully" "SUCCESS"
             } else {
-                Write-BuildLog "Code signing failed, continuing with unsigned build" "WARNING" "Yellow"
+                Write-BuildLogWithTimestamp "Code signing failed, continuing with unsigned build" "WARNING"
             }
         }
 
@@ -653,7 +660,7 @@ try {
     exit $(if ($success) { 0 } else { 1 })
 
 } catch {
-    Write-BuildLog "Unexpected error: $($_.Exception.Message)" "ERROR" "Red"
+    Write-BuildLogWithTimestamp "Unexpected error: $($_.Exception.Message)" "ERROR"
     Show-BuildSummary -Success $false
     exit 1
 }

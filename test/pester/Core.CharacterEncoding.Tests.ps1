@@ -6,9 +6,14 @@
     and ensures proper character handling per architecture guidelines
 #>
 
+# Import the BuildLogger
+$scriptRoot = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
+. "$scriptRoot/../../build-tools/utils/BuildLogger.ps1"
+
 BeforeAll {
     # Navigate up two levels from test/pester/ to project root
-    $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+    $scriptRoot = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
+    $projectRoot = Split-Path -Parent (Split-Path -Parent $scriptRoot)
     $ConfigPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
     $MessagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
 }
@@ -93,12 +98,12 @@ Describe "Character Encoding Tests" -Tag "Core", "Encoding" {
             }
 
             # Output summary only after all checks are complete
-            Write-Host "Checked $checkedCount files, skipped $($skippedFiles.Count) file(s)" -ForegroundColor Cyan
+            Write-BuildLog "Checked $checkedCount files, skipped $($skippedFiles.Count) file(s)"
 
             if ($failedFiles.Count -gt 0) {
-                Write-Host "Files with UTF-8 symbols in console output:" -ForegroundColor Yellow
+                Write-BuildLog "Files with UTF-8 symbols in console output:" -Level Warning
                 $failedFiles | ForEach-Object {
-                    Write-Host "  - $($_.Path)" -ForegroundColor Yellow
+                    Write-BuildLog "  - $($_.Path)" -Level Warning
                 }
             }
 

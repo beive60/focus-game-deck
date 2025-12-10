@@ -1,4 +1,4 @@
-﻿# =============================================================================
+# =============================================================================
 # Test-AppActions.ps1
 #
 # This script tests the application management logic from the FocusGameDeck
@@ -26,10 +26,13 @@ function ConvertTo-SecureStringSafe {
         [string]$PlainText
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     try {
         return ConvertTo-SecureString -String $PlainText -AsPlainText -Force
     } catch {
-        Write-Warning "ConvertTo-SecureString failed, attempting alternative method: $_"
+        Write-BuildLog "ConvertTo-SecureString failed, attempting alternative method: $_" -Level Warning
         # Alternative: create SecureString manually
         $secureString = New-Object System.Security.SecureString
         foreach ($char in $PlainText.ToCharArray()) {
@@ -48,24 +51,27 @@ function Invoke-AppAction {
         [string]$SpecialMode = $null  # For backward compatibility
     )
 
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     # Validate app exists in managedApps
     if (-not $config.managedApps.$AppId) {
-        Write-Host "WARNING: Application '$AppId' is not defined in managedApps"
+        Write-BuildLog "WARNING: Application '$AppId' is not defined in managedApps"
         return
     }
 
     $appConfig = $config.managedApps.$AppId
 
-    Write-Host "  Testing action '$Action' for app '$AppId'..."
+    Write-BuildLog "  Testing action '$Action' for app '$AppId'..."
 
     # Handle different action types
     switch ($Action) {
         "start-process" {
             if ($appConfig.path -and $appConfig.path -ne "") {
                 $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") { $appConfig.arguments } else { "no arguments" }
-                Write-Host "    [SIMULATE] Would start process: $($appConfig.path) $arguments"
+                Write-BuildLog "    [SIMULATE] Would start process: $($appConfig.path) $arguments"
             } else {
-                Write-Host "    [WARNING] No path specified for app '$AppId'"
+                Write-BuildLog "    [WARNING] No path specified for app '$AppId'"
             }
         }
         "stop-process" {
@@ -78,33 +84,33 @@ function Invoke-AppAction {
                     try {
                         $processes = Get-Process -Name $processName -ErrorAction Stop
                         if ($processes) {
-                            Write-Host "    [SIMULATE] Would stop process: $processName (Currently running with PID: $($processes[0].Id))"
+                            Write-BuildLog "    [SIMULATE] Would stop process: $processName (Currently running with PID: $($processes[0].Id))"
                         }
                     } catch {
-                        Write-Host "    [INFO] Process '$processName' is not currently running"
+                        Write-BuildLog "    [INFO] Process '$processName' is not currently running"
                     }
                 }
             } else {
-                Write-Host "    [WARNING] No process name specified for app '$AppId'"
+                Write-BuildLog "    [WARNING] No process name specified for app '$AppId'"
             }
         }
         "start-vtube-studio" {
-            Write-Host "    [SIMULATE] Would start VTube Studio integration"
+            Write-BuildLog "    [SIMULATE] Would start VTube Studio integration"
         }
         "stop-vtube-studio" {
-            Write-Host "    [SIMULATE] Would stop VTube Studio integration"
+            Write-BuildLog "    [SIMULATE] Would stop VTube Studio integration"
         }
         "set-discord-gaming-mode" {
-            Write-Host "    [SIMULATE] Would set Discord to gaming mode"
+            Write-BuildLog "    [SIMULATE] Would set Discord to gaming mode"
         }
         "restore-discord-normal" {
-            Write-Host "    [SIMULATE] Would restore Discord to normal mode"
+            Write-BuildLog "    [SIMULATE] Would restore Discord to normal mode"
         }
         "none" {
-            Write-Host "    [INFO] No action specified - skipping"
+            Write-BuildLog "    [INFO] No action specified - skipping"
         }
         default {
-            Write-Host "    [ERROR] Unknown action: $Action for app: $AppId"
+            Write-BuildLog "    [ERROR] Unknown action: $Action for app: $AppId"
         }
     }
 }
@@ -115,23 +121,26 @@ function Test-OBSActions {
         [string]$Action  # "start" or "stop"
     )
 
-    Write-Host "  Testing OBS $Action..."
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+    Write-BuildLog "  Testing OBS $Action..."
 
     if ($Action -eq "start") {
         $obsProcessName = "obs64"
         $obsProcess = Get-Process -Name $obsProcessName -ErrorAction SilentlyContinue
         if ($obsProcess) {
-            Write-Host "    [INFO] OBS is already running (PID: $($obsProcess[0].Id))"
+            Write-BuildLog "    [INFO] OBS is already running (PID: $($obsProcess[0].Id))"
         } else {
-            Write-Host "    [SIMULATE] Would start OBS: $($config.integrations.obs.path)"
+            Write-BuildLog "    [SIMULATE] Would start OBS: $($config.integrations.obs.path)"
         }
 
         if ($config.integrations.obs.replayBuffer) {
-            Write-Host "    [SIMULATE] Would start OBS replay buffer via WebSocket"
+            Write-BuildLog "    [SIMULATE] Would start OBS replay buffer via WebSocket"
         }
     } elseif ($Action -eq "stop") {
         if ($config.integrations.obs.replayBuffer) {
-            Write-Host "    [SIMULATE] Would stop OBS replay buffer via WebSocket"
+            Write-BuildLog "    [SIMULATE] Would stop OBS replay buffer via WebSocket"
         }
     }
 }
@@ -140,7 +149,7 @@ function Test-OBSActions {
 
 # --- Main Test Logic ---
 
-Write-Host "=== FocusGameDeck App Actions Test ==="
+Write-BuildLog "=== FocusGameDeck App Actions Test ==="
 Write-Host ""
 
 # Load configuration file
@@ -148,33 +157,33 @@ $projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../../.."
 $configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
 
 if (-not (Test-Path $configPath)) {
-    Write-Host "Error: config.json not found at $configPath"
-    Write-Host "Please create it from config.json.sample."
+    Write-BuildLog "Error: config.json not found at $configPath"
+    Write-BuildLog "Please create it from config.json.sample."
     exit 1
 }
 
 try {
     $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    Write-Host "Configuration loaded successfully"
+    Write-BuildLog "Configuration loaded successfully"
 } catch {
-    Write-Host "Error loading configuration: $_"
+    Write-BuildLog "Error loading configuration: $_"
     exit 1
 }
 
 # Get game configuration
 $gameConfig = $config.games.$GameId
 if (-not $gameConfig) {
-    Write-Host "Error: Game ID '$GameId' not found in configuration"
-    Write-Host "Available game IDs: $($config.games.PSObject.Properties.Name -join ', ')"
+    Write-BuildLog "Error: Game ID '$GameId' not found in configuration"
+    Write-BuildLog "Available game IDs: $($config.games.PSObject.Properties.Name -join ', ')"
     exit 1
 }
 
-Write-Host "Testing game: $($gameConfig.name)"
-Write-Host "Apps to manage: $($gameConfig.appsToManage -join ', ')"
+Write-BuildLog "Testing game: $($gameConfig.name)"
+Write-BuildLog "Apps to manage: $($gameConfig.appsToManage -join ', ')"
 Write-Host ""
 
 # Test game start scenario
-Write-Host "--- SIMULATING GAME START ---"
+Write-BuildLog "--- SIMULATING GAME START ---"
 Write-Host ""
 
 foreach ($appId in $gameConfig.appsToManage) {
@@ -195,12 +204,12 @@ foreach ($appId in $gameConfig.appsToManage) {
 
         Invoke-AppAction -AppId $appId -Action $action
     } else {
-        Write-Host "  WARNING: App '$appId' not defined in managedApps"
+        Write-BuildLog "  WARNING: App '$appId' not defined in managedApps"
     }
 }
 
 Write-Host ""
-Write-Host "--- SIMULATING GAME END ---"
+Write-BuildLog "--- SIMULATING GAME END ---"
 Write-Host ""
 
 # Test Clibor first (special handling)
@@ -230,7 +239,7 @@ foreach ($appId in $gameConfig.appsToManage) {
 }
 
 Write-Host ""
-Write-Host "=== Test Complete ==="
+Write-BuildLog "=== Test Complete ==="
 Write-Host ""
-Write-Host "This test simulated the app management actions without actually executing them."
-Write-Host "Review the output above to verify the expected behavior matches your configuration."
+Write-BuildLog "This test simulated the app management actions without actually executing them."
+Write-BuildLog "Review the output above to verify the expected behavior matches your configuration."

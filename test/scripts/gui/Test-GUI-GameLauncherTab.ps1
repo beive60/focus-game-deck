@@ -1,8 +1,11 @@
-﻿# Game Launcher Tab Unit Tests
+# Game Launcher Tab Unit Tests
 # Tests for the newly implemented Game Launcher Tab functionality
 #
 # Author: GitHub Copilot Assistant
 # Date: 2025-10-02
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
 
 # Set execution policy and encoding
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
@@ -15,8 +18,8 @@ Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
 
-Write-Host "=== Game Launcher Tab Unit Tests ==="
-Write-Host "Testing Game Launcher Tab functionality..."
+Write-BuildLog "=== Game Launcher Tab Unit Tests ==="
+Write-BuildLog "Testing Game Launcher Tab functionality..."
 Write-Host ""
 
 # Test counters
@@ -32,15 +35,15 @@ function Invoke-Test {
         [string]$Description = ""
     )
 
-    Write-Host "Running Test: $TestName"
+    Write-BuildLog "Running Test: $TestName"
     if ($Description) {
-        Write-Host "  Description: $Description" -[\p { Emoji_Presentation }\p { Extended_Pictographic }]\u { FE0F }?\sForegroundColor Gray
+        Write-BuildLog "  Description: $Description" -Level Debug
     }
 
     try {
         $result = & $TestCode
         if ($result -eq $true -or $null -eq $result) {
-            Write-Host "  PASSED"
+            Write-BuildLog "  PASSED"
             $script:TestsPassed++
             $script:TestResults += [PSCustomObject]@{
                 TestName = $TestName
@@ -49,7 +52,7 @@ function Invoke-Test {
                 Description = $Description
             }
         } else {
-            Write-Host "  FAILED: $result"
+            Write-BuildLog "  FAILED: $result"
             $script:TestsFailed++
             $script:TestResults += [PSCustomObject]@{
                 TestName = $TestName
@@ -59,7 +62,7 @@ function Invoke-Test {
             }
         }
     } catch {
-        Write-Host "  FAILED: $($_.Exception.Message)"
+        Write-BuildLog "  FAILED: $($_.Exception.Message)"
         $script:TestsFailed++
         $script:TestResults += [PSCustomObject]@{
             TestName = $TestName
@@ -77,6 +80,9 @@ function New-MockConfigData {
         [int]$GameCount = 3
     )
 
+
+    # Import the BuildLogger
+    . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     $mockConfig = [PSCustomObject]@{
         language = "en"
         games = [PSCustomObject]@{}
@@ -110,10 +116,10 @@ function New-MockMessages {
             Write-Verbose "multipleGamesReady message: '$($messagesData.en.multipleGamesReady)'"
             return $messagesData.en
         } else {
-            Write-Warning "Messages file not found at: $messagesPath"
+            Write-BuildLog "Messages file not found at: $messagesPath" -Level Warning
         }
     } catch {
-        Write-Warning "Could not load actual messages, using fallback: $($_.Exception.Message)"
+        Write-BuildLog "Could not load actual messages, using fallback: $($_.Exception.Message)" -Level Warning
     }
 
     # Fallback mock messages
@@ -166,11 +172,11 @@ try {
         }
     }
 
-    Write-Host "Extracted functions for testing environment"
+    Write-BuildLog "Extracted functions for testing environment"
 
 } catch {
-    Write-Warning "Could not load ConfigEditor.ps1 for testing: $($_.Exception.Message)"
-    Write-Host "Running tests with mock implementations..."
+    Write-BuildLog "Could not load ConfigEditor.ps1 for testing: $($_.Exception.Message)" -Level Warning
+    Write-BuildLog "Running tests with mock implementations..."
 }
 
 # Mock global variables for testing
@@ -222,6 +228,9 @@ function New-MockWindow {
     $mockWindow = New-Object PSObject
     $mockWindow | Add-Member -MemberType ScriptMethod -Name "FindName" -Value {
         param([string]$Name)
+
+        # Import the BuildLogger
+        . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
         return $script:MockControls[$Name]
     }
 
@@ -452,6 +461,9 @@ Invoke-Test -TestName "Start-GameFromLauncher-Validation" -Description "Test gam
     function Start-GameFromLauncher {
         param([string]$GameId)
 
+
+        # Import the BuildLogger
+        . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
         try {
             $statusText = $script:Window.FindName("LauncherStatusText")
             if ($statusText) {
@@ -549,6 +561,9 @@ Invoke-Test -TestName "Switch-ToGameSettingsTab" -Description "Test tab switchin
     function Switch-ToGameSettingsTab {
         param([string]$GameId = "")
 
+
+        # Import the BuildLogger
+        . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
         try {
             $script:mockTabSwitched = $true
             $script:mockGameSelected = $GameId
@@ -619,35 +634,35 @@ Invoke-Test -TestName "ConfigEditor-Integration" -Description "Test integration 
 #endregion
 
 # Run all tests
-Write-Host "Starting Game Launcher Tab unit tests..."
-Write-Host ("=" * 60)
+Write-BuildLog "Starting Game Launcher Tab unit tests..."
+# Separator removed
 
 # Execute the tests (they are already defined above with Invoke-Test calls)
 
 # Display test summary
-Write-Host ("=" * 60)
-Write-Host "Test Results Summary:"
-Write-Host "  Passed: $script:TestsPassed"
-Write-Host "  Failed: $script:TestsFailed"
-Write-Host "  Total:  $($script:TestsPassed + $script:TestsFailed)"
+# Separator removed
+Write-BuildLog "Test Results Summary:"
+Write-BuildLog "  Passed: $script:TestsPassed"
+Write-BuildLog "  Failed: $script:TestsFailed"
+Write-BuildLog "  Total:  $($script:TestsPassed + $script:TestsFailed)"
 
 if ($script:TestsFailed -eq 0) {
-    Write-Host "All tests passed! Game Launcher Tab functionality is working correctly."
+    Write-BuildLog "All tests passed! Game Launcher Tab functionality is working correctly."
 } else {
-    Write-Host " Some tests failed. Please review the results above."
+    Write-BuildLog " Some tests failed. Please review the results above."
 
     # Show failed tests details
     $failedTests = $script:TestResults | Where-Object { $_.Status -eq "FAILED" }
     if ($failedTests) {
-        Write-Host "Failed Tests Details:"
+        Write-BuildLog "Failed Tests Details:"
         foreach ($test in $failedTests) {
-            Write-Host "  - $($test.TestName): $($test.Error)"
+            Write-BuildLog "  - $($test.TestName): $($test.Error)"
         }
     }
 }
 
-Write-Host "Game Launcher Tab Unit Tests Completed."
-Write-Host ("=" * 60)
+Write-BuildLog "Game Launcher Tab Unit Tests Completed."
+# Separator removed
 
 # Return results for CI/automation
 return @{

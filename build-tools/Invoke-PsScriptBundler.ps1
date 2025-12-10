@@ -48,12 +48,16 @@ param(
     [string]$ProjectRoot = (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent)
 )
 
+# Import the BuildLogger at script level
+. "$PSScriptRoot/utils/BuildLogger.ps1"
+
 function Write-BundlerMessage {
     param(
         [string]$Message,
         [string]$Level = "INFO"
     )
-    Write-Host "[$Level] $Message"
+
+    Write-BuildLog "[$Level] $Message"
 }
 
 function Resolve-DotSourcedPath {
@@ -253,8 +257,8 @@ $mainScriptContent
 }
 
 try {
-    Write-Host "Focus Game Deck - Script Bundler"
-    Write-Host ("=" * 60)
+    Write-BuildLog "Focus Game Deck - Script Bundler"
+    # Separator removed
 
     $entryPointFull = Join-Path $ProjectRoot $EntryPoint
     if (-not (Test-Path $entryPointFull)) {

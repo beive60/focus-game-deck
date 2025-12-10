@@ -85,30 +85,33 @@ param(
     [switch]$All
 )
 
+# Import the BuildLogger at script level
+. "$PSScriptRoot/utils/BuildLogger.ps1"
+
 # Display deprecation warning
 function Show-DeprecationWarning {
     Write-Host ""
-    Write-Host "================================================================================================"
-    Write-Host "DEPRECATION WARNING"
-    Write-Host "================================================================================================"
-    Write-Host "This script (Build-FocusGameDeck.ps1) is DEPRECATED and will be removed in a future version."
+    Write-BuildLog "================================================================================================"
+    Write-BuildLog "DEPRECATION WARNING"
+    Write-BuildLog "================================================================================================"
+    Write-BuildLog "This script (Build-FocusGameDeck.ps1) is DEPRECATED and will be removed in a future version."
     Write-Host ""
-    Write-Host "The build system has been refactored following the Single Responsibility Principle."
+    Write-BuildLog "The build system has been refactored following the Single Responsibility Principle."
     Write-Host ""
-    Write-Host "Please use the new specialized tool scripts:"
-    Write-Host "  - Install-BuildDependencies.ps1  : Install ps2exe module"
-    Write-Host "  - Build-Executables.ps1          : Build executables"
-    Write-Host "  - Copy-Resources.ps1             : Copy runtime resources"
-    Write-Host "  - Sign-Executables.ps1           : Sign executables"
-    Write-Host "  - Create-Package.ps1             : Create release package"
-    Write-Host "  - Release-Manager.ps1            : Orchestrate complete workflow"
+    Write-BuildLog "Please use the new specialized tool scripts:"
+    Write-BuildLog "  - Install-BuildDependencies.ps1  : Install ps2exe module"
+    Write-BuildLog "  - Build-Executables.ps1          : Build executables"
+    Write-BuildLog "  - Copy-Resources.ps1             : Copy runtime resources"
+    Write-BuildLog "  - Sign-Executables.ps1           : Sign executables"
+    Write-BuildLog "  - Create-Package.ps1             : Create release package"
+    Write-BuildLog "  - Release-Manager.ps1            : Orchestrate complete workflow"
     Write-Host ""
-    Write-Host "Recommended commands:"
-    Write-Host "  Development build: .\Release-Manager.ps1 -Development"
-    Write-Host "  Production build:  .\Release-Manager.ps1 -Production"
+    Write-BuildLog "Recommended commands:"
+    Write-BuildLog "  Development build: .\Release-Manager.ps1 -Development"
+    Write-BuildLog "  Production build:  .\Release-Manager.ps1 -Production"
     Write-Host ""
-    Write-Host "This script will continue to work but is no longer maintained."
-    Write-Host "================================================================================================"
+    Write-BuildLog "This script will continue to work but is no longer maintained."
+    Write-BuildLog "================================================================================================"
     Write-Host ""
 
     Start-Sleep -Seconds 3
@@ -129,51 +132,51 @@ function Test-PS2EXE {
 
 # Install ps2exe if needed
 if ($Install) {
-    Write-Host "Installing ps2exe module..."
+    Write-BuildLog "Installing ps2exe module..."
 
     if (-not (Test-PS2EXE)) {
         try {
             Install-Module -Name ps2exe -Scope CurrentUser -Force
-            Write-Host "ps2exe module installed successfully."
+            Write-BuildLog "ps2exe module installed successfully."
         } catch {
-            Write-Host "Failed to install ps2exe: $($_.Exception.Message)"
+            Write-BuildLog "Failed to install ps2exe: $($_.Exception.Message)"
             exit 1
         }
     } else {
-        Write-Host "ps2exe module is already installed."
+        Write-BuildLog "ps2exe module is already installed."
     }
 }
 
 # Clean build artifacts
 if ($Clean) {
-    Write-Host "Cleaning build artifacts..."
+    Write-BuildLog "Cleaning build artifacts..."
 
     $buildDir = Join-Path $PSScriptRoot "build"
     $distDir = Join-Path $PSScriptRoot "dist"
 
     if (Test-Path $buildDir) {
         Remove-Item $buildDir -Recurse -Force
-        Write-Host "Build directory cleaned."
+        Write-BuildLog "Build directory cleaned."
     }
 
     if (Test-Path $distDir) {
         Remove-Item $distDir -Recurse -Force
-        Write-Host "Distribution directory cleaned."
+        Write-BuildLog "Distribution directory cleaned."
     }    $exeFiles = Get-ChildItem -Path $PSScriptRoot -Filter "*.exe" -Recurse
     foreach ($exeFile in $exeFiles) {
         if ($exeFile.Name -like "*Focus-Game-Deck*") {
             Remove-Item $exeFile.FullName -Force
-            Write-Host "Removed: $($exeFile.FullName)"
+            Write-BuildLog "Removed: $($exeFile.FullName)"
         }
     }
 }
 
 # Build executables
 if ($Build) {
-    Write-Host "Building executables..."
+    Write-BuildLog "Building executables..."
 
     if (-not (Test-PS2EXE)) {
-        Write-Host "ps2exe module is not installed. Run with -Install parameter first."
+        Write-BuildLog "ps2exe module is not installed. Run with -Install parameter first."
         exit 1
     }
 
@@ -192,7 +195,7 @@ if ($Build) {
 
         # Build 1: Main Router (Focus-Game-Deck.exe)
         # This is a lightweight router that only launches other executables
-        Write-Host "Building Main Router (Focus-Game-Deck.exe)..."
+        Write-BuildLog "Building Main Router (Focus-Game-Deck.exe)..."
         $mainScriptPath = Join-Path $projectRoot "src/Main.PS1"
         $mainOutputPath = Join-Path $buildDir "Focus-Game-Deck.exe"
 
@@ -213,24 +216,24 @@ if ($Build) {
             if (Test-Path $iconFile) {
                 $ps2exeParams.Add("iconFile", $iconFile)
             } else {
-                Write-Warning "Icon file not found: $iconFile. Building without an icon."
+                Write-BuildLog "Icon file not found: $iconFile. Building without an icon." -Level Warning
             }
 
             ps2exe @ps2exeParams
 
             if (Test-Path $mainOutputPath) {
-                Write-Host "[OK] Main Router executable created: $mainOutputPath"
+                Write-BuildLog "[OK] Main Router executable created: $mainOutputPath"
             } else {
-                Write-Host "[ERROR] Failed to create Main Router executable."
+                Write-BuildLog "[ERROR] Failed to create Main Router executable."
             }
         } else {
-            Write-Host "[ERROR] Main script not found: $mainScriptPath"
+            Write-BuildLog "[ERROR] Main script not found: $mainScriptPath"
         }
 
         # Build 2: Config Editor (ConfigEditor.exe)
         # Bundle all GUI dependencies into the executable
         Write-Host ""
-        Write-Host "Building Config Editor (ConfigEditor.exe) with bundled dependencies..."
+        Write-BuildLog "Building Config Editor (ConfigEditor.exe) with bundled dependencies..."
 
         # Define ConfigEditor paths
         $configEditorPath = Join-Path -Path $projectRoot "gui/ConfigEditor.ps1"
@@ -252,7 +255,7 @@ if ($Build) {
                 $helperPath = Join-Path $projectRoot "gui/$helper"
                 if (Test-Path $helperPath) {
                     $embedFilesHash[(Join-Path -Path "./" -ChildPath $helper)] = $helperPath
-                    Write-Host "[INFO] Will embed: $helper"
+                    Write-BuildLog "[INFO] Will embed: $helper"
                 }
             }
 
@@ -266,7 +269,7 @@ if ($Build) {
                 $fullPath = Join-Path -Path $projectRoot -ChildPath $relPath
                 if (Test-Path $fullPath) {
                     $embedFilesHash[$relPath] = $fullPath
-                    Write-Host "[INFO] Will embed: $relPath"
+                    Write-BuildLog "[INFO] Will embed: $relPath"
                 }
             }
 
@@ -290,23 +293,23 @@ if ($Build) {
 
             if ($embedFilesHash.Count -gt 0) {
                 $ps2exeParams.Add("embedFiles", $embedFilesHash)
-                Write-Host "[INFO] Embedding $($embedFilesHash.Count) helper files into ConfigEditor.exe"
+                Write-BuildLog "[INFO] Embedding $($embedFilesHash.Count) helper files into ConfigEditor.exe"
             }
 
             ps2exe @ps2exeParams
 
             if (Test-Path $configEditorOutput) {
-                Write-Host "[OK] Config Editor executable created: $configEditorOutput"
+                Write-BuildLog "[OK] Config Editor executable created: $configEditorOutput"
             } else {
-                Write-Host "[ERROR] Failed to create Config Editor executable."
+                Write-BuildLog "[ERROR] Failed to create Config Editor executable."
             }
         } else {
-            Write-Host "[ERROR] Config Editor script not found: $configEditorPath"
+            Write-BuildLog "[ERROR] Config Editor script not found: $configEditorPath"
         }
 
         # Build 2.5: Config Editor with console for debugging (ConfigEditor-Console.exe)
         Write-Host ""
-        Write-Host "Building Config Editor (ConfigEditor-Console.exe) with bundled dependencies..."
+        Write-BuildLog "Building Config Editor (ConfigEditor-Console.exe) with bundled dependencies..."
 
         $configEditorConsoleOutput = Join-Path $buildDir "ConfigEditor-Console.exe"
         ps2exeParams.noConsole = $false
@@ -314,15 +317,15 @@ if ($Build) {
         ps2exe @ps2exeParams
 
         if (Test-Path $configEditorConsoleOutput) {
-            Write-Host "[OK] Config Editor executable created: $configEditorConsoleOutput"
+            Write-BuildLog "[OK] Config Editor executable created: $configEditorConsoleOutput"
         } else {
-            Write-Host "[ERROR] Failed to create Config Editor executable."
+            Write-BuildLog "[ERROR] Failed to create Config Editor executable."
         }
 
         # Build 3: Game Launcher (Invoke-FocusGameDeck.exe)
         # Bundle all game launcher modules into the executable
         Write-Host ""
-        Write-Host "Building Game Launcher (Invoke-FocusGameDeck.exe) with bundled dependencies..."
+        Write-BuildLog "Building Game Launcher (Invoke-FocusGameDeck.exe) with bundled dependencies..."
 
         # Create staging directory for game launcher
         $gameLauncherStaging = Join-Path $buildDir "staging-gameLauncher"
@@ -379,7 +382,7 @@ foreach ($modulePath in $modulePaths) {
     if (Test-Path $modulePath) {
         . $modulePath
     } else {
-        Write-Error "Required module not found: $modulePath"
+        Write-BuildLog "Required module not found: $modulePath" -Level Error
         exit 1
     }
 }
@@ -400,18 +403,18 @@ try {
 
     # Display localized loading messages
     if ($msg.mainLoadingConfig) {
-        Write-Host $msg.mainLoadingConfig
+        Write-BuildLog $msg.mainLoadingConfig
     } else {
-        Write-Host "Loading configuration..."
+        Write-BuildLog "Loading configuration..."
     }
 
     if ($msg.mainConfigLoaded) {
-        Write-Host $msg.mainConfigLoaded
+        Write-BuildLog $msg.mainConfigLoaded
     } else {
-        Write-Host "Configuration loaded successfully."
+        Write-BuildLog "Configuration loaded successfully."
     }
 } catch {
-    Write-Error "Failed to load configuration: $_"
+    Write-BuildLog "Failed to load configuration: $_" -Level Error
     exit 1
 }
 # [BUILD-TIME-PATCH-END]
@@ -423,7 +426,7 @@ try {
 
             # Save patched version
             $gameLauncherContent | Set-Content (Join-Path $gameLauncherStaging "Invoke-FocusGameDeck.ps1") -Encoding UTF8 -Force
-            Write-Host "[INFO] Patched Invoke-FocusGameDeck.ps1 for bundled execution"
+            Write-BuildLog "[INFO] Patched Invoke-FocusGameDeck.ps1 for bundled execution"
 
             # Copy all module scripts to flat structure (ps2exe will bundle these)
             $modules = @(
@@ -443,7 +446,7 @@ try {
                 $modulePath = Join-Path $projectRoot "src/modules/$module"
                 if (Test-Path $modulePath) {
                     Copy-Item $modulePath $gameLauncherStaging -Force
-                    Write-Host "[INFO] Bundled: $module"
+                    Write-BuildLog "[INFO] Bundled: $module"
                 }
             }
 
@@ -475,27 +478,27 @@ try {
             ps2exe @ps2exeParams
 
             if (Test-Path $gameLauncherOutput) {
-                Write-Host "[OK] Game Launcher executable created: $gameLauncherOutput"
+                Write-BuildLog "[OK] Game Launcher executable created: $gameLauncherOutput"
             } else {
-                Write-Host "[ERROR] Failed to create Game Launcher executable."
+                Write-BuildLog "[ERROR] Failed to create Game Launcher executable."
             }
 
             # Clean up staging directory
             Remove-Item $gameLauncherStaging -Recurse -Force
         } else {
-            Write-Host "[ERROR] Game Launcher script not found: $gameLauncherPath"
+            Write-BuildLog "[ERROR] Game Launcher script not found: $gameLauncherPath"
         }
 
         Write-Host ""
-        Write-Host "Multi-Executable Bundle Architecture:"
-        Write-Host "  1. Focus-Game-Deck.exe - Main router (launches sub-processes)"
-        Write-Host "  2. ConfigEditor.exe - GUI configuration editor (fully bundled)"
-        Write-Host "     ConfigEditor-Console.exe - GUI configuration editor with console (for debugging)"
-        Write-Host "  3. Invoke-FocusGameDeck.exe - Game launcher (fully bundled)"
+        Write-BuildLog "Multi-Executable Bundle Architecture:"
+        Write-BuildLog "  1. Focus-Game-Deck.exe - Main router (launches sub-processes)"
+        Write-BuildLog "  2. ConfigEditor.exe - GUI configuration editor (fully bundled)"
+        Write-BuildLog "     ConfigEditor-Console.exe - GUI configuration editor with console (for debugging)"
+        Write-BuildLog "  3. Invoke-FocusGameDeck.exe - Game launcher (fully bundled)"
 
         # Copy necessary supporting files to build directory
         Write-Host ""
-        Write-Host "Copying supporting files to build directory..."
+        Write-BuildLog "Copying supporting files to build directory..."
 
         # Copy config directory
         $configDir = Join-Path $buildDir "config"
@@ -509,13 +512,13 @@ try {
                 $destName = $_.Name -replace '\.sample$', ''
                 $destPath = Join-Path $configDir $destName
                 Copy-Item $_.FullName $destPath -Force
-                Write-Host "[OK] Copied $($_.Name) as $destName"
+                Write-BuildLog "[OK] Copied $($_.Name) as $destName"
             }
 
             # Copy other JSON files (excluding *.json.sample files)
             Get-ChildItem $sourceConfigDir -Filter "*.json" | Where-Object { $_.Name -notlike "*.json.sample" } | ForEach-Object {
                 Copy-Item $_.FullName $configDir -Force
-                Write-Host "[OK] Copied $($_.Name)"
+                Write-BuildLog "[OK] Copied $($_.Name)"
             }
         }
 
@@ -527,7 +530,7 @@ try {
         $sourceLocalizationDir = Join-Path $projectRoot "localization"
         if (Test-Path $sourceLocalizationDir) {
             Copy-Item "$sourceLocalizationDir/*.json" $localizationDir -Force
-            Write-Host "[OK] Copied localization files"
+            Write-BuildLog "[OK] Copied localization files"
         }
 
         # Copy gui directory (for XAML and helper scripts that ConfigEditor.exe references at runtime)
@@ -540,29 +543,29 @@ try {
             Get-ChildItem $sourceGuiDir -Include "*.xaml" -Recurse | ForEach-Object {
                 Copy-Item $_.FullName $guiDir -Force
             }
-            Write-Host "[OK] Copied GUI files (XAML only)"
+            Write-BuildLog "[OK] Copied GUI files (XAML only)"
         }
 
         Write-Host ""
-        Write-Host "Build completed successfully!"
-        Write-Host "Built files are located in: $buildDir"
+        Write-BuildLog "Build completed successfully!"
+        Write-BuildLog "Built files are located in: $buildDir"
 
         # List built executables
         Write-Host ""
-        Write-Host "Built executables:"
+        Write-BuildLog "Built executables:"
         Get-ChildItem $buildDir -Filter "*.exe" | ForEach-Object {
             $fileSize = [math]::Round($_.Length / 1KB, 2)
-            Write-Host "  $($_.Name) ($fileSize KB)"
+            Write-BuildLog "  $($_.Name) ($fileSize KB)"
         }
 
         # Auto-sign if requested
         if ($Sign -or $All) {
-            Write-Host "Starting code signing process..."
+            Write-BuildLog "Starting code signing process..."
             $signingScript = Join-Path $PSScriptRoot "Sign-Executables.ps1"
             if (Test-Path $signingScript) {
                 & $signingScript -SignAll
             } else {
-                Write-Warning "Code signing script not found: $signingScript"
+                Write-BuildLog "Code signing script not found: $signingScript" -Level Warning
             }
         }
 
@@ -572,7 +575,7 @@ try {
             New-Item -ItemType Directory -Path $distDir -Force | Out-Null
         }
 
-        Write-Host "Creating distribution package..."
+        Write-BuildLog "Creating distribution package..."
 
         # Move executables to dist directory
         Get-ChildItem $buildDir -Filter "*.exe" | ForEach-Object {
@@ -589,7 +592,7 @@ try {
             }
 
             $signStatus = if ($isSigned) { "(signed)" } else { "(unsigned)" }
-            Write-Host "Moved: $($_.Name) to distribution directory $signStatus"
+            Write-BuildLog "Moved: $($_.Name) to distribution directory $signStatus"
         }
 
         # Copy configuration files and other assets to dist directory
@@ -614,7 +617,7 @@ try {
             Get-ChildItem $sourceGuiProject -Include "*.xaml" -Recurse | ForEach-Object {
                 Copy-Item $_.FullName $distGuiDir -Force
             }
-            Write-Host "[OK] Copied GUI XAML files to distribution directory"
+            Write-BuildLog "[OK] Copied GUI XAML files to distribution directory"
         }
 
         # Ensure localization directory is present
@@ -623,12 +626,12 @@ try {
         if (Test-Path $sourceLocalizationProject) {
             if (-not (Test-Path $distLocalizationDir)) { New-Item -ItemType Directory -Path $distLocalizationDir -Force | Out-Null }
             Copy-Item "$sourceLocalizationProject/*.json" $distLocalizationDir -Force
-            Write-Host "[OK] Copied localization files to distribution directory"
+            Write-BuildLog "[OK] Copied localization files to distribution directory"
         }
 
         # Verification: All scripts should be bundled in executables
         Write-Host ""
-        Write-Host "Verifying distribution package (all scripts should be bundled)..."
+        Write-BuildLog "Verifying distribution package (all scripts should be bundled)..."
         $checkPaths = @(
             @{ Path = (Join-Path $distDir "config"); Type = "Configuration files" },
             @{ Path = (Join-Path $distGuiDir "MainWindow.xaml"); Type = "GUI XAML resources" },
@@ -640,32 +643,32 @@ try {
 
         foreach ($item in $checkPaths) {
             if (Test-Path $item.Path) {
-                Write-Host "  [OK] $($item.Type): $($item.Path)"
+                Write-BuildLog "  [OK] $($item.Type): $($item.Path)"
             } else {
-                Write-Warning "  [MISSING] $($item.Type): $($item.Path)"
+                Write-BuildLog "  [MISSING] $($item.Type): $($item.Path)" -Level Warning
             }
         }
 
         # Clean up intermediate build directory
-        Write-Host "Cleaning up intermediate build directory..."
+        Write-BuildLog "Cleaning up intermediate build directory..."
         Remove-Item $buildDir -Recurse -Force
-        Write-Host "Build directory cleaned up."
+        Write-BuildLog "Build directory cleaned up."
 
-        Write-Host "Distribution package completed! Files are located in: $distDir"
+        Write-BuildLog "Distribution package completed! Files are located in: $distDir"
     } catch {
-        Write-Host "Failed to build executables: $($_.Exception.Message)"
+        Write-BuildLog "Failed to build executables: $($_.Exception.Message)"
         exit 1
     }
 }
 
 # Sign existing build if requested
 if ($Sign -and -not $Build) {
-    Write-Host "Signing existing build..."
+    Write-BuildLog "Signing existing build..."
     $buildDir = Join-Path $PSScriptRoot "build"
     $distDir = Join-Path $PSScriptRoot "dist"
 
     if (-not (Test-Path $buildDir)) {
-        Write-Error "Build directory not found. Please run with -Build first."
+        Write-BuildLog "Build directory not found. Please run with -Build first." -Level Error
         exit 1
     }
 
@@ -678,7 +681,7 @@ if ($Sign -and -not $Build) {
             New-Item -ItemType Directory -Path $distDir -Force | Out-Null
         }
 
-        Write-Host "Creating distribution package..."
+        Write-BuildLog "Creating distribution package..."
 
         # Move executables to dist directory
         Get-ChildItem $buildDir -Filter "*.exe" | ForEach-Object {
@@ -695,7 +698,7 @@ if ($Sign -and -not $Build) {
             }
 
             $signStatus = if ($isSigned) { "(signed)" } else { "(unsigned)" }
-            Write-Host "Moved: $($_.Name) to distribution directory $signStatus"
+            Write-BuildLog "Moved: $($_.Name) to distribution directory $signStatus"
         }
 
         # Copy other files to dist directory
@@ -712,34 +715,34 @@ if ($Sign -and -not $Build) {
         }
 
         # Clean up intermediate build directory
-        Write-Host "Cleaning up intermediate build directory..."
+        Write-BuildLog "Cleaning up intermediate build directory..."
         Remove-Item $buildDir -Recurse -Force
-        Write-Host "Build directory cleaned up."
+        Write-BuildLog "Build directory cleaned up."
 
-        Write-Host "Distribution package completed! Files are located in: $distDir"
+        Write-BuildLog "Distribution package completed! Files are located in: $distDir"
     } else {
-        Write-Error "Code signing script not found: $signingScript"
+        Write-BuildLog "Code signing script not found: $signingScript" -Level Error
         exit 1
     }
 }# Show usage if no parameters
 if (-not $Install -and -not $Build -and -not $Clean -and -not $Sign -and -not $All) {
-    Write-Host "Focus Game Deck - Main Application Build Script"
+    Write-BuildLog "Focus Game Deck - Main Application Build Script"
     Write-Host ""
-    Write-Host "Usage:"
-    Write-Host "  ./Build-FocusGameDeck.ps1 -Install           # Install ps2exe module"
-    Write-Host "  ./Build-FocusGameDeck.ps1 -Build             # Build all executables"
-    Write-Host "  ./Build-FocusGameDeck.ps1 -Sign              # Sign existing build"
-    Write-Host "  ./Build-FocusGameDeck.ps1 -Clean             # Clean build artifacts"
-    Write-Host "  ./Build-FocusGameDeck.ps1 -All               # Install, build, and sign"
-    Write-Host "  ./Build-FocusGameDeck.ps1 -Build -Sign       # Build and sign"
+    Write-BuildLog "Usage:"
+    Write-BuildLog "  ./Build-FocusGameDeck.ps1 -Install           # Install ps2exe module"
+    Write-BuildLog "  ./Build-FocusGameDeck.ps1 -Build             # Build all executables"
+    Write-BuildLog "  ./Build-FocusGameDeck.ps1 -Sign              # Sign existing build"
+    Write-BuildLog "  ./Build-FocusGameDeck.ps1 -Clean             # Clean build artifacts"
+    Write-BuildLog "  ./Build-FocusGameDeck.ps1 -All               # Install, build, and sign"
+    Write-BuildLog "  ./Build-FocusGameDeck.ps1 -Build -Sign       # Build and sign"
     Write-Host ""
-    Write-Host "Example workflows:"
-    Write-Host "  Development: ./Build-FocusGameDeck.ps1 -Install -Build"
-    Write-Host "  Production:  ./Build-FocusGameDeck.ps1 -All"
+    Write-BuildLog "Example workflows:"
+    Write-BuildLog "  Development: ./Build-FocusGameDeck.ps1 -Install -Build"
+    Write-BuildLog "  Production:  ./Build-FocusGameDeck.ps1 -All"
     Write-Host ""
-    Write-Host "This script will create executable versions of:"
-    Write-Host "  - Focus-Game-Deck.exe (unified application with integrated GUI configuration editor)"
+    Write-BuildLog "This script will create executable versions of:"
+    Write-BuildLog "  - Focus-Game-Deck.exe (unified application with integrated GUI configuration editor)"
     Write-Host ""
-    Write-Host "Final distribution files will be placed in the 'dist' directory."
-    Write-Host "Digital signature status can be verified via Windows Properties."
+    Write-BuildLog "Final distribution files will be placed in the 'dist' directory."
+    Write-BuildLog "Digital signature status can be verified via Windows Properties."
 }
