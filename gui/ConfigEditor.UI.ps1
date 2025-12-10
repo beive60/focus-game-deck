@@ -76,13 +76,28 @@ class ConfigEditorUI {
             Write-Verbose "[DEBUG] ConfigEditorUI: State manager, mappings, and localization assigned"
 
             # Load XAML (use project root defined in main script)
-            Write-Verbose "[DEBUG] ConfigEditorUI: Step 1/6 - Loading XAML file"
-            $xamlPath = Join-Path -Path $this.ProjectRoot -ChildPath "gui/MainWindow.xaml"
-            if (-not (Test-Path $xamlPath)) {
-                throw "XAML file not found: $xamlPath"
+            Write-Host "[DEBUG] ConfigEditorUI: Step 1/6 - Loading XAML"
+            $xamlContent = $null
+
+            # Check if embedded XAML variable exists (production/bundled mode)
+            if ($Global:Xaml_MainWindow) {
+                Write-Host "[DEBUG] ConfigEditorUI: Using embedded XAML from `$Global:Xaml_MainWindow"
+                $xamlContent = $Global:Xaml_MainWindow
+            } else {
+                # Fallback to file-based loading (development mode)
+                Write-Host "[DEBUG] ConfigEditorUI: Loading XAML from file (development mode)"
+                $xamlPath = Join-Path -Path $this.ProjectRoot -ChildPath "gui/MainWindow.xaml"
+                if (-not (Test-Path $xamlPath)) {
+                    throw "XAML file not found: $xamlPath"
+                }
+                $xamlContent = Get-Content $xamlPath -Raw -Encoding UTF8
             }
-            $xamlContent = Get-Content $xamlPath -Raw -Encoding UTF8
-            Write-Verbose "[DEBUG] ConfigEditorUI: Step 2/6 - XAML content loaded - Length: $($xamlContent.Length)"
+
+            if ([string]::IsNullOrWhiteSpace($xamlContent)) {
+                throw "XAML content is empty or null"
+            }
+
+            Write-Host "[DEBUG] ConfigEditorUI: Step 2/6 - XAML content loaded - Length: $($xamlContent.Length)"
 
             # Parse XAML
             Write-Verbose "[DEBUG] ConfigEditorUI: Step 3/6 - Parsing XAML"

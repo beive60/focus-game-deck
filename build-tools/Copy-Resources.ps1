@@ -48,6 +48,15 @@ if ($Verbose) {
     $VerbosePreference = "Continue"
 }
 
+function Write-CopyMessage {
+    param(
+        [string]$Message,
+        [string]$Level = "INFO"
+    )
+
+    Write-Host "[$Level] $Message"
+}
+
 function Copy-DirectoryContents {
     param(
         [string]$SourcePath,
@@ -121,14 +130,11 @@ try {
         -Exclude @("*.backup", "*diagnostic*") `
         -Description "localization files"
 
-    # Copy GUI XAML files (runtime resources)
-    $guiSource = Join-Path $SourceRoot "gui"
-    $guiDest = Join-Path $DestinationDir "gui"
-    $copyResults += Copy-DirectoryContents `
-        -SourcePath $guiSource `
-        -DestPath $guiDest `
-        -Include @("*.xaml") `
-        -Description "GUI XAML files"
+    # NOTE: GUI XAML files are no longer copied to release directory
+    # They are embedded in the executable via Embed-XamlResources.ps1 and XamlResources.ps1
+    # This reduces release package size and removes external file dependencies
+    Write-Host ""
+    Write-Verbose "Skipping GUI XAML files (embedded in executable)"
 
     Write-BuildLog "COPY SUMMARY"
 
