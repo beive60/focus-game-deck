@@ -7,11 +7,13 @@
 #>
 
 # Import the BuildLogger
-. "$PSScriptRoot/../../build-tools/utils/BuildLogger.ps1"
+$scriptRoot = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
+. "$scriptRoot/../../build-tools/utils/BuildLogger.ps1"
 
 BeforeAll {
     # Navigate up two levels from test/pester/ to project root
-    $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+    $scriptRoot = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
+    $projectRoot = Split-Path -Parent (Split-Path -Parent $scriptRoot)
     $ConfigPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
     $MessagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
 }

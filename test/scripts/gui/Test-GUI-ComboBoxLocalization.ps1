@@ -56,15 +56,14 @@
     - .NET WPF assemblies
 #>
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
-
-
 param(
     [Parameter()]
     [ValidateSet("ja", "en", "zh-CN")]
     [string]$Language = "ja"
 )
+
+# Import the BuildLogger
+. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
 
 $ErrorActionPreference = "Stop"
 $VerbosePreference = "Continue"

@@ -210,9 +210,10 @@ function Test-JsonKeyStructure {
         # Test each JSON file
         foreach ($jsonFile in $jsonFiles) {
             try {
-                $jsonContent = Get-Content -Path $jsonFile.FullName -Raw | ConvertFrom-Json -AsHashtable
+                $jsonContent = Get-Content -Path $jsonFile.FullName -Raw | ConvertFrom-Json
+                $jsonKeys = $jsonContent.PSObject.Properties.Name
                 $results.KeyCoverage[$jsonFile.Name] = @{
-                    TotalKeys = $jsonContent.Keys.Count
+                    TotalKeys = $jsonKeys.Count
                     MappedKeys = 0
                     UnmappedKeys = @()
                 }
@@ -233,7 +234,7 @@ function Test-JsonKeyStructure {
                 }
 
                 foreach ($mappingKey in ($allMappingKeys | Sort-Object -Unique)) {
-                    if ($jsonContent.ContainsKey($mappingKey)) {
+                    if ($jsonContent.PSObject.Properties.Name -contains $mappingKey) {
                         $results.KeyCoverage[$jsonFile.Name].MappedKeys++
                     } else {
                         $results.MissingKeys += "$($jsonFile.Name): $mappingKey"
@@ -241,7 +242,7 @@ function Test-JsonKeyStructure {
                 }
 
                 # Check for JSON keys not in mappings
-                foreach ($jsonKey in $jsonContent.Keys) {
+                foreach ($jsonKey in $jsonKeys) {
                     if ($jsonKey -notin $allMappingKeys) {
                         $results.KeyCoverage[$jsonFile.Name].UnmappedKeys += $jsonKey
                     }
