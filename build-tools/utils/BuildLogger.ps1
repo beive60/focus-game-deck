@@ -46,15 +46,18 @@ function Write-BuildLog {
 
         [Parameter(Mandatory = $false)]
         [ValidateSet("Info", "Success", "Warning", "Error", "Debug")]
-        [string]$Level = "Info"
+        [string]$Level = "Info",
+
+        [Parameter(Mandatory = $false)]
+        [switch]$NoNewline
     )
 
     switch ($Level) {
         "Info" {
-            Write-Host "[INFO] $Message"
+            Write-Host "[INFO] $Message" -NoNewline:$NoNewline
         }
         "Success" {
-            Write-Host "[DONE] $Message"
+            Write-Host "[DONE] $Message" -NoNewline:$NoNewline
         }
         "Warning" {
             Write-Warning "[WARN] $Message"

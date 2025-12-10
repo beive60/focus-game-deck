@@ -81,8 +81,8 @@ function New-MockConfigData {
     )
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+    # Import the BuildLogger
+    . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     $mockConfig = [PSCustomObject]@{
         language = "en"
         games = [PSCustomObject]@{}
@@ -189,9 +189,6 @@ function Get-LocalizedMessage {
     param(
         [string]$Key,
         [string[]]$Args = @()
-
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     )
 
     if (-not $script:Messages) {
@@ -232,8 +229,8 @@ function New-MockWindow {
     $mockWindow | Add-Member -MemberType ScriptMethod -Name "FindName" -Value {
         param([string]$Name)
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+        # Import the BuildLogger
+        . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
         return $script:MockControls[$Name]
     }
 
@@ -465,8 +462,8 @@ Invoke-Test -TestName "Start-GameFromLauncher-Validation" -Description "Test gam
         param([string]$GameId)
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+        # Import the BuildLogger
+        . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
         try {
             $statusText = $script:Window.FindName("LauncherStatusText")
             if ($statusText) {
@@ -565,8 +562,8 @@ Invoke-Test -TestName "Switch-ToGameSettingsTab" -Description "Test tab switchin
         param([string]$GameId = "")
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+        # Import the BuildLogger
+        . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
         try {
             $script:mockTabSwitched = $true
             $script:mockGameSelected = $GameId
