@@ -91,68 +91,46 @@ function New-ReleaseReadme {
         [string]$Language = "en"
     )
 
-    # Define localized content
-    $localizedContent = @{
-        "en" = @{
-            "title" = "Focus Game Deck - Release Package"
-            "version" = "Version"
-            "buildDate" = "Build Date"
-            "signed" = "Signed"
-            "yes" = "Yes"
-            "no" = "No"
-            "filesIncluded" = "Files Included"
-            "configEditor" = "GUI configuration editor for managing game profiles and settings"
-            "mainApp" = "Main application executable (unified launcher and game runner)"
-            "scriptExecutor" = "PowerShell script executor for running games with optimizations"
-            "localization" = "Localization resources for multi-language support"
-            "readme" = "This file"
-            "installation" = "Installation"
-            "step1" = "Extract all files to a directory of your choice"
-            "step2" = "Run ConfigEditor.exe to open the configuration editor"
-            "step3" = "Configure your games and settings"
-            "step4" = "Run Focus-Game-Deck.exe [GameId] to launch games with optimized settings"
-            "architecture" = "Architecture"
-            "arch1" = "All PowerShell scripts are bundled into the executables"
-            "arch2" = "Configuration files are automatically generated when needed"
-            "arch3" = "Self-contained with minimal external dependencies"
-            "documentation" = "Documentation"
-            "docText" = "For complete documentation, visit:"
-            "license" = "License"
-            "licenseText" = "This software is released under the MIT License."
-        }
-        "ja" = @{
-            "title" = "Focus Game Deck - リリースパッケージ"
-            "version" = "バージョン"
-            "buildDate" = "ビルド日時"
-            "signed" = "署名済み"
-            "yes" = "はい"
-            "no" = "いいえ"
-            "filesIncluded" = "含まれるファイル"
-            "configEditor" = "ゲームプロファイルと設定を管理するGUI設定エディタ"
-            "mainApp" = "メインアプリケーション実行可能ファイル（統合ランチャーとゲームランナー）"
-            "scriptExecutor" = "ゲーム実行用の最適化を行うPowerScriptスクリプト実行機"
-            "localization" = "多言語対応のローカライゼーションリソース"
-            "readme" = "このファイル"
-            "installation" = "インストール方法"
-            "step1" = "すべてのファイルを任意のディレクトリに抽出します"
-            "step2" = "ConfigEditor.exe を実行して設定エディタを開きます"
-            "step3" = "ゲームと設定を構成します"
-            "step4" = "Focus-Game-Deck.exe [GameId] を実行して、ゲームを最適化された設定で起動します"
-            "architecture" = "アーキテクチャ"
-            "arch1" = "すべてのPowerShellスクリプトは実行可能ファイルにバンドルされています"
-            "arch2" = "設定ファイルは必要に応じて自動的に生成されます"
-            "arch3" = "自己完結型で、外部依存関係は最小限です"
-            "documentation" = "ドキュメント"
-            "docText" = "完全なドキュメントについては、以下をご覧ください："
-            "license" = "ライセンス"
-            "licenseText" = "このソフトウェアはMITライセンスの下でリリースされています。"
-        }
+    # Load localized content from JSON file
+    $readmeStringsPath = Join-Path -Path $PSScriptRoot -ChildPath "resources/readme-strings.json"
+    if (-not (Test-Path $readmeStringsPath)) {
+        Write-Verbose "README strings file not found: $readmeStringsPath"
+        throw "README strings file not found: $readmeStringsPath"
+    }
+
+    try {
+        $localizedContent = Get-Content $readmeStringsPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    } catch {
+        Write-Verbose "Failed to load README strings: $($_.Exception.Message)"
+        throw "Failed to load README strings: $($_.Exception.Message)"
     }
 
     # Get localized strings, fall back to English if language not found
-    $strings = $localizedContent[$Language]
+    $strings = $localizedContent.$Language
     if (-not $strings) {
-        $strings = $localizedContent["en"]
+        $strings = $localizedContent.en
+    }
+
+    # Validate that all required keys exist
+    $requiredKeys = @(
+        "title", "version", "buildDate", "signed", "yes", "no",
+        "filesIncluded", "configEditor", "mainApp", "scriptExecutor",
+        "localization", "readme", "installation", "step1", "step2",
+        "step3", "step4", "architecture", "archIntro", "arch1",
+        "arch2", "arch3", "documentation", "docText", "license",
+        "licenseText"
+    )
+
+    $missingKeys = @()
+    foreach ($key in $requiredKeys) {
+        if (-not $strings.$key) {
+            $missingKeys += $key
+        }
+    }
+
+    if ($missingKeys.Count -gt 0) {
+        $missingKeysList = $missingKeys -join ", "
+        throw "Required keys missing in README strings for language '$Language': $missingKeysList"
     }
 
     $readme = @(
@@ -177,12 +155,12 @@ function New-ReleaseReadme {
         "3. $($strings["step3"])"
         "4. $($strings["step4"])"
         ""
-        "## $($strings["architecture"])"
+        "## $($strings.architecture)"
         ""
-        "This release uses a bundled executable architecture:"
-        "- $($strings["arch1"])"
-        "- $($strings["arch2"])"
-        "- $($strings["arch3"])"
+        "$($strings.archIntro)"
+        "- $($strings.arch1)"
+        "- $($strings.arch2)"
+        "- $($strings.arch3)"
         ""
         "## $($strings["documentation"])"
         ""
