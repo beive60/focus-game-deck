@@ -98,8 +98,28 @@ function Resolve-DotSourcedPath {
 
     # 2. 存在しない場合、`. (Join-Path ...)` のようなパスを正しくパースする
     if ($pathExpression -match '^\(Join-Path') {
-        # 2.1. Join-Pathが使用されているかを確認する。(already did)
-        $match = [regex]::Match($pathExpression, '^\(Join-Path\s-Path\s\$(\w+)\s-ChildPath\s"([^"]+)"\)$')
+        # Try positional parameters first: (Join-Path $var "path")
+        $match = [regex]::Match($pathExpression, '^\(Join-Path\s+\$(\w+)\s+"([^"]+)"\)$')
+        if ($match.Success) {
+            $baseVarName = $match.Groups[1].Value
+            $childPath = $match.Groups[2].Value
+
+            $basePath = ""
+            if ($baseVarName -eq 'appRoot' -or $baseVarName -eq 'projectRoot') {
+                $basePath = $ProjectRoot
+            } elseif ($baseVarName -eq 'PSScriptRoot') {
+                $basePath = $CurrentScriptDir
+            }
+
+            if ($basePath) {
+                $resolvedPath = Join-Path -Path $basePath -ChildPath $childPath
+                $resolvedPath = [System.IO.Path]::GetFullPath(($resolvedPath -replace '[\\/]+', '/'))
+                return $resolvedPath
+            }
+        }
+
+        # Try named parameters: (Join-Path -Path $var -ChildPath "path")
+        $match = [regex]::Match($pathExpression, '^\(Join-Path\s+-Path\s+\$(\w+)\s+-ChildPath\s+"([^"]+)"\)$')
         if ($match.Success) {
             $baseVarName = $match.Groups[1].Value
             # 2.2. -ChildPathに続く引数を抽出する。
@@ -192,11 +212,36 @@ function New-BundledScript {
     $paramBlock = ""
     $mainScriptContent = $entryContent
 
-    # Regex to find param block at start of script (handling comments/whitespace)
-    if ($entryContent -match '(?s)^\s*(<#.*?#>\s*)?param\s*\((.*?)\)') {
-        $paramBlock = $Matches[0]
-        # Remove param block from main content to avoid duplication
-        $mainScriptContent = $entryContent.Substring($Matches[0].Length)
+    # Extract param block to ensure it remains at the top
+    # Use a more robust approach: find the param block by matching balanced parentheses
+    $paramBlock = ""
+    $mainScriptContent = $entryContent
+
+    # Look for param block at the start (may have comments/whitespace before it)
+    if ($entryContent -match '(?s)^(.*?)\s*param\s*\(') {
+        $beforeParam = $Matches[1]  # Comments/whitespace before param
+        $startPos = $Matches[0].Length
+
+        # Count parentheses to find the end of the param block
+        $depth = 1
+        $endPos = $startPos
+        $chars = $entryContent.ToCharArray()
+
+        for ($i = $startPos; $i -lt $chars.Length; $i++) {
+            if ($chars[$i] -eq '(') { $depth++ }
+            elseif ($chars[$i] -eq ')') {
+                $depth--
+                if ($depth -eq 0) {
+                    $endPos = $i + 1
+                    break
+                }
+            }
+        }
+
+        if ($depth -eq 0) {
+            $paramBlock = $entryContent.Substring(0, $endPos).Trim() + "`n"
+            $mainScriptContent = $entryContent.Substring($endPos).TrimStart()
+        }
     }
     # ---------------------------------------------------------------
 
@@ -216,8 +261,8 @@ $paramBlock
         if (Test-Path $depPath) {
             Write-Verbose "Bundling: $depPath"
             $depContent = Get-Content $depPath -Raw -Encoding UTF8
-            # Remove dot-sources from dependencies too
-            $depContent = $depContent -replace '^\s*\.\s+.+$', ''
+            # Remove dot-sources from dependencies (line-by-line to handle multiline properly)
+            $depContent = ($depContent -split "`r?`n" | Where-Object { $_ -notmatch '^\s*\.\s+' }) -join "`n"
 
             $bundledContent += @"
 
@@ -230,8 +275,8 @@ $depContent
         }
     }
 
-    # Remove dot-sources from main script content
-    $mainScriptContent = $mainScriptContent -replace '^\s*\.\s+.+$', ''
+    # Remove dot-sources from main script content (line-by-line to handle multiline properly)
+    $mainScriptContent = ($mainScriptContent -split "`r?`n" | Where-Object { $_ -notmatch '^\s*\.\s+' }) -join "`n"
 
     $bundledContent += @"
 
