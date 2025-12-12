@@ -204,6 +204,17 @@ function New-BundledScript {
     Write-BundlerMessage "Resolving dependencies for: $(Split-Path $EntryPointPath -Leaf)" "INFO"
     $dependencies = Get-ScriptDependencies -ScriptPath $EntryPointPath -ProjectRoot $ProjectRoot -ProcessedFiles $processedFiles
 
+    # Auto-include XamlResources.ps1 for GUI applications (ConfigEditor, Main.PS1)
+    $entryFileName = [System.IO.Path]::GetFileName($EntryPointPath)
+    if ($entryFileName -match '^(ConfigEditor|Main)\.ps1$') {
+        $xamlResourcesPath = Join-Path $ProjectRoot "src/generated/XamlResources.ps1"
+        if ((Test-Path $xamlResourcesPath) -and -not ($dependencies -contains $xamlResourcesPath)) {
+            Write-BundlerMessage "Auto-including XamlResources.ps1 for GUI application" "INFO"
+            # Add at the beginning so XAML variables are available before UI initialization
+            $dependencies = @($xamlResourcesPath) + $dependencies
+        }
+    }
+
     Write-BundlerMessage "Found $($dependencies.Count) dependencies" "INFO"
 
     $entryContent = Get-Content $EntryPointPath -Raw -Encoding UTF8

@@ -437,7 +437,7 @@ function Initialize-ConfigEditor {
 
         # Step 9: Initialize event handler
         # Pass project root into events handler so it can construct file paths without referencing script-scoped variables
-        $eventHandler = [ConfigEditorEvents]::new($uiManager, $stateManager, $appRoot)
+        $eventHandler = [ConfigEditorEvents]::new($uiManager, $stateManager, $appRoot, $script:isExecutable)
 
         # Connect event handler to UI manager
         $uiManager.EventHandler = $eventHandler

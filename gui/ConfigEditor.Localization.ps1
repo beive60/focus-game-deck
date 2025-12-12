@@ -13,7 +13,7 @@ class ConfigEditorLocalization {
     [string]$CurrentLanguage = "en"
     [PSCustomObject]$Messages = $null
     [string]$MessagesPath = ""
-    [string]$ProjectRoot = ""
+    [string]$appRoot = ""
 
     <#
     .SYNOPSIS
@@ -21,10 +21,10 @@ class ConfigEditorLocalization {
     .NOTES
         Sets the MessagesPath, detects language, and loads messages.
     #>
-    ConfigEditorLocalization([string]$ProjectRoot) {
+    ConfigEditorLocalization([string]$appRoot) {
         # Store provided project root and build messages path from it.
-        $this.ProjectRoot = $ProjectRoot
-        $this.MessagesPath = Join-Path -Path $this.ProjectRoot -ChildPath "localization/messages.json"
+        $this.appRoot = $appRoot
+        $this.MessagesPath = Join-Path -Path $this.appRoot -ChildPath "localization/messages.json"
         $this.DetectLanguage()
         $this.LoadMessages()
     }
