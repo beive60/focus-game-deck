@@ -64,7 +64,7 @@ class ConfigEditorUI {
         Automatically loads XAML from MainWindow.xaml in the script directory.
     #>
     # Constructor
-    ConfigEditorUI([ConfigEditorState]$stateManager, [hashtable]$allMappings, [ConfigEditorLocalization]$localization, [string]$appRoot) {
+    ConfigEditorUI([ConfigEditorState]$stateManager, [hashtable]$allMappings, [Object]$localization, [string]$appRoot) {
         try {
             Write-Verbose "[DEBUG] ConfigEditorUI: Constructor started"
             $this.State = $stateManager
