@@ -434,12 +434,10 @@ class AppManager {
                     return $false
                 }
             }
+            return $false
         }
-        # Return true for "none" action even when disabled
-        if ($action -eq "none") {
-            return $true
-        }
-        return $false
+        # When Discord is disabled, accept "none" action and reject all others
+        return ($action -eq "none")
     }
 
     <#
