@@ -1,12 +1,14 @@
 ﻿class ConfigEditorEvents {
     $uiManager
     $stateManager
-    [string]$ProjectRoot
+    [string]$appRoot
+    [bool]$IsExecutable
 
-    ConfigEditorEvents($ui, $state, [string]$ProjectRoot) {
+    ConfigEditorEvents($ui, $state, [string]$appRoot, [bool]$IsExecutable) {
         $this.uiManager = $ui
         $this.stateManager = $state
-        $this.ProjectRoot = $ProjectRoot
+        $this.appRoot = $appRoot
+        $this.IsExecutable = $IsExecutable
     }
 
     # Helper method to set ComboBox selection by matching Tag property
@@ -1343,7 +1345,7 @@
                     $dialogXaml = $Global:Xaml_ConfirmSaveChangesDialog_fragment
                 } else {
                     # Fallback to file-based loading (development mode)
-                    $dialogXamlPath = Join-Path -Path $this.ProjectRoot -ChildPath "gui/ConfirmSaveChangesDialog.fragment.xaml"
+                    $dialogXamlPath = Join-Path -Path $this.appRoot -ChildPath "gui/ConfirmSaveChangesDialog.fragment.xaml"
                     if (Test-Path $dialogXamlPath) {
                         try {
                             $dialogXaml = Get-Content -Path $dialogXamlPath -Raw
@@ -1836,25 +1838,44 @@
             }
 
             # Use the direct game launcher to avoid recursive ConfigEditor launches
-            $gameLauncherPath = Join-Path -Path $this.ProjectRoot -ChildPath "src/Invoke-FocusGameDeck.ps1"
+            $launcherExePath = Join-Path -Path $this.appRoot -ChildPath "Invoke-FocusGameDeck.exe"
+            $launcherScriptPath = Join-Path -Path $this.appRoot -ChildPath "src/Invoke-FocusGameDeck.ps1"
+            $process = $null
 
-            if (-not (Test-Path $gameLauncherPath)) {
-                Show-SafeMessage -Key "launcherNotFound" -MessageType "Error"
-                if ($statusText) {
-                    $statusText.Text = $this.uiManager.GetLocalizedMessage("launchError")
-                    $statusText.Foreground = "#CC0000"
+            if ($this.IsExecutable) {
+                if (-not (Test-Path $launcherExePath)) {
+                    Show-SafeMessage -Key "launcherNotFound" -MessageType "Error"
+                    if ($statusText) {
+                        $statusText.Text = $this.uiManager.GetLocalizedMessage("launchError")
+                        $statusText.Foreground = "#CC0000"
+                    }
+                    return
                 }
-                return
+
+                Write-Verbose "[INFO] ConfigEditorEvents: Launching game via bundled executable - $GameId"
+
+                $process = Start-Process -FilePath $launcherExePath -ArgumentList @(
+                    "-GameId", $GameId
+                ) -WindowStyle Minimized -PassThru
+            } else {
+                if (-not (Test-Path $launcherScriptPath)) {
+                    Show-SafeMessage -Key "launcherNotFound" -MessageType "Error"
+                    if ($statusText) {
+                        $statusText.Text = $this.uiManager.GetLocalizedMessage("launchError")
+                        $statusText.Foreground = "#CC0000"
+                    }
+                    return
+                }
+
+                Write-Verbose "[INFO] ConfigEditorEvents: Launching game from GUI - $GameId"
+
+                # Launch the game using PowerShell - bypass Main.ps1 to prevent recursive ConfigEditor launch
+                $process = Start-Process -FilePath "powershell.exe" -ArgumentList @(
+                    "-ExecutionPolicy", "Bypass",
+                    "-File", $launcherScriptPath,
+                    "-GameId", $GameId
+                ) -WindowStyle Minimized -PassThru
             }
-
-            Write-Verbose "[INFO] ConfigEditorEvents: Launching game from GUI - $GameId"
-
-            # Launch the game using PowerShell - bypass Main.ps1 to prevent recursive ConfigEditor launch
-            $process = Start-Process -FilePath "powershell.exe" -ArgumentList @(
-                "-ExecutionPolicy", "Bypass",
-                "-File", $gameLauncherPath,
-                "-GameId", $GameId
-            ) -WindowStyle Minimized -PassThru
 
             # Provide immediate non-intrusive feedback
             if ($process) {
@@ -1985,11 +2006,11 @@
             }
 
             # Use the enhanced launcher creation script (resolve from project root)
-            $launcherScriptPath = Join-Path -Path $this.ProjectRoot -ChildPath "scripts/Create-Launchers-Enhanced.ps1"
+            $launcherScriptPath = Join-Path -Path $this.appRoot -ChildPath "scripts/Create-Launchers-Enhanced.ps1"
 
             if (-not (Test-Path $launcherScriptPath)) {
                 # Fallback to basic launcher script
-                $launcherScriptPath = Join-Path -Path $this.ProjectRoot -ChildPath "scripts/Create-Launchers.ps1"
+                $launcherScriptPath = Join-Path -Path $this.appRoot -ChildPath "scripts/Create-Launchers.ps1"
                 if (-not (Test-Path $launcherScriptPath)) {
                     Show-SafeMessage -Key "launcherScriptNotFound" -MessageType "Error"
                     return

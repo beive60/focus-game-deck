@@ -25,6 +25,8 @@ $script:BrowserButtonMappings = @{
     "BrowseEpicPathButton" = "browseButton"
     "BrowseRiotPathButton" = "browseButton"
     "BrowseOBSPathButton" = "browseButton"
+    "BrowseDiscordPathButton" = "browseButton"
+    "BrowseVTubePathButton" = "browseButton"
 }
 
 # Auto-detection buttons
@@ -33,6 +35,8 @@ $script:AutoDetectButtonMappings = @{
     "AutoDetectEpicButton" = "autoDetectButton"
     "AutoDetectRiotButton" = "autoDetectButton"
     "AutoDetectOBSButton" = "autoDetectButton"
+    "AutoDetectDiscordButton" = "autoDetectButton"
+    "AutoDetectVTubeButton" = "autoDetectButton"
 }
 
 # Save and action buttons
@@ -106,6 +110,20 @@ $script:LabelMappings = @{
     "LauncherTypeLabel2" = "launcherTypeLabel"
     "LogRetentionLabel" = "logRetentionLabel"
     "ExecutablePathLabel" = "executablePathLabel"
+    "ObsGameIntegrationGroup" = "gameIntegrationGroup"
+    "ObsExecutableGroup" = "executableFileGroup"
+    "DiscordGameIntegrationGroup" = "gameIntegrationGroup"
+    "DiscordExecutableGroup" = "executableFileGroup"
+    "DiscordStatusOnStartLabel" = "discordStatusOnStart"
+    "DiscordStatusOnEndLabel" = "discordStatusOnEnd"
+    "DiscordRichPresenceGroup" = "discordRichPresenceGroup"
+    "DiscordAppIdLabel" = "discordAppIdLabel"
+    "VTubeGameIntegrationGroup" = "gameIntegrationGroup"
+    "VTubeWebSocketGroup" = "vtubeWebsocketGroup"
+    "VTubeLaunchMethodGroup" = "vtubeLaunchMethodGroup"
+    "VTubeSteamAppIdLabel" = "vtubeSteamAppIdLabel"
+    "VTubeHostLabel" = "hostLabel"
+    "VTubePortLabel" = "portLabel"
 }
 
 # Tab header mappings
@@ -128,12 +146,29 @@ $script:TextMappings = @{
     "LauncherHintText" = "launcherHintText"
     "LauncherHelpText" = "launcherHelpText"
     "DiscordPathInfoText" = "discordPathInfo"
+    "ObsIntegrationTitle" = "integrationTitleObs"
+    "DiscordIntegrationTitle" = "integrationTitleDiscord"
+    "VTubeStudioIntegrationTitle" = "integrationTitleVtube"
 }
 
 # CheckBox content mappings
 $script:CheckBoxMappings = @{
+    "OBSAutoStartCheckBox" = "gameStartObsLabel"
+    "OBSAutoStopCheckBox" = "gameStopReplayBufferLabel"
     "OBSReplayBufferCheckBox" = "replayBufferLabel"
     "EnableLogNotarizationCheckBox" = "enableLogNotarization"
+    "DiscordEnableGameModeCheckBox" = "discordEnableAutoControl"
+    "DiscordDisableOverlayCheckBox" = "discordDisableOverlay"
+    "DiscordRPCEnableCheckBox" = "discordEnableRichPresence"
+    "VTubeAutoStartCheckBox" = "vtubeAutoStart"
+    "VTubeAutoStopCheckBox" = "vtubeAutoStop"
+    "VTubeWebSocketEnableCheckBox" = "vtubeEnableWebsocket"
+}
+
+# RadioButton content mappings
+$script:RadioButtonMappings = @{
+    "VTubeLaunchViaSteamRadio" = "vtubeLaunchViaSteam"
+    "VTubeLaunchDirectRadio" = "vtubeLaunchDirect"
 }
 
 # MenuItem mappings
@@ -223,6 +258,14 @@ $script:ComboBoxItemMappings = @{
     "PlatformSteamItem" = "steamPlatform"
     "PlatformEpicItem" = "epicPlatform"
     "PlatformRiotItem" = "riotPlatform"
+    "DiscordStatusOnStartOnlineItem" = "discordStatusOnline"
+    "DiscordStatusOnStartDndItem" = "discordStatusDnd"
+    "DiscordStatusOnStartIdleItem" = "discordStatusIdle"
+    "DiscordStatusOnStartInvisibleItem" = "discordStatusInvisible"
+    "DiscordStatusOnEndOnlineItem" = "discordStatusOnline"
+    "DiscordStatusOnEndDndItem" = "discordStatusDnd"
+    "DiscordStatusOnEndIdleItem" = "discordStatusIdle"
+    "DiscordStatusOnEndInvisibleItem" = "discordStatusInvisible"
 }
 
 # Game action message key mappings (used for dynamic ComboBoxItem creation)
@@ -234,8 +277,6 @@ $script:GameActionMessageKeys = @{
     "none" = "gameActionNone"
     "start-process" = "gameActionStartProcess"
     "stop-process" = "gameActionStopProcess"
-    "enter-game-mode" = "gameActionEnterGameMode"
-    "exit-game-mode" = "gameActionExitGameMode"
 }
 
 # Termination method options mapping
@@ -307,7 +348,7 @@ function Get-LocalizationKey {
         [string]$ElementName,
 
         [Parameter(Mandatory = $false)]
-        [ValidateSet("Button", "Label", "Tab", "Text", "CheckBox", "MenuItem", "Tooltip", "ComboBoxItem")]
+        [ValidateSet("Button", "Label", "Tab", "Text", "CheckBox", "RadioButton", "MenuItem", "Tooltip", "ComboBoxItem")]
         [string]$ElementType
     )
 
@@ -319,10 +360,11 @@ function Get-LocalizationKey {
             "Tab" { @($script:TabMappings) }
             "Text" { @($script:TextMappings) }
             "CheckBox" { @($script:CheckBoxMappings) }
+            "RadioButton" { @($script:RadioButtonMappings) }
             "MenuItem" { @($script:MenuItemMappings) }
             "Tooltip" { @($script:TooltipMappings) }
             "ComboBoxItem" { @($script:ComboBoxItemMappings) }
-            default { @($script:ButtonMappings, $script:LabelMappings, $script:TabMappings, $script:TextMappings, $script:CheckBoxMappings, $script:MenuItemMappings, $script:TooltipMappings, $script:ComboBoxItemMappings) }
+            default { @($script:ButtonMappings, $script:LabelMappings, $script:TabMappings, $script:TextMappings, $script:CheckBoxMappings, $script:RadioButtonMappings, $script:MenuItemMappings, $script:TooltipMappings, $script:ComboBoxItemMappings) }
         }
 
         # Search through the specified mapping tables
@@ -477,4 +519,4 @@ function Test-ComboBoxItemMappings {
 
 # Variables are automatically available in the caller's scope when dot-sourced
 # No Export-ModuleMember needed for dot-sourced scripts
-Write-Verbose "ConfigEditor.Mappings.ps1 loaded successfully with $($script:ButtonMappings.Count) button mappings, $($script:LabelMappings.Count) label mappings, $($script:TabMappings.Count) tab mappings, $($script:TextMappings.Count) text mappings, $($script:CheckBoxMappings.Count) checkbox mappings, $($script:MenuItemMappings.Count) menu item mappings, $($script:TooltipMappings.Count) tooltip mappings, $($script:ComboBoxItemMappings.Count) static ComboBoxItem mappings, and $($script:GameActionMessageKeys.Count) game action message keys"
+Write-Verbose "ConfigEditor.Mappings.ps1 loaded successfully with $($script:ButtonMappings.Count) button mappings, $($script:LabelMappings.Count) label mappings, $($script:TabMappings.Count) tab mappings, $($script:TextMappings.Count) text mappings, $($script:CheckBoxMappings.Count) checkbox mappings, $($script:RadioButtonMappings.Count) radio button mappings, $($script:MenuItemMappings.Count) menu item mappings, $($script:TooltipMappings.Count) tooltip mappings, $($script:ComboBoxItemMappings.Count) static ComboBoxItem mappings, and $($script:GameActionMessageKeys.Count) game action message keys"

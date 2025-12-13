@@ -87,44 +87,90 @@ function New-ReleaseReadme {
     param(
         [string]$Version,
         [bool]$IsSigned,
-        [string]$BuildDate
+        [string]$BuildDate,
+        [string]$Language = "en"
     )
 
-    $readme = @"
-# Focus Game Deck - Release Package
+    # Load localized content from JSON file
+    $readmeStringsPath = Join-Path -Path $PSScriptRoot -ChildPath "resources/readme-strings.json"
+    if (-not (Test-Path $readmeStringsPath)) {
+        Write-Verbose "README strings file not found: $readmeStringsPath"
+        throw "README strings file not found: $readmeStringsPath"
+    }
 
-**Version:** $Version
-**Build Date:** $BuildDate
-**Signed:** $(if ($IsSigned) { "Yes" } else { "No" })
+    try {
+        $localizedContent = Get-Content $readmeStringsPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    } catch {
+        Write-Verbose "Failed to load README strings: $($_.Exception.Message)"
+        throw "Failed to load README strings: $($_.Exception.Message)"
+    }
 
-## Files Included
+    # Get localized strings, fall back to English if language not found
+    $strings = $localizedContent.$Language
+    if (-not $strings) {
+        $strings = $localizedContent.en
+    }
 
-- **Focus-Game-Deck.exe**: Main application executable (bundled with all functionality)
-- **localization/**: Localization resources for multi-language support
-- **gui/**: GUI XAML files for the configuration editor
+    # Validate that all required keys exist
+    $requiredKeys = @(
+        "title", "version", "buildDate", "signed", "yes", "no",
+        "filesIncluded", "configEditor", "mainApp", "scriptExecutor",
+        "localization", "readme", "installation", "step1", "step2",
+        "step3", "step4", "architecture", "archIntro", "arch1",
+        "arch2", "arch3", "documentation", "docText", "license",
+        "licenseText"
+    )
 
-## Installation
+    $missingKeys = @()
+    foreach ($key in $requiredKeys) {
+        if (-not $strings.$key) {
+            $missingKeys += $key
+        }
+    }
 
-1. Extract all files to a directory of your choice
-2. Run Focus-Game-Deck.exe to start the application
-3. Configuration files will be automatically generated on first run
+    if ($missingKeys.Count -gt 0) {
+        $missingKeysList = $missingKeys -join ", "
+        throw "Required keys missing in README strings for language '$Language': $missingKeysList"
+    }
 
-## Architecture
-
-This release uses a bundled executable architecture:
-- All PowerShell scripts are bundled into the executable
-- Configuration files are automatically generated when needed
-- Self-contained with minimal external dependencies
-
-## Documentation
-
-For complete documentation, visit:
-https://github.com/beive60/focus-game-deck
-
-## License
-
-This software is released under the MIT License.
-"@
+    $readme = @(
+        "# $($strings["title"])"
+        ""
+        "**$($strings["version"]):** $Version"
+        "**$($strings["buildDate"]):** $BuildDate"
+        "**$($strings["signed"]):** $(if ($IsSigned) { $strings["yes"] } else { $strings["no"] })"
+        ""
+        "## $($strings["filesIncluded"])"
+        ""
+        "- **ConfigEditor.exe**: $($strings["configEditor"])"
+        "- **Focus-Game-Deck.exe**: $($strings["mainApp"])"
+        "- **Invoke-FocusGameDeck.exe**: $($strings["scriptExecutor"])"
+        "- **localization/messages.json**: $($strings["localization"])"
+        "- **README.txt**: $($strings["readme"])"
+        ""
+        "## $($strings["installation"])"
+        ""
+        "1. $($strings["step1"])"
+        "2. $($strings["step2"])"
+        "3. $($strings["step3"])"
+        "4. $($strings["step4"])"
+        ""
+        "## $($strings.architecture)"
+        ""
+        "$($strings.archIntro)"
+        "- $($strings.arch1)"
+        "- $($strings.arch2)"
+        "- $($strings.arch3)"
+        ""
+        "## $($strings["documentation"])"
+        ""
+        "$($strings["docText"])"
+        "https://github.com/beive60/focus-game-deck"
+        ""
+        "## $($strings["license"])"
+        ""
+        "$($strings["licenseText"])"
+    ) -join "`n"
 
     return $readme
 }
@@ -160,16 +206,70 @@ try {
     New-Item -ItemType Directory -Path $DestinationDir -Force | Out-Null
 
     Write-PackageMessage "Copying files to release directory..." "INFO"
-    Copy-Item -Path "$SourceDir/*" -Destination $DestinationDir -Recurse -Force
+
+    # Copy only required executables
+    $executablesToCopy = @(
+        "ConfigEditor.exe",
+        "Focus-Game-Deck.exe",
+        "Invoke-FocusGameDeck.exe"
+    )
+
+    foreach ($exe in $executablesToCopy) {
+        $sourcePath = Join-Path $SourceDir $exe
+        if (Test-Path $sourcePath) {
+            Copy-Item -Path $sourcePath -Destination $DestinationDir -Force
+            Write-Verbose "  Copied: $exe"
+        } else {
+            Write-PackageMessage "Warning: $exe not found in source directory" "WARN"
+        }
+    }
+
+    # Copy localization/messages.json
+    $localizationDir = Join-Path $DestinationDir "localization"
+    New-Item -ItemType Directory -Path $localizationDir -Force | Out-Null
+
+    $messagesSource = Join-Path $SourceDir "localization/messages.json"
+    if (Test-Path $messagesSource) {
+        Copy-Item -Path $messagesSource -Destination (Join-Path $localizationDir "messages.json") -Force
+        Write-Verbose "  Copied: localization/messages.json"
+    } else {
+        Write-PackageMessage "Warning: localization/messages.json not found" "WARN"
+    }
 
     $fileCount = (Get-ChildItem $DestinationDir -Recurse -File).Count
     Write-PackageMessage "Copied $fileCount files" "SUCCESS"
 
     Write-PackageMessage "Creating release documentation..." "INFO"
-    $readmeContent = New-ReleaseReadme -Version $Version -IsSigned $IsSigned -BuildDate $buildDate
+
+    # Create default README (using localized content based on system settings or first available language)
+    $defaultLanguage = "en"
+    $readmeContent = New-ReleaseReadme -Version $Version -IsSigned $IsSigned -BuildDate $buildDate -Language $defaultLanguage
+
+    # Create README.txt in source directory (dist) - default language, no language suffix
+    $sourceReadmePath = Join-Path $SourceDir "README.txt"
+    Set-Content -Path $sourceReadmePath -Value $readmeContent -Encoding UTF8
+    Write-Verbose "  Created: README.txt in source directory"
+
+    # Create README.txt in destination directory (release) - default language, no language suffix
     $readmePath = Join-Path $DestinationDir "README.txt"
     Set-Content -Path $readmePath -Value $readmeContent -Encoding UTF8
-    Write-Verbose "  Created: README.txt"
+    Write-Verbose "  Created: README.txt in release directory"
+
+    # Create language-specific versions
+    $languages = @("en", "ja")
+    foreach ($lang in $languages) {
+        $langReadmeContent = New-ReleaseReadme -Version $Version -IsSigned $IsSigned -BuildDate $buildDate -Language $lang
+
+        # Create in source directory (dist)
+        $sourceLangReadmePath = Join-Path $SourceDir "README.$lang.txt"
+        Set-Content -Path $sourceLangReadmePath -Value $langReadmeContent -Encoding UTF8
+        Write-Verbose "  Created: README.$lang.txt in source directory"
+
+        # Create in destination directory (release)
+        $destLangReadmePath = Join-Path $DestinationDir "README.$lang.txt"
+        Set-Content -Path $destLangReadmePath -Value $langReadmeContent -Encoding UTF8
+        Write-Verbose "  Created: README.$lang.txt in release directory"
+    }
 
     Write-Host ""
     # Separator removed

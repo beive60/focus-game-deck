@@ -13,7 +13,7 @@ class ConfigEditorLocalization {
     [string]$CurrentLanguage = "en"
     [PSCustomObject]$Messages = $null
     [string]$MessagesPath = ""
-    [string]$ProjectRoot = ""
+    [string]$appRoot = ""
 
     <#
     .SYNOPSIS
@@ -21,10 +21,10 @@ class ConfigEditorLocalization {
     .NOTES
         Sets the MessagesPath, detects language, and loads messages.
     #>
-    ConfigEditorLocalization([string]$ProjectRoot) {
+    ConfigEditorLocalization([string]$appRoot) {
         # Store provided project root and build messages path from it.
-        $this.ProjectRoot = $ProjectRoot
-        $this.MessagesPath = Join-Path -Path $this.ProjectRoot -ChildPath "localization/messages.json"
+        $this.appRoot = $appRoot
+        $this.MessagesPath = Join-Path -Path $this.appRoot -ChildPath "localization/messages.json"
         $this.DetectLanguage()
         $this.LoadMessages()
     }
@@ -84,7 +84,7 @@ class ConfigEditorLocalization {
         [bool] True if supported.
     #>
     [bool]IsLanguageSupported([string]$Language) {
-        $supportedLanguages = @("en", "ja", "ko", "zh")
+        $supportedLanguages = @("en", "ja", "zh-CN")
         return $Language -in $supportedLanguages
     }
 
@@ -100,11 +100,13 @@ class ConfigEditorLocalization {
                 throw "[ERROR] Messages file not found: $($this.MessagesPath)"
             }
             $messagesContent = Get-Content $this.MessagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
-            if ($messagesContent.PSObject.Properties[$this.CurrentLanguage]) {
-                $this.Messages = $messagesContent.($this.CurrentLanguage)
+            $langProperty = $messagesContent.PSObject.Properties | Where-Object { $_.Name -eq $this.CurrentLanguage }
+            if ($langProperty) {
+                $this.Messages = $langProperty.Value
             } else {
                 Write-Verbose "[INFO] Language '$($this.CurrentLanguage)' not found, falling back to English"
-                $this.Messages = $messagesContent.en
+                $enProperty = $messagesContent.PSObject.Properties | Where-Object { $_.Name -eq 'en' }
+                $this.Messages = $enProperty.Value
                 $this.CurrentLanguage = "en"
             }
             Write-Verbose "[INFO] Loaded messages for language: $($this.CurrentLanguage)"
@@ -126,8 +128,13 @@ class ConfigEditorLocalization {
     #>
     [string]GetMessage([string]$Key, [array]$Arguments = @()) {
         try {
-            if ($this.Messages -and $this.Messages.PSObject.Properties[$Key]) {
-                $message = $this.Messages.$Key.ToString()
+            if ($null -eq $this.Messages) {
+                Write-Warning "[WARNING] Messages not loaded"
+                return $Key
+            }
+            $messageProperty = $this.Messages.PSObject.Properties | Where-Object { $_.Name -eq $Key }
+            if ($messageProperty) {
+                $message = $messageProperty.Value.ToString()
                 for ($i = 0; $i -lt $Arguments.Length; $i++) {
                     $message = $message -replace "\{$i\}", $Arguments[$i]
                 }

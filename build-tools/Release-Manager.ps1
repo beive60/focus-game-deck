@@ -127,7 +127,7 @@ function Write-BuildLogWithTimestamp {
         [string]$Message,
         [string]$Level = "INFO"
     )
-    
+
     $timestamp = (Get-Date).ToString("HH:mm:ss")
     $levelMapped = switch ($Level) {
         "SUCCESS" { "Success" }
@@ -187,6 +187,7 @@ function Clear-BuildArtifacts {
     $pathsToClean = @(
         (Join-Path $PSScriptRoot "build"),
         (Join-Path $PSScriptRoot "dist"),
+        (Join-Path $projectRoot "src/generated"),
         (Join-Path $projectRoot "release"),
         (Join-Path $projectRoot "gui/*.exe")
     )
@@ -229,6 +230,19 @@ function Build-AllExecutables {
     if ($Verbose) { $buildArgs += "-Verbose" }
 
     return Invoke-BuildScript -ScriptPath $buildScript -Arguments $buildArgs -Description "Building all executables"
+}
+
+# Function to generate embedded XAML resources
+function Generate-XamlResources {
+    Write-BuildLogWithTimestamp "Generating embedded XAML resources..." "INFO"
+
+    $embedScript = Join-Path $PSScriptRoot "Embed-XamlResources.ps1"
+    $outputPath = Join-Path $PSScriptRoot "build/XamlResources.ps1"
+
+    $embedArgs = @("-OutputPath", $outputPath)
+    if ($Verbose) { $embedArgs += "-Verbose" }
+
+    return Invoke-BuildScript -ScriptPath $embedScript -Arguments $embedArgs -Description "Embedding XAML resources"
 }
 
 # Function to sign all executables
@@ -549,7 +563,12 @@ try {
         # Step 1: Install dependencies
         $success = Initialize-BuildEnvironment
 
-        # Step 2: Bundle entry-point scripts
+        # Step 2: Generate embedded XAML resources
+        if ($success) {
+            $success = Generate-XamlResources
+        }
+
+        # Step 3: Bundle entry-point scripts
         if ($success) {
             $bundlerScript = Join-Path $PSScriptRoot "Invoke-PsScriptBundler.ps1"
             $projectRoot = Split-Path $PSScriptRoot -Parent
@@ -567,17 +586,17 @@ try {
             }
         }
 
-        # Step 3: Build executables
+        # Step 4: Build executables
         if ($success) {
             $success = Build-AllExecutables
         }
 
-        # Step 4: Copy resources
+        # Step 5: Copy resources
         if ($success) {
             $success = Copy-BuildResources
         }
 
-        # Step 5: Create release package
+        # Step 6: Create release package
         if ($success) {
             $success = New-ReleasePackage -IsSigned $false
         }
@@ -590,7 +609,12 @@ try {
         # Step 1: Install dependencies
         $success = Initialize-BuildEnvironment
 
-        # Step 2: Bundle entry-point scripts
+        # Step 2: Generate embedded XAML resources
+        if ($success) {
+            $success = Generate-XamlResources
+        }
+
+        # Step 3: Bundle entry-point scripts
         if ($success) {
             $bundlerScript = Join-Path $PSScriptRoot "Invoke-PsScriptBundler.ps1"
             $projectRoot = Split-Path $PSScriptRoot -Parent
@@ -608,17 +632,17 @@ try {
             }
         }
 
-        # Step 3: Build executables
+        # Step 4: Build executables
         if ($success) {
             $success = Build-AllExecutables
         }
 
-        # Step 4: Copy resources
+        # Step 5: Copy resources
         if ($success) {
             $success = Copy-BuildResources
         }
 
-        # Step 5: Sign executables
+        # Step 6: Sign executables
         if ($success) {
             $signingSuccess = Add-CodeSignatures
             if ($signingSuccess) {
@@ -629,7 +653,7 @@ try {
             }
         }
 
-        # Step 6: Create release package
+        # Step 7: Create release package
         if ($success) {
             $success = New-ReleasePackage -IsSigned $isSigned
         }

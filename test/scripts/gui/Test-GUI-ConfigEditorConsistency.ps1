@@ -104,6 +104,7 @@ try {
         Tab = $TabMappings
         Text = $TextMappings
         CheckBox = $CheckBoxMappings
+        RadioButton = $RadioButtonMappings
         MenuItem = $MenuItemMappings
         Tooltip = $TooltipMappings
     }

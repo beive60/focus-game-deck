@@ -102,6 +102,11 @@ if ($isExecutable) {
 $configPath = Join-Path $appRoot "config/config.json"
 $messagesPath = Join-Path $appRoot "localization/messages.json"
 
+# Explicit dot-source for bundler dependency resolution
+# These are processed by Invoke-PsScriptBundler.ps1 and removed during bundling
+. (Join-Path $appRoot "scripts/LanguageHelper.ps1")
+. (Join-Path $appRoot "build-tools/Version.ps1")
+
 if ($isExecutable) {
     # In executable mode, define paths to bundled executables
     $configEditorExe = Join-Path $appRoot "ConfigEditor.exe"

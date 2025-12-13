@@ -52,6 +52,30 @@
             "detail": "Setup build environment without building executables"
         },
         {
+            "label": "[CLEAN] Remove Bundled Scripts",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                "Remove-Item -Path .\\build-tools\\build\\* -Force -ErrorAction SilentlyContinue; Write-Host 'Bundled scripts cleaned.'"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Remove all bundled .ps1 files and release directory to force regeneration on next build"
+        },
+        {
             "label": "[BUILD] Development Build (unsigned)",
             "type": "shell",
             "command": "powershell",
@@ -107,6 +131,32 @@
                 "runOn": "default"
             },
             "detail": "Complete production build workflow (install, build, sign, package)"
+        },
+        {
+            "label": "[BUILD] Clean Build Artifacts",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "./build-tools/Release-Manager.ps1",
+                "-Clean",
+                "-Verbose"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "detail": "Clean build artifacts, dist directory, and remove bundled scripts"
         },
         {
             "label": "[RUN] Focus Game Deck (Unified)",
