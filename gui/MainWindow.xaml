@@ -609,8 +609,11 @@
                                                 VerticalAlignment="Center"/>
                                         </StackPanel>
 
+                                        <!-- TODO: Re-enable in future release -->
+                                        <!-- Disabled for v1.0 - Discord integration has known bugs -->
                                         <StackPanel Orientation="Horizontal"
-                                                    Margin="0,5">
+                                                    Margin="0,5"
+                                                    Visibility="Collapsed">
                                             <CheckBox
                                                 x:Name="UseDiscordIntegrationCheckBox"
                                                 Content="Discord"
@@ -1286,9 +1289,12 @@
                 <!-- =============================================== -->
                 <!-- Discord Tab -->
                 <!-- =============================================== -->
+                <!-- TODO: Re-enable in future release -->
+                <!-- Disabled for v1.0 - Discord integration has known bugs -->
                 <TabItem
                     x:Name="DiscordTab"
-                    Header="[DISCORD_TAB_HEADER]">
+                    Header="[DISCORD_TAB_HEADER]"
+                    Visibility="Collapsed">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*"/>

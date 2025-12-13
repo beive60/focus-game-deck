@@ -35,20 +35,35 @@ if ($isExecutable) {
 $configPath = Join-Path $appRoot "config/config.json"
 $messagesPath = Join-Path $appRoot "localization/messages.json"
 
-# Explicit dot-source declarations for bundler dependency resolution
-# These are processed by Invoke-PsScriptBundler.ps1 and removed during bundling
-# Order is critical: LanguageHelper must be first!
-. (Join-Path -Path $appRoot -ChildPath "scripts/LanguageHelper.ps1")
-. (Join-Path -Path $appRoot -ChildPath "src/modules/WebSocketAppManagerBase.ps1")
-. (Join-Path -Path $appRoot -ChildPath "src/modules/AppManager.ps1")
-. (Join-Path -Path $appRoot -ChildPath "src/modules/ConfigValidator.ps1")
-. (Join-Path -Path $appRoot -ChildPath "src/modules/DiscordManager.ps1")
-. (Join-Path -Path $appRoot -ChildPath "src/modules/DiscordRPCClient.ps1")
-. (Join-Path -Path $appRoot -ChildPath "src/modules/Logger.ps1")
-. (Join-Path -Path $appRoot -ChildPath "src/modules/OBSManager.ps1")
-. (Join-Path -Path $appRoot -ChildPath "src/modules/UpdateChecker.ps1")
-. (Join-Path -Path $appRoot -ChildPath "src/modules/PlatformManager.ps1")
-. (Join-Path -Path $appRoot -ChildPath "src/modules/VTubeStudioManager.ps1")
+# Read Source files using dot-source
+if (-not $isExecutable) {
+    $filesToSources = @(
+        # Modules
+        (Join-Path $appRoot "src/modules/AppManager.ps1"),
+        (Join-Path $appRoot "src/modules/ConfigValidator.ps1"),
+        # TODO: Re-enable in future release
+        # Disabled for v1.0 - Discord integration has known bugs
+        # (Join-Path $appRoot "src/modules/DiscordManager.ps1"),
+        # (Join-Path $appRoot "src/modules/DiscordRPCClient.ps1"),
+        (Join-Path $appRoot "src/modules/Logger.ps1"),
+        (Join-Path $appRoot "src/modules/OBSManager.ps1"),
+        (Join-Path $appRoot "src/modules/UpdateChecker.ps1"),
+        (Join-Path $appRoot "src/modules/PlatformManager.ps1"),
+        (Join-Path $appRoot "src/modules/VTubeStudioManager.ps1"),
+        (Join-Path $appRoot "src/modules/WebSocketAppManagerBase.ps1"),
+        # Scripts
+        (Join-Path $appRoot "scripts/LanguageHelper.ps1")
+    )
+
+    foreach ($sourcePath in $filesToSources) {
+        try {
+            . $sourcePath
+        } catch {
+            Write-Error "Failed to load module '$sourcePath': $_"
+            exit 1
+        }
+    }
+}
 
 Write-LocalizedHost -Messages $msg -Key "cli_loading_config" -Default "Loading configuration..." -Level "INFO" -Component "ConfigLoader"
 # Load configuration
