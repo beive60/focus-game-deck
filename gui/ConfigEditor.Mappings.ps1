@@ -277,8 +277,6 @@ $script:GameActionMessageKeys = @{
     "none" = "gameActionNone"
     "start-process" = "gameActionStartProcess"
     "stop-process" = "gameActionStopProcess"
-    "enter-game-mode" = "gameActionEnterGameMode"
-    "exit-game-mode" = "gameActionExitGameMode"
 }
 
 # Termination method options mapping
