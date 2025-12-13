@@ -732,12 +732,13 @@ class AppManager {
                 $discordManager = New-DiscordManager -DiscordConfig $appConfig -Messages $this.Messages
 
                 # Set Gaming Mode
-                return $discordManager.SetGamingMode($this.gameConfig.name)
+                return $discordManager.SetGamingMode($this.GameConfig.name)
             } catch {
                 Write-Host "Failed to set Discord Gaming Mode: $_"
                 return $false
             }
         }
+        # Return true (no-op success) to avoid breaking application flow when feature is disabled
         return $true
     }
 
@@ -766,6 +767,7 @@ class AppManager {
                 return $false
             }
         }
+        # Return true (no-op success) to avoid breaking application flow when feature is disabled
         return $true
     }
 
