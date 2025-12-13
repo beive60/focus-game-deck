@@ -59,7 +59,7 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-Command",
-                "Remove-Item -Path .\\build-tools\\build\\*-bundled.ps1 -Force -ErrorAction SilentlyContinue; Write-Host 'Bundled scripts cleaned.'"
+                "Remove-Item -Path .\\build-tools\\build\\* -Force -ErrorAction SilentlyContinue; Write-Host 'Bundled scripts cleaned.'"
             ],
             "group": "build",
             "presentation": {

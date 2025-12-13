@@ -207,9 +207,16 @@ function New-BundledScript {
     # Auto-include XamlResources.ps1 for GUI applications (ConfigEditor, Main.PS1)
     $entryFileName = [System.IO.Path]::GetFileName($EntryPointPath)
     if ($entryFileName -match '^(ConfigEditor|Main)\.ps1$') {
-        $xamlResourcesPath = Join-Path $ProjectRoot "src/generated/XamlResources.ps1"
-        if ((Test-Path $xamlResourcesPath) -and -not ($dependencies -contains $xamlResourcesPath)) {
-            Write-BundlerMessage "Auto-including XamlResources.ps1 for GUI application" "INFO"
+        $xamlResourcesCandidates = @(
+            (Join-Path $ProjectRoot "build-tools/build/XamlResources.ps1"),
+            (Join-Path $ProjectRoot "src/generated/XamlResources.ps1")  # Backward compatibility
+        )
+
+        $xamlResourcesPath = $xamlResourcesCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+        if ($xamlResourcesPath -and -not ($dependencies -contains $xamlResourcesPath)) {
+            $relativePath = $xamlResourcesPath.Replace($ProjectRoot + [IO.Path]::DirectorySeparatorChar, "") -replace "\\", "/"
+            Write-BundlerMessage "Auto-including XamlResources.ps1 for GUI application from $relativePath" "INFO"
             # Add at the beginning so XAML variables are available before UI initialization
             $dependencies = @($xamlResourcesPath) + $dependencies
         }
