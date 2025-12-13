@@ -195,6 +195,7 @@ $expectedMappings = @(
     "TabMappings",
     "TextMappings",
     "CheckBoxMappings",
+    "RadioButtonMappings",
     "MenuItemMappings",
     "TooltipMappings",
     "ComboBoxItemMappings",
@@ -227,6 +228,7 @@ if ($configEditorContent -match $allMappingsPattern) {
         @{ Name = "Tab"; Pattern = "Tab\s*=" }
         @{ Name = "Text"; Pattern = "Text\s*=" }
         @{ Name = "CheckBox"; Pattern = "CheckBox\s*=" }
+        @{ Name = "RadioButton"; Pattern = "RadioButton\s*=" }
         @{ Name = "MenuItem"; Pattern = "MenuItem\s*=" }
         @{ Name = "Tooltip"; Pattern = "Tooltip\s*=" }
         @{ Name = "ComboBoxItem"; Pattern = "ComboBoxItem\s*=" }
@@ -259,6 +261,7 @@ $allMappingsToCheck = @{
     Tab = $script:TabMappings
     Text = $script:TextMappings
     CheckBox = $script:CheckBoxMappings
+    RadioButton = $script:RadioButtonMappings
     MenuItem = $script:MenuItemMappings
     ComboBoxItem = $script:ComboBoxItemMappings
 }

@@ -6,7 +6,8 @@ param(
 #Requires -Version 5.1
 
 # Import required modules if not already loaded
-if (-not (Get-Module -Name Microsoft.PowerShell.Security)) {
+# Check both module (PowerShell Core) and snap-in (Windows PowerShell)
+if (-not (Get-Module -Name Microsoft.PowerShell.Security) -and -not (Get-PSSnapin -Name Microsoft.PowerShell.Security -ErrorAction SilentlyContinue)) {
     try {
         Import-Module Microsoft.PowerShell.Security -ErrorAction SilentlyContinue
     } catch {

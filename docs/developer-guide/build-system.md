@@ -282,7 +282,7 @@ To add a new entry point that requires build-time patching:
 
 **Purpose**: Convert XAML UI files to embedded PowerShell string variables.
 
-**Responsibility**: Reads all XAML and XAML-related files (*.xaml, *.xaml.fragment, etc.) from the gui/ directory and converts them into PowerShell Here-String format variables in src/generated/XamlResources.ps1. This eliminates external XAML file dependencies in production builds.
+**Responsibility**: Reads all XAML and XAML-related files (*.xaml,*.xaml.fragment, etc.) from the gui/ directory and converts them into PowerShell Here-String format variables in build-tools/build/XamlResources.ps1. This eliminates external XAML file dependencies in production builds.
 
 **Usage**:
 
@@ -299,12 +299,12 @@ To add a new entry point that requires build-time patching:
 
 **Features**:
 
-- Automatically finds and converts all XAML files (*.xaml, *.xaml.fragment, etc.) to `$Global:Xaml_<FileName>` variables
-- Automatically creates src/generated/ directory if needed
+- Automatically finds and converts all XAML files (*.xaml,*.xaml.fragment, etc.) to `$Global:Xaml_<FileName>` variables
+- Automatically creates build-tools/build/ directory if needed
 - Sanitizes variable names (replaces special characters with underscores)
 - Generates UTF-8 encoded output with descriptive headers
 
-**Note**: The generated XamlResources.ps1 file must be dot-sourced before loading ConfigEditor classes to enable embedded XAML mode. The ConfigEditor automatically falls back to file-based XAML loading in development mode when embedded variables are not available.
+**Note**: The generated XamlResources.ps1 file (build-tools/build/XamlResources.ps1) is dot-sourced automatically during bundling for GUI entry points. When loading manually, dot-source this file before ConfigEditor classes to enable embedded XAML mode. The ConfigEditor automatically falls back to file-based XAML loading in development mode when embedded variables are not available.
 
 #### Invoke-PsScriptBundler.ps1
 

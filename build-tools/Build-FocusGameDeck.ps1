@@ -366,6 +366,12 @@ if ($isExecutable) {
 $configPath = Join-Path $appRoot "config/config.json"
 $messagesPath = Join-Path $appRoot "localization/messages.json"
 
+# Load LanguageHelper FIRST so Write-LocalizedHost is available to module classes
+$languageHelperPath = Join-Path $scriptDir "LanguageHelper.ps1"
+if (Test-Path $languageHelperPath) {
+    . $languageHelperPath
+}
+
 # Module scripts are bundled and extracted to $PSScriptRoot (flat in bundled mode)
 $modulePaths = @(
     (Join-Path $scriptDir "Logger.ps1"),
@@ -374,8 +380,6 @@ $modulePaths = @(
     (Join-Path $scriptDir "OBSManager.ps1"),
     (Join-Path $scriptDir "PlatformManager.ps1")
 )
-
-$languageHelperPath = Join-Path $scriptDir "LanguageHelper.ps1"
 
 # Import modules
 foreach ($modulePath in $modulePaths) {
