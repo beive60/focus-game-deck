@@ -110,13 +110,17 @@ class AppManager {
             }
         }
 
+        # TODO: Re-enable in future release
+        # Disabled for v1.0 - Discord integration has known bugs
         # Discord Manager
-        if ($this.GameConfig.integrations.useDiscord -and $this.Config.integrations.discord) {
-            $this.IntegrationManagers['discord'] = New-DiscordManager `
-                -DiscordConfig $this.Config.integrations.discord `
-                -Messages $this.Messages
-            if ($this.Logger) {
-                $this.Logger.Info("Discord manager initialized", "APP")
+        if ($false) { # Disabled for v1.0
+            if ($this.GameConfig.integrations.useDiscord -and $this.Config.integrations.discord) {
+                $this.IntegrationManagers['discord'] = New-DiscordManager `
+                    -DiscordConfig $this.Config.integrations.discord `
+                    -Messages $this.Messages
+                if ($this.Logger) {
+                    $this.Logger.Info("Discord manager initialized", "APP")
+                }
             }
         }
 
@@ -394,38 +398,46 @@ class AppManager {
         $success = $appManager.HandleDiscordAction($discordManager, $config, "start-process")
     #>
     [bool] HandleDiscordAction([object] $manager, [object] $config, [string] $action) {
-        switch ($action) {
-            "enter-game-mode" {
-                if ($this.Logger) { $this.Logger.Info("Starting Discord integration", "Discord") }
+        # TODO: Re-enable in future release
+        # Disabled for v1.0 - Discord integration has known bugs
+        if ($false) { # Disabled for v1.0
+            switch ($action) {
+                "enter-game-mode" {
+                    if ($this.Logger) { $this.Logger.Info("Starting Discord integration", "Discord") }
 
-                $success = $manager.StartDiscord()
+                    $success = $manager.StartDiscord()
 
-                if ($success) {
-                    Write-LocalizedHost -Messages $this.Messages -Key "console_discord_started" -Default "Discord started successfully" -Level "OK" -Component "DiscordManager"
-                    if ($this.Logger) { $this.Logger.Info("Discord started successfully", "Discord") }
+                    if ($success) {
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_discord_started" -Default "Discord started successfully" -Level "OK" -Component "DiscordManager"
+                        if ($this.Logger) { $this.Logger.Info("Discord started successfully", "Discord") }
+                    }
+
+                    return $success
                 }
+                "exit-game-mode" {
+                    if ($this.Logger) { $this.Logger.Info("Stopping Discord integration", "Discord") }
 
-                return $success
-            }
-            "exit-game-mode" {
-                if ($this.Logger) { $this.Logger.Info("Stopping Discord integration", "Discord") }
+                    $success = $manager.StopDiscord()
 
-                $success = $manager.StopDiscord()
+                    if ($success) {
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_discord_stopped" -Default "Discord stopped successfully" -Level "OK" -Component "DiscordManager"
+                        if ($this.Logger) { $this.Logger.Info("Discord stopped successfully", "Discord") }
+                    }
 
-                if ($success) {
-                    Write-LocalizedHost -Messages $this.Messages -Key "console_discord_stopped" -Default "Discord stopped successfully" -Level "OK" -Component "DiscordManager"
-                    if ($this.Logger) { $this.Logger.Info("Discord stopped successfully", "Discord") }
+                    return $success
                 }
-
-                return $success
+                "none" {
+                    return $true
+                }
+                default {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_discord_action" -Args @($action) -Default ("Unknown action: {0}" -f $action) -Level "WARNING" -Component "DiscordManager"
+                    return $false
+                }
             }
-            "none" {
-                return $true
-            }
-            default {
-                Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_discord_action" -Args @($action) -Default ("Unknown action: {0}" -f $action) -Level "WARNING" -Component "DiscordManager"
-                return $false
-            }
+        }
+        # Return true for "none" action even when disabled
+        if ($action -eq "none") {
+            return $true
         }
         return $false
     }
@@ -705,48 +717,58 @@ class AppManager {
 
     # Set Discord Gaming Mode (special action)
     [bool] SetDiscordGamingMode([string] $appId, [object] $appConfig) {
-        try {
-            # Load DiscordManager if not already loaded
-            $modulePath = Join-Path $PSScriptRoot "DiscordManager.ps1"
-            if (Test-Path $modulePath) {
-                . $modulePath
-            } else {
-                Write-Host "DiscordManager module not found at: $modulePath"
+        # TODO: Re-enable in future release
+        # Disabled for v1.0 - Discord integration has known bugs
+        if ($false) { # Disabled for v1.0
+            try {
+                # Load DiscordManager if not already loaded
+                $modulePath = Join-Path $PSScriptRoot "DiscordManager.ps1"
+                if (Test-Path $modulePath) {
+                    . $modulePath
+                } else {
+                    Write-Host "DiscordManager module not found at: $modulePath"
+                    return $false
+                }
+
+                # Create DiscordManager instance
+                $discordManager = New-DiscordManager -DiscordConfig $appConfig -Messages $this.Messages
+
+                # Set Gaming Mode
+                return $discordManager.SetGamingMode($this.gameConfig.name)
+            } catch {
+                Write-Host "Failed to set Discord Gaming Mode: $_"
                 return $false
             }
-
-            # Create DiscordManager instance
-            $discordManager = New-DiscordManager -DiscordConfig $appConfig -Messages $this.Messages
-
-            # Set Gaming Mode
-            return $discordManager.SetGamingMode($this.gameConfig.name)
-        } catch {
-            Write-Host "Failed to set Discord Gaming Mode: $_"
-            return $false
         }
+        return $true
     }
 
     # Restore Discord Normal Mode (special action)
     [bool] RestoreDiscordNormal([string] $appId, [object] $appConfig) {
-        try {
-            # Load DiscordManager if not already loaded
-            $modulePath = Join-Path $PSScriptRoot "DiscordManager.ps1"
-            if (Test-Path $modulePath) {
-                . $modulePath
-            } else {
-                Write-Host "DiscordManager module not found at: $modulePath"
+        # TODO: Re-enable in future release
+        # Disabled for v1.0 - Discord integration has known bugs
+        if ($false) { # Disabled for v1.0
+            try {
+                # Load DiscordManager if not already loaded
+                $modulePath = Join-Path $PSScriptRoot "DiscordManager.ps1"
+                if (Test-Path $modulePath) {
+                    . $modulePath
+                } else {
+                    Write-Host "DiscordManager module not found at: $modulePath"
+                    return $false
+                }
+
+                # Create DiscordManager instance
+                $discordManager = New-DiscordManager -DiscordConfig $appConfig -Messages $this.Messages
+
+                # Restore Normal Mode
+                return $discordManager.RestoreNormalMode()
+            } catch {
+                Write-Host "Failed to restore Discord Normal Mode: $_"
                 return $false
             }
-
-            # Create DiscordManager instance
-            $discordManager = New-DiscordManager -DiscordConfig $appConfig -Messages $this.Messages
-
-            # Restore Normal Mode
-            return $discordManager.RestoreNormalMode()
-        } catch {
-            Write-Host "Failed to restore Discord Normal Mode: $_"
-            return $false
         }
+        return $true
     }
 
     # Check if application process is running

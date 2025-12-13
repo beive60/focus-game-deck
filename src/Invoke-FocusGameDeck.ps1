@@ -40,8 +40,10 @@ if (-not $isExecutable) {
         # Modules
         (Join-Path $appRoot "src/modules/AppManager.ps1"),
         (Join-Path $appRoot "src/modules/ConfigValidator.ps1"),
-        (Join-Path $appRoot "src/modules/DiscordManager.ps1"),
-        (Join-Path $appRoot "src/modules/DiscordRPCClient.ps1"),
+        # TODO: Re-enable in future release
+        # Disabled for v1.0 - Discord integration has known bugs
+        # (Join-Path $appRoot "src/modules/DiscordManager.ps1"),
+        # (Join-Path $appRoot "src/modules/DiscordRPCClient.ps1"),
         (Join-Path $appRoot "src/modules/Logger.ps1"),
         (Join-Path $appRoot "src/modules/OBSManager.ps1"),
         (Join-Path $appRoot "src/modules/UpdateChecker.ps1"),
