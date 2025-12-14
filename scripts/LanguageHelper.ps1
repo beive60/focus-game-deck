@@ -57,7 +57,7 @@ try {
 function Get-DetectedLanguage {
     param(
         [PSCustomObject]$ConfigData = $null,
-        [string[]]$SupportedLanguages = @("en", "ja", "zh-CN")
+        [string[]]$SupportedLanguages = @("en", "ja", "zh-CN", "ru", "fr", "es")
     )
 
     $defaultLang = "en"  # English as fallback
@@ -194,6 +194,21 @@ function Set-CultureByLanguage {
                 [System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::GetCultureInfo("zh-CN")
                 [System.Threading.Thread]::CurrentThread.CurrentUICulture = [System.Globalization.CultureInfo]::GetCultureInfo("zh-CN")
                 Write-Verbose "Culture set to Chinese Simplified (zh-CN)"
+            }
+            "ru" {
+                [System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::GetCultureInfo("ru-RU")
+                [System.Threading.Thread]::CurrentThread.CurrentUICulture = [System.Globalization.CultureInfo]::GetCultureInfo("ru-RU")
+                Write-Verbose "Culture set to Russian (ru-RU)"
+            }
+            "fr" {
+                [System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::GetCultureInfo("fr-FR")
+                [System.Threading.Thread]::CurrentThread.CurrentUICulture = [System.Globalization.CultureInfo]::GetCultureInfo("fr-FR")
+                Write-Verbose "Culture set to French (fr-FR)"
+            }
+            "es" {
+                [System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::GetCultureInfo("es-ES")
+                [System.Threading.Thread]::CurrentThread.CurrentUICulture = [System.Globalization.CultureInfo]::GetCultureInfo("es-ES")
+                Write-Verbose "Culture set to Spanish (es-ES)"
             }
             "en" {
                 [System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::GetCultureInfo("en-US")

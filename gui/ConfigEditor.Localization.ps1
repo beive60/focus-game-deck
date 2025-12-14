@@ -84,7 +84,7 @@ class ConfigEditorLocalization {
         [bool] True if supported.
     #>
     [bool]IsLanguageSupported([string]$Language) {
-        $supportedLanguages = @("en", "ja", "zh-CN")
+        $supportedLanguages = @("en", "ja", "zh-CN", "ru", "fr", "es")
         return $Language -in $supportedLanguages
     }
 

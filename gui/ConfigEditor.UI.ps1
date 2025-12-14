@@ -1343,6 +1343,9 @@ class ConfigEditorUI {
                         @{ Code = "en"; Name = "English" }
                         @{ Code = "ja"; Name = "日本語" }
                         @{ Code = "zh-CN"; Name = "中文（简体）" }
+                        @{ Code = "ru"; Name = "Русский" }
+                        @{ Code = "fr"; Name = "Français" }
+                        @{ Code = "es"; Name = "Español" }
                     )
 
                     $selectedIndex = 0
