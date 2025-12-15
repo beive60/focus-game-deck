@@ -578,7 +578,8 @@
 
                                     <!-- App Integration Section -->
                                     <Label
-                                        Content="アプリ連携:"
+                                        x:Name="GameIntegrationSectionLabel"
+                                        Content="[GAME_INTEGRATION_SECTION_LABEL]"
                                         Grid.Row="4"
                                         FontWeight="Bold"
                                         Margin="0,20,0,5"/>
@@ -586,7 +587,8 @@
                                         Grid.Row="5"
                                         Margin="10,5,0,0">
                                         <TextBlock
-                                            Text="このゲームで使用する連携機能を選択してください"
+                                            x:Name="GameIntegrationDescriptionText"
+                                            Text="[GAME_INTEGRATION_DESCRIPTION]"
                                             Foreground="#666"
                                             FontSize="11"
                                             Margin="0,0,0,10"/>
@@ -600,7 +602,7 @@
                                                 VerticalAlignment="Center"/>
                                             <Button
                                                 x:Name="OpenOBSTabButton"
-                                                Content="→ 設定を開く"
+                                                Content="[OPEN_INTEGRATION_SETTINGS]"
                                                 Background="Transparent"
                                                 BorderThickness="0"
                                                 Foreground="#0078D4"
@@ -621,7 +623,7 @@
                                                 VerticalAlignment="Center"/>
                                             <Button
                                                 x:Name="OpenDiscordTabButton"
-                                                Content="→ 設定を開く"
+                                                Content="[OPEN_INTEGRATION_SETTINGS]"
                                                 Background="Transparent"
                                                 BorderThickness="0"
                                                 Foreground="#0078D4"
@@ -639,7 +641,7 @@
                                                 VerticalAlignment="Center"/>
                                             <Button
                                                 x:Name="OpenVTubeStudioTabButton"
-                                                Content="→ 設定を開く"
+                                                Content="[OPEN_INTEGRATION_SETTINGS]"
                                                 Background="Transparent"
                                                 BorderThickness="0"
                                                 Foreground="#0078D4"

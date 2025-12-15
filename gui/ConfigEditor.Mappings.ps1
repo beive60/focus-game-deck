@@ -48,6 +48,9 @@ $script:ActionButtonMappings = @{
     "SaveDiscordSettingsButton" = "saveButton"
     "SaveVTubeStudioSettingsButton" = "saveButton"
     "GenerateLaunchersButton" = "generateLaunchers"
+    "OpenOBSTabButton" = "openIntegrationSettings"
+    "OpenDiscordTabButton" = "openIntegrationSettings"
+    "OpenVTubeStudioTabButton" = "openIntegrationSettings"
 }
 
 # List movement buttons
@@ -124,6 +127,7 @@ $script:LabelMappings = @{
     "VTubeSteamAppIdLabel" = "vtubeSteamAppIdLabel"
     "VTubeHostLabel" = "hostLabel"
     "VTubePortLabel" = "portLabel"
+    "GameIntegrationSectionLabel" = "gameIntegrationSectionLabel"
 }
 
 # Tab header mappings
@@ -145,6 +149,7 @@ $script:TextMappings = @{
     "LauncherStatusText" = "readyToLaunch"
     "LauncherHintText" = "launcherHintText"
     "LauncherHelpText" = "launcherHelpText"
+    "GameIntegrationDescriptionText" = "gameIntegrationDescription"
     "DiscordPathInfoText" = "discordPathInfo"
     "ObsIntegrationTitle" = "integrationTitleObs"
     "DiscordIntegrationTitle" = "integrationTitleDiscord"

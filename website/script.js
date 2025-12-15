@@ -95,13 +95,16 @@ class I18n {
 
     detectLanguage() {
         const stored = localStorage.getItem('focus-game-deck-language');
-        if (stored && ['ja', 'zh-CN', 'en'].includes(stored)) {
+        if (stored && ['ja', 'zh-CN', 'en', 'ru', 'fr', 'es'].includes(stored)) {
             return stored;
         }
 
         const browserLang = navigator.language || navigator.userLanguage;
         if (browserLang.startsWith('ja')) return 'ja';
         if (browserLang.startsWith('zh')) return 'zh-CN';
+        if (browserLang.startsWith('ru')) return 'ru';
+        if (browserLang.startsWith('fr')) return 'fr';
+        if (browserLang.startsWith('es')) return 'es';
         return 'en';
     }
 
@@ -123,7 +126,7 @@ class I18n {
             this.messages = await response.json();
         } catch (error) {
             console.error('Error loading translations:', error);
-            this.messages = { ja: {}, 'zh-CN': {}, en: {} };
+            this.messages = { ja: {}, 'zh-CN': {}, en: {}, ru: {}, fr: {}, es: {} };
         }
     }
 
@@ -142,7 +145,7 @@ class I18n {
     }
 
     changeLanguage(langCode) {
-        if (['ja', 'zh-CN', 'en'].includes(langCode)) {
+        if (['ja', 'zh-CN', 'en', 'ru', 'fr', 'es'].includes(langCode)) {
             this.currentLanguage = langCode;
             localStorage.setItem('focus-game-deck-language', langCode);
             this.translatePage();
