@@ -192,6 +192,8 @@ If you use such tools, please configure the application to run as administrator:
 
 ### Discord Integration
 
+> **Note:** Discord integration is temporarily disabled in v1.0 and will be re-enabled in a future release.
+
 1. **Enable Developer Mode**
    - Discord Settings → Advanced → Developer Mode: ON
 

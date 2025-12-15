@@ -348,6 +348,8 @@ Configure OBS Studio for streaming and recording automation.
 
 ### Discord Integration
 
+> **Note:** Discord integration is temporarily disabled in v1.0 and will be re-enabled in a future release.
+
 Configure Discord Rich Presence and status management.
 
 ```json
@@ -419,6 +421,8 @@ Configure how Focus Game Deck logs its activities.
 - `Fatal`: Fatal errors only
 
 ### Log Notarization
+
+> **Note:** Log notarization (Firebase) is temporarily disabled in v1.0 and will be re-enabled in a future release.
 
 Enable cryptographic proof of log integrity for competitive gaming or dispute resolution:
 
