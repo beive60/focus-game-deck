@@ -1673,7 +1673,9 @@
                                             <RowDefinition Height="35"/>
                                             <RowDefinition Height="35"/>
                                             <RowDefinition Height="35"/>
-                                            <RowDefinition Height="35"/>
+                                            <!-- TODO: Re-enable in future release (Change back to Height="35") -->
+                                            <!-- Disabled for v1.0 - Changed to Auto to collapse space when content is hidden -->
+                                            <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
 
@@ -1747,6 +1749,8 @@
                                                 Tag="-1"/>
                                         </ComboBox>
 
+                                        <!-- TODO: Re-enable in future release -->
+                                        <!-- Disabled for v1.0 - Firebase log integrity verification is temporarily disabled -->
                                         <CheckBox
                                             x:Name="EnableLogNotarizationCheckBox"
                                             Content="[ENABLE_LOG_NOTARIZATION]"
@@ -1754,7 +1758,8 @@
                                             Grid.Column="0"
                                             Grid.ColumnSpan="2"
                                             VerticalAlignment="Center"
-                                            Margin="5"/>
+                                            Margin="5"
+                                            Visibility="Collapsed"/>
 
                                         <TextBlock
                                             x:Name="LauncherHelpText"

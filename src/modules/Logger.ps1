@@ -120,8 +120,12 @@ class Logger {
                 $this.EnableConsoleLogging = $config.logging.enableConsoleLogging
             }
 
-            if ($config.logging.enableNotarization) {
-                $this.EnableNotarization = $config.logging.enableNotarization
+            # TODO: Re-enable in future release
+            # Disabled for v1.0 - Firebase log integrity verification is temporarily disabled
+            if ($false) { # Disabled for v1.0
+                if ($config.logging.enableNotarization) {
+                    $this.EnableNotarization = $config.logging.enableNotarization
+                }
             }
 
             if ($config.logging.filePath) {
@@ -762,54 +766,59 @@ class Logger {
         Returns immediately if logging or notarization is disabled.
     #>
     [string] FinalizeAndNotarizeLogAsync() {
-        if (-not $this.EnableNotarization) {
-            $this.Debug("Log notarization is disabled", "NOTARY")
-            return $null
-        }
-
-        if (-not $this.EnableFileLogging -or -not (Test-Path $this.LogFilePath)) {
-            $this.Warning("No log file to notarize", "NOTARY")
-            return $null
-        }
-
-        try {
-            $this.Info("Starting log notarization process...", "NOTARY")
-
-            # Calculate log file hash
-            $hash = $this.GetLogFileHash()
-            if (-not $hash) {
-                throw "Failed to calculate log file hash"
+        # TODO: Re-enable in future release
+        # Disabled for v1.0 - Firebase log integrity verification is temporarily disabled
+        if ($false) { # Disabled for v1.0
+            if (-not $this.EnableNotarization) {
+                $this.Debug("Log notarization is disabled", "NOTARY")
+                return $null
             }
 
-            $this.Debug("Log file hash calculated: $hash", "NOTARY")
-
-            # Generate client timestamp in ISO 8601 format
-            $clientTimestamp = Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ"
-
-            # Send hash to Firebase
-            $response = $this.SendHashToFirebase($hash, $clientTimestamp)
-
-            # Extract document ID from response
-            $documentId = $null
-            if ($response -and $response.name) {
-                $documentId = ($response.name -split '/')[-1]
+            if (-not $this.EnableFileLogging -or -not (Test-Path $this.LogFilePath)) {
+                $this.Warning("No log file to notarize", "NOTARY")
+                return $null
             }
 
-            if ($documentId) {
-                if ($this.Messages -and $this.Messages.loggerNotarizationSuccess) {
-                    $msg = $this.Messages.loggerNotarizationSuccess -f $documentId
-                    $this.Info($msg, "NOTARY")
-                } else {
-                    $this.Info("Log successfully notarized. Certificate ID: $documentId", "NOTARY")
+            try {
+                $this.Info("Starting log notarization process...", "NOTARY")
+
+                # Calculate log file hash
+                $hash = $this.GetLogFileHash()
+                if (-not $hash) {
+                    throw "Failed to calculate log file hash"
                 }
-                return $documentId
-            } else {
-                throw "Failed to extract document ID from Firebase response"
+
+                $this.Debug("Log file hash calculated: $hash", "NOTARY")
+
+                # Generate client timestamp in ISO 8601 format
+                $clientTimestamp = Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ"
+
+                # Send hash to Firebase
+                $response = $this.SendHashToFirebase($hash, $clientTimestamp)
+
+                # Extract document ID from response
+                $documentId = $null
+                if ($response -and $response.name) {
+                    $documentId = ($response.name -split '/')[-1]
+                }
+
+                if ($documentId) {
+                    if ($this.Messages -and $this.Messages.loggerNotarizationSuccess) {
+                        $msg = $this.Messages.loggerNotarizationSuccess -f $documentId
+                        $this.Info($msg, "NOTARY")
+                    } else {
+                        $this.Info("Log successfully notarized. Certificate ID: $documentId", "NOTARY")
+                    }
+                    return $documentId
+                } else {
+                    throw "Failed to extract document ID from Firebase response"
+                }
+            } catch {
+                $this.Error("Log notarization failed: $($_.Exception.Message)", "NOTARY")
+                return $null
             }
-        } catch {
-            $this.Error("Log notarization failed: $($_.Exception.Message)", "NOTARY")
-            return $null
         }
+        return $null
     }
 }
 

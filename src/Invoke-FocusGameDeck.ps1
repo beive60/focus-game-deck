@@ -320,11 +320,18 @@ try {
         Write-LocalizedHost -Messages $msg -Key "console_finalizing_log" -Default "Finalizing session log..."
 
         try {
-            $certificateId = $logger.FinalizeAndNotarizeLogAsync()
+            # TODO: Re-enable in future release
+            # Disabled for v1.0 - Firebase log integrity verification is temporarily disabled
+            if ($false) { # Disabled for v1.0
+                $certificateId = $logger.FinalizeAndNotarizeLogAsync()
 
-            if ($certificateId) {
-                Write-Host "[OK] Logger: " -NoNewline
-                Write-LocalizedHost -Messages $msg -Key "mainLogNotarizedSuccess" -Args @($certificateId) -Default ("[OK] Log notarized successfully. Certificate ID: {0}" -f $certificateId)
+                if ($certificateId) {
+                    Write-Host "[OK] Logger: " -NoNewline
+                    Write-LocalizedHost -Messages $msg -Key "mainLogNotarizedSuccess" -Args @($certificateId) -Default ("[OK] Log notarized successfully. Certificate ID: {0}" -f $certificateId)
+                } else {
+                    Write-Host "[INFO] Logger: " -NoNewline
+                    Write-LocalizedHost -Messages $msg -Key "console_log_finalized" -Default "Log finalization completed"
+                }
             } else {
                 Write-Host "[INFO] Logger: " -NoNewline
                 Write-LocalizedHost -Messages $msg -Key "console_log_finalized" -Default "Log finalization completed"
