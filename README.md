@@ -17,7 +17,7 @@ Focus Game Deck automates your gaming session from start to finish - handling te
 - **Smart App Management** - Control any application with configurable startup/shutdown actions
 - **Zero-Config Setup** - Intelligent defaults with optional GUI configuration
 - **Robust Design** - Comprehensive validation and cleanup even if interrupted
-- **Gaming Integrations** - Built-in support for OBS, VTube Studio, Discord
+- **Gaming Integrations** - Built-in support for OBS, VTube Studio, Discord (Coming Soon)
 - **Secure Architecture** - Three separate, digitally signed executables ensure code integrity
 - **Efficient Design** - Multi-executable architecture optimizes memory usage and startup time
 
