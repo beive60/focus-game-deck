@@ -127,4 +127,26 @@ Describe "GUI Tests" -Tag "GUI" {
             }
         }
     }
+
+    Context "Create Launchers Enhanced" {
+        It "should pass launcher creation script tests" {
+            $testScript = Join-Path -Path $script:ProjectRoot -ChildPath "test/scripts/gui/Test-GUI-CreateLaunchersEnhanced.ps1"
+            $output = & $testScript *>&1 | Out-String
+            $exitCode = $LASTEXITCODE
+
+            # Parse test results
+            if ($output -match "Tests Passed:\s+(\d+)") {
+                $passed = [int]$Matches[1]
+                $passed | Should -BeGreaterThan 0 -Because "At least some tests should pass"
+            }
+
+            if ($output -match "Tests Failed:\s+(\d+)") {
+                $failed = [int]$Matches[1]
+                $failed | Should -Be 0 -Because "All launcher creation tests should pass"
+            }
+
+            # Verify test completion
+            $output | Should -Match "\[TEST RESULT\]" -Because "Test should output result summary"
+        }
+    }
 }

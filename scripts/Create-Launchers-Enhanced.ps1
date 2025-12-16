@@ -6,6 +6,12 @@
     This script generates Windows shortcut (.lnk) files instead of .bat files for better user experience and visual appeal.
     Creates user-friendly shortcut launchers for each game defined in config.json, with minimized PowerShell window execution.
 
+.PARAMETER NoInteractive
+    Suppresses pause prompts for automated execution
+
+.PARAMETER GameId
+    Optional. If specified, creates a shortcut only for the specified game ID
+
 .NOTES
     Author: Focus Game Deck Team
     Version: 1.0.0
@@ -23,16 +29,40 @@
     - Robust error handling with appropriate fallbacks
 #>
 
+param(
+    [switch]$NoInteractive,
+    [string]$GameId = $null
+)
+
 # Get the directory where the script is located
 $scriptDir = $PSScriptRoot
-$rootDir = Split-Path $scriptDir -Parent
+if (-not $scriptDir) {
+    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+}
+if (-not $scriptDir) {
+    # When run from executable, use current directory
+    $scriptDir = Get-Location
+}
+
+Write-Verbose "Script directory: $scriptDir"
+
+# Determine root directory - if scriptDir is 'scripts', go up one level
+if ((Split-Path -Leaf $scriptDir) -eq "scripts") {
+    $rootDir = Split-Path $scriptDir -Parent
+} else {
+    # When run from executable, assume current directory is root
+    $rootDir = $scriptDir
+}
+
+Write-Verbose "Root directory: $rootDir"
+
 $configPath = Join-Path $rootDir "config/config.json"
 $coreScriptPath = Join-Path $rootDir "src/Invoke-FocusGameDeck.ps1"
+$messagesPath = Join-Path $rootDir "localization/messages.json"
 
-# Check if running from GUI (parameter to suppress pause)
-param(
-    [switch]$NoInteractive
-)
+Write-Verbose "Config path: $configPath"
+Write-Verbose "Core script path: $coreScriptPath"
+Write-Verbose "Messages path: $messagesPath"
 
 # Check if config.json exists
 if (-not (Test-Path $configPath)) {
@@ -189,11 +219,73 @@ try {
     Write-Host "Loading configuration from: $configPath"
     $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
-    # Clean up old launchers
-    Remove-OldLaunchers -RootDirectory $rootDir
+    # Load localization messages
+    if (-not (Test-Path $messagesPath)) {
+        Write-Host "Warning: Localization file not found at: $messagesPath"
+        Write-Host "Using default English messages"
+        $localizedMessages = @{
+            readmeTitle = "Focus Game Deck - Game Launcher Shortcuts"
+            readmeDescription = "This folder contains shortcuts for games configured in Focus Game Deck."
+            readmeUsageTitle = "Usage"
+            readmeUsageStep1 = "1. Double-click a shortcut to launch the game"
+            readmeUsageStep2 = "2. Focus Game Deck will automatically launch the game and control associated integration apps (OBS, Discord, VTube Studio, etc.)"
+            readmeUsageStep3 = "3. Configured integration apps will automatically stop when you exit the game"
+            readmeNotesTitle = "Notes"
+            readmeNote1 = "- You can freely delete or move shortcuts"
+            readmeNote2 = "- If you change settings, recreate shortcuts from the Tools menu"
+            readmeNote3 = "- If you encounter any issues, please report them in the GitHub repository Issues section"
+            readmeFooter = "More info: https://github.com/beive60/focus-game-deck"
+        }
+    } else {
+        $messages = Get-Content -Path $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $currentLanguage = $config.globalSettings.language
+        if (-not $currentLanguage) {
+            $currentLanguage = "en"
+        }
+        $localizedMessages = $messages.$currentLanguage
+    }
 
-    # Get all game entries
-    $games = $config.games.PSObject.Properties
+    # Determine output directory (Desktop/Focus-Game-Deck/)
+    $desktopPath = [Environment]::GetFolderPath('Desktop')
+    $outputDir = Join-Path $desktopPath "Focus-Game-Deck"
+
+    # Create output directory if it doesn't exist
+    if (-not (Test-Path $outputDir)) {
+        New-Item -Path $outputDir -ItemType Directory -Force | Out-Null
+        Write-Host "Created directory: $outputDir"
+    }
+
+    # Create README.txt in the output directory
+    $readmeContent = @"
+$($localizedMessages.readmeTitle)
+$('=' * 80)
+
+$($localizedMessages.readmeDescription)
+
+$($localizedMessages.readmeUsageTitle)
+$('-' * 80)
+$($localizedMessages.readmeUsageStep1)
+$($localizedMessages.readmeUsageStep2)
+$($localizedMessages.readmeUsageStep3)
+
+$($localizedMessages.readmeNotesTitle)
+$('-' * 80)
+$($localizedMessages.readmeNote1)
+$($localizedMessages.readmeNote2)
+$($localizedMessages.readmeNote3)
+
+$($localizedMessages.readmeFooter)
+"@
+    $readmePath = Join-Path $outputDir "README.txt"
+    $readmeContent | Out-File -FilePath $readmePath -Encoding UTF8 -Force
+    Write-Host "Created README.txt in output directory"
+
+    # Clean up old launchers
+    Remove-OldLaunchers -TargetDirectory $outputDir
+
+    # Get all game entries, excluding _order property
+    $allProperties = $config.games.PSObject.Properties
+    $games = @($allProperties | Where-Object { $_.Name -ne '_order' })
 
     if ($games.Count -eq 0) {
         Write-Host "Warning: No games found in configuration."
@@ -203,7 +295,22 @@ try {
         exit 0
     }
 
-    Write-Host "Found $($games.Count) games. Generating shortcut launchers..."
+    # If a specific GameId is provided, filter to only that game
+    if ($GameId) {
+        $targetGame = $games | Where-Object { $_.Name -eq $GameId }
+        if (-not $targetGame) {
+            Write-Host "Error: Game ID '$GameId' not found in configuration."
+            if (-not $NoInteractive) {
+                pause
+            }
+            exit 1
+        }
+        $games = @($targetGame)
+        Write-Host "Creating shortcut launcher for game: $GameId"
+    } else {
+        $count = $games.Count
+        Write-Host "Found $count games. Generating shortcut launchers..."
+    }
 
     $successCount = 0
     $failureCount = 0
@@ -212,7 +319,7 @@ try {
     foreach ($game in $games) {
         $gameId = $game.Name
         $gameDisplayName = $game.Value.name
-        $shortcutPath = Join-Path $rootDir "launch_$($gameId).lnk"
+        $shortcutPath = Join-Path $outputDir "$($gameId).lnk"
 
         # Create description for the shortcut
         $description = "Launch $gameDisplayName with Focus Game Deck automation"
@@ -231,7 +338,7 @@ try {
             -WindowStyle 7
 
         if ($success) {
-            Write-Host "    [OK] Successfully created: launch_$($gameId).lnk"
+            Write-Host "    [OK] Successfully created: $($gameId).lnk"
             $successCount++
         } else {
             Write-Host "    [ERROR] Failed to create launcher for: $gameDisplayName"
@@ -241,14 +348,23 @@ try {
 
     # Summary
     Write-Host "" + ("=" * 50)
-    Write-Host "Launcher creation completed!"
-    Write-Host "Successfully created: $successCount shortcuts"
+    if ($GameId) {
+        if ($successCount -eq 1) {
+            Write-Host "Shortcut created successfully for game: $GameId"
+            Write-Host "You can now double-click 'launch_$($GameId).lnk' to start the game."
+        } else {
+            Write-Host "Failed to create shortcut for game: $GameId"
+        }
+    } else {
+        Write-Host "Launcher creation completed!"
+        Write-Host "Successfully created: $successCount shortcuts"
 
-    if ($failureCount -gt 0) {
-        Write-Host "Failed to create: $failureCount shortcuts"
+        if ($failureCount -gt 0) {
+            Write-Host "Failed to create: $failureCount shortcuts"
+        }
+
+        Write-Host "You can now double-click the 'launch_GAMEID.lnk' files to start your games."
     }
-
-    Write-Host "You can now double-click the 'launch_GAMEID.lnk' files to start your games."
     Write-Host "The PowerShell window will be minimized automatically for better user experience."
 
 } catch {

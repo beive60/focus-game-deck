@@ -130,6 +130,16 @@ try {
         -Exclude @("*.backup", "*diagnostic*") `
         -Description "localization files"
 
+    # Copy scripts (runtime resources)
+    $scriptsSource = Join-Path $SourceRoot "scripts"
+    $scriptsDest = Join-Path $DestinationDir "scripts"
+    $copyResults += Copy-DirectoryContents `
+        -SourcePath $scriptsSource `
+        -DestPath $scriptsDest `
+        -Include @("*.ps1") `
+        -Exclude @("*.backup", "*test*") `
+        -Description "script files"
+
     # NOTE: GUI XAML files are no longer copied to release directory
     # They are embedded in the executable via Embed-XamlResources.ps1 and XamlResources.ps1
     # This reduces release package size and removes external file dependencies

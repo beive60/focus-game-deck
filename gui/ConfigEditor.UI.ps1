@@ -933,6 +933,25 @@ class ConfigEditorUI {
                             $this.BorderBrush = "#E1E5E9"
                         })
 
+                    # Create context menu for the game card
+                    $contextMenu = New-Object System.Windows.Controls.ContextMenu
+
+                    $createShortcutMenuItem = New-Object System.Windows.Controls.MenuItem
+                    $createShortcutMenuItem.Header = $this.GetLocalizedMessage("createShortcutMenuItem")
+                    $createShortcutMenuItem.Tag = @{ GameId = $gameId; FormInstance = $this }
+                    $createShortcutMenuItem.add_Click({
+                            try {
+                                $gameId = $this.Tag.GameId
+                                $formInstance = $this.Tag.FormInstance
+                                $formInstance.CreateShortcutForGame($gameId)
+                            } catch {
+                                Write-Warning "Error in context menu click: $($_.Exception.Message)"
+                            }
+                        })
+                    $contextMenu.Items.Add($createShortcutMenuItem)
+
+                    $border.ContextMenu = $contextMenu
+
                     # Create main grid
                     $grid = New-Object System.Windows.Controls.Grid
 
@@ -1640,6 +1659,394 @@ class ConfigEditorUI {
     #>
     [void]SwitchToGameTab([string]$GameId) {
         # Implementation would go here
+    }
+
+    <#
+    .SYNOPSIS
+        Creates desktop shortcuts for all configured games.
+
+    .DESCRIPTION
+        This method creates Windows shortcut (.lnk) files for all games in the configuration.
+    #>
+    [void]CreateAllShortcuts() {
+        try {
+            Write-Verbose "Creating shortcuts for all games"
+            Write-Verbose "State object type: $($this.State.GetType().FullName)"
+
+            # Count games - use the State property
+            $gameCount = 0
+            $configData = $this.State.ConfigData
+
+            if ($null -eq $configData) {
+                Write-Warning "ConfigData is null"
+                $noGamesMsg = $this.GetLocalizedMessage("noGamesConfigured")
+                $this.ShowNotification($noGamesMsg, "Info")
+                return
+            }
+
+            Write-Verbose "ConfigData retrieved successfully"
+
+            if ($null -eq $configData.games) {
+                Write-Warning "ConfigData.games is null"
+                $noGamesMsg = $this.GetLocalizedMessage("noGamesConfigured")
+                $this.ShowNotification($noGamesMsg, "Info")
+                return
+            }
+
+            Write-Verbose "ConfigData.games exists"
+            $allProperties = @($configData.games.PSObject.Properties)
+            Write-Verbose "Total properties in games object: $($allProperties.Count)"
+
+            # Log all property names for debugging
+            foreach ($prop in $allProperties) {
+                Write-Verbose "  Property: $($prop.Name)"
+            }
+
+            # Exclude _order property
+            $gameProperties = @($allProperties | Where-Object { $_.Name -ne '_order' })
+            $gameCount = $gameProperties.Count
+
+            Write-Verbose "After excluding _order: $gameCount games"
+
+            if ($gameCount -eq 0) {
+                $noGamesMsg = $this.GetLocalizedMessage("noGamesConfigured")
+                $this.ShowNotification($noGamesMsg, "Info")
+                Write-Verbose "No games configured, exiting"
+                return
+            }
+
+            # Show notification
+            $creatingMsg = $this.GetLocalizedMessage("creatingAllShortcuts")
+            $this.ShowNotification($creatingMsg, "Info")
+
+            # Create shortcuts asynchronously
+            $scriptBlock = {
+                param($ConfigData, $GameProperties, $LocalizedMessages)
+
+                try {
+                    # Determine paths - use executable directory if running from .exe
+                    $currentProcess = [System.Diagnostics.Process]::GetCurrentProcess()
+                    $exePath = $currentProcess.MainModule.FileName
+                    $isExecutable = $exePath -match '\.exe$'
+
+                    if ($isExecutable) {
+                        $currentDir = [System.IO.Path]::GetDirectoryName($exePath)
+                    } else {
+                        $currentDir = Get-Location
+                    }
+
+                    # Determine launcher path - use .exe if exists, otherwise .ps1
+                    $launcherExe = Join-Path $currentDir "Invoke-FocusGameDeck.exe"
+                    $launcherScript = Join-Path $currentDir "src/Invoke-FocusGameDeck.ps1"
+
+                    if (Test-Path $launcherExe) {
+                        $launcherPath = $launcherExe
+                        $isLauncherExe = $true
+                    } elseif (Test-Path $launcherScript) {
+                        $launcherPath = $launcherScript
+                        $isLauncherExe = $false
+                    } else {
+                        throw "Launcher not found: neither $launcherExe nor $launcherScript exists"
+                    }
+
+                    # Determine output directory
+                    $desktopPath = [Environment]::GetFolderPath('Desktop')
+                    $outputDir = Join-Path $desktopPath "Focus-Game-Deck"
+
+                    # Create output directory
+                    if (-not (Test-Path $outputDir)) {
+                        New-Item -Path $outputDir -ItemType Directory -Force | Out-Null
+                    }
+
+                    # Create README.txt
+                    $readmeContent = @"
+$($LocalizedMessages.readmeTitle)
+$('=' * 80)
+
+$($LocalizedMessages.readmeDescription)
+
+$($LocalizedMessages.readmeUsageTitle)
+$('-' * 80)
+$($LocalizedMessages.readmeUsageStep1)
+$($LocalizedMessages.readmeUsageStep2)
+$($LocalizedMessages.readmeUsageStep3)
+
+$($LocalizedMessages.readmeNotesTitle)
+$('-' * 80)
+$($LocalizedMessages.readmeNote1)
+$($LocalizedMessages.readmeNote2)
+$($LocalizedMessages.readmeNote3)
+
+$($LocalizedMessages.readmeFooter)
+"@
+                    $readmePath = Join-Path $outputDir "README.txt"
+                    $readmeContent | Out-File -FilePath $readmePath -Encoding UTF8 -Force
+
+                    # Clean up old shortcuts
+                    Get-ChildItem -Path $outputDir -Filter "*.lnk" -ErrorAction SilentlyContinue | Remove-Item -Force
+
+                    # Create shortcuts
+                    $successCount = 0
+                    foreach ($game in $GameProperties) {
+                        $gameId = $game.Name
+                        $gameDisplayName = $game.Value.name
+                        $shortcutPath = Join-Path $outputDir "$($gameId).lnk"
+
+                        try {
+                            $WshShell = New-Object -ComObject WScript.Shell
+                            $Shortcut = $WshShell.CreateShortcut($shortcutPath)
+
+                            if ($isLauncherExe) {
+                                # Use executable directly
+                                $Shortcut.TargetPath = $launcherPath
+                                $Shortcut.Arguments = "-GameId $gameId"
+                            } else {
+                                # Use PowerShell to run script
+                                $Shortcut.TargetPath = "powershell.exe"
+                                $Shortcut.Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Minimized -File `"$launcherPath`" -GameId $gameId"
+                            }
+
+                            $Shortcut.Description = "Launch $gameDisplayName with Focus Game Deck automation"
+                            $Shortcut.WorkingDirectory = $currentDir
+                            $Shortcut.WindowStyle = 7
+                            $Shortcut.Save()
+                            [System.Runtime.Interopservices.Marshal]::ReleaseComObject($WshShell) | Out-Null
+                            $successCount++
+                        } catch {
+                            Write-Warning "Failed to create shortcut for $gameId : $($_.Exception.Message)"
+                        }
+                    }
+
+                    return @{
+                        Success = $true
+                        Count = $successCount
+                    }
+                } catch {
+                    return @{
+                        Success = $false
+                        Error = $_.Exception.Message
+                    }
+                }
+            }
+
+            # Get localized messages for README
+            $localizedMessages = @{
+                readmeTitle = $this.GetLocalizedMessage("readmeTitle")
+                readmeDescription = $this.GetLocalizedMessage("readmeDescription")
+                readmeUsageTitle = $this.GetLocalizedMessage("readmeUsageTitle")
+                readmeUsageStep1 = $this.GetLocalizedMessage("readmeUsageStep1")
+                readmeUsageStep2 = $this.GetLocalizedMessage("readmeUsageStep2")
+                readmeUsageStep3 = $this.GetLocalizedMessage("readmeUsageStep3")
+                readmeNotesTitle = $this.GetLocalizedMessage("readmeNotesTitle")
+                readmeNote1 = $this.GetLocalizedMessage("readmeNote1")
+                readmeNote2 = $this.GetLocalizedMessage("readmeNote2")
+                readmeNote3 = $this.GetLocalizedMessage("readmeNote3")
+                readmeFooter = $this.GetLocalizedMessage("readmeFooter")
+            }
+
+            # Start async job
+            $job = [PowerShell]::Create()
+            $job.AddScript($scriptBlock).AddArgument($configData).AddArgument($gameProperties).AddArgument($localizedMessages) | Out-Null
+            $asyncResult = $job.BeginInvoke()
+
+            # Create timer to check completion
+            $checkTimer = New-Object System.Windows.Threading.DispatcherTimer
+            $checkTimer.Interval = [TimeSpan]::FromMilliseconds(500)
+
+            $formInstance = $this
+            $expectedCount = $gameCount
+            $checkTimer.Tag = @{
+                Job = $job
+                AsyncResult = $asyncResult
+                FormInstance = $formInstance
+                ExpectedCount = $expectedCount
+            }
+
+            $checkTimer.add_Tick({
+                    param($sender, $e)
+                    $tag = $sender.Tag
+
+                    if ($tag.AsyncResult.IsCompleted) {
+                        $sender.Stop()
+
+                        try {
+                            $result = $tag.Job.EndInvoke($tag.AsyncResult)
+                            $tag.Job.Dispose()
+
+                            $formInstance = $tag.FormInstance
+                            $expectedCount = $tag.ExpectedCount
+
+                            if ($result.Success) {
+                                $successMsg = $formInstance.GetLocalizedMessage("allShortcutsCreated") -f $result.Count
+                                $formInstance.ShowNotification($successMsg, "Success")
+                            } else {
+                                $errorMsg = $formInstance.GetLocalizedMessage("shortcutCreationFailed") -f $result.Error
+                                $formInstance.ShowNotification($errorMsg, "Error")
+                            }
+                        } catch {
+                            Write-Warning "Failed to process launcher result: $($_.Exception.Message)"
+                            $errorMsg = $formInstance.GetLocalizedMessage("shortcutCreationFailed") -f $_.Exception.Message
+                            $formInstance.ShowNotification($errorMsg, "Error")
+                        }
+                    }
+                })
+
+            $checkTimer.Start()
+
+        } catch {
+            Write-Warning "Failed to create all shortcuts: $($_.Exception.Message)"
+            $errorMsg = $this.GetLocalizedMessage("shortcutCreationFailed") -f $_.Exception.Message
+            $this.ShowNotification($errorMsg, "Error")
+        }
+    }
+
+    <#
+    .SYNOPSIS
+        Creates a desktop shortcut for a specific game.
+
+    .DESCRIPTION
+        This method creates a Windows shortcut (.lnk) file for the specified game on the desktop.
+
+    .PARAMETER GameId
+        The ID of the game for which to create the shortcut.
+    #>
+    [void]CreateShortcutForGame([string]$GameId) {
+        try {
+            Write-Verbose "Creating shortcut for game: $GameId"
+
+            # Show notification
+            $creatingMsg = $this.GetLocalizedMessage("creatingShortcut")
+            $this.ShowNotification($creatingMsg, "Info")
+
+            # Create shortcut asynchronously
+            $scriptBlock = {
+                param($GameId, $ConfigData)
+
+                try {
+                    # Determine paths - use executable directory if running from .exe
+                    $currentProcess = [System.Diagnostics.Process]::GetCurrentProcess()
+                    $exePath = $currentProcess.MainModule.FileName
+                    $isExecutable = $exePath -match '\.exe$'
+
+                    if ($isExecutable) {
+                        $currentDir = [System.IO.Path]::GetDirectoryName($exePath)
+                    } else {
+                        $currentDir = Get-Location
+                    }
+
+                    # Determine launcher path - use .exe if exists, otherwise .ps1
+                    $launcherExe = Join-Path $currentDir "Invoke-FocusGameDeck.exe"
+                    $launcherScript = Join-Path $currentDir "src/Invoke-FocusGameDeck.ps1"
+
+                    if (Test-Path $launcherExe) {
+                        $launcherPath = $launcherExe
+                        $isLauncherExe = $true
+                    } elseif (Test-Path $launcherScript) {
+                        $launcherPath = $launcherScript
+                        $isLauncherExe = $false
+                    } else {
+                        throw "Launcher not found: neither $launcherExe nor $launcherScript exists"
+                    }
+
+                    # Determine output directory
+                    $desktopPath = [Environment]::GetFolderPath('Desktop')
+                    $outputDir = Join-Path $desktopPath "Focus-Game-Deck"
+
+                    # Create output directory
+                    if (-not (Test-Path $outputDir)) {
+                        New-Item -Path $outputDir -ItemType Directory -Force | Out-Null
+                    }
+
+                    # Get game info
+                    $gameDisplayName = $ConfigData.games.$GameId.name
+                    $shortcutPath = Join-Path $outputDir "$($GameId).lnk"
+
+                    # Create shortcut
+                    $WshShell = New-Object -ComObject WScript.Shell
+                    $Shortcut = $WshShell.CreateShortcut($shortcutPath)
+
+                    if ($isLauncherExe) {
+                        # Use executable directly
+                        $Shortcut.TargetPath = $launcherPath
+                        $Shortcut.Arguments = "-GameId $GameId"
+                    } else {
+                        # Use PowerShell to run script
+                        $Shortcut.TargetPath = "powershell.exe"
+                        $Shortcut.Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Minimized -File `"$launcherPath`" -GameId $GameId"
+                    }
+
+                    $Shortcut.Description = "Launch $gameDisplayName with Focus Game Deck automation"
+                    $Shortcut.WorkingDirectory = $currentDir
+                    $Shortcut.WindowStyle = 7
+                    $Shortcut.Save()
+                    [System.Runtime.Interopservices.Marshal]::ReleaseComObject($WshShell) | Out-Null
+
+                    return @{
+                        Success = $true
+                        GameId = $GameId
+                    }
+                } catch {
+                    return @{
+                        Success = $false
+                        Error = $_.Exception.Message
+                    }
+                }
+            }
+
+            # Start async job
+            $job = [PowerShell]::Create()
+            $job.AddScript($scriptBlock).AddArgument($GameId).AddArgument($configData) | Out-Null
+            $asyncResult = $job.BeginInvoke()
+
+            # Create timer to check completion
+            $checkTimer = New-Object System.Windows.Threading.DispatcherTimer
+            $checkTimer.Interval = [TimeSpan]::FromMilliseconds(500)
+
+            $formInstance = $this
+            $checkTimer.Tag = @{
+                Job = $job
+                AsyncResult = $asyncResult
+                GameId = $GameId
+                FormInstance = $formInstance
+            }
+
+            $checkTimer.add_Tick({
+                    param($sender, $e)
+                    $tag = $sender.Tag
+
+                    if ($tag.AsyncResult.IsCompleted) {
+                        $sender.Stop()
+
+                        try {
+                            $result = $tag.Job.EndInvoke($tag.AsyncResult)
+                            $tag.Job.Dispose()
+
+                            $gameId = $tag.GameId
+                            $formInstance = $tag.FormInstance
+
+                            if ($result.Success) {
+                                $shortcutName = "$($gameId).lnk"
+                                $successMsg = $formInstance.GetLocalizedMessage("shortcutCreated") -f $shortcutName
+                                $formInstance.ShowNotification($successMsg, "Success")
+                            } else {
+                                $errorMsg = $formInstance.GetLocalizedMessage("shortcutCreationFailed") -f $result.Error
+                                $formInstance.ShowNotification($errorMsg, "Error")
+                            }
+                        } catch {
+                            Write-Warning "Failed to process launcher result: $($_.Exception.Message)"
+                            $errorMsg = $formInstance.GetLocalizedMessage("shortcutCreationFailed") -f $_.Exception.Message
+                            $formInstance.ShowNotification($errorMsg, "Error")
+                        }
+                    }
+                })
+
+            $checkTimer.Start()
+
+        } catch {
+            Write-Warning "Failed to create shortcut for game '$GameId': $($_.Exception.Message)"
+            $errorMsg = $this.GetLocalizedMessage("shortcutCreationFailed") -f $_.Exception.Message
+            $this.ShowNotification($errorMsg, "Error")
+        }
     }
 
     <#

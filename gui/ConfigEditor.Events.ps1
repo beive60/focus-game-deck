@@ -1945,6 +1945,16 @@
         }
     }
 
+    # Handle create all shortcuts
+    [void] HandleCreateAllShortcuts() {
+        try {
+            Write-Verbose "Creating shortcuts for all games..."
+            $this.uiManager.CreateAllShortcuts()
+        } catch {
+            Write-Warning "Failed to create all shortcuts: $($_.Exception.Message)"
+        }
+    }
+
     # Handle about dialog
     [void] HandleAbout() {
         try {
@@ -2169,6 +2179,7 @@
             $this.uiManager.Window.FindName("RefreshGameListMenuItem").add_Click({ $self.HandleRefreshGameList() }.GetNewClosure())
             $this.uiManager.Window.FindName("RefreshManagedAppsListMenuItem").add_Click({ $self.HandleRefreshManagedAppsList() }.GetNewClosure())
             $this.uiManager.Window.FindName("RefreshAllMenuItem").add_Click({ $self.HandleRefreshAll() }.GetNewClosure())
+            $this.uiManager.Window.FindName("CreateAllShortcutsMenuItem").add_Click({ $self.HandleCreateAllShortcuts() }.GetNewClosure())
             $this.uiManager.Window.FindName("CheckUpdateMenuItem").add_Click({ $self.HandleCheckUpdate() }.GetNewClosure())
             $feedbackMenuItem = $this.uiManager.Window.FindName("FeedbackMenuItem")
             if ($feedbackMenuItem) {

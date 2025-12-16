@@ -236,6 +236,17 @@ try {
         Write-PackageMessage "Warning: localization/messages.json not found" "WARN"
     }
 
+    # Copy scripts folder
+    $scriptsSourceDir = Join-Path $SourceDir "scripts"
+    $scriptsDestDir = Join-Path $DestinationDir "scripts"
+    if (Test-Path $scriptsSourceDir) {
+        New-Item -ItemType Directory -Path $scriptsDestDir -Force | Out-Null
+        Copy-Item -Path "$scriptsSourceDir\*" -Destination $scriptsDestDir -Recurse -Force
+        Write-Verbose "  Copied: scripts folder"
+    } else {
+        Write-PackageMessage "Warning: scripts folder not found" "WARN"
+    }
+
     $fileCount = (Get-ChildItem $DestinationDir -Recurse -File).Count
     Write-PackageMessage "Copied $fileCount files" "SUCCESS"
 

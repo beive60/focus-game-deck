@@ -27,7 +27,15 @@ Describe "Core Functionality Tests" -Tag "Core" {
     Context "Log Rotation" {
         It "should pass log rotation tests" {
             $testScript = Join-Path -Path $projectRoot -ChildPath "test/scripts/core/Test-Core-LogRotation.ps1"
-            { & $testScript *>&1 | Out-Null; if ($LASTEXITCODE -ne 0) { throw "Test failed with exit code $LASTEXITCODE" } } | Should -Not -Throw -Because "Log rotation test should pass"
+            # Run in a new PowerShell process to avoid module caching issues
+            $result = powershell -ExecutionPolicy Bypass -File $testScript 2>&1 | Out-String
+            $exitCode = $LASTEXITCODE
+            if ($exitCode -ne 0) {
+                Write-Host "========== Test Failed - Output Below =========="
+                Write-Host $result
+                Write-Host "========== End of Output =========="
+            }
+            $exitCode | Should -Be 0 -Because "Log rotation test should pass (exit code: $exitCode)"
         }
     }
 
