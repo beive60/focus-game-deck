@@ -97,23 +97,23 @@ Describe "Integration Tests" -Tag "Integration" {
 
             if (-not (Test-Path $testScript)) {
                 Set-ItResult -Skipped -Because "Log notarization test script not found"
-                # Skip if config.json is not found (CI environment)
-                if ($outputText -match "Cannot find path.*config\.json|config.*does not exist") {
-                    Set-ItResult -Skipped -Because "config.json not found - expected in CI environment"
-                    return
-                }
-
-                # Skip if test has low success rate (partial failure is acceptable)
-                if ($outputText -match "Success Rate:.*(\d+\.\d+)%" -and [double]$Matches[1] -lt 50) {
-                    Set-ItResult -Skipped -Because "Log notarization test has low success rate - acceptable in test environment"
-                    return
-                }
-
                 return
             }
 
             $output = & $testScript *>&1 | Out-String
             $outputText = $output
+
+            # Skip if config.json is not found (CI environment)
+            if ($outputText -match "Cannot find path.*config\.json|config.*does not exist") {
+                Set-ItResult -Skipped -Because "config.json not found - expected in CI environment"
+                return
+            }
+
+            # Skip if test has low success rate (partial failure is acceptable)
+            if ($outputText -match "Success Rate:.*(\d+\.\d+)%" -and [double]$Matches[1] -lt 50) {
+                Set-ItResult -Skipped -Because "Log notarization test has low success rate - acceptable in test environment"
+                return
+            }
 
             if ($outputText -match "Log notarization.*not running|not found") {
                 Set-ItResult -Skipped -Because "Log notarization not available in test environment"
