@@ -6,14 +6,14 @@
     and ensures proper character handling per architecture guidelines
 #>
 
-# Import the BuildLogger
-$scriptRoot = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
-. "$scriptRoot/../../build-tools/utils/BuildLogger.ps1"
-
 BeforeAll {
     # Navigate up two levels from test/pester/ to project root
     $scriptRoot = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
     $projectRoot = Split-Path -Parent (Split-Path -Parent $scriptRoot)
+
+    # Import the BuildLogger
+    . "$projectRoot/build-tools/utils/BuildLogger.ps1"
+
     $ConfigPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
     $MessagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
 }
@@ -21,7 +21,11 @@ BeforeAll {
 Describe "Character Encoding Tests" -Tag "Core", "Encoding" {
 
     Context "JSON File Encoding" {
-        It "config.json should be UTF-8 without BOM" -Skip:(-not (Test-Path $ConfigPath)) {
+        It "config.json should be UTF-8 without BOM" {
+            if (-not (Test-Path $ConfigPath)) {
+                Set-ItResult -Skipped -Because "config.json not found at $ConfigPath"
+                return
+            }
             $bytes = [System.IO.File]::ReadAllBytes($ConfigPath)
             # UTF-8 BOM is EF BB BF
             $hasBOM = (
@@ -32,7 +36,11 @@ Describe "Character Encoding Tests" -Tag "Core", "Encoding" {
             $hasBOM | Should -Be $false
         }
 
-        It "config.json should be valid UTF-8" -Skip:(-not (Test-Path $ConfigPath)) {
+        It "config.json should be valid UTF-8" {
+            if (-not (Test-Path $ConfigPath)) {
+                Set-ItResult -Skipped -Because "config.json not found at $ConfigPath"
+                return
+            }
             {
                 $content = Get-Content $ConfigPath -Raw -Encoding UTF8
                 $content | ConvertFrom-Json

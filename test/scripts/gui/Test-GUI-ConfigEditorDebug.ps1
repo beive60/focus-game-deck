@@ -34,7 +34,7 @@ try {
 
         $projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
         $configEditorPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.ps1"
-        & $configEditorPath -DebugMode -AutoCloseSeconds $AutoCloseSeconds 2>&1 3>&1
+        & $configEditorPath -DebugMode -AutoCloseSeconds $AutoCloseSeconds -Headless 2>&1 3>&1
     }
 
     # Collect warnings and errors from output
