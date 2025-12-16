@@ -933,6 +933,25 @@ class ConfigEditorUI {
                             $this.BorderBrush = "#E1E5E9"
                         })
 
+                    # Create context menu for the game card
+                    $contextMenu = New-Object System.Windows.Controls.ContextMenu
+
+                    $createShortcutMenuItem = New-Object System.Windows.Controls.MenuItem
+                    $createShortcutMenuItem.Header = $this.GetLocalizedMessage("createShortcutMenuItem")
+                    $createShortcutMenuItem.Tag = @{ GameId = $gameId; FormInstance = $this }
+                    $createShortcutMenuItem.add_Click({
+                            try {
+                                $gameId = $this.Tag.GameId
+                                $formInstance = $this.Tag.FormInstance
+                                $formInstance.CreateShortcutForGame($gameId)
+                            } catch {
+                                Write-Warning "Error in context menu click: $($_.Exception.Message)"
+                            }
+                        })
+                    $contextMenu.Items.Add($createShortcutMenuItem)
+
+                    $border.ContextMenu = $contextMenu
+
                     # Create main grid
                     $grid = New-Object System.Windows.Controls.Grid
 
@@ -1640,6 +1659,287 @@ class ConfigEditorUI {
     #>
     [void]SwitchToGameTab([string]$GameId) {
         # Implementation would go here
+    }
+
+    <#
+    .SYNOPSIS
+        Creates desktop shortcuts for all configured games.
+
+    .DESCRIPTION
+        This method creates Windows shortcut (.lnk) files for all games in the configuration.
+    #>
+    [void]CreateAllShortcuts() {
+        try {
+            Write-Verbose "Creating shortcuts for all games"
+            Write-Verbose "State object type: $($this.State.GetType().FullName)"
+
+            # Count games - use the State property
+            $gameCount = 0
+            $configData = $this.State.ConfigData
+
+            if ($null -eq $configData) {
+                Write-Warning "ConfigData is null"
+                $noGamesMsg = $this.GetLocalizedMessage("noGamesConfigured")
+                $this.ShowNotification($noGamesMsg, "Info")
+                return
+            }
+
+            Write-Verbose "ConfigData retrieved successfully"
+
+            if ($null -eq $configData.games) {
+                Write-Warning "ConfigData.games is null"
+                $noGamesMsg = $this.GetLocalizedMessage("noGamesConfigured")
+                $this.ShowNotification($noGamesMsg, "Info")
+                return
+            }
+
+            Write-Verbose "ConfigData.games exists"
+            $allProperties = @($configData.games.PSObject.Properties)
+            Write-Verbose "Total properties in games object: $($allProperties.Count)"
+
+            # Log all property names for debugging
+            foreach ($prop in $allProperties) {
+                Write-Verbose "  Property: $($prop.Name)"
+            }
+
+            # Exclude _order property
+            $gameProperties = @($allProperties | Where-Object { $_.Name -ne '_order' })
+            $gameCount = $gameProperties.Count
+
+            Write-Verbose "After excluding _order: $gameCount games"
+
+            if ($gameCount -eq 0) {
+                $noGamesMsg = $this.GetLocalizedMessage("noGamesConfigured")
+                $this.ShowNotification($noGamesMsg, "Info")
+                Write-Verbose "No games configured, exiting"
+                return
+            }
+
+            # Show notification
+            $creatingMsg = $this.GetLocalizedMessage("creatingAllShortcuts")
+            $this.ShowNotification($creatingMsg, "Info")
+
+            # Get project root directory
+            # Try to find the script relative to PSScriptRoot first
+            $scriptDir = if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { Get-Location }
+            $launcherScriptPath = Join-Path $scriptDir "scripts/Create-Launchers-Enhanced.ps1"
+
+            # If not found, try relative to current executable location
+            if (-not (Test-Path $launcherScriptPath)) {
+                $exeDir = [System.IO.Path]::GetDirectoryName([System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName)
+                $launcherScriptPath = Join-Path $exeDir "scripts/Create-Launchers-Enhanced.ps1"
+            }
+
+            if (-not (Test-Path $launcherScriptPath)) {
+                Write-Warning "Launcher script not found: $launcherScriptPath"
+                $errorMsg = $this.GetLocalizedMessage("launcherScriptNotFound")
+                $this.ShowNotification($errorMsg, "Error")
+                return
+            }
+
+            # Execute the launcher creation script asynchronously (without GameId parameter for all games)
+            $scriptBlock = {
+                param($ScriptPath)
+
+                $processInfo = New-Object System.Diagnostics.ProcessStartInfo
+                $processInfo.FileName = "powershell.exe"
+                $processInfo.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`" -NoInteractive -Verbose"
+                $processInfo.UseShellExecute = $false
+                $processInfo.CreateNoWindow = $true
+                $processInfo.RedirectStandardOutput = $true
+                $processInfo.RedirectStandardError = $true
+
+                $process = [System.Diagnostics.Process]::Start($processInfo)
+                $output = $process.StandardOutput.ReadToEnd()
+                $errorOutput = $process.StandardError.ReadToEnd()
+                $process.WaitForExit()
+
+                return @{
+                    ExitCode = $process.ExitCode
+                    Output = $output
+                    Error = $errorOutput
+                }
+            }
+
+            # Start async job
+            $job = [PowerShell]::Create()
+            $job.AddScript($scriptBlock).AddArgument($launcherScriptPath) | Out-Null
+            $asyncResult = $job.BeginInvoke()
+
+            # Create timer to check completion
+            $checkTimer = New-Object System.Windows.Threading.DispatcherTimer
+            $checkTimer.Interval = [TimeSpan]::FromMilliseconds(500)
+
+            $formInstance = $this
+            $expectedCount = $gameCount
+            $checkTimer.Tag = @{
+                Job = $job
+                AsyncResult = $asyncResult
+                FormInstance = $formInstance
+                ExpectedCount = $expectedCount
+            }
+
+            $checkTimer.add_Tick({
+                    param($sender, $e)
+                    $tag = $sender.Tag
+
+                    if ($tag.AsyncResult.IsCompleted) {
+                        $sender.Stop()
+
+                        try {
+                            $result = $tag.Job.EndInvoke($tag.AsyncResult)
+                            $tag.Job.Dispose()
+
+                            $formInstance = $tag.FormInstance
+                            $expectedCount = $tag.ExpectedCount
+
+                            Write-Verbose "Launcher script completed with exit code: $($result.ExitCode)"
+                            Write-Verbose "Output: $($result.Output)"
+
+                            if ($result.Error) {
+                                Write-Warning "Launcher script error: $($result.Error)"
+                            }
+
+                            if ($result.ExitCode -eq 0) {
+                                # Success
+                                $successMsg = $formInstance.GetLocalizedMessage("allShortcutsCreated") -f $expectedCount
+                                $formInstance.ShowNotification($successMsg, "Success")
+                            } else {
+                                # Failure
+                                $errorDetail = if ($result.Error) { $result.Error } else { "Exit code: $($result.ExitCode)" }
+                                $errorMsg = $formInstance.GetLocalizedMessage("shortcutCreationFailed") -f $errorDetail
+                                $formInstance.ShowNotification($errorMsg, "Error")
+                            }
+                        } catch {
+                            Write-Warning "Failed to process launcher result: $($_.Exception.Message)"
+                        }
+                    }
+                })
+
+            $checkTimer.Start()
+
+        } catch {
+            Write-Warning "Failed to create all shortcuts: $($_.Exception.Message)"
+            $errorMsg = $this.GetLocalizedMessage("shortcutCreationFailed") -f $_.Exception.Message
+            $this.ShowNotification($errorMsg, "Error")
+        }
+    }
+
+    <#
+    .SYNOPSIS
+        Creates a desktop shortcut for a specific game.
+
+    .DESCRIPTION
+        This method creates a Windows shortcut (.lnk) file for the specified game on the desktop.
+
+    .PARAMETER GameId
+        The ID of the game for which to create the shortcut.
+    #>
+    [void]CreateShortcutForGame([string]$GameId) {
+        try {
+            Write-Verbose "Creating shortcut for game: $GameId"
+
+            # Show notification
+            $creatingMsg = $this.GetLocalizedMessage("creatingShortcut")
+            $this.ShowNotification($creatingMsg, "Info")
+
+            # Get project root directory
+            $scriptDir = Split-Path $PSScriptRoot -Parent
+            $launcherScriptPath = Join-Path $scriptDir "scripts/Create-Launchers-Enhanced.ps1"
+
+            if (-not (Test-Path $launcherScriptPath)) {
+                Write-Warning "Launcher script not found: $launcherScriptPath"
+                $errorMsg = $this.GetLocalizedMessage("launcherScriptNotFound")
+                $this.ShowNotification($errorMsg, "Error")
+                return
+            }
+
+            # Execute the launcher creation script asynchronously to prevent UI freeze
+            $scriptBlock = {
+                param($ScriptPath, $GameId)
+
+                $processInfo = New-Object System.Diagnostics.ProcessStartInfo
+                $processInfo.FileName = "powershell.exe"
+                $processInfo.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`" -GameId `"$GameId`" -NoInteractive"
+                $processInfo.UseShellExecute = $false
+                $processInfo.CreateNoWindow = $true
+                $processInfo.RedirectStandardOutput = $true
+                $processInfo.RedirectStandardError = $true
+
+                $process = [System.Diagnostics.Process]::Start($processInfo)
+                $output = $process.StandardOutput.ReadToEnd()
+                $errorOutput = $process.StandardError.ReadToEnd()
+                $process.WaitForExit()
+
+                return @{
+                    ExitCode = $process.ExitCode
+                    Output = $output
+                    Error = $errorOutput
+                }
+            }
+
+            # Start async job
+            $job = [PowerShell]::Create()
+            $job.AddScript($scriptBlock).AddArgument($launcherScriptPath).AddArgument($GameId) | Out-Null
+            $asyncResult = $job.BeginInvoke()
+
+            # Create timer to check completion
+            $checkTimer = New-Object System.Windows.Threading.DispatcherTimer
+            $checkTimer.Interval = [TimeSpan]::FromMilliseconds(500)
+
+            $formInstance = $this
+            $checkTimer.Tag = @{
+                Job = $job
+                AsyncResult = $asyncResult
+                GameId = $GameId
+                FormInstance = $formInstance
+            }
+
+            $checkTimer.add_Tick({
+                    param($sender, $e)
+                    $tag = $sender.Tag
+
+                    if ($tag.AsyncResult.IsCompleted) {
+                        $sender.Stop()
+
+                        try {
+                            $result = $tag.Job.EndInvoke($tag.AsyncResult)
+                            $tag.Job.Dispose()
+
+                            $gameId = $tag.GameId
+                            $formInstance = $tag.FormInstance
+
+                            Write-Verbose "Launcher script completed with exit code: $($result.ExitCode)"
+                            Write-Verbose "Output: $($result.Output)"
+
+                            if ($result.Error) {
+                                Write-Warning "Launcher script error: $($result.Error)"
+                            }
+
+                            if ($result.ExitCode -eq 0) {
+                                # Success
+                                $shortcutName = "$($gameId).lnk"
+                                $successMsg = $formInstance.GetLocalizedMessage("shortcutCreated") -f $shortcutName
+                                $formInstance.ShowNotification($successMsg, "Success")
+                            } else {
+                                # Failure
+                                $errorDetail = if ($result.Error) { $result.Error } else { "Exit code: $($result.ExitCode)" }
+                                $errorMsg = $formInstance.GetLocalizedMessage("shortcutCreationFailed") -f $errorDetail
+                                $formInstance.ShowNotification($errorMsg, "Error")
+                            }
+                        } catch {
+                            Write-Warning "Failed to process launcher result: $($_.Exception.Message)"
+                        }
+                    }
+                })
+
+            $checkTimer.Start()
+
+        } catch {
+            Write-Warning "Failed to create shortcut for game '$GameId': $($_.Exception.Message)"
+            $errorMsg = $this.GetLocalizedMessage("shortcutCreationFailed") -f $_.Exception.Message
+            $this.ShowNotification($errorMsg, "Error")
+        }
     }
 
     <#

@@ -28,6 +28,13 @@
                     Header="[REFRESH_ALL]"/>
             </MenuItem>
             <MenuItem
+                x:Name="ToolsMenu"
+                Header="[TOOLS_MENU_HEADER]">
+                <MenuItem
+                    x:Name="CreateAllShortcutsMenuItem"
+                    Header="[CREATE_ALL_SHORTCUTS]"/>
+            </MenuItem>
+            <MenuItem
                 x:Name="HelpMenu"
                 Header="[HELP_MENU_HEADER]">
                 <MenuItem
