@@ -100,9 +100,15 @@ Describe "Integration Tests" -Tag "Integration" {
                 return
             }
 
-            # Run in a new PowerShell process to avoid error stream issues
-            $output = powershell -ExecutionPolicy Bypass -File $testScript 2>&1 | Out-String
-            $exitCode = $LASTEXITCODE
+            # Run in a new PowerShell process and capture all output/errors
+            try {
+                $output = & powershell -ExecutionPolicy Bypass -File $testScript 2>&1 | Out-String
+                $exitCode = $LASTEXITCODE
+            } catch {
+                # Capture exception message as output
+                $output = $_.Exception.Message
+                $exitCode = 1
+            }
             $outputText = $output
 
             # Skip if config.json is not found (CI environment)
