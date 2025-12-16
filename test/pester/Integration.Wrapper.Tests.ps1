@@ -100,7 +100,9 @@ Describe "Integration Tests" -Tag "Integration" {
                 return
             }
 
-            $output = & $testScript *>&1 | Out-String
+            # Run in a new PowerShell process to avoid error stream issues
+            $output = powershell -ExecutionPolicy Bypass -File $testScript 2>&1 | Out-String
+            $exitCode = $LASTEXITCODE
             $outputText = $output
 
             # Skip if config.json is not found (CI environment)
@@ -122,7 +124,7 @@ Describe "Integration Tests" -Tag "Integration" {
             if ($outputText -match "Log notarization.*not running|not found") {
                 Set-ItResult -Skipped -Because "Log notarization not available in test environment"
             } else {
-                $outputText | Should -Match "\[OK\]|\[PASS\]|Success"
+                $exitCode | Should -Be 0 -Because "Log notarization test should pass with exit code 0"
             }
         }
     }
