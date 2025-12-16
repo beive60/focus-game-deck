@@ -126,8 +126,8 @@ function Write-TestResult {
     )
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+    # Import the BuildLogger
+    . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     if ($Passed) {
         Write-BuildLog "PASS: $TestName"
         if ($Message) { Write-BuildLog "   $Message" }
@@ -159,8 +159,8 @@ function Clear-TestEnvironment {
     param()
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+    # Import the BuildLogger
+    . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     try {
         if (Test-Path $TestLogDir) {
             Remove-Item -Path $TestLogDir -Recurse -Force
@@ -202,8 +202,8 @@ function New-TestLogFiles {
     )
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+    # Import the BuildLogger
+    . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     # Ensure directory exists
     if (-not (Test-Path $LogDirectory)) {
         New-Item -ItemType Directory -Path $LogDirectory -Force | Out-Null
@@ -266,8 +266,8 @@ function New-TestConfig {
     )
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+    # Import the BuildLogger
+    . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     $config = @{
         logging = @{
             level = "Debug"
@@ -317,8 +317,8 @@ function Test-LogRetention {
     )
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+    # Import the BuildLogger
+    . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     try {
         Write-BuildLog "`Testing: $TestDescription"
 
@@ -407,8 +407,8 @@ function Invoke-LogRotationTests {
     param()
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+    # Import the BuildLogger
+    . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     Write-BuildLog "Starting Log Rotation Tests"
     # Separator removed
 
@@ -429,7 +429,7 @@ function Invoke-LogRotationTests {
         Write-BuildLog "`Testing: Invalid configuration handling"
 
         Clear-TestEnvironment
-        New-TestLogFiles -LogDirectory $TestLogDir
+        $null = New-TestLogFiles -LogDirectory $TestLogDir
 
         # Create config with invalid retention value
         $invalidConfig = @{
@@ -465,7 +465,7 @@ function Invoke-LogRotationTests {
         Write-BuildLog "`Testing: Missing logging configuration"
 
         Clear-TestEnvironment
-        New-TestLogFiles -LogDirectory $TestLogDir
+        $null = New-TestLogFiles -LogDirectory $TestLogDir
 
         # Create minimal config without logging section
         $minimalConfig = @{
