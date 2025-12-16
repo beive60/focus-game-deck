@@ -110,9 +110,13 @@ Describe "Integration Tests" -Tag "Integration" {
             }
 
             # Skip if test has low success rate (partial failure is acceptable)
-            if ($outputText -match "Success Rate:.*(\d+\.\d+)%" -and [double]$Matches[1] -lt 50) {
-                Set-ItResult -Skipped -Because "Log notarization test has low success rate - acceptable in test environment"
-                return
+            # Pattern matches "Success Rate: 33.3%" or "Success Rate: [ERROR] 33.3%"
+            if ($outputText -match "Success Rate:.*?(\d+\.\d+)%") {
+                $successRate = [double]$Matches[1]
+                if ($successRate -lt 50) {
+                    Set-ItResult -Skipped -Because "Log notarization test has low success rate ($successRate%) - acceptable in test environment"
+                    return
+                }
             }
 
             if ($outputText -match "Log notarization.*not running|not found") {
