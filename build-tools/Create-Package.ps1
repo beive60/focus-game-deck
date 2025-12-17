@@ -106,9 +106,10 @@ function New-ReleaseReadme {
     }
 
     # Get localized strings, fall back to English if language not found
-    $strings = $localizedContent.$Language
+    # Use PSObject.Properties to access keys with special characters (e.g., zh-CN)
+    $strings = $localizedContent.PSObject.Properties[$Language].Value
     if (-not $strings) {
-        $strings = $localizedContent.en
+        $strings = $localizedContent.PSObject.Properties['en'].Value
     }
 
     # Validate that all required keys exist
@@ -123,7 +124,8 @@ function New-ReleaseReadme {
 
     $missingKeys = @()
     foreach ($key in $requiredKeys) {
-        if (-not $strings.$key) {
+        # Use PSObject.Properties to ensure consistent access
+        if (-not $strings.PSObject.Properties[$key].Value) {
             $missingKeys += $key
         }
     }
@@ -134,26 +136,26 @@ function New-ReleaseReadme {
     }
 
     $readme = @(
-        "# $($strings["title"])"
+        "# $($strings.title)"
         ""
-        "**$($strings["version"]):** $Version"
-        "**$($strings["buildDate"]):** $BuildDate"
-        "**$($strings["signed"]):** $(if ($IsSigned) { $strings["yes"] } else { $strings["no"] })"
+        "**$($strings.version):** $Version"
+        "**$($strings.buildDate):** $BuildDate"
+        "**$($strings.signed):** $(if ($IsSigned) { $strings.yes } else { $strings.no })"
         ""
-        "## $($strings["filesIncluded"])"
+        "## $($strings.filesIncluded)"
         ""
-        "- **ConfigEditor.exe**: $($strings["configEditor"])"
-        "- **Focus-Game-Deck.exe**: $($strings["mainApp"])"
-        "- **Invoke-FocusGameDeck.exe**: $($strings["scriptExecutor"])"
-        "- **localization/messages.json**: $($strings["localization"])"
-        "- **README.txt**: $($strings["readme"])"
+        "- **ConfigEditor.exe**: $($strings.configEditor)"
+        "- **Focus-Game-Deck.exe**: $($strings.mainApp)"
+        "- **Invoke-FocusGameDeck.exe**: $($strings.scriptExecutor)"
+        "- **localization/messages.json**: $($strings.localization)"
+        "- **README.txt**: $($strings.readme)"
         ""
-        "## $($strings["installation"])"
+        "## $($strings.installation)"
         ""
-        "1. $($strings["step1"])"
-        "2. $($strings["step2"])"
-        "3. $($strings["step3"])"
-        "4. $($strings["step4"])"
+        "1. $($strings.step1)"
+        "2. $($strings.step2)"
+        "3. $($strings.step3)"
+        "4. $($strings.step4)"
         ""
         "## $($strings.architecture)"
         ""
@@ -162,14 +164,14 @@ function New-ReleaseReadme {
         "- $($strings.arch2)"
         "- $($strings.arch3)"
         ""
-        "## $($strings["documentation"])"
+        "## $($strings.documentation)"
         ""
-        "$($strings["docText"])"
+        "$($strings.docText)"
         "https://github.com/beive60/focus-game-deck"
         ""
-        "## $($strings["license"])"
+        "## $($strings.license)"
         ""
-        "$($strings["licenseText"])"
+        "$($strings.licenseText)"
     ) -join "`n"
 
     return $readme
