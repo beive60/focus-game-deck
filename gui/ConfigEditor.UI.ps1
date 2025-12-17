@@ -1995,7 +1995,7 @@ $($LocalizedMessages.readmeFooter)
 
             # Start async job
             $job = [PowerShell]::Create()
-            $job.AddScript($scriptBlock).AddArgument($GameId).AddArgument($configData) | Out-Null
+            $job.AddScript($scriptBlock).AddArgument($GameId).AddArgument($this.ConfigData) | Out-Null
             $asyncResult = $job.BeginInvoke()
 
             # Create timer to check completion
