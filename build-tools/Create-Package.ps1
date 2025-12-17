@@ -106,9 +106,17 @@ function New-ReleaseReadme {
     }
 
     # Get localized strings, fall back to English if language not found
-    $strings = $localizedContent.$Language
+    # Use PSObject.Properties to access keys with special characters (e.g., zh-CN)
+    $langProperty = $localizedContent.PSObject.Properties[$Language]
+    $strings = if ($langProperty) { $langProperty.Value } else { $null }
+
     if (-not $strings) {
-        $strings = $localizedContent.en
+        $enProperty = $localizedContent.PSObject.Properties['en']
+        $strings = if ($enProperty) { $enProperty.Value } else { $null }
+
+        if (-not $strings) {
+            throw "Failed to load strings for language '$Language' and fallback 'en' language not found"
+        }
     }
 
     # Validate that all required keys exist
@@ -123,7 +131,9 @@ function New-ReleaseReadme {
 
     $missingKeys = @()
     foreach ($key in $requiredKeys) {
-        if (-not $strings.$key) {
+        # Use PSObject.Properties to ensure consistent access
+        $keyProperty = $strings.PSObject.Properties[$key]
+        if (-not $keyProperty -or -not $keyProperty.Value) {
             $missingKeys += $key
         }
     }
@@ -134,26 +144,26 @@ function New-ReleaseReadme {
     }
 
     $readme = @(
-        "# $($strings["title"])"
+        "# $($strings.title)"
         ""
-        "**$($strings["version"]):** $Version"
-        "**$($strings["buildDate"]):** $BuildDate"
-        "**$($strings["signed"]):** $(if ($IsSigned) { $strings["yes"] } else { $strings["no"] })"
+        "**$($strings.version):** $Version"
+        "**$($strings.buildDate):** $BuildDate"
+        "**$($strings.signed):** $(if ($IsSigned) { $strings.yes } else { $strings.no })"
         ""
-        "## $($strings["filesIncluded"])"
+        "## $($strings.filesIncluded)"
         ""
-        "- **ConfigEditor.exe**: $($strings["configEditor"])"
-        "- **Focus-Game-Deck.exe**: $($strings["mainApp"])"
-        "- **Invoke-FocusGameDeck.exe**: $($strings["scriptExecutor"])"
-        "- **localization/messages.json**: $($strings["localization"])"
-        "- **README.txt**: $($strings["readme"])"
+        "- **ConfigEditor.exe**: $($strings.configEditor)"
+        "- **Focus-Game-Deck.exe**: $($strings.mainApp)"
+        "- **Invoke-FocusGameDeck.exe**: $($strings.scriptExecutor)"
+        "- **localization/messages.json**: $($strings.localization)"
+        "- **README.txt**: $($strings.readme)"
         ""
-        "## $($strings["installation"])"
+        "## $($strings.installation)"
         ""
-        "1. $($strings["step1"])"
-        "2. $($strings["step2"])"
-        "3. $($strings["step3"])"
-        "4. $($strings["step4"])"
+        "1. $($strings.step1)"
+        "2. $($strings.step2)"
+        "3. $($strings.step3)"
+        "4. $($strings.step4)"
         ""
         "## $($strings.architecture)"
         ""
@@ -162,14 +172,14 @@ function New-ReleaseReadme {
         "- $($strings.arch2)"
         "- $($strings.arch3)"
         ""
-        "## $($strings["documentation"])"
+        "## $($strings.documentation)"
         ""
-        "$($strings["docText"])"
+        "$($strings.docText)"
         "https://github.com/beive60/focus-game-deck"
         ""
-        "## $($strings["license"])"
+        "## $($strings.license)"
         ""
-        "$($strings["licenseText"])"
+        "$($strings.licenseText)"
     ) -join "`n"
 
     return $readme
@@ -252,33 +262,19 @@ try {
 
     Write-PackageMessage "Creating release documentation..." "INFO"
 
-    # Create default README (using localized content based on system settings or first available language)
-    $defaultLanguage = "en"
-    $readmeContent = New-ReleaseReadme -Version $Version -IsSigned $IsSigned -BuildDate $buildDate -Language $defaultLanguage
-
-    # Create README.txt in source directory (dist) - default language, no language suffix
-    $sourceReadmePath = Join-Path $SourceDir "README.txt"
-    Set-Content -Path $sourceReadmePath -Value $readmeContent -Encoding UTF8
-    Write-Verbose "  Created: README.txt in source directory"
-
-    # Create README.txt in destination directory (release) - default language, no language suffix
-    $readmePath = Join-Path $DestinationDir "README.txt"
-    Set-Content -Path $readmePath -Value $readmeContent -Encoding UTF8
-    Write-Verbose "  Created: README.txt in release directory"
-
-    # Create language-specific versions
-    $languages = @("en", "ja")
+    # Create language-specific versions for all supported languages
+    $languages = @("en", "ja", "zh-CN", "ru", "fr", "es")
     foreach ($lang in $languages) {
         $langReadmeContent = New-ReleaseReadme -Version $Version -IsSigned $IsSigned -BuildDate $buildDate -Language $lang
 
         # Create in source directory (dist)
         $sourceLangReadmePath = Join-Path $SourceDir "README.$lang.txt"
-        Set-Content -Path $sourceLangReadmePath -Value $langReadmeContent -Encoding UTF8
+        [System.IO.File]::WriteAllText($sourceLangReadmePath, $langReadmeContent)
         Write-Verbose "  Created: README.$lang.txt in source directory"
 
         # Create in destination directory (release)
         $destLangReadmePath = Join-Path $DestinationDir "README.$lang.txt"
-        Set-Content -Path $destLangReadmePath -Value $langReadmeContent -Encoding UTF8
+        [System.IO.File]::WriteAllText($destLangReadmePath, $langReadmeContent)
         Write-Verbose "  Created: README.$lang.txt in release directory"
     }
 
