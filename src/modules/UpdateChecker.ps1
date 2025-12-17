@@ -169,13 +169,25 @@ function Get-UpdateCheckMessage {
     if ($UpdateCheckResult.ContainsKey("ErrorMessage")) {
         switch ($UpdateCheckResult.ErrorType) {
             "NetworkError" {
-                return $Messages.GetValueOrDefault("networkError", "Network error: Unable to check for updates")
+                if ($Messages.ContainsKey("networkError")) {
+                    return $Messages["networkError"]
+                } else {
+                    return "Network error: Unable to check for updates"
+                }
             }
             "TimeoutError" {
-                return $Messages.GetValueOrDefault("timeoutError", "Timeout error: Update check timed out")
+                if ($Messages.ContainsKey("timeoutError")) {
+                    return $Messages["timeoutError"]
+                } else {
+                    return "Timeout error: Update check timed out"
+                }
             }
             default {
-                return $Messages.GetValueOrDefault("unknownError", "Unknown error: $($UpdateCheckResult.ErrorMessage)")
+                if ($Messages.ContainsKey("unknownError")) {
+                    return $Messages["unknownError"]
+                } else {
+                    return "Unknown error: $($UpdateCheckResult.ErrorMessage)"
+                }
             }
         }
     }
@@ -183,9 +195,17 @@ function Get-UpdateCheckMessage {
     if ($UpdateCheckResult.UpdateAvailable) {
         $current = $UpdateCheckResult.CurrentVersion
         $latest = $UpdateCheckResult.LatestVersion
-        return $Messages.GetValueOrDefault("updateAvailable", "Update available: v$latest (current: v$current)")
+        if ($Messages.ContainsKey("updateAvailable")) {
+            return $Messages["updateAvailable"]
+        } else {
+            return "Update available: v$latest (current: v$current)"
+        }
     } else {
-        return $Messages.GetValueOrDefault("upToDate", "You are using the latest version")
+        if ($Messages.ContainsKey("upToDate")) {
+            return $Messages["upToDate"]
+        } else {
+            return "You are using the latest version"
+        }
     }
 }
 

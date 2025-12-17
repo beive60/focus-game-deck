@@ -150,8 +150,8 @@ function Compare-Version {
 
     try {
         # Parse versions (remove pre-release and build info for basic comparison)
-        $v1Parts = ($Version1 -split '-')[0] -split '/.'
-        $v2Parts = ($Version2 -split '-')[0] -split '/.'
+        $v1Parts = ($Version1 -split '-')[0] -split '\.'
+        $v2Parts = ($Version2 -split '-')[0] -split '\.'
 
         # Ensure we have at least 3 parts (major.minor.patch)
         while ($v1Parts.Count -lt 3) { $v1Parts += "0" }
