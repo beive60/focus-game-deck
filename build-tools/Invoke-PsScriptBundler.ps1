@@ -222,6 +222,22 @@ function New-BundledScript {
         }
     }
 
+    # Auto-include launcher scripts for ConfigEditor (required for runtime launcher creation)
+    if ($entryFileName -match '^ConfigEditor\.ps1$') {
+        $launcherScripts = @(
+            (Join-Path $ProjectRoot "scripts/Create-Launchers-Enhanced.ps1"),
+            (Join-Path $ProjectRoot "scripts/Create-Launchers.ps1")
+        )
+
+        foreach ($launcherScript in $launcherScripts) {
+            if ((Test-Path $launcherScript) -and -not ($dependencies -contains $launcherScript)) {
+                $relativePath = $launcherScript.Replace($ProjectRoot + [IO.Path]::DirectorySeparatorChar, "") -replace "\\", "/"
+                Write-BundlerMessage "Auto-including launcher script for ConfigEditor from $relativePath" "INFO"
+                $dependencies += $launcherScript
+            }
+        }
+    }
+
     Write-BundlerMessage "Found $($dependencies.Count) dependencies" "INFO"
 
     $entryContent = Get-Content $EntryPointPath -Raw -Encoding UTF8
