@@ -671,6 +671,27 @@ class AppManager {
             Write-LocalizedHost -Messages $this.Messages -Key "console_force_termination_success" -Args @($processName) -Default ("Process forcefully terminated: {0}" -f $processName) -Level "OK" -Component "AppManager"
             return $true
         } catch {
+            # Check if error is Access Denied (NativeErrorCode 5)
+            if ($_.Exception.InnerException -is [System.ComponentModel.Win32Exception] -and
+                $_.Exception.InnerException.NativeErrorCode -eq 5) {
+
+                try {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_elevating_termination" -Args @($processName) -Default ("Access denied. Attempting to terminate with admin privileges: {0}" -f $processName) -Level "WARNING" -Component "AppManager"
+
+                    # Start PowerShell with admin privileges to terminate the process
+                    Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile", "-Command", "Stop-Process -Name '$processName' -Force" -WindowStyle Hidden -Wait
+
+                    # Verify process has been terminated
+                    if (-not (Get-Process -Name $processName -ErrorAction SilentlyContinue)) {
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_elevated_termination_success" -Args @($processName) -Default ("Process terminated with admin privileges: {0}" -f $processName) -Level "OK" -Component "AppManager"
+                        return $true
+                    }
+                } catch {
+                    # UAC cancelled or other error
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_elevated_termination_failed" -Args @($processName, $_) -Default ("Elevated termination failed for {0}: {1}" -f $processName, $_) -Level "WARNING" -Component "AppManager"
+                }
+            }
+
             Write-LocalizedHost -Messages $this.Messages -Key "console_force_termination_failed" -Args @($processName, $_) -Default ("Force termination failed for {0}: {1}" -f $processName, $_) -Level "WARNING" -Component "AppManager"
             return $false
         }
