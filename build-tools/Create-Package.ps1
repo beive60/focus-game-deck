@@ -109,11 +109,11 @@ function New-ReleaseReadme {
     # Use PSObject.Properties to access keys with special characters (e.g., zh-CN)
     $langProperty = $localizedContent.PSObject.Properties[$Language]
     $strings = if ($langProperty) { $langProperty.Value } else { $null }
-    
+
     if (-not $strings) {
         $enProperty = $localizedContent.PSObject.Properties['en']
         $strings = if ($enProperty) { $enProperty.Value } else { $null }
-        
+
         if (-not $strings) {
             throw "Failed to load strings for language '$Language' and fallback 'en' language not found"
         }
@@ -269,12 +269,12 @@ try {
 
         # Create in source directory (dist)
         $sourceLangReadmePath = Join-Path $SourceDir "README.$lang.txt"
-        Set-Content -Path $sourceLangReadmePath -Value $langReadmeContent -Encoding UTF8
+        [System.IO.File]::WriteAllText($sourceLangReadmePath, $langReadmeContent)
         Write-Verbose "  Created: README.$lang.txt in source directory"
 
         # Create in destination directory (release)
         $destLangReadmePath = Join-Path $DestinationDir "README.$lang.txt"
-        Set-Content -Path $destLangReadmePath -Value $langReadmeContent -Encoding UTF8
+        [System.IO.File]::WriteAllText($destLangReadmePath, $langReadmeContent)
         Write-Verbose "  Created: README.$lang.txt in release directory"
     }
 
