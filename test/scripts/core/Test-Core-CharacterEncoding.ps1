@@ -103,12 +103,23 @@ try {
     $hasBOM = ($messagesBytes.Length -ge 3 -and $messagesBytes[0] -eq 0xEF -and $messagesBytes[1] -eq 0xBB -and $messagesBytes[2] -eq 0xBF)
     Test-Result "messages.json without BOM" (-not $hasBOM) $(if ($hasBOM) { "BOM detected" } else { "" })
 
-    # Test message structure
+    # Test message structure for all supported languages
     if ($messages.en -and $messages.ja) {
         $enCount = ($messages.en.PSObject.Properties | Measure-Object).Count
         $jaCount = ($messages.ja.PSObject.Properties | Measure-Object).Count
         $zhCnCount = ($messages."zh-cn".PSObject.Properties | Measure-Object).Count
-        Test-Result "Message key consistency" ($enCount -eq $jaCount -and $jaCount -eq $zhCnCount) "EN=$enCount, JA=$jaCount, ZH-CN=$zhCnCount"
+        $ruCount = ($messages.ru.PSObject.Properties | Measure-Object).Count
+        $frCount = ($messages.fr.PSObject.Properties | Measure-Object).Count
+        $esCount = ($messages.es.PSObject.Properties | Measure-Object).Count
+
+        # All languages should have the same number of keys
+        $allCountsMatch = ($enCount -eq $jaCount) -and ($jaCount -eq $zhCnCount) -and ($zhCnCount -eq $ruCount) -and ($ruCount -eq $frCount) -and ($frCount -eq $esCount)
+        Test-Result "Message key consistency (all languages)" $allCountsMatch "EN=$enCount, JA=$jaCount, ZH-CN=$zhCnCount, RU=$ruCount, FR=$frCount, ES=$esCount"
+
+        # If key consistency check failed, suggest running the diagnostic tool
+        if (-not $allCountsMatch) {
+            Write-BuildLog "  Hint: Run './localization/Test-LocalizationConsistency.ps1 -ShowDetails' to identify missing or extra keys"
+        }
 
         # Test Japanese text
         $sampleText = $messages.ja.errorMessage
