@@ -433,8 +433,10 @@ function New-LegacyReleasePackage {
         }
         New-Item -ItemType Directory -Path $releaseDir -Force | Out-Null
 
-        # Copy built files
-        Copy-Item -Path "$sourceDir/*" -Destination $releaseDir -Recurse -Force
+        # Copy built files (exclude scripts directory - scripts are bundled in executables)
+        Get-ChildItem -Path $sourceDir | Where-Object { $_.Name -ne "scripts" } | ForEach-Object {
+            Copy-Item -Path $_.FullName -Destination $releaseDir -Recurse -Force
+        }
 
         # Create README for release
         $releaseReadme = @"
