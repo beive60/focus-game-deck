@@ -107,9 +107,16 @@ function New-ReleaseReadme {
 
     # Get localized strings, fall back to English if language not found
     # Use PSObject.Properties to access keys with special characters (e.g., zh-CN)
-    $strings = $localizedContent.PSObject.Properties[$Language].Value
+    $langProperty = $localizedContent.PSObject.Properties[$Language]
+    $strings = if ($langProperty) { $langProperty.Value } else { $null }
+    
     if (-not $strings) {
-        $strings = $localizedContent.PSObject.Properties['en'].Value
+        $enProperty = $localizedContent.PSObject.Properties['en']
+        $strings = if ($enProperty) { $enProperty.Value } else { $null }
+        
+        if (-not $strings) {
+            throw "Failed to load strings for language '$Language' and fallback 'en' language not found"
+        }
     }
 
     # Validate that all required keys exist
@@ -125,7 +132,8 @@ function New-ReleaseReadme {
     $missingKeys = @()
     foreach ($key in $requiredKeys) {
         # Use PSObject.Properties to ensure consistent access
-        if (-not $strings.PSObject.Properties[$key].Value) {
+        $keyProperty = $strings.PSObject.Properties[$key]
+        if (-not $keyProperty -or -not $keyProperty.Value) {
             $missingKeys += $key
         }
     }
