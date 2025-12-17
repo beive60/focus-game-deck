@@ -252,22 +252,8 @@ try {
 
     Write-PackageMessage "Creating release documentation..." "INFO"
 
-    # Create default README (using localized content based on system settings or first available language)
-    $defaultLanguage = "en"
-    $readmeContent = New-ReleaseReadme -Version $Version -IsSigned $IsSigned -BuildDate $buildDate -Language $defaultLanguage
-
-    # Create README.txt in source directory (dist) - default language, no language suffix
-    $sourceReadmePath = Join-Path $SourceDir "README.txt"
-    Set-Content -Path $sourceReadmePath -Value $readmeContent -Encoding UTF8
-    Write-Verbose "  Created: README.txt in source directory"
-
-    # Create README.txt in destination directory (release) - default language, no language suffix
-    $readmePath = Join-Path $DestinationDir "README.txt"
-    Set-Content -Path $readmePath -Value $readmeContent -Encoding UTF8
-    Write-Verbose "  Created: README.txt in release directory"
-
-    # Create language-specific versions
-    $languages = @("en", "ja")
+    # Create language-specific versions for all supported languages
+    $languages = @("en", "ja", "zh-CN", "ru", "fr", "es")
     foreach ($lang in $languages) {
         $langReadmeContent = New-ReleaseReadme -Version $Version -IsSigned $IsSigned -BuildDate $buildDate -Language $lang
 
