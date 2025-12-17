@@ -116,7 +116,7 @@ try {
 
         # If key consistency check failed, suggest running the diagnostic tool
         if (-not $allCountsMatch) {
-            Write-BuildLog "  Hint: Run './localization/Test-LocalizationConsistency.ps1 -ShowDetails' to identify missing or extra keys"
+            Write-BuildLog "  Hint: Run './test/Test-LocalizationConsistency.ps1 -Target App -ShowDetails' to identify missing or extra keys"
         }
 
         # Test Japanese text
@@ -126,6 +126,48 @@ try {
     }
 } catch {
     Test-Result "messages.json validation" $false $_.Exception.Message
+}
+
+# Test messages-website.json
+try {
+    $websiteMessagesPath = Join-Path $projectRoot "website/messages-website.json"
+    if (Test-Path $websiteMessagesPath) {
+        $websiteMessagesContent = Get-Content $websiteMessagesPath -Raw -Encoding UTF8
+        $websiteMessages = $websiteMessagesContent | ConvertFrom-Json
+        Test-Result "messages-website.json UTF-8 parsing" $true
+
+        $websiteMessagesBytes = [System.IO.File]::ReadAllBytes($websiteMessagesPath)
+        $hasBOM = ($websiteMessagesBytes.Length -ge 3 -and $websiteMessagesBytes[0] -eq 0xEF -and $websiteMessagesBytes[1] -eq 0xBB -and $websiteMessagesBytes[2] -eq 0xBF)
+        Test-Result "messages-website.json without BOM" (-not $hasBOM) $(if ($hasBOM) { "BOM detected" } else { "" })
+
+        # Test message structure for all supported languages
+        if ($websiteMessages.en -and $websiteMessages.ja) {
+            $enCount = ($websiteMessages.en.PSObject.Properties | Measure-Object).Count
+            $jaCount = ($websiteMessages.ja.PSObject.Properties | Measure-Object).Count
+            $zhCnCount = ($websiteMessages."zh-cn".PSObject.Properties | Measure-Object).Count
+            $ruCount = ($websiteMessages.ru.PSObject.Properties | Measure-Object).Count
+            $frCount = ($websiteMessages.fr.PSObject.Properties | Measure-Object).Count
+            $esCount = ($websiteMessages.es.PSObject.Properties | Measure-Object).Count
+
+            # All languages should have the same number of keys
+            $allCountsMatch = ($enCount -eq $jaCount) -and ($jaCount -eq $zhCnCount) -and ($zhCnCount -eq $ruCount) -and ($ruCount -eq $frCount) -and ($frCount -eq $esCount)
+            Test-Result "Website message key consistency (all languages)" $allCountsMatch "EN=$enCount, JA=$jaCount, ZH-CN=$zhCnCount, RU=$ruCount, FR=$frCount, ES=$esCount"
+
+            # If key consistency check failed, suggest running the diagnostic tool
+            if (-not $allCountsMatch) {
+                Write-BuildLog "  Hint: Run './test/Test-LocalizationConsistency.ps1 -Target Website -ShowDetails' to identify missing or extra keys"
+            }
+
+            # Test Japanese text
+            $sampleText = $websiteMessages.ja.site_title
+            $hasJapanese = $sampleText -and $sampleText.Length -gt 0
+            Test-Result "Website Japanese character integrity" $hasJapanese $(if ($sampleText) { "Sample: $($sampleText.Substring(0, [Math]::Min(15, $sampleText.Length)))..." } else { "No sample text" })
+        }
+    } else {
+        Write-BuildLog "  Note: messages-website.json not found, skipping website messages test"
+    }
+} catch {
+    Test-Result "messages-website.json validation" $false $_.Exception.Message
 }
 
 Write-BuildLog "Testing Console Output Safety..."
