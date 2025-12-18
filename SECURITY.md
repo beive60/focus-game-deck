@@ -6,8 +6,7 @@
 
 | Version | Security Updates | Status |
 |---------|-----------------|--------|
-| v1.0.1-alpha | Best effort support | Current |
-| v1.0.0 | End of support | Legacy |
+| v1.0.0 | Best effort support | Current |
 
 ### Security Update Policy
 
