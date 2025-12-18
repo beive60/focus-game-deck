@@ -222,21 +222,10 @@ function New-BundledScript {
         }
     }
 
-    # Auto-include launcher scripts for ConfigEditor (required for runtime launcher creation)
-    if ($entryFileName -match '^ConfigEditor\.ps1$') {
-        $launcherScripts = @(
-            (Join-Path $ProjectRoot "scripts/Create-Launchers-Enhanced.ps1"),
-            (Join-Path $ProjectRoot "scripts/Create-Launchers.ps1")
-        )
-
-        foreach ($launcherScript in $launcherScripts) {
-            if ((Test-Path $launcherScript) -and -not ($dependencies -contains $launcherScript)) {
-                $relativePath = $launcherScript.Replace($ProjectRoot + [IO.Path]::DirectorySeparatorChar, "") -replace "\\", "/"
-                Write-BundlerMessage "Auto-including launcher script for ConfigEditor from $relativePath" "INFO"
-                $dependencies += $launcherScript
-            }
-        }
-    }
+    # Note: Launcher scripts are NOT auto-included for ConfigEditor
+    # ConfigEditor has its own internal shortcut creation functionality
+    # External launcher scripts (Create-Launchers-Enhanced.ps1, Create-Launchers.ps1)
+    # are standalone scripts and should not be bundled into the executable
 
     Write-BundlerMessage "Found $($dependencies.Count) dependencies" "INFO"
 

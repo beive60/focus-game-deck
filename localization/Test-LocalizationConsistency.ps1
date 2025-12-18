@@ -1,8 +1,13 @@
 <#
 .SYNOPSIS
-    Validates localization key consistency across all supported languages.
+    [DEPRECATED] Validates localization key consistency across all supported languages.
 
 .DESCRIPTION
+    DEPRECATED: This script has been moved to ./test/Test-LocalizationConsistency.ps1
+    The new version supports both application and website message files.
+
+    Please use: ./test/Test-LocalizationConsistency.ps1 -Target App
+
     This script checks that all language files in messages.json have the same set of keys.
     It compares all supported languages (en, ja, zh-cn, ru, fr, es) and reports:
     - Missing keys in each language
@@ -51,6 +56,25 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+# Show deprecation warning
+Write-Host ""
+Write-Host "=====================================================================" -ForegroundColor Yellow
+Write-Host "  DEPRECATION WARNING" -ForegroundColor Yellow
+Write-Host "=====================================================================" -ForegroundColor Yellow
+Write-Host "This script has been moved to: ./test/Test-LocalizationConsistency.ps1" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "The new version supports both application and website message files." -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Usage examples:" -ForegroundColor Cyan
+Write-Host "  ./test/Test-LocalizationConsistency.ps1           # Check all files" -ForegroundColor White
+Write-Host "  ./test/Test-LocalizationConsistency.ps1 -Target App     # App only" -ForegroundColor White
+Write-Host "  ./test/Test-LocalizationConsistency.ps1 -Target Website # Website only" -ForegroundColor White
+Write-Host ""
+Write-Host "Continuing with legacy behavior (app messages only)..." -ForegroundColor Yellow
+Write-Host "=====================================================================" -ForegroundColor Yellow
+Write-Host ""
+Start-Sleep -Seconds 2
 
 # ANSI color codes for better readability
 $colorReset = "`e[0m"
