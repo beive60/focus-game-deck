@@ -2015,26 +2015,14 @@
                 return
             }
 
-            # Use the enhanced launcher creation script (resolve from project root)
-            $launcherScriptPath = Join-Path -Path $this.appRoot -ChildPath "scripts/Create-Launchers-Enhanced.ps1"
-
-            if (-not (Test-Path $launcherScriptPath)) {
-                # Fallback to basic launcher script
-                $launcherScriptPath = Join-Path -Path $this.appRoot -ChildPath "scripts/Create-Launchers.ps1"
-                if (-not (Test-Path $launcherScriptPath)) {
-                    Show-SafeMessage -Key "launcherScriptNotFound" -MessageType "Error"
-                    return
-                }
-            }
-
-            # Execute the launcher creation script
-            $gameIds = $selectedGames -join ","
-            Write-Verbose "[INFO] ConfigEditorEvents: Creating launchers for games - $gameIds"
+            # Use the internal shortcut creation function from ConfigEditor.UI.ps1
+            # This function is already implemented and works correctly in both script and executable modes
+            Write-Verbose "[INFO] ConfigEditorEvents: Creating launchers for $($selectedGames.Count) games"
 
             try {
-                & $launcherScriptPath -GameIds $gameIds -ConfigPath $script:ConfigPath
-                Show-SafeMessage -Key "launchersGenerated" -MessageType "Information" -FormatArgs @($selectedGames.Count)
-                Write-Verbose "Generated launchers for $($selectedGames.Count) games"
+                # Call the CreateAllShortcuts method from the UI manager
+                $this.uiManager.CreateAllShortcuts()
+                Write-Verbose "[INFO] ConfigEditorEvents: Successfully initiated shortcut creation for $($selectedGames.Count) games"
             } catch {
                 Write-Error "Launcher generation failed: $_"
                 Show-SafeMessage -Key "launcherGenerationFailed" -MessageType "Error" -FormatArgs @($_.Exception.Message)

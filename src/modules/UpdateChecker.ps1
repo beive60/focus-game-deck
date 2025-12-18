@@ -14,17 +14,8 @@
 # Version: 1.0.0
 # Date: 2025-09-24
 
-# Import version information
-# Only attempt to load relative paths if PSScriptRoot is valid (Development mode)
-if (-not [string]::IsNullOrEmpty($PSScriptRoot)) {
-    $projectRoot = Join-Path -Path $PSScriptRoot -ChildPath "../.."
-    $VersionModulePath = Join-Path -Path $projectRoot -ChildPath "build-tools/Version.ps1"
-    if (Test-Path $VersionModulePath) {
-        . $VersionModulePath
-    } else {
-        Write-Warning "Version module not found: $VersionModulePath"
-    }
-}
+# Note: Version.ps1 functions are expected to be available through bundling or prior sourcing
+# No explicit import needed here as dependencies are resolved at bundle time
 
 # Get latest release information from GitHub API
 function Get-LatestReleaseInfo {
