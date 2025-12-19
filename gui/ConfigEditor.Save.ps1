@@ -100,7 +100,8 @@ function Protect-Password {
         return $encryptedString
     } catch {
         Write-Warning "Failed to encrypt password: $($_.Exception.Message)"
-        return $PlainTextPassword
+        # Return empty string instead of plain text for security
+        return ""
     }
 }
 
@@ -178,11 +179,14 @@ function Save-CurrentGameData {
     $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
     $epicGameId = if ($epicGameIdTextBox) { $epicGameIdTextBox.Text.Trim() } else { "" }
 
+    $riotGameIdTextBox = $script:Window.FindName("RiotGameIdTextBox")
+    $riotGameId = if ($riotGameIdTextBox) { $riotGameIdTextBox.Text.Trim() } else { "" }
+
     $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
     $executablePath = if ($executablePathTextBox) { $executablePathTextBox.Text.Trim() } else { "" }
 
     # Use centralized validation module
-    $validationErrors = Invoke-ConfigurationValidation -GameId $newGameId -Platform $platform -SteamAppId $steamAppId -EpicGameId $epicGameId -ExecutablePath $executablePath
+    $validationErrors = Invoke-ConfigurationValidation -GameId $newGameId -Platform $platform -SteamAppId $steamAppId -EpicGameId $epicGameId -RiotGameId $riotGameId -ExecutablePath $executablePath
 
     if ($validationErrors.Count -gt 0) {
         foreach ($err in $validationErrors) {
