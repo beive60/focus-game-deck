@@ -132,6 +132,9 @@
             $adjustedTargetIndex = $targetIndex - 1
         }
         
+        # Clamp adjusted target index to valid range
+        $adjustedTargetIndex = [Math]::Max(0, [Math]::Min($adjustedTargetIndex, $newOrder.Count))
+        
         # Insert at new position
         $newOrder.Insert($adjustedTargetIndex, $itemToMove)
         
@@ -238,12 +241,12 @@
                 $currentOrder.IndexOf($targetContent)
             } else {
                 # Dropped outside of items, place at end (after last item)
-                $currentOrder.Count - 1
+                $currentOrder.Count
             }
             
             if ($targetIndex -eq -1) {
                 # If target item not found in order, place at end
-                $targetIndex = $currentOrder.Count - 1
+                $targetIndex = $currentOrder.Count
             }
             
             Write-Verbose "Reordering game from index $sourceIndex to $targetIndex"
@@ -307,12 +310,12 @@
                 $currentOrder.IndexOf($targetContent)
             } else {
                 # Dropped outside of items, place at end (after last item)
-                $currentOrder.Count - 1
+                $currentOrder.Count
             }
             
             if ($targetIndex -eq -1) {
                 # If target item not found in order, place at end
-                $targetIndex = $currentOrder.Count - 1
+                $targetIndex = $currentOrder.Count
             }
             
             Write-Verbose "Reordering app from index $sourceIndex to $targetIndex"
