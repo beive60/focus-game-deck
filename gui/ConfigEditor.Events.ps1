@@ -119,12 +119,12 @@
             return $currentOrder
         }
 
-        # Create a copy of the array
-        $newOrder = @($currentOrder)
+        # Create a new ArrayList for easier manipulation
+        $newOrder = [System.Collections.ArrayList]::new($currentOrder)
         $itemToMove = $newOrder[$sourceIndex]
         
-        # Remove the item from source position
-        $newOrder = $newOrder | Where-Object { $_ -ne $itemToMove }
+        # Remove the item from source position by index
+        $newOrder.RemoveAt($sourceIndex)
         
         # Adjust target index if removing the item shifted positions
         $adjustedTargetIndex = $targetIndex
@@ -133,17 +133,10 @@
         }
         
         # Insert at new position
-        if ($adjustedTargetIndex -eq 0) {
-            $newOrder = @($itemToMove) + $newOrder
-        } elseif ($adjustedTargetIndex -ge $newOrder.Count) {
-            $newOrder = $newOrder + @($itemToMove)
-        } else {
-            $beforeItems = $newOrder[0..($adjustedTargetIndex - 1)]
-            $afterItems = $newOrder[$adjustedTargetIndex..($newOrder.Count - 1)]
-            $newOrder = $beforeItems + @($itemToMove) + $afterItems
-        }
+        $newOrder.Insert($adjustedTargetIndex, $itemToMove)
         
-        return $newOrder
+        # Convert back to array
+        return @($newOrder)
     }
 
     # Helper method to get the ListBoxItem under the mouse pointer
@@ -244,11 +237,12 @@
                 $targetContent = $targetItem.Content
                 $currentOrder.IndexOf($targetContent)
             } else {
-                # Dropped outside of items, place at end
+                # Dropped outside of items, place at end (after last item)
                 $currentOrder.Count - 1
             }
             
             if ($targetIndex -eq -1) {
+                # If target item not found in order, place at end
                 $targetIndex = $currentOrder.Count - 1
             }
             
@@ -312,11 +306,12 @@
                 $targetContent = $targetItem.Content
                 $currentOrder.IndexOf($targetContent)
             } else {
-                # Dropped outside of items, place at end
+                # Dropped outside of items, place at end (after last item)
                 $currentOrder.Count - 1
             }
             
             if ($targetIndex -eq -1) {
+                # If target item not found in order, place at end
                 $targetIndex = $currentOrder.Count - 1
             }
             
