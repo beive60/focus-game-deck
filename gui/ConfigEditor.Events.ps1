@@ -115,6 +115,12 @@
     # Helper method to reorder items in an array
     # Returns the new order array with the item moved from sourceIndex to targetIndex
     [array] ReorderItems([array]$currentOrder, [int]$sourceIndex, [int]$targetIndex) {
+        # Validate source index
+        if ($sourceIndex -lt 0 -or $sourceIndex -ge $currentOrder.Count) {
+            Write-Warning "Invalid source index: $sourceIndex (array size: $($currentOrder.Count))"
+            return $currentOrder
+        }
+        
         if ($sourceIndex -eq $targetIndex) {
             return $currentOrder
         }
@@ -192,6 +198,14 @@
                 # Start drag operation
                 $listBox = $sender
                 $draggedData = $this.draggedItem.Content
+                
+                # Validate dragged data
+                if ([string]::IsNullOrEmpty($draggedData)) {
+                    Write-Verbose "Dragged item has no content, aborting drag"
+                    $this.dragStartPoint = $null
+                    $this.draggedItem = $null
+                    return
+                }
                 
                 Write-Verbose "Starting drag operation for item: $draggedData"
                 
@@ -309,12 +323,12 @@
                 $targetContent = $targetItem.Content
                 $currentOrder.IndexOf($targetContent)
             } else {
-                # Dropped outside of items, place at end (after last item)
+                # Dropped outside of items, place at end of list
                 $currentOrder.Count
             }
             
             if ($targetIndex -eq -1) {
-                # If target item not found in order, place at end
+                # If target item not found in order, place at end of list
                 $targetIndex = $currentOrder.Count
             }
             
