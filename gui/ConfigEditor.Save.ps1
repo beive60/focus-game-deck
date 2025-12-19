@@ -871,39 +871,59 @@ function Save-DiscordSettingsData {
         # Get status settings
         $statusOnStartCombo = $script:Window.FindName("DiscordStatusOnStartCombo")
         if ($statusOnStartCombo -and $statusOnStartCombo.SelectedItem) {
-            $script:StateManager.ConfigData.discord.statusOnStart = $statusOnStartCombo.SelectedItem.Tag
+            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["statusOnStart"]) {
+                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "statusOnStart" -NotePropertyValue $statusOnStartCombo.SelectedItem.Tag -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.discord.statusOnStart = $statusOnStartCombo.SelectedItem.Tag
+            }
             Write-Verbose "Save-DiscordSettingsData: Status on start set to $($statusOnStartCombo.SelectedItem.Tag)"
         }
 
         $statusOnEndCombo = $script:Window.FindName("DiscordStatusOnEndCombo")
         if ($statusOnEndCombo -and $statusOnEndCombo.SelectedItem) {
-            $script:StateManager.ConfigData.discord.statusOnEnd = $statusOnEndCombo.SelectedItem.Tag
+            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["statusOnEnd"]) {
+                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "statusOnEnd" -NotePropertyValue $statusOnEndCombo.SelectedItem.Tag -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.discord.statusOnEnd = $statusOnEndCombo.SelectedItem.Tag
+            }
             Write-Verbose "Save-DiscordSettingsData: Status on end set to $($statusOnEndCombo.SelectedItem.Tag)"
         }
 
         # Get overlay checkbox
         $disableOverlayCheckBox = $script:Window.FindName("DiscordDisableOverlayCheckBox")
         if ($disableOverlayCheckBox) {
-            $script:StateManager.ConfigData.discord.disableOverlay = $disableOverlayCheckBox.IsChecked
+            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["disableOverlay"]) {
+                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "disableOverlay" -NotePropertyValue $disableOverlayCheckBox.IsChecked -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.discord.disableOverlay = $disableOverlayCheckBox.IsChecked
+            }
             Write-Verbose "Save-DiscordSettingsData: Disable overlay set to $($disableOverlayCheckBox.IsChecked)"
         }
 
         # Get Rich Presence settings
         $rpcEnableCheckBox = $script:Window.FindName("DiscordRPCEnableCheckBox")
         if ($rpcEnableCheckBox) {
-            if (-not $script:StateManager.ConfigData.discord.rpc) {
-                $script:StateManager.ConfigData.discord | Add-Member -NotePropertyName "rpc" -NotePropertyValue @{} -Force
+            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["rpc"]) {
+                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "rpc" -NotePropertyValue @{} -Force
             }
-            $script:StateManager.ConfigData.discord.rpc.enabled = $rpcEnableCheckBox.IsChecked
+            if (-not $script:StateManager.ConfigData.integrations.discord.rpc.PSObject.Properties["enabled"]) {
+                $script:StateManager.ConfigData.integrations.discord.rpc | Add-Member -NotePropertyName "enabled" -NotePropertyValue $rpcEnableCheckBox.IsChecked -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.discord.rpc.enabled = $rpcEnableCheckBox.IsChecked
+            }
             Write-Verbose "Save-DiscordSettingsData: RPC enabled set to $($rpcEnableCheckBox.IsChecked)"
         }
 
         $rpcAppIdTextBox = $script:Window.FindName("DiscordRPCAppIdTextBox")
         if ($rpcAppIdTextBox) {
-            if (-not $script:StateManager.ConfigData.discord.rpc) {
-                $script:StateManager.ConfigData.discord | Add-Member -NotePropertyName "rpc" -NotePropertyValue @{} -Force
+            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["rpc"]) {
+                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "rpc" -NotePropertyValue @{} -Force
             }
-            $script:StateManager.ConfigData.discord.rpc.applicationId = $rpcAppIdTextBox.Text
+            if (-not $script:StateManager.ConfigData.integrations.discord.rpc.PSObject.Properties["applicationId"]) {
+                $script:StateManager.ConfigData.integrations.discord.rpc | Add-Member -NotePropertyName "applicationId" -NotePropertyValue $rpcAppIdTextBox.Text -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.discord.rpc.applicationId = $rpcAppIdTextBox.Text
+            }
             Write-Verbose "Save-DiscordSettingsData: RPC application ID set to $($rpcAppIdTextBox.Text)"
         }
 

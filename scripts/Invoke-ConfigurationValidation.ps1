@@ -157,6 +157,16 @@ function Invoke-ConfigurationValidation {
                 }
             }
         }
+        'riot' {
+            # Riot Game ID: basic validation (non-empty)
+            # Note: Riot game IDs are simple identifiers like "valorant", "bacon", "league_of_legends"
+            if ([string]::IsNullOrWhiteSpace($RiotGameId)) {
+                $errors += @{
+                    Control = 'RiotGameIdTextBox'
+                    Key = 'riotGameIdRequired'
+                }
+            }
+        }
         { $_ -in 'standalone', 'direct' } {
             # Executable Path: validate file existence
             if ([string]::IsNullOrWhiteSpace($ExecutablePath)) {
