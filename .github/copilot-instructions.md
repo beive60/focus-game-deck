@@ -158,6 +158,68 @@ When naming cmdlets, always use approved PowerShell verb names as defined by Mic
 - Other Verbs (System.Management.Automation.VerbsOther): defines canonical verb names that do not fit into specific verb name categories.
     - Use: Uses or includes a resource and performs something.
 
+## Module Structure and Guidelines
+
+### ConfigEditor Module Pattern
+
+The ConfigEditor follows a modular structure where functionality is separated into multiple files:
+
+- `ConfigEditor.ps1` - Main entry point, initialization, and orchestration
+- `ConfigEditor.UI.ps1` - UI component management and rendering
+- `ConfigEditor.Events.ps1` - Event handlers and user interaction logic
+- `ConfigEditor.State.ps1` - State management and data operations
+- `ConfigEditor.Localization.ps1` - Localization and message handling
+- `ConfigEditor.Mappings.ps1` - Data mapping and transformation
+- `ConfigEditor.JsonHelper.ps1` - JSON serialization and deserialization
+- `ConfigEditor.Save.ps1` - Save operations for all configuration types
+
+### Validation Module
+
+The `scripts/Invoke-ConfigurationValidation.ps1` module provides centralized validation logic:
+
+- **Purpose**: Single source of truth for all configuration validation rules
+- **Design**: Independent module with no dependencies on UI or other modules
+- **Usage**: Can be called from GUI, CLI tools, tests, or build scripts
+- **Returns**: Structured error objects with `Control` and `Key` properties
+- **Platform Support**: Validates Steam, Epic, Riot, standalone, and direct platforms
+
+Example usage:
+```powershell
+$errors = Invoke-ConfigurationValidation -GameId $id -Platform $platform -SteamAppId $appId
+if ($errors.Count -gt 0) {
+    foreach ($err in $errors) {
+        # Handle error using $err.Control and $err.Key
+    }
+}
+```
+
+### Save Module
+
+The `gui/ConfigEditor.Save.ps1` module aggregates all save-related functions:
+
+- `Save-CurrentGameData` - Saves game configuration
+- `Save-CurrentAppData` - Saves managed application configuration
+- `Save-GlobalSettingsData` - Saves global settings
+- `Save-OBSSettingsData` - Saves OBS integration settings
+- `Save-DiscordSettingsData` - Saves Discord integration settings
+- `Save-VTubeStudioSettingsData` - Saves VTube Studio integration settings
+
+All save functions use `Invoke-ConfigurationValidation` for validation before saving.
+
+### Module Loading
+
+Modules are dot-sourced in `ConfigEditor.ps1` in the following order:
+
+1. JsonHelper (utility functions)
+2. Mappings (data transformation)
+3. State (state management)
+4. Localization (message handling)
+5. UI (UI components)
+6. Events (event handlers)
+7. Save (save operations)
+
+External modules like validation are loaded before the ConfigEditor modules.
+
 ## Conclusion
 
 Do not suggest code that does not comply with the above rules.
