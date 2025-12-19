@@ -5,7 +5,7 @@
 .DESCRIPTION
     This module contains all save-related functions for the ConfigEditor.
     Handles saving of game configurations, managed applications, and global settings.
-    
+
     Functions in this module:
     - Set-PropertyValue: Helper to set or add properties to PSCustomObject
     - Protect-Password: Encrypts passwords using DPAPI
@@ -22,7 +22,7 @@
     Author: Focus Game Deck Development Team
     Version: 1.0.0
     Last Updated: 2025-12-19
-    
+
     This module depends on:
     - Invoke-ConfigurationValidation for validation
     - UIManager for error display
@@ -82,7 +82,8 @@ The plain text password to encrypt.
 String - The encrypted password string.
 #>
 function Protect-Password {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPlainTextForPassword', '', Justification = 'Function purpose is to encrypt plain text passwords')]
+    # [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPlainTextForPassword', '', Justification = 'Function purpose is to encrypt plain text passwords')]
+    # Note: Attribute commented out to avoid ps2exe build issues
     param(
         [Parameter(Mandatory = $true)]
         [string]$PlainTextPassword
@@ -120,7 +121,8 @@ The encrypted password string to decrypt.
 String - The decrypted plain text password.
 #>
 function Unprotect-Password {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPlainTextForPassword', '', Justification = 'Parameter contains encrypted string, not plain text password')]
+    # [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPlainTextForPassword', '', Justification = 'Parameter contains encrypted string, not plain text password')]
+    # Note: Attribute commented out to avoid ps2exe build issues
     param(
         [Parameter(Mandatory = $false)]
         [string]$EncryptedPassword
@@ -134,9 +136,10 @@ function Unprotect-Password {
         # Try to decrypt as DPAPI-encrypted string
         try {
             $secureString = ConvertTo-SecureString -String $EncryptedPassword
-            $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureString)
-            $plainText = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
-            [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+            $marshalType = "System.Runtime.InteropServices.Marshal" -as [type]
+            $bstr = $marshalType::SecureStringToBSTR($secureString)
+            $plainText = $marshalType::PtrToStringBSTR($bstr)
+            $marshalType::ZeroFreeBSTR($bstr)
 
             return $plainText
         } catch {

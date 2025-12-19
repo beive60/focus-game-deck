@@ -14,7 +14,7 @@
     Author: Focus Game Deck Development Team
     Version: 1.0.0
     Last Updated: 2025-12-19
-    
+
     Design Principles:
     - No dependencies on UI or other modules
     - Returns structured error objects for easy integration
@@ -45,7 +45,7 @@ function Invoke-ConfigurationValidation {
     .DESCRIPTION
         Main validation entry point for game configurations.
         Validates Game ID, platform-specific identifiers, and executable paths.
-        
+
         Validation Rules:
         - Game ID: Required, alphanumeric with hyphens and underscores only
         - Steam AppID: Required for steam platform, must be 7-digit numeric
@@ -183,5 +183,7 @@ function Invoke-ConfigurationValidation {
         }
     }
 
-    return $errors
+    # Always return as array to ensure consistent behavior
+    # Use the comma operator to force array return even for single items
+    return , $errors
 }
