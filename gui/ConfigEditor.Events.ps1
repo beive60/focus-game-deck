@@ -3,6 +3,10 @@
     $stateManager
     [string]$appRoot
     [bool]$IsExecutable
+    
+    # Drag and drop state
+    [object]$dragStartPoint = $null
+    [object]$draggedItem = $null
 
     ConfigEditorEvents($ui, $state, [string]$appRoot, [bool]$IsExecutable) {
         $this.uiManager = $ui
@@ -106,6 +110,243 @@
         }
 
         Write-Verbose "TerminationMethod enabled: $shouldEnableTermination (StartAction: $startAction, EndAction: $endAction)"
+    }
+
+    # Helper method to reorder items in an array
+    # Returns the new order array with the item moved from sourceIndex to targetIndex
+    [array] ReorderItems([array]$currentOrder, [int]$sourceIndex, [int]$targetIndex) {
+        if ($sourceIndex -eq $targetIndex) {
+            return $currentOrder
+        }
+
+        # Create a copy of the array
+        $newOrder = @($currentOrder)
+        $itemToMove = $newOrder[$sourceIndex]
+        
+        # Remove the item from source position
+        $newOrder = $newOrder | Where-Object { $_ -ne $itemToMove }
+        
+        # Adjust target index if removing the item shifted positions
+        $adjustedTargetIndex = $targetIndex
+        if ($sourceIndex -lt $targetIndex) {
+            $adjustedTargetIndex = $targetIndex - 1
+        }
+        
+        # Insert at new position
+        if ($adjustedTargetIndex -eq 0) {
+            $newOrder = @($itemToMove) + $newOrder
+        } elseif ($adjustedTargetIndex -ge $newOrder.Count) {
+            $newOrder = $newOrder + @($itemToMove)
+        } else {
+            $beforeItems = $newOrder[0..($adjustedTargetIndex - 1)]
+            $afterItems = $newOrder[$adjustedTargetIndex..($newOrder.Count - 1)]
+            $newOrder = $beforeItems + @($itemToMove) + $afterItems
+        }
+        
+        return $newOrder
+    }
+
+    # Helper method to get the ListBoxItem under the mouse pointer
+    [object] GetListBoxItemUnderMouse([object]$listBox, [object]$position) {
+        try {
+            $hitTestResult = [System.Windows.Media.VisualTreeHelper]::HitTest($listBox, $position)
+            if ($hitTestResult) {
+                $element = $hitTestResult.VisualHit
+                # Walk up the visual tree to find the ListBoxItem
+                while ($element -and $element -isnot [System.Windows.Controls.ListBoxItem]) {
+                    $element = [System.Windows.Media.VisualTreeHelper]::GetParent($element)
+                }
+                return $element
+            }
+        } catch {
+            Write-Verbose "Failed to get ListBoxItem under mouse: $($_.Exception.Message)"
+        }
+        return $null
+    }
+
+    # Handle drag start for ListBox items
+    [void] HandleListBoxPreviewMouseLeftButtonDown([object]$sender, [object]$e) {
+        $this.dragStartPoint = $e.GetPosition($null)
+        $this.draggedItem = $null
+        
+        # Find the ListBoxItem that was clicked
+        $element = $e.OriginalSource
+        while ($element -and $element -isnot [System.Windows.Controls.ListBoxItem]) {
+            $element = [System.Windows.Media.VisualTreeHelper]::GetParent($element)
+        }
+        
+        if ($element) {
+            $this.draggedItem = $element
+        }
+    }
+
+    # Handle mouse move to initiate drag operation
+    [void] HandleListBoxMouseMove([object]$sender, [object]$e) {
+        if ($null -eq $this.dragStartPoint -or $null -eq $this.draggedItem) {
+            return
+        }
+        
+        # Check if mouse moved beyond threshold
+        $mousePosition = $e.GetPosition($null)
+        $diff = $this.dragStartPoint - $mousePosition
+        
+        $dragThreshold = 5
+        if ([Math]::Abs($diff.X) -gt $dragThreshold -or [Math]::Abs($diff.Y) -gt $dragThreshold) {
+            try {
+                # Start drag operation
+                $listBox = $sender
+                $draggedData = $this.draggedItem.Content
+                
+                Write-Verbose "Starting drag operation for item: $draggedData"
+                
+                [System.Windows.DragDrop]::DoDragDrop(
+                    $this.draggedItem,
+                    $draggedData,
+                    [System.Windows.DragDropEffects]::Move
+                )
+            } catch {
+                Write-Verbose "Failed to start drag operation: $($_.Exception.Message)"
+            } finally {
+                $this.dragStartPoint = $null
+                $this.draggedItem = $null
+            }
+        }
+    }
+
+    # Handle drop event for GamesList
+    [void] HandleGamesListDrop([object]$sender, [object]$e) {
+        try {
+            $dropData = $e.Data.GetData([string])
+            if (-not $dropData) {
+                return
+            }
+            
+            Write-Verbose "Drop event for game: $dropData"
+            
+            # Ensure games order exists
+            if (-not $this.stateManager.ConfigData.games._order) {
+                $this.stateManager.InitializeGameOrder()
+            }
+            
+            $currentOrder = $this.stateManager.ConfigData.games._order
+            $sourceIndex = $currentOrder.IndexOf($dropData)
+            
+            if ($sourceIndex -eq -1) {
+                Write-Warning "Dropped game not found in order array"
+                return
+            }
+            
+            # Get the target position
+            $mousePosition = $e.GetPosition($sender)
+            $targetItem = $this.GetListBoxItemUnderMouse($sender, $mousePosition)
+            
+            $targetIndex = if ($targetItem) {
+                $targetContent = $targetItem.Content
+                $currentOrder.IndexOf($targetContent)
+            } else {
+                # Dropped outside of items, place at end
+                $currentOrder.Count - 1
+            }
+            
+            if ($targetIndex -eq -1) {
+                $targetIndex = $currentOrder.Count - 1
+            }
+            
+            Write-Verbose "Reordering game from index $sourceIndex to $targetIndex"
+            
+            # Reorder the items
+            $newOrder = $this.ReorderItems($currentOrder, $sourceIndex, $targetIndex)
+            
+            # Update the configuration
+            $this.stateManager.ConfigData.games._order = $newOrder
+            
+            # Mark as modified
+            $this.stateManager.SetModified()
+            
+            # Refresh the games list
+            $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
+            
+            # Restore selection
+            $gamesList = $script:Window.FindName("GamesList")
+            for ($i = 0; $i -lt $gamesList.Items.Count; $i++) {
+                if ($gamesList.Items[$i] -eq $dropData) {
+                    $gamesList.SelectedIndex = $i
+                    break
+                }
+            }
+            
+            $e.Handled = $true
+        } catch {
+            Write-Warning "Failed to handle drop for games list: $($_.Exception.Message)"
+        }
+    }
+
+    # Handle drop event for ManagedAppsList
+    [void] HandleManagedAppsListDrop([object]$sender, [object]$e) {
+        try {
+            $dropData = $e.Data.GetData([string])
+            if (-not $dropData) {
+                return
+            }
+            
+            Write-Verbose "Drop event for app: $dropData"
+            
+            # Ensure apps order exists
+            if (-not $this.stateManager.ConfigData.managedApps._order) {
+                $this.stateManager.InitializeAppOrder()
+            }
+            
+            $currentOrder = $this.stateManager.ConfigData.managedApps._order
+            $sourceIndex = $currentOrder.IndexOf($dropData)
+            
+            if ($sourceIndex -eq -1) {
+                Write-Warning "Dropped app not found in order array"
+                return
+            }
+            
+            # Get the target position
+            $mousePosition = $e.GetPosition($sender)
+            $targetItem = $this.GetListBoxItemUnderMouse($sender, $mousePosition)
+            
+            $targetIndex = if ($targetItem) {
+                $targetContent = $targetItem.Content
+                $currentOrder.IndexOf($targetContent)
+            } else {
+                # Dropped outside of items, place at end
+                $currentOrder.Count - 1
+            }
+            
+            if ($targetIndex -eq -1) {
+                $targetIndex = $currentOrder.Count - 1
+            }
+            
+            Write-Verbose "Reordering app from index $sourceIndex to $targetIndex"
+            
+            # Reorder the items
+            $newOrder = $this.ReorderItems($currentOrder, $sourceIndex, $targetIndex)
+            
+            # Update the configuration
+            $this.stateManager.ConfigData.managedApps._order = $newOrder
+            
+            # Mark as modified
+            $this.stateManager.SetModified()
+            
+            # Refresh the apps list
+            $this.uiManager.UpdateManagedAppsList($this.stateManager.ConfigData)
+            
+            # Restore selection
+            $managedAppsList = $script:Window.FindName("ManagedAppsList")
+            for ($i = 0; $i -lt $managedAppsList.Items.Count; $i++) {
+                if ($managedAppsList.Items[$i] -eq $dropData) {
+                    $managedAppsList.SelectedIndex = $i
+                    break
+                }
+            }
+            
+            $e.Handled = $true
+        } catch {
+            Write-Warning "Failed to handle drop for managed apps list: $($_.Exception.Message)"
+        }
     }
 
     # Handle platform selection changed
@@ -690,24 +931,14 @@
 
         # Only proceed if position actually changes
         if ($newIndex -ne $currentIndex) {
-            # Create a new array with the item moved
-            $newOrder = @($currentOrder)
-            $gameToMove = $newOrder[$currentIndex]
-            $newOrder = $newOrder | Where-Object { $_ -ne $gameToMove }
-
-            # Insert at new position
-            if ($newIndex -eq 0) {
-                $newOrder = @($gameToMove) + $newOrder
-            } elseif ($newIndex -ge $newOrder.Count) {
-                $newOrder = $newOrder + @($gameToMove)
-            } else {
-                $beforeItems = $newOrder[0..($newIndex - 1)]
-                $afterItems = $newOrder[$newIndex..($newOrder.Count - 1)]
-                $newOrder = $beforeItems + @($gameToMove) + $afterItems
-            }
+            # Use the shared reorder helper method
+            $newOrder = $this.ReorderItems($currentOrder, $currentIndex, $newIndex)
 
             # Update the configuration
             $this.stateManager.ConfigData.games._order = $newOrder
+            
+            # Mark as modified
+            $this.stateManager.SetModified()
 
             # Refresh the games list
             $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
@@ -720,8 +951,6 @@
                     break
                 }
             }
-
-
 
             Write-Verbose "Moved game '$selectedGame' $Direction (from index $currentIndex to $newIndex)"
         }
@@ -893,24 +1122,14 @@
 
         # Only proceed if position actually changes
         if ($newIndex -ne $currentIndex) {
-            # Create a new array with the item moved
-            $newOrder = @($currentOrder)
-            $appToMove = $newOrder[$currentIndex]
-            $newOrder = $newOrder | Where-Object { $_ -ne $appToMove }
-
-            # Insert at new position
-            if ($newIndex -eq 0) {
-                $newOrder = @($appToMove) + $newOrder
-            } elseif ($newIndex -ge $newOrder.Count) {
-                $newOrder = $newOrder + @($appToMove)
-            } else {
-                $beforeItems = $newOrder[0..($newIndex - 1)]
-                $afterItems = $newOrder[$newIndex..($newOrder.Count - 1)]
-                $newOrder = $beforeItems + @($appToMove) + $afterItems
-            }
+            # Use the shared reorder helper method
+            $newOrder = $this.ReorderItems($currentOrder, $currentIndex, $newIndex)
 
             # Update the configuration
             $this.stateManager.ConfigData.managedApps._order = $newOrder
+            
+            # Mark as modified
+            $this.stateManager.SetModified()
 
             # Refresh the managed apps list
             $this.uiManager.UpdateManagedAppsList($this.stateManager.ConfigData)
@@ -2084,7 +2303,16 @@
             } else { Write-Verbose "MainTabControl not found" }
 
             # --- Game Settings Tab ---
-            $gamesListCtrl = $this.uiManager.Window.FindName("GamesList"); if ($gamesListCtrl) { $gamesListCtrl.add_SelectionChanged({ $self.HandleGameSelectionChanged() }.GetNewClosure()) } else { Write-Verbose "GamesList not found" }
+            $gamesListCtrl = $this.uiManager.Window.FindName("GamesList")
+            if ($gamesListCtrl) {
+                $gamesListCtrl.add_SelectionChanged({ $self.HandleGameSelectionChanged() }.GetNewClosure())
+                # Register drag and drop handlers for GamesList
+                $gamesListCtrl.add_PreviewMouseLeftButtonDown({ param($s, $e) $self.HandleListBoxPreviewMouseLeftButtonDown($s, $e) }.GetNewClosure())
+                $gamesListCtrl.add_MouseMove({ param($s, $e) $self.HandleListBoxMouseMove($s, $e) }.GetNewClosure())
+                $gamesListCtrl.add_Drop({ param($s, $e) $self.HandleGamesListDrop($s, $e) }.GetNewClosure())
+            } else {
+                Write-Verbose "GamesList not found"
+            }
             $platformCombo = $this.uiManager.Window.FindName("PlatformComboBox"); if ($platformCombo) { $platformCombo.add_SelectionChanged({ $self.HandlePlatformSelectionChanged() }.GetNewClosure()) } else { Write-Verbose "PlatformComboBox not found" }
 
             # Validation event handlers for Game ID
@@ -2130,7 +2358,16 @@
             $this.uiManager.Window.FindName("OpenVTubeStudioTabButton").add_Click({ $self.HandleOpenIntegrationTab("VTubeStudio") }.GetNewClosure())
 
             # --- Managed Apps Tab ---
-            $this.uiManager.Window.FindName("ManagedAppsList").add_SelectionChanged({ $self.HandleAppSelectionChanged() }.GetNewClosure())
+            $managedAppsListCtrl = $this.uiManager.Window.FindName("ManagedAppsList")
+            if ($managedAppsListCtrl) {
+                $managedAppsListCtrl.add_SelectionChanged({ $self.HandleAppSelectionChanged() }.GetNewClosure())
+                # Register drag and drop handlers for ManagedAppsList
+                $managedAppsListCtrl.add_PreviewMouseLeftButtonDown({ param($s, $e) $self.HandleListBoxPreviewMouseLeftButtonDown($s, $e) }.GetNewClosure())
+                $managedAppsListCtrl.add_MouseMove({ param($s, $e) $self.HandleListBoxMouseMove($s, $e) }.GetNewClosure())
+                $managedAppsListCtrl.add_Drop({ param($s, $e) $self.HandleManagedAppsListDrop($s, $e) }.GetNewClosure())
+            } else {
+                Write-Verbose "ManagedAppsList not found"
+            }
             $this.uiManager.Window.FindName("AddAppButton").add_Click({ $self.HandleAddApp() }.GetNewClosure())
             $this.uiManager.Window.FindName("DuplicateAppButton").add_Click({ $self.HandleDuplicateApp() }.GetNewClosure())
             $this.uiManager.Window.FindName("DeleteAppButton").add_Click({ $self.HandleDeleteApp() }.GetNewClosure())

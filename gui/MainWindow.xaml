@@ -191,7 +191,14 @@
                                 <ListBox
                                     x:Name="GamesList"
                                     Grid.Row="1"
-                                    Margin="0,5,0,5"/>
+                                    Margin="0,5,0,5"
+                                    AllowDrop="True">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="AllowDrop" Value="True"/>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                </ListBox>
                                 <StackPanel
                                     Grid.Row="2"
                                     Orientation="Vertical"
@@ -751,7 +758,14 @@
                                 <ListBox
                                     x:Name="ManagedAppsList"
                                     Grid.Row="1"
-                                    Margin="0,5,0,5"/>
+                                    Margin="0,5,0,5"
+                                    AllowDrop="True">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="AllowDrop" Value="True"/>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                </ListBox>
                                 <StackPanel
                                     Grid.Row="2"
                                     Orientation="Vertical"
