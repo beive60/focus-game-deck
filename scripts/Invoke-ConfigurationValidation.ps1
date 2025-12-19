@@ -175,6 +175,3 @@ function Invoke-ConfigurationValidation {
 
     return $errors
 }
-
-# Export the function
-Export-ModuleMember -Function Invoke-ConfigurationValidation
