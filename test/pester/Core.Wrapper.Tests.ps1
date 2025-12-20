@@ -47,4 +47,13 @@ Describe "Core Functionality Tests" -Tag "Core" {
             $output | Should -Not -Match "FAIL.*Expected.*platforms" -Because "Multi-platform tests should not have critical failures"
         }
     }
+
+    Context "Configuration Validation" {
+        It "should pass configuration validation tests" {
+            $testScript = Join-Path -Path $projectRoot -ChildPath "test/scripts/core/Test-Core-ConfigValidation.ps1"
+            $null = & $testScript *>&1
+            $exitCode = $LASTEXITCODE
+            $exitCode | Should -Be 0 -Because "Configuration validation test should pass (exit code: $exitCode)"
+        }
+    }
 }

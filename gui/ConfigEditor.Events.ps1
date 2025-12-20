@@ -1696,10 +1696,12 @@
         $gameIdTextBox = $script:Window.FindName("GameIdTextBox")
         $gameId = $gameIdTextBox.Text.Trim()
 
-        if ([string]::IsNullOrWhiteSpace($gameId)) {
-            $this.uiManager.SetInputError("GameIdTextBox", $this.uiManager.GetLocalizedMessage("gameIdRequired"))
-        } elseif ($gameId -notmatch '^[a-zA-Z0-9_-]+$') {
-            $this.uiManager.SetInputError("GameIdTextBox", $this.uiManager.GetLocalizedMessage("gameIdInvalidCharacters"))
+        # Use centralized validation module
+        $errors = Invoke-ConfigurationValidation -GameId $gameId
+        $gameIdError = $errors | Where-Object { $_.Control -eq 'GameIdTextBox' }
+        
+        if ($gameIdError) {
+            $this.uiManager.SetInputError("GameIdTextBox", $this.uiManager.GetLocalizedMessage($gameIdError.Key))
         } else {
             $this.uiManager.SetInputError("GameIdTextBox", "")
         }
@@ -1708,16 +1710,19 @@
     # Validate Steam App ID on blur
     [void] ValidateSteamAppIdOnBlur() {
         $platformCombo = $script:Window.FindName("PlatformComboBox")
+        $platform = if ($platformCombo.SelectedItem) { $platformCombo.SelectedItem.Tag } else { "" }
 
         # Only validate if platform is Steam
-        if ($platformCombo.SelectedItem -and $platformCombo.SelectedItem.Tag -eq "steam") {
+        if ($platform -eq "steam") {
             $steamAppIdTextBox = $script:Window.FindName("SteamAppIdTextBox")
             $steamAppId = $steamAppIdTextBox.Text.Trim()
 
-            if ([string]::IsNullOrWhiteSpace($steamAppId)) {
-                $this.uiManager.SetInputError("SteamAppIdTextBox", $this.uiManager.GetLocalizedMessage("steamAppIdRequired"))
-            } elseif ($steamAppId -notmatch '^\d{7}$') {
-                $this.uiManager.SetInputError("SteamAppIdTextBox", $this.uiManager.GetLocalizedMessage("steamAppIdMust7Digits"))
+            # Use centralized validation module
+            $errors = Invoke-ConfigurationValidation -Platform $platform -SteamAppId $steamAppId
+            $steamError = $errors | Where-Object { $_.Control -eq 'SteamAppIdTextBox' }
+            
+            if ($steamError) {
+                $this.uiManager.SetInputError("SteamAppIdTextBox", $this.uiManager.GetLocalizedMessage($steamError.Key))
             } else {
                 $this.uiManager.SetInputError("SteamAppIdTextBox", "")
             }
@@ -1740,16 +1745,19 @@
     # Validate Epic Game ID on blur
     [void] ValidateEpicGameIdOnBlur() {
         $platformCombo = $script:Window.FindName("PlatformComboBox")
+        $platform = if ($platformCombo.SelectedItem) { $platformCombo.SelectedItem.Tag } else { "" }
 
         # Only validate if platform is Epic
-        if ($platformCombo.SelectedItem -and $platformCombo.SelectedItem.Tag -eq "epic") {
+        if ($platform -eq "epic") {
             $epicGameIdTextBox = $script:Window.FindName("EpicGameIdTextBox")
             $epicGameId = $epicGameIdTextBox.Text.Trim()
 
-            if ([string]::IsNullOrWhiteSpace($epicGameId)) {
-                $this.uiManager.SetInputError("EpicGameIdTextBox", $this.uiManager.GetLocalizedMessage("epicGameIdRequired"))
-            } elseif ($epicGameId -notmatch '^(com\.epicgames\.launcher://)?apps/') {
-                $this.uiManager.SetInputError("EpicGameIdTextBox", $this.uiManager.GetLocalizedMessage("epicGameIdInvalidFormat"))
+            # Use centralized validation module
+            $errors = Invoke-ConfigurationValidation -Platform $platform -EpicGameId $epicGameId
+            $epicError = $errors | Where-Object { $_.Control -eq 'EpicGameIdTextBox' }
+            
+            if ($epicError) {
+                $this.uiManager.SetInputError("EpicGameIdTextBox", $this.uiManager.GetLocalizedMessage($epicError.Key))
             } else {
                 $this.uiManager.SetInputError("EpicGameIdTextBox", "")
             }
@@ -1767,16 +1775,19 @@
     # Validate Executable Path on blur
     [void] ValidateExecutablePathOnBlur() {
         $platformCombo = $script:Window.FindName("PlatformComboBox")
+        $platform = if ($platformCombo.SelectedItem) { $platformCombo.SelectedItem.Tag } else { "" }
 
         # Only validate if platform is standalone or direct
-        if ($platformCombo.SelectedItem -and ($platformCombo.SelectedItem.Tag -eq "standalone" -or $platformCombo.SelectedItem.Tag -eq "direct")) {
+        if ($platform -in 'standalone', 'direct') {
             $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
             $executablePath = $executablePathTextBox.Text.Trim()
 
-            if ([string]::IsNullOrWhiteSpace($executablePath)) {
-                $this.uiManager.SetInputError("ExecutablePathTextBox", $this.uiManager.GetLocalizedMessage("executablePathRequired"))
-            } elseif (-not (Test-Path -Path $executablePath -PathType Leaf)) {
-                $this.uiManager.SetInputError("ExecutablePathTextBox", $this.uiManager.GetLocalizedMessage("executablePathNotFound"))
+            # Use centralized validation module
+            $errors = Invoke-ConfigurationValidation -Platform $platform -ExecutablePath $executablePath
+            $pathError = $errors | Where-Object { $_.Control -eq 'ExecutablePathTextBox' }
+            
+            if ($pathError) {
+                $this.uiManager.SetInputError("ExecutablePathTextBox", $this.uiManager.GetLocalizedMessage($pathError.Key))
             } else {
                 $this.uiManager.SetInputError("ExecutablePathTextBox", "")
             }

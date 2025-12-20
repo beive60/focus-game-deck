@@ -62,6 +62,7 @@
         "DPAPI",
         "epicgames",
         "Finalizers",
+        "Firestore",
         "hashtables",
         "HKCU",
         "LASTEXITCODE",

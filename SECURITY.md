@@ -231,17 +231,14 @@ To verify a log file with chain-of-trust authentication:
 1. **Obtain Certificate ID** from user
 2. **Query Firebase record** using Certificate ID
 3. **Extract authentication data**:
-
-- `logHash`: Used for log integrity verification
-- `appSignatureHash`: Used for application authenticity verification
-- `appVersion`: Used to locate official registry entry
-
+   - `logHash`: Used for log integrity verification
+   - `appSignatureHash`: Used for application authenticity verification
+   - `appVersion`: Used to locate official registry entry
 4. **Verify log integrity**: Calculate SHA256 of log file, compare with `logHash`
 5. **Verify application authenticity**:
-
-- Look up `appVersion` in `docs/official_signature_hashes.json`
-- Find the matching executable entry
-- Compare `appSignatureHash` with registry entry (EV or OV certificate)
+   - Look up `appVersion` in `docs/official_signature_hashes.json`
+   - Find the matching executable entry
+   - Compare `appSignatureHash` with registry entry (EV or OV certificate)
 
 6. **Assessment**:
 
