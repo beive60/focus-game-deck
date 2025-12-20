@@ -3,6 +3,7 @@
 > **DEPRECATED**: This document has been consolidated into [architecture.md](architecture.md) and [build-system.md](build-system.md) as of 2025-12-07 to reduce documentation duplication, as the content was already comprehensively covered in the architecture and build system documentation.
 >
 > Please refer to:
+>
 > - [Architecture Guide](architecture.md) - For multi-executable architecture design and rationale
 > - [Build System Guide](build-system.md) - For build process, tool scripts, and SRP refactoring details
 > - [v3 Migration Guide](v3-migration-guide.md) - For migration instructions and testing procedures
@@ -436,6 +437,146 @@ Focus-Game-Deck.exe --config
 3. **Development**:
    - Original scripts (Main-Router.ps1, Invoke-FocusGameDeck.ps1, ConfigEditor.ps1) still work for development
    - Bundled versions only used for compilation
+
+## ps2exe Coding Guidelines
+
+When writing PowerShell code intended for ps2exe compilation, follow these critical guidelines to avoid runtime issues:
+
+### 1. Here-String Variable Expansion
+
+**Problem**: Double-quoted here-strings (`@"..."@`) expand variables at **build time**, not runtime.
+
+**Example of the Issue**:
+
+```powershell
+# This XAML template uses $title as a placeholder
+$xamlTemplate = @"
+<Window Title="$title">
+  <TextBlock Text="$message"/>
+</Window>
+"@
+
+# In ps2exe: $title and $message are expanded during compilation
+# If these variables don't exist at build time, they become empty strings
+# Result: <Window Title=""> <TextBlock Text=""/>
+```
+
+**Solution**: Always use **single-quoted here-strings** (`@'...'@`) for templates with runtime placeholders:
+
+```powershell
+# Correct approach for templates
+$xamlTemplate = @'
+<Window Title="$title">
+  <TextBlock Text="$message"/>
+</Window>
+'@
+
+# Now perform runtime replacement
+$xamlTemplate = $xamlTemplate.Replace('$title', $actualTitle)
+$xamlTemplate = $xamlTemplate.Replace('$message', $actualMessage)
+```
+
+**When to Use Each**:
+
+- **Double-quoted** (`@"..."@`): When you want variable expansion at build time
+- **Single-quoted** (`@'...'@`): When you need literal `$` symbols preserved for runtime replacement
+
+**Real-World Example**: The `Embed-XamlResources.ps1` script was fixed to use single-quoted here-strings to preserve XAML placeholders like `$title`, `$message`, etc., allowing runtime replacement in the compiled executable.
+
+### 2. Type Reference String Hiding
+
+**Problem**: ps2exe parses PowerShell code at **compile time**. Direct type references like `[System.Windows.Controls.ListBox]` cause parse errors if the assembly isn't loaded during compilation.
+
+**Example of the Issue**:
+
+```powershell
+# This fails in ps2exe if WPF assemblies aren't loaded at compile time
+function Get-ListBoxItems {
+    param([System.Windows.Controls.ListBox]$listBox)
+    # Error: Unable to find type [System.Windows.Controls.ListBox]
+}
+
+$item = $sender -as [System.Windows.Controls.ListBoxItem]
+# Error: Unable to find type [System.Windows.Controls.ListBoxItem]
+```
+
+**Solution**: Use **string-based type resolution** to defer type lookup to runtime:
+
+```powershell
+# Correct approach - type name as string, resolved at runtime
+function Get-ListBoxItems {
+    $listBoxType = "System.Windows.Controls.ListBox" -as [type]
+    param($listBox)  # No type constraint
+
+    if ($listBox.GetType().FullName -ne $listBoxType.FullName) {
+        throw "Expected ListBox"
+    }
+}
+
+# String-based casting
+$listBoxItemType = "System.Windows.Controls.ListBoxItem" -as [type]
+$item = $sender.GetType().FullName -eq $listBoxItemType.FullName ? $sender : $null
+```
+
+**Pattern for WPF/Complex Types**:
+
+```powershell
+# Store type as variable at the beginning of functions
+$visualTreeHelperType = "System.Windows.Media.VisualTreeHelper" -as [type]
+$listBoxItemType = "System.Windows.Controls.ListBoxItem" -as [type]
+
+# Use the type variable instead of direct type reference
+$child = $visualTreeHelperType::GetChild($visual, $i)
+
+# Type checking
+if ($element.GetType().FullName -eq $listBoxItemType.FullName) {
+    # Element is a ListBoxItem
+}
+```
+
+**When This Matters**:
+
+- WPF applications (PresentationFramework, PresentationCore types)
+- Windows Forms applications
+- Any external assembly loaded at runtime
+- PowerShell classes that reference external types
+
+**Real-World Example**: The ConfigEditor drag-and-drop implementation was refactored to hide all WPF type references (`ListBox`, `ListBoxItem`, `VisualTreeHelper`, `Adorner`, etc.) as strings, allowing the code to compile successfully with ps2exe.
+
+### 3. Assembly Loading in ps2exe
+
+**Best Practice**: Load assemblies explicitly before using types:
+
+```powershell
+# Load assemblies at the beginning
+Add-Type -AssemblyName PresentationFramework
+Add-Type -AssemblyName PresentationCore
+Add-Type -AssemblyName WindowsBase
+
+# Then use string-based type resolution
+$windowType = "System.Windows.Window" -as [type]
+```
+
+**Note**: Even with explicit loading, string-based type resolution is still recommended to avoid parse-time errors.
+
+### 4. Testing for ps2exe Compatibility
+
+Always test code in both modes:
+
+```powershell
+# Development mode (scripts)
+powershell -ExecutionPolicy Bypass -File ./gui/ConfigEditor.ps1
+
+# Bundled mode (executable)
+./build-tools/Release-Manager.ps1 -Development
+./release/Focus-Game-Deck.exe
+```
+
+If code works in development but fails in the executable, check for:
+
+1. Double-quoted here-strings with runtime variables
+2. Direct type references to external assemblies
+3. Path assumptions (ps2exe extracts to flat temp directory)
 
 ## Compliance with Architecture Specification
 

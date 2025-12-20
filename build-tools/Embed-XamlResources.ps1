@@ -88,8 +88,10 @@ function Convert-XamlFileToVariable {
             $escapedContent = $xamlContent -replace "'", "''"
             $variableDefinition = "`$$variableName = @'`n$escapedContent`n'@"
         } else {
-            # Use standard double-quoted here-string
-            $variableDefinition = "`$$variableName = @`"`n$xamlContent`n`"@"
+            # Always use single-quoted here-string to preserve $ symbols for runtime replacement
+            # Double-quoted here-strings would expand $variables at build time, causing placeholders to become empty
+            $escapedContent = $xamlContent -replace "'", "''"
+            $variableDefinition = "`$$variableName = @'`n$escapedContent`n'@"
         }
 
         Write-Verbose "  Variable name: $variableName"

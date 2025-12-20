@@ -3,10 +3,12 @@
     $stateManager
     [string]$appRoot
     [bool]$IsExecutable
-    
+
     # Drag and drop state
     [object]$dragStartPoint = $null
     [object]$draggedItem = $null
+    [object]$currentAdorner = $null
+    [object]$adornerLayer = $null
 
     ConfigEditorEvents($ui, $state, [string]$appRoot, [bool]$IsExecutable) {
         $this.uiManager = $ui
@@ -120,7 +122,7 @@
             Write-Warning "Invalid source index: $sourceIndex (array size: $($currentOrder.Count))"
             return $currentOrder
         }
-        
+
         if ($sourceIndex -eq $targetIndex) {
             return $currentOrder
         }
@@ -128,22 +130,22 @@
         # Create a new ArrayList for easier manipulation
         $newOrder = [System.Collections.ArrayList]::new($currentOrder)
         $itemToMove = $newOrder[$sourceIndex]
-        
+
         # Remove the item from source position by index
         $newOrder.RemoveAt($sourceIndex)
-        
+
         # Adjust target index if removing the item shifted positions
         $adjustedTargetIndex = $targetIndex
         if ($sourceIndex -lt $targetIndex) {
             $adjustedTargetIndex = $targetIndex - 1
         }
-        
+
         # Clamp adjusted target index to valid range
         $adjustedTargetIndex = [Math]::Max(0, [Math]::Min($adjustedTargetIndex, $newOrder.Count))
-        
+
         # Insert at new position
         $newOrder.Insert($adjustedTargetIndex, $itemToMove)
-        
+
         # Convert back to array
         return @($newOrder)
     }
@@ -151,14 +153,20 @@
     # Helper method to get the ListBoxItem under the mouse pointer
     [object] GetListBoxItemUnderMouse([object]$listBox, [object]$position) {
         try {
-            $hitTestResult = [System.Windows.Media.VisualTreeHelper]::HitTest($listBox, $position)
+            $visualTreeHelperType = "System.Windows.Media.VisualTreeHelper" -as [type]
+            $listBoxItemType = "System.Windows.Controls.ListBoxItem" -as [type]
+
+            $hitTestResult = $visualTreeHelperType::HitTest($listBox, $position)
             if ($hitTestResult) {
                 $element = $hitTestResult.VisualHit
                 # Walk up the visual tree to find the ListBoxItem
-                while ($element -and $element -isnot [System.Windows.Controls.ListBoxItem]) {
-                    $element = [System.Windows.Media.VisualTreeHelper]::GetParent($element)
+                while ($element -and $element.GetType().FullName -ne 'System.Windows.Controls.ListBoxItem') {
+                    $element = $visualTreeHelperType::GetParent($element)
                 }
-                return $element
+                # Verify the element is actually a ListBoxItem
+                if ($element -and $element.GetType().FullName -eq 'System.Windows.Controls.ListBoxItem') {
+                    return $element
+                }
             }
         } catch {
             Write-Verbose "Failed to get ListBoxItem under mouse: $($_.Exception.Message)"
@@ -166,17 +174,60 @@
         return $null
     }
 
+    # Helper method to remove the current insertion indicator adorner
+    [void] RemoveInsertionIndicator() {
+        if ($this.currentAdorner -and $this.adornerLayer) {
+            try {
+                $this.adornerLayer.Remove($this.currentAdorner)
+                $this.currentAdorner = $null
+                $this.adornerLayer = $null
+                Write-Verbose "Removed insertion indicator adorner"
+            } catch {
+                Write-Verbose "Failed to remove adorner: $($_.Exception.Message)"
+            }
+        }
+    }
+
+    # Helper method to show insertion indicator at the specified position
+    [void] ShowInsertionIndicator([object]$targetItem, [bool]$insertAbove) {
+        # Remove existing adorner first
+        $this.RemoveInsertionIndicator()
+
+        try {
+            # Get the adorner layer
+            $adornerLayerType = "System.Windows.Documents.AdornerLayer" -as [type]
+            $layer = $adornerLayerType::GetAdornerLayer($targetItem)
+            if (-not $layer) {
+                Write-Verbose "Could not get adorner layer for target item"
+                return
+            }
+
+            # Create new insertion indicator adorner
+            $adorner = New-Object InsertionIndicatorAdorner($targetItem, $insertAbove)
+            $layer.Add($adorner)
+
+            # Store references for cleanup
+            $this.currentAdorner = $adorner
+            $this.adornerLayer = $layer
+
+            Write-Verbose "Showing insertion indicator (insertAbove: $insertAbove)"
+        } catch {
+            Write-Verbose "Failed to show insertion indicator: $($_.Exception.Message)"
+        }
+    }
+
     # Handle drag start for ListBox items
     [void] HandleListBoxPreviewMouseLeftButtonDown([object]$sender, [object]$e) {
         $this.dragStartPoint = $e.GetPosition($null)
         $this.draggedItem = $null
-        
+
         # Find the ListBoxItem that was clicked
+        $visualTreeHelperType = "System.Windows.Media.VisualTreeHelper" -as [type]
         $element = $e.OriginalSource
-        while ($element -and $element -isnot [System.Windows.Controls.ListBoxItem]) {
-            $element = [System.Windows.Media.VisualTreeHelper]::GetParent($element)
+        while ($element -and $element.GetType().FullName -ne 'System.Windows.Controls.ListBoxItem') {
+            $element = $visualTreeHelperType::GetParent($element)
         }
-        
+
         if ($element) {
             $this.draggedItem = $element
         }
@@ -187,18 +238,18 @@
         if ($null -eq $this.dragStartPoint -or $null -eq $this.draggedItem) {
             return
         }
-        
+
         # Check if mouse moved beyond threshold
         $mousePosition = $e.GetPosition($null)
         $diff = $this.dragStartPoint - $mousePosition
-        
+
         $dragThreshold = 5
         if ([Math]::Abs($diff.X) -gt $dragThreshold -or [Math]::Abs($diff.Y) -gt $dragThreshold) {
             try {
                 # Start drag operation
                 $listBox = $sender
                 $draggedData = $this.draggedItem.Content
-                
+
                 # Validate dragged data
                 if ([string]::IsNullOrEmpty($draggedData)) {
                     Write-Verbose "Dragged item has no content, aborting drag"
@@ -206,13 +257,16 @@
                     $this.draggedItem = $null
                     return
                 }
-                
+
                 Write-Verbose "Starting drag operation for item: $draggedData"
-                
-                [System.Windows.DragDrop]::DoDragDrop(
+
+                $dragDropType = "System.Windows.DragDrop" -as [type]
+                $dragDropEffectsType = "System.Windows.DragDropEffects" -as [type]
+
+                $dragDropType::DoDragDrop(
                     $this.draggedItem,
                     $draggedData,
-                    [System.Windows.DragDropEffects]::Move
+                    $dragDropEffectsType::Move
                 )
             } catch {
                 Write-Verbose "Failed to start drag operation: $($_.Exception.Message)"
@@ -223,60 +277,119 @@
         }
     }
 
+    # Handle DragOver event for GamesList
+    [void] HandleGamesListDragOver([object]$sender, [object]$e) {
+        $dragDropEffectsType = "System.Windows.DragDropEffects" -as [type]
+
+        try {
+            # Check if we have valid drag data
+            $dragData = $e.Data.GetData([string])
+            if (-not $dragData) {
+                $e.Effects = $dragDropEffectsType::None
+                $this.RemoveInsertionIndicator()
+                return
+            }
+
+            # Get the target item under mouse
+            $mousePosition = $e.GetPosition($sender)
+            $targetItem = $this.GetListBoxItemUnderMouse($sender, $mousePosition)
+
+            if ($targetItem) {
+                # Determine if we should insert above or below
+                $itemPosition = $e.GetPosition($targetItem)
+                $itemHeight = $targetItem.ActualHeight
+                $insertAbove = $itemPosition.Y -lt ($itemHeight / 2)
+
+                # Show insertion indicator
+                $this.ShowInsertionIndicator($targetItem, $insertAbove)
+
+                $e.Effects = $dragDropEffectsType::Move
+            } else {
+                # No target item, allow drop at the end
+                $this.RemoveInsertionIndicator()
+                $e.Effects = $dragDropEffectsType::Move
+            }
+
+            $e.Handled = $true
+        } catch {
+            Write-Verbose "Failed to handle DragOver for games list: $($_.Exception.Message)"
+            $e.Effects = $dragDropEffectsType::None
+        }
+    }
+
+    # Handle DragLeave event for GamesList
+    [void] HandleGamesListDragLeave([object]$sender, [object]$e) {
+        $this.RemoveInsertionIndicator()
+    }
+
     # Handle drop event for GamesList
     [void] HandleGamesListDrop([object]$sender, [object]$e) {
+        # Remove insertion indicator
+        $this.RemoveInsertionIndicator()
+
         try {
             $dropData = $e.Data.GetData([string])
             if (-not $dropData) {
                 return
             }
-            
+
             Write-Verbose "Drop event for game: $dropData"
-            
+
             # Ensure games order exists
             if (-not $this.stateManager.ConfigData.games._order) {
                 $this.stateManager.InitializeGameOrder()
             }
-            
+
             $currentOrder = $this.stateManager.ConfigData.games._order
             $sourceIndex = $currentOrder.IndexOf($dropData)
-            
+
             if ($sourceIndex -eq -1) {
                 Write-Warning "Dropped game not found in order array"
                 return
             }
-            
+
             # Get the target position
             $mousePosition = $e.GetPosition($sender)
             $targetItem = $this.GetListBoxItemUnderMouse($sender, $mousePosition)
-            
+
             $targetIndex = if ($targetItem) {
                 $targetContent = $targetItem.Content
-                $currentOrder.IndexOf($targetContent)
+                $baseIndex = $currentOrder.IndexOf($targetContent)
+
+                # Determine if we should insert above or below
+                $itemPosition = $e.GetPosition($targetItem)
+                $itemHeight = $targetItem.ActualHeight
+                $insertAbove = $itemPosition.Y -lt ($itemHeight / 2)
+
+                if ($insertAbove) {
+                    $baseIndex
+                } else {
+                    $baseIndex + 1
+                }
             } else {
                 # Dropped outside of items, place at end (after last item)
                 $currentOrder.Count
             }
-            
+
             if ($targetIndex -eq -1) {
                 # If target item not found in order, place at end
                 $targetIndex = $currentOrder.Count
             }
-            
+
             Write-Verbose "Reordering game from index $sourceIndex to $targetIndex"
-            
+
             # Reorder the items
             $newOrder = $this.ReorderItems($currentOrder, $sourceIndex, $targetIndex)
-            
+
             # Update the configuration
             $this.stateManager.ConfigData.games._order = $newOrder
-            
+
             # Mark as modified
             $this.stateManager.SetModified()
-            
+
             # Refresh the games list
             $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
-            
+
             # Restore selection
             $gamesList = $script:Window.FindName("GamesList")
             for ($i = 0; $i -lt $gamesList.Items.Count; $i++) {
@@ -285,67 +398,126 @@
                     break
                 }
             }
-            
+
             $e.Handled = $true
         } catch {
             Write-Warning "Failed to handle drop for games list: $($_.Exception.Message)"
         }
     }
 
+    # Handle DragOver event for ManagedAppsList
+    [void] HandleManagedAppsListDragOver([object]$sender, [object]$e) {
+        $dragDropEffectsType = "System.Windows.DragDropEffects" -as [type]
+
+        try {
+            # Check if we have valid drag data
+            $dragData = $e.Data.GetData([string])
+            if (-not $dragData) {
+                $e.Effects = $dragDropEffectsType::None
+                $this.RemoveInsertionIndicator()
+                return
+            }
+
+            # Get the target item under mouse
+            $mousePosition = $e.GetPosition($sender)
+            $targetItem = $this.GetListBoxItemUnderMouse($sender, $mousePosition)
+
+            if ($targetItem) {
+                # Determine if we should insert above or below
+                $itemPosition = $e.GetPosition($targetItem)
+                $itemHeight = $targetItem.ActualHeight
+                $insertAbove = $itemPosition.Y -lt ($itemHeight / 2)
+
+                # Show insertion indicator
+                $this.ShowInsertionIndicator($targetItem, $insertAbove)
+
+                $e.Effects = $dragDropEffectsType::Move
+            } else {
+                # No target item, allow drop at the end
+                $this.RemoveInsertionIndicator()
+                $e.Effects = $dragDropEffectsType::Move
+            }
+
+            $e.Handled = $true
+        } catch {
+            Write-Verbose "Failed to handle DragOver for managed apps list: $($_.Exception.Message)"
+            $e.Effects = $dragDropEffectsType::None
+        }
+    }
+
+    # Handle DragLeave event for ManagedAppsList
+    [void] HandleManagedAppsListDragLeave([object]$sender, [object]$e) {
+        $this.RemoveInsertionIndicator()
+    }
+
     # Handle drop event for ManagedAppsList
     [void] HandleManagedAppsListDrop([object]$sender, [object]$e) {
+        # Remove insertion indicator
+        $this.RemoveInsertionIndicator()
+
         try {
             $dropData = $e.Data.GetData([string])
             if (-not $dropData) {
                 return
             }
-            
+
             Write-Verbose "Drop event for app: $dropData"
-            
+
             # Ensure apps order exists
             if (-not $this.stateManager.ConfigData.managedApps._order) {
                 $this.stateManager.InitializeAppOrder()
             }
-            
+
             $currentOrder = $this.stateManager.ConfigData.managedApps._order
             $sourceIndex = $currentOrder.IndexOf($dropData)
-            
+
             if ($sourceIndex -eq -1) {
                 Write-Warning "Dropped app not found in order array"
                 return
             }
-            
+
             # Get the target position
             $mousePosition = $e.GetPosition($sender)
             $targetItem = $this.GetListBoxItemUnderMouse($sender, $mousePosition)
-            
+
             $targetIndex = if ($targetItem) {
                 $targetContent = $targetItem.Content
-                $currentOrder.IndexOf($targetContent)
+                $baseIndex = $currentOrder.IndexOf($targetContent)
+
+                if ($baseIndex -eq -1) {
+                    # If target item not found in order, place at end of list
+                    $currentOrder.Count
+                } else {
+                    # Determine if we should insert above or below
+                    $itemPosition = $e.GetPosition($targetItem)
+                    $itemHeight = $targetItem.ActualHeight
+                    $insertAbove = $itemPosition.Y -lt ($itemHeight / 2)
+
+                    if ($insertAbove) {
+                        $baseIndex
+                    } else {
+                        $baseIndex + 1
+                    }
+                }
             } else {
                 # Dropped outside of items, place at end of list
                 $currentOrder.Count
             }
-            
-            if ($targetIndex -eq -1) {
-                # If target item not found in order, place at end of list
-                $targetIndex = $currentOrder.Count
-            }
-            
+
             Write-Verbose "Reordering app from index $sourceIndex to $targetIndex"
-            
+
             # Reorder the items
             $newOrder = $this.ReorderItems($currentOrder, $sourceIndex, $targetIndex)
-            
+
             # Update the configuration
             $this.stateManager.ConfigData.managedApps._order = $newOrder
-            
+
             # Mark as modified
             $this.stateManager.SetModified()
-            
+
             # Refresh the apps list
             $this.uiManager.UpdateManagedAppsList($this.stateManager.ConfigData)
-            
+
             # Restore selection
             $managedAppsList = $script:Window.FindName("ManagedAppsList")
             for ($i = 0; $i -lt $managedAppsList.Items.Count; $i++) {
@@ -354,7 +526,7 @@
                     break
                 }
             }
-            
+
             $e.Handled = $true
         } catch {
             Write-Warning "Failed to handle drop for managed apps list: $($_.Exception.Message)"
@@ -948,7 +1120,7 @@
 
             # Update the configuration
             $this.stateManager.ConfigData.games._order = $newOrder
-            
+
             # Mark as modified
             $this.stateManager.SetModified()
 
@@ -1139,7 +1311,7 @@
 
             # Update the configuration
             $this.stateManager.ConfigData.managedApps._order = $newOrder
-            
+
             # Mark as modified
             $this.stateManager.SetModified()
 
@@ -1564,6 +1736,13 @@
                 $discardAndClose = $this.uiManager.GetLocalizedMessage("discardAndClose")
                 $cancel = $this.uiManager.GetLocalizedMessage("cancelButton")
 
+                Write-Verbose "[DEBUG] Dialog localization values:"
+                Write-Verbose "  title: '$title'"
+                Write-Verbose "  message: '$message'"
+                Write-Verbose "  saveAndClose: '$saveAndClose'"
+                Write-Verbose "  discardAndClose: '$discardAndClose'"
+                Write-Verbose "  cancel: '$cancel'"
+
                 # Create custom dialog window
                 Add-Type -AssemblyName PresentationFramework
 
@@ -1598,17 +1777,19 @@
                 # Expand placeholders in dialog XAML
                 if (-not [string]::IsNullOrWhiteSpace($dialogXaml)) {
                     try {
+                        Write-Verbose "[DEBUG] Original XAML length: $($dialogXaml.Length)"
+                        Write-Verbose "[DEBUG] First 300 chars of original XAML: $($dialogXaml.Substring(0, [Math]::Min(300, $dialogXaml.Length)))"
+
                         # Replace literal tokens like $title in the fragment with the runtime values
-                        $dialogXaml = $dialogXaml -replace '\$title',
-                        ("System.Text.RegularExpressions.Regex" -as [type])::Escape($title)
-                        $dialogXaml = $dialogXaml -replace '\$message',
-                        ("System.Text.RegularExpressions.Regex" -as [type])::Escape($message)
-                        $dialogXaml = $dialogXaml -replace '\$saveAndClose',
-                        ("System.Text.RegularExpressions.Regex" -as [type])::Escape($saveAndClose)
-                        $dialogXaml = $dialogXaml -replace '\$discardAndClose',
-                        ("System.Text.RegularExpressions.Regex" -as [type])::Escape($discardAndClose)
-                        $dialogXaml = $dialogXaml -replace '\$cancel',
-                        ("System.Text.RegularExpressions.Regex" -as [type])::Escape($cancel)
+                        # Use simple string replace instead of regex for better reliability
+                        $dialogXaml = $dialogXaml.Replace('$title', $title)
+                        $dialogXaml = $dialogXaml.Replace('$message', $message)
+                        $dialogXaml = $dialogXaml.Replace('$saveAndClose', $saveAndClose)
+                        $dialogXaml = $dialogXaml.Replace('$discardAndClose', $discardAndClose)
+                        $dialogXaml = $dialogXaml.Replace('$cancel', $cancel)
+
+                        Write-Verbose "[DEBUG] Replaced XAML length: $($dialogXaml.Length)"
+                        Write-Verbose "[DEBUG] First 300 chars of replaced XAML: $($dialogXaml.Substring(0, [Math]::Min(300, $dialogXaml.Length)))"
                     } catch {
                         Write-Warning "Failed to expand placeholders in dialog XAML: $($_.Exception.Message)"
                         $dialogXaml = $null
@@ -1699,7 +1880,7 @@
         # Use centralized validation module
         $errors = Invoke-ConfigurationValidation -GameId $gameId
         $gameIdError = $errors | Where-Object { $_.Control -eq 'GameIdTextBox' }
-        
+
         if ($gameIdError) {
             $this.uiManager.SetInputError("GameIdTextBox", $this.uiManager.GetLocalizedMessage($gameIdError.Key))
         } else {
@@ -1720,7 +1901,7 @@
             # Use centralized validation module
             $errors = Invoke-ConfigurationValidation -Platform $platform -SteamAppId $steamAppId
             $steamError = $errors | Where-Object { $_.Control -eq 'SteamAppIdTextBox' }
-            
+
             if ($steamError) {
                 $this.uiManager.SetInputError("SteamAppIdTextBox", $this.uiManager.GetLocalizedMessage($steamError.Key))
             } else {
@@ -1755,7 +1936,7 @@
             # Use centralized validation module
             $errors = Invoke-ConfigurationValidation -Platform $platform -EpicGameId $epicGameId
             $epicError = $errors | Where-Object { $_.Control -eq 'EpicGameIdTextBox' }
-            
+
             if ($epicError) {
                 $this.uiManager.SetInputError("EpicGameIdTextBox", $this.uiManager.GetLocalizedMessage($epicError.Key))
             } else {
@@ -1785,7 +1966,7 @@
             # Use centralized validation module
             $errors = Invoke-ConfigurationValidation -Platform $platform -ExecutablePath $executablePath
             $pathError = $errors | Where-Object { $_.Control -eq 'ExecutablePathTextBox' }
-            
+
             if ($pathError) {
                 $this.uiManager.SetInputError("ExecutablePathTextBox", $this.uiManager.GetLocalizedMessage($pathError.Key))
             } else {
@@ -2332,6 +2513,8 @@
                 # Register drag and drop handlers for GamesList
                 $gamesListCtrl.add_PreviewMouseLeftButtonDown({ param($s, $e) $self.HandleListBoxPreviewMouseLeftButtonDown($s, $e) }.GetNewClosure())
                 $gamesListCtrl.add_MouseMove({ param($s, $e) $self.HandleListBoxMouseMove($s, $e) }.GetNewClosure())
+                $gamesListCtrl.add_DragOver({ param($s, $e) $self.HandleGamesListDragOver($s, $e) }.GetNewClosure())
+                $gamesListCtrl.add_DragLeave({ param($s, $e) $self.HandleGamesListDragLeave($s, $e) }.GetNewClosure())
                 $gamesListCtrl.add_Drop({ param($s, $e) $self.HandleGamesListDrop($s, $e) }.GetNewClosure())
             } else {
                 Write-Verbose "GamesList not found"
@@ -2387,6 +2570,8 @@
                 # Register drag and drop handlers for ManagedAppsList
                 $managedAppsListCtrl.add_PreviewMouseLeftButtonDown({ param($s, $e) $self.HandleListBoxPreviewMouseLeftButtonDown($s, $e) }.GetNewClosure())
                 $managedAppsListCtrl.add_MouseMove({ param($s, $e) $self.HandleListBoxMouseMove($s, $e) }.GetNewClosure())
+                $managedAppsListCtrl.add_DragOver({ param($s, $e) $self.HandleManagedAppsListDragOver($s, $e) }.GetNewClosure())
+                $managedAppsListCtrl.add_DragLeave({ param($s, $e) $self.HandleManagedAppsListDragLeave($s, $e) }.GetNewClosure())
                 $managedAppsListCtrl.add_Drop({ param($s, $e) $self.HandleManagedAppsListDrop($s, $e) }.GetNewClosure())
             } else {
                 Write-Verbose "ManagedAppsList not found"
