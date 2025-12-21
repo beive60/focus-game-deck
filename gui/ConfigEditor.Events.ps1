@@ -624,7 +624,7 @@
 
         # Check if mouse moved beyond threshold
         $mousePosition = $e.GetPosition($null)
-        $diff = [System.Windows.Point]::Subtract($mousePosition, $this.dragStartPoint)
+        $diff = $this.dragStartPoint - $mousePosition
 
         $dragThreshold = 5
         if ([Math]::Abs($diff.X) -gt $dragThreshold -or [Math]::Abs($diff.Y) -gt $dragThreshold) {
@@ -645,7 +645,7 @@
                 $dragDropType = "System.Windows.DragDrop" -as [type]
                 $dragDropEffectsType = "System.Windows.DragDropEffects" -as [type]
 
-                [void]$dragDropType::DoDragDrop(
+                $dragDropType::DoDragDrop(
                     $this.draggedItem,
                     $gameId,
                     $dragDropEffectsType::Move
