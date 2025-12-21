@@ -167,10 +167,12 @@ function Initialize-WpfAssemblies {
             'PresentationFramework',
             'PresentationCore',
             'WindowsBase',
-            'System.Windows.Forms'
+            'System.Windows.Forms',
+            'System.Xaml'
         )
         foreach ($assemblyName in $requiredAssemblies) {
-            if (-not ([AppDomain]::CurrentDomain.GetAssemblies().FullName -contains $assemblyName)) {
+            $isLoaded = [AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq $assemblyName }
+            if (-not $isLoaded) {
                 try {
                     Add-Type -AssemblyName $assemblyName
                     Write-Verbose "[INFO] Loaded assembly: $assemblyName"
@@ -182,6 +184,114 @@ function Initialize-WpfAssemblies {
             }
         }
         Write-Verbose "[OK] ConfigEditor: WPF assemblies loaded successfully"
+
+        # Define the InsertionIndicatorAdorner class for drag and drop visual feedback
+        try {
+            $adornerCode = @"
+using System;
+using System.Windows;
+using System.Windows.Documents;
+using System.Windows.Media;
+
+public class InsertionIndicatorAdorner : Adorner
+{
+    private bool insertAbove;
+    private Pen pen;
+
+    public InsertionIndicatorAdorner(UIElement adornedElement, bool insertAbove) : base(adornedElement)
+    {
+        this.insertAbove = insertAbove;
+        this.IsHitTestVisible = false;
+
+        // Create a pen for drawing the insertion line
+        // Using a bright blue color with 2px thickness for visibility
+        this.pen = new Pen(new SolidColorBrush(Color.FromRgb(0, 120, 215)), 2.0);
+        this.pen.Freeze();
+    }
+
+    protected override void OnRender(DrawingContext drawingContext)
+    {
+        if (this.AdornedElement == null) return;
+
+        Rect adornedElementRect = new Rect(this.AdornedElement.RenderSize);
+
+        // Draw a horizontal line at the top or bottom of the adorned element
+        double yPosition = this.insertAbove ? adornedElementRect.Top : adornedElementRect.Bottom;
+
+        // Draw the line across the full width of the element
+        Point startPoint = new Point(adornedElementRect.Left, yPosition);
+        Point endPoint = new Point(adornedElementRect.Right, yPosition);
+
+        drawingContext.DrawLine(this.pen, startPoint, endPoint);
+
+        // Draw small triangles at both ends to make it more visible
+        double triangleSize = 4.0;
+
+        // Left triangle
+        var leftTriangle = new StreamGeometry();
+        using (StreamGeometryContext ctx = leftTriangle.Open())
+        {
+            ctx.BeginFigure(new Point(startPoint.X, yPosition), true, true);
+            ctx.LineTo(new Point(startPoint.X + triangleSize, yPosition - triangleSize), true, false);
+            ctx.LineTo(new Point(startPoint.X + triangleSize, yPosition + triangleSize), true, false);
+        }
+        leftTriangle.Freeze();
+        drawingContext.DrawGeometry(this.pen.Brush, null, leftTriangle);
+
+        // Right triangle
+        var rightTriangle = new StreamGeometry();
+        using (StreamGeometryContext ctx = rightTriangle.Open())
+        {
+            ctx.BeginFigure(new Point(endPoint.X, yPosition), true, true);
+            ctx.LineTo(new Point(endPoint.X - triangleSize, yPosition - triangleSize), true, false);
+            ctx.LineTo(new Point(endPoint.X - triangleSize, yPosition + triangleSize), true, false);
+        }
+        rightTriangle.Freeze();
+        drawingContext.DrawGeometry(this.pen.Brush, null, rightTriangle);
+    }
+}
+"@
+
+            # Get the already loaded WPF assemblies to avoid version conflicts
+            $loadedAssemblies = [AppDomain]::CurrentDomain.GetAssemblies()
+            $requiredAssemblyNames = @('PresentationCore', 'PresentationFramework', 'WindowsBase', 'System.Xaml')
+            $assemblyPaths = @()
+
+            foreach ($name in $requiredAssemblyNames) {
+                $assembly = $loadedAssemblies | Where-Object { $_.GetName().Name -eq $name } | Select-Object -First 1
+                if ($assembly) {
+                    # Use Location for file-based assemblies
+                    if ($assembly.Location -and (Test-Path $assembly.Location)) {
+                        $assemblyPaths += $assembly.Location
+                        Write-Verbose "[DEBUG] ConfigEditor: Found assembly $name at $($assembly.Location)"
+                    } else {
+                        # For GAC assemblies without Location, try to find them
+                        Write-Verbose "[DEBUG] ConfigEditor: Assembly $name has no location, skipping"
+                    }
+                }
+            }
+
+            # If we don't have all required assemblies, fall back to just loading without custom references
+            if ($assemblyPaths.Count -lt 4) {
+                Write-Verbose "[WARNING] ConfigEditor: Not all assembly paths found ($($assemblyPaths.Count)/4), attempting without explicit references"
+                try {
+                    # Try without ReferencedAssemblies - let .NET resolve them
+                    Add-Type -TypeDefinition $adornerCode -Language CSharp -IgnoreWarnings -ErrorAction Stop
+                    Write-Verbose "[OK] ConfigEditor: InsertionIndicatorAdorner class loaded successfully (auto-resolved)"
+                } catch {
+                    Write-Warning "[WARNING] Failed to load InsertionIndicatorAdorner class: $($_.Exception.Message)"
+                    Write-Verbose "[INFO] ConfigEditor: Drag and drop insertion indicator will not be available"
+                }
+            } else {
+                # Load the adorner type using the already loaded assembly references
+                Add-Type -TypeDefinition $adornerCode -ReferencedAssemblies $assemblyPaths -Language CSharp -ErrorAction Stop
+                Write-Verbose "[OK] ConfigEditor: InsertionIndicatorAdorner class loaded successfully"
+            }
+        } catch {
+            Write-Warning "[WARNING] Failed to load InsertionIndicatorAdorner class (outer catch): $($_.Exception.Message)"
+            Write-Verbose "[INFO] ConfigEditor: Drag and drop insertion indicator will not be available"
+        }
+
         return $true
     } catch {
         Write-Error "Failed to load WPF assemblies: $($_.Exception.Message)"

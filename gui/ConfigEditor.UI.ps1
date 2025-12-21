@@ -950,6 +950,34 @@ class ConfigEditorUI {
                         })
                     $contextMenu.Items.Add($createShortcutMenuItem)
 
+                    # Add delete menu item
+                    $deleteMenuItem = New-Object System.Windows.Controls.MenuItem
+                    $deleteMenuItem.Header = $this.GetLocalizedMessage("deleteMenuItem")
+                    $deleteMenuItem.Tag = @{ GameId = $gameId; FormInstance = $this }
+                    $deleteMenuItem.add_Click({
+                            try {
+                                $gameId = $this.Tag.GameId
+                                $formInstance = $this.Tag.FormInstance
+                                # Set the selected game in the Games list
+                                $gamesList = $formInstance.Window.FindName("GamesList")
+                                if ($gamesList) {
+                                    for ($i = 0; $i -lt $gamesList.Items.Count; $i++) {
+                                        if ($gamesList.Items[$i] -eq $gameId) {
+                                            $gamesList.SelectedIndex = $i
+                                            break
+                                        }
+                                    }
+                                }
+                                # Call the delete handler
+                                if ($formInstance.EventHandler) {
+                                    $formInstance.EventHandler.HandleDeleteGame()
+                                }
+                            } catch {
+                                Write-Warning "Error in delete menu click: $($_.Exception.Message)"
+                            }
+                        })
+                    $contextMenu.Items.Add($deleteMenuItem)
+
                     $border.ContextMenu = $contextMenu
 
                     # Create main grid
