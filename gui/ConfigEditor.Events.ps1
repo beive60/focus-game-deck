@@ -533,6 +533,261 @@
         }
     }
 
+    # Helper method to get the Border item (game card) under the mouse in ItemsControl
+    [object] GetItemsControlBorderUnderMouse([object]$itemsControl, [object]$position) {
+        try {
+            $visualTreeHelperType = "System.Windows.Media.VisualTreeHelper" -as [type]
+            $borderType = "System.Windows.Controls.Border" -as [type]
+
+            $hitTestResult = $visualTreeHelperType::HitTest($itemsControl, $position)
+            if ($hitTestResult) {
+                $element = $hitTestResult.VisualHit
+                # Walk up the visual tree to find a Border that is a direct child of ItemsControl
+                while ($element -and $element -ne $itemsControl) {
+                    if ($element.GetType().FullName -eq 'System.Windows.Controls.Border') {
+                        # Check if this border's parent is the ItemsControl or its container
+                        $parent = $visualTreeHelperType::GetParent($element)
+                        # Walk up to find if we're inside the ItemsControl
+                        $current = $element
+                        while ($current -and $current -ne $itemsControl) {
+                            $current = $visualTreeHelperType::GetParent($current)
+                        }
+                        if ($current -eq $itemsControl) {
+                            # This border is inside our ItemsControl
+                            # Check if it's in the Items collection
+                            foreach ($item in $itemsControl.Items) {
+                                if ($item -eq $element) {
+                                    return $element
+                                }
+                            }
+                        }
+                    }
+                    $element = $visualTreeHelperType::GetParent($element)
+                }
+            }
+        } catch {
+            Write-Verbose "Failed to get Border under mouse: $($_.Exception.Message)"
+        }
+        return $null
+    }
+
+    # Helper method to extract game ID from a Border element
+    [string] GetGameIdFromBorder([object]$border) {
+        try {
+            # The border contains a Grid, which contains an info panel and a launch button
+            # The launch button has a Tag with GameId
+            if ($border -and $border.Child) {
+                $grid = $border.Child
+                foreach ($child in $grid.Children) {
+                    if ($child.GetType().FullName -eq 'System.Windows.Controls.Button' -and $child.Tag) {
+                        if ($child.Tag.GameId) {
+                            return $child.Tag.GameId
+                        }
+                    }
+                }
+            }
+        } catch {
+            Write-Verbose "Failed to extract GameId from Border: $($_.Exception.Message)"
+        }
+        return $null
+    }
+
+    # Handle drag start for GameLauncherList items
+    [void] HandleGameLauncherPreviewMouseLeftButtonDown([object]$sender, [object]$e) {
+        $this.dragStartPoint = $e.GetPosition($null)
+        $this.draggedItem = $null
+
+        # Find the Border (game card) that was clicked
+        $visualTreeHelperType = "System.Windows.Media.VisualTreeHelper" -as [type]
+        $element = $e.OriginalSource
+        
+        # Walk up to find a Border element
+        while ($element -and $element.GetType().FullName -ne 'System.Windows.Controls.Border') {
+            $element = $visualTreeHelperType::GetParent($element)
+        }
+
+        # Verify this border is a game card in the ItemsControl
+        if ($element) {
+            $itemsControl = $sender
+            foreach ($item in $itemsControl.Items) {
+                if ($item -eq $element) {
+                    $this.draggedItem = $element
+                    Write-Verbose "GameLauncher drag start captured for border"
+                    break
+                }
+            }
+        }
+    }
+
+    # Handle mouse move to initiate drag operation for GameLauncherList
+    [void] HandleGameLauncherMouseMove([object]$sender, [object]$e) {
+        if ($null -eq $this.dragStartPoint -or $null -eq $this.draggedItem) {
+            return
+        }
+
+        # Check if mouse moved beyond threshold
+        $mousePosition = $e.GetPosition($null)
+        $diff = [System.Windows.Point]::Subtract($mousePosition, $this.dragStartPoint)
+
+        $dragThreshold = 5
+        if ([Math]::Abs($diff.X) -gt $dragThreshold -or [Math]::Abs($diff.Y) -gt $dragThreshold) {
+            try {
+                # Extract game ID from the dragged border
+                $gameId = $this.GetGameIdFromBorder($this.draggedItem)
+                
+                # Validate dragged data
+                if ([string]::IsNullOrEmpty($gameId)) {
+                    Write-Verbose "Dragged game card has no GameId, aborting drag"
+                    $this.dragStartPoint = $null
+                    $this.draggedItem = $null
+                    return
+                }
+
+                Write-Verbose "Starting drag operation for game launcher item: $gameId"
+
+                $dragDropType = "System.Windows.DragDrop" -as [type]
+                $dragDropEffectsType = "System.Windows.DragDropEffects" -as [type]
+
+                [void]$dragDropType::DoDragDrop(
+                    $this.draggedItem,
+                    $gameId,
+                    $dragDropEffectsType::Move
+                )
+            } catch {
+                Write-Verbose "Failed to start drag operation for game launcher: $($_.Exception.Message)"
+            } finally {
+                $this.dragStartPoint = $null
+                $this.draggedItem = $null
+            }
+        }
+    }
+
+    # Handle DragOver event for GameLauncherList
+    [void] HandleGameLauncherDragOver([object]$sender, [object]$e) {
+        $dragDropEffectsType = "System.Windows.DragDropEffects" -as [type]
+
+        try {
+            # Check if we have valid drag data
+            $dragData = $e.Data.GetData([string])
+            if (-not $dragData) {
+                $e.Effects = $dragDropEffectsType::None
+                $this.RemoveInsertionIndicator()
+                return
+            }
+
+            # Get the target item under mouse
+            $mousePosition = $e.GetPosition($sender)
+            $targetBorder = $this.GetItemsControlBorderUnderMouse($sender, $mousePosition)
+
+            if ($targetBorder) {
+                # Determine if we should insert above or below
+                $itemPosition = $e.GetPosition($targetBorder)
+                $itemHeight = $targetBorder.ActualHeight
+                $insertAbove = $itemPosition.Y -lt ($itemHeight / 2)
+
+                # Show insertion indicator
+                $this.ShowInsertionIndicator($targetBorder, $insertAbove)
+
+                $e.Effects = $dragDropEffectsType::Move
+            } else {
+                # No target item, allow drop at the end
+                $this.RemoveInsertionIndicator()
+                $e.Effects = $dragDropEffectsType::Move
+            }
+
+            $e.Handled = $true
+        } catch {
+            Write-Verbose "Failed to handle DragOver for game launcher: $($_.Exception.Message)"
+            $e.Effects = $dragDropEffectsType::None
+        }
+    }
+
+    # Handle DragLeave event for GameLauncherList
+    [void] HandleGameLauncherDragLeave([object]$sender, [object]$e) {
+        $this.RemoveInsertionIndicator()
+    }
+
+    # Handle drop event for GameLauncherList
+    [void] HandleGameLauncherDrop([object]$sender, [object]$e) {
+        # Remove insertion indicator
+        $this.RemoveInsertionIndicator()
+
+        try {
+            $dropData = $e.Data.GetData([string])
+            if (-not $dropData) {
+                return
+            }
+
+            Write-Verbose "Drop event for game launcher: $dropData"
+
+            # Ensure games order exists
+            if (-not $this.stateManager.ConfigData.games._order) {
+                $this.stateManager.InitializeGameOrder()
+            }
+
+            $currentOrder = $this.stateManager.ConfigData.games._order
+            $sourceIndex = $currentOrder.IndexOf($dropData)
+
+            if ($sourceIndex -eq -1) {
+                Write-Warning "Dropped game not found in order array"
+                return
+            }
+
+            # Get the target position
+            $mousePosition = $e.GetPosition($sender)
+            $targetBorder = $this.GetItemsControlBorderUnderMouse($sender, $mousePosition)
+
+            $targetIndex = if ($targetBorder) {
+                $targetGameId = $this.GetGameIdFromBorder($targetBorder)
+                if ($targetGameId) {
+                    $baseIndex = $currentOrder.IndexOf($targetGameId)
+
+                    # Determine if we should insert above or below
+                    $itemPosition = $e.GetPosition($targetBorder)
+                    $itemHeight = $targetBorder.ActualHeight
+                    $insertAbove = $itemPosition.Y -lt ($itemHeight / 2)
+
+                    if ($insertAbove) {
+                        $baseIndex
+                    } else {
+                        $baseIndex + 1
+                    }
+                } else {
+                    $currentOrder.Count
+                }
+            } else {
+                # Dropped outside of items, place at end
+                $currentOrder.Count
+            }
+
+            if ($targetIndex -eq -1) {
+                # If target item not found in order, place at end
+                $targetIndex = $currentOrder.Count
+            }
+
+            Write-Verbose "Reordering game in launcher from index $sourceIndex to $targetIndex"
+
+            # Reorder the items
+            $newOrder = $this.ReorderItems($currentOrder, $sourceIndex, $targetIndex)
+
+            # Update the configuration
+            $this.stateManager.ConfigData.games._order = $newOrder
+
+            # Mark as modified
+            $this.stateManager.SetModified()
+
+            # Refresh the game launcher list to reflect new order
+            $this.uiManager.UpdateGameLauncherList($this.stateManager.ConfigData)
+            
+            # Also refresh the games list tab to keep it in sync
+            $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
+
+            $e.Handled = $true
+        } catch {
+            Write-Warning "Failed to handle drop for game launcher: $($_.Exception.Message)"
+        }
+    }
+
     # Handle platform selection changed
     [void] HandlePlatformSelectionChanged() {
         $platformCombo = $script:Window.FindName("PlatformComboBox")
@@ -2478,6 +2733,20 @@
             # --- Game Launcher Tab ---
             $genLaunchersBtn = $this.uiManager.Window.FindName("GenerateLaunchersButton")
             if ($genLaunchersBtn) { $genLaunchersBtn.add_Click({ $self.HandleGenerateLaunchers() }.GetNewClosure()) } else { Write-Verbose "GenerateLaunchersButton not found" }
+
+            # Register drag and drop handlers for GameLauncherList
+            $gameLauncherListCtrl = $this.uiManager.Window.FindName("GameLauncherList")
+            if ($gameLauncherListCtrl) {
+                $gameLauncherListCtrl.AllowDrop = $true
+                $gameLauncherListCtrl.add_PreviewMouseLeftButtonDown({ param($s, $e) $self.HandleGameLauncherPreviewMouseLeftButtonDown($s, $e) }.GetNewClosure())
+                $gameLauncherListCtrl.add_MouseMove({ param($s, $e) $self.HandleGameLauncherMouseMove($s, $e) }.GetNewClosure())
+                $gameLauncherListCtrl.add_DragOver({ param($s, $e) $self.HandleGameLauncherDragOver($s, $e) }.GetNewClosure())
+                $gameLauncherListCtrl.add_DragLeave({ param($s, $e) $self.HandleGameLauncherDragLeave($s, $e) }.GetNewClosure())
+                $gameLauncherListCtrl.add_Drop({ param($s, $e) $self.HandleGameLauncherDrop($s, $e) }.GetNewClosure())
+                Write-Verbose "GameLauncherList drag and drop handlers registered"
+            } else {
+                Write-Verbose "GameLauncherList not found"
+            }
 
             # Add tab selection event to update game list when switching to launcher tab
             $mainTabControl = $this.uiManager.Window.FindName("MainTabControl")
