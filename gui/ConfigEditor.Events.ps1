@@ -2782,6 +2782,21 @@
                 $gamesListCtrl.add_DragOver({ param($s, $e) $self.HandleGamesListDragOver($s, $e) }.GetNewClosure())
                 $gamesListCtrl.add_DragLeave({ param($s, $e) $self.HandleGamesListDragLeave($s, $e) }.GetNewClosure())
                 $gamesListCtrl.add_Drop({ param($s, $e) $self.HandleGamesListDrop($s, $e) }.GetNewClosure())
+                
+                # Create context menu for GamesList
+                $gamesContextMenu = New-Object System.Windows.Controls.ContextMenu
+                
+                $deleteGameMenuItem = New-Object System.Windows.Controls.MenuItem
+                $deleteGameMenuItem.Header = $self.uiManager.GetLocalizedMessage("deleteMenuItem")
+                $deleteGameMenuItem.add_Click({ $self.HandleDeleteGame() }.GetNewClosure())
+                $gamesContextMenu.Items.Add($deleteGameMenuItem)
+                
+                $duplicateGameMenuItem = New-Object System.Windows.Controls.MenuItem
+                $duplicateGameMenuItem.Header = $self.uiManager.GetLocalizedMessage("duplicateMenuItem")
+                $duplicateGameMenuItem.add_Click({ $self.HandleDuplicateGame() }.GetNewClosure())
+                $gamesContextMenu.Items.Add($duplicateGameMenuItem)
+                
+                $gamesListCtrl.ContextMenu = $gamesContextMenu
             } else {
                 Write-Verbose "GamesList not found"
             }
@@ -2839,6 +2854,21 @@
                 $managedAppsListCtrl.add_DragOver({ param($s, $e) $self.HandleManagedAppsListDragOver($s, $e) }.GetNewClosure())
                 $managedAppsListCtrl.add_DragLeave({ param($s, $e) $self.HandleManagedAppsListDragLeave($s, $e) }.GetNewClosure())
                 $managedAppsListCtrl.add_Drop({ param($s, $e) $self.HandleManagedAppsListDrop($s, $e) }.GetNewClosure())
+                
+                # Create context menu for ManagedAppsList
+                $appsContextMenu = New-Object System.Windows.Controls.ContextMenu
+                
+                $deleteAppMenuItem = New-Object System.Windows.Controls.MenuItem
+                $deleteAppMenuItem.Header = $self.uiManager.GetLocalizedMessage("deleteMenuItem")
+                $deleteAppMenuItem.add_Click({ $self.HandleDeleteApp() }.GetNewClosure())
+                $appsContextMenu.Items.Add($deleteAppMenuItem)
+                
+                $duplicateAppMenuItem = New-Object System.Windows.Controls.MenuItem
+                $duplicateAppMenuItem.Header = $self.uiManager.GetLocalizedMessage("duplicateMenuItem")
+                $duplicateAppMenuItem.add_Click({ $self.HandleDuplicateApp() }.GetNewClosure())
+                $appsContextMenu.Items.Add($duplicateAppMenuItem)
+                
+                $managedAppsListCtrl.ContextMenu = $appsContextMenu
             } else {
                 Write-Verbose "ManagedAppsList not found"
             }
