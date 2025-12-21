@@ -948,15 +948,8 @@
                     $useVTubeCheck.IsChecked = ($gameData.integrations -and $gameData.integrations.useVTubeStudio) -or ($gameData.appsToManage -contains "vtubeStudio")
                 }
 
-                # Enable buttons
-                $duplicateGameButton = $script:Window.FindName("DuplicateGameButton")
-                if ($duplicateGameButton) { $duplicateGameButton.IsEnabled = $true }
-
-                $deleteGameButton = $script:Window.FindName("DeleteGameButton")
-                if ($deleteGameButton) { $deleteGameButton.IsEnabled = $true }
-
-                # Update move button states
-                Update-MoveButtonStates
+                # Update move button states (removed - using drag and drop)
+                # Update-MoveButtonStates
 
                 Write-Verbose "Loaded game data for: $selectedGame"
             }
@@ -1008,15 +1001,7 @@
             # Update termination settings visibility
             Update-TerminationSettingsVisibility
 
-            # Disable buttons
-            $duplicateGameButton = $script:Window.FindName("DuplicateGameButton")
-            if ($duplicateGameButton) { $duplicateGameButton.IsEnabled = $false }
-
-            $deleteGameButton = $script:Window.FindName("DeleteGameButton")
-            if ($deleteGameButton) { $deleteGameButton.IsEnabled = $false }
-
-            # Update move button states
-            Update-MoveButtonStates
+            # Buttons removed - using drag and drop and context menus
         }
     }
 
@@ -1150,15 +1135,7 @@
                     $gracefulTimeoutTextBox.Text = $timeoutValue
                 }
 
-                # Enable buttons
-                $duplicateAppButton = $script:Window.FindName("DuplicateAppButton")
-                if ($duplicateAppButton) { $duplicateAppButton.IsEnabled = $true }
-
-                $deleteAppButton = $script:Window.FindName("DeleteAppButton")
-                if ($deleteAppButton) { $deleteAppButton.IsEnabled = $true }
-
-                # Update move button states
-                Update-MoveAppButtonStates
+                # Buttons removed - using drag and drop and context menus
 
                 # Update termination method enabled state based on selected actions
                 $this.UpdateTerminationMethodState()
@@ -1190,15 +1167,7 @@
             $gracefulTimeoutTextBox = $script:Window.FindName("GracefulTimeoutTextBox")
             if ($gracefulTimeoutTextBox) { $gracefulTimeoutTextBox.Text = "5" }
 
-            # Disable buttons
-            $duplicateAppButton = $script:Window.FindName("DuplicateAppButton")
-            if ($duplicateAppButton) { $duplicateAppButton.IsEnabled = $false }
-
-            $deleteAppButton = $script:Window.FindName("DeleteAppButton")
-            if ($deleteAppButton) { $deleteAppButton.IsEnabled = $false }
-
-            # Update move button states
-            Update-MoveAppButtonStates
+            # Buttons removed - using drag and drop and context menus
         }
     }
 
@@ -2832,14 +2801,8 @@
             $gameStartCombo = $this.uiManager.Window.FindName("GameStartActionCombo"); if ($gameStartCombo) { $gameStartCombo.add_SelectionChanged({ $self.UpdateTerminationMethodState() }.GetNewClosure()) } else { Write-Verbose "GameStartActionCombo not found" }
             $gameEndCombo = $this.uiManager.Window.FindName("GameEndActionCombo"); if ($gameEndCombo) { $gameEndCombo.add_SelectionChanged({ $self.UpdateTerminationMethodState() }.GetNewClosure()) } else { Write-Verbose "GameEndActionCombo not found" }
             $addGameBtn = $this.uiManager.Window.FindName("AddGameButton"); if ($addGameBtn) { $addGameBtn.add_Click({ $self.HandleAddGame() }.GetNewClosure()) } else { Write-Verbose "AddGameButton not found" }
-            $dupGameBtn = $this.uiManager.Window.FindName("DuplicateGameButton"); if ($dupGameBtn) { $dupGameBtn.add_Click({ $self.HandleDuplicateGame() }.GetNewClosure()) } else { Write-Verbose "DuplicateGameButton not found" }
-            $delGameBtn = $this.uiManager.Window.FindName("DeleteGameButton"); if ($delGameBtn) { $delGameBtn.add_Click({ $self.HandleDeleteGame() }.GetNewClosure()) } else { Write-Verbose "DeleteGameButton not found" }
             $browseExecBtn = $this.uiManager.Window.FindName("BrowseExecutablePathButton"); if ($browseExecBtn) { $browseExecBtn.add_Click({ $self.HandleBrowseExecutablePath() }.GetNewClosure()) } else { Write-Verbose "BrowseExecutablePathButton not found" }
             $saveGameBtn = $this.uiManager.Window.FindName("SaveGameSettingsButton"); if ($saveGameBtn) { $saveGameBtn.add_Click({ $self.HandleSaveGameSettings() }.GetNewClosure()) } else { Write-Verbose "SaveGameSettingsButton not found" }
-            $this.uiManager.Window.FindName("MoveGameTopButton").add_Click({ $self.HandleMoveGame("Top") }.GetNewClosure())
-            $this.uiManager.Window.FindName("MoveGameUpButton").add_Click({ $self.HandleMoveGame("Up") }.GetNewClosure())
-            $this.uiManager.Window.FindName("MoveGameDownButton").add_Click({ $self.HandleMoveGame("Down") }.GetNewClosure())
-            $this.uiManager.Window.FindName("MoveGameBottomButton").add_Click({ $self.HandleMoveGame("Bottom") }.GetNewClosure())
             $this.uiManager.Window.FindName("OpenOBSTabButton").add_Click({ $self.HandleOpenIntegrationTab("OBS") }.GetNewClosure())
             $this.uiManager.Window.FindName("OpenDiscordTabButton").add_Click({ $self.HandleOpenIntegrationTab("Discord") }.GetNewClosure())
             $this.uiManager.Window.FindName("OpenVTubeStudioTabButton").add_Click({ $self.HandleOpenIntegrationTab("VTubeStudio") }.GetNewClosure())
@@ -2873,14 +2836,8 @@
                 Write-Verbose "ManagedAppsList not found"
             }
             $this.uiManager.Window.FindName("AddAppButton").add_Click({ $self.HandleAddApp() }.GetNewClosure())
-            $this.uiManager.Window.FindName("DuplicateAppButton").add_Click({ $self.HandleDuplicateApp() }.GetNewClosure())
-            $this.uiManager.Window.FindName("DeleteAppButton").add_Click({ $self.HandleDeleteApp() }.GetNewClosure())
             $this.uiManager.Window.FindName("BrowseAppPathButton").add_Click({ $self.HandleBrowseAppPath() }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveManagedAppsButton").add_Click({ $self.HandleSaveManagedApps() }.GetNewClosure())
-            $this.uiManager.Window.FindName("MoveAppTopButton").add_Click({ $self.HandleMoveApp("Top") }.GetNewClosure())
-            $this.uiManager.Window.FindName("MoveAppUpButton").add_Click({ $self.HandleMoveApp("Up") }.GetNewClosure())
-            $this.uiManager.Window.FindName("MoveAppDownButton").add_Click({ $self.HandleMoveApp("Down") }.GetNewClosure())
-            $this.uiManager.Window.FindName("MoveAppBottomButton").add_Click({ $self.HandleMoveApp("Bottom") }.GetNewClosure())
 
             # --- OBS Tab ---
             $this.uiManager.Window.FindName("BrowseOBSPathButton").add_Click({ $self.HandleBrowseOBSPath() }.GetNewClosure())

@@ -213,55 +213,14 @@
                                             Width="65"
                                             Height="22"
                                             Margin="2"/>
-                                        <Button
-                                            x:Name="DuplicateGameButton"
-                                            Content="[DUPLICATE_BUTTON]"
-                                            Width="55"
-                                            Height="22"
-                                            Margin="2"/>
-                                        <Button
-                                            x:Name="DeleteGameButton"
-                                            Content="[DELETE_BUTTON]"
-                                            Width="50"
-                                            Height="22"
-                                            Margin="2"/>
                                     </StackPanel>
-                                    <StackPanel
-                                        Orientation="Horizontal"
-                                        HorizontalAlignment="Center">
-                                        <Button
-                                            x:Name="MoveGameTopButton"
-                                            Content="[moveTopButton]"
-                                            Width="41"
-                                            Height="22"
-                                            Margin="2"
-                                            FontSize="10"
-                                            ToolTip="[moveTopTooltip]"/>
-                                        <Button
-                                            x:Name="MoveGameUpButton"
-                                            Content="[moveUpButton]"
-                                            Width="41"
-                                            Height="22"
-                                            Margin="2"
-                                            FontSize="10"
-                                            ToolTip="[moveUpTooltip]"/>
-                                        <Button
-                                            x:Name="MoveGameDownButton"
-                                            Content="[moveDownButton]"
-                                            Width="41"
-                                            Height="22"
-                                            Margin="2"
-                                            FontSize="10"
-                                            ToolTip="[moveDownTooltip]"/>
-                                        <Button
-                                            x:Name="MoveGameBottomButton"
-                                            Content="[moveBottomButton]"
-                                            Width="41"
-                                            Height="22"
-                                            Margin="2"
-                                            FontSize="10"
-                                            ToolTip="[moveBottomTooltip]"/>
-                                    </StackPanel>
+                                    <TextBlock
+                                        x:Name="GamesDragDropHint"
+                                        Text="[dragDropReorderHint]"
+                                        FontSize="11"
+                                        Foreground="#666"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,5,0,0"/>
                                 </StackPanel>
                             </Grid>
 
@@ -780,55 +739,14 @@
                                             Width="65"
                                             Height="22"
                                             Margin="2"/>
-                                        <Button
-                                            x:Name="DuplicateAppButton"
-                                            Content="[DUPLICATE_BUTTON]"
-                                            Width="55"
-                                            Height="22"
-                                            Margin="2"/>
-                                        <Button
-                                            x:Name="DeleteAppButton"
-                                            Content="[DELETE_BUTTON]"
-                                            Width="50"
-                                            Height="22"
-                                            Margin="2"/>
                                     </StackPanel>
-                                    <StackPanel
-                                        Orientation="Horizontal"
-                                        HorizontalAlignment="Center">
-                                        <Button
-                                            x:Name="MoveAppTopButton"
-                                            Content="[moveTopButton]"
-                                            Width="41"
-                                            Height="22"
-                                            Margin="2"
-                                            FontSize="10"
-                                            ToolTip="[moveTopTooltip]"/>
-                                        <Button
-                                            x:Name="MoveAppUpButton"
-                                            Content="[moveUpButton]"
-                                            Width="41"
-                                            Height="22"
-                                            Margin="2"
-                                            FontSize="10"
-                                            ToolTip="[moveUpTooltip]"/>
-                                        <Button
-                                            x:Name="MoveAppDownButton"
-                                            Content="[moveDownButton]"
-                                            Width="41"
-                                            Height="22"
-                                            Margin="2"
-                                            FontSize="10"
-                                            ToolTip="[moveDownTooltip]"/>
-                                        <Button
-                                            x:Name="MoveAppBottomButton"
-                                            Content="[moveBottomButton]"
-                                            Width="41"
-                                            Height="22"
-                                            Margin="2"
-                                            FontSize="10"
-                                            ToolTip="[moveBottomTooltip]"/>
-                                    </StackPanel>
+                                    <TextBlock
+                                        x:Name="AppsDragDropHint"
+                                        Text="[dragDropReorderHint]"
+                                        FontSize="11"
+                                        Foreground="#666"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,5,0,0"/>
                                 </StackPanel>
                             </Grid>
 
