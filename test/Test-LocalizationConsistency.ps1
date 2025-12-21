@@ -149,7 +149,7 @@ function Test-MessageFile {
     }
 
     # Define supported languages
-    $supportedLanguages = @("en", "ja", "zh-cn", "ru", "fr", "es")
+    $supportedLanguages = @("en", "ja", "zh-cn", "ru", "fr", "es", "id", "pt-br")
 
     # Verify base language exists
     if (-not $messages.$BaseLanguage) {
