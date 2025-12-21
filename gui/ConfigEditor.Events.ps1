@@ -537,16 +537,13 @@
     [object] GetItemsControlBorderUnderMouse([object]$itemsControl, [object]$position) {
         try {
             $visualTreeHelperType = "System.Windows.Media.VisualTreeHelper" -as [type]
-            $borderType = "System.Windows.Controls.Border" -as [type]
 
             $hitTestResult = $visualTreeHelperType::HitTest($itemsControl, $position)
             if ($hitTestResult) {
                 $element = $hitTestResult.VisualHit
                 # Walk up the visual tree to find a Border that is a direct child of ItemsControl
                 while ($element -and $element -ne $itemsControl) {
-                    if ($element.GetType().FullName -eq 'System.Windows.Controls.Border') {
-                        # Check if this border's parent is the ItemsControl or its container
-                        $parent = $visualTreeHelperType::GetParent($element)
+                    if ($element -is [System.Windows.Controls.Border]) {
                         # Walk up to find if we're inside the ItemsControl
                         $current = $element
                         while ($current -and $current -ne $itemsControl) {
@@ -579,7 +576,7 @@
             if ($border -and $border.Child) {
                 $grid = $border.Child
                 foreach ($child in $grid.Children) {
-                    if ($child.GetType().FullName -eq 'System.Windows.Controls.Button' -and $child.Tag) {
+                    if ($child -is [System.Windows.Controls.Button] -and $child.Tag) {
                         if ($child.Tag.GameId) {
                             return $child.Tag.GameId
                         }
@@ -602,7 +599,7 @@
         $element = $e.OriginalSource
         
         # Walk up to find a Border element
-        while ($element -and $element.GetType().FullName -ne 'System.Windows.Controls.Border') {
+        while ($element -and $element -isnot [System.Windows.Controls.Border]) {
             $element = $visualTreeHelperType::GetParent($element)
         }
 
