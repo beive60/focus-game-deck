@@ -1,0 +1,70 @@
+{
+    "_comment": "Centralized language configuration for Focus Game Deck",
+    "_version": "1.0.0",
+    "supportedLanguages": [
+        {
+            "code": "en",
+            "name": "English",
+            "nativeName": "English",
+            "culture": "en-US",
+            "flag": "🇺🇸",
+            "browserPrefix": "en"
+        },
+        {
+            "code": "ja",
+            "name": "Japanese",
+            "nativeName": "日本語",
+            "culture": "ja-JP",
+            "flag": "🇯🇵",
+            "browserPrefix": "ja"
+        },
+        {
+            "code": "zh-CN",
+            "name": "Chinese (Simplified)",
+            "nativeName": "中文（简体）",
+            "culture": "zh-CN",
+            "flag": "🇨🇳",
+            "browserPrefix": "zh"
+        },
+        {
+            "code": "ru",
+            "name": "Russian",
+            "nativeName": "Русский",
+            "culture": "ru-RU",
+            "flag": "🇷🇺",
+            "browserPrefix": "ru"
+        },
+        {
+            "code": "fr",
+            "name": "French",
+            "nativeName": "Français",
+            "culture": "fr-FR",
+            "flag": "🇫🇷",
+            "browserPrefix": "fr"
+        },
+        {
+            "code": "es",
+            "name": "Spanish",
+            "nativeName": "Español",
+            "culture": "es-ES",
+            "flag": "🇪🇸",
+            "browserPrefix": "es"
+        },
+        {
+            "code": "pt-BR",
+            "name": "Portuguese (Brazil)",
+            "nativeName": "Português (Brasil)",
+            "culture": "pt-BR",
+            "flag": "🇧🇷",
+            "browserPrefix": "pt"
+        },
+        {
+            "code": "id-ID",
+            "name": "Indonesian",
+            "nativeName": "Bahasa Indonesia",
+            "culture": "id-ID",
+            "flag": "🇮🇩",
+            "browserPrefix": "id"
+        }
+    ]
+}

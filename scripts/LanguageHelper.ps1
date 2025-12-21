@@ -57,7 +57,7 @@ try {
 function Get-DetectedLanguage {
     param(
         [PSCustomObject]$ConfigData = $null,
-        [string[]]$SupportedLanguages = @("en", "ja", "zh-CN", "ru", "fr", "es")
+        [string[]]$SupportedLanguages = @("en", "ja", "zh-CN", "ru", "fr", "es", "pt-BR", "id-ID")
     )
 
     $defaultLang = "en"  # English as fallback
@@ -118,7 +118,13 @@ function Get-OSLanguage {
                 return "zh-CN"
             } elseif ($cultureName.StartsWith("zh-")) {
                 # Default other Chinese variants to zh-CN for now
-                return "zh-CN"
+                return "zh-CN"            
+            } elseif ($cultureName -eq "pt-br" -or $cultureName.StartsWith("pt-br")) {
+                # Brazilian Portuguese
+                return "pt-BR"
+            } elseif ($cultureName -eq "id-id" -or $cultureName.StartsWith("id-")) {
+                # Indonesian
+                return "id-ID"            
             } else {
                 # Return two-letter ISO language name for other languages
                 return $uiCulture.TwoLetterISOLanguageName.ToLower()
@@ -140,7 +146,13 @@ function Get-OSLanguage {
                 return "zh-CN"
             } elseif ($cultureName.StartsWith("zh-")) {
                 # Default other Chinese variants to zh-CN for now
-                return "zh-CN"
+                return "zh-CN"            
+            } elseif ($cultureName -eq "pt-br" -or $cultureName.StartsWith("pt-br")) {
+                # Brazilian Portuguese
+                return "pt-BR"
+            } elseif ($cultureName -eq "id-id" -or $cultureName.StartsWith("id-")) {
+                # Indonesian
+                return "id-ID"            
             } else {
                 # Return two-letter ISO language name for other languages
                 return $culture.TwoLetterISOLanguageName.ToLower()
@@ -209,6 +221,16 @@ function Set-CultureByLanguage {
                 [System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::GetCultureInfo("es-ES")
                 [System.Threading.Thread]::CurrentThread.CurrentUICulture = [System.Globalization.CultureInfo]::GetCultureInfo("es-ES")
                 Write-Verbose "Culture set to Spanish (es-ES)"
+            }
+            "pt-br" {
+                [System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::GetCultureInfo("pt-BR")
+                [System.Threading.Thread]::CurrentThread.CurrentUICulture = [System.Globalization.CultureInfo]::GetCultureInfo("pt-BR")
+                Write-Verbose "Culture set to Brazilian Portuguese (pt-BR)"
+            }
+            "id-id" {
+                [System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::GetCultureInfo("id-ID")
+                [System.Threading.Thread]::CurrentThread.CurrentUICulture = [System.Globalization.CultureInfo]::GetCultureInfo("id-ID")
+                Write-Verbose "Culture set to Indonesian (id-ID)"
             }
             "en" {
                 [System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::GetCultureInfo("en-US")
