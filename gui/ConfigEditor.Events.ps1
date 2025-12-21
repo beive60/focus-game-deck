@@ -2755,6 +2755,11 @@
                 # Create context menu for GamesList
                 $gamesContextMenu = New-Object System.Windows.Controls.ContextMenu
                 
+                $addGameMenuItem = New-Object System.Windows.Controls.MenuItem
+                $addGameMenuItem.Header = $self.uiManager.GetLocalizedMessage("addMenuItem")
+                $addGameMenuItem.add_Click({ $self.HandleAddGame() }.GetNewClosure())
+                $gamesContextMenu.Items.Add($addGameMenuItem)
+                
                 $deleteGameMenuItem = New-Object System.Windows.Controls.MenuItem
                 $deleteGameMenuItem.Header = $self.uiManager.GetLocalizedMessage("deleteMenuItem")
                 $deleteGameMenuItem.add_Click({ $self.HandleDeleteGame() }.GetNewClosure())
@@ -2800,7 +2805,6 @@
             }
             $gameStartCombo = $this.uiManager.Window.FindName("GameStartActionCombo"); if ($gameStartCombo) { $gameStartCombo.add_SelectionChanged({ $self.UpdateTerminationMethodState() }.GetNewClosure()) } else { Write-Verbose "GameStartActionCombo not found" }
             $gameEndCombo = $this.uiManager.Window.FindName("GameEndActionCombo"); if ($gameEndCombo) { $gameEndCombo.add_SelectionChanged({ $self.UpdateTerminationMethodState() }.GetNewClosure()) } else { Write-Verbose "GameEndActionCombo not found" }
-            $addGameBtn = $this.uiManager.Window.FindName("AddGameButton"); if ($addGameBtn) { $addGameBtn.add_Click({ $self.HandleAddGame() }.GetNewClosure()) } else { Write-Verbose "AddGameButton not found" }
             $browseExecBtn = $this.uiManager.Window.FindName("BrowseExecutablePathButton"); if ($browseExecBtn) { $browseExecBtn.add_Click({ $self.HandleBrowseExecutablePath() }.GetNewClosure()) } else { Write-Verbose "BrowseExecutablePathButton not found" }
             $saveGameBtn = $this.uiManager.Window.FindName("SaveGameSettingsButton"); if ($saveGameBtn) { $saveGameBtn.add_Click({ $self.HandleSaveGameSettings() }.GetNewClosure()) } else { Write-Verbose "SaveGameSettingsButton not found" }
             $this.uiManager.Window.FindName("OpenOBSTabButton").add_Click({ $self.HandleOpenIntegrationTab("OBS") }.GetNewClosure())
@@ -2821,6 +2825,11 @@
                 # Create context menu for ManagedAppsList
                 $appsContextMenu = New-Object System.Windows.Controls.ContextMenu
                 
+                $addAppMenuItem = New-Object System.Windows.Controls.MenuItem
+                $addAppMenuItem.Header = $self.uiManager.GetLocalizedMessage("addMenuItem")
+                $addAppMenuItem.add_Click({ $self.HandleAddApp() }.GetNewClosure())
+                $appsContextMenu.Items.Add($addAppMenuItem)
+                
                 $deleteAppMenuItem = New-Object System.Windows.Controls.MenuItem
                 $deleteAppMenuItem.Header = $self.uiManager.GetLocalizedMessage("deleteMenuItem")
                 $deleteAppMenuItem.add_Click({ $self.HandleDeleteApp() }.GetNewClosure())
@@ -2835,7 +2844,6 @@
             } else {
                 Write-Verbose "ManagedAppsList not found"
             }
-            $this.uiManager.Window.FindName("AddAppButton").add_Click({ $self.HandleAddApp() }.GetNewClosure())
             $this.uiManager.Window.FindName("BrowseAppPathButton").add_Click({ $self.HandleBrowseAppPath() }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveManagedAppsButton").add_Click({ $self.HandleSaveManagedApps() }.GetNewClosure())
 
