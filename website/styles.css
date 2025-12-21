@@ -91,7 +91,8 @@ header {
     background: none;
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    padding: 8px 12px;
+    padding: 10px 16px;
+    min-height: 44px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -117,7 +118,8 @@ header {
 }
 
 .language-selector select {
-    padding: 8px 12px;
+    padding: 10px 16px;
+    min-height: 44px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     background: var(--bg-primary);
@@ -142,7 +144,7 @@ header {
     header {
         flex-direction: column;
         text-align: center;
-        gap: 15px;
+        gap: 20px;
     }
 
     .header-content {
@@ -152,6 +154,8 @@ header {
     .header-controls {
         justify-content: center;
         margin-left: 0;
+        gap: 20px;
+        flex-wrap: wrap;
     }
 
     .language-selector {
@@ -238,7 +242,8 @@ h1 {
     background-color: var(--button-bg);
     color: var(--button-text);
     text-decoration: none;
-    padding: 12px 24px;
+    padding: 14px 28px;
+    min-height: 44px;
     border-radius: 4px;
     font-weight: 500;
     margin-right: 15px;
@@ -392,18 +397,48 @@ footer {
 /* Responsive Design */
 @media (max-width: 768px) {
     body {
-        padding: 15px;
+        padding: 16px;
     }
 
     h1 {
         font-size: 2rem;
+        line-height: 1.3;
+    }
+
+    .subtitle {
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+
+    .description {
+        font-size: 1rem;
+        line-height: 1.8;
+    }
+
+    .download-section {
+        padding: 24px 20px;
+    }
+
+    .download-section h2 {
+        font-size: 1.4rem;
+        line-height: 1.4;
     }
 
     .download-btn {
         display: block;
         text-align: center;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
         margin-right: 0;
+        width: 100%;
+    }
+
+    .feedback-section {
+        padding: 24px 20px;
+    }
+
+    .feedback-section h2 {
+        font-size: 1.4rem;
+        line-height: 1.4;
     }
 
     .req-grid {
@@ -418,16 +453,95 @@ footer {
 
 /* Small mobile adjustments */
 @media (max-width: 480px) {
+    body {
+        padding: 12px;
+    }
+
+    header {
+        gap: 16px;
+        padding-bottom: 16px;
+    }
+
+    .header-controls {
+        gap: 12px;
+        width: 100%;
+    }
+
+    .theme-toggle,
+    .language-selector select {
+        flex: 1;
+        min-width: 0;
+        justify-content: center;
+    }
+
     h1 {
-        font-size: 1.8rem;
+        font-size: 1.75rem;
+        line-height: 1.3;
+        margin-bottom: 8px;
     }
 
     .subtitle {
-        font-size: 1rem;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .description {
+        font-size: 0.95rem;
+        line-height: 1.8;
+        margin: 20px 0;
+    }
+
+    .hero-section {
+        margin: 16px 0 24px 0;
+    }
+
+    .hero-image {
+        border-radius: 6px;
     }
 
     .download-section {
-        padding: 20px;
+        padding: 20px 16px;
+        margin: 30px 0;
+    }
+
+    .download-section h2 {
+        font-size: 1.3rem;
+        line-height: 1.4;
+        margin-bottom: 12px;
+    }
+
+    .download-btn {
+        padding: 12px 20px;
+        font-size: 15px;
+    }
+
+    .feedback-section {
+        padding: 20px 16px;
+        margin: 30px 0;
+    }
+
+    .feedback-section h2 {
+        font-size: 1.3rem;
+        line-height: 1.4;
+    }
+
+    .feedback-section p {
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .features {
+        margin: 40px 0;
+    }
+
+    .features h2 {
+        font-size: 1.3rem;
+        line-height: 1.4;
+    }
+
+    .features p {
+        font-size: 0.95rem;
+        line-height: 1.6;
     }
 
     .req-item {
@@ -438,5 +552,11 @@ footer {
 
     .req-label {
         margin-bottom: 5px;
+        font-size: 0.9rem;
+    }
+
+    footer {
+        margin-top: 40px;
+        font-size: 0.85rem;
     }
 }
