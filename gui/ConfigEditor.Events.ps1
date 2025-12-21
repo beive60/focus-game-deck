@@ -542,8 +542,9 @@
             if ($hitTestResult) {
                 $element = $hitTestResult.VisualHit
                 # Walk up the visual tree to find a Border that is a direct child of ItemsControl
+                $borderType = "System.Windows.Controls.Border" -as [type]
                 while ($element -and $element -ne $itemsControl) {
-                    if ($element -is [System.Windows.Controls.Border]) {
+                    if ($element.GetType().FullName -eq $borderType.FullName) {
                         # Walk up to find if we're inside the ItemsControl
                         $current = $element
                         while ($current -and $current -ne $itemsControl) {
@@ -575,8 +576,9 @@
             # The launch button has a Tag with GameId
             if ($border -and $border.Child) {
                 $grid = $border.Child
+                $buttonType = "System.Windows.Controls.Button" -as [type]
                 foreach ($child in $grid.Children) {
-                    if ($child -is [System.Windows.Controls.Button] -and $child.Tag) {
+                    if ($child.GetType().FullName -eq $buttonType.FullName -and $child.Tag) {
                         if ($child.Tag.GameId) {
                             return $child.Tag.GameId
                         }
@@ -596,10 +598,11 @@
 
         # Find the Border (game card) that was clicked
         $visualTreeHelperType = "System.Windows.Media.VisualTreeHelper" -as [type]
+        $borderType = "System.Windows.Controls.Border" -as [type]
         $element = $e.OriginalSource
-        
+
         # Walk up to find a Border element
-        while ($element -and $element -isnot [System.Windows.Controls.Border]) {
+        while ($element -and $element.GetType().FullName -ne $borderType.FullName) {
             $element = $visualTreeHelperType::GetParent($element)
         }
 
@@ -631,7 +634,7 @@
             try {
                 # Extract game ID from the dragged border
                 $gameId = $this.GetGameIdFromBorder($this.draggedItem)
-                
+
                 # Validate dragged data
                 if ([string]::IsNullOrEmpty($gameId)) {
                     Write-Verbose "Dragged game card has no GameId, aborting drag"
@@ -775,7 +778,7 @@
 
             # Refresh the game launcher list to reflect new order
             $this.uiManager.UpdateGameLauncherList($this.stateManager.ConfigData)
-            
+
             # Also refresh the games list tab to keep it in sync
             $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
 
@@ -2751,25 +2754,25 @@
                 $gamesListCtrl.add_DragOver({ param($s, $e) $self.HandleGamesListDragOver($s, $e) }.GetNewClosure())
                 $gamesListCtrl.add_DragLeave({ param($s, $e) $self.HandleGamesListDragLeave($s, $e) }.GetNewClosure())
                 $gamesListCtrl.add_Drop({ param($s, $e) $self.HandleGamesListDrop($s, $e) }.GetNewClosure())
-                
+
                 # Create context menu for GamesList
                 $gamesContextMenu = New-Object System.Windows.Controls.ContextMenu
-                
+
                 $addGameMenuItem = New-Object System.Windows.Controls.MenuItem
                 $addGameMenuItem.Header = $self.uiManager.GetLocalizedMessage("addMenuItem")
                 $addGameMenuItem.add_Click({ $self.HandleAddGame() }.GetNewClosure())
                 $gamesContextMenu.Items.Add($addGameMenuItem)
-                
+
                 $deleteGameMenuItem = New-Object System.Windows.Controls.MenuItem
                 $deleteGameMenuItem.Header = $self.uiManager.GetLocalizedMessage("deleteMenuItem")
                 $deleteGameMenuItem.add_Click({ $self.HandleDeleteGame() }.GetNewClosure())
                 $gamesContextMenu.Items.Add($deleteGameMenuItem)
-                
+
                 $duplicateGameMenuItem = New-Object System.Windows.Controls.MenuItem
                 $duplicateGameMenuItem.Header = $self.uiManager.GetLocalizedMessage("duplicateMenuItem")
                 $duplicateGameMenuItem.add_Click({ $self.HandleDuplicateGame() }.GetNewClosure())
                 $gamesContextMenu.Items.Add($duplicateGameMenuItem)
-                
+
                 $gamesListCtrl.ContextMenu = $gamesContextMenu
             } else {
                 Write-Verbose "GamesList not found"
@@ -2821,25 +2824,25 @@
                 $managedAppsListCtrl.add_DragOver({ param($s, $e) $self.HandleManagedAppsListDragOver($s, $e) }.GetNewClosure())
                 $managedAppsListCtrl.add_DragLeave({ param($s, $e) $self.HandleManagedAppsListDragLeave($s, $e) }.GetNewClosure())
                 $managedAppsListCtrl.add_Drop({ param($s, $e) $self.HandleManagedAppsListDrop($s, $e) }.GetNewClosure())
-                
+
                 # Create context menu for ManagedAppsList
                 $appsContextMenu = New-Object System.Windows.Controls.ContextMenu
-                
+
                 $addAppMenuItem = New-Object System.Windows.Controls.MenuItem
                 $addAppMenuItem.Header = $self.uiManager.GetLocalizedMessage("addMenuItem")
                 $addAppMenuItem.add_Click({ $self.HandleAddApp() }.GetNewClosure())
                 $appsContextMenu.Items.Add($addAppMenuItem)
-                
+
                 $deleteAppMenuItem = New-Object System.Windows.Controls.MenuItem
                 $deleteAppMenuItem.Header = $self.uiManager.GetLocalizedMessage("deleteMenuItem")
                 $deleteAppMenuItem.add_Click({ $self.HandleDeleteApp() }.GetNewClosure())
                 $appsContextMenu.Items.Add($deleteAppMenuItem)
-                
+
                 $duplicateAppMenuItem = New-Object System.Windows.Controls.MenuItem
                 $duplicateAppMenuItem.Header = $self.uiManager.GetLocalizedMessage("duplicateMenuItem")
                 $duplicateAppMenuItem.add_Click({ $self.HandleDuplicateApp() }.GetNewClosure())
                 $appsContextMenu.Items.Add($duplicateAppMenuItem)
-                
+
                 $managedAppsListCtrl.ContextMenu = $appsContextMenu
             } else {
                 Write-Verbose "ManagedAppsList not found"

@@ -154,6 +154,8 @@ $script:TextMappings = @{
     "ObsIntegrationTitle" = "integrationTitleObs"
     "DiscordIntegrationTitle" = "integrationTitleDiscord"
     "VTubeStudioIntegrationTitle" = "integrationTitleVtube"
+    "GamesDragDropHint" = "dragDropReorderHint"
+    "AppsDragDropHint" = "dragDropReorderHint"
 }
 
 # CheckBox content mappings
