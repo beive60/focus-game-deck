@@ -28,7 +28,7 @@
 
     Test Coverage:
     - Version information retrieval from Version.ps1
-    - Message template loading from messages.json
+    - Message template loading from individual language files
     - Placeholder replacement for Japanese (ja)
     - Placeholder replacement for English (en)
     - Placeholder replacement for Chinese Simplified (zh-CN)
@@ -40,7 +40,8 @@
 
     Dependencies:
     - Version.ps1 module for version information
-    - localization/messages.json for message templates
+    - localization/ directory with individual language files (ja.json, en.json, zh-CN.json)
+    - scripts/LanguageHelper.ps1 for message loading
     - gui/ConfigEditor.ps1 for Get-LocalizedMessage function source
 #>
 
@@ -67,9 +68,9 @@ try {
     $versionModulePath = Join-Path -Path $projectRoot -ChildPath "build-tools/Version.ps1"
     . $versionModulePath
 
-    # Load messages
-    $messagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
-    $messagesContent = Get-Content $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    # Load LanguageHelper for new file structure support
+    $languageHelperPath = Join-Path -Path $projectRoot -ChildPath "scripts/LanguageHelper.ps1"
+    . $languageHelperPath
 
     # Get version info
     $versionInfo = Get-ProjectVersionInfo
@@ -82,8 +83,9 @@ try {
     foreach ($lang in $languages) {
         Write-Host "--- Testing Language: $lang ---"
 
-        # Set up script variables
-        $script:Messages = $messagesContent.$lang
+        # Load messages using new individual file structure
+        $localizationDir = Join-Path -Path $projectRoot -ChildPath "localization"
+        $script:Messages = Get-LocalizedMessages -MessagesPath $localizationDir -LanguageCode $lang
         $script:CurrentLanguage = $lang
 
         # Load the fixed Get-LocalizedMessage function from ConfigEditor.ps1

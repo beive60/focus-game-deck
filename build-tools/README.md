@@ -111,7 +111,7 @@ The Focus Game Deck build system follows the **Single Responsibility Principle (
 **Task:** Copies runtime files that are not compiled into executables:
 
 - Configuration files (`config.json`, `config.json.sample`)
-- Localization files (`messages.json`)
+- Localization files (individual language files: `*.json` from `localization/`)
 - XAML UI files (`MainWindow.xaml`)
 - Asset files (icons, images)
 - Documentation (`README.md`, `LICENSE.md`)

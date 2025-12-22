@@ -15,7 +15,8 @@ This directory contains the source code for the GUI configuration editor.
 - `ConfigEditor.State.ps1` - Configuration state management
 - `ConfigEditor.UI.ps1` - UI construction and management
 - `MainWindow.xaml` - WPF window UI layout definition (includes Game Launcher tab)
-- `messages.json` - Internationalization message resources for GUI
+
+**Note**: Localization message files have been moved to `../localization/` directory (individual language files).
 
 ## Quick Start
 

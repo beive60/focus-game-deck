@@ -45,6 +45,7 @@ Welcome to Focus Game Deck documentation! This index provides a comprehensive ov
 | **[Architecture Guide](developer-guide/architecture.md)** | Technical design and implementation | Developers |
 | **[Build System](developer-guide/build-system.md)** | Development and distribution infrastructure | Developers and maintainers |
 | **[GUI Design Specifications](developer-guide/gui-design.md)** | Interface design and implementation | GUI developers |
+| **[Localization Guide](developer-guide/localization-guide.md)** | Adding new languages and translations | Developers and translators |
 | **[Developer Release Guide](developer-guide/release-process.md)** | Release process and workflows | Maintainers |
 | **[v3 Migration Guide](developer-guide/v3-migration-guide.md)** | Multi-executable architecture migration | Developers upgrading from v2.x |
 
@@ -54,6 +55,7 @@ Welcome to Focus Game Deck documentation! This index provides a comprehensive ov
 |----------|--------|-------------|
 | `developer-guide/json-formatting-fix.md` | Deprecated (2025-12-07) | Consolidated into [Architecture Guide - JSON Formatting Standards](developer-guide/architecture.md#json-formatting-standards) |
 | `developer-guide/bundling-implementation.md` | Deprecated (2025-12-07) | Content distributed to [Architecture Guide](developer-guide/architecture.md) and [Build System](developer-guide/build-system.md) |
+| `developer-guide/localization-file-split-proposal.md` | Implemented (2025-12-22) | Functionality integrated into application (v3.1), see [Localization Guide](developer-guide/localization-guide.md) |
 
 ### Project Planning & Information
 
