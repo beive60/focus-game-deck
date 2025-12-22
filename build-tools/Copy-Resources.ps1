@@ -121,14 +121,16 @@ try {
     $copyResults = @()
 
     # Copy localization files (runtime resources)
+    # New format: Individual language files (*.json) + manifest.json
+    # Legacy format: messages.json (backward compatibility)
     $localizationSource = Join-Path $SourceRoot "localization"
     $localizationDest = Join-Path $DestinationDir "localization"
     $copyResults += Copy-DirectoryContents `
         -SourcePath $localizationSource `
         -DestPath $localizationDest `
         -Include @("*.json") `
-        -Exclude @("*.backup", "*diagnostic*") `
-        -Description "localization files"
+        -Exclude @("*.backup*", "*diagnostic*") `
+        -Description "localization files (individual language files + manifest)"
 
     # NOTE: Script files are no longer copied to release directory
     # Launcher scripts (Create-Launchers-Enhanced.ps1, Create-Launchers.ps1) are bundled

@@ -118,13 +118,13 @@ function Get-OSLanguage {
                 return "zh-CN"
             } elseif ($cultureName.StartsWith("zh-")) {
                 # Default other Chinese variants to zh-CN for now
-                return "zh-CN"            
+                return "zh-CN"
             } elseif ($cultureName -eq "pt-br" -or $cultureName.StartsWith("pt-br")) {
                 # Brazilian Portuguese
                 return "pt-BR"
             } elseif ($cultureName -eq "id-id" -or $cultureName.StartsWith("id-")) {
                 # Indonesian
-                return "id-ID"            
+                return "id-ID"
             } else {
                 # Return two-letter ISO language name for other languages
                 return $uiCulture.TwoLetterISOLanguageName.ToLower()
@@ -146,13 +146,13 @@ function Get-OSLanguage {
                 return "zh-CN"
             } elseif ($cultureName.StartsWith("zh-")) {
                 # Default other Chinese variants to zh-CN for now
-                return "zh-CN"            
+                return "zh-CN"
             } elseif ($cultureName -eq "pt-br" -or $cultureName.StartsWith("pt-br")) {
                 # Brazilian Portuguese
                 return "pt-BR"
             } elseif ($cultureName -eq "id-id" -or $cultureName.StartsWith("id-")) {
                 # Indonesian
-                return "id-ID"            
+                return "id-ID"
             } else {
                 # Return two-letter ISO language name for other languages
                 return $culture.TwoLetterISOLanguageName.ToLower()
@@ -249,19 +249,26 @@ function Set-CultureByLanguage {
 
 <#
 .SYNOPSIS
-    Loads localized messages from messages.json file
+    Loads localized messages from individual language files or legacy messages.json
 
 .PARAMETER MessagesPath
-    Path to the messages.json file
+    Path to the localization directory or messages.json file
+    - If directory: Loads individual language file (e.g., localization/ja.json)
+    - If file: Loads from legacy monolithic messages.json
 
 .PARAMETER LanguageCode
-    Language code to load (supported codes vary based on available localizations)
+    Language code to load (e.g., "ja", "en", "zh-CN")
 
 .RETURNS
     PSCustomObject containing localized messages
 
 .EXAMPLE
-    $messages = Get-LocalizedMessages -MessagesPath "./messages.json" -LanguageCode "ja"
+    $messages = Get-LocalizedMessages -MessagesPath "./localization" -LanguageCode "ja"
+    # Loads from localization/ja.json (new format)
+
+.EXAMPLE
+    $messages = Get-LocalizedMessages -MessagesPath "./localization/messages.json" -LanguageCode "ja"
+    # Loads from messages.json (legacy format, backward compatibility)
 #>
 function Get-LocalizedMessages {
     param(
@@ -270,36 +277,58 @@ function Get-LocalizedMessages {
     )
 
     try {
-        if (-not (Test-Path $MessagesPath)) {
-            Write-Warning "Messages file not found: $MessagesPath"
-            return [PSCustomObject]@{}
-        }
+        # Determine if MessagesPath is a directory or file
+        $isDirectory = Test-Path -Path $MessagesPath -PathType Container
 
-        $messagesData = Get-Content -Path $MessagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($isDirectory) {
+            # New format: Individual language files in directory
+            $languageFile = Join-Path -Path $MessagesPath -ChildPath "$LanguageCode.json"
 
-        # Check if the file has language-specific structure
-        # Check for exact match first, then case-insensitive match for compatibility
-        if ($messagesData.PSObject.Properties.Name -contains $LanguageCode) {
-            Write-Verbose "Loading messages for language: $LanguageCode"
-            return $messagesData.$LanguageCode
-        } else {
-            # Try case-insensitive match for backwards compatibility
-            $matchingLanguage = $messagesData.PSObject.Properties.Name | Where-Object { $_.ToLower() -eq $LanguageCode.ToLower() } | Select-Object -First 1
-            if ($matchingLanguage) {
-                Write-Verbose "Loading messages for language (case-insensitive match): $matchingLanguage"
-                return $messagesData.$matchingLanguage
-            } elseif ($messagesData.PSObject.Properties.Name -contains "messages") {
-                # Legacy format - assume Japanese
-                Write-Verbose "Loading messages from legacy format"
-                return $messagesData.messages
+            if (-not (Test-Path $languageFile)) {
+                Write-Warning "Language file not found: $languageFile, falling back to English"
+                $languageFile = Join-Path -Path $MessagesPath -ChildPath "en.json"
+            }
+
+            if (Test-Path $languageFile) {
+                Write-Verbose "Loading messages from: $languageFile"
+                return Get-Content -Path $languageFile -Raw -Encoding UTF8 | ConvertFrom-Json
             } else {
-                # Fallback to English if the requested language is not found
-                if ($messagesData.PSObject.Properties.Name -contains "en") {
-                    Write-Warning "No messages found for language: $LanguageCode. Falling back to English."
-                    return $messagesData.en
+                throw "English fallback file not found: $languageFile"
+            }
+        } else {
+            # Legacy format: Monolithic messages.json file (backward compatibility)
+            if (-not (Test-Path $MessagesPath)) {
+                Write-Warning "Messages file not found: $MessagesPath"
+                return [PSCustomObject]@{}
+            }
+
+            Write-Verbose "Using legacy single-file format: $MessagesPath"
+            $messagesData = Get-Content -Path $MessagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
+
+            # Check if the file has language-specific structure
+            # Check for exact match first, then case-insensitive match for compatibility
+            if ($messagesData.PSObject.Properties.Name -contains $LanguageCode) {
+                Write-Verbose "Loading messages for language: $LanguageCode"
+                return $messagesData.$LanguageCode
+            } else {
+                # Try case-insensitive match for backwards compatibility
+                $matchingLanguage = $messagesData.PSObject.Properties.Name | Where-Object { $_.ToLower() -eq $LanguageCode.ToLower() } | Select-Object -First 1
+                if ($matchingLanguage) {
+                    Write-Verbose "Loading messages for language (case-insensitive match): $matchingLanguage"
+                    return $messagesData.$matchingLanguage
+                } elseif ($messagesData.PSObject.Properties.Name -contains "messages") {
+                    # Legacy format - assume Japanese
+                    Write-Verbose "Loading messages from legacy format"
+                    return $messagesData.messages
                 } else {
-                    Write-Warning "No messages found for language: $LanguageCode and no English fallback available"
-                    return [PSCustomObject]@{}
+                    # Fallback to English if the requested language is not found
+                    if ($messagesData.PSObject.Properties.Name -contains "en") {
+                        Write-Warning "No messages found for language: $LanguageCode. Falling back to English."
+                        return $messagesData.en
+                    } else {
+                        Write-Warning "No messages found for language: $LanguageCode and no English fallback available"
+                        return [PSCustomObject]@{}
+                    }
                 }
             }
         }
