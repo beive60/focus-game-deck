@@ -105,18 +105,23 @@ function New-MockConfigData {
     return $mockConfig
 }
 
-# Helper function to load actual messages from messages.json
+# Helper function to load actual messages from individual language files
 function New-MockMessages {
     try {
         $projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
-        $messagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
-        if (Test-Path $messagesPath) {
-            $messagesData = Get-Content $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
-            Write-Verbose "Loaded messages from: $messagesPath"
-            Write-Verbose "multipleGamesReady message: '$($messagesData.en.multipleGamesReady)'"
-            return $messagesData.en
+
+        # Load LanguageHelper
+        $languageHelperPath = Join-Path -Path $projectRoot -ChildPath "scripts/LanguageHelper.ps1"
+        . $languageHelperPath
+
+        $localizationDir = Join-Path -Path $projectRoot -ChildPath "localization"
+        if (Test-Path $localizationDir) {
+            $messages = Get-LocalizedMessages -MessagesPath $localizationDir -LanguageCode "en"
+            Write-Verbose "Loaded messages from: $localizationDir/en.json"
+            Write-Verbose "multipleGamesReady message: '$($messages.multipleGamesReady)'"
+            return $messages
         } else {
-            Write-BuildLog "Messages file not found at: $messagesPath" -Level Warning
+            Write-BuildLog "Localization directory not found at: $localizationDir" -Level Warning
         }
     } catch {
         Write-BuildLog "Could not load actual messages, using fallback: $($_.Exception.Message)" -Level Warning

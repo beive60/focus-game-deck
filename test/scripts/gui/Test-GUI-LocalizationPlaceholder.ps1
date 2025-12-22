@@ -49,13 +49,17 @@ try {
 
     # Test message loading
     Write-BuildLog "--- Step 2: Testing message loading ---"
-    $messagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
-    if (-not (Test-Path $messagesPath)) {
-        throw "Messages file not found: $messagesPath"
+
+    # Load LanguageHelper for new file structure support
+    $languageHelperPath = Join-Path -Path $projectRoot -ChildPath "scripts/LanguageHelper.ps1"
+    . $languageHelperPath
+
+    $localizationDir = Join-Path -Path $projectRoot -ChildPath "localization"
+    if (-not (Test-Path $localizationDir)) {
+        throw "Localization directory not found: $localizationDir"
     }
 
-    $messagesContent = Get-Content $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    Write-BuildLog "[OK] Messages loaded successfully"
+    Write-BuildLog "[OK] Localization directory found"
 
     # Test for each supported language
     $languages = @("ja", "en", "zh-CN")
@@ -63,12 +67,13 @@ try {
     foreach ($lang in $languages) {
         Write-BuildLog "--- Step 3: Testing language '$lang' ---"
 
-        if (-not $messagesContent.$lang) {
-            Write-BuildLog "Language '$lang' not found in messages" -Level Warning
+        # Load messages using new individual file structure
+        try {
+            $messages = Get-LocalizedMessages -MessagesPath $localizationDir -LanguageCode $lang
+        } catch {
+            Write-BuildLog "Failed to load messages for language '$lang': $($_.Exception.Message)" -Level Warning
             continue
         }
-
-        $messages = $messagesContent.$lang
         $aboutTemplate = $messages.aboutMessage
 
         if (-not $aboutTemplate) {

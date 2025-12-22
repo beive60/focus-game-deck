@@ -285,12 +285,29 @@ try {
         }
     } else {
         # Check based on Target parameter
-        $appMessagesPath = Join-Path $projectRoot "localization/messages.json"
+        # New format: Individual language files in localization directory
+        $appMessagesDir = Join-Path $projectRoot "localization"
         $websiteMessagesPath = Join-Path $projectRoot "website/messages-website.json"
+
+        # Check if new format (individual files) or legacy format (messages.json)
+        $manifestPath = Join-Path $appMessagesDir "manifest.json"
+        if (Test-Path $manifestPath) {
+            Write-Verbose "Using new individual language file format"
+            $useNewFormat = $true
+        } else {
+            Write-Verbose "Using legacy monolithic messages.json format"
+            $useNewFormat = $false
+            $appMessagesPath = Join-Path $projectRoot "localization/messages.json"
+        }
 
         switch ($Target) {
             "App" {
-                if (Test-Path $appMessagesPath) {
+                if ($useNewFormat) {
+                    # Add all individual language files
+                    $languageFiles = Get-ChildItem -Path $appMessagesDir -Filter "*.json" -File |
+                        Where-Object { $_.Name -notmatch "(manifest|backup|diagnostic)" }
+                    $filesToCheck += $languageFiles.FullName
+                } elseif (Test-Path $appMessagesPath) {
                     $filesToCheck += $appMessagesPath
                 }
             }
@@ -300,7 +317,12 @@ try {
                 }
             }
             "All" {
-                if (Test-Path $appMessagesPath) {
+                if ($useNewFormat) {
+                    # Add all individual language files
+                    $languageFiles = Get-ChildItem -Path $appMessagesDir -Filter "*.json" -File |
+                        Where-Object { $_.Name -notmatch "(manifest|backup|diagnostic)" }
+                    $filesToCheck += $languageFiles.FullName
+                } elseif (Test-Path $appMessagesPath) {
                     $filesToCheck += $appMessagesPath
                 }
                 if (Test-Path $websiteMessagesPath) {
