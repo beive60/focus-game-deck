@@ -140,7 +140,7 @@ function Test-Prerequisites {
     }
 
     $requiredFiles = @(
-        (Join-Path -Path $appRoot -ChildPath "localization/messages.json"),
+        (Join-Path -Path $appRoot -ChildPath "localization"),
         (Join-Path -Path $appRoot -ChildPath "config/config.json")
     )
 

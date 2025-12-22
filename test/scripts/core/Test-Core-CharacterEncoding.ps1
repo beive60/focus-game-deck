@@ -90,25 +90,33 @@ try {
     Test-Result "config.json.sample validation" $false $_.Exception.Message
 }
 
-# Test messages.json
+# Test individual language files (e.g., en.json, ja.json)
 try {
-    $messagesPath = Join-Path $projectRoot "localization/messages.json"
-    $messagesContent = Get-Content $messagesPath -Raw -Encoding UTF8
-    $messages = $messagesContent | ConvertFrom-Json
-    Test-Result "messages.json UTF-8 parsing" $true
+    $enPath = Join-Path $projectRoot "localization/en.json"
+    $enContent = Get-Content $enPath -Raw -Encoding UTF8
+    $messages = $enContent | ConvertFrom-Json
+    Test-Result "en.json UTF-8 parsing" $true
 
-    $messagesBytes = [System.IO.File]::ReadAllBytes($messagesPath)
-    $hasBOM = ($messagesBytes.Length -ge 3 -and $messagesBytes[0] -eq 0xEF -and $messagesBytes[1] -eq 0xBB -and $messagesBytes[2] -eq 0xBF)
-    Test-Result "messages.json without BOM" (-not $hasBOM) $(if ($hasBOM) { "BOM detected" } else { "" })
+    $enBytes = [System.IO.File]::ReadAllBytes($enPath)
+    $hasBOM = ($enBytes.Length -ge 3 -and $enBytes[0] -eq 0xEF -and $enBytes[1] -eq 0xBB -and $enBytes[2] -eq 0xBF)
+    Test-Result "en.json without BOM" (-not $hasBOM) $(if ($hasBOM) { "BOM detected" } else { "" })
 
     # Test message structure for all supported languages
-    if ($messages.en -and $messages.ja) {
-        $enCount = ($messages.en.PSObject.Properties | Measure-Object).Count
-        $jaCount = ($messages.ja.PSObject.Properties | Measure-Object).Count
-        $zhCnCount = ($messages."zh-cn".PSObject.Properties | Measure-Object).Count
-        $ruCount = ($messages.ru.PSObject.Properties | Measure-Object).Count
-        $frCount = ($messages.fr.PSObject.Properties | Measure-Object).Count
-        $esCount = ($messages.es.PSObject.Properties | Measure-Object).Count
+    $enCount = ($messages.PSObject.Properties | Measure-Object).Count
+
+    # Load other language files to compare
+    $jaPath = Join-Path $projectRoot "localization/ja.json"
+    $zhCnPath = Join-Path $projectRoot "localization/zh-CN.json"
+    $ruPath = Join-Path $projectRoot "localization/ru.json"
+    $frPath = Join-Path $projectRoot "localization/fr.json"
+    $esPath = Join-Path $projectRoot "localization/es.json"
+
+    if ((Test-Path $jaPath) -and (Test-Path $zhCnPath)) {
+        $jaCount = ((Get-Content $jaPath -Raw -Encoding UTF8 | ConvertFrom-Json).PSObject.Properties | Measure-Object).Count
+        $zhCnCount = ((Get-Content $zhCnPath -Raw -Encoding UTF8 | ConvertFrom-Json).PSObject.Properties | Measure-Object).Count
+        $ruCount = ((Get-Content $ruPath -Raw -Encoding UTF8 | ConvertFrom-Json).PSObject.Properties | Measure-Object).Count
+        $frCount = ((Get-Content $frPath -Raw -Encoding UTF8 | ConvertFrom-Json).PSObject.Properties | Measure-Object).Count
+        $esCount = ((Get-Content $esPath -Raw -Encoding UTF8 | ConvertFrom-Json).PSObject.Properties | Measure-Object).Count
 
         # All languages should have the same number of keys
         $allCountsMatch = ($enCount -eq $jaCount) -and ($jaCount -eq $zhCnCount) -and ($zhCnCount -eq $ruCount) -and ($ruCount -eq $frCount) -and ($frCount -eq $esCount)
@@ -120,12 +128,13 @@ try {
         }
 
         # Test Japanese text
-        $sampleText = $messages.ja.errorMessage
+        $jaMessages = Get-Content $jaPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $sampleText = $jaMessages.errorMessage
         $hasJapanese = $sampleText -and ($sampleText.Contains("エラー") -or $sampleText.Length -gt 5)
         Test-Result "Japanese character integrity" $hasJapanese $(if ($sampleText) { "Sample: $($sampleText.Substring(0, [Math]::Min(15, $sampleText.Length)))..." } else { "No sample text" })
     }
 } catch {
-    Test-Result "messages.json validation" $false $_.Exception.Message
+    Test-Result "Individual language files validation" $false $_.Exception.Message
 }
 
 # Test messages-website.json
@@ -196,10 +205,10 @@ try {
                 try {
                     . $languageHelperPath
 
-                    # Load messages using proper LanguageHelper method
-                    $messagesPath = Join-Path $projectRoot "localization/messages.json"
+                    # Load messages using proper LanguageHelper method (individual language files)
+                    $localizationDir = Join-Path $projectRoot "localization"
                     $langCode = Get-DetectedLanguage -ConfigData $config
-                    $msg = Get-LocalizedMessages -MessagesPath $messagesPath -LanguageCode $langCode
+                    $msg = Get-LocalizedMessages -MessagesPath $localizationDir -LanguageCode $langCode
 
                     # Create simple test messages for compatibility testing
                     $testMessages = @{

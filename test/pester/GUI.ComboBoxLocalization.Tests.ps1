@@ -67,10 +67,12 @@ Describe "GUI ComboBox Localization Tests" -Tag "GUI", "Localization" {
         }
 
         It "should have message keys for all ComboBox mappings" {
-            $messages = Get-Content -Path (Join-Path -Path $projectRoot -ChildPath "localization/messages.json") -Raw -Encoding UTF8 | ConvertFrom-Json
+            # Load from individual language file
+            $jaPath = Join-Path -Path $projectRoot -ChildPath "localization/ja.json"
+            $messages = Get-Content -Path $jaPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
             foreach ($messageKey in $ComboBoxItemMappings.Values) {
-                $messages.ja.$messageKey | Should -Not -BeNullOrEmpty -Because "Message key $messageKey should exist"
+                $messages.$messageKey | Should -Not -BeNullOrEmpty -Because "Message key $messageKey should exist"
             }
         }
     }

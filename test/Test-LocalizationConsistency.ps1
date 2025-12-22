@@ -40,7 +40,7 @@
     Validates only website messages
 
 .EXAMPLE
-    .\Test-LocalizationConsistency.ps1 -Path "./localization/messages.json" -ShowDetails
+    .\Test-LocalizationConsistency.ps1 -Path "./localization" -ShowDetails
     Validates a specific message file with detailed output
 
 .EXAMPLE
@@ -297,7 +297,7 @@ try {
         } else {
             Write-Verbose "Using legacy monolithic messages.json format"
             $useNewFormat = $false
-            $appMessagesPath = Join-Path $projectRoot "localization/messages.json"
+            $appMessagesPath = Join-Path $projectRoot "localization"
         }
 
         switch ($Target) {

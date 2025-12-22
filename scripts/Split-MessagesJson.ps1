@@ -11,7 +11,7 @@
     language instead of parsing all languages.
 
 .PARAMETER SourceFile
-    Path to the source messages.json file (default: localization/messages.json)
+    Path to the source messages.json file (default: localization/messages.json if it exists, otherwise error)
 
 .PARAMETER OutputDir
     Output directory for split files (default: localization)
