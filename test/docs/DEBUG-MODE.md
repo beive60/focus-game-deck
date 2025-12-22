@@ -150,4 +150,4 @@ Write-Host "ConfigEditor test passed"
 - gui/ConfigEditor.ps1 - Main GUI application
 - test/Test-ConfigEditorDebug.ps1 - Automated test script
 - gui/ConfigEditor.*.ps1 - Supporting module files
-- localization/messages.json - Localization resources
+- localization/*.json - Individual language files for localization resources

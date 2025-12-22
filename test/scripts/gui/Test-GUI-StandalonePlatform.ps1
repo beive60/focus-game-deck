@@ -72,7 +72,7 @@ if ($configEditorContent -match 'function Handle-BrowseExecutablePath') {
 Write-Host ""
 Write-BuildLog "Test 8: Checking messages.json for localization..."
 
-$messagesPath = "../localization/messages.json"
+$messagesPath = "../localization/en.json"
 $messagesContent = Get-Content $messagesPath -Raw
 
 if ($messagesContent -match 'standalonePlatform') {

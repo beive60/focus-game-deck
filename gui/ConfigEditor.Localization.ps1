@@ -22,9 +22,9 @@ class ConfigEditorLocalization {
         Sets the MessagesPath, detects language, and loads messages.
     #>
     ConfigEditorLocalization([string]$appRoot) {
-        # Store provided project root and build messages path from it.
+        # Store provided project root and build localization directory path from it.
         $this.appRoot = $appRoot
-        $this.MessagesPath = Join-Path -Path $this.appRoot -ChildPath "localization/messages.json"
+        $this.MessagesPath = Join-Path -Path $this.appRoot -ChildPath "localization"
         $this.DetectLanguage()
         $this.LoadMessages()
     }
@@ -98,44 +98,54 @@ class ConfigEditorLocalization {
     #>
     [void]LoadMessages() {
         try {
-            # Determine localization directory
-            $localizationDir = Split-Path -Path $this.MessagesPath -Parent
+            Write-Verbose "[DEBUG] LoadMessages: MessagesPath = $($this.MessagesPath)"
+            Write-Verbose "[DEBUG] LoadMessages: CurrentLanguage = $($this.CurrentLanguage)"
 
-            # New format: Try loading individual language file first
+            # MessagesPath should be the localization directory
+            $localizationDir = $this.MessagesPath
+
+            # Try loading individual language file first (new format)
             $languageFile = Join-Path -Path $localizationDir -ChildPath "$($this.CurrentLanguage).json"
+            Write-Verbose "[DEBUG] LoadMessages: Checking for language file: $languageFile"
 
             if (Test-Path $languageFile) {
                 # New format: Individual language file exists
                 Write-Verbose "[INFO] Loading messages from individual file: $languageFile"
                 $this.Messages = Get-Content -Path $languageFile -Raw -Encoding UTF8 | ConvertFrom-Json
                 Write-Verbose "[INFO] Loaded messages for language: $($this.CurrentLanguage)"
-            } elseif (Test-Path $this.MessagesPath) {
-                # Legacy format: Load from monolithic messages.json (backward compatibility)
-                Write-Verbose "[INFO] Loading messages from legacy single file: $($this.MessagesPath)"
-                $messagesContent = Get-Content $this.MessagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
-                $langProperty = $messagesContent.PSObject.Properties | Where-Object { $_.Name -eq $this.CurrentLanguage }
-
-                if ($langProperty) {
-                    $this.Messages = $langProperty.Value
-                    Write-Verbose "[INFO] Loaded messages for language: $($this.CurrentLanguage)"
-                } else {
-                    # Fallback to English in legacy format
-                    Write-Verbose "[INFO] Language '$($this.CurrentLanguage)' not found, falling back to English"
-                    $enFile = Join-Path -Path $localizationDir -ChildPath "en.json"
-
-                    if (Test-Path $enFile) {
-                        # Try individual English file
-                        $this.Messages = Get-Content -Path $enFile -Raw -Encoding UTF8 | ConvertFrom-Json
-                    } else {
-                        # Use English from legacy file
-                        $enProperty = $messagesContent.PSObject.Properties | Where-Object { $_.Name -eq 'en' }
-                        $this.Messages = $enProperty.Value
-                    }
-                    $this.CurrentLanguage = "en"
-                    Write-Verbose "[INFO] Loaded English fallback messages"
-                }
             } else {
-                throw "[ERROR] No messages file found at: $($this.MessagesPath) or $languageFile"
+                # Try legacy format as fallback
+                $legacyFile = Join-Path -Path $localizationDir -ChildPath "messages.json"
+                Write-Verbose "[DEBUG] LoadMessages: Individual file not found, trying legacy: $legacyFile"
+
+                if (Test-Path $legacyFile) {
+                    # Legacy format: Load from monolithic messages.json (backward compatibility)
+                    Write-Verbose "[INFO] Loading messages from legacy single file: $legacyFile"
+                    $messagesContent = Get-Content $legacyFile -Raw -Encoding UTF8 | ConvertFrom-Json
+                    $langProperty = $messagesContent.PSObject.Properties | Where-Object { $_.Name -eq $this.CurrentLanguage }
+
+                    if ($langProperty) {
+                        $this.Messages = $langProperty.Value
+                        Write-Verbose "[INFO] Loaded messages for language: $($this.CurrentLanguage)"
+                    } else {
+                        # Fallback to English in legacy format
+                        Write-Verbose "[INFO] Language '$($this.CurrentLanguage)' not found, falling back to English"
+                        $enFile = Join-Path -Path $localizationDir -ChildPath "en.json"
+
+                        if (Test-Path $enFile) {
+                            # Try individual English file
+                            $this.Messages = Get-Content -Path $enFile -Raw -Encoding UTF8 | ConvertFrom-Json
+                        } else {
+                            # Use English from legacy file
+                            $enProperty = $messagesContent.PSObject.Properties | Where-Object { $_.Name -eq 'en' }
+                            $this.Messages = $enProperty.Value
+                        }
+                        $this.CurrentLanguage = "en"
+                        Write-Verbose "[INFO] Loaded English fallback messages"
+                    }
+                } else {
+                    throw "[ERROR] No localization files found. Checked: $languageFile and $legacyFile"
+                }
             }
 
         } catch {

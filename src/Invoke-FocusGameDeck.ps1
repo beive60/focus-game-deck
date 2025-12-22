@@ -7,9 +7,17 @@ param(
 
 # Import required modules if not already loaded
 # Check both module (PowerShell Core) and snap-in (Windows PowerShell)
-if (-not (Get-Module -Name Microsoft.PowerShell.Security) -and -not (Get-PSSnapin -Name Microsoft.PowerShell.Security -ErrorAction SilentlyContinue)) {
+if (-not (Get-Module -Name Microsoft.PowerShell.Security)) {
     try {
-        Import-Module Microsoft.PowerShell.Security -ErrorAction SilentlyContinue
+        # Try Get-PSSnapin only for Windows PowerShell (version < 6)
+        if ($PSVersionTable.PSVersion.Major -lt 6) {
+            $snapin = Get-PSSnapin -Name Microsoft.PowerShell.Security -ErrorAction SilentlyContinue
+            if (-not $snapin) {
+                Import-Module Microsoft.PowerShell.Security -ErrorAction SilentlyContinue
+            }
+        } else {
+            Import-Module Microsoft.PowerShell.Security -ErrorAction SilentlyContinue
+        }
     } catch {
         Write-Warning "Failed to load Microsoft.PowerShell.Security module: $_"
     }
@@ -33,7 +41,7 @@ if ($isExecutable) {
 
 # AssetFile paths variables - use $appRoot for external files
 $configPath = Join-Path $appRoot "config/config.json"
-$messagesPath = Join-Path $appRoot "localization/messages.json"
+$localizationDir = Join-Path $appRoot "localization"
 
 # Explicit dot-source declarations for bundler dependency resolution
 # These are processed by Invoke-PsScriptBundler.ps1 and removed during bundling
@@ -52,24 +60,31 @@ $messagesPath = Join-Path $appRoot "localization/messages.json"
 . (Join-Path -Path $appRoot -ChildPath "src/modules/PlatformManager.ps1")
 . (Join-Path -Path $appRoot -ChildPath "src/modules/VTubeStudioManager.ps1")
 
-Write-LocalizedHost -Messages $msg -Key "cli_loading_config" -Default "Loading configuration..." -Level "INFO" -Component "ConfigLoader"
 # Load configuration
 try {
+    Write-Host "[INFO] ConfigLoader: Loading configuration..."
     $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    Write-LocalizedHost -Messages $msg -Key "cli_config_loaded" -Default "Configuration loaded." -Level "OK" -Component "ConfigLoader"
+    Write-Host "[OK] ConfigLoader: Configuration loaded."
 } catch {
     Write-Error "Failed to load configuration: $_"
     exit 1
 }
-# Load localization messages
+
+# Load localization messages from individual language files
 try {
-    $messagesData = Get-Content -Path $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
     $langCode = Get-DetectedLanguage -ConfigData $config
-    $msg = if ($messagesData.PSObject.Properties.Name -contains $langCode) {
-        $messagesData.$langCode
-    } else {
-        $messagesData.en  # Fallback to English
+    Write-Verbose "Detected language code: $langCode"
+
+    # Use Get-LocalizedMessages function to load individual language file (e.g., fr.json, en.json)
+    # This follows the v3.1+ split-file architecture for 88.5% performance improvement
+    $msg = Get-LocalizedMessages -MessagesPath $localizationDir -LanguageCode $langCode
+
+    if (-not $msg -or $msg.PSObject.Properties.Count -eq 0) {
+        Write-Warning "Failed to load messages for language '$langCode'. Using English fallback."
+        $msg = Get-LocalizedMessages -MessagesPath $localizationDir -LanguageCode "en"
     }
+
+    Write-Verbose "Loaded localization messages for language: $langCode"
 } catch {
     Write-Warning "Failed to load localization messages: $_"
     Write-Host "Continuing with default messages."

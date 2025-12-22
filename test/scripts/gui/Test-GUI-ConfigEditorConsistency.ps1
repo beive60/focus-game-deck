@@ -36,7 +36,7 @@ $ErrorActionPreference = 'Stop'
 # Define paths
 $projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $MappingsPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1"
-$MessagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
+$MessagesPath = Join-Path -Path $projectRoot -ChildPath "localization/en.json"
 $XamlPath = Join-Path -Path $projectRoot -ChildPath "gui/MainWindow.xaml"
 $ConfigEditorPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.ps1"
 

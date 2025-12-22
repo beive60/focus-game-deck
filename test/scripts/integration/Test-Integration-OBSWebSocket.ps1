@@ -28,7 +28,7 @@
     Prerequisite   : OBS Studio must be running with WebSocket server enabled
     Required Files :
         - config/config.json (OBS configuration)
-        - localization/messages.json (Localized messages)
+        - localization/*.json (Individual language files for localized messages)
         - src/modules/OBSManager.ps1 (OBSManager module)
 
     Before running:

@@ -23,7 +23,7 @@
     Dependencies:
     - test/scripts/gui/Test-GUI-LocalizationIntegrity.ps1
     - gui/ConfigEditor.Mappings.ps1
-    - localization/messages.json
+    - localization/*.json (individual language files)
     - gui/MainWindow.xaml
 #>
 

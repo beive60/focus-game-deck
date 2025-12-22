@@ -15,7 +15,8 @@ BeforeAll {
     . "$projectRoot/build-tools/utils/BuildLogger.ps1"
 
     $ConfigPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
-    $MessagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
+    $LocalizationDir = Join-Path -Path $projectRoot -ChildPath "localization"
+    $MessagesPath = Join-Path -Path $LocalizationDir -ChildPath "en.json"
 }
 
 Describe "Character Encoding Tests" -Tag "Core", "Encoding" {
@@ -47,7 +48,7 @@ Describe "Character Encoding Tests" -Tag "Core", "Encoding" {
             } | Should -Not -Throw
         }
 
-        It "messages.json should be UTF-8 without BOM" {
+        It "en.json should be UTF-8 without BOM" {
             $bytes = [System.IO.File]::ReadAllBytes($MessagesPath)
             $hasBOM = (
                 $bytes.Length -ge 3 -and
@@ -57,7 +58,7 @@ Describe "Character Encoding Tests" -Tag "Core", "Encoding" {
             $hasBOM | Should -Be $false
         }
 
-        It "messages.json should be valid UTF-8" {
+        It "en.json should be valid UTF-8" {
             {
                 $content = Get-Content $MessagesPath -Raw -Encoding UTF8
                 $content | ConvertFrom-Json
@@ -66,12 +67,13 @@ Describe "Character Encoding Tests" -Tag "Core", "Encoding" {
     }
 
     Context "Japanese Character Integrity" {
-        It "should correctly read Japanese characters from messages.json" {
-            $messages = Get-Content $MessagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
-            $messages.ja | Should -Not -BeNullOrEmpty
+        It "should correctly read Japanese characters from ja.json" {
+            $jaPath = Join-Path -Path $LocalizationDir -ChildPath "ja.json"
+            $messages = Get-Content $jaPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            $messages | Should -Not -BeNullOrEmpty
 
             # Check for common Japanese characters
-            $jaText = $messages.ja | ConvertTo-Json
+            $jaText = $messages | ConvertTo-Json
             $jaText | Should -Match '[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+'
         }
     }

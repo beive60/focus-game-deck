@@ -51,7 +51,7 @@
 
     Dependencies:
     - gui/ConfigEditor.Mappings.ps1 (ComboBoxItem mapping definitions)
-    - localization/messages.json (localized message strings)
+    - localization/*.json (individual language files with localized message strings)
     - gui/MainWindow.xaml (GUI layout definition)
     - .NET WPF assemblies
 #>
@@ -71,7 +71,8 @@ $VerbosePreference = "Continue"
 # Define project root and script paths
 $projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $MappingsPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Mappings.ps1"
-$MessagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
+$localizationDir = Join-Path -Path $projectRoot -ChildPath "localization"
+$MessagesPath = Join-Path -Path $localizationDir -ChildPath "$Language.json"
 $XamlPath = Join-Path -Path $projectRoot -ChildPath "gui/MainWindow.xaml"
 $ConfigEditorPath = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.ps1"
 
@@ -89,10 +90,13 @@ Add-Type -AssemblyName WindowsBase
 Write-BuildLog "[2/6] Loading mappings..."
 . $MappingsPath
 
-# Load messages
+# Load messages from individual language file
 Write-BuildLog "[3/6] Loading messages..."
-$messagesJson = Get-Content $MessagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
-$messages = $messagesJson.$Language
+if (-not (Test-Path $MessagesPath)) {
+    Write-BuildLog "[ERROR] Language file not found: $MessagesPath" -Level Error
+    exit 1
+}
+$messages = Get-Content $MessagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
 Write-BuildLog "Messages loaded for '$Language'. Total message count: $($messages.PSObject.Properties.Count)"
 Write-Host ""

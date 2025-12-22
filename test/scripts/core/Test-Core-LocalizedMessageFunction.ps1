@@ -56,7 +56,7 @@
 
     Dependencies:
     - Version.ps1 module for Get-ProjectVersionInfo function
-    - localization/messages.json for message templates
+    - localization/*.json for individual language message templates
 #>
 
 param(
@@ -86,7 +86,7 @@ try {
     }
 
     # Load messages
-    $messagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
+    $messagesPath = Join-Path -Path $projectRoot -ChildPath "localization/en.json"
     $messagesContent = Get-Content $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
     # Set up script variables as they would be in ConfigEditor

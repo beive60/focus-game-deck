@@ -35,7 +35,7 @@ if ($Verbose) { $VerbosePreference = "Continue" }
 # Initialize script variables
 $projectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $configPath = Join-Path -Path $projectRoot -ChildPath "config/config.json"
-$messagesPath = Join-Path -Path $projectRoot -ChildPath "localization/messages.json"
+$messagesPath = Join-Path -Path $projectRoot -ChildPath "localization/en.json"
 $loggerModulePath = Join-Path -Path $projectRoot -ChildPath "src/modules/Logger.ps1"
 $testLogDir = Join-Path -Path $PSScriptRoot -ChildPath "logs"
 $testLogFile = Join-Path $testLogDir "test-log-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"

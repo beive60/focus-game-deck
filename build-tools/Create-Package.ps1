@@ -234,16 +234,24 @@ try {
         }
     }
 
-    # Copy localization/messages.json
+    # Copy localization files (individual language files + manifest.json, and legacy messages.json if exists)
     $localizationDir = Join-Path $DestinationDir "localization"
     New-Item -ItemType Directory -Path $localizationDir -Force | Out-Null
 
-    $messagesSource = Join-Path $SourceDir "localization/messages.json"
-    if (Test-Path $messagesSource) {
-        Copy-Item -Path $messagesSource -Destination (Join-Path $localizationDir "messages.json") -Force
-        Write-Verbose "  Copied: localization/messages.json"
+    $localizationSourceDir = Join-Path $SourceDir "localization"
+    if (Test-Path $localizationSourceDir) {
+        # Copy all JSON files (en.json, ja.json, manifest.json, etc.)
+        $jsonFiles = Get-ChildItem -Path $localizationSourceDir -Filter "*.json" -File
+        if ($jsonFiles) {
+            foreach ($file in $jsonFiles) {
+                Copy-Item -Path $file.FullName -Destination $localizationDir -Force
+                Write-Verbose "  Copied: localization/$($file.Name)"
+            }
+        } else {
+            Write-PackageMessage "Warning: No localization JSON files found in $localizationSourceDir" "WARN"
+        }
     } else {
-        Write-PackageMessage "Warning: localization/messages.json not found" "WARN"
+        Write-PackageMessage "Warning: localization directory not found: $localizationSourceDir" "WARN"
     }
 
     # Copy scripts folder
@@ -263,7 +271,7 @@ try {
     Write-PackageMessage "Creating release documentation..." "INFO"
 
     # Create language-specific versions for all supported languages
-    $languages = @("en", "ja", "zh-CN", "ru", "fr", "es")
+    $languages = @("en", "ja", "zh-CN", "ru", "fr", "es", "id-ID", "pt-BR")
     foreach ($lang in $languages) {
         $langReadmeContent = New-ReleaseReadme -Version $Version -IsSigned $IsSigned -BuildDate $buildDate -Language $lang
 
