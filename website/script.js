@@ -237,6 +237,14 @@ class I18n {
                         'es': 'es'
                     };
                 }
+
+                const langCode = langMap[this.currentLanguage] || 'en';
+
+                // Replace {lang} placeholder with actual language code
+                const newSrc = basePattern.replace('{lang}', langCode);
+                img.src = newSrc;
+
+                // Update alt text if data-i18n-img-alt is specified
                 const altKey = img.getAttribute('data-i18n-img-alt');
                 if (altKey) {
                     const translation = currentMessages[altKey];
