@@ -184,11 +184,68 @@ class I18n {
             }
         });
 
+        // Handle data-i18n-img for language-specific images
+        this.updateLanguageImages();
+
         if (currentMessages['site_title']) {
             document.title = currentMessages['site_title'];
         }
 
         document.documentElement.lang = this.currentLanguage;
+    }
+
+    /**
+     * Update images based on current language
+     * Images with data-i18n-img attribute will have their src updated
+     * Images with data-i18n-img-alt attribute will have their alt updated
+     */
+    updateLanguageImages() {
+        const images = document.querySelectorAll('[data-i18n-img]');
+        const currentMessages = this.messages[this.currentLanguage] || {};
+
+        images.forEach(img => {
+            const basePattern = img.getAttribute('data-i18n-img');
+
+            if (basePattern && img.tagName === 'IMG') {
+                // Check if this is a console image (special naming convention)
+                const isConsoleImage = basePattern.includes('console_');
+
+                // Map language codes to match filename conventions
+                let langMap;
+                if (isConsoleImage) {
+                    // Console images use different naming: ja (not jp), id-ID, pt-BR, zn-CN
+                    langMap = {
+                        'ja': 'ja',
+                        'zh-CN': 'zn-CN',
+                        'pt-BR': 'pt-BR',
+                        'id-ID': 'id-ID',
+                        'en': 'en',
+                        'ru': 'ru',
+                        'fr': 'fr',
+                        'es': 'es'
+                    };
+                } else {
+                    // Standard naming: jp, zh-cn, pt-br, id
+                    langMap = {
+                        'ja': 'jp',
+                        'zh-CN': 'zh-cn',
+                        'pt-BR': 'pt-br',
+                        'id-ID': 'id',
+                        'en': 'en',
+                        'ru': 'ru',
+                        'fr': 'fr',
+                        'es': 'es'
+                    };
+                }
+                const altKey = img.getAttribute('data-i18n-img-alt');
+                if (altKey) {
+                    const translation = currentMessages[altKey];
+                    if (translation) {
+                        img.alt = translation;
+                    }
+                }
+            }
+        });
     }
 }
 
