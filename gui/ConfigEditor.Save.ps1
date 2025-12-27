@@ -441,12 +441,25 @@ function Save-CurrentAppData {
     # Save process name
     $appProcessNameTextBox = $script:Window.FindName("AppProcessNameTextBox")
     if ($appProcessNameTextBox) {
-        $processNameValue = $appProcessNameTextBox.Text
-        if ($processNameValue -match '\|') {
+        $processNameValue = $appProcessNameTextBox.Text.Trim()
+
+        # Remove deprecated processNames property if it exists
+        if ($appData.PSObject.Properties.Name -contains "processNames") {
+            $appData.PSObject.Properties.Remove("processNames")
+            Write-Verbose "Removed deprecated 'processNames' property"
+        }
+
+        if ([string]::IsNullOrWhiteSpace($processNameValue)) {
+            # If empty, store as empty string
+            Set-PropertyValue -Object $appData -PropertyName "processName" -Value ""
+        } elseif ($processNameValue -match '\|') {
+            # Multiple process names separated by pipe
             Set-PropertyValue -Object $appData -PropertyName "processName" -Value ($processNameValue -split '\|' | ForEach-Object { $_.Trim() })
         } else {
+            # Single process name (already trimmed)
             Set-PropertyValue -Object $appData -PropertyName "processName" -Value $processNameValue
         }
+        Write-Verbose "Saved processName: $processNameValue"
     }
 
     # Save path (normalize backslashes to forward slashes)
