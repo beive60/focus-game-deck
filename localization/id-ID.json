@@ -241,7 +241,7 @@
     "gameIdInvalidCharacters": "ID Game hanya boleh berisi karakter alfanumerik, tanda hubung, dan garis bawah",
     "gameIdAlreadyExists": "ID Game '{0}' sudah digunakan. Silakan pilih yang lain.",
     "steamAppIdRequired": "Steam App ID diperlukan untuk platform Steam",
-    "steamAppIdMust7Digits": "Steam App ID harus berupa angka 7 digit",
+    "steamAppIdMust7Digits": "Steam App ID harus hanya berupa angka",
     "epicGameIdRequired": "Epic Game ID diperlukan untuk platform Epic",
     "epicGameIdInvalidFormat": "Epic Game ID harus dimulai dengan 'apps/' atau 'com.epicgames.launcher://apps/'",
     "executablePathRequired": "Jalur eksekusi diperlukan",

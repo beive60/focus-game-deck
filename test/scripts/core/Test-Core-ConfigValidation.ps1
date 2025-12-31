@@ -112,10 +112,10 @@ $errors = Invoke-ConfigurationValidation -GameId "apex" -Platform "steam" -Steam
 Test-ValidationResult -TestName "Empty Steam AppID" -Errors $errors -ExpectedCount 1 -ExpectedControl "SteamAppIdTextBox" -ExpectedKey "steamAppIdRequired"
 
 $errors = Invoke-ConfigurationValidation -GameId "apex" -Platform "steam" -SteamAppId "123456"
-Test-ValidationResult -TestName "Steam AppID with 6 digits" -Errors $errors -ExpectedCount 1 -ExpectedControl "SteamAppIdTextBox" -ExpectedKey "steamAppIdMust7Digits"
+Test-ValidationResult -TestName "Steam AppID with 6 digits (valid)" -Errors $errors -ExpectedCount 0
 
 $errors = Invoke-ConfigurationValidation -GameId "apex" -Platform "steam" -SteamAppId "12345678"
-Test-ValidationResult -TestName "Steam AppID with 8 digits" -Errors $errors -ExpectedCount 1 -ExpectedControl "SteamAppIdTextBox" -ExpectedKey "steamAppIdMust7Digits"
+Test-ValidationResult -TestName "Steam AppID with 8 digits (valid)" -Errors $errors -ExpectedCount 0
 
 $errors = Invoke-ConfigurationValidation -GameId "apex" -Platform "steam" -SteamAppId "117247a"
 Test-ValidationResult -TestName "Steam AppID with non-numeric characters" -Errors $errors -ExpectedCount 1 -ExpectedControl "SteamAppIdTextBox" -ExpectedKey "steamAppIdMust7Digits"
