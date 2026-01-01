@@ -462,7 +462,7 @@ function Save-CurrentAppData {
         $workingDirValue = $workingDirectoryTextBox.Text.Trim()
         if ([string]::IsNullOrWhiteSpace($workingDirValue)) {
             # If working directory is empty, remove the property
-            if ($null -ne $appData.PSObject.Properties["workingDirectory"]) {
+            if ($appData.PSObject.Properties.Name -contains "workingDirectory") {
                 $appData.PSObject.Properties.Remove("workingDirectory")
             }
         } else {
