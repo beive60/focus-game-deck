@@ -18,9 +18,7 @@ class VTubeStudioManager {
 
         # Load and initialize base helper for common operations
         try {
-            $this.BaseHelper = New-WebSocketAppManagerBase`
-            -Config $vtubeConfig -Messages $messages -Logger $logger`
-            -AppName "VTubeStudio"
+            $this.BaseHelper = New-WebSocketAppManagerBase -Config $vtubeConfig -Messages $messages -Logger $logger -AppName "VTubeStudio"
         } catch {
             Write-LocalizedHost -Messages $messages -Key "vtube_startup_failed_error" -Args @($_) -Default "Failed to start VTube Studio: {0}" -Level "WARNING" -Component "VTubeStudioManager"
             $this.BaseHelper = $null
