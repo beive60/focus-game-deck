@@ -251,7 +251,12 @@ class VTubeStudioManager {
             $json = $message | ConvertTo-Json -Depth 5 -Compress
             $buffer = [System.Text.Encoding]::UTF8.GetBytes($json)
             $sendSegment = New-Object ArraySegment[byte](, $buffer)
-            $this.WebSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
+            
+            # Use timeout for send operation
+            $cts = New-Object System.Threading.CancellationTokenSource
+            $cts.CancelAfter(5000)
+            
+            $this.WebSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, $cts.Token).Wait()
             return $true
         } catch {
             Write-LocalizedHost -Messages $this.Messages -Key "vtube_websocket_send_error" -Args @($_) -Default "VTube Studio WebSocket send error: {0}" -Level "WARNING" -Component "VTubeStudioManager"
@@ -273,9 +278,11 @@ class VTubeStudioManager {
         $buffer = New-Object byte[] 8192
         $segment = New-Object ArraySegment[byte](, $buffer)
         $resultText = ""
+        $maxIterations = 100  # Prevent infinite loops
 
         try {
-            while ($this.WebSocket.State -eq "Open") {
+            $iteration = 0
+            while ($this.WebSocket.State -eq "Open" -and $iteration -lt $maxIterations) {
                 $receiveTask = $this.WebSocket.ReceiveAsync($segment, $cts.Token)
                 $receiveTask.Wait()
                 $result = $receiveTask.Result
@@ -285,7 +292,14 @@ class VTubeStudioManager {
                 if ($result.EndOfMessage) {
                     break
                 }
+                $iteration++
             }
+            
+            if ($iteration -ge $maxIterations) {
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_websocket_message_too_large" -Default "VTube Studio message exceeded size limit" -Level "WARNING" -Component "VTubeStudioManager"
+                return $null
+            }
+            
             return $resultText | ConvertFrom-Json
         } catch {
             Write-LocalizedHost -Messages $this.Messages -Key "vtube_websocket_receive_error" -Args @($_) -Default "VTube Studio WebSocket receive error: {0}" -Level "WARNING" -Component "VTubeStudioManager"

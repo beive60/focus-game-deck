@@ -438,6 +438,7 @@
   "vtube_websocket_not_connected": "VTube Studio WebSocket not connected",
   "vtube_websocket_send_error": "VTube Studio WebSocket send error: {0}",
   "vtube_websocket_receive_error": "VTube Studio WebSocket receive error: {0}",
+  "vtube_websocket_message_too_large": "VTube Studio message exceeded size limit",
   "vtube_plaintext_token_detected": "Plain text authentication token detected - consider re-saving with encryption",
   "vtube_requesting_token": "Requesting authentication token from VTube Studio...",
   "vtube_token_request_failed": "Failed to obtain authentication token from VTube Studio",
