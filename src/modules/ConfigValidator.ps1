@@ -259,6 +259,27 @@ class ConfigValidator {
         # Determine platform (default to Steam)
         $platform = if ($gameConfig.platform) { $gameConfig.platform } else { "steam" }
 
+        # Check if platform is supported
+        $supportedPlatforms = @("steam", "epic", "riot", "standalone", "direct")
+        if ($platform -notin $supportedPlatforms) {
+            $this.Errors += "Game '$gameId' has unsupported platform: '$platform'. Supported platforms: $($supportedPlatforms -join ', ')"
+            # Don't continue with validation if platform is unsupported
+            # Still validate appsToManage references
+            if ($gameConfig.appsToManage) {
+                foreach ($appId in $gameConfig.appsToManage) {
+                    if ($appId -eq "obs") {
+                        continue
+                    }
+                    if (-not $this.Config.managedApps.$appId) {
+                        $this.Errors += "Game '$gameId' references undefined application: '$appId'"
+                    }
+                }
+            } else {
+                $this.Warnings += "Game '$gameId' has no applications to manage (appsToManage is empty)"
+            }
+            return
+        }
+
         # Use ValidationRules module for format validation
         $validationParams = @{
             GameId = $gameId

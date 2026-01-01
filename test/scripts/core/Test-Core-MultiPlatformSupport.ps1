@@ -99,6 +99,7 @@ $srcDir = Join-Path -Path $projectRoot -ChildPath "src"
 # Import modules for testing
 $modulePaths = @(
     (Join-Path $srcDir "modules/Logger.ps1"),
+    (Join-Path $srcDir "modules/ValidationRules.ps1"),
     (Join-Path $srcDir "modules/ConfigValidator.ps1"),
     (Join-Path $srcDir "modules/PlatformManager.ps1")
 )
@@ -320,14 +321,14 @@ function Test-ConfigValidator {
             steamGame = @{
                 name = "Test Steam Game"
                 platform = "steam"
-                steamAppId = "123456"
+                steamAppId = "1234567"  # Fixed: 7 digits
                 processName = "steamgame*"
                 appsToManage = @("testApp")
             }
             epicGame = @{
                 name = "Test Epic Game"
                 platform = "epic"
-                epicGameId = "TestEpicGame"
+                epicGameId = "apps/TestEpicGame"  # Fixed: added proper prefix
                 processName = "epicgame*"
                 appsToManage = @("testApp")
             }
@@ -346,7 +347,7 @@ function Test-ConfigValidator {
             }
             missingPlatform = @{
                 name = "Missing Platform Game"
-                steamAppId = "654321"
+                steamAppId = "6543210"  # Fixed: 7 digits
                 processName = "missing*"
                 appsToManage = @()
             }
@@ -380,7 +381,8 @@ function Test-ConfigValidator {
         $validator.Errors = @()
         $validator.Warnings = @()
 
-        $validator.ValidateGameConfiguration($gameId)
+        # Use the proper public API method
+        $validator.ValidateConfiguration($gameId) | Out-Null
 
         $hasErrors = $validator.Errors.Count -gt 0
         $actualResult = -not $hasErrors
