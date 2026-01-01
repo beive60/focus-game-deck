@@ -241,7 +241,7 @@
     "gameIdInvalidCharacters": "El ID del juego solo puede contener caracteres alfanuméricos, guiones y guiones bajos",
     "gameIdAlreadyExists": "El ID de juego '{0}' ya está en uso. Por favor, elija otro.",
     "steamAppIdRequired": "Se requiere Steam App ID para la plataforma Steam",
-    "steamAppIdMust7Digits": "El Steam App ID debe ser un número de 7 dígitos",
+    "steamAppIdMust7Digits": "El Steam App ID debe ser solo numérico",
     "epicGameIdRequired": "Se requiere Epic Game ID para la plataforma Epic",
     "epicGameIdInvalidFormat": "El Epic Game ID debe comenzar con 'apps/' o 'com.epicgames.launcher://apps/'",
     "executablePathRequired": "La ruta del ejecutable es obligatoria.",

@@ -241,7 +241,7 @@
     "gameIdInvalidCharacters": "L'ID du jeu ne peut contenir que des caractères alphanumériques, des traits d'union et des traits de soulignement",
     "gameIdAlreadyExists": "L'ID de jeu '{0}' est déjà utilisé. Veuillez en choisir un autre.",
     "steamAppIdRequired": "L'ID d'application Steam est requis pour la plateforme Steam",
-    "steamAppIdMust7Digits": "L'ID d'application Steam doit être un nombre à 7 chiffres",
+    "steamAppIdMust7Digits": "L'ID d'application Steam doit être uniquement numérique",
     "epicGameIdRequired": "L'ID Epic Game est requis pour la plateforme Epic",
     "epicGameIdInvalidFormat": "L'ID Epic Game doit commencer par 'apps/' ou 'com.epicgames.launcher://apps/'",
     "executablePathRequired": "Le chemin de l'exécutable est requis.",

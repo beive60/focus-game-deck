@@ -241,7 +241,7 @@
     "gameIdInvalidCharacters": "ID игры может содержать только буквенно-цифровые символы, дефисы и подчеркивания",
     "gameIdAlreadyExists": "ID игры '{0}' уже используется. Пожалуйста, выберите другой.",
     "steamAppIdRequired": "Steam App ID требуется для платформы Steam",
-    "steamAppIdMust7Digits": "Steam App ID должен быть 7-значным числом",
+    "steamAppIdMust7Digits": "Steam App ID должен содержать только цифры",
     "epicGameIdRequired": "Epic Game ID требуется для платформы Epic",
     "epicGameIdInvalidFormat": "Epic Game ID должен начинаться с 'apps/' или 'com.epicgames.launcher://apps/'",
     "executablePathRequired": "Путь к исполняемому файлу обязателен.",
