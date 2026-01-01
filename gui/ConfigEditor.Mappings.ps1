@@ -47,6 +47,7 @@ $script:ActionButtonMappings = @{
     "SaveOBSSettingsButton" = "saveButton"
     "SaveDiscordSettingsButton" = "saveButton"
     "SaveVTubeStudioSettingsButton" = "saveButton"
+    "StartVTubeStudioButton" = "startVTubeStudioButton"
     "GenerateLaunchersButton" = "generateLaunchers"
     "OpenOBSTabButton" = "openIntegrationSettings"
     "OpenDiscordTabButton" = "openIntegrationSettings"

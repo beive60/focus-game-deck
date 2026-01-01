@@ -276,6 +276,7 @@
   "vtubeLaunchViaSteam": "Recommended: Launch via Steam (Steam client required)",
   "vtubeSteamAppIdLabel": "Steam AppID:",
   "vtubeLaunchDirect": "Launch directly from executable",
+  "START_VTUBE_STUDIO_BUTTON": "Start VTube Studio",
   "vtubeStudioSettingsSaved": "VTube Studio settings have been saved",
   "vtubeStudioSettingsSaveFailed": "Failed to save VTube Studio settings",
   "toolsMenuHeader": "_Tools",

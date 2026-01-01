@@ -1683,6 +1683,52 @@
         }
     }
 
+    # Handle Start VTube Studio button click
+    [void] HandleStartVTubeStudio() {
+        try {
+            Write-Verbose "[DEBUG] ConfigEditorEvents: Starting VTube Studio"
+
+            # Load the VTubeStudioManager module
+            $vtubeManagerPath = Join-Path -Path $this.stateManager.ProjectRoot -ChildPath "src/modules/VTubeStudioManager.ps1"
+            if (-not (Test-Path $vtubeManagerPath)) {
+                Write-Verbose "[ERROR] VTubeStudioManager module not found at: $vtubeManagerPath"
+                Show-SafeMessage -Key "vtube_startup_failed" -MessageType "Error"
+                return
+            }
+
+            . $vtubeManagerPath
+
+            # Get VTube Studio configuration
+            $vtubeConfig = $this.stateManager.ConfigData.integrations.vtubeStudio
+            if (-not $vtubeConfig) {
+                Write-Verbose "[ERROR] VTube Studio configuration not found"
+                Show-SafeMessage -Key "vtube_startup_failed" -MessageType "Error"
+                return
+            }
+
+            # Create VTubeStudioManager instance
+            $messages = $this.uiManager.Messages
+            $vtubeManager = New-VTubeStudioManager -VTubeConfig $vtubeConfig -Messages $messages
+
+            # Start VTube Studio
+            $success = $vtubeManager.StartVTubeStudio()
+
+            if ($success) {
+                $message = $this.uiManager.GetLocalizedMessage("vtube_startup_complete")
+                $this.uiManager.ShowNotification($message, "Success")
+                Write-Verbose "VTube Studio started successfully"
+            } else {
+                $message = $this.uiManager.GetLocalizedMessage("vtube_startup_failed")
+                $this.uiManager.ShowNotification($message, "Error")
+                Write-Verbose "Failed to start VTube Studio"
+            }
+
+        } catch {
+            Write-Verbose "[ERROR] ConfigEditorEvents: Failed to start VTube Studio - $($_.Exception.Message)"
+            Show-SafeMessage -Key "vtube_startup_failed_error" -Args @($_.Exception.Message) -MessageType "Error"
+        }
+    }
+
     # Handle check update
     [void] HandleCheckUpdate() {
         try {
@@ -2863,6 +2909,7 @@
             # --- VTube Studio Tab ---
             $this.uiManager.Window.FindName("BrowseVTubePathButton").add_Click({ $self.HandleBrowseVTubeStudioPath() }.GetNewClosure())
             $this.uiManager.Window.FindName("AutoDetectVTubeButton").add_Click({ $self.HandleAutoDetectPath("VTubeStudio") }.GetNewClosure())
+            $this.uiManager.Window.FindName("StartVTubeStudioButton").add_Click({ $self.HandleStartVTubeStudio() }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveVTubeStudioSettingsButton").add_Click({ $self.HandleSaveVTubeStudioSettings() }.GetNewClosure())
 
             # --- Global Settings Tab ---

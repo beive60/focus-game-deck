@@ -1548,9 +1548,27 @@
                             Grid.Row="1"
                             Background="#F8F8F8"
                             Margin="0,5,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <Button
+                                x:Name="StartVTubeStudioButton"
+                                Content="[START_VTUBE_STUDIO_BUTTON]"
+                                Grid.Column="0"
+                                Width="150"
+                                Height="30"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Margin="20,0,0,0"
+                                Background="#28A745"
+                                Foreground="White"
+                                BorderThickness="0"/>
                             <Button
                                 x:Name="SaveVTubeStudioSettingsButton"
                                 Content="[SAVE_BUTTON]"
+                                Grid.Column="1"
                                 Width="100"
                                 Height="30"
                                 HorizontalAlignment="Right"
