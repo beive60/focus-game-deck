@@ -118,6 +118,9 @@ function Test-SteamAppIdFormat {
     }
 
     # Steam AppID must be exactly 7 digits
+    # This is enforced by Steam's internal system - all AppIDs are 7-digit numbers
+    # Examples: 1172470 (Apex Legends), 0000000 (Invalid but format-wise correct)
+    # Reference: https://partner.steamgames.com/doc/store/application/platforms
     if ($SteamAppId -notmatch '^[0-9]{7}$') {
         return $false
     }

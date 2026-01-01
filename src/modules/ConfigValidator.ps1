@@ -306,21 +306,23 @@ class ConfigValidator {
         $result = Test-GameConfiguration @validationParams
         
         # Add any validation errors to our error list
-        foreach ($error in $result.Errors) {
-            # Convert control-based errors to human-readable messages
-            $errorMsg = switch ($error.Key) {
-                'gameIdRequired' { "Game '$gameId' has empty Game ID" }
-                'gameIdInvalidCharacters' { "Game '$gameId' has invalid characters in Game ID" }
-                'steamAppIdRequired' { "Game '$gameId' requires Steam AppID" }
-                'steamAppIdMust7Digits' { "Game '$gameId' has invalid Steam AppID format (must be 7 digits)" }
-                'epicGameIdRequired' { "Game '$gameId' requires Epic Game ID" }
-                'epicGameIdInvalidFormat' { "Game '$gameId' has invalid Epic Game ID format" }
-                'riotGameIdRequired' { "Game '$gameId' requires Riot Game ID" }
-                'executablePathRequired' { "Game '$gameId' requires executable path" }
-                'executablePathNotFound' { "Game '$gameId' executable path does not exist: '$($gameConfig.executablePath)'" }
-                default { "Game '$gameId' validation error: $($error.Key)" }
+        if ($result -and $result.Errors) {
+            foreach ($error in $result.Errors) {
+                # Convert control-based errors to human-readable messages
+                $errorMsg = switch ($error.Key) {
+                    'gameIdRequired' { "Game '$gameId' has empty Game ID" }
+                    'gameIdInvalidCharacters' { "Game '$gameId' has invalid characters in Game ID" }
+                    'steamAppIdRequired' { "Game '$gameId' requires Steam AppID" }
+                    'steamAppIdMust7Digits' { "Game '$gameId' has invalid Steam AppID format (must be 7 digits)" }
+                    'epicGameIdRequired' { "Game '$gameId' requires Epic Game ID" }
+                    'epicGameIdInvalidFormat' { "Game '$gameId' has invalid Epic Game ID format" }
+                    'riotGameIdRequired' { "Game '$gameId' requires Riot Game ID" }
+                    'executablePathRequired' { "Game '$gameId' requires executable path" }
+                    'executablePathNotFound' { "Game '$gameId' executable path does not exist: '$($gameConfig.executablePath)'" }
+                    default { "Game '$gameId' validation error: $($error.Key)" }
+                }
+                $this.Errors += $errorMsg
             }
-            $this.Errors += $errorMsg
         }
 
         # Validate appsToManage references

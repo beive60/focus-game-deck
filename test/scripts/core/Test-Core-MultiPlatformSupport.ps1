@@ -381,7 +381,10 @@ function Test-ConfigValidator {
         $validator.Errors = @()
         $validator.Warnings = @()
 
-        # Use the proper public API method
+        # Use ValidateConfiguration instead of ValidateGameConfiguration
+        # ValidateConfiguration calls ValidateGameWithDependencies which performs
+        # dependency chain validation (checks platform paths, managed apps, integrations)
+        # ValidateGameConfiguration only validates game config format, not dependencies
         $validator.ValidateConfiguration($gameId) | Out-Null
 
         $hasErrors = $validator.Errors.Count -gt 0
