@@ -47,7 +47,18 @@
             "integrations": {
                 "useOBS": true,
                 "useDiscord": false,
-                "useVTubeStudio": true
+                "useVTubeStudio": true,
+                "vtubeStudioSettings": {
+                    "modelId": "Models/Game/valorant_avatar.vtube.json",
+                    "onLaunchHotkeys": [
+                        "gaming_mode_on",
+                        "show_weapon"
+                    ],
+                    "onExitHotkeys": [
+                        "gaming_mode_off"
+                    ],
+                    "_comment": "modelId: Path to the VTube Studio model to load. onLaunchHotkeys: Hotkeys to trigger when game starts. onExitHotkeys: Hotkeys to trigger when game ends."
+                }
             },
             "steamAppId": "",
             "epicGameId": "",
@@ -138,8 +149,11 @@
             "websocket": {
                 "host": "127.0.0.1",
                 "port": 8001,
-                "enabled": false
-            }
+                "enabled": true
+            },
+            "authenticationToken": "",
+            "defaultModelId": "Models/Default/default.vtube.json",
+            "_comment": "authenticationToken will be encrypted when saved from GUI. defaultModelId is used to restore the original model when game ends."
         }
     },
     "logging": {

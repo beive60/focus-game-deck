@@ -174,18 +174,52 @@ class VTubeStudioManager {
         return $null
     }
 
-    # WebSocket connection methods (for future expansion)
-    # These methods provide the foundation for VTube Studio API integration
+    # WebSocket connection and API methods
 
     # Connect to VTube Studio WebSocket API
     [bool] ConnectWebSocket() {
-        # Future implementation: Connect to ws://localhost:8001
-        # This will be implemented when WebSocket features are needed
-        Write-LocalizedHost -Messages $this.Messages -Key "vtube_websocket_feature_coming_soon" -Default "WebSocket connection feature coming soon..." -Level "INFO" -Component "VTubeStudioManager"
-        if ($this.Logger) {
-            $this.Logger.Info("WebSocket connection requested (feature pending)", "VTUBE")
+        try {
+            # Check if WebSocket is enabled in config
+            if (-not $this.Config.websocket -or -not $this.Config.websocket.enabled) {
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_websocket_disabled" -Default "VTube Studio WebSocket integration is disabled" -Level "INFO" -Component "VTubeStudioManager"
+                if ($this.Logger) {
+                    $this.Logger.Info("WebSocket integration disabled in config", "VTUBE")
+                }
+                return $false
+            }
+
+            # Use 127.0.0.1 instead of localhost to avoid IPv6 issues
+            $host = if ($this.Config.websocket.host) { $this.Config.websocket.host } else { "127.0.0.1" }
+            $port = if ($this.Config.websocket.port) { $this.Config.websocket.port } else { 8001 }
+            
+            $this.WebSocket = New-Object System.Net.WebSockets.ClientWebSocket
+            $uri = "ws://${host}:${port}"
+            
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_connecting_websocket" -Args @($uri) -Default "Connecting to VTube Studio WebSocket: {0}" -Level "INFO" -Component "VTubeStudioManager"
+            
+            $cts = New-Object System.Threading.CancellationTokenSource
+            $cts.CancelAfter(5000)
+            
+            $this.WebSocket.ConnectAsync($uri, $cts.Token).Wait()
+            
+            if ($this.WebSocket.State -ne [System.Net.WebSockets.WebSocketState]::Open) {
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_websocket_connection_failed" -Default "Failed to connect to VTube Studio WebSocket" -Level "WARNING" -Component "VTubeStudioManager"
+                return $false
+            }
+            
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_websocket_connected" -Default "Connected to VTube Studio WebSocket" -Level "OK" -Component "VTubeStudioManager"
+            if ($this.Logger) {
+                $this.Logger.Info("WebSocket connected to $uri", "VTUBE")
+            }
+            
+            return $true
+        } catch {
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_websocket_connection_error" -Args @($_) -Default "VTube Studio WebSocket connection error: {0}" -Level "WARNING" -Component "VTubeStudioManager"
+            if ($this.Logger) {
+                $this.Logger.Error("WebSocket connection error: $_", "VTUBE")
+            }
+            return $false
         }
-        return $false
     }
 
     # Disconnect from VTube Studio WebSocket API
@@ -208,13 +242,280 @@ class VTubeStudioManager {
         $this.WebSocket = $null
     }
 
-    # Send command to VTube Studio (placeholder for future WebSocket commands)
-    [bool] SendCommand([string] $command, [object] $parameters = $null) {
-        # Future implementation: Send WebSocket commands to VTube Studio API
-        Write-LocalizedHost -Messages $this.Messages -Key "vtube_websocket_command_coming_soon" -Args @($command) -Default "WebSocket command feature coming soon: {0}" -Level "INFO" -Component "VTubeStudioManager"
-        if ($this.Logger) {
-            $this.Logger.Info("WebSocket command requested: $command (feature pending)", "VTUBE")
+    # Send WebSocket message to VTube Studio
+    [bool] SendWebSocketMessage([object] $message) {
+        if (-not $this.WebSocket -or $this.WebSocket.State -ne "Open") {
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_websocket_not_connected" -Default "VTube Studio WebSocket not connected" -Level "WARNING" -Component "VTubeStudioManager"
+            return $false
         }
+
+        try {
+            $json = $message | ConvertTo-Json -Depth 5 -Compress
+            $buffer = [System.Text.Encoding]::UTF8.GetBytes($json)
+            $sendSegment = New-Object ArraySegment[byte](, $buffer)
+            $this.WebSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
+            return $true
+        } catch {
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_websocket_send_error" -Args @($_) -Default "VTube Studio WebSocket send error: {0}" -Level "WARNING" -Component "VTubeStudioManager"
+            if ($this.Logger) {
+                $this.Logger.Error("WebSocket send error: $_", "VTUBE")
+            }
+            return $false
+        }
+    }
+
+    # Receive WebSocket response from VTube Studio
+    [object] ReceiveWebSocketResponse([int] $TimeoutSeconds = 5) {
+        if (-not $this.WebSocket -or $this.WebSocket.State -ne "Open") {
+            return $null
+        }
+
+        $cts = New-Object System.Threading.CancellationTokenSource
+        $cts.CancelAfter($TimeoutSeconds * 1000)
+        $buffer = New-Object byte[] 8192
+        $segment = New-Object ArraySegment[byte](, $buffer)
+        $resultText = ""
+
+        try {
+            while ($this.WebSocket.State -eq "Open") {
+                $receiveTask = $this.WebSocket.ReceiveAsync($segment, $cts.Token)
+                $receiveTask.Wait()
+                $result = $receiveTask.Result
+
+                $resultText += [System.Text.Encoding]::UTF8.GetString($buffer, 0, $result.Count)
+
+                if ($result.EndOfMessage) {
+                    break
+                }
+            }
+            return $resultText | ConvertFrom-Json
+        } catch {
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_websocket_receive_error" -Args @($_) -Default "VTube Studio WebSocket receive error: {0}" -Level "WARNING" -Component "VTubeStudioManager"
+            if ($this.Logger) {
+                $this.Logger.Error("WebSocket receive error: $_", "VTUBE")
+            }
+            return $null
+        }
+    }
+
+    # Authenticate with VTube Studio API
+    [bool] Authenticate() {
+        try {
+            # Get authentication token from config
+            $authToken = $null
+            if ($this.Config.authenticationToken) {
+                try {
+                    # Try to decrypt DPAPI-encrypted token (new format)
+                    $secureToken = ConvertTo-SecureString -String $this.Config.authenticationToken
+                    $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureToken)
+                    $authToken = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
+                    [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+                } catch {
+                    # Fall back to plain text (old format for backward compatibility)
+                    $authToken = $this.Config.authenticationToken
+                    Write-LocalizedHost -Messages $this.Messages -Key "vtube_plaintext_token_detected" -Default "Plain text authentication token detected - consider re-saving with encryption" -Level "WARNING" -Component "VTubeStudioManager"
+                }
+            }
+
+            # If no token, request a new one
+            if (-not $authToken) {
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_requesting_token" -Default "Requesting authentication token from VTube Studio..." -Level "INFO" -Component "VTubeStudioManager"
+                
+                $tokenRequest = @{
+                    apiName = "FocusGameDeck"
+                    apiVersion = "1.0"
+                    requestID = "AuthenticationTokenRequest"
+                    messageType = "AuthenticationTokenRequest"
+                    data = @{
+                        pluginName = "Focus Game Deck"
+                        pluginDeveloper = "Focus Game Deck Team"
+                    }
+                }
+                
+                if (-not $this.SendWebSocketMessage($tokenRequest)) {
+                    return $false
+                }
+                
+                $tokenResponse = $this.ReceiveWebSocketResponse(10)
+                if (-not $tokenResponse -or $tokenResponse.messageType -ne "AuthenticationTokenResponse") {
+                    Write-LocalizedHost -Messages $this.Messages -Key "vtube_token_request_failed" -Default "Failed to obtain authentication token from VTube Studio" -Level "WARNING" -Component "VTubeStudioManager"
+                    return $false
+                }
+                
+                $authToken = $tokenResponse.data.authenticationToken
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_token_received" -Default "Authentication token received from VTube Studio" -Level "OK" -Component "VTubeStudioManager"
+            }
+
+            # Authenticate with the token
+            $authRequest = @{
+                apiName = "FocusGameDeck"
+                apiVersion = "1.0"
+                requestID = "AuthenticationRequest"
+                messageType = "AuthenticationRequest"
+                data = @{
+                    pluginName = "Focus Game Deck"
+                    pluginDeveloper = "Focus Game Deck Team"
+                    authenticationToken = $authToken
+                }
+            }
+            
+            if (-not $this.SendWebSocketMessage($authRequest)) {
+                return $false
+            }
+            
+            $authResponse = $this.ReceiveWebSocketResponse(5)
+            if (-not $authResponse -or $authResponse.messageType -ne "AuthenticationResponse") {
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_auth_failed" -Default "VTube Studio authentication failed" -Level "WARNING" -Component "VTubeStudioManager"
+                return $false
+            }
+            
+            if (-not $authResponse.data.authenticated) {
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_auth_rejected" -Default "VTube Studio authentication rejected" -Level "WARNING" -Component "VTubeStudioManager"
+                return $false
+            }
+            
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_auth_successful" -Default "VTube Studio authentication successful" -Level "OK" -Component "VTubeStudioManager"
+            if ($this.Logger) {
+                $this.Logger.Info("Authentication successful", "VTUBE")
+            }
+            
+            return $true
+        } catch {
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_auth_error" -Args @($_) -Default "VTube Studio authentication error: {0}" -Level "WARNING" -Component "VTubeStudioManager"
+            if ($this.Logger) {
+                $this.Logger.Error("Authentication error: $_", "VTUBE")
+            }
+            return $false
+        }
+    }
+
+    # Load a VTube Studio model by ID
+    [bool] LoadModel([string] $modelID) {
+        if ([string]::IsNullOrWhiteSpace($modelID)) {
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_model_id_required" -Default "Model ID is required" -Level "WARNING" -Component "VTubeStudioManager"
+            return $false
+        }
+
+        try {
+            # Connect and authenticate if not already connected
+            if (-not $this.WebSocket -or $this.WebSocket.State -ne "Open") {
+                if (-not $this.ConnectWebSocket()) {
+                    return $false
+                }
+                if (-not $this.Authenticate()) {
+                    $this.DisconnectWebSocket()
+                    return $false
+                }
+            }
+
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_loading_model" -Args @($modelID) -Default "Loading VTube Studio model: {0}" -Level "INFO" -Component "VTubeStudioManager"
+            
+            $loadModelRequest = @{
+                apiName = "FocusGameDeck"
+                apiVersion = "1.0"
+                requestID = "ModelLoadRequest"
+                messageType = "ModelLoadRequest"
+                data = @{
+                    modelID = $modelID
+                }
+            }
+            
+            if (-not $this.SendWebSocketMessage($loadModelRequest)) {
+                return $false
+            }
+            
+            $loadResponse = $this.ReceiveWebSocketResponse(10)
+            if (-not $loadResponse -or $loadResponse.messageType -ne "ModelLoadResponse") {
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_model_load_failed" -Default "Failed to load VTube Studio model" -Level "WARNING" -Component "VTubeStudioManager"
+                return $false
+            }
+            
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_model_loaded" -Args @($modelID) -Default "VTube Studio model loaded: {0}" -Level "OK" -Component "VTubeStudioManager"
+            if ($this.Logger) {
+                $this.Logger.Info("Model loaded: $modelID", "VTUBE")
+            }
+            
+            return $true
+        } catch {
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_model_load_error" -Args @($modelID, $_) -Default "Error loading VTube Studio model {0}: {1}" -Level "WARNING" -Component "VTubeStudioManager"
+            if ($this.Logger) {
+                $this.Logger.Error("Model load error for $modelID : $_", "VTUBE")
+            }
+            return $false
+        }
+    }
+
+    # Trigger VTube Studio hotkeys
+    [bool] TriggerHotkeys([array] $hotkeyIDs) {
+        if (-not $hotkeyIDs -or $hotkeyIDs.Count -eq 0) {
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_hotkey_ids_required" -Default "Hotkey IDs are required" -Level "WARNING" -Component "VTubeStudioManager"
+            return $false
+        }
+
+        try {
+            # Connect and authenticate if not already connected
+            if (-not $this.WebSocket -or $this.WebSocket.State -ne "Open") {
+                if (-not $this.ConnectWebSocket()) {
+                    return $false
+                }
+                if (-not $this.Authenticate()) {
+                    $this.DisconnectWebSocket()
+                    return $false
+                }
+            }
+
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_triggering_hotkeys" -Args @($hotkeyIDs.Count) -Default "Triggering {0} VTube Studio hotkey(s)" -Level "INFO" -Component "VTubeStudioManager"
+            
+            $allSuccess = $true
+            foreach ($hotkeyID in $hotkeyIDs) {
+                if ([string]::IsNullOrWhiteSpace($hotkeyID)) {
+                    continue
+                }
+                
+                $triggerRequest = @{
+                    apiName = "FocusGameDeck"
+                    apiVersion = "1.0"
+                    requestID = "HotkeyTriggerRequest_$hotkeyID"
+                    messageType = "HotkeyTriggerRequest"
+                    data = @{
+                        hotkeyID = $hotkeyID
+                    }
+                }
+                
+                if (-not $this.SendWebSocketMessage($triggerRequest)) {
+                    $allSuccess = $false
+                    continue
+                }
+                
+                $triggerResponse = $this.ReceiveWebSocketResponse(5)
+                if (-not $triggerResponse -or $triggerResponse.messageType -ne "HotkeyTriggerResponse") {
+                    Write-LocalizedHost -Messages $this.Messages -Key "vtube_hotkey_trigger_failed" -Args @($hotkeyID) -Default "Failed to trigger VTube Studio hotkey: {0}" -Level "WARNING" -Component "VTubeStudioManager"
+                    $allSuccess = $false
+                    continue
+                }
+                
+                if ($this.Logger) {
+                    $this.Logger.Info("Hotkey triggered: $hotkeyID", "VTUBE")
+                }
+            }
+            
+            if ($allSuccess) {
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_hotkeys_triggered" -Args @($hotkeyIDs.Count) -Default "Triggered {0} VTube Studio hotkey(s) successfully" -Level "OK" -Component "VTubeStudioManager"
+            }
+            
+            return $allSuccess
+        } catch {
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_hotkey_trigger_error" -Args @($_) -Default "Error triggering VTube Studio hotkeys: {0}" -Level "WARNING" -Component "VTubeStudioManager"
+            if ($this.Logger) {
+                $this.Logger.Error("Hotkey trigger error: $_", "VTUBE")
+            }
+            return $false
+        }
+    }
+
+    # Send command to VTube Studio (legacy method for backward compatibility)
+    [bool] SendCommand([string] $command, [object] $parameters = $null) {
+        Write-LocalizedHost -Messages $this.Messages -Key "vtube_send_command_deprecated" -Args @($command) -Default "SendCommand is deprecated, use specific API methods instead: {0}" -Level "WARNING" -Component "VTubeStudioManager"
         return $false
     }
 }

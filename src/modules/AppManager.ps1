@@ -465,10 +465,90 @@ class AppManager {
     [bool] HandleVTubeStudioAction([object] $manager, [object] $config, [string] $action) {
         switch ($action) {
             "enter-game-mode" {
-                return $manager.StartVTubeStudio()
+                if ($this.Logger) { $this.Logger.Info("Starting VTube Studio integration", "VTube") }
+
+                # Start VTube Studio application
+                $success = $manager.StartVTubeStudio()
+                if (-not $success) {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_startup_failed" -Default "Failed to start VTube Studio" -Level "WARNING" -Component "VTubeStudioManager"
+                    if ($this.Logger) { $this.Logger.Warning("Failed to start VTube Studio", "VTube") }
+                    return $false
+                }
+
+                # Get game-specific VTube Studio settings
+                $vtubeSettings = $null
+                if ($this.GameConfig -and $this.GameConfig.integrations -and $this.GameConfig.integrations.vtubeStudioSettings) {
+                    $vtubeSettings = $this.GameConfig.integrations.vtubeStudioSettings
+                }
+
+                # Load model if specified
+                if ($vtubeSettings -and $vtubeSettings.modelId) {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_loading_model" -Args @($vtubeSettings.modelId) -Default "Loading VTube Studio model: {0}" -Level "INFO" -Component "VTubeStudioManager"
+                    if ($this.Logger) { $this.Logger.Info("Loading model: $($vtubeSettings.modelId)", "VTube") }
+                    
+                    $modelSuccess = $manager.LoadModel($vtubeSettings.modelId)
+                    if (-not $modelSuccess) {
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_model_load_failed" -Args @($vtubeSettings.modelId) -Default "Failed to load model: {0}" -Level "WARNING" -Component "VTubeStudioManager"
+                        if ($this.Logger) { $this.Logger.Warning("Failed to load model: $($vtubeSettings.modelId)", "VTube") }
+                    }
+                }
+
+                # Trigger onLaunch hotkeys if specified
+                if ($vtubeSettings -and $vtubeSettings.onLaunchHotkeys -and $vtubeSettings.onLaunchHotkeys.Count -gt 0) {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_triggering_launch_hotkeys" -Default "Triggering VTube Studio launch hotkeys" -Level "INFO" -Component "VTubeStudioManager"
+                    if ($this.Logger) { $this.Logger.Info("Triggering launch hotkeys", "VTube") }
+                    
+                    $hotkeySuccess = $manager.TriggerHotkeys($vtubeSettings.onLaunchHotkeys)
+                    if (-not $hotkeySuccess) {
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_hotkey_trigger_failed" -Default "Failed to trigger some hotkeys" -Level "WARNING" -Component "VTubeStudioManager"
+                        if ($this.Logger) { $this.Logger.Warning("Failed to trigger some launch hotkeys", "VTube") }
+                    }
+                }
+
+                return $success
             }
             "exit-game-mode" {
-                return $manager.StopVTubeStudio()
+                if ($this.Logger) { $this.Logger.Info("Stopping VTube Studio integration", "VTube") }
+
+                # Get game-specific VTube Studio settings
+                $vtubeSettings = $null
+                if ($this.GameConfig -and $this.GameConfig.integrations -and $this.GameConfig.integrations.vtubeStudioSettings) {
+                    $vtubeSettings = $this.GameConfig.integrations.vtubeStudioSettings
+                }
+
+                # Trigger onExit hotkeys if specified
+                if ($vtubeSettings -and $vtubeSettings.onExitHotkeys -and $vtubeSettings.onExitHotkeys.Count -gt 0) {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_triggering_exit_hotkeys" -Default "Triggering VTube Studio exit hotkeys" -Level "INFO" -Component "VTubeStudioManager"
+                    if ($this.Logger) { $this.Logger.Info("Triggering exit hotkeys", "VTube") }
+                    
+                    $hotkeySuccess = $manager.TriggerHotkeys($vtubeSettings.onExitHotkeys)
+                    if (-not $hotkeySuccess) {
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_exit_hotkey_failed" -Default "Failed to trigger some exit hotkeys" -Level "WARNING" -Component "VTubeStudioManager"
+                        if ($this.Logger) { $this.Logger.Warning("Failed to trigger some exit hotkeys", "VTube") }
+                    }
+                }
+
+                # Rollback to default model if configured
+                $defaultModelId = $null
+                if ($config -and $config.defaultModelId) {
+                    $defaultModelId = $config.defaultModelId
+                }
+
+                if ($defaultModelId) {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_restoring_default_model" -Args @($defaultModelId) -Default "Restoring default VTube Studio model: {0}" -Level "INFO" -Component "VTubeStudioManager"
+                    if ($this.Logger) { $this.Logger.Info("Restoring default model: $defaultModelId", "VTube") }
+                    
+                    $rollbackSuccess = $manager.LoadModel($defaultModelId)
+                    if (-not $rollbackSuccess) {
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_default_model_failed" -Args @($defaultModelId) -Default "Failed to restore default model: {0}" -Level "WARNING" -Component "VTubeStudioManager"
+                        if ($this.Logger) { $this.Logger.Warning("Failed to restore default model: $defaultModelId", "VTube") }
+                    }
+                }
+
+                # Disconnect WebSocket to clean up resources
+                $manager.DisconnectWebSocket()
+
+                return $true
             }
             "none" {
                 return $true

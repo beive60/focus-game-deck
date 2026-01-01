@@ -362,6 +362,76 @@ class ConfigValidator {
             $this.Warnings += "VTube Studio path not configured in 'integrations.vtubeStudio.path' - will attempt auto-detection"
         }
 
+        # Validate WebSocket configuration
+        if ($this.Config.integrations.vtubeStudio.websocket) {
+            # Validate port is numeric
+            if ($this.Config.integrations.vtubeStudio.websocket.port) {
+                $port = $this.Config.integrations.vtubeStudio.websocket.port
+                if ($port -isnot [int] -and $port -notmatch '^\d+$') {
+                    $this.Errors += "VTube Studio WebSocket port must be numeric: '$port'"
+                }
+            }
+
+            # Validate host is present
+            if (-not $this.Config.integrations.vtubeStudio.websocket.host) {
+                $this.Warnings += "VTube Studio WebSocket host not specified, using default '127.0.0.1'"
+            }
+
+            # Validate enabled is boolean
+            if ($this.Config.integrations.vtubeStudio.websocket.PSObject.Properties.Name -contains "enabled") {
+                if ($this.Config.integrations.vtubeStudio.websocket.enabled -isnot [bool]) {
+                    $this.Warnings += "VTube Studio WebSocket 'enabled' should be a boolean value (true/false)"
+                }
+            }
+        }
+
+        # Validate authentication token (if present, must be string)
+        if ($this.Config.integrations.vtubeStudio.PSObject.Properties.Name -contains "authenticationToken") {
+            if ($this.Config.integrations.vtubeStudio.authenticationToken -isnot [string] -and $null -ne $this.Config.integrations.vtubeStudio.authenticationToken) {
+                $this.Errors += "VTube Studio authenticationToken must be a string"
+            }
+        }
+
+        # Validate defaultModelId (if present, must be string)
+        if ($this.Config.integrations.vtubeStudio.PSObject.Properties.Name -contains "defaultModelId") {
+            if ($this.Config.integrations.vtubeStudio.defaultModelId -and $this.Config.integrations.vtubeStudio.defaultModelId -isnot [string]) {
+                $this.Errors += "VTube Studio defaultModelId must be a string"
+            }
+        }
+
+        # Validate game-specific VTube Studio settings
+        if ($this.Config.games) {
+            foreach ($gameProperty in $this.Config.games.PSObject.Properties) {
+                $gameId = $gameProperty.Name
+                $gameConfig = $gameProperty.Value
+                
+                if ($gameConfig.integrations -and $gameConfig.integrations.useVTubeStudio -and $gameConfig.integrations.vtubeStudioSettings) {
+                    $vtsSettings = $gameConfig.integrations.vtubeStudioSettings
+                    
+                    # Validate modelId (optional, but if present must be string)
+                    if ($vtsSettings.PSObject.Properties.Name -contains "modelId") {
+                        if ($vtsSettings.modelId -and $vtsSettings.modelId -isnot [string]) {
+                            $this.Errors += "Game '$gameId' VTube Studio modelId must be a string"
+                        }
+                    }
+                    
+                    # Validate onLaunchHotkeys (optional, but if present must be array)
+                    if ($vtsSettings.PSObject.Properties.Name -contains "onLaunchHotkeys") {
+                        if ($vtsSettings.onLaunchHotkeys -and $vtsSettings.onLaunchHotkeys -isnot [array]) {
+                            $this.Errors += "Game '$gameId' VTube Studio onLaunchHotkeys must be an array"
+                        }
+                    }
+                    
+                    # Validate onExitHotkeys (optional, but if present must be array)
+                    if ($vtsSettings.PSObject.Properties.Name -contains "onExitHotkeys") {
+                        if ($vtsSettings.onExitHotkeys -and $vtsSettings.onExitHotkeys -isnot [array]) {
+                            $this.Errors += "Game '$gameId' VTube Studio onExitHotkeys must be an array"
+                        }
+                    }
+                }
+            }
+        }
+
         # Validate gameStartAction and gameEndAction
         $validIntegrationActions = @("enter-game-mode", "exit-game-mode", "none")
 
