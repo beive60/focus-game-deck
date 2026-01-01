@@ -407,13 +407,3 @@ function Test-GameConfiguration {
         Errors = $errors
     }
 }
-
-# Export functions for module use
-Export-ModuleMember -Function @(
-    'Test-GameIdFormat',
-    'Test-SteamAppIdFormat',
-    'Test-EpicGameIdFormat',
-    'Test-RiotGameIdFormat',
-    'Test-ConfigPathExists',
-    'Test-GameConfiguration'
-)

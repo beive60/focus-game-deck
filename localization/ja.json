@@ -244,6 +244,7 @@
   "steamAppIdMust7Digits": "Steam AppIDは7桁の数字である必要があります",
   "epicGameIdRequired": "EpicプラットフォームにはEpic Game IDが必要です",
   "epicGameIdInvalidFormat": "Epic Game IDは 'apps/' または 'com.epicgames.launcher://apps/' で始まる必要があります",
+  "riotGameIdRequired": "RiotプラットフォームにはRiot Game IDが必要です",
   "executablePathRequired": "実行ファイルのパスは必須です",
   "executablePathNotFound": "指定された実行ファイルが見つかりません",
   "managedAppsSettingsSaved": "管理アプリ設定が保存されました",
