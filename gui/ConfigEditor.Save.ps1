@@ -456,6 +456,21 @@ function Save-CurrentAppData {
         Set-PropertyValue -Object $appData -PropertyName "path" -Value $normalizedPath
     }
 
+    # Save working directory (normalize backslashes to forward slashes)
+    $workingDirectoryTextBox = $script:Window.FindName("WorkingDirectoryTextBox")
+    if ($workingDirectoryTextBox) {
+        $workingDirValue = $workingDirectoryTextBox.Text.Trim()
+        if ([string]::IsNullOrWhiteSpace($workingDirValue)) {
+            # If working directory is empty, remove the property
+            if ($appData.PSObject.Properties.Name -contains "workingDirectory") {
+                $appData.PSObject.Properties.Remove("workingDirectory")
+            }
+        } else {
+            $normalizedWorkingDir = $workingDirValue -replace '\\', '/'
+            Set-PropertyValue -Object $appData -PropertyName "workingDirectory" -Value $normalizedWorkingDir
+        }
+    }
+
     # Save arguments
     $appArgumentsTextBox = $script:Window.FindName("AppArgumentsTextBox")
     if ($appArgumentsTextBox) {

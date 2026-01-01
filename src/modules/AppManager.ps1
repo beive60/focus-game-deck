@@ -524,10 +524,27 @@ class AppManager {
                 $null
             }
 
-            if ($arguments) {
-                Start-Process -FilePath $appConfig.path -ArgumentList $arguments
+            # Determine working directory
+            $workingDir = $null
+            if ($appConfig.workingDirectory -and $appConfig.workingDirectory -ne "") {
+                if (Test-Path -Path $appConfig.workingDirectory -PathType Container) {
+                    $workingDir = $appConfig.workingDirectory
+                }
+            }
+
+            # Start process with appropriate parameters
+            if ($workingDir) {
+                if ($arguments) {
+                    Start-Process -FilePath $appConfig.path -ArgumentList $arguments -WorkingDirectory $workingDir
+                } else {
+                    Start-Process -FilePath $appConfig.path -WorkingDirectory $workingDir
+                }
             } else {
-                Start-Process -FilePath $appConfig.path
+                if ($arguments) {
+                    Start-Process -FilePath $appConfig.path -ArgumentList $arguments
+                } else {
+                    Start-Process -FilePath $appConfig.path
+                }
             }
             Write-LocalizedHost -Messages $this.Messages -Key "console_app_started" -Args @($appId) -Default ("Application started: {0}" -f $appId) -Level "OK" -Component "AppManager"
             return $true

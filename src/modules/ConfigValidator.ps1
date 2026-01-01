@@ -138,6 +138,13 @@ class ConfigValidator {
                     $this.Errors += "Application '$appId' requires 'processName' property for stop-process action"
                 }
             }
+
+            # Validate working directory if specified
+            if ($appConfig.workingDirectory -and $appConfig.workingDirectory -ne "") {
+                if (-not (Test-Path -Path $appConfig.workingDirectory -PathType Container)) {
+                    $this.Warnings += "Application '$appId' working directory does not exist or is not a directory: '$($appConfig.workingDirectory)'"
+                }
+            }
         }
     }
 

@@ -1109,6 +1109,12 @@
                     $appPathTextBox.Text = $pathValue
                 }
 
+                # Load working directory
+                $workingDirectoryTextBox = $script:Window.FindName("WorkingDirectoryTextBox")
+                if ($workingDirectoryTextBox) {
+                    $workingDirectoryTextBox.Text = if ($appData.workingDirectory) { $appData.workingDirectory } else { "" }
+                }
+
                 # Load arguments
                 $appArgumentsTextBox = $script:Window.FindName("AppArgumentsTextBox")
                 if ($appArgumentsTextBox) {
@@ -1644,6 +1650,19 @@
         if ($openFileDialog.ShowDialog()) {
             $script:Window.FindName("AppPathTextBox").Text = $openFileDialog.FileName
             Write-Verbose "Selected app executable path: $($openFileDialog.FileName)"
+        }
+    }
+
+    # Handle browse working directory (for Managed Apps tab)
+    [void] HandleBrowseWorkingDirectory() {
+        Add-Type -AssemblyName System.Windows.Forms
+        $folderBrowserDialog = New-Object System.Windows.Forms.FolderBrowserDialog
+        $folderBrowserDialog.Description = $this.uiManager.GetLocalizedMessage("browseFolderButton")
+        $folderBrowserDialog.ShowNewFolderButton = $true
+
+        if ($folderBrowserDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+            $script:Window.FindName("WorkingDirectoryTextBox").Text = $folderBrowserDialog.SelectedPath
+            Write-Verbose "Selected working directory: $($folderBrowserDialog.SelectedPath)"
         }
     }
 
@@ -2848,6 +2867,7 @@
                 Write-Verbose "ManagedAppsList not found"
             }
             $this.uiManager.Window.FindName("BrowseAppPathButton").add_Click({ $self.HandleBrowseAppPath() }.GetNewClosure())
+            $this.uiManager.Window.FindName("BrowseWorkingDirectoryButton").add_Click({ $self.HandleBrowseWorkingDirectory() }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveManagedAppsButton").add_Click({ $self.HandleSaveManagedApps() }.GetNewClosure())
 
             # --- OBS Tab ---

@@ -763,6 +763,7 @@
                                             <RowDefinition Height="30"/>
                                             <RowDefinition Height="30"/>
                                             <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
                                             <RowDefinition Height="60"/>
                                         </Grid.RowDefinitions>
 
@@ -828,8 +829,42 @@
                                             Height="25"/>
 
                                         <StackPanel
-                                            x:Name="AppProcessNameLabelPanel"
+                                            x:Name="WorkingDirectoryLabelPanel"
                                             Grid.Row="3"
+                                            Grid.Column="0"
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            ToolTip="[TOOLTIP_WORKING_DIRECTORY]">
+                                            <Label
+                                                x:Name="WorkingDirectoryLabel"
+                                                Content="[WORKING_DIRECTORY_LABEL]"
+                                                VerticalAlignment="Center"/>
+                                            <TextBlock
+                                                x:Name="WorkingDirectoryTooltip"
+                                                Text="?"
+                                                FontWeight="Bold"
+                                                Foreground="#0078D4"
+                                                Margin="3,0,0,0"
+                                                VerticalAlignment="Center"
+                                                ToolTip="[TOOLTIP_WORKING_DIRECTORY]"/>
+                                        </StackPanel>
+                                        <TextBox
+                                            x:Name="WorkingDirectoryTextBox"
+                                            Grid.Row="3"
+                                            Grid.Column="1"
+                                            VerticalContentAlignment="Center"
+                                            Margin="5"/>
+                                        <Button
+                                            x:Name="BrowseWorkingDirectoryButton"
+                                            Content="[BROWSE_FOLDER_BUTTON]"
+                                            Grid.Row="3"
+                                            Grid.Column="2"
+                                            Width="70"
+                                            Height="25"/>
+
+                                        <StackPanel
+                                            x:Name="AppProcessNameLabelPanel"
+                                            Grid.Row="4"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
                                             VerticalAlignment="Center"
@@ -849,14 +884,14 @@
                                         </StackPanel>
                                         <TextBox
                                             x:Name="AppProcessNameTextBox"
-                                            Grid.Row="3"
+                                            Grid.Row="4"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
                                             Margin="5"/>
 
                                         <StackPanel
                                             x:Name="GameStartActionLabelPanel"
-                                            Grid.Row="4"
+                                            Grid.Row="5"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
                                             VerticalAlignment="Center"
@@ -876,7 +911,7 @@
                                         </StackPanel>
                                         <ComboBox
                                             x:Name="GameStartActionCombo"
-                                            Grid.Row="4"
+                                            Grid.Row="5"
                                             Grid.Column="1"
                                             Margin="5">
 
@@ -884,7 +919,7 @@
 
                                         <StackPanel
                                             x:Name="GameEndActionLabelPanel"
-                                            Grid.Row="5"
+                                            Grid.Row="6"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
                                             VerticalAlignment="Center"
@@ -904,7 +939,7 @@
                                         </StackPanel>
                                         <ComboBox
                                             x:Name="GameEndActionCombo"
-                                            Grid.Row="5"
+                                            Grid.Row="6"
                                             Grid.Column="1"
                                             Margin="5">
 
@@ -912,7 +947,7 @@
 
                                         <StackPanel
                                             x:Name="AppArgumentsLabelPanel"
-                                            Grid.Row="6"
+                                            Grid.Row="7"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
                                             VerticalAlignment="Center"
@@ -932,7 +967,7 @@
                                         </StackPanel>
                                         <TextBox
                                             x:Name="AppArgumentsTextBox"
-                                            Grid.Row="6"
+                                            Grid.Row="7"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
                                             Margin="5"
@@ -940,7 +975,7 @@
 
                                         <StackPanel
                                             x:Name="TerminationMethodLabelPanel"
-                                            Grid.Row="7"
+                                            Grid.Row="8"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
                                             VerticalAlignment="Center"
@@ -960,13 +995,13 @@
                                         </StackPanel>
                                         <ComboBox
                                             x:Name="TerminationMethodCombo"
-                                            Grid.Row="7"
+                                            Grid.Row="8"
                                             Grid.Column="1"
                                             Margin="5"/>
 
                                         <StackPanel
                                             x:Name="GracefulTimeoutLabelPanel"
-                                            Grid.Row="8"
+                                            Grid.Row="9"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
                                             VerticalAlignment="Center"
@@ -986,21 +1021,21 @@
                                         </StackPanel>
                                         <TextBox
                                             x:Name="GracefulTimeoutTextBox"
-                                            Grid.Row="8"
+                                            Grid.Row="9"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
                                             Margin="5"/>
 
                                         <Label
                                             x:Name="AppCommentLabel"
-                                            Grid.Row="9"
+                                            Grid.Row="10"
                                             Grid.Column="0"
                                             Content="[COMMENT_LABEL]"
                                             VerticalAlignment="Top"
                                             Margin="0,5,0,0"/>
                                         <TextBox
                                             x:Name="AppCommentTextBox"
-                                            Grid.Row="9"
+                                            Grid.Row="10"
                                             Grid.Column="1"
                                             Grid.ColumnSpan="2"
                                             TextWrapping="Wrap"
