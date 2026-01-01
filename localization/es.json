@@ -244,6 +244,7 @@
     "steamAppIdMust7Digits": "El Steam App ID debe ser solo numérico",
     "epicGameIdRequired": "Se requiere Epic Game ID para la plataforma Epic",
     "epicGameIdInvalidFormat": "El Epic Game ID debe comenzar con 'apps/' o 'com.epicgames.launcher://apps/'",
+    "riotGameIdRequired": "Se requiere el ID de juego de Riot para la plataforma Riot",
     "executablePathRequired": "La ruta del ejecutable es obligatoria.",
     "executablePathNotFound": "No se encontró el archivo ejecutable especificado.",
     "managedAppsSettingsSaved": "Configuración de aplicaciones administradas guardada.",

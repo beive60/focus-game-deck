@@ -244,6 +244,7 @@
     "steamAppIdMust7Digits": "Steam应用ID必须仅由数字组成",
     "epicGameIdRequired": "Epic平台需要Epic游戏ID",
     "epicGameIdInvalidFormat": "Epic游戏ID必须以'apps/'或'com.epicgames.launcher://apps/'开头",
+    "riotGameIdRequired": "Riot平台需要Riot游戏ID",
     "executablePathRequired": "可执行文件路径为必填项",
     "executablePathNotFound": "找不到指定的可执行文件",
     "managedAppsSettingsSaved": "托管应用设置已保存",

@@ -244,6 +244,7 @@
     "steamAppIdMust7Digits": "Steam App ID должен содержать только цифры",
     "epicGameIdRequired": "Epic Game ID требуется для платформы Epic",
     "epicGameIdInvalidFormat": "Epic Game ID должен начинаться с 'apps/' или 'com.epicgames.launcher://apps/'",
+    "riotGameIdRequired": "Требуется ID игры Riot для платформы Riot",
     "executablePathRequired": "Путь к исполняемому файлу обязателен.",
     "executablePathNotFound": "Указанный исполняемый файл не найден.",
     "managedAppsSettingsSaved": "Настройки управляемых приложений сохранены.",

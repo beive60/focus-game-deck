@@ -244,6 +244,7 @@
     "steamAppIdMust7Digits": "Steam App ID harus hanya berupa angka",
     "epicGameIdRequired": "Epic Game ID diperlukan untuk platform Epic",
     "epicGameIdInvalidFormat": "Epic Game ID harus dimulai dengan 'apps/' atau 'com.epicgames.launcher://apps/'",
+    "riotGameIdRequired": "ID Game Riot diperlukan untuk platform Riot",
     "executablePathRequired": "Jalur eksekusi diperlukan",
     "executablePathNotFound": "File eksekusi yang ditentukan tidak ditemukan",
     "managedAppsSettingsSaved": "Pengaturan aplikasi terkelola telah disimpan",
