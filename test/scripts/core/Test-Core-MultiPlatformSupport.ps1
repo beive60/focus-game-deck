@@ -154,8 +154,8 @@ function Test-Assert {
     )
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+    # Import the BuildLogger
+    . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     if ($Condition) {
         $global:TestResults.Passed++
         $status = "[OK] PASS"
@@ -310,7 +310,7 @@ function Test-ConfigValidator {
     $testConfig = @{
         managedApps = @{
             testApp = @{
-                path = "C:\Test/app.exe"
+                path = "C:/Test/app.exe"
                 processName = "testapp"
                 gameStartAction = "start-process"
                 gameEndAction = "stop-process"
@@ -321,7 +321,7 @@ function Test-ConfigValidator {
             steamGame = @{
                 name = "Test Steam Game"
                 platform = "steam"
-                steamAppId = "1234567"  # Fixed: 7 digits
+                steamAppId = "1234567"  # Fixed: numerical ID
                 processName = "steamgame*"
                 appsToManage = @("testApp")
             }
@@ -347,13 +347,13 @@ function Test-ConfigValidator {
             }
             missingPlatform = @{
                 name = "Missing Platform Game"
-                steamAppId = "6543210"  # Fixed: 7 digits
+                steamAppId = "6543210"  # Fixed: numerical ID
                 processName = "missing*"
                 appsToManage = @()
             }
         }
         paths = @{
-            steam = "C:/Steam/steam.exe"
+            steam = "C:/Program Files (x86)/Steam/steam.exe" # Actual path for testing
         }
     }
 

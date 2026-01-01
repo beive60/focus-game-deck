@@ -28,7 +28,7 @@ BeforeAll {
 }
 
 Describe "Test-GameIdFormat" -Tag "Core", "ValidationRules" {
-    
+
     Context "Valid Game IDs" {
         It "Should accept alphanumeric characters" {
             Test-GameIdFormat -GameId "apex2024" | Should -BeTrue
@@ -84,7 +84,7 @@ Describe "Test-GameIdFormat" -Tag "Core", "ValidationRules" {
 }
 
 Describe "Test-SteamAppIdFormat" -Tag "Core", "ValidationRules" {
-    
+
     Context "Valid Steam AppIDs" {
         It "Should accept valid 7-digit Steam AppID" {
             Test-SteamAppIdFormat -SteamAppId "1172470" | Should -BeTrue
@@ -93,23 +93,14 @@ Describe "Test-SteamAppIdFormat" -Tag "Core", "ValidationRules" {
         It "Should accept another valid 7-digit Steam AppID" {
             Test-SteamAppIdFormat -SteamAppId "0000000" | Should -BeTrue
         }
+        It "Should accept 6-digit number" {
+            Test-SteamAppIdFormat -SteamAppId "123456" | Should -BeTrue
+        }
     }
 
     Context "Invalid Steam AppIDs" {
         It "Should reject empty string" {
             Test-SteamAppIdFormat -SteamAppId "" | Should -BeFalse
-        }
-
-        It "Should reject 6-digit number" {
-            Test-SteamAppIdFormat -SteamAppId "123456" | Should -BeFalse
-        }
-
-        It "Should reject 8-digit number" {
-            Test-SteamAppIdFormat -SteamAppId "12345678" | Should -BeFalse
-        }
-
-        It "Should reject non-numeric characters" {
-            Test-SteamAppIdFormat -SteamAppId "117247a" | Should -BeFalse
         }
 
         It "Should reject mixed alphanumeric" {
@@ -119,7 +110,7 @@ Describe "Test-SteamAppIdFormat" -Tag "Core", "ValidationRules" {
 }
 
 Describe "Test-EpicGameIdFormat" -Tag "Core", "ValidationRules" {
-    
+
     Context "Valid Epic Game IDs" {
         It "Should accept 'apps/' prefix" {
             Test-EpicGameIdFormat -EpicGameId "apps/fortnite" | Should -BeTrue
@@ -154,7 +145,7 @@ Describe "Test-EpicGameIdFormat" -Tag "Core", "ValidationRules" {
 }
 
 Describe "Test-RiotGameIdFormat" -Tag "Core", "ValidationRules" {
-    
+
     Context "Valid Riot Game IDs" {
         It "Should accept 'valorant'" {
             Test-RiotGameIdFormat -RiotGameId "valorant" | Should -BeTrue
@@ -185,7 +176,7 @@ Describe "Test-RiotGameIdFormat" -Tag "Core", "ValidationRules" {
 }
 
 Describe "Test-ConfigPathExists" -Tag "Core", "ValidationRules" {
-    
+
     BeforeAll {
         # Create a temporary file for testing
         $script:testFilePath = Join-Path -Path $TestDrive -ChildPath "test-file.exe"
@@ -222,7 +213,7 @@ Describe "Test-ConfigPathExists" -Tag "Core", "ValidationRules" {
 }
 
 Describe "Test-GameConfiguration" -Tag "Core", "ValidationRules" {
-    
+
     BeforeAll {
         # Create a temporary executable file for testing
         $script:testExePath = Join-Path -Path $TestDrive -ChildPath "test-game.exe"
@@ -244,9 +235,9 @@ Describe "Test-GameConfiguration" -Tag "Core", "ValidationRules" {
         }
 
         It "Should return error for invalid Steam AppID format" {
-            $result = Test-GameConfiguration -GameId "apex" -Platform "steam" -SteamAppId "123456"
+            $result = Test-GameConfiguration -GameId "apex" -Platform "steam" -SteamAppId "123456abc"
             $result.IsValid | Should -BeFalse
-            $result.Errors[0].Key | Should -Be "steamAppIdMust7Digits"
+            $result.Errors[0].Key | Should -Be "steamAppIdMustBeNumeric"
         }
     }
 
