@@ -6,7 +6,7 @@
     This module contains pure validation logic with no dependencies on UI,
     logging, or other modules. All functions return boolean values or
     simple validation result objects.
-    
+
     This is the single source of truth for all validation rules across
     CLI and GUI components.
 
@@ -14,7 +14,7 @@
     Author: Focus Game Deck Development Team
     Version: 1.0.0
     Last Updated: 2026-01-01
-    
+
     Design Principles:
     - No dependencies on UI, logging, or other modules
     - Pure functions that return bool or simple result objects
@@ -86,7 +86,7 @@ function Test-GameIdFormat {
     Tests if a Steam AppID has valid format.
 
 .DESCRIPTION
-    Steam AppIDs must be exactly 7 digits (numeric characters only).
+    Steam AppIDs must be numeric characters only.
 
 .PARAMETER SteamAppId
     The Steam AppID to validate.
@@ -100,8 +100,8 @@ function Test-GameIdFormat {
     Returns: $true
 
 .EXAMPLE
-    Test-SteamAppIdFormat -SteamAppId "123456"
-    Returns: $false (only 6 digits)
+    Test-SteamAppIdFormat -SteamAppId "123456a"
+    Returns: $false (includes non-numeric character)
 #>
 function Test-SteamAppIdFormat {
     [CmdletBinding()]
@@ -117,11 +117,11 @@ function Test-SteamAppIdFormat {
         return $false
     }
 
-    # Steam AppID must be exactly 7 digits
-    # This is enforced by Steam's internal system - all AppIDs are 7-digit numbers
+    # Steam AppID must be numeric
+    # This is enforced by Steam's internal system - all AppIDs are numeric
     # Examples: 1172470 (Apex Legends), 0000000 (Invalid but format-wise correct)
     # Reference: https://partner.steamgames.com/doc/store/application/platforms
-    if ($SteamAppId -notmatch '^[0-9]{7}$') {
+    if ($SteamAppId -notmatch '^[0-9]+$') {
         return $false
     }
 
@@ -267,7 +267,7 @@ function Test-ConfigPathExists {
 .DESCRIPTION
     Performs comprehensive validation of game configuration including
     Game ID format and platform-specific identifier validation.
-    
+
     Returns a hashtable with validation results and error details.
 
 .PARAMETER GameId
@@ -360,7 +360,7 @@ function Test-GameConfiguration {
                 } else {
                     $errors += @{
                         Control = 'SteamAppIdTextBox'
-                        Key = 'steamAppIdMust7Digits'
+                        Key = 'steamAppIdMustBeNumeric'
                     }
                 }
             }
