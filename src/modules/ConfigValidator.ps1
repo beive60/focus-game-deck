@@ -1,5 +1,8 @@
 # Configuration Validator Module
-# Enhanced configuration validation with detailed error reporting
+# Enhanced configuration validation with detailed error reporting and dependency chain validation
+#
+# This module validates configuration using the pure ValidationRules module and implements
+# dependency chain validation - only checking what's actually needed for the game being launched.
 
 class ConfigValidator {
     [object] $Config
@@ -15,7 +18,8 @@ class ConfigValidator {
         $this.Warnings = @()
     }
 
-    # Main validation method
+    # Main validation method with dependency chain validation
+    # When gameId is provided, validates only what's needed for that specific game
     [bool] ValidateConfiguration([string] $gameId = $null) {
         $this.Errors = @()
         $this.Warnings = @()
@@ -23,21 +27,15 @@ class ConfigValidator {
         # Validate basic structure
         $this.ValidateBasicStructure()
 
-        # Validate paths
-        $this.ValidatePaths()
-
-        # Validate managed apps
-        $this.ValidateManagedApps()
-
-        # Validate specific game if provided
         if ($gameId) {
-            $this.ValidateGameConfiguration($gameId)
+            # Dependency Chain Validation: Only validate what this game needs
+            $this.ValidateGameWithDependencies($gameId)
+        } else {
+            # Full validation mode (when no specific game is provided)
+            $this.ValidateAllPaths()
+            $this.ValidateAllManagedApps()
+            $this.ValidateAllIntegrations()
         }
-
-        # Validate integrations
-        $this.ValidateOBSConfiguration()
-        $this.ValidateDiscordConfiguration()
-        $this.ValidateVTubeStudioConfiguration()
 
         # Return true if no errors (warnings are acceptable)
         return $this.Errors.Count -eq 0
@@ -65,13 +63,144 @@ class ConfigValidator {
         }
     }
 
-    # Validate paths configuration
-    [void] ValidatePaths() {
+    # Dependency Chain Validation: Validate a game and all its dependencies
+    [void] ValidateGameWithDependencies([string] $gameId) {
+        if (-not $this.Config.games.$gameId) {
+            $this.Errors += "Game ID '$gameId' not found in configuration"
+            return
+        }
+
+        $gameConfig = $this.Config.games.$gameId
+
+        # 1. Validate the game configuration itself
+        $this.ValidateGameConfiguration($gameId)
+
+        # 2. Validate only the platform used by this game
+        $platform = if ($gameConfig.platform) { $gameConfig.platform } else { "steam" }
+        $this.ValidatePlatformForGame($platform)
+
+        # 3. Validate only the managed apps referenced by this game
+        if ($gameConfig.appsToManage) {
+            foreach ($appId in $gameConfig.appsToManage) {
+                if ($appId -eq "obs") {
+                    continue  # OBS is handled specially in integrations
+                }
+                $this.ValidateManagedApp($appId)
+            }
+        }
+
+        # 4. Validate only the integrations used by this game
+        if ($gameConfig.integrations) {
+            if ($gameConfig.integrations.useOBS) {
+                $this.ValidateOBSConfiguration()
+            }
+            if ($gameConfig.integrations.useDiscord) {
+                $this.ValidateDiscordConfiguration()
+            }
+            if ($gameConfig.integrations.useVTubeStudio) {
+                $this.ValidateVTubeStudioConfiguration()
+            }
+        }
+
+        # Also check if OBS is in appsToManage
+        if ($gameConfig.appsToManage -and "obs" -in $gameConfig.appsToManage) {
+            $this.ValidateOBSConfiguration()
+        }
+    }
+
+    # Validate platform-specific path for a given platform
+    [void] ValidatePlatformForGame([string] $platform) {
+        if (-not $this.Config.paths) {
+            $this.Errors += "Missing 'paths' section in configuration"
+            return
+        }
+
+        switch ($platform) {
+            "steam" {
+                if (-not $this.Config.paths.steam) {
+                    $this.Errors += "Steam path is required in 'paths.steam' for Steam platform"
+                } elseif (-not (Test-Path $this.Config.paths.steam)) {
+                    $this.Errors += "Steam path does not exist: '$($this.Config.paths.steam)'"
+                }
+            }
+            "epic" {
+                if (-not $this.Config.paths.epic) {
+                    $this.Warnings += "Epic platform path not configured in 'paths.epic' - will attempt auto-detection"
+                } elseif (-not (Test-Path $this.Config.paths.epic)) {
+                    $this.Warnings += "Epic path does not exist: '$($this.Config.paths.epic)' - will attempt auto-detection"
+                }
+            }
+            "riot" {
+                if (-not $this.Config.paths.riot) {
+                    $this.Warnings += "Riot platform path not configured in 'paths.riot' - will attempt auto-detection"
+                } elseif (-not (Test-Path $this.Config.paths.riot)) {
+                    $this.Warnings += "Riot path does not exist: '$($this.Config.paths.riot)' - will attempt auto-detection"
+                }
+            }
+            { $_ -in "standalone", "direct" } {
+                # For standalone/direct, executable path is part of game config, already validated
+            }
+        }
+    }
+
+    # Validate a single managed application
+    [void] ValidateManagedApp([string] $appId) {
+        if (-not $this.Config.managedApps.$appId) {
+            $this.Errors += "Game references undefined application: '$appId'"
+            return
+        }
+
+        $appConfig = $this.Config.managedApps.$appId
+        $validActions = @("start-process", "stop-process", "none")
+
+        # Validate required properties
+        if (-not $appConfig.PSObject.Properties.Name -contains "processName") {
+            $this.Errors += "Application '$appId' is missing 'processName' property"
+        }
+
+        if (-not $appConfig.PSObject.Properties.Name -contains "gameStartAction") {
+            $this.Errors += "Application '$appId' is missing 'gameStartAction' property"
+        }
+
+        if (-not $appConfig.PSObject.Properties.Name -contains "gameEndAction") {
+            $this.Errors += "Application '$appId' is missing 'gameEndAction' property"
+        }
+
+        # Validate action values
+        if ($appConfig.gameStartAction -and $appConfig.gameStartAction -notin $validActions) {
+            $this.Errors += "Application '$appId' has invalid gameStartAction: '$($appConfig.gameStartAction)'. Valid values: $($validActions -join ', ')"
+        }
+
+        if ($appConfig.gameEndAction -and $appConfig.gameEndAction -notin $validActions) {
+            $this.Errors += "Application '$appId' has invalid gameEndAction: '$($appConfig.gameEndAction)'. Valid values: $($validActions -join ', ')"
+        }
+
+        # Validate path if needed for start-process action
+        $needsPath = @("start-process")
+        if (($appConfig.gameStartAction -in $needsPath) -or ($appConfig.gameEndAction -in $needsPath)) {
+            if (-not $appConfig.path -or $appConfig.path -eq "") {
+                $this.Errors += "Application '$appId' requires 'path' property for its configured actions"
+            } elseif (-not (Test-Path $appConfig.path)) {
+                $this.Warnings += "Application '$appId' path does not exist: '$($appConfig.path)'"
+            }
+        }
+
+        # Validate process name if needed for stop-process action
+        if (($appConfig.gameStartAction -eq "stop-process") -or ($appConfig.gameEndAction -eq "stop-process")) {
+            if (-not $appConfig.processName -or $appConfig.processName -eq "") {
+                $this.Errors += "Application '$appId' requires 'processName' property for stop-process action"
+            }
+        }
+    }
+
+    # Full validation methods (used when no specific game is provided)
+    
+    [void] ValidateAllPaths() {
         if (-not $this.Config.paths) {
             return
         }
 
-        # Validate Steam path
+        # Validate Steam path (always required as default platform)
         if ($this.Config.paths.steam) {
             if (-not (Test-Path $this.Config.paths.steam)) {
                 $this.Errors += "Steam path does not exist: '$($this.Config.paths.steam)'"
@@ -88,8 +217,7 @@ class ConfigValidator {
         }
     }
 
-    # Validate managed applications
-    [void] ValidateManagedApps() {
+    [void] ValidateAllManagedApps() {
         if (-not $this.Config.managedApps) {
             return
         }
@@ -98,50 +226,20 @@ class ConfigValidator {
 
         foreach ($appProperty in $this.Config.managedApps.PSObject.Properties) {
             $appId = $appProperty.Name
-            $appConfig = $appProperty.Value
-
-            # Validate required properties
-            if (-not $appConfig.PSObject.Properties.Name -contains "processName") {
-                $this.Errors += "Application '$appId' is missing 'processName' property"
-            }
-
-            if (-not $appConfig.PSObject.Properties.Name -contains "gameStartAction") {
-                $this.Errors += "Application '$appId' is missing 'gameStartAction' property"
-            }
-
-            if (-not $appConfig.PSObject.Properties.Name -contains "gameEndAction") {
-                $this.Errors += "Application '$appId' is missing 'gameEndAction' property"
-            }
-
-            # Validate action values
-            if ($appConfig.gameStartAction -and $appConfig.gameStartAction -notin $validActions) {
-                $this.Errors += "Application '$appId' has invalid gameStartAction: '$($appConfig.gameStartAction)'. Valid values: $($validActions -join ', ')"
-            }
-
-            if ($appConfig.gameEndAction -and $appConfig.gameEndAction -notin $validActions) {
-                $this.Errors += "Application '$appId' has invalid gameEndAction: '$($appConfig.gameEndAction)'. Valid values: $($validActions -join ', ')"
-            }
-
-            # Validate path if needed for start-process action
-            $needsPath = @("start-process")
-            if (($appConfig.gameStartAction -in $needsPath) -or ($appConfig.gameEndAction -in $needsPath)) {
-                if (-not $appConfig.path -or $appConfig.path -eq "") {
-                    $this.Errors += "Application '$appId' requires 'path' property for its configured actions"
-                } elseif (-not (Test-Path $appConfig.path)) {
-                    $this.Warnings += "Application '$appId' path does not exist: '$($appConfig.path)'"
-                }
-            }
-
-            # Validate process name if needed for stop-process action
-            if (($appConfig.gameStartAction -eq "stop-process") -or ($appConfig.gameEndAction -eq "stop-process")) {
-                if (-not $appConfig.processName -or $appConfig.processName -eq "") {
-                    $this.Errors += "Application '$appId' requires 'processName' property for stop-process action"
-                }
-            }
+            if ($appId -eq '_order') { continue }  # Skip order metadata
+            
+            $this.ValidateManagedApp($appId)
         }
     }
 
-    # Validate specific game configuration (Multi-Platform Support)
+    [void] ValidateAllIntegrations() {
+        # Check if any game uses integrations
+        $this.ValidateOBSConfiguration()
+        $this.ValidateDiscordConfiguration()
+        $this.ValidateVTubeStudioConfiguration()
+    }
+
+    # Validate specific game configuration (using ValidationRules module)
     [void] ValidateGameConfiguration([string] $gameId) {
         if (-not $this.Config.games.$gameId) {
             $this.Errors += "Game ID '$gameId' not found in configuration"
@@ -158,58 +256,54 @@ class ConfigValidator {
             }
         }
 
-        # Validate platform-specific requirements (Multi-Platform Support)
-        $platform = if ($gameConfig.platform) { $gameConfig.platform } else { "steam" }  # Default to Steam
+        # Determine platform (default to Steam)
+        $platform = if ($gameConfig.platform) { $gameConfig.platform } else { "steam" }
 
+        # Use ValidationRules module for format validation
+        $validationParams = @{
+            GameId = $gameId
+            Platform = $platform
+        }
+
+        # Add platform-specific parameters
         switch ($platform) {
             "steam" {
-                if (-not $gameConfig.steamAppId) {
-                    $this.Errors += "Game '$gameId' with Steam platform requires 'steamAppId' property"
-                }
-                if (-not $this.Config.paths.steam) {
-                    $this.Errors += "Steam platform requires 'paths.steam' configuration"
-                }
+                $validationParams['SteamAppId'] = if ($gameConfig.steamAppId) { $gameConfig.steamAppId } else { "" }
             }
             "epic" {
-                if (-not $gameConfig.epicGameId) {
-                    $this.Errors += "Game '$gameId' with Epic platform requires 'epicGameId' property"
-                }
-                if (-not $this.Config.paths.epic) {
-                    $this.Warnings += "Epic platform path not configured in 'paths.epic' - will attempt auto-detection"
-                }
-            }
-            "ea" {
-                if (-not $gameConfig.eaGameId) {
-                    $this.Errors += "Game '$gameId' with EA platform requires 'eaGameId' property"
-                }
-                if (-not $this.Config.paths.ea) {
-                    $this.Warnings += "EA platform path not configured in 'paths.ea' - will attempt auto-detection"
-                }
+                $validationParams['EpicGameId'] = if ($gameConfig.epicGameId) { $gameConfig.epicGameId } else { "" }
             }
             "riot" {
-                if (-not $gameConfig.riotGameId) {
-                    $this.Errors += "Game '$gameId' with Riot platform requires 'riotGameId' property"
-                }
-                if (-not $this.Config.paths.riot) {
-                    $this.Warnings += "Riot platform path not configured in 'paths.riot' - will attempt auto-detection"
-                }
+                $validationParams['RiotGameId'] = if ($gameConfig.riotGameId) { $gameConfig.riotGameId } else { "" }
             }
-            "direct" {
-                if (-not $gameConfig.executablePath) {
-                    $this.Errors += "Game '$gameId' with standalone platform requires 'executablePath' property"
-                } elseif (-not (Test-Path $gameConfig.executablePath)) {
-                    $this.Errors += "Game '$gameId' executable path does not exist: '$($gameConfig.executablePath)'"
-                }
-            }
-            default {
-                $this.Errors += "Game '$gameId' has unsupported platform: '$platform'. Supported platforms: steam, epic, riot, direct"
+            { $_ -in "standalone", "direct" } {
+                $validationParams['ExecutablePath'] = if ($gameConfig.executablePath) { $gameConfig.executablePath } else { "" }
             }
         }
 
-        # Validate appsToManage
-        if (-not $gameConfig.appsToManage) {
-            $this.Warnings += "Game '$gameId' has no applications to manage (appsToManage is empty)"
-        } else {
+        # Perform validation using ValidationRules
+        $result = Test-GameConfiguration @validationParams
+        
+        # Add any validation errors to our error list
+        foreach ($error in $result.Errors) {
+            # Convert control-based errors to human-readable messages
+            $errorMsg = switch ($error.Key) {
+                'gameIdRequired' { "Game '$gameId' has empty Game ID" }
+                'gameIdInvalidCharacters' { "Game '$gameId' has invalid characters in Game ID" }
+                'steamAppIdRequired' { "Game '$gameId' requires Steam AppID" }
+                'steamAppIdMust7Digits' { "Game '$gameId' has invalid Steam AppID format (must be 7 digits)" }
+                'epicGameIdRequired' { "Game '$gameId' requires Epic Game ID" }
+                'epicGameIdInvalidFormat' { "Game '$gameId' has invalid Epic Game ID format" }
+                'riotGameIdRequired' { "Game '$gameId' requires Riot Game ID" }
+                'executablePathRequired' { "Game '$gameId' requires executable path" }
+                'executablePathNotFound' { "Game '$gameId' executable path does not exist: '$($gameConfig.executablePath)'" }
+                default { "Game '$gameId' validation error: $($error.Key)" }
+            }
+            $this.Errors += $errorMsg
+        }
+
+        # Validate appsToManage references
+        if ($gameConfig.appsToManage) {
             foreach ($appId in $gameConfig.appsToManage) {
                 if ($appId -eq "obs") {
                     # OBS is handled specially, skip validation here
@@ -220,6 +314,8 @@ class ConfigValidator {
                     $this.Errors += "Game '$gameId' references undefined application: '$appId'"
                 }
             }
+        } else {
+            $this.Warnings += "Game '$gameId' has no applications to manage (appsToManage is empty)"
         }
     }
 
