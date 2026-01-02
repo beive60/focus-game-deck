@@ -86,19 +86,85 @@ if (Test-Assert "manifest.json exists" (Test-Path $manifestPath)) {
     }
 }
 
-# Test 3: Individual language files exist
-Write-Host "`nTest 3: Individual language files" -ForegroundColor Yellow
+# Test 3: Individual language files exist and key count consistency
+Write-Host "`nTest 3: Individual language files and key consistency" -ForegroundColor Yellow
 $expectedLanguages = @("ja", "en", "zh-CN", "ru", "fr", "es", "pt-BR", "id-ID")
+$languageKeyCounts = @{}
+$languageFileSizes = @{}
 
 foreach ($lang in $expectedLanguages) {
     $langFile = Join-Path $localizationDir "$lang.json"
     if (Test-Assert "Language file exists: $lang.json" (Test-Path $langFile)) {
         $fileInfo = Get-Item $langFile
         $sizeKB = [math]::Round($fileInfo.Length / 1KB, 2)
+        $languageFileSizes[$lang] = $sizeKB
         Write-Verbose "  $lang.json size: $sizeKB KB"
 
-        # Test file size is reasonable (between 20KB and 50KB)
-        Test-Assert "  $lang.json size is reasonable" (($sizeKB -gt 20) -and ($sizeKB -lt 50)) "Size: $sizeKB KB"
+        # Count keys in the language file
+        try {
+            $langData = Get-Content $langFile -Raw -Encoding UTF8 | ConvertFrom-Json
+            $keyCount = @($langData.PSObject.Properties).Count
+            $languageKeyCounts[$lang] = $keyCount
+            Write-Verbose "  $lang.json keys: $keyCount"
+
+            # Test file is not empty and has reasonable key count (at least 100 keys)
+            Test-Assert "  $lang.json has reasonable key count" ($keyCount -gt 100) "Keys: $keyCount"
+        } catch {
+            Test-Assert "  $lang.json is valid JSON" $false $_.Exception.Message
+        }
+    }
+}
+
+# Verify all languages have the same number of keys
+Write-Host "`nTest 3b: Key count consistency across languages" -ForegroundColor Yellow
+if ($languageKeyCounts.Count -gt 0) {
+    $baseKeyCount = $languageKeyCounts["en"]
+    $allConsistent = $true
+
+    foreach ($lang in $expectedLanguages) {
+        if ($languageKeyCounts.ContainsKey($lang)) {
+            $keyCount = $languageKeyCounts[$lang]
+            $matches = ($keyCount -eq $baseKeyCount)
+
+            if (-not $matches) {
+                $diff = $keyCount - $baseKeyCount
+                $diffStr = if ($diff -gt 0) { "+$diff" } else { "$diff" }
+                Test-Assert "  $lang key count matches baseline (en)" $false "Expected: $baseKeyCount, Got: $keyCount ($diffStr)"
+                $allConsistent = $false
+            } else {
+                Write-Verbose "  ${lang}: $keyCount keys (matches baseline)"
+            }
+        }
+    }
+
+    if ($allConsistent) {
+        Test-Assert "All languages have consistent key count" $true "All $($expectedLanguages.Count) languages have $baseKeyCount keys"
+    }
+}
+
+# Verify file sizes are within reasonable range (detect outliers)
+Write-Host "`nTest 3c: File size outlier detection" -ForegroundColor Yellow
+if ($languageFileSizes.Count -gt 0) {
+    $sizes = $languageFileSizes.Values
+    $avgSize = ($sizes | Measure-Object -Average).Average
+    $maxSize = ($sizes | Measure-Object -Maximum).Maximum
+    $minSize = ($sizes | Measure-Object -Minimum).Minimum
+
+    Write-Verbose "  Average size: $([math]::Round($avgSize, 2)) KB"
+    Write-Verbose "  Min size: $minSize KB, Max size: $maxSize KB"
+
+    # Allow 30% variance from average (accounts for language verbosity differences)
+    $lowerBound = $avgSize * 0.7
+    $upperBound = $avgSize * 1.3
+
+    foreach ($lang in $expectedLanguages) {
+        if ($languageFileSizes.ContainsKey($lang)) {
+            $size = $languageFileSizes[$lang]
+            $isWithinRange = ($size -ge $lowerBound) -and ($size -le $upperBound)
+            $variance = [math]::Round((($size - $avgSize) / $avgSize) * 100, 1)
+
+            Test-Assert "  $lang.json size within acceptable range" $isWithinRange "Size: $size KB (${variance}% from average)"
+        }
     }
 }
 
@@ -140,7 +206,7 @@ if (Test-Path $legacyFile) {
 
     # Calculate average individual file size
     $individualFiles = Get-ChildItem -Path $localizationDir -Filter "*.json" |
-        Where-Object { $_.Name -match "^[a-z]{2}(-[A-Z]{2})?\.json$" }
+    Where-Object { $_.Name -match "^[a-z]{2}(-[A-Z]{2})?\.json$" }
 
     $totalIndividualSize = ($individualFiles | Measure-Object -Property Length -Sum).Sum
     $avgIndividualSize = $totalIndividualSize / $individualFiles.Count
