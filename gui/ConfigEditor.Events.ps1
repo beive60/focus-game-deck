@@ -1,4 +1,4 @@
-﻿class ConfigEditorEvents {
+class ConfigEditorEvents {
     $uiManager
     $stateManager
     [string]$appRoot
@@ -1085,19 +1085,29 @@
                     } else {
                         "start-process"
                     }
+                    Write-Verbose "  Setting GameStartActionCombo to: $appStartAction"
                     $this.SetComboBoxSelectionByTag($gameStartActionCombo, $appStartAction)
+                    Write-Verbose "  GameStartActionCombo SelectedItem: $($gameStartActionCombo.SelectedItem)"
                 }
 
                 if ($gameEndActionCombo) {
                     # Check for both endAction and gameEndAction for compatibility
+                    Write-Verbose "  endAction property: $($appData.endAction)"
+                    Write-Verbose "  gameEndAction property: $($appData.gameEndAction)"
                     $appEndAction = if ($appData.endAction) {
+                        Write-Verbose "  Using endAction: $($appData.endAction)"
                         $appData.endAction
                     } elseif ($appData.gameEndAction) {
+                        Write-Verbose "  Using gameEndAction: $($appData.gameEndAction)"
                         $appData.gameEndAction
                     } else {
+                        Write-Verbose "  Using default: stop-process"
                         "stop-process"
                     }
+                    Write-Verbose "  Final appEndAction value: $appEndAction"
+                    Write-Verbose "  Setting GameEndActionCombo to: $appEndAction"
                     $this.SetComboBoxSelectionByTag($gameEndActionCombo, $appEndAction)
+                    Write-Verbose "  GameEndActionCombo SelectedItem: $($gameEndActionCombo.SelectedItem)"
                 }
 
                 $appPathTextBox = $script:Window.FindName("AppPathTextBox")
@@ -1111,6 +1121,12 @@
                         ""
                     }
                     $appPathTextBox.Text = $pathValue
+                }
+
+                # Load working directory
+                $workingDirectoryTextBox = $script:Window.FindName("WorkingDirectoryTextBox")
+                if ($workingDirectoryTextBox) {
+                    $workingDirectoryTextBox.Text = if ($appData.workingDirectory) { $appData.workingDirectory } else { "" }
                 }
 
                 # Load arguments
@@ -1375,11 +1391,13 @@
         # Create new app with default values
         $newApp = @{
             displayName = "New App"
-            processNames = @("notepad.exe")
-            startAction = "start-process"
-            endAction = "stop-process"
+            processName = "notepad.exe"
+            path = ""
+            arguments = ""
+            gameStartAction = "start-process"
+            gameEndAction = "stop-process"
             terminationMethod = "auto"
-            gracefulTimeout = 5
+            gracefulTimeoutMs = 5000
         }
 
         # Add to configuration
@@ -1648,6 +1666,20 @@
         if ($openFileDialog.ShowDialog()) {
             $script:Window.FindName("AppPathTextBox").Text = $openFileDialog.FileName
             Write-Verbose "Selected app executable path: $($openFileDialog.FileName)"
+        }
+    }
+
+    # Handle browse working directory (for Managed Apps tab)
+    [void] HandleBrowseWorkingDirectory() {
+        Add-Type -AssemblyName System.Windows.Forms
+        $folderBrowserDialog = New-Object System.Windows.Forms.FolderBrowserDialog
+        $folderBrowserDialog.Description = $this.uiManager.GetLocalizedMessage("browseFolderButton")
+        $folderBrowserDialog.ShowNewFolderButton = $true
+
+        $dialogResultType = "System.Windows.Forms.DialogResult" -as [type]
+        if ($folderBrowserDialog.ShowDialog() -eq $dialogResultType::OK) {
+            $script:Window.FindName("WorkingDirectoryTextBox").Text = $folderBrowserDialog.SelectedPath
+            Write-Verbose "Selected working directory: $($folderBrowserDialog.SelectedPath)"
         }
     }
 
@@ -2852,6 +2884,7 @@
                 Write-Verbose "ManagedAppsList not found"
             }
             $this.uiManager.Window.FindName("BrowseAppPathButton").add_Click({ $self.HandleBrowseAppPath() }.GetNewClosure())
+            $this.uiManager.Window.FindName("BrowseWorkingDirectoryButton").add_Click({ $self.HandleBrowseWorkingDirectory() }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveManagedAppsButton").add_Click({ $self.HandleSaveManagedApps() }.GetNewClosure())
 
             # --- OBS Tab ---
