@@ -324,6 +324,62 @@ function Save-CurrentGameData {
         } else {
             $gameData.integrations.useVTubeStudio = [bool]$useVTubeCheck.IsChecked
         }
+        
+        # Save VTube Studio game-specific settings if enabled
+        if ($useVTubeCheck.IsChecked) {
+            if (-not $gameData.integrations.PSObject.Properties["vtubeStudioSettings"]) {
+                $gameData.integrations | Add-Member -NotePropertyName "vtubeStudioSettings" -NotePropertyValue ([PSCustomObject]@{}) -Force
+            }
+            
+            # Save model ID
+            $modelIdTextBox = $script:Window.FindName("VTubeModelIdTextBox")
+            if ($modelIdTextBox) {
+                $modelId = $modelIdTextBox.Text.Trim()
+                if ($modelId) {
+                    Set-PropertyValue -Object $gameData.integrations.vtubeStudioSettings -PropertyName "modelId" -Value $modelId
+                } else {
+                    # Remove modelId if empty
+                    if ($gameData.integrations.vtubeStudioSettings.PSObject.Properties["modelId"]) {
+                        $gameData.integrations.vtubeStudioSettings.PSObject.Properties.Remove("modelId")
+                    }
+                }
+            }
+            
+            # Save launch hotkeys
+            $launchHotkeysTextBox = $script:Window.FindName("VTubeOnLaunchHotkeysTextBox")
+            if ($launchHotkeysTextBox) {
+                $hotkeyText = $launchHotkeysTextBox.Text.Trim()
+                if ($hotkeyText) {
+                    $hotkeys = $hotkeyText -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+                    Set-PropertyValue -Object $gameData.integrations.vtubeStudioSettings -PropertyName "onLaunchHotkeys" -Value @($hotkeys)
+                } else {
+                    # Remove onLaunchHotkeys if empty
+                    if ($gameData.integrations.vtubeStudioSettings.PSObject.Properties["onLaunchHotkeys"]) {
+                        $gameData.integrations.vtubeStudioSettings.PSObject.Properties.Remove("onLaunchHotkeys")
+                    }
+                }
+            }
+            
+            # Save exit hotkeys
+            $exitHotkeysTextBox = $script:Window.FindName("VTubeOnExitHotkeysTextBox")
+            if ($exitHotkeysTextBox) {
+                $hotkeyText = $exitHotkeysTextBox.Text.Trim()
+                if ($hotkeyText) {
+                    $hotkeys = $hotkeyText -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+                    Set-PropertyValue -Object $gameData.integrations.vtubeStudioSettings -PropertyName "onExitHotkeys" -Value @($hotkeys)
+                } else {
+                    # Remove onExitHotkeys if empty
+                    if ($gameData.integrations.vtubeStudioSettings.PSObject.Properties["onExitHotkeys"]) {
+                        $gameData.integrations.vtubeStudioSettings.PSObject.Properties.Remove("onExitHotkeys")
+                    }
+                }
+            }
+        } else {
+            # Remove vtubeStudioSettings if VTube Studio integration is disabled
+            if ($gameData.integrations.PSObject.Properties["vtubeStudioSettings"]) {
+                $gameData.integrations.PSObject.Properties.Remove("vtubeStudioSettings")
+            }
+        }
     }
 
     # If the ID changed, perform the rename operation on the games object

@@ -525,6 +525,104 @@ class VTubeStudioManager {
         }
     }
 
+    # Get available models from VTube Studio
+    [object] GetAvailableModels() {
+        try {
+            # Connect and authenticate if not already connected
+            if (-not $this.WebSocket -or $this.WebSocket.State -ne "Open") {
+                if (-not $this.ConnectWebSocket()) {
+                    return $null
+                }
+                if (-not $this.Authenticate()) {
+                    $this.DisconnectWebSocket()
+                    return $null
+                }
+            }
+
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_getting_models" -Default "Getting available VTube Studio models..." -Level "INFO" -Component "VTubeStudioManager"
+            
+            $modelsRequest = @{
+                apiName = "FocusGameDeck"
+                apiVersion = "1.0"
+                requestID = "AvailableModelsRequest"
+                messageType = "AvailableModelsRequest"
+                data = @{}
+            }
+            
+            if (-not $this.SendWebSocketMessage($modelsRequest)) {
+                return $null
+            }
+            
+            $modelsResponse = $this.ReceiveWebSocketResponse(10)
+            if (-not $modelsResponse -or $modelsResponse.messageType -ne "AvailableModelsResponse") {
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_get_models_failed" -Default "Failed to get VTube Studio models" -Level "WARNING" -Component "VTubeStudioManager"
+                return $null
+            }
+            
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_models_retrieved" -Args @($modelsResponse.data.availableModels.Count) -Default "Retrieved {0} VTube Studio model(s)" -Level "OK" -Component "VTubeStudioManager"
+            if ($this.Logger) {
+                $this.Logger.Info("Retrieved $($modelsResponse.data.availableModels.Count) models", "VTUBE")
+            }
+            
+            return $modelsResponse.data.availableModels
+        } catch {
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_get_models_error" -Args @($_) -Default "Error getting VTube Studio models: {0}" -Level "WARNING" -Component "VTubeStudioManager"
+            if ($this.Logger) {
+                $this.Logger.Error("Get models error: $_", "VTUBE")
+            }
+            return $null
+        }
+    }
+
+    # Get hotkeys for the current model
+    [object] GetHotkeysInCurrentModel() {
+        try {
+            # Connect and authenticate if not already connected
+            if (-not $this.WebSocket -or $this.WebSocket.State -ne "Open") {
+                if (-not $this.ConnectWebSocket()) {
+                    return $null
+                }
+                if (-not $this.Authenticate()) {
+                    $this.DisconnectWebSocket()
+                    return $null
+                }
+            }
+
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_getting_hotkeys" -Default "Getting hotkeys from current VTube Studio model..." -Level "INFO" -Component "VTubeStudioManager"
+            
+            $hotkeysRequest = @{
+                apiName = "FocusGameDeck"
+                apiVersion = "1.0"
+                requestID = "HotkeysInCurrentModelRequest"
+                messageType = "HotkeysInCurrentModelRequest"
+                data = @{}
+            }
+            
+            if (-not $this.SendWebSocketMessage($hotkeysRequest)) {
+                return $null
+            }
+            
+            $hotkeysResponse = $this.ReceiveWebSocketResponse(10)
+            if (-not $hotkeysResponse -or $hotkeysResponse.messageType -ne "HotkeysInCurrentModelResponse") {
+                Write-LocalizedHost -Messages $this.Messages -Key "vtube_get_hotkeys_failed" -Default "Failed to get VTube Studio hotkeys" -Level "WARNING" -Component "VTubeStudioManager"
+                return $null
+            }
+            
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_hotkeys_retrieved" -Args @($hotkeysResponse.data.availableHotkeys.Count) -Default "Retrieved {0} VTube Studio hotkey(s)" -Level "OK" -Component "VTubeStudioManager"
+            if ($this.Logger) {
+                $this.Logger.Info("Retrieved $($hotkeysResponse.data.availableHotkeys.Count) hotkeys", "VTUBE")
+            }
+            
+            return $hotkeysResponse.data.availableHotkeys
+        } catch {
+            Write-LocalizedHost -Messages $this.Messages -Key "vtube_get_hotkeys_error" -Args @($_) -Default "Error getting VTube Studio hotkeys: {0}" -Level "WARNING" -Component "VTubeStudioManager"
+            if ($this.Logger) {
+                $this.Logger.Error("Get hotkeys error: $_", "VTUBE")
+            }
+            return $null
+        }
+    }
+
     # Send command to VTube Studio (legacy method for backward compatibility)
     [bool] SendCommand([string] $command, [object] $parameters = $null) {
         Write-LocalizedHost -Messages $this.Messages -Key "vtube_send_command_deprecated" -Args @($command) -Default "SendCommand is deprecated, use specific API methods instead: {0}" -Level "WARNING" -Component "VTubeStudioManager"
