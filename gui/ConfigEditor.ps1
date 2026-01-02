@@ -396,6 +396,10 @@ function Initialize-ConfigEditor {
                 . (Join-Path -Path $appRoot -ChildPath "src/modules/ValidationRules.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ValidationRules.ps1"
 
+                Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - scripts/Invoke-ConfigurationValidation.ps1"
+                . (Join-Path -Path $appRoot -ChildPath "scripts/Invoke-ConfigurationValidation.ps1")
+                Write-Verbose "[OK] ConfigEditor: Module Loaded: Invoke-ConfigurationValidation.ps1"
+
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Save.ps1"
                 . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.Save.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Save.ps1"
