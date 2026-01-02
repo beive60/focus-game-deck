@@ -616,7 +616,6 @@
                                         <GroupBox
                                             x:Name="VTubeGameSpecificSettingsGroup"
                                             Header="[vtubeGameSpecificSettingsGroup]"
-                                            Visibility="Collapsed"
                                             Margin="20,10,0,10">
                                         <StackPanel Margin="10">
                                             <!-- Model ID -->

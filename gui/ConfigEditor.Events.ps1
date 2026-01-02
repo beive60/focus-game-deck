@@ -951,51 +951,46 @@
                     $useVTubeCheck.IsChecked = ($gameData.integrations -and $gameData.integrations.useVTubeStudio) -or ($gameData.appsToManage -contains "vtubeStudio")
                     
                     # Load VTube Studio game-specific settings
-                    $vtubeSettingsGroup = $script:Window.FindName("VTubeGameSpecificSettingsGroup")
-                    if ($vtubeSettingsGroup) {
-                        if ($useVTubeCheck.IsChecked -and $gameData.integrations -and $gameData.integrations.vtubeStudioSettings) {
-                            $vtubeSettingsGroup.Visibility = [System.Windows.Visibility]::Visible
-                            $vtsSettings = $gameData.integrations.vtubeStudioSettings
-                            
-                            # Load model ID
-                            $modelIdTextBox = $script:Window.FindName("VTubeModelIdTextBox")
-                            if ($modelIdTextBox) {
-                                $modelIdTextBox.Text = if ($vtsSettings.modelId) { $vtsSettings.modelId } else { "" }
-                            }
-                            
-                            # Load launch hotkeys
-                            $launchHotkeysTextBox = $script:Window.FindName("VTubeOnLaunchHotkeysTextBox")
-                            if ($launchHotkeysTextBox) {
-                                if ($vtsSettings.onLaunchHotkeys) {
-                                    $launchHotkeysTextBox.Text = $vtsSettings.onLaunchHotkeys -join ", "
-                                } else {
-                                    $launchHotkeysTextBox.Text = ""
-                                }
-                            }
-                            
-                            # Load exit hotkeys
-                            $exitHotkeysTextBox = $script:Window.FindName("VTubeOnExitHotkeysTextBox")
-                            if ($exitHotkeysTextBox) {
-                                if ($vtsSettings.onExitHotkeys) {
-                                    $exitHotkeysTextBox.Text = $vtsSettings.onExitHotkeys -join ", "
-                                } else {
-                                    $exitHotkeysTextBox.Text = ""
-                                }
-                            }
+                    $vtsSettings = if ($gameData.integrations -and $gameData.integrations.vtubeStudioSettings) { $gameData.integrations.vtubeStudioSettings } else { $null }
+                    
+                    # Load model ID
+                    $modelIdTextBox = $script:Window.FindName("VTubeModelIdTextBox")
+                    if ($modelIdTextBox) {
+                        $modelIdTextBox.Text = if ($vtsSettings -and $vtsSettings.modelId) { $vtsSettings.modelId } else { "" }
+                    }
+                    
+                    # Load launch hotkeys
+                    $launchHotkeysTextBox = $script:Window.FindName("VTubeOnLaunchHotkeysTextBox")
+                    if ($launchHotkeysTextBox) {
+                        if ($vtsSettings -and $vtsSettings.onLaunchHotkeys) {
+                            $launchHotkeysTextBox.Text = $vtsSettings.onLaunchHotkeys -join ", "
                         } else {
-                            $vtubeSettingsGroup.Visibility = [System.Windows.Visibility]::Collapsed
-                            
-                            # Clear VTube Studio fields
-                            $modelIdTextBox = $script:Window.FindName("VTubeModelIdTextBox")
-                            if ($modelIdTextBox) { $modelIdTextBox.Text = "" }
-                            
-                            $launchHotkeysTextBox = $script:Window.FindName("VTubeOnLaunchHotkeysTextBox")
-                            if ($launchHotkeysTextBox) { $launchHotkeysTextBox.Text = "" }
-                            
-                            $exitHotkeysTextBox = $script:Window.FindName("VTubeOnExitHotkeysTextBox")
-                            if ($exitHotkeysTextBox) { $exitHotkeysTextBox.Text = "" }
+                            $launchHotkeysTextBox.Text = ""
                         }
                     }
+                    
+                    # Load exit hotkeys
+                    $exitHotkeysTextBox = $script:Window.FindName("VTubeOnExitHotkeysTextBox")
+                    if ($exitHotkeysTextBox) {
+                        if ($vtsSettings -and $vtsSettings.onExitHotkeys) {
+                            $exitHotkeysTextBox.Text = $vtsSettings.onExitHotkeys -join ", "
+                        } else {
+                            $exitHotkeysTextBox.Text = ""
+                        }
+                    }
+                    
+                    # Enable/disable controls based on checkbox state
+                    $isEnabled = [bool]$useVTubeCheck.IsChecked
+                    if ($modelIdTextBox) { $modelIdTextBox.IsEnabled = $isEnabled }
+                    if ($launchHotkeysTextBox) { $launchHotkeysTextBox.IsEnabled = $isEnabled }
+                    if ($exitHotkeysTextBox) { $exitHotkeysTextBox.IsEnabled = $isEnabled }
+                    
+                    $getModelListButton = $script:Window.FindName("GetModelListButton")
+                    $getLaunchHotkeyButton = $script:Window.FindName("GetLaunchHotkeyListButton")
+                    $getExitHotkeyButton = $script:Window.FindName("GetExitHotkeyListButton")
+                    if ($getModelListButton) { $getModelListButton.IsEnabled = $isEnabled }
+                    if ($getLaunchHotkeyButton) { $getLaunchHotkeyButton.IsEnabled = $isEnabled }
+                    if ($getExitHotkeyButton) { $getExitHotkeyButton.IsEnabled = $isEnabled }
                 }
 
                 # Update move button states (removed - using drag and drop)
@@ -1780,14 +1775,25 @@
     [void] HandleVTubeIntegrationCheckChanged() {
         try {
             $useVTubeCheckBox = $script:Window.FindName("UseVTubeStudioIntegrationCheckBox")
-            $vtubeSettingsGroup = $script:Window.FindName("VTubeGameSpecificSettingsGroup")
             
-            if ($useVTubeCheckBox -and $vtubeSettingsGroup) {
-                if ($useVTubeCheckBox.IsChecked) {
-                    $vtubeSettingsGroup.Visibility = [System.Windows.Visibility]::Visible
-                } else {
-                    $vtubeSettingsGroup.Visibility = [System.Windows.Visibility]::Collapsed
-                }
+            # Get all VTS controls
+            $modelIdTextBox = $script:Window.FindName("VTubeModelIdTextBox")
+            $launchHotkeysTextBox = $script:Window.FindName("VTubeOnLaunchHotkeysTextBox")
+            $exitHotkeysTextBox = $script:Window.FindName("VTubeOnExitHotkeysTextBox")
+            $getModelListButton = $script:Window.FindName("GetModelListButton")
+            $getLaunchHotkeyButton = $script:Window.FindName("GetLaunchHotkeyListButton")
+            $getExitHotkeyButton = $script:Window.FindName("GetExitHotkeyListButton")
+            
+            if ($useVTubeCheckBox) {
+                $isEnabled = [bool]$useVTubeCheckBox.IsChecked
+                
+                # Enable/disable all VTS controls based on checkbox state
+                if ($modelIdTextBox) { $modelIdTextBox.IsEnabled = $isEnabled }
+                if ($launchHotkeysTextBox) { $launchHotkeysTextBox.IsEnabled = $isEnabled }
+                if ($exitHotkeysTextBox) { $exitHotkeysTextBox.IsEnabled = $isEnabled }
+                if ($getModelListButton) { $getModelListButton.IsEnabled = $isEnabled }
+                if ($getLaunchHotkeyButton) { $getLaunchHotkeyButton.IsEnabled = $isEnabled }
+                if ($getExitHotkeyButton) { $getExitHotkeyButton.IsEnabled = $isEnabled }
             }
         } catch {
             Write-Verbose "[ERROR] ConfigEditorEvents: Failed to handle VTube integration check - $($_.Exception.Message)"

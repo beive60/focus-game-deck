@@ -147,27 +147,27 @@ class VTubeStudioManager {
             return $this.Config.path
         }
 
-        # # Auto-detect Steam path
-        # $steamPaths = @(
-        #     "C:/Program Files (x86)/Steam/steam.exe",
-        #     "C:/Program Files/Steam/steam.exe"
-        # )
+        # Auto-detect Steam path
+        $steamPaths = @(
+            "C:/Program Files (x86)/Steam/steam.exe",
+            "C:/Program Files/Steam/steam.exe"
+        )
 
-        # foreach ($path in $steamPaths) {
-        #     if (Test-Path $path) {
-        #         return $path
-        #     }
-        # }
+        foreach ($path in $steamPaths) {
+            if (Test-Path $path) {
+                return $path
+            }
+        }
 
-        # # Try registry
-        # try {
-        #     $steamReg = Get-ItemProperty -Path "HKCU:/Software/Valve/Steam" -Name "SteamExe" -ErrorAction SilentlyContinue
-        #     if ($steamReg -and (Test-Path $steamReg.SteamExe)) {
-        #         return $steamReg.SteamExe
-        #     }
-        # } catch {
-        #     # Ignore registry errors
-        # }
+        # Try registry
+        try {
+            $steamReg = Get-ItemProperty -Path "HKCU:/Software/Valve/Steam" -Name "SteamExe" -ErrorAction SilentlyContinue
+            if ($steamReg -and (Test-Path $steamReg.SteamExe)) {
+                return $steamReg.SteamExe
+            }
+        } catch {
+            # Ignore registry errors
+        }
 
         return $null
     }
