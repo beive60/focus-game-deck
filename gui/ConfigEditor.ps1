@@ -65,6 +65,38 @@ if ($DebugMode) {
     $VerbosePreference = 'Continue'
 }
 
+# Check for duplicate class definitions (occurs when script is run multiple times in same session)
+$classAlreadyDefined = $false
+try {
+    # Try to check if ConfigEditorState class is already defined
+    $existingType = [ConfigEditorState] -as [type]
+    if ($null -ne $existingType) {
+        $classAlreadyDefined = $true
+        Write-Warning "================================================================"
+        Write-Warning "IMPORTANT: Classes are already defined in this PowerShell session."
+        Write-Warning "Running this script multiple times in the same session causes type conflicts."
+        Write-Warning "================================================================"
+        Write-Warning ""
+        Write-Warning "SOLUTION: Please start a NEW PowerShell session and run the script again."
+        Write-Warning ""
+        Write-Warning "Quick commands:"
+        Write-Warning "  1. Close this terminal (type 'exit')"
+        Write-Warning "  2. Open a new PowerShell terminal"
+        Write-Warning "  3. Run: gui/ConfigEditor.ps1 -DebugMode"
+        Write-Warning ""
+        Write-Warning "================================================================"
+
+        # Exit with error if classes are already defined
+        if (-not $NoAutoStart) {
+            Write-Error "Cannot continue with duplicate class definitions. Please use a new PowerShell session."
+            exit 1
+        }
+    }
+} catch {
+    # Class not defined yet - this is expected on first run
+    $classAlreadyDefined = $false
+}
+
 # Expose headless flag to script scope for functions to read
 $script:Headless = [bool]$Headless
 
@@ -299,6 +331,56 @@ public class InsertionIndicatorAdorner : Adorner
     }
 }
 
+# Cleanup function to reset application state before initialization
+function Invoke-StartupCleanup {
+    try {
+        Write-Verbose "[INFO] Startup cleanup: Checking for existing instances"
+
+        # Close any existing window
+        if (Get-Variable -Name "Window" -Scope Script -ErrorAction SilentlyContinue) {
+            $existingWindow = $script:Window
+            if ($null -ne $existingWindow) {
+                Write-Verbose "[INFO] Startup cleanup: Closing existing window"
+                try {
+                    $existingWindow.Close()
+                } catch {
+                    Write-Verbose "[WARN] Startup cleanup: Failed to close window - $($_.Exception.Message)"
+                }
+            }
+            Remove-Variable -Name "Window" -Scope Script -Force -ErrorAction SilentlyContinue
+        }
+
+        # Clear UI manager reference
+        if (Get-Variable -Name "UIManager" -Scope Script -ErrorAction SilentlyContinue) {
+            Write-Verbose "[INFO] Startup cleanup: Clearing UIManager reference"
+            $script:UIManager = $null
+            Remove-Variable -Name "UIManager" -Scope Script -Force -ErrorAction SilentlyContinue
+        }
+
+        # Clear state manager reference
+        if (Get-Variable -Name "StateManager" -Scope Script -ErrorAction SilentlyContinue) {
+            Write-Verbose "[INFO] Startup cleanup: Clearing StateManager reference"
+            $script:StateManager = $null
+            Remove-Variable -Name "StateManager" -Scope Script -Force -ErrorAction SilentlyContinue
+        }
+
+        # Clear localization reference
+        if (Get-Variable -Name "Localization" -Scope Script -ErrorAction SilentlyContinue) {
+            Write-Verbose "[INFO] Startup cleanup: Clearing Localization reference"
+            $script:Localization = $null
+            Remove-Variable -Name "Localization" -Scope Script -Force -ErrorAction SilentlyContinue
+        }
+
+        # Reset initialization flag
+        $script:IsInitializationComplete = $false
+
+        Write-Verbose "[OK] Startup cleanup: Completed successfully"
+    } catch {
+        Write-Verbose "[WARN] Startup cleanup: Error during cleanup - $($_.Exception.Message)"
+        # Continue anyway - cleanup is best-effort
+    }
+}
+
 # Validate UI mappings function
 function Test-UIMappings {
     param()
@@ -344,6 +426,10 @@ function Test-UIMappings {
 # Initialize the application
 function Initialize-ConfigEditor {
     try {
+        # Step 0: Cleanup existing instances (if any)
+        Write-Verbose "[INFO] ConfigEditor: Performing pre-initialization cleanup"
+        Invoke-StartupCleanup
+
         # Debug mode information
         Write-Verbose "[DEBUG] ConfigEditor: Debug mode enabled"
         if ($AutoCloseSeconds -gt 0) {
@@ -473,13 +559,6 @@ function Initialize-ConfigEditor {
             # This must be done BEFORE creating the Localization instance
             $script:ConfigData = $stateManager.ConfigData
             Write-Verbose "[DEBUG] ConfigEditor: script:ConfigData.language = '$($script:ConfigData.language)'"
-
-            # Remove any existing localization instance to avoid type conflicts
-            # This prevents PowerShell class type mismatch errors when scripts are re-run
-            if (Get-Variable -Name "Localization" -Scope Script -ErrorAction SilentlyContinue) {
-                Write-Verbose "[DEBUG] ConfigEditor: Removing existing Localization instance"
-                Remove-Variable -Name "Localization" -Scope Script -Force
-            }
 
             # Pass shared project root into localization class (PowerShell classes cannot access script-scoped variables)
             $script:Localization = [ConfigEditorLocalization]::new($appRoot)
