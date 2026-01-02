@@ -459,6 +459,10 @@ function Save-CurrentAppData {
             # Single process name (already trimmed)
             Set-PropertyValue -Object $appData -PropertyName "processName" -Value $processNameValue
         }
+        # Remove old 'processNames' key if it exists (backward compatibility cleanup)
+        if ($appData.PSObject.Properties.Name -contains "processNames") {
+            $appData.PSObject.Properties.Remove("processNames")
+        }
         Write-Verbose "Saved processName: $processNameValue"
     }
 
@@ -494,12 +498,20 @@ function Save-CurrentAppData {
     $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
     if ($gameStartActionCombo -and $gameStartActionCombo.SelectedItem) {
         Set-PropertyValue -Object $appData -PropertyName "gameStartAction" -Value $gameStartActionCombo.SelectedItem.Tag
+        # Remove old 'startAction' key if it exists (backward compatibility cleanup)
+        if ($appData.PSObject.Properties.Name -contains "startAction") {
+            $appData.PSObject.Properties.Remove("startAction")
+        }
     }
 
     # Save end action
     $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
     if ($gameEndActionCombo -and $gameEndActionCombo.SelectedItem) {
         Set-PropertyValue -Object $appData -PropertyName "gameEndAction" -Value $gameEndActionCombo.SelectedItem.Tag
+        # Remove old 'endAction' key if it exists (backward compatibility cleanup)
+        if ($appData.PSObject.Properties.Name -contains "endAction") {
+            $appData.PSObject.Properties.Remove("endAction")
+        }
     }
 
     # Save termination method
@@ -516,6 +528,10 @@ function Save-CurrentAppData {
             Set-PropertyValue -Object $appData -PropertyName "gracefulTimeoutMs" -Value ($timeoutSeconds * 1000)
         } else {
             Set-PropertyValue -Object $appData -PropertyName "gracefulTimeoutMs" -Value 5000
+        }
+        # Remove old 'gracefulTimeout' key if it exists (backward compatibility cleanup)
+        if ($appData.PSObject.Properties.Name -contains "gracefulTimeout") {
+            $appData.PSObject.Properties.Remove("gracefulTimeout")
         }
     }
 

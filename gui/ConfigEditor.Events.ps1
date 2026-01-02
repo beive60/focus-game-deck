@@ -1085,19 +1085,29 @@
                     } else {
                         "start-process"
                     }
+                    Write-Verbose "  Setting GameStartActionCombo to: $appStartAction"
                     $this.SetComboBoxSelectionByTag($gameStartActionCombo, $appStartAction)
+                    Write-Verbose "  GameStartActionCombo SelectedItem: $($gameStartActionCombo.SelectedItem)"
                 }
 
                 if ($gameEndActionCombo) {
                     # Check for both endAction and gameEndAction for compatibility
+                    Write-Verbose "  endAction property: $($appData.endAction)"
+                    Write-Verbose "  gameEndAction property: $($appData.gameEndAction)"
                     $appEndAction = if ($appData.endAction) {
+                        Write-Verbose "  Using endAction: $($appData.endAction)"
                         $appData.endAction
                     } elseif ($appData.gameEndAction) {
+                        Write-Verbose "  Using gameEndAction: $($appData.gameEndAction)"
                         $appData.gameEndAction
                     } else {
+                        Write-Verbose "  Using default: stop-process"
                         "stop-process"
                     }
+                    Write-Verbose "  Final appEndAction value: $appEndAction"
+                    Write-Verbose "  Setting GameEndActionCombo to: $appEndAction"
                     $this.SetComboBoxSelectionByTag($gameEndActionCombo, $appEndAction)
+                    Write-Verbose "  GameEndActionCombo SelectedItem: $($gameEndActionCombo.SelectedItem)"
                 }
 
                 $appPathTextBox = $script:Window.FindName("AppPathTextBox")
@@ -1381,11 +1391,13 @@
         # Create new app with default values
         $newApp = @{
             displayName = "New App"
-            processNames = @("notepad.exe")
-            startAction = "start-process"
-            endAction = "stop-process"
+            processName = "notepad.exe"
+            path = ""
+            arguments = ""
+            gameStartAction = "start-process"
+            gameEndAction = "stop-process"
             terminationMethod = "auto"
-            gracefulTimeout = 5
+            gracefulTimeoutMs = 5000
         }
 
         # Add to configuration
