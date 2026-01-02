@@ -1821,6 +1821,19 @@
             $messages = $this.uiManager.Messages
             $vtubeManager = New-VTubeStudioManager -VTubeConfig $vtubeConfig -Messages $messages
 
+            # Check if VTube Studio is running, start it if not
+            if (-not $vtubeManager.IsVTubeStudioRunning()) {
+                Write-Verbose "[DEBUG] VTube Studio is not running, attempting to start..."
+                $startResult = $vtubeManager.StartVTubeStudio()
+                if (-not $startResult) {
+                    Write-Verbose "[WARNING] Failed to start VTube Studio automatically"
+                    Show-SafeMessage -Key "vtube_startup_failed" -MessageType "Warning"
+                    return
+                }
+                # Wait a moment for VTS to initialize
+                Start-Sleep -Seconds 2
+            }
+
             # Get available models
             $models = $vtubeManager.GetAvailableModels()
 
@@ -1931,6 +1944,19 @@
             # Create VTubeStudioManager instance
             $messages = $this.uiManager.Messages
             $vtubeManager = New-VTubeStudioManager -VTubeConfig $vtubeConfig -Messages $messages
+
+            # Check if VTube Studio is running, start it if not
+            if (-not $vtubeManager.IsVTubeStudioRunning()) {
+                Write-Verbose "[DEBUG] VTube Studio is not running, attempting to start..."
+                $startResult = $vtubeManager.StartVTubeStudio()
+                if (-not $startResult) {
+                    Write-Verbose "[WARNING] Failed to start VTube Studio automatically"
+                    Show-SafeMessage -Key "vtube_startup_failed" -MessageType "Warning"
+                    return
+                }
+                # Wait a moment for VTS to initialize
+                Start-Sleep -Seconds 2
+            }
 
             # Get available hotkeys
             $hotkeys = $vtubeManager.GetHotkeysInCurrentModel()
