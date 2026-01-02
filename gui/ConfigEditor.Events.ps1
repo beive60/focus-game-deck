@@ -1060,7 +1060,11 @@
                             $appData.processNames
                         }
                     } elseif ($appData.processName) {
-                        $appData.processName
+                        if ($appData.processName -is [array]) {
+                            $appData.processName -join "|"
+                        } else {
+                            $appData.processName
+                        }
                     } else {
                         ""
                     }

@@ -49,6 +49,7 @@ $localizationDir = Join-Path $appRoot "localization"
 . (Join-Path -Path $appRoot -ChildPath "scripts/LanguageHelper.ps1")
 . (Join-Path -Path $appRoot -ChildPath "src/modules/WebSocketAppManagerBase.ps1")
 . (Join-Path -Path $appRoot -ChildPath "src/modules/AppManager.ps1")
+. (Join-Path -Path $appRoot -ChildPath "src/modules/ValidationRules.ps1")
 . (Join-Path -Path $appRoot -ChildPath "src/modules/ConfigValidator.ps1")
 # TODO: Re-enable in future release
 # Disabled for v1.0 - Discord integration has known bugs
@@ -141,9 +142,10 @@ Write-LocalizedHost -Messages $msg -Key "cli_validating_config" -Default "Valida
 $validator = New-ConfigValidator -Config $config -Messages $msg
 if (-not $validator.ValidateConfiguration($GameId)) {
     $validator.DisplayResults()
-    Write-LocalizedHost -Messages $msg -Key "cli_validation_failed" -Default "Configuration validation failed." -Level "WARNING" -Component "ConfigValidator"
-    if ($logger) { $logger.Error("Configuration validation failed", "CONFIG") }
-    exit 1
+    $errorMsg = "Configuration validation failed."
+    Write-LocalizedHost -Messages $msg -Key "cli_validation_failed" -Default $errorMsg -Level "WARNING" -Component "ConfigValidator"
+    if ($logger) { $logger.Error($errorMsg, "CONFIG") }
+    throw $errorMsg
 }
 $validator.DisplayResults()
 Write-LocalizedHost -Messages $msg -Key "console_config_validation_passed" -Default "Configuration validation passed" -Level "OK" -Component "ConfigValidator"
@@ -158,7 +160,7 @@ if (-not $gameConfig) {
     $availableIds = ($config.games.PSObject.Properties.Name -join ', ')
     Write-LocalizedHost -Messages $msg -Key "cli_available_games" -Args @($availableIds) -Default ("Available game IDs: {0}" -f $availableIds) -Level "INFO" -Component "GameLauncher"
     if ($logger) { $logger.Error($errorMsg, "MAIN") }
-    exit 1
+    throw $errorMsg
 }
 
 # Validate platform support
@@ -173,7 +175,7 @@ if (-not $platformManager.IsPlatformAvailable($gamePlatform)) {
     Write-LocalizedHost -Messages $msg -Key "cli_platform_not_supported" -Args @($gamePlatform) -Default $errorMsg -Level "WARNING" -Component "PlatformManager"
     Write-LocalizedHost -Messages $msg -Key "cli_available_platforms" -Args @($availablePlatforms -join ', ') -Default ("Available platforms: {0}" -f ($availablePlatforms -join ', ')) -Level "INFO" -Component "PlatformManager"
     if ($logger) { $logger.Error($errorMsg, "PLATFORM") }
-    exit 1
+    throw $errorMsg
 }
 
 if ($logger) {
