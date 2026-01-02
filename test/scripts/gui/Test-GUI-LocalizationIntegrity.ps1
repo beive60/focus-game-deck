@@ -583,10 +583,10 @@ $analysis = Test-LocalizationControlFlow
 if ($analysis) {
     Write-LocalizationDiagnosticReport -Analysis $analysis
 
-    # Output analysis to file for further review - save to gui directory
-    $outputDir = Join-Path -Path $projectRoot -ChildPath "gui"
-    $outputPath = Join-Path -Path $outputDir -ChildPath "localization-diagnostic-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
-    $analysis | ConvertTo-Json -Depth 5 | Out-File -FilePath $outputPath -Encoding UTF8
+    # Output analysis to file for further review - save to test directory
+    $outputDir = Join-Path -Path $projectRoot -ChildPath "test"
+    $outputPath = Join-Path -Path $outputDir -ChildPath "localization-diagnostic.json"
+    $analysis | ConvertTo-Json -Depth 5 | Out-File -FilePath $outputPath -Encoding UTF8 -Force
     Write-BuildLog "Detailed analysis saved to: $outputPath"
 
     # Calculate total issues for test result

@@ -1,4 +1,4 @@
-﻿class ConfigEditorState {
+class ConfigEditorState {
     # Properties
     [string]$ConfigPath
     [PSCustomObject]$ConfigData
@@ -87,7 +87,7 @@
                 language = ""
                 obs = [PSCustomObject]@{
                     websocket = [PSCustomObject]@{
-                        host = "localhost"
+                        host = "127.0.0.1"
                         port = 4455
                         password = ""
                     }

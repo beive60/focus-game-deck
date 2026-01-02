@@ -99,6 +99,7 @@ $srcDir = Join-Path -Path $projectRoot -ChildPath "src"
 # Import modules for testing
 $modulePaths = @(
     (Join-Path $srcDir "modules/Logger.ps1"),
+    (Join-Path $srcDir "modules/ValidationRules.ps1"),
     (Join-Path $srcDir "modules/ConfigValidator.ps1"),
     (Join-Path $srcDir "modules/PlatformManager.ps1")
 )
@@ -153,8 +154,8 @@ function Test-Assert {
     )
 
 
-# Import the BuildLogger
-. "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
+    # Import the BuildLogger
+    . "$PSScriptRoot/../../../build-tools/utils/BuildLogger.ps1"
     if ($Condition) {
         $global:TestResults.Passed++
         $status = "[OK] PASS"
@@ -309,7 +310,7 @@ function Test-ConfigValidator {
     $testConfig = @{
         managedApps = @{
             testApp = @{
-                path = "C:\Test/app.exe"
+                path = "C:/Test/app.exe"
                 processName = "testapp"
                 gameStartAction = "start-process"
                 gameEndAction = "stop-process"
@@ -320,14 +321,14 @@ function Test-ConfigValidator {
             steamGame = @{
                 name = "Test Steam Game"
                 platform = "steam"
-                steamAppId = "123456"
+                steamAppId = "1234567"  # Fixed: numerical ID
                 processName = "steamgame*"
                 appsToManage = @("testApp")
             }
             epicGame = @{
                 name = "Test Epic Game"
                 platform = "epic"
-                epicGameId = "TestEpicGame"
+                epicGameId = "apps/TestEpicGame"  # Fixed: added proper prefix
                 processName = "epicgame*"
                 appsToManage = @("testApp")
             }
@@ -346,13 +347,13 @@ function Test-ConfigValidator {
             }
             missingPlatform = @{
                 name = "Missing Platform Game"
-                steamAppId = "654321"
+                steamAppId = "6543210"  # Fixed: numerical ID
                 processName = "missing*"
                 appsToManage = @()
             }
         }
         paths = @{
-            steam = "C:/Steam/steam.exe"
+            steam = "C:/Program Files (x86)/Steam/steam.exe" # Actual path for testing
         }
     }
 
@@ -380,7 +381,11 @@ function Test-ConfigValidator {
         $validator.Errors = @()
         $validator.Warnings = @()
 
-        $validator.ValidateGameConfiguration($gameId)
+        # Use ValidateConfiguration instead of ValidateGameConfiguration
+        # ValidateConfiguration calls ValidateGameWithDependencies which performs
+        # dependency chain validation (checks platform paths, managed apps, integrations)
+        # ValidateGameConfiguration only validates game config format, not dependencies
+        $validator.ValidateConfiguration($gameId) | Out-Null
 
         $hasErrors = $validator.Errors.Count -gt 0
         $actualResult = -not $hasErrors
