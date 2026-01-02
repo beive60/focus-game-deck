@@ -49,6 +49,7 @@ $localizationDir = Join-Path $appRoot "localization"
 . (Join-Path -Path $appRoot -ChildPath "scripts/LanguageHelper.ps1")
 . (Join-Path -Path $appRoot -ChildPath "src/modules/WebSocketAppManagerBase.ps1")
 . (Join-Path -Path $appRoot -ChildPath "src/modules/AppManager.ps1")
+. (Join-Path -Path $appRoot -ChildPath "src/modules/ValidationRules.ps1")
 . (Join-Path -Path $appRoot -ChildPath "src/modules/ConfigValidator.ps1")
 # TODO: Re-enable in future release
 # Disabled for v1.0 - Discord integration has known bugs

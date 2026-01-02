@@ -24,7 +24,7 @@
     Last Updated: 2025-12-19
 
     This module depends on:
-    - Invoke-ConfigurationValidation for validation
+    - ValidationRules for validation
     - UIManager for error display
     - StateManager for configuration state
     - Localization for messages
@@ -188,14 +188,14 @@ function Save-CurrentGameData {
     $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
     $executablePath = if ($executablePathTextBox) { $executablePathTextBox.Text.Trim() } else { "" }
 
-    # Use centralized validation module
-    $validationErrors = Invoke-ConfigurationValidation -GameId $newGameId -Platform $platform -SteamAppId $steamAppId -EpicGameId $epicGameId -RiotGameId $riotGameId -ExecutablePath $executablePath
+    # Use ValidationRules module for validation
+    $validationResult = Test-GameConfiguration -GameId $newGameId -Platform $platform -SteamAppId $steamAppId -EpicGameId $epicGameId -RiotGameId $riotGameId -ExecutablePath $executablePath
 
-    if ($validationErrors.Count -gt 0) {
-        foreach ($err in $validationErrors) {
+    if (-not $validationResult.IsValid) {
+        foreach ($err in $validationResult.Errors) {
             $script:UIManager.SetInputError($err.Control, $script:Localization.GetMessage($err.Key))
         }
-        Show-SafeMessage -Key $validationErrors[0].Key -MessageType "Warning"
+        Show-SafeMessage -Key $validationResult.Errors[0].Key -MessageType "Warning"
         return
     }
 
