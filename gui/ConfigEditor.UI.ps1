@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     ConfigEditor UI Module - Main UI class for Focus Game Deck configuration editor.
 
