@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     ConfigEditor UI Module - Main UI class for Focus Game Deck configuration editor.
 
@@ -1893,11 +1893,11 @@ $($LocalizedMessages.readmeFooter)
             }
 
             $checkTimer.add_Tick({
-                    param($sender, $e)
-                    $tag = $sender.Tag
+                    param($s, $e)
+                    $tag = $s.Tag
 
                     if ($tag.AsyncResult.IsCompleted) {
-                        $sender.Stop()
+                        $s.Stop()
 
                         try {
                             $result = $tag.Job.EndInvoke($tag.AsyncResult)
@@ -2041,11 +2041,11 @@ $($LocalizedMessages.readmeFooter)
             }
 
             $checkTimer.add_Tick({
-                    param($sender, $e)
-                    $tag = $sender.Tag
+                    param($s, $e)
+                    $tag = $s.Tag
 
                     if ($tag.AsyncResult.IsCompleted) {
-                        $sender.Stop()
+                        $s.Stop()
 
                         try {
                             $result = $tag.Job.EndInvoke($tag.AsyncResult)
