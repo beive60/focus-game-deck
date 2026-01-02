@@ -255,22 +255,33 @@ class OBSManager {
 
             # Wait for OBS startup
             $retryCount = 0
-            $maxRetries = 10
+            $maxRetries = 15
+            $waitInterval = 2
+
+            Write-LocalizedHost -Messages $this.Messages -Key "waiting_obs_startup" -Default "Waiting for OBS to start..." -Level "INFO" -Component "OBSManager"
+
             while (-not $this.IsOBSRunning() -and ($retryCount -lt $maxRetries)) {
-                Start-Sleep -Seconds 2
+                Start-Sleep -Seconds $waitInterval
                 $retryCount++
+                Write-LocalizedHost -Messages $this.Messages -Key "waiting_obs_startup_retry" -Args @($retryCount, $maxRetries) -Default "Waiting for OBS startup... ({0}/{1})" -Level "INFO" -Component "OBSManager"
             }
 
             if ($this.IsOBSRunning()) {
+                Write-LocalizedHost -Messages $this.Messages -Key "obs_process_detected" -Default "OBS process detected" -Level "OK" -Component "OBSManager"
+
+                # Wait for WebSocket server startup
+                $wsWaitTime = 5
+                Write-LocalizedHost -Messages $this.Messages -Key "waiting_obs_websocket" -Args @($wsWaitTime) -Default "Waiting {0} seconds for OBS WebSocket server to start..." -Level "INFO" -Component "OBSManager"
+                Start-Sleep -Seconds $wsWaitTime
+
                 Write-LocalizedHost -Messages $this.Messages -Key "obs_startup_complete" -Default "OBS startup complete" -Level "OK" -Component "OBSManager"
-                Start-Sleep -Seconds 5  # Wait for WebSocket server startup
                 return $true
             } else {
-                Write-LocalizedHost -Messages $this.Messages -Key "obs_startup_failed" -Default "OBS startup failed" -Level "WARNING" -Component "OBSManager"
+                Write-LocalizedHost -Messages $this.Messages -Key "obs_startup_timeout" -Args @(($maxRetries * $waitInterval)) -Default "OBS startup timeout after {0} seconds" -Level "WARNING" -Component "OBSManager"
                 return $false
             }
         } catch {
-            Write-LocalizedHost -Messages $this.Messages -Key "obs_startup_failed" -Default "Failed to start OBS" -Level "WARNING" -Component "OBSManager"
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_startup_error" -Args @($_.Exception.Message) -Default "Failed to start OBS: {0}" -Level "WARNING" -Component "OBSManager"
             return $false
         }
     }
