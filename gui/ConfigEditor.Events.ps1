@@ -1,4 +1,4 @@
-﻿class ConfigEditorEvents {
+class ConfigEditorEvents {
     $uiManager
     $stateManager
     [string]$appRoot
@@ -1676,7 +1676,8 @@
         $folderBrowserDialog.Description = $this.uiManager.GetLocalizedMessage("browseFolderButton")
         $folderBrowserDialog.ShowNewFolderButton = $true
 
-        if ($folderBrowserDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+        $dialogResultType = "System.Windows.Forms.DialogResult" -as [type]
+        if ($folderBrowserDialog.ShowDialog() -eq $dialogResultType::OK) {
             $script:Window.FindName("WorkingDirectoryTextBox").Text = $folderBrowserDialog.SelectedPath
             Write-Verbose "Selected working directory: $($folderBrowserDialog.SelectedPath)"
         }
