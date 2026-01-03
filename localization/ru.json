@@ -606,5 +606,20 @@
     "vtube_websocket_receive_error": "Ошибка приема WebSocket",
     "vtube_websocket_send_error": "Ошибка отправки WebSocket",
     "vtubeHotkeysTooltip": "Выберите хоткеи для активации в VTube Studio.",
-    "vtubeModelIdTooltip": "Выберите модель для автоматической загрузки."
+    "vtubeModelIdTooltip": "Выберите модель для автоматической загрузки.",
+    "obsGameSpecificSettingsGroup": "",
+    "obsReplayBufferBehaviorLabel": "",
+    "obsReplayBufferBehaviorTooltip": "",
+    "obsReplayBufferGlobal": "",
+    "obsReplayBufferEnable": "",
+    "obsReplayBufferDisable": "",
+    "obsTargetSceneLabel": "",
+    "obsTargetSceneTooltip": "",
+    "obsEnableRollbackLabel": "",
+    "obsEnableRollbackTooltip": "",
+    "obs_scene_switched": "",
+    "obs_scene_restored": "",
+    "obs_scene_switch_failed": "",
+    "obs_scene_restore_failed": "",
+    "obs_get_scene_failed": ""
 }

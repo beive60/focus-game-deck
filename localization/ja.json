@@ -606,5 +606,20 @@
     "vtube_websocket_receive_error": "WebSocket受信エラー",
     "vtube_websocket_send_error": "WebSocket送信エラー",
     "vtubeHotkeysTooltip": "VTube Studioで実行するホットキーを選択してください。",
-    "vtubeModelIdTooltip": "自動的に読み込むモデルを選択してください。"
+    "vtubeModelIdTooltip": "自動的に読み込むモデルを選択してください。",
+    "obsGameSpecificSettingsGroup": "",
+    "obsReplayBufferBehaviorLabel": "",
+    "obsReplayBufferBehaviorTooltip": "",
+    "obsReplayBufferGlobal": "",
+    "obsReplayBufferEnable": "",
+    "obsReplayBufferDisable": "",
+    "obsTargetSceneLabel": "",
+    "obsTargetSceneTooltip": "",
+    "obsEnableRollbackLabel": "",
+    "obsEnableRollbackTooltip": "",
+    "obs_scene_switched": "",
+    "obs_scene_restored": "",
+    "obs_scene_switch_failed": "",
+    "obs_scene_restore_failed": "",
+    "obs_get_scene_failed": ""
 }

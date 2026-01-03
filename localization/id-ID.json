@@ -606,5 +606,20 @@
     "vtube_websocket_receive_error": "Kesalahan Penerimaan WebSocket",
     "vtube_websocket_send_error": "Kesalahan Pengiriman WebSocket",
     "vtubeHotkeysTooltip": "Pilih hotkey untuk dipicu di VTube Studio.",
-    "vtubeModelIdTooltip": "Pilih model yang akan dimuat secara otomatis."
+    "vtubeModelIdTooltip": "Pilih model yang akan dimuat secara otomatis.",
+    "obsGameSpecificSettingsGroup": "",
+    "obsReplayBufferBehaviorLabel": "",
+    "obsReplayBufferBehaviorTooltip": "",
+    "obsReplayBufferGlobal": "",
+    "obsReplayBufferEnable": "",
+    "obsReplayBufferDisable": "",
+    "obsTargetSceneLabel": "",
+    "obsTargetSceneTooltip": "",
+    "obsEnableRollbackLabel": "",
+    "obsEnableRollbackTooltip": "",
+    "obs_scene_switched": "",
+    "obs_scene_restored": "",
+    "obs_scene_switch_failed": "",
+    "obs_scene_restore_failed": "",
+    "obs_get_scene_failed": ""
 }
