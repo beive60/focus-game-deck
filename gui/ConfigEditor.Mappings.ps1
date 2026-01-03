@@ -48,6 +48,10 @@ $script:ActionButtonMappings = @{
     "SaveOBSSettingsButton" = "saveButton"
     "SaveDiscordSettingsButton" = "saveButton"
     "SaveVTubeStudioSettingsButton" = "saveButton"
+    "StartVTubeStudioButton" = "startVTubeStudioButton"
+    "GetModelListButton" = "getModelListButton"
+    "GetLaunchHotkeyListButton" = "getHotkeyListButton"
+    "GetExitHotkeyListButton" = "getHotkeyListButton"
     "GenerateLaunchersButton" = "generateLaunchers"
     "OpenOBSTabButton" = "openIntegrationSettings"
     "OpenDiscordTabButton" = "openIntegrationSettings"
@@ -130,6 +134,10 @@ $script:LabelMappings = @{
     "VTubeHostLabel" = "hostLabel"
     "VTubePortLabel" = "portLabel"
     "GameIntegrationSectionLabel" = "gameIntegrationSectionLabel"
+    "VTubeGameSpecificSettingsGroup" = "vtubeGameSpecificSettingsGroup"
+    "VTubeModelIdLabel" = "vtubeModelIdLabel"
+    "VTubeOnLaunchHotkeysLabel" = "vtubeOnLaunchHotkeysLabel"
+    "VTubeOnExitHotkeysLabel" = "vtubeOnExitHotkeysLabel"
 }
 
 # Tab header mappings

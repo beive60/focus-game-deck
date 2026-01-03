@@ -611,9 +611,86 @@
                                                 Padding="5,0"
                                                 VerticalAlignment="Center" />
                                         </StackPanel>
-                                    </StackPanel>
 
-                                    <Grid
+                                        <!-- VTube Studio Game-Specific Settings -->
+                                        <GroupBox
+                                            x:Name="VTubeGameSpecificSettingsGroup"
+                                            Header="[vtubeGameSpecificSettingsGroup]"
+                                            Margin="20,10,0,10">
+                                        <StackPanel Margin="10">
+                                            <!-- Model ID -->
+                                            <Label
+                                                x:Name="VTubeModelIdLabel"
+                                                Content="[vtubeModelIdLabel]"
+                                                Margin="0,5,0,2"/>
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="120"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox
+                                                    x:Name="VTubeModelIdTextBox"
+                                                    Grid.Column="0"
+                                                    VerticalContentAlignment="Center"
+                                                    Margin="0,0,5,0"
+                                                    ToolTip="[vtubeModelIdTooltip]"/>
+                                                <Button
+                                                    x:Name="GetModelListButton"
+                                                    Content="[GET_MODEL_LIST_BUTTON]"
+                                                    Grid.Column="1"
+                                                    Height="25"/>
+                                            </Grid>
+
+                                            <!-- Launch Hotkeys -->
+                                            <Label
+                                                x:Name="VTubeOnLaunchHotkeysLabel"
+                                                Content="[vtubeOnLaunchHotkeysLabel]"
+                                                Margin="0,5,0,2"/>
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="120"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox
+                                                    x:Name="VTubeOnLaunchHotkeysTextBox"
+                                                    Grid.Column="0"
+                                                    VerticalContentAlignment="Center"
+                                                    Margin="0,0,5,0"
+                                                    ToolTip="[vtubeHotkeysTooltip]"/>
+                                                <Button
+                                                    x:Name="GetLaunchHotkeyListButton"
+                                                    Content="[GET_HOTKEY_LIST_BUTTON]"
+                                                    Grid.Column="1"
+                                                    Height="25"/>
+                                            </Grid>
+
+                                            <!-- Exit Hotkeys -->
+                                            <Label
+                                                x:Name="VTubeOnExitHotkeysLabel"
+                                                Content="[vtubeOnExitHotkeysLabel]"
+                                                Margin="0,5,0,2"/>
+                                            <Grid Margin="0,0,0,5">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="120"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox
+                                                    x:Name="VTubeOnExitHotkeysTextBox"
+                                                    Grid.Column="0"
+                                                    VerticalContentAlignment="Center"
+                                                    Margin="0,0,5,0"
+                                                    ToolTip="[vtubeHotkeysTooltip]"/>
+                                                <Button
+                                                    x:Name="GetExitHotkeyListButton"
+                                                    Content="[GET_HOTKEY_LIST_BUTTON]"
+                                                    Grid.Column="1"
+                                                    Height="25"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </GroupBox>
+                                </StackPanel>
+
+                                <Grid
                                         Grid.Row="6"
                                         Margin="0,20,0,10">
                                         <Grid.ColumnDefinitions>
@@ -1583,9 +1660,27 @@
                             Grid.Row="1"
                             Background="#F8F8F8"
                             Margin="0,5,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <Button
+                                x:Name="StartVTubeStudioButton"
+                                Content="[START_VTUBE_STUDIO_BUTTON]"
+                                Grid.Column="0"
+                                Width="150"
+                                Height="30"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Margin="20,0,0,0"
+                                Background="#28A745"
+                                Foreground="White"
+                                BorderThickness="0"/>
                             <Button
                                 x:Name="SaveVTubeStudioSettingsButton"
                                 Content="[SAVE_BUTTON]"
+                                Grid.Column="1"
                                 Width="100"
                                 Height="30"
                                 HorizontalAlignment="Right"

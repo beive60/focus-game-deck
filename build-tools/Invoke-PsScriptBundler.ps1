@@ -98,8 +98,8 @@ function Resolve-DotSourcedPath {
 
     # 2. 存在しない場合、`. (Join-Path ...)` のようなパスを正しくパースする
     if ($pathExpression -match '^\(Join-Path') {
-        # Try positional parameters first: (Join-Path $var "path")
-        $match = [regex]::Match($pathExpression, '^\(Join-Path\s+\$(\w+)\s+"([^"]+)"\)$')
+        # Try positional parameters first: (Join-Path $var "path") or (Join-Path $script:var "path")
+        $match = [regex]::Match($pathExpression, '^\(Join-Path\s+\$(?:script:)?(\w+)\s+"([^"]+)"\)$')
         if ($match.Success) {
             $baseVarName = $match.Groups[1].Value
             $childPath = $match.Groups[2].Value
@@ -118,8 +118,8 @@ function Resolve-DotSourcedPath {
             }
         }
 
-        # Try named parameters: (Join-Path -Path $var -ChildPath "path")
-        $match = [regex]::Match($pathExpression, '^\(Join-Path\s+-Path\s+\$(\w+)\s+-ChildPath\s+"([^"]+)"\)$')
+        # Try named parameters: (Join-Path -Path $var -ChildPath "path") or (Join-Path -Path $script:var -ChildPath "path")
+        $match = [regex]::Match($pathExpression, '^\(Join-Path\s+-Path\s+\$(?:script:)?(\w+)\s+-ChildPath\s+"([^"]+)"\)$')
         if ($match.Success) {
             $baseVarName = $match.Groups[1].Value
             # 2.2. -ChildPathに続く引数を抽出する。

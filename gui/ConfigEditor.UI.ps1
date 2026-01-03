@@ -101,16 +101,17 @@ class ConfigEditorUI {
 
             # Parse XAML
             Write-Verbose "[DEBUG] ConfigEditorUI: Step 3/6 - Parsing XAML"
+            $xamlReaderType = "System.Windows.Markup.XamlReader" -as [type]
             $xamlLoader = [ScriptBlock]::Create('
-                param($xmlReader)
-                return [System.Windows.Markup.XamlReader]::Load($xmlReader)
+                param($xmlReader, $xamlReaderType)
+                return $xamlReaderType::Load($xmlReader)
             ')
 
             # Create XmlReader from content
             $stringReader = New-Object System.IO.StringReader($xamlContent)
             $xmlReader = [System.Xml.XmlReader]::Create($stringReader)
 
-            $this.Window = $xamlLoader.Invoke($xmlReader)[0]
+            $this.Window = $xamlLoader.Invoke($xmlReader, $xamlReaderType)[0]
             $xmlReader.Close()
             $stringReader.Close()
             Write-Verbose "[DEBUG] ConfigEditorUI: Step 4/6 - XAML parsed successfully"
@@ -1371,6 +1372,27 @@ class ConfigEditorUI {
                     $vtubeAutoStopCheckBox = $self.Window.FindName("VTubeAutoStopCheckBox")
                     if ($vtubeAutoStopCheckBox) {
                         $vtubeAutoStopCheckBox.IsChecked = ($ConfigData.integrations.vtubeStudio.gameEndAction -eq "exit-game-mode")
+                    }
+
+                    # Load VTube Studio WebSocket settings
+                    if ($ConfigData.integrations.vtubeStudio.websocket) {
+                        $vtubeWebSocketEnableCheckBox = $self.Window.FindName("VTubeWebSocketEnableCheckBox")
+                        if ($vtubeWebSocketEnableCheckBox) {
+                            $vtubeWebSocketEnableCheckBox.IsChecked = [bool]$ConfigData.integrations.vtubeStudio.websocket.enabled
+                            Write-Verbose "Loaded VTube Studio WebSocket enabled: $($ConfigData.integrations.vtubeStudio.websocket.enabled)"
+                        }
+
+                        $vtubeHostTextBox = $self.Window.FindName("VTubeHostTextBox")
+                        if ($vtubeHostTextBox -and $ConfigData.integrations.vtubeStudio.websocket.host) {
+                            $vtubeHostTextBox.Text = $ConfigData.integrations.vtubeStudio.websocket.host
+                            Write-Verbose "Loaded VTube Studio WebSocket host: $($ConfigData.integrations.vtubeStudio.websocket.host)"
+                        }
+
+                        $vtubePortTextBox = $self.Window.FindName("VTubePortTextBox")
+                        if ($vtubePortTextBox -and $ConfigData.integrations.vtubeStudio.websocket.port) {
+                            $vtubePortTextBox.Text = $ConfigData.integrations.vtubeStudio.websocket.port.ToString()
+                            Write-Verbose "Loaded VTube Studio WebSocket port: $($ConfigData.integrations.vtubeStudio.websocket.port)"
+                        }
                     }
                 }
 

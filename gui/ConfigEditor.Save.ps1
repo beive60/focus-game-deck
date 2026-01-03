@@ -324,6 +324,62 @@ function Save-CurrentGameData {
         } else {
             $gameData.integrations.useVTubeStudio = [bool]$useVTubeCheck.IsChecked
         }
+
+        # Save VTube Studio game-specific settings if enabled
+        if ($useVTubeCheck.IsChecked) {
+            if (-not $gameData.integrations.PSObject.Properties["vtubeStudioSettings"]) {
+                $gameData.integrations | Add-Member -NotePropertyName "vtubeStudioSettings" -NotePropertyValue ([PSCustomObject]@{}) -Force
+            }
+
+            # Save model ID
+            $modelIdTextBox = $script:Window.FindName("VTubeModelIdTextBox")
+            if ($modelIdTextBox) {
+                $modelId = $modelIdTextBox.Text.Trim()
+                if ($modelId) {
+                    Set-PropertyValue -Object $gameData.integrations.vtubeStudioSettings -PropertyName "modelId" -Value $modelId
+                } else {
+                    # Remove modelId if empty
+                    if ($gameData.integrations.vtubeStudioSettings.PSObject.Properties["modelId"]) {
+                        $gameData.integrations.vtubeStudioSettings.PSObject.Properties.Remove("modelId")
+                    }
+                }
+            }
+
+            # Save launch hotkeys
+            $launchHotkeysTextBox = $script:Window.FindName("VTubeOnLaunchHotkeysTextBox")
+            if ($launchHotkeysTextBox) {
+                $hotkeyText = $launchHotkeysTextBox.Text.Trim()
+                if ($hotkeyText) {
+                    $hotkeys = $hotkeyText -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+                    Set-PropertyValue -Object $gameData.integrations.vtubeStudioSettings -PropertyName "onLaunchHotkeys" -Value @($hotkeys)
+                } else {
+                    # Remove onLaunchHotkeys if empty
+                    if ($gameData.integrations.vtubeStudioSettings.PSObject.Properties["onLaunchHotkeys"]) {
+                        $gameData.integrations.vtubeStudioSettings.PSObject.Properties.Remove("onLaunchHotkeys")
+                    }
+                }
+            }
+
+            # Save exit hotkeys
+            $exitHotkeysTextBox = $script:Window.FindName("VTubeOnExitHotkeysTextBox")
+            if ($exitHotkeysTextBox) {
+                $hotkeyText = $exitHotkeysTextBox.Text.Trim()
+                if ($hotkeyText) {
+                    $hotkeys = $hotkeyText -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+                    Set-PropertyValue -Object $gameData.integrations.vtubeStudioSettings -PropertyName "onExitHotkeys" -Value @($hotkeys)
+                } else {
+                    # Remove onExitHotkeys if empty
+                    if ($gameData.integrations.vtubeStudioSettings.PSObject.Properties["onExitHotkeys"]) {
+                        $gameData.integrations.vtubeStudioSettings.PSObject.Properties.Remove("onExitHotkeys")
+                    }
+                }
+            }
+        } else {
+            # Remove vtubeStudioSettings if VTube Studio integration is disabled
+            if ($gameData.integrations.PSObject.Properties["vtubeStudioSettings"]) {
+                $gameData.integrations.PSObject.Properties.Remove("vtubeStudioSettings")
+            }
+        }
     }
 
     # If the ID changed, perform the rename operation on the games object
@@ -997,6 +1053,9 @@ function Save-VTubeStudioSettingsData {
         $vtubePathTextBox = $script:Window.FindName("VTubePathTextBox")
         $vtubeAutoStartCheckBox = $script:Window.FindName("VTubeAutoStartCheckBox")
         $vtubeAutoStopCheckBox = $script:Window.FindName("VTubeAutoStopCheckBox")
+        $vtubeWebSocketEnableCheckBox = $script:Window.FindName("VTubeWebSocketEnableCheckBox")
+        $vtubeHostTextBox = $script:Window.FindName("VTubeHostTextBox")
+        $vtubePortTextBox = $script:Window.FindName("VTubePortTextBox")
 
         # Ensure integrations section exists
         if (-not $script:StateManager.ConfigData.integrations) {
@@ -1038,6 +1097,56 @@ function Save-VTubeStudioSettingsData {
                 $script:StateManager.ConfigData.integrations.vtubeStudio.gameEndAction = $gameEndAction
             }
             Write-Verbose "Saved VTube Studio gameEndAction: $gameEndAction"
+        }
+
+        # Ensure websocket section exists
+        if (-not $script:StateManager.ConfigData.integrations.vtubeStudio.PSObject.Properties["websocket"]) {
+            $script:StateManager.ConfigData.integrations.vtubeStudio | Add-Member -NotePropertyName "websocket" -NotePropertyValue @{} -Force
+        }
+
+        # Save WebSocket enabled status
+        if ($vtubeWebSocketEnableCheckBox) {
+            $websocketEnabled = [bool]$vtubeWebSocketEnableCheckBox.IsChecked
+            if (-not $script:StateManager.ConfigData.integrations.vtubeStudio.websocket.PSObject.Properties["enabled"]) {
+                $script:StateManager.ConfigData.integrations.vtubeStudio.websocket | Add-Member -NotePropertyName "enabled" -NotePropertyValue $websocketEnabled -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.vtubeStudio.websocket.enabled = $websocketEnabled
+            }
+            Write-Verbose "Saved VTube Studio WebSocket enabled: $websocketEnabled"
+        }
+
+        # Save WebSocket host
+        if ($vtubeHostTextBox) {
+            $hostValue = $vtubeHostTextBox.Text
+            if ([string]::IsNullOrWhiteSpace($hostValue)) {
+                $hostValue = "localhost"
+            }
+            if (-not $script:StateManager.ConfigData.integrations.vtubeStudio.websocket.PSObject.Properties["host"]) {
+                $script:StateManager.ConfigData.integrations.vtubeStudio.websocket | Add-Member -NotePropertyName "host" -NotePropertyValue $hostValue -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.vtubeStudio.websocket.host = $hostValue
+            }
+            Write-Verbose "Saved VTube Studio WebSocket host: $hostValue"
+        }
+
+        # Save WebSocket port
+        if ($vtubePortTextBox) {
+            $portText = $vtubePortTextBox.Text
+            $port = 8001  # Default port
+            if (-not [string]::IsNullOrWhiteSpace($portText)) {
+                try {
+                    $port = [int]$portText
+                } catch {
+                    Write-Warning "Invalid port number '$portText', using default 8001"
+                    $port = 8001
+                }
+            }
+            if (-not $script:StateManager.ConfigData.integrations.vtubeStudio.websocket.PSObject.Properties["port"]) {
+                $script:StateManager.ConfigData.integrations.vtubeStudio.websocket | Add-Member -NotePropertyName "port" -NotePropertyValue $port -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.vtubeStudio.websocket.port = $port
+            }
+            Write-Verbose "Saved VTube Studio WebSocket port: $port"
         }
 
         # Mark configuration as modified
