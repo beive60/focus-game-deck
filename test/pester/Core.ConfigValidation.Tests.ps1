@@ -87,18 +87,14 @@ Describe "Invoke-ConfigurationValidation" -Tag "Core", "Validation" {
             $errors[0].Key | Should -Be "steamAppIdRequired"
         }
 
-        It "Should reject Steam AppID with less than 7 digits" {
+        It "Should accept Steam AppID with less than 7 digits" {
             $errors = Invoke-ConfigurationValidation -GameId "apex" -Platform "steam" -SteamAppId "123456"
-            $errors | Should -HaveCount 1
-            $errors[0].Control | Should -Be "SteamAppIdTextBox"
-            $errors[0].Key | Should -Be "steamAppIdMust7Digits"
+            $errors | Should -HaveCount 0
         }
 
-        It "Should reject Steam AppID with more than 7 digits" {
+        It "Should accept Steam AppID with more than 7 digits" {
             $errors = Invoke-ConfigurationValidation -GameId "apex" -Platform "steam" -SteamAppId "12345678"
-            $errors | Should -HaveCount 1
-            $errors[0].Control | Should -Be "SteamAppIdTextBox"
-            $errors[0].Key | Should -Be "steamAppIdMust7Digits"
+            $errors | Should -HaveCount 0
         }
 
         It "Should reject Steam AppID with non-numeric characters" {

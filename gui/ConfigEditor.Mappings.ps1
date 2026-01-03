@@ -20,6 +20,7 @@ $script:CrudButtonMappings = @{
 # File browser buttons
 $script:BrowserButtonMappings = @{
     "BrowseAppPathButton" = "browseButton"
+    "BrowseWorkingDirectoryButton" = "browseFolderButton"
     "BrowseExecutablePathButton" = "browseButton"
     "BrowseSteamPathButton" = "browseButton"
     "BrowseEpicPathButton" = "browseButton"
@@ -104,6 +105,7 @@ $script:LabelMappings = @{
     "AppDetailsLabel" = "appDetailsLabel"
     "AppIdLabel" = "appIdLabel"
     "AppPathLabel" = "appPathLabel"
+    "WorkingDirectoryLabel" = "workingDirectoryLabel"
     "AppDisplayNameLabel" = "appDisplayNameLabel"
     "AppProcessNameLabel" = "processNameLabel"
     "GameStartActionLabel" = "gameStartActionLabel"
@@ -132,6 +134,10 @@ $script:LabelMappings = @{
     "VTubeHostLabel" = "hostLabel"
     "VTubePortLabel" = "portLabel"
     "GameIntegrationSectionLabel" = "gameIntegrationSectionLabel"
+    "VTubeGameSpecificSettingsGroup" = "vtubeGameSpecificSettingsGroup"
+    "VTubeModelIdLabel" = "vtubeModelIdLabel"
+    "VTubeOnLaunchHotkeysLabel" = "vtubeOnLaunchHotkeysLabel"
+    "VTubeOnExitHotkeysLabel" = "vtubeOnExitHotkeysLabel"
 }
 
 # Tab header mappings
@@ -248,6 +254,7 @@ $script:TooltipMappings = @{
     "IntegrationsLabelPanel" = "tooltip_integrations"
     "AppIdLabelPanel" = "tooltipAppId"
     "AppProcessNameLabelPanel" = "tooltipProcessName"
+    "WorkingDirectoryLabelPanel" = "tooltipWorkingDirectory"
     "GameStartActionLabelPanel" = "tooltipGameActions"
     "GameEndActionLabelPanel" = "tooltipGameActions"
     "AppArgumentsLabelPanel" = "tooltipLaunchArguments"

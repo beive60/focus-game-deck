@@ -1,4 +1,4 @@
-﻿class ConfigEditorEvents {
+class ConfigEditorEvents {
     $uiManager
     $stateManager
     [string]$appRoot
@@ -1102,7 +1102,11 @@
                             $appData.processNames
                         }
                     } elseif ($appData.processName) {
-                        $appData.processName
+                        if ($appData.processName -is [array]) {
+                            $appData.processName -join "|"
+                        } else {
+                            $appData.processName
+                        }
                     } else {
                         ""
                     }
@@ -1123,19 +1127,29 @@
                     } else {
                         "start-process"
                     }
+                    Write-Verbose "  Setting GameStartActionCombo to: $appStartAction"
                     $this.SetComboBoxSelectionByTag($gameStartActionCombo, $appStartAction)
+                    Write-Verbose "  GameStartActionCombo SelectedItem: $($gameStartActionCombo.SelectedItem)"
                 }
 
                 if ($gameEndActionCombo) {
                     # Check for both endAction and gameEndAction for compatibility
+                    Write-Verbose "  endAction property: $($appData.endAction)"
+                    Write-Verbose "  gameEndAction property: $($appData.gameEndAction)"
                     $appEndAction = if ($appData.endAction) {
+                        Write-Verbose "  Using endAction: $($appData.endAction)"
                         $appData.endAction
                     } elseif ($appData.gameEndAction) {
+                        Write-Verbose "  Using gameEndAction: $($appData.gameEndAction)"
                         $appData.gameEndAction
                     } else {
+                        Write-Verbose "  Using default: stop-process"
                         "stop-process"
                     }
+                    Write-Verbose "  Final appEndAction value: $appEndAction"
+                    Write-Verbose "  Setting GameEndActionCombo to: $appEndAction"
                     $this.SetComboBoxSelectionByTag($gameEndActionCombo, $appEndAction)
+                    Write-Verbose "  GameEndActionCombo SelectedItem: $($gameEndActionCombo.SelectedItem)"
                 }
 
                 $appPathTextBox = $script:Window.FindName("AppPathTextBox")
@@ -1149,6 +1163,12 @@
                         ""
                     }
                     $appPathTextBox.Text = $pathValue
+                }
+
+                # Load working directory
+                $workingDirectoryTextBox = $script:Window.FindName("WorkingDirectoryTextBox")
+                if ($workingDirectoryTextBox) {
+                    $workingDirectoryTextBox.Text = if ($appData.workingDirectory) { $appData.workingDirectory } else { "" }
                 }
 
                 # Load arguments
@@ -1413,11 +1433,13 @@
         # Create new app with default values
         $newApp = @{
             displayName = "New App"
-            processNames = @("notepad.exe")
-            startAction = "start-process"
-            endAction = "stop-process"
+            processName = "notepad.exe"
+            path = ""
+            arguments = ""
+            gameStartAction = "start-process"
+            gameEndAction = "stop-process"
             terminationMethod = "auto"
-            gracefulTimeout = 5
+            gracefulTimeoutMs = 5000
         }
 
         # Add to configuration
@@ -1689,6 +1711,20 @@
         }
     }
 
+    # Handle browse working directory (for Managed Apps tab)
+    [void] HandleBrowseWorkingDirectory() {
+        Add-Type -AssemblyName System.Windows.Forms
+        $folderBrowserDialog = New-Object System.Windows.Forms.FolderBrowserDialog
+        $folderBrowserDialog.Description = $this.uiManager.GetLocalizedMessage("browseFolderButton")
+        $folderBrowserDialog.ShowNewFolderButton = $true
+
+        $dialogResultType = "System.Windows.Forms.DialogResult" -as [type]
+        if ($folderBrowserDialog.ShowDialog() -eq $dialogResultType::OK) {
+            $script:Window.FindName("WorkingDirectoryTextBox").Text = $folderBrowserDialog.SelectedPath
+            Write-Verbose "Selected working directory: $($folderBrowserDialog.SelectedPath)"
+        }
+    }
+
     # Handle browse OBS path
     [void] HandleBrowseOBSPath() {
         $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
@@ -1846,27 +1882,35 @@
             $models = $vtubeManager.GetAvailableModels()
 
             if ($models -and $models.Count -gt 0) {
+                # Type resolution for ps2exe compatibility
+                $windowStartupLocationType = "System.Windows.WindowStartupLocation" -as [type]
+                $gridLengthType = "System.Windows.GridLength" -as [type]
+                $gridUnitType = "System.Windows.GridUnitType" -as [type]
+                $gridType = "System.Windows.Controls.Grid" -as [type]
+                $orientationType = "System.Windows.Controls.Orientation" -as [type]
+                $horizontalAlignmentType = "System.Windows.HorizontalAlignment" -as [type]
+
                 # Create selection dialog
                 $dialog = New-Object System.Windows.Window
                 $dialog.Title = "Select VTube Studio Model"
                 $dialog.Width = 500
                 $dialog.Height = 400
-                $dialog.WindowStartupLocation = [System.Windows.WindowStartupLocation]::CenterOwner
+                $dialog.WindowStartupLocation = $windowStartupLocationType::CenterOwner
                 $dialog.Owner = $script:Window
 
                 $grid = New-Object System.Windows.Controls.Grid
                 $grid.Margin = "10"
 
                 $rowDef1 = New-Object System.Windows.Controls.RowDefinition
-                $rowDef1.Height = [System.Windows.GridLength]::new(1, [System.Windows.GridUnitType]::Star)
+                $rowDef1.Height = $gridLengthType::new(1, $gridUnitType::Star)
                 $rowDef2 = New-Object System.Windows.Controls.RowDefinition
-                $rowDef2.Height = [System.Windows.GridLength]::Auto
+                $rowDef2.Height = $gridLengthType::Auto
                 $grid.RowDefinitions.Add($rowDef1)
                 $grid.RowDefinitions.Add($rowDef2)
 
                 $listBox = New-Object System.Windows.Controls.ListBox
                 $listBox.Margin = "0,0,0,10"
-                [System.Windows.Controls.Grid]::SetRow($listBox, 0)
+                $gridType::SetRow($listBox, 0)
 
                 foreach ($model in $models) {
                     $item = New-Object System.Windows.Controls.ListBoxItem
@@ -1878,9 +1922,9 @@
                 $grid.Children.Add($listBox)
 
                 $buttonPanel = New-Object System.Windows.Controls.StackPanel
-                $buttonPanel.Orientation = [System.Windows.Controls.Orientation]::Horizontal
-                $buttonPanel.HorizontalAlignment = [System.Windows.HorizontalAlignment]::Right
-                [System.Windows.Controls.Grid]::SetRow($buttonPanel, 1)
+                $buttonPanel.Orientation = $orientationType::Horizontal
+                $buttonPanel.HorizontalAlignment = $horizontalAlignmentType::Right
+                $gridType::SetRow($buttonPanel, 1)
 
                 $okButton = New-Object System.Windows.Controls.Button
                 $okButton.Content = "OK"
@@ -1893,35 +1937,35 @@
                 $windowRef = $script:Window
 
                 $okButton.add_Click({
-                    try {
-                        Write-Verbose "[DEBUG] OK button clicked"
-                        if ($listBoxRef.SelectedItem) {
-                            $selectedModelId = $listBoxRef.SelectedItem.Tag
-                            Write-Verbose "[DEBUG] Selected model ID: $selectedModelId"
+                        try {
+                            Write-Verbose "[DEBUG] OK button clicked"
+                            if ($listBoxRef.SelectedItem) {
+                                $selectedModelId = $listBoxRef.SelectedItem.Tag
+                                Write-Verbose "[DEBUG] Selected model ID: $selectedModelId"
 
-                            $modelIdTextBox = $windowRef.FindName("VTubeModelIdTextBox")
-                            Write-Verbose "[DEBUG] Found textbox: $($modelIdTextBox -ne $null)"
+                                $modelIdTextBox = $windowRef.FindName("VTubeModelIdTextBox")
+                                Write-Verbose "[DEBUG] Found textbox: $($modelIdTextBox -ne $null)"
 
-                            if ($modelIdTextBox) {
-                                $modelIdTextBox.Text = $selectedModelId
-                                Write-Verbose "[DEBUG] Set textbox value to: $selectedModelId"
+                                if ($modelIdTextBox) {
+                                    $modelIdTextBox.Text = $selectedModelId
+                                    Write-Verbose "[DEBUG] Set textbox value to: $selectedModelId"
+                                }
                             }
+                            $dialogRef.DialogResult = $true
+                            $dialogRef.Close()
+                            Write-Verbose "[DEBUG] Dialog closed successfully"
+                        } catch {
+                            Write-Verbose "[ERROR] Error in OK button click handler: $_"
                         }
-                        $dialogRef.DialogResult = $true
-                        $dialogRef.Close()
-                        Write-Verbose "[DEBUG] Dialog closed successfully"
-                    } catch {
-                        Write-Verbose "[ERROR] Error in OK button click handler: $_"
-                    }
-                }.GetNewClosure())
+                    }.GetNewClosure())
 
                 $cancelButton = New-Object System.Windows.Controls.Button
                 $cancelButton.Content = "Cancel"
                 $cancelButton.Width = 80
                 $cancelButton.add_Click({
-                    $dialogRef.DialogResult = $false
-                    $dialogRef.Close()
-                }.GetNewClosure())
+                        $dialogRef.DialogResult = $false
+                        $dialogRef.Close()
+                    }.GetNewClosure())
 
                 $buttonPanel.Children.Add($okButton)
                 $buttonPanel.Children.Add($cancelButton)
@@ -1985,28 +2029,37 @@
             $hotkeys = $vtubeManager.GetHotkeysInCurrentModel()
 
             if ($hotkeys -and $hotkeys.Count -gt 0) {
+                # Type resolution for ps2exe compatibility
+                $windowStartupLocationType = "System.Windows.WindowStartupLocation" -as [type]
+                $gridLengthType = "System.Windows.GridLength" -as [type]
+                $gridUnitType = "System.Windows.GridUnitType" -as [type]
+                $gridType = "System.Windows.Controls.Grid" -as [type]
+                $selectionModeType = "System.Windows.Controls.SelectionMode" -as [type]
+                $orientationType = "System.Windows.Controls.Orientation" -as [type]
+                $horizontalAlignmentType = "System.Windows.HorizontalAlignment" -as [type]
+
                 # Create selection dialog
                 $dialog = New-Object System.Windows.Window
                 $dialog.Title = "Select VTube Studio Hotkeys"
                 $dialog.Width = 500
                 $dialog.Height = 400
-                $dialog.WindowStartupLocation = [System.Windows.WindowStartupLocation]::CenterOwner
+                $dialog.WindowStartupLocation = $windowStartupLocationType::CenterOwner
                 $dialog.Owner = $script:Window
 
                 $grid = New-Object System.Windows.Controls.Grid
                 $grid.Margin = "10"
 
                 $rowDef1 = New-Object System.Windows.Controls.RowDefinition
-                $rowDef1.Height = [System.Windows.GridLength]::new(1, [System.Windows.GridUnitType]::Star)
+                $rowDef1.Height = $gridLengthType::new(1, $gridUnitType::Star)
                 $rowDef2 = New-Object System.Windows.Controls.RowDefinition
-                $rowDef2.Height = [System.Windows.GridLength]::Auto
+                $rowDef2.Height = $gridLengthType::Auto
                 $grid.RowDefinitions.Add($rowDef1)
                 $grid.RowDefinitions.Add($rowDef2)
 
                 $listBox = New-Object System.Windows.Controls.ListBox
-                $listBox.SelectionMode = [System.Windows.Controls.SelectionMode]::Multiple
+                $listBox.SelectionMode = $selectionModeType::Multiple
                 $listBox.Margin = "0,0,0,10"
-                [System.Windows.Controls.Grid]::SetRow($listBox, 0)
+                $gridType::SetRow($listBox, 0)
 
                 foreach ($hotkey in $hotkeys) {
                     $item = New-Object System.Windows.Controls.ListBoxItem
@@ -2018,9 +2071,9 @@
                 $grid.Children.Add($listBox)
 
                 $buttonPanel = New-Object System.Windows.Controls.StackPanel
-                $buttonPanel.Orientation = [System.Windows.Controls.Orientation]::Horizontal
-                $buttonPanel.HorizontalAlignment = [System.Windows.HorizontalAlignment]::Right
-                [System.Windows.Controls.Grid]::SetRow($buttonPanel, 1)
+                $buttonPanel.Orientation = $orientationType::Horizontal
+                $buttonPanel.HorizontalAlignment = $horizontalAlignmentType::Right
+                $gridType::SetRow($buttonPanel, 1)
 
                 $okButton = New-Object System.Windows.Controls.Button
                 $okButton.Content = "OK"
@@ -2034,44 +2087,44 @@
                 $windowRef = $script:Window
 
                 $okButton.add_Click({
-                    try {
-                        Write-Verbose "[DEBUG] Hotkey OK button clicked"
-                        if ($listBoxRef.SelectedItems.Count -gt 0) {
-                            $selectedHotkeys = @()
-                            foreach ($item in $listBoxRef.SelectedItems) {
-                                $selectedHotkeys += $item.Tag
-                            }
-                            Write-Verbose "[DEBUG] Selected hotkeys: $($selectedHotkeys -join ', ')"
+                        try {
+                            Write-Verbose "[DEBUG] Hotkey OK button clicked"
+                            if ($listBoxRef.SelectedItems.Count -gt 0) {
+                                $selectedHotkeys = @()
+                                foreach ($item in $listBoxRef.SelectedItems) {
+                                    $selectedHotkeys += $item.Tag
+                                }
+                                Write-Verbose "[DEBUG] Selected hotkeys: $($selectedHotkeys -join ', ')"
 
-                            $targetTextBox = $null
-                            if ($typeRef -eq "launch") {
-                                $targetTextBox = $windowRef.FindName("VTubeOnLaunchHotkeysTextBox")
-                                Write-Verbose "[DEBUG] Target: VTubeOnLaunchHotkeysTextBox"
-                            } else {
-                                $targetTextBox = $windowRef.FindName("VTubeOnExitHotkeysTextBox")
-                                Write-Verbose "[DEBUG] Target: VTubeOnExitHotkeysTextBox"
-                            }
+                                $targetTextBox = $null
+                                if ($typeRef -eq "launch") {
+                                    $targetTextBox = $windowRef.FindName("VTubeOnLaunchHotkeysTextBox")
+                                    Write-Verbose "[DEBUG] Target: VTubeOnLaunchHotkeysTextBox"
+                                } else {
+                                    $targetTextBox = $windowRef.FindName("VTubeOnExitHotkeysTextBox")
+                                    Write-Verbose "[DEBUG] Target: VTubeOnExitHotkeysTextBox"
+                                }
 
-                            if ($targetTextBox) {
-                                $targetTextBox.Text = $selectedHotkeys -join ", "
-                                Write-Verbose "[DEBUG] Set textbox value"
+                                if ($targetTextBox) {
+                                    $targetTextBox.Text = $selectedHotkeys -join ", "
+                                    Write-Verbose "[DEBUG] Set textbox value"
+                                }
                             }
+                            $dialogRef.DialogResult = $true
+                            $dialogRef.Close()
+                            Write-Verbose "[DEBUG] Hotkey dialog closed successfully"
+                        } catch {
+                            Write-Verbose "[ERROR] Error in hotkey OK button click handler: $_"
                         }
-                        $dialogRef.DialogResult = $true
-                        $dialogRef.Close()
-                        Write-Verbose "[DEBUG] Hotkey dialog closed successfully"
-                    } catch {
-                        Write-Verbose "[ERROR] Error in hotkey OK button click handler: $_"
-                    }
-                }.GetNewClosure())
+                    }.GetNewClosure())
 
                 $cancelButton = New-Object System.Windows.Controls.Button
                 $cancelButton.Content = "Cancel"
                 $cancelButton.Width = 80
                 $cancelButton.add_Click({
-                    $dialogRef.DialogResult = $false
-                    $dialogRef.Close()
-                }.GetNewClosure())
+                        $dialogRef.DialogResult = $false
+                        $dialogRef.Close()
+                    }.GetNewClosure())
 
                 $buttonPanel.Children.Add($okButton)
                 $buttonPanel.Children.Add($cancelButton)
@@ -3271,6 +3324,7 @@
                 Write-Verbose "ManagedAppsList not found"
             }
             $this.uiManager.Window.FindName("BrowseAppPathButton").add_Click({ $self.HandleBrowseAppPath() }.GetNewClosure())
+            $this.uiManager.Window.FindName("BrowseWorkingDirectoryButton").add_Click({ $self.HandleBrowseWorkingDirectory() }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveManagedAppsButton").add_Click({ $self.HandleSaveManagedApps() }.GetNewClosure())
 
             # --- OBS Tab ---

@@ -149,7 +149,7 @@ function Test-MessageFile {
     }
 
     # Define supported languages
-    $supportedLanguages = @("en", "ja", "zh-cn", "ru", "fr", "es", "id", "pt-br")
+    $supportedLanguages = @("en", "ja", "zh-cn", "ru", "fr", "es", "id-id", "pt-br")
 
     # Verify base language exists
     if (-not $messages.$BaseLanguage) {
@@ -305,7 +305,7 @@ try {
                 if ($useNewFormat) {
                     # Add all individual language files
                     $languageFiles = Get-ChildItem -Path $appMessagesDir -Filter "*.json" -File |
-                        Where-Object { $_.Name -notmatch "(manifest|backup|diagnostic)" }
+                    Where-Object { $_.Name -notmatch "(manifest|backup|diagnostic)" }
                     $filesToCheck += $languageFiles.FullName
                 } elseif (Test-Path $appMessagesPath) {
                     $filesToCheck += $appMessagesPath
@@ -320,7 +320,7 @@ try {
                 if ($useNewFormat) {
                     # Add all individual language files
                     $languageFiles = Get-ChildItem -Path $appMessagesDir -Filter "*.json" -File |
-                        Where-Object { $_.Name -notmatch "(manifest|backup|diagnostic)" }
+                    Where-Object { $_.Name -notmatch "(manifest|backup|diagnostic)" }
                     $filesToCheck += $languageFiles.FullName
                 } elseif (Test-Path $appMessagesPath) {
                     $filesToCheck += $appMessagesPath

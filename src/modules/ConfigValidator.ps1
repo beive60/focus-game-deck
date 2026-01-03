@@ -1,5 +1,8 @@
 # Configuration Validator Module
-# Enhanced configuration validation with detailed error reporting
+# Enhanced configuration validation with detailed error reporting and dependency chain validation
+#
+# This module validates configuration using the pure ValidationRules module and implements
+# dependency chain validation - only checking what's actually needed for the game being launched.
 
 class ConfigValidator {
     [object] $Config
@@ -15,7 +18,8 @@ class ConfigValidator {
         $this.Warnings = @()
     }
 
-    # Main validation method
+    # Main validation method with dependency chain validation
+    # When gameId is provided, validates only what's needed for that specific game
     [bool] ValidateConfiguration([string] $gameId = $null) {
         $this.Errors = @()
         $this.Warnings = @()
@@ -23,21 +27,15 @@ class ConfigValidator {
         # Validate basic structure
         $this.ValidateBasicStructure()
 
-        # Validate paths
-        $this.ValidatePaths()
-
-        # Validate managed apps
-        $this.ValidateManagedApps()
-
-        # Validate specific game if provided
         if ($gameId) {
-            $this.ValidateGameConfiguration($gameId)
+            # Dependency Chain Validation: Only validate what this game needs
+            $this.ValidateGameWithDependencies($gameId)
+        } else {
+            # Full validation mode (when no specific game is provided)
+            $this.ValidateAllPaths()
+            $this.ValidateAllManagedApps()
+            $this.ValidateAllIntegrations()
         }
-
-        # Validate integrations
-        $this.ValidateOBSConfiguration()
-        $this.ValidateDiscordConfiguration()
-        $this.ValidateVTubeStudioConfiguration()
 
         # Return true if no errors (warnings are acceptable)
         return $this.Errors.Count -eq 0
@@ -50,46 +48,173 @@ class ConfigValidator {
 
         foreach ($section in $requiredSections) {
             if (-not $this.Config.$section) {
-                $this.Errors += "Missing required section: '$section'"
+                $this.Errors += ($this.Messages.validator_missing_section -f $section)
             }
         }
 
         # Check if games section has at least one game
         if ($this.Config.games -and $this.Config.games.PSObject.Properties.Count -eq 0) {
-            $this.Warnings += "No games configured in 'games' section"
+            $this.Warnings += $this.Messages.validator_no_games_configured
         }
 
         # Check if managedApps section has at least one app
         if ($this.Config.managedApps -and $this.Config.managedApps.PSObject.Properties.Count -eq 0) {
-            $this.Warnings += "No applications configured in 'managedApps' section"
+            $this.Warnings += $this.Messages.validator_no_apps_configured
         }
     }
 
-    # Validate paths configuration
-    [void] ValidatePaths() {
+    # Dependency Chain Validation: Validate a game and all its dependencies
+    [void] ValidateGameWithDependencies([string] $gameId) {
+        if (-not $this.Config.games.$gameId) {
+            $this.Errors += ($this.Messages.validator_game_not_found -f $gameId)
+            return
+        }
+
+        $gameConfig = $this.Config.games.$gameId
+
+        # 1. Validate the game configuration itself
+        $this.ValidateGameConfiguration($gameId)
+
+        # 2. Validate only the platform used by this game
+        $platform = if ($gameConfig.platform) { $gameConfig.platform } else { "steam" }
+        $this.ValidatePlatformForGame($platform)
+
+        # 3. Validate only the managed apps referenced by this game
+        if ($gameConfig.appsToManage) {
+            foreach ($appId in $gameConfig.appsToManage) {
+                if ($appId -eq "obs") {
+                    continue  # OBS is handled specially in integrations
+                }
+                $this.ValidateManagedApp($appId)
+            }
+        }
+
+        # 4. Validate only the integrations used by this game
+        if ($gameConfig.integrations) {
+            if ($gameConfig.integrations.useOBS) {
+                $this.ValidateOBSConfiguration()
+            }
+            if ($gameConfig.integrations.useDiscord) {
+                $this.ValidateDiscordConfiguration()
+            }
+            if ($gameConfig.integrations.useVTubeStudio) {
+                $this.ValidateVTubeStudioConfiguration()
+            }
+        }
+
+        # Also check if OBS is in appsToManage
+        if ($gameConfig.appsToManage -and "obs" -in $gameConfig.appsToManage) {
+            $this.ValidateOBSConfiguration()
+        }
+    }
+
+    # Validate platform-specific path for a given platform
+    [void] ValidatePlatformForGame([string] $platform) {
+        if (-not $this.Config.paths) {
+            $this.Errors += $this.Messages.validator_missing_paths_section
+            return
+        }
+
+        switch ($platform) {
+            "steam" {
+                if (-not $this.Config.paths.steam) {
+                    $this.Errors += $this.Messages.validator_steam_path_required
+                } elseif (-not (Test-Path $this.Config.paths.steam)) {
+                    $this.Errors += ($this.Messages.validator_steam_path_not_exist -f $this.Config.paths.steam)
+                }
+            }
+            "epic" {
+                if (-not $this.Config.paths.epic) {
+                    $this.Warnings += $this.Messages.validator_epic_path_not_configured
+                } elseif (-not (Test-Path $this.Config.paths.epic)) {
+                    $this.Warnings += ($this.Messages.validator_epic_path_not_exist -f $this.Config.paths.epic)
+                }
+            }
+            "riot" {
+                if (-not $this.Config.paths.riot) {
+                    $this.Warnings += $this.Messages.validator_riot_path_not_configured
+                } elseif (-not (Test-Path $this.Config.paths.riot)) {
+                    $this.Warnings += ($this.Messages.validator_riot_path_not_exist -f $this.Config.paths.riot)
+                }
+            }
+        }
+    }
+
+    # Validate a single managed application
+    [void] ValidateManagedApp([string] $appId) {
+        if (-not $this.Config.managedApps.$appId) {
+            $this.Errors += ($this.Messages.validator_app_undefined -f $appId)
+            return
+        }
+
+        $appConfig = $this.Config.managedApps.$appId
+        $validActions = @("start-process", "stop-process", "none")
+
+        # Validate required properties
+        if (-not $appConfig.PSObject.Properties.Name -contains "processName") {
+            $this.Errors += ($this.Messages.validator_app_missing_process_name -f $appId)
+        }
+
+        if (-not $appConfig.PSObject.Properties.Name -contains "gameStartAction") {
+            $this.Errors += ($this.Messages.validator_app_missing_game_start_action -f $appId)
+        }
+
+        if (-not $appConfig.PSObject.Properties.Name -contains "gameEndAction") {
+            $this.Errors += ($this.Messages.validator_app_missing_game_end_action -f $appId)
+        }
+
+        # Validate action values
+        if ($appConfig.gameStartAction -and $appConfig.gameStartAction -notin $validActions) {
+            $this.Errors += ($this.Messages.validator_app_invalid_start_action -f $appId, $appConfig.gameStartAction, ($validActions -join ', '))
+        }
+
+        if ($appConfig.gameEndAction -and $appConfig.gameEndAction -notin $validActions) {
+            $this.Errors += ($this.Messages.validator_app_invalid_end_action -f $appId, $appConfig.gameEndAction, ($validActions -join ', '))
+        }
+
+        # Validate path if needed for start-process action
+        $needsPath = @("start-process")
+        if (($appConfig.gameStartAction -in $needsPath) -or ($appConfig.gameEndAction -in $needsPath)) {
+            if (-not $appConfig.path -or $appConfig.path -eq "") {
+                $this.Errors += ($this.Messages.validator_app_path_required -f $appId)
+            } elseif (-not (Test-Path $appConfig.path)) {
+                $this.Warnings += ($this.Messages.validator_app_path_not_exist -f $appId, $appConfig.path)
+            }
+        }
+
+        # Validate process name if needed for stop-process action
+        if (($appConfig.gameStartAction -eq "stop-process") -or ($appConfig.gameEndAction -eq "stop-process")) {
+            if (-not $appConfig.processName -or $appConfig.processName -eq "") {
+                $this.Errors += ($this.Messages.validator_app_process_name_required -f $appId)
+            }
+        }
+    }
+
+    # Full validation methods (used when no specific game is provided)
+
+    [void] ValidateAllPaths() {
         if (-not $this.Config.paths) {
             return
         }
 
-        # Validate Steam path
+        # Validate Steam path (always required as default platform)
         if ($this.Config.paths.steam) {
             if (-not (Test-Path $this.Config.paths.steam)) {
-                $this.Errors += "Steam path does not exist: '$($this.Config.paths.steam)'"
+                $this.Errors += ($this.Messages.validator_steam_path_not_exist_general -f $this.Config.paths.steam)
             }
         } else {
-            $this.Errors += "Steam path is required in 'paths.steam'"
+            $this.Errors += $this.Messages.validator_steam_path_required_general
         }
 
         # Validate OBS path if present (now in integrations.obs.path)
         if ($this.Config.integrations.obs.path) {
             if (-not (Test-Path $this.Config.integrations.obs.path)) {
-                $this.Warnings += "OBS path does not exist: '$($this.Config.integrations.obs.path)'"
+                $this.Warnings += ($this.Messages.validator_obs_path_not_exist -f $this.Config.integrations.obs.path)
             }
         }
     }
 
-    # Validate managed applications
-    [void] ValidateManagedApps() {
+    [void] ValidateAllManagedApps() {
         if (-not $this.Config.managedApps) {
             return
         }
@@ -98,53 +223,23 @@ class ConfigValidator {
 
         foreach ($appProperty in $this.Config.managedApps.PSObject.Properties) {
             $appId = $appProperty.Name
-            $appConfig = $appProperty.Value
+            if ($appId -eq '_order') { continue }  # Skip order metadata
 
-            # Validate required properties
-            if (-not $appConfig.PSObject.Properties.Name -contains "processName") {
-                $this.Errors += "Application '$appId' is missing 'processName' property"
-            }
-
-            if (-not $appConfig.PSObject.Properties.Name -contains "gameStartAction") {
-                $this.Errors += "Application '$appId' is missing 'gameStartAction' property"
-            }
-
-            if (-not $appConfig.PSObject.Properties.Name -contains "gameEndAction") {
-                $this.Errors += "Application '$appId' is missing 'gameEndAction' property"
-            }
-
-            # Validate action values
-            if ($appConfig.gameStartAction -and $appConfig.gameStartAction -notin $validActions) {
-                $this.Errors += "Application '$appId' has invalid gameStartAction: '$($appConfig.gameStartAction)'. Valid values: $($validActions -join ', ')"
-            }
-
-            if ($appConfig.gameEndAction -and $appConfig.gameEndAction -notin $validActions) {
-                $this.Errors += "Application '$appId' has invalid gameEndAction: '$($appConfig.gameEndAction)'. Valid values: $($validActions -join ', ')"
-            }
-
-            # Validate path if needed for start-process action
-            $needsPath = @("start-process")
-            if (($appConfig.gameStartAction -in $needsPath) -or ($appConfig.gameEndAction -in $needsPath)) {
-                if (-not $appConfig.path -or $appConfig.path -eq "") {
-                    $this.Errors += "Application '$appId' requires 'path' property for its configured actions"
-                } elseif (-not (Test-Path $appConfig.path)) {
-                    $this.Warnings += "Application '$appId' path does not exist: '$($appConfig.path)'"
-                }
-            }
-
-            # Validate process name if needed for stop-process action
-            if (($appConfig.gameStartAction -eq "stop-process") -or ($appConfig.gameEndAction -eq "stop-process")) {
-                if (-not $appConfig.processName -or $appConfig.processName -eq "") {
-                    $this.Errors += "Application '$appId' requires 'processName' property for stop-process action"
-                }
-            }
+            $this.ValidateManagedApp($appId)
         }
     }
 
-    # Validate specific game configuration (Multi-Platform Support)
+    [void] ValidateAllIntegrations() {
+        # Check if any game uses integrations
+        $this.ValidateOBSConfiguration()
+        $this.ValidateDiscordConfiguration()
+        $this.ValidateVTubeStudioConfiguration()
+    }
+
+    # Validate specific game configuration (using ValidationRules module)
     [void] ValidateGameConfiguration([string] $gameId) {
         if (-not $this.Config.games.$gameId) {
-            $this.Errors += "Game ID '$gameId' not found in configuration"
+            $this.Errors += ($this.Messages.validator_game_not_found -f $gameId)
             return
         }
 
@@ -154,62 +249,81 @@ class ConfigValidator {
         $basicRequiredProperties = @("name", "processName")
         foreach ($prop in $basicRequiredProperties) {
             if (-not $gameConfig.PSObject.Properties.Name -contains $prop) {
-                $this.Errors += "Game '$gameId' is missing required property: '$prop'"
+                $this.Errors += ($this.Messages.validator_game_missing_property -f $gameId, $prop)
             }
         }
 
-        # Validate platform-specific requirements (Multi-Platform Support)
-        $platform = if ($gameConfig.platform) { $gameConfig.platform } else { "steam" }  # Default to Steam
+        # Determine platform (default to Steam)
+        $platform = if ($gameConfig.platform) { $gameConfig.platform } else { "steam" }
 
+        # Check if platform is supported
+        $supportedPlatforms = @("steam", "epic", "riot", "standalone", "direct")
+        if ($platform -notin $supportedPlatforms) {
+            $this.Errors += ($this.Messages.validator_game_unsupported_platform -f $gameId, $platform, ($supportedPlatforms -join ', '))
+            # Don't continue with validation if platform is unsupported
+            # Still validate appsToManage references
+            if ($gameConfig.appsToManage) {
+                foreach ($appId in $gameConfig.appsToManage) {
+                    if ($appId -eq "obs") {
+                        continue
+                    }
+                    if (-not $this.Config.managedApps.$appId) {
+                        $this.Errors += "Game '$gameId' references undefined application: '$appId'"
+                    }
+                }
+            } else {
+                $this.Warnings += ($this.Messages.validator_game_no_apps_to_manage -f $gameId)
+            }
+            return
+        }
+
+        # Use ValidationRules module for format validation
+        $validationParams = @{
+            GameId = $gameId
+            Platform = $platform
+        }
+
+        # Add platform-specific parameters
         switch ($platform) {
             "steam" {
-                if (-not $gameConfig.steamAppId) {
-                    $this.Errors += "Game '$gameId' with Steam platform requires 'steamAppId' property"
-                }
-                if (-not $this.Config.paths.steam) {
-                    $this.Errors += "Steam platform requires 'paths.steam' configuration"
-                }
+                $validationParams['SteamAppId'] = if ($gameConfig.steamAppId) { $gameConfig.steamAppId } else { "" }
             }
             "epic" {
-                if (-not $gameConfig.epicGameId) {
-                    $this.Errors += "Game '$gameId' with Epic platform requires 'epicGameId' property"
-                }
-                if (-not $this.Config.paths.epic) {
-                    $this.Warnings += "Epic platform path not configured in 'paths.epic' - will attempt auto-detection"
-                }
-            }
-            "ea" {
-                if (-not $gameConfig.eaGameId) {
-                    $this.Errors += "Game '$gameId' with EA platform requires 'eaGameId' property"
-                }
-                if (-not $this.Config.paths.ea) {
-                    $this.Warnings += "EA platform path not configured in 'paths.ea' - will attempt auto-detection"
-                }
+                $validationParams['EpicGameId'] = if ($gameConfig.epicGameId) { $gameConfig.epicGameId } else { "" }
             }
             "riot" {
-                if (-not $gameConfig.riotGameId) {
-                    $this.Errors += "Game '$gameId' with Riot platform requires 'riotGameId' property"
-                }
-                if (-not $this.Config.paths.riot) {
-                    $this.Warnings += "Riot platform path not configured in 'paths.riot' - will attempt auto-detection"
-                }
+                $validationParams['RiotGameId'] = if ($gameConfig.riotGameId) { $gameConfig.riotGameId } else { "" }
             }
-            "direct" {
-                if (-not $gameConfig.executablePath) {
-                    $this.Errors += "Game '$gameId' with standalone platform requires 'executablePath' property"
-                } elseif (-not (Test-Path $gameConfig.executablePath)) {
-                    $this.Errors += "Game '$gameId' executable path does not exist: '$($gameConfig.executablePath)'"
-                }
-            }
-            default {
-                $this.Errors += "Game '$gameId' has unsupported platform: '$platform'. Supported platforms: steam, epic, riot, direct"
+            { $_ -in "standalone", "direct" } {
+                $validationParams['ExecutablePath'] = if ($gameConfig.executablePath) { $gameConfig.executablePath } else { "" }
             }
         }
 
-        # Validate appsToManage
-        if (-not $gameConfig.appsToManage) {
-            $this.Warnings += "Game '$gameId' has no applications to manage (appsToManage is empty)"
-        } else {
+        # Perform validation using ValidationRules
+        $result = Test-GameConfiguration @validationParams
+
+        # Add any validation errors to our error list
+        if ($result -and $result.Errors) {
+            foreach ($e in $result.Errors) {
+                # Convert control-based errors to human-readable messages
+                $errorMsg = switch ($e.Key) {
+                    'gameIdRequired' { "Game '$gameId' has empty Game ID" }
+                    'gameIdInvalidCharacters' { "Game '$gameId' has invalid characters in Game ID" }
+                    'steamAppIdRequired' { "Game '$gameId' requires Steam AppID" }
+                    'steamAppIdMust7Digits' { "Game '$gameId' has invalid Steam AppID format (must be numeric only)" }
+                    'epicGameIdRequired' { "Game '$gameId' requires Epic Game ID" }
+                    'epicGameIdInvalidFormat' { "Game '$gameId' has invalid Epic Game ID format" }
+                    'riotGameIdRequired' { "Game '$gameId' requires Riot Game ID" }
+                    'executablePathRequired' { "Game '$gameId' requires executable path" }
+                    'executablePathNotFound' { "Game '$gameId' executable path does not exist: '$($gameConfig.executablePath)'" }
+                    default { "Game '$gameId' validation error: $($error.Key)" }
+                }
+                $this.Errors += $errorMsg
+            }
+        }
+
+        # Validate appsToManage references
+        if ($gameConfig.appsToManage) {
             foreach ($appId in $gameConfig.appsToManage) {
                 if ($appId -eq "obs") {
                     # OBS is handled specially, skip validation here
@@ -220,6 +334,8 @@ class ConfigValidator {
                     $this.Errors += "Game '$gameId' references undefined application: '$appId'"
                 }
             }
+        } else {
+            $this.Warnings += ($this.Messages.validator_game_no_apps_to_manage -f $gameId)
         }
     }
 
@@ -243,32 +359,32 @@ class ConfigValidator {
 
         # Validate OBS integration exists
         if (-not $this.Config.integrations.obs) {
-            $this.Errors += "OBS is used but 'integrations.obs' configuration section is missing"
+            $this.Errors += $this.Messages.validator_obs_not_configured
             return
         }
 
         # Validate OBS path
         if (-not $this.Config.integrations.obs.path) {
-            $this.Errors += "OBS is used but 'integrations.obs.path' is not configured"
+            $this.Errors += $this.Messages.validator_obs_path_not_configured
         }
 
         # Validate WebSocket configuration
         if (-not $this.Config.integrations.obs.websocket) {
-            $this.Errors += "OBS WebSocket configuration is missing"
+            $this.Errors += $this.Messages.validator_obs_websocket_missing
         } else {
             if (-not $this.Config.integrations.obs.websocket.host) {
-                $this.Warnings += "OBS WebSocket host not specified, using default 'localhost'"
+                $this.Warnings += $this.Messages.validator_obs_websocket_host_missing
             }
 
             if (-not $this.Config.integrations.obs.websocket.port) {
-                $this.Warnings += "OBS WebSocket port not specified, using default 4455"
+                $this.Warnings += $this.Messages.validator_obs_websocket_port_missing
             }
         }
 
         # Validate replay buffer setting
         if ($this.Config.integrations.obs.PSObject.Properties.Name -contains "replayBuffer") {
             if ($this.Config.integrations.obs.replayBuffer -isnot [bool]) {
-                $this.Warnings += "OBS replayBuffer should be a boolean value (true/false)"
+                $this.Errors += $this.Messages.validator_obs_replay_buffer_invalid
             }
         }
 
@@ -277,13 +393,13 @@ class ConfigValidator {
 
         if ($this.Config.integrations.obs.gameStartAction) {
             if ($this.Config.integrations.obs.gameStartAction -notin $validIntegrationActions) {
-                $this.Errors += "OBS has invalid gameStartAction: '$($this.Config.integrations.obs.gameStartAction)'. Valid values: $($validIntegrationActions -join ', ')"
+                $this.Errors += ($this.Messages.validator_obs_invalid_start_action -f $this.Config.integrations.obs.gameStartAction, ($validIntegrationActions -join ', '))
             }
         }
 
         if ($this.Config.integrations.obs.gameEndAction) {
             if ($this.Config.integrations.obs.gameEndAction -notin $validIntegrationActions) {
-                $this.Errors += "OBS has invalid gameEndAction: '$($this.Config.integrations.obs.gameEndAction)'. Valid values: $($validIntegrationActions -join ', ')"
+                $this.Errors += ($this.Messages.validator_obs_invalid_end_action -f $this.Config.integrations.obs.gameEndAction, ($validIntegrationActions -join ', '))
             }
         }
     }
@@ -308,13 +424,13 @@ class ConfigValidator {
 
         # Validate Discord integration exists
         if (-not $this.Config.integrations.discord) {
-            $this.Errors += "Discord is used but 'integrations.discord' configuration section is missing"
+            $this.Errors += $this.Messages.validator_discord_not_configured
             return
         }
 
         # Validate Discord path
         if (-not $this.Config.integrations.discord.path) {
-            $this.Warnings += "Discord path not configured in 'integrations.discord.path' - will attempt auto-detection"
+            $this.Warnings += $this.Messages.validator_discord_path_not_configured
         }
 
         # Validate gameStartAction and gameEndAction
@@ -322,13 +438,13 @@ class ConfigValidator {
 
         if ($this.Config.integrations.discord.gameStartAction) {
             if ($this.Config.integrations.discord.gameStartAction -notin $validIntegrationActions) {
-                $this.Errors += "Discord has invalid gameStartAction: '$($this.Config.integrations.discord.gameStartAction)'. Valid values: $($validIntegrationActions -join ', ')"
+                $this.Errors += ($this.Messages.validator_discord_invalid_start_action -f $this.Config.integrations.discord.gameStartAction, ($validIntegrationActions -join ', '))
             }
         }
 
         if ($this.Config.integrations.discord.gameEndAction) {
             if ($this.Config.integrations.discord.gameEndAction -notin $validIntegrationActions) {
-                $this.Errors += "Discord has invalid gameEndAction: '$($this.Config.integrations.discord.gameEndAction)'. Valid values: $($validIntegrationActions -join ', ')"
+                $this.Errors += ($this.Messages.validator_discord_invalid_end_action -f $this.Config.integrations.discord.gameEndAction, ($validIntegrationActions -join ', '))
             }
         }
     }
@@ -353,13 +469,13 @@ class ConfigValidator {
 
         # Validate VTube Studio integration exists
         if (-not $this.Config.integrations.vtubeStudio) {
-            $this.Errors += "VTube Studio is used but 'integrations.vtubeStudio' configuration section is missing"
+            $this.Errors += $this.Messages.validator_vtube_not_configured
             return
         }
 
         # Validate VTube Studio path
         if (-not $this.Config.integrations.vtubeStudio.path) {
-            $this.Warnings += "VTube Studio path not configured in 'integrations.vtubeStudio.path' - will attempt auto-detection"
+            $this.Warnings += $this.Messages.validator_vtube_path_not_configured
         }
 
         # Validate WebSocket configuration
@@ -437,13 +553,13 @@ class ConfigValidator {
 
         if ($this.Config.integrations.vtubeStudio.gameStartAction) {
             if ($this.Config.integrations.vtubeStudio.gameStartAction -notin $validIntegrationActions) {
-                $this.Errors += "VTube Studio has invalid gameStartAction: '$($this.Config.integrations.vtubeStudio.gameStartAction)'. Valid values: $($validIntegrationActions -join ', ')"
+                $this.Errors += ($this.Messages.validator_vtube_invalid_start_action -f $this.Config.integrations.vtubeStudio.gameStartAction, ($validIntegrationActions -join ', '))
             }
         }
 
         if ($this.Config.integrations.vtubeStudio.gameEndAction) {
             if ($this.Config.integrations.vtubeStudio.gameEndAction -notin $validIntegrationActions) {
-                $this.Errors += "VTube Studio has invalid gameEndAction: '$($this.Config.integrations.vtubeStudio.gameEndAction)'. Valid values: $($validIntegrationActions -join ', ')"
+                $this.Errors += ($this.Messages.validator_vtube_invalid_end_action -f $this.Config.integrations.vtubeStudio.gameEndAction, ($validIntegrationActions -join ', '))
             }
         }
     }

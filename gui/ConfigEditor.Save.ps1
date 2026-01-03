@@ -24,7 +24,7 @@
     Last Updated: 2025-12-19
 
     This module depends on:
-    - Invoke-ConfigurationValidation for validation
+    - ValidationRules for validation
     - UIManager for error display
     - StateManager for configuration state
     - Localization for messages
@@ -188,14 +188,14 @@ function Save-CurrentGameData {
     $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
     $executablePath = if ($executablePathTextBox) { $executablePathTextBox.Text.Trim() } else { "" }
 
-    # Use centralized validation module
-    $validationErrors = Invoke-ConfigurationValidation -GameId $newGameId -Platform $platform -SteamAppId $steamAppId -EpicGameId $epicGameId -RiotGameId $riotGameId -ExecutablePath $executablePath
+    # Use ValidationRules module for validation
+    $validationResult = Test-GameConfiguration -GameId $newGameId -Platform $platform -SteamAppId $steamAppId -EpicGameId $epicGameId -RiotGameId $riotGameId -ExecutablePath $executablePath
 
-    if ($validationErrors.Count -gt 0) {
-        foreach ($err in $validationErrors) {
-            $script:UIManager.SetInputError($err.Control, $script:Localization.GetMessage($err.Key, @()))
+    if (-not $validationResult.IsValid) {
+        foreach ($err in $validationResult.Errors) {
+            $script:UIManager.SetInputError($err.Control, $script:Localization.GetMessage($err.Key))
         }
-        Show-SafeMessage -Key $validationErrors[0].Key -MessageType "Warning"
+        Show-SafeMessage -Key $validationResult.Errors[0].Key -MessageType "Warning"
         return
     }
 
@@ -497,12 +497,29 @@ function Save-CurrentAppData {
     # Save process name
     $appProcessNameTextBox = $script:Window.FindName("AppProcessNameTextBox")
     if ($appProcessNameTextBox) {
-        $processNameValue = $appProcessNameTextBox.Text
-        if ($processNameValue -match '\|') {
+        $processNameValue = $appProcessNameTextBox.Text.Trim()
+
+        # Remove deprecated processNames property if it exists
+        if ($appData.PSObject.Properties.Name -contains "processNames") {
+            $appData.PSObject.Properties.Remove("processNames")
+            Write-Verbose "Removed deprecated 'processNames' property"
+        }
+
+        if ([string]::IsNullOrWhiteSpace($processNameValue)) {
+            # If empty, store as empty string
+            Set-PropertyValue -Object $appData -PropertyName "processName" -Value ""
+        } elseif ($processNameValue -match '\|') {
+            # Multiple process names separated by pipe
             Set-PropertyValue -Object $appData -PropertyName "processName" -Value ($processNameValue -split '\|' | ForEach-Object { $_.Trim() })
         } else {
+            # Single process name (already trimmed)
             Set-PropertyValue -Object $appData -PropertyName "processName" -Value $processNameValue
         }
+        # Remove old 'processNames' key if it exists (backward compatibility cleanup)
+        if ($appData.PSObject.Properties.Name -contains "processNames") {
+            $appData.PSObject.Properties.Remove("processNames")
+        }
+        Write-Verbose "Saved processName: $processNameValue"
     }
 
     # Save path (normalize backslashes to forward slashes)
@@ -510,6 +527,21 @@ function Save-CurrentAppData {
     if ($appPathTextBox) {
         $normalizedPath = $appPathTextBox.Text -replace '\\', '/'
         Set-PropertyValue -Object $appData -PropertyName "path" -Value $normalizedPath
+    }
+
+    # Save working directory (normalize backslashes to forward slashes)
+    $workingDirectoryTextBox = $script:Window.FindName("WorkingDirectoryTextBox")
+    if ($workingDirectoryTextBox) {
+        $workingDirValue = $workingDirectoryTextBox.Text.Trim()
+        if ([string]::IsNullOrWhiteSpace($workingDirValue)) {
+            # If working directory is empty, remove the property
+            if ($appData.PSObject.Properties.Name -contains "workingDirectory") {
+                $appData.PSObject.Properties.Remove("workingDirectory")
+            }
+        } else {
+            $normalizedWorkingDir = $workingDirValue -replace '\\', '/'
+            Set-PropertyValue -Object $appData -PropertyName "workingDirectory" -Value $normalizedWorkingDir
+        }
     }
 
     # Save arguments
@@ -522,12 +554,20 @@ function Save-CurrentAppData {
     $gameStartActionCombo = $script:Window.FindName("GameStartActionCombo")
     if ($gameStartActionCombo -and $gameStartActionCombo.SelectedItem) {
         Set-PropertyValue -Object $appData -PropertyName "gameStartAction" -Value $gameStartActionCombo.SelectedItem.Tag
+        # Remove old 'startAction' key if it exists (backward compatibility cleanup)
+        if ($appData.PSObject.Properties.Name -contains "startAction") {
+            $appData.PSObject.Properties.Remove("startAction")
+        }
     }
 
     # Save end action
     $gameEndActionCombo = $script:Window.FindName("GameEndActionCombo")
     if ($gameEndActionCombo -and $gameEndActionCombo.SelectedItem) {
         Set-PropertyValue -Object $appData -PropertyName "gameEndAction" -Value $gameEndActionCombo.SelectedItem.Tag
+        # Remove old 'endAction' key if it exists (backward compatibility cleanup)
+        if ($appData.PSObject.Properties.Name -contains "endAction") {
+            $appData.PSObject.Properties.Remove("endAction")
+        }
     }
 
     # Save termination method
@@ -544,6 +584,10 @@ function Save-CurrentAppData {
             Set-PropertyValue -Object $appData -PropertyName "gracefulTimeoutMs" -Value ($timeoutSeconds * 1000)
         } else {
             Set-PropertyValue -Object $appData -PropertyName "gracefulTimeoutMs" -Value 5000
+        }
+        # Remove old 'gracefulTimeout' key if it exists (backward compatibility cleanup)
+        if ($appData.PSObject.Properties.Name -contains "gracefulTimeout") {
+            $appData.PSObject.Properties.Remove("gracefulTimeout")
         }
     }
 

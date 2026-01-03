@@ -598,17 +598,25 @@ class AppManager {
         }
 
         try {
-            $arguments = if ($appConfig.arguments -and $appConfig.arguments -ne "") {
-                $appConfig.arguments
-            } else {
-                $null
+            # Build Start-Process parameters
+            $processParams = @{
+                FilePath = $appConfig.path
             }
 
-            if ($arguments) {
-                Start-Process -FilePath $appConfig.path -ArgumentList $arguments
-            } else {
-                Start-Process -FilePath $appConfig.path
+            # Add arguments if specified
+            if ($appConfig.arguments -and $appConfig.arguments -ne "") {
+                $processParams['ArgumentList'] = $appConfig.arguments
             }
+
+            # Add working directory if specified and valid
+            if ($appConfig.workingDirectory -and $appConfig.workingDirectory -ne "") {
+                if (Test-Path -Path $appConfig.workingDirectory -PathType Container) {
+                    $processParams['WorkingDirectory'] = $appConfig.workingDirectory
+                }
+            }
+
+            # Start process with built parameters
+            Start-Process @processParams
             Write-LocalizedHost -Messages $this.Messages -Key "console_app_started" -Args @($appId) -Default ("Application started: {0}" -f $appId) -Level "OK" -Component "AppManager"
             return $true
         } catch {

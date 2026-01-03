@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     ConfigEditor UI Module - Main UI class for Focus Game Deck configuration editor.
 
@@ -101,16 +101,17 @@ class ConfigEditorUI {
 
             # Parse XAML
             Write-Verbose "[DEBUG] ConfigEditorUI: Step 3/6 - Parsing XAML"
+            $xamlReaderType = "System.Windows.Markup.XamlReader" -as [type]
             $xamlLoader = [ScriptBlock]::Create('
-                param($xmlReader)
-                return [System.Windows.Markup.XamlReader]::Load($xmlReader)
+                param($xmlReader, $xamlReaderType)
+                return $xamlReaderType::Load($xmlReader)
             ')
 
             # Create XmlReader from content
             $stringReader = New-Object System.IO.StringReader($xamlContent)
             $xmlReader = [System.Xml.XmlReader]::Create($stringReader)
 
-            $this.Window = $xamlLoader.Invoke($xmlReader)[0]
+            $this.Window = $xamlLoader.Invoke($xmlReader, $xamlReaderType)[0]
             $xmlReader.Close()
             $stringReader.Close()
             Write-Verbose "[DEBUG] ConfigEditorUI: Step 4/6 - XAML parsed successfully"
@@ -1914,11 +1915,11 @@ $($LocalizedMessages.readmeFooter)
             }
 
             $checkTimer.add_Tick({
-                    param($sender, $e)
-                    $tag = $sender.Tag
+                    param($s, $e)
+                    $tag = $s.Tag
 
                     if ($tag.AsyncResult.IsCompleted) {
-                        $sender.Stop()
+                        $s.Stop()
 
                         try {
                             $result = $tag.Job.EndInvoke($tag.AsyncResult)
@@ -2062,11 +2063,11 @@ $($LocalizedMessages.readmeFooter)
             }
 
             $checkTimer.add_Tick({
-                    param($sender, $e)
-                    $tag = $sender.Tag
+                    param($s, $e)
+                    $tag = $s.Tag
 
                     if ($tag.AsyncResult.IsCompleted) {
-                        $sender.Stop()
+                        $s.Stop()
 
                         try {
                             $result = $tag.Job.EndInvoke($tag.AsyncResult)

@@ -48,7 +48,7 @@ function Invoke-ConfigurationValidation {
 
         Validation Rules:
         - Game ID: Required, alphanumeric with hyphens and underscores only
-        - Steam AppID: Required for steam platform, must be 7-digit numeric
+        - Steam AppID: Required for steam platform, must be numeric only (1 or more digits)
         - Epic Game ID: Required for epic platform, must start with 'apps/' or 'com.epicgames.launcher://apps/'
         - Riot Game ID: Required for riot platform
         - Executable Path: Required for standalone/direct platforms, must exist
@@ -60,7 +60,7 @@ function Invoke-ConfigurationValidation {
         The platform type: steam, epic, riot, standalone, or direct.
 
     .PARAMETER SteamAppId
-        Steam Application ID. Required when Platform is 'steam'. Must be 7-digit numeric.
+        Steam Application ID. Required when Platform is 'steam'. Must be numeric only (1 or more digits).
 
     .PARAMETER EpicGameId
         Epic Games Launcher Game ID. Required when Platform is 'epic'.
@@ -130,13 +130,13 @@ function Invoke-ConfigurationValidation {
     # Platform-specific validations
     switch ($Platform) {
         'steam' {
-            # Steam AppID: required + 7-digit numeric
+            # Steam AppID: required + numeric only (1 or more digits)
             if ([string]::IsNullOrWhiteSpace($SteamAppId)) {
                 $errors += @{
                     Control = 'SteamAppIdTextBox'
                     Key = 'steamAppIdRequired'
                 }
-            } elseif ($SteamAppId -notmatch '^[0-9]{7}$') {
+            } elseif ($SteamAppId -notmatch '^[0-9]+$') {
                 $errors += @{
                     Control = 'SteamAppIdTextBox'
                     Key = 'steamAppIdMust7Digits'
