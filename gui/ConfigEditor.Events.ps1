@@ -939,6 +939,28 @@ class ConfigEditorEvents {
                 $useOBSCheck = $script:Window.FindName("UseOBSIntegrationCheckBox")
                 if ($useOBSCheck) {
                     $useOBSCheck.IsChecked = ($gameData.integrations -and $gameData.integrations.useOBS) -or ($gameData.appsToManage -contains "obs")
+
+                    # Load OBS game-specific settings
+                    $obsSettings = if ($gameData.integrations -and $gameData.integrations.obsSettings) { $gameData.integrations.obsSettings } else { $null }
+
+                    # Load replay buffer behavior
+                    $replayBufferBehaviorCombo = $script:Window.FindName("OBSReplayBufferBehaviorCombo")
+                    if ($replayBufferBehaviorCombo) {
+                        $behavior = if ($obsSettings -and $obsSettings.replayBufferBehavior) { $obsSettings.replayBufferBehavior } else { "UseGlobal" }
+                        $this.SetComboBoxSelectionByTag($replayBufferBehaviorCombo, $behavior)
+                    }
+
+                    # Load target scene name
+                    $targetSceneTextBox = $script:Window.FindName("OBSTargetSceneTextBox")
+                    if ($targetSceneTextBox) {
+                        $targetSceneTextBox.Text = if ($obsSettings -and $obsSettings.targetSceneName) { $obsSettings.targetSceneName } else { "" }
+                    }
+
+                    # Load enable rollback
+                    $enableRollbackCheckBox = $script:Window.FindName("OBSEnableRollbackCheckBox")
+                    if ($enableRollbackCheckBox) {
+                        $enableRollbackCheckBox.IsChecked = ($obsSettings -and $obsSettings.enableRollback) -eq $true
+                    }
                 }
 
                 $useDiscordCheck = $script:Window.FindName("UseDiscordIntegrationCheckBox")

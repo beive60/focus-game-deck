@@ -304,6 +304,43 @@ function Save-CurrentGameData {
         } else {
             $gameData.integrations.useOBS = [bool]$useOBSCheck.IsChecked
         }
+
+        # Save OBS game-specific settings if enabled
+        if ($useOBSCheck.IsChecked) {
+            if (-not $gameData.integrations.PSObject.Properties["obsSettings"]) {
+                $gameData.integrations | Add-Member -NotePropertyName "obsSettings" -NotePropertyValue ([PSCustomObject]@{}) -Force
+            }
+
+            # Save replay buffer behavior
+            $replayBufferBehaviorCombo = $script:Window.FindName("OBSReplayBufferBehaviorCombo")
+            if ($replayBufferBehaviorCombo -and $replayBufferBehaviorCombo.SelectedItem) {
+                $behavior = $replayBufferBehaviorCombo.SelectedItem.Tag
+                Set-PropertyValue -Object $gameData.integrations.obsSettings -PropertyName "replayBufferBehavior" -Value $behavior
+            } else {
+                # Default to UseGlobal if not set
+                Set-PropertyValue -Object $gameData.integrations.obsSettings -PropertyName "replayBufferBehavior" -Value "UseGlobal"
+            }
+
+            # Save target scene name
+            $targetSceneTextBox = $script:Window.FindName("OBSTargetSceneTextBox")
+            if ($targetSceneTextBox) {
+                $sceneName = $targetSceneTextBox.Text.Trim()
+                Set-PropertyValue -Object $gameData.integrations.obsSettings -PropertyName "targetSceneName" -Value $sceneName
+            }
+
+            # Save enable rollback
+            $enableRollbackCheckBox = $script:Window.FindName("OBSEnableRollbackCheckBox")
+            if ($enableRollbackCheckBox) {
+                Set-PropertyValue -Object $gameData.integrations.obsSettings -PropertyName "enableRollback" -Value ([bool]$enableRollbackCheckBox.IsChecked)
+            } else {
+                Set-PropertyValue -Object $gameData.integrations.obsSettings -PropertyName "enableRollback" -Value $false
+            }
+        } else {
+            # Remove obsSettings if OBS integration is disabled
+            if ($gameData.integrations.PSObject.Properties["obsSettings"]) {
+                $gameData.integrations.PSObject.Properties.Remove("obsSettings")
+            }
+        }
     }
 
     # save discord setting
