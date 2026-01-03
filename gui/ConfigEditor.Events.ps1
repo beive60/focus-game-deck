@@ -949,16 +949,16 @@
                 $useVTubeCheck = $script:Window.FindName("UseVTubeStudioIntegrationCheckBox")
                 if ($useVTubeCheck) {
                     $useVTubeCheck.IsChecked = ($gameData.integrations -and $gameData.integrations.useVTubeStudio) -or ($gameData.appsToManage -contains "vtubeStudio")
-                    
+
                     # Load VTube Studio game-specific settings
                     $vtsSettings = if ($gameData.integrations -and $gameData.integrations.vtubeStudioSettings) { $gameData.integrations.vtubeStudioSettings } else { $null }
-                    
+
                     # Load model ID
                     $modelIdTextBox = $script:Window.FindName("VTubeModelIdTextBox")
                     if ($modelIdTextBox) {
                         $modelIdTextBox.Text = if ($vtsSettings -and $vtsSettings.modelId) { $vtsSettings.modelId } else { "" }
                     }
-                    
+
                     # Load launch hotkeys
                     $launchHotkeysTextBox = $script:Window.FindName("VTubeOnLaunchHotkeysTextBox")
                     if ($launchHotkeysTextBox) {
@@ -968,7 +968,7 @@
                             $launchHotkeysTextBox.Text = ""
                         }
                     }
-                    
+
                     # Load exit hotkeys
                     $exitHotkeysTextBox = $script:Window.FindName("VTubeOnExitHotkeysTextBox")
                     if ($exitHotkeysTextBox) {
@@ -978,13 +978,13 @@
                             $exitHotkeysTextBox.Text = ""
                         }
                     }
-                    
+
                     # Enable/disable controls based on checkbox state
                     $isEnabled = [bool]$useVTubeCheck.IsChecked
                     if ($modelIdTextBox) { $modelIdTextBox.IsEnabled = $isEnabled }
                     if ($launchHotkeysTextBox) { $launchHotkeysTextBox.IsEnabled = $isEnabled }
                     if ($exitHotkeysTextBox) { $exitHotkeysTextBox.IsEnabled = $isEnabled }
-                    
+
                     $getModelListButton = $script:Window.FindName("GetModelListButton")
                     $getLaunchHotkeyButton = $script:Window.FindName("GetLaunchHotkeyListButton")
                     $getExitHotkeyButton = $script:Window.FindName("GetExitHotkeyListButton")
@@ -1730,15 +1730,14 @@
         try {
             Write-Verbose "[DEBUG] ConfigEditorEvents: Starting VTube Studio"
 
-            # Load the VTubeStudioManager module
-            $vtubeManagerPath = Join-Path -Path $this.stateManager.ProjectRoot -ChildPath "src/modules/VTubeStudioManager.ps1"
-            if (-not (Test-Path $vtubeManagerPath)) {
-                Write-Verbose "[ERROR] VTubeStudioManager module not found at: $vtubeManagerPath"
+            # Check if New-VTubeStudioManager function is available via global reference
+            if (-not $global:NewVTubeStudioManagerFunc) {
+                Write-Verbose "[ERROR] VTubeStudioManager function not registered in global scope"
                 Show-SafeMessage -Key "vtube_startup_failed" -MessageType "Error"
                 return
             }
 
-            . $vtubeManagerPath
+            Write-Verbose "[DEBUG] ConfigEditorEvents: New-VTubeStudioManager function found in global scope"
 
             # Get VTube Studio configuration
             $vtubeConfig = $this.stateManager.ConfigData.integrations.vtubeStudio
@@ -1748,9 +1747,14 @@
                 return
             }
 
-            # Create VTubeStudioManager instance
+            Write-Verbose "[DEBUG] ConfigEditorEvents: VTube configuration found"
+
+            # Create VTubeStudioManager instance using global function reference
             $messages = $this.uiManager.Messages
-            $vtubeManager = New-VTubeStudioManager -VTubeConfig $vtubeConfig -Messages $messages
+            Write-Verbose "[DEBUG] ConfigEditorEvents: Creating VTubeStudioManager instance"
+            $vtubeManager = & $global:NewVTubeStudioManagerFunc -VTubeConfig $vtubeConfig -Messages $messages
+
+            Write-Verbose "[DEBUG] ConfigEditorEvents: VTubeStudioManager instance created, starting VTube Studio"
 
             # Start VTube Studio
             $success = $vtubeManager.StartVTubeStudio()
@@ -1758,15 +1762,16 @@
             if ($success) {
                 $message = $this.uiManager.GetLocalizedMessage("vtube_startup_complete")
                 $this.uiManager.ShowNotification($message, "Success")
-                Write-Verbose "VTube Studio started successfully"
+                Write-Verbose "[OK] VTube Studio started successfully"
             } else {
                 $message = $this.uiManager.GetLocalizedMessage("vtube_startup_failed")
                 $this.uiManager.ShowNotification($message, "Error")
-                Write-Verbose "Failed to start VTube Studio"
+                Write-Verbose "[WARNING] Failed to start VTube Studio"
             }
 
         } catch {
             Write-Verbose "[ERROR] ConfigEditorEvents: Failed to start VTube Studio - $($_.Exception.Message)"
+            Write-Verbose "[ERROR] Stack trace: $($_.ScriptStackTrace)"
             Show-SafeMessage -Key "vtube_startup_failed_error" -Args @($_.Exception.Message) -MessageType "Error"
         }
     }
@@ -1775,7 +1780,7 @@
     [void] HandleVTubeIntegrationCheckChanged() {
         try {
             $useVTubeCheckBox = $script:Window.FindName("UseVTubeStudioIntegrationCheckBox")
-            
+
             # Get all VTS controls
             $modelIdTextBox = $script:Window.FindName("VTubeModelIdTextBox")
             $launchHotkeysTextBox = $script:Window.FindName("VTubeOnLaunchHotkeysTextBox")
@@ -1783,10 +1788,10 @@
             $getModelListButton = $script:Window.FindName("GetModelListButton")
             $getLaunchHotkeyButton = $script:Window.FindName("GetLaunchHotkeyListButton")
             $getExitHotkeyButton = $script:Window.FindName("GetExitHotkeyListButton")
-            
+
             if ($useVTubeCheckBox) {
                 $isEnabled = [bool]$useVTubeCheckBox.IsChecked
-                
+
                 # Enable/disable all VTS controls based on checkbox state
                 if ($modelIdTextBox) { $modelIdTextBox.IsEnabled = $isEnabled }
                 if ($launchHotkeysTextBox) { $launchHotkeysTextBox.IsEnabled = $isEnabled }
@@ -1805,15 +1810,12 @@
         try {
             Write-Verbose "[DEBUG] ConfigEditorEvents: Getting VTube Studio model list"
 
-            # Load the VTubeStudioManager module
-            $vtubeManagerPath = Join-Path -Path $this.stateManager.ProjectRoot -ChildPath "src/modules/VTubeStudioManager.ps1"
-            if (-not (Test-Path $vtubeManagerPath)) {
-                Write-Verbose "[ERROR] VTubeStudioManager module not found at: $vtubeManagerPath"
+            # Check if VTubeStudioManager function is available
+            if (-not $global:NewVTubeStudioManagerFunc) {
+                Write-Verbose "[ERROR] VTubeStudioManager function not registered"
                 Show-SafeMessage -Key "vtube_get_models_failed" -MessageType "Error"
                 return
             }
-
-            . $vtubeManagerPath
 
             # Get VTube Studio configuration
             $vtubeConfig = $this.stateManager.ConfigData.integrations.vtubeStudio
@@ -1825,7 +1827,7 @@
 
             # Create VTubeStudioManager instance
             $messages = $this.uiManager.Messages
-            $vtubeManager = New-VTubeStudioManager -VTubeConfig $vtubeConfig -Messages $messages
+            $vtubeManager = & $global:NewVTubeStudioManagerFunc -VTubeConfig $vtubeConfig -Messages $messages
 
             # Check if VTube Studio is running, start it if not
             if (-not $vtubeManager.IsVTubeStudioRunning()) {
@@ -1884,14 +1886,32 @@
                 $okButton.Content = "OK"
                 $okButton.Width = 80
                 $okButton.Margin = "0,0,10,0"
+
+                # Store references for event handlers
+                $dialogRef = $dialog
+                $listBoxRef = $listBox
+                $windowRef = $script:Window
+
                 $okButton.add_Click({
-                    if ($listBox.SelectedItem) {
-                        $modelIdTextBox = $script:Window.FindName("VTubeModelIdTextBox")
-                        if ($modelIdTextBox) {
-                            $modelIdTextBox.Text = $listBox.SelectedItem.Tag
+                    try {
+                        Write-Verbose "[DEBUG] OK button clicked"
+                        if ($listBoxRef.SelectedItem) {
+                            $selectedModelId = $listBoxRef.SelectedItem.Tag
+                            Write-Verbose "[DEBUG] Selected model ID: $selectedModelId"
+
+                            $modelIdTextBox = $windowRef.FindName("VTubeModelIdTextBox")
+                            Write-Verbose "[DEBUG] Found textbox: $($modelIdTextBox -ne $null)"
+
+                            if ($modelIdTextBox) {
+                                $modelIdTextBox.Text = $selectedModelId
+                                Write-Verbose "[DEBUG] Set textbox value to: $selectedModelId"
+                            }
                         }
-                        $dialog.DialogResult = $true
-                        $dialog.Close()
+                        $dialogRef.DialogResult = $true
+                        $dialogRef.Close()
+                        Write-Verbose "[DEBUG] Dialog closed successfully"
+                    } catch {
+                        Write-Verbose "[ERROR] Error in OK button click handler: $_"
                     }
                 }.GetNewClosure())
 
@@ -1899,8 +1919,8 @@
                 $cancelButton.Content = "Cancel"
                 $cancelButton.Width = 80
                 $cancelButton.add_Click({
-                    $dialog.DialogResult = $false
-                    $dialog.Close()
+                    $dialogRef.DialogResult = $false
+                    $dialogRef.Close()
                 }.GetNewClosure())
 
                 $buttonPanel.Children.Add($okButton)
@@ -1929,15 +1949,12 @@
         try {
             Write-Verbose "[DEBUG] ConfigEditorEvents: Getting VTube Studio hotkey list for $type"
 
-            # Load the VTubeStudioManager module
-            $vtubeManagerPath = Join-Path -Path $this.stateManager.ProjectRoot -ChildPath "src/modules/VTubeStudioManager.ps1"
-            if (-not (Test-Path $vtubeManagerPath)) {
-                Write-Verbose "[ERROR] VTubeStudioManager module not found at: $vtubeManagerPath"
+            # Check if VTubeStudioManager function is available
+            if (-not $global:NewVTubeStudioManagerFunc) {
+                Write-Verbose "[ERROR] VTubeStudioManager function not registered"
                 Show-SafeMessage -Key "vtube_get_hotkeys_failed" -MessageType "Error"
                 return
             }
-
-            . $vtubeManagerPath
 
             # Get VTube Studio configuration
             $vtubeConfig = $this.stateManager.ConfigData.integrations.vtubeStudio
@@ -1949,7 +1966,7 @@
 
             # Create VTubeStudioManager instance
             $messages = $this.uiManager.Messages
-            $vtubeManager = New-VTubeStudioManager -VTubeConfig $vtubeConfig -Messages $messages
+            $vtubeManager = & $global:NewVTubeStudioManagerFunc -VTubeConfig $vtubeConfig -Messages $messages
 
             # Check if VTube Studio is running, start it if not
             if (-not $vtubeManager.IsVTubeStudioRunning()) {
@@ -2009,25 +2026,42 @@
                 $okButton.Content = "OK"
                 $okButton.Width = 80
                 $okButton.Margin = "0,0,10,0"
+
+                # Store references for event handlers
+                $dialogRef = $dialog
+                $listBoxRef = $listBox
+                $typeRef = $type
+                $windowRef = $script:Window
+
                 $okButton.add_Click({
-                    if ($listBox.SelectedItems.Count -gt 0) {
-                        $selectedHotkeys = @()
-                        foreach ($item in $listBox.SelectedItems) {
-                            $selectedHotkeys += $item.Tag
+                    try {
+                        Write-Verbose "[DEBUG] Hotkey OK button clicked"
+                        if ($listBoxRef.SelectedItems.Count -gt 0) {
+                            $selectedHotkeys = @()
+                            foreach ($item in $listBoxRef.SelectedItems) {
+                                $selectedHotkeys += $item.Tag
+                            }
+                            Write-Verbose "[DEBUG] Selected hotkeys: $($selectedHotkeys -join ', ')"
+
+                            $targetTextBox = $null
+                            if ($typeRef -eq "launch") {
+                                $targetTextBox = $windowRef.FindName("VTubeOnLaunchHotkeysTextBox")
+                                Write-Verbose "[DEBUG] Target: VTubeOnLaunchHotkeysTextBox"
+                            } else {
+                                $targetTextBox = $windowRef.FindName("VTubeOnExitHotkeysTextBox")
+                                Write-Verbose "[DEBUG] Target: VTubeOnExitHotkeysTextBox"
+                            }
+
+                            if ($targetTextBox) {
+                                $targetTextBox.Text = $selectedHotkeys -join ", "
+                                Write-Verbose "[DEBUG] Set textbox value"
+                            }
                         }
-                        
-                        $targetTextBox = $null
-                        if ($type -eq "launch") {
-                            $targetTextBox = $script:Window.FindName("VTubeOnLaunchHotkeysTextBox")
-                        } else {
-                            $targetTextBox = $script:Window.FindName("VTubeOnExitHotkeysTextBox")
-                        }
-                        
-                        if ($targetTextBox) {
-                            $targetTextBox.Text = $selectedHotkeys -join ", "
-                        }
-                        $dialog.DialogResult = $true
-                        $dialog.Close()
+                        $dialogRef.DialogResult = $true
+                        $dialogRef.Close()
+                        Write-Verbose "[DEBUG] Hotkey dialog closed successfully"
+                    } catch {
+                        Write-Verbose "[ERROR] Error in hotkey OK button click handler: $_"
                     }
                 }.GetNewClosure())
 
@@ -2035,8 +2069,8 @@
                 $cancelButton.Content = "Cancel"
                 $cancelButton.Width = 80
                 $cancelButton.add_Click({
-                    $dialog.DialogResult = $false
-                    $dialog.Close()
+                    $dialogRef.DialogResult = $false
+                    $dialogRef.Close()
                 }.GetNewClosure())
 
                 $buttonPanel.Children.Add($okButton)
@@ -3190,7 +3224,7 @@
             $this.uiManager.Window.FindName("OpenOBSTabButton").add_Click({ $self.HandleOpenIntegrationTab("OBS") }.GetNewClosure())
             $this.uiManager.Window.FindName("OpenDiscordTabButton").add_Click({ $self.HandleOpenIntegrationTab("Discord") }.GetNewClosure())
             $this.uiManager.Window.FindName("OpenVTubeStudioTabButton").add_Click({ $self.HandleOpenIntegrationTab("VTubeStudio") }.GetNewClosure())
-            
+
             # VTube Studio game-specific settings buttons
             $getModelListBtn = $this.uiManager.Window.FindName("GetModelListButton")
             if ($getModelListBtn) { $getModelListBtn.add_Click({ $self.HandleGetModelList() }.GetNewClosure()) }
@@ -3198,7 +3232,7 @@
             if ($getLaunchHotkeyBtn) { $getLaunchHotkeyBtn.add_Click({ $self.HandleGetHotkeyList("launch") }.GetNewClosure()) }
             $getExitHotkeyBtn = $this.uiManager.Window.FindName("GetExitHotkeyListButton")
             if ($getExitHotkeyBtn) { $getExitHotkeyBtn.add_Click({ $self.HandleGetHotkeyList("exit") }.GetNewClosure()) }
-            
+
             # VTube Studio integration checkbox change
             $useVTubeCheckBox = $this.uiManager.Window.FindName("UseVTubeStudioIntegrationCheckBox")
             if ($useVTubeCheckBox) { $useVTubeCheckBox.add_Checked({ $self.HandleVTubeIntegrationCheckChanged() }.GetNewClosure()); $useVTubeCheckBox.add_Unchecked({ $self.HandleVTubeIntegrationCheckChanged() }.GetNewClosure()) }

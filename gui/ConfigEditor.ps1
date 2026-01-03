@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Focus Game Deck - Configuration Editor GUI application.
 
@@ -109,15 +109,15 @@ Write-Verbose "PSScriptRoot: '$PSScriptRoot'"
 if ($script:isExecutable) {
     # In executable mode, the root is the directory where the .exe file is located
     # ps2exe extracts to temp, but we need the actual exe location for external files
-    $appRoot = Split-Path -Parent $currentProcess.Path
+    $script:appRoot = Split-Path -Parent $currentProcess.Path
 } else {
     # In development (script) mode, calculate the project root relative to the current script
     # For ConfigEditor.ps1 in /gui, the root is one level up
-    $appRoot = Split-Path -Parent $PSScriptRoot
+    $script:appRoot = Split-Path -Parent $PSScriptRoot
 }
 
-Write-Verbose "Calculated appRoot: '$appRoot'"
-if ([string]::IsNullOrEmpty($appRoot)) {
+Write-Verbose "Calculated appRoot: '$script:appRoot'"
+if ([string]::IsNullOrEmpty($script:appRoot)) {
     Write-Verbose "ERROR: appRoot is NULL or EMPTY! Join-Path will fail."
 }
 
@@ -133,15 +133,15 @@ function Test-Prerequisites {
     }
 
     # Define required external files based on execution mode
-    $mainWindowPath = Join-Path -Path $appRoot -ChildPath "gui/MainWindow.xaml"
+    $mainWindowPath = Join-Path -Path $script:appRoot -ChildPath "gui/MainWindow.xaml"
     # Check MainWindow.xaml - only fatal if missing AND embedded XAML not available
     if (-not (Test-Path $mainWindowPath) -and -not $Global:Xaml_MainWindow) {
         throw "Fatal error: Required file not found and no embedded XAML available: $mainWindowPath"
     }
 
     $requiredFiles = @(
-        (Join-Path -Path $appRoot -ChildPath "localization"),
-        (Join-Path -Path $appRoot -ChildPath "config/config.json")
+        (Join-Path -Path $script:appRoot -ChildPath "localization"),
+        (Join-Path -Path $script:appRoot -ChildPath "config/config.json")
     )
 
     # Add MainWindow.xaml to required files list only if it exists (optional in bundled mode)
@@ -343,6 +343,7 @@ function Test-UIMappings {
 
 # Initialize the application
 function Initialize-ConfigEditor {
+    Write-Verbose "[TRACE] Initialize-ConfigEditor: FUNCTION STARTED"
     try {
         # Debug mode information
         Write-Verbose "[DEBUG] ConfigEditor: Debug mode enabled"
@@ -369,35 +370,35 @@ function Initialize-ConfigEditor {
 
             try {
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.JsonHelper.ps1"
-                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.JsonHelper.ps1")
+                . (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.JsonHelper.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.JsonHelper.ps1"
 
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Mappings.ps1"
-                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.Mappings.ps1")
+                . (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.Mappings.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Mappings.ps1"
 
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.State.ps1"
-                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.State.ps1")
+                . (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.State.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.State.ps1"
 
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Localization.ps1"
-                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.Localization.ps1")
+                . (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.Localization.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Localization.ps1"
 
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.UI.ps1"
-                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.UI.ps1")
+                . (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.UI.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.UI.ps1"
 
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Events.ps1"
-                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.Events.ps1")
+                . (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.Events.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Events.ps1"
 
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - scripts/Invoke-ConfigurationValidation.ps1"
-                . (Join-Path -Path $appRoot -ChildPath "scripts/Invoke-ConfigurationValidation.ps1")
+                . (Join-Path -Path $script:appRoot -ChildPath "scripts/Invoke-ConfigurationValidation.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: Invoke-ConfigurationValidation.ps1"
 
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Save.ps1"
-                . (Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.Save.ps1")
+                . (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.Save.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Save.ps1"
             } catch {
                 # The error record ($_) from a dot-sourcing failure contains details
@@ -410,20 +411,23 @@ function Initialize-ConfigEditor {
         }
 
         Write-Verbose "[OK] ConfigEditor: Script modules loaded successfully"
+        Write-Verbose "[TRACE] Initialize-ConfigEditor: Reached Step 3"
 
         # Step 3: Prepare configuration path
         # Note: Actual config loading and generation happens in ConfigEditorState.LoadConfiguration()
         Write-Verbose "[INFO] ConfigEditor: Preparing configuration path"
-        $script:ConfigPath = Join-Path -Path $appRoot -ChildPath "config/config.json"
+        $script:ConfigPath = Join-Path -Path $script:appRoot -ChildPath "config/config.json"
         Write-Verbose "[INFO] ConfigEditor: Config path set to: $($script:ConfigPath)"
 
         # Step 4: Validate UI mappings
+        Write-Verbose "[TRACE] Initialize-ConfigEditor: Reached Step 4"
         if (-not (Test-UIMappings)) {
             Write-Verbose "[WARNING] ConfigEditor: UI mappings validation failed - Some features may not work properly"
         }
 
         # Step 5: Initialize state manager with config path
         # This will load existing config.json or generate a new one with defaults
+        Write-Verbose "[TRACE] Initialize-ConfigEditor: Reached Step 5"
         Write-Verbose "[INFO] ConfigEditor: Initializing state manager"
         try {
             $stateManager = [ConfigEditorState]::new($script:ConfigPath)
@@ -440,14 +444,19 @@ function Initialize-ConfigEditor {
 
             # Store state manager in script scope for access from functions
             $script:StateManager = $stateManager
+            Write-Verbose "[TRACE] Initialize-ConfigEditor: StateManager stored in script scope"
         } catch {
             Write-Error "[ERROR] ConfigEditor: Failed to initialize state manager: $($_.Exception.Message)"
+            Write-Verbose "[TRACE] Initialize-ConfigEditor: ERROR in Step 5 - throwing exception"
             throw
         }
 
         # Step 6: Import additional modules (Version, UpdateChecker, etc.)
+        Write-Verbose "[TRACE] Initialize-ConfigEditor: Reached Step 6 (CRITICAL POINT)"
         Write-Verbose "[INFO] ConfigEditor: Importing additional modules"
+        Write-Verbose "[TRACE] === ABOUT TO CALL Import-AdditionalModules ==="
         Import-AdditionalModules
+        Write-Verbose "[TRACE] === RETURNED FROM Import-AdditionalModules ==="
 
         # Step 6.5: Verify global function references are set
         Write-Verbose "[INFO] ConfigEditor: Verifying global function references"
@@ -463,6 +472,7 @@ function Initialize-ConfigEditor {
         }
 
         # Step 7: Initialize localization
+        Write-Verbose "[TRACE] Initialize-ConfigEditor: Reached Step 7"
         Write-Verbose "[INFO] ConfigEditor: Initializing localization"
         try {
             # Set script:ConfigData for localization to access
@@ -478,7 +488,7 @@ function Initialize-ConfigEditor {
             }
 
             # Pass shared project root into localization class (PowerShell classes cannot access script-scoped variables)
-            $script:Localization = [ConfigEditorLocalization]::new($appRoot)
+            $script:Localization = [ConfigEditorLocalization]::new($script:appRoot)
 
             # Re-detect language with ConfigData now available
             $script:Localization.DetectLanguage()
@@ -514,7 +524,7 @@ function Initialize-ConfigEditor {
                 ComboBoxItem = $ComboBoxItemMappings
             }
             # Pass project root into UI class so it can construct file paths without referencing script-scoped variables
-            $uiManager = [ConfigEditorUI]::new($stateManager, $allMappings, $script:Localization, $appRoot)
+            $uiManager = [ConfigEditorUI]::new($stateManager, $allMappings, $script:Localization, $script:appRoot)
 
             Write-Verbose "[DEBUG] ConfigEditor: ConfigEditorUI instance created - $($null -ne $uiManager)"
 
@@ -556,7 +566,7 @@ function Initialize-ConfigEditor {
 
         # Step 9: Initialize event handler
         # Pass project root into events handler so it can construct file paths without referencing script-scoped variables
-        $eventHandler = [ConfigEditorEvents]::new($uiManager, $stateManager, $appRoot, $script:isExecutable)
+        $eventHandler = [ConfigEditorEvents]::new($uiManager, $stateManager, $script:appRoot, $script:isExecutable)
 
         # Connect event handler to UI manager
         $uiManager.EventHandler = $eventHandler
@@ -664,7 +674,7 @@ function Initialize-ConfigEditor {
     } catch {
         Write-Verbose "[ERROR] ConfigEditor: Initialization failed - $($_.Exception.Message)"
         if ($_.InvocationInfo.ScriptName) {
-            $relativePath = $_.InvocationInfo.ScriptName -replace [regex]::Escape($appRoot), "."
+            $relativePath = $_.InvocationInfo.ScriptName -replace [regex]::Escape($script:appRoot), "."
             $relativePath = $relativePath -replace "\\", "/"  # Convert to forward slashes
             Write-Verbose "[ERROR] ConfigEditor: Module - $relativePath"
         } else {
@@ -689,16 +699,42 @@ function Initialize-ConfigEditor {
 
 # Import additional modules after WPF assemblies are loaded
 function Import-AdditionalModules {
+    Write-Verbose "[DEBUG] Import-AdditionalModules: FUNCTION ENTERED - appRoot=$script:appRoot"
     try {
+        Write-Verbose "[DEBUG] Import-AdditionalModules: Inside try block"
         # Load modules individually with dedicated error handling for each.
         # This makes the loading process more robust, as a failure in one optional
         # module will not prevent others from being loaded.
 
-        # --- Load LanguageHelper.ps1 ---
+        # --- Load LanguageHelper.ps1 - Load to GLOBAL scope ---
         try {
             Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing additional module - scripts/LanguageHelper.ps1"
-            . (Join-Path -Path $appRoot -ChildPath "scripts/LanguageHelper.ps1")
-            Write-Verbose "[OK] ConfigEditor: Loaded: LanguageHelper.ps1"
+            $languageHelperPath = Join-Path -Path $script:appRoot -ChildPath "scripts/LanguageHelper.ps1"
+            Write-Verbose "[DEBUG] ConfigEditor: LanguageHelper.ps1 path: $languageHelperPath"
+            Write-Verbose "[DEBUG] ConfigEditor: LanguageHelper.ps1 exists: $(Test-Path $languageHelperPath)"
+
+            if (Test-Path $languageHelperPath) {
+                # Load the script content and execute it in the global scope
+                $languageHelperScript = Get-Content -Path $languageHelperPath -Raw
+                # Replace 'function' with 'function global:' to make functions globally available
+                $languageHelperScript = $languageHelperScript -replace '(?m)^(\s*)function\s+([A-Za-z-]+)', '$1function global:$2'
+                # Replace '$script:' with '$global:' for variables
+                $languageHelperScript = $languageHelperScript -replace '\$script:', '$global:'
+
+                . ([ScriptBlock]::Create($languageHelperScript))
+                Write-Verbose "[OK] ConfigEditor: Loaded: LanguageHelper.ps1 with global scope"
+
+                # Verify Write-LocalizedHost function is available and register it
+                if (Test-Path function:\Write-LocalizedHost) {
+                    Write-Verbose "[OK] ConfigEditor: Write-LocalizedHost function is available globally"
+                    $global:WriteLocalizedHostFunc = Get-Command Write-LocalizedHost
+                    Write-Verbose "[OK] ConfigEditor: Write-LocalizedHost global reference set"
+                } else {
+                    Write-Verbose "[WARN] ConfigEditor: Write-LocalizedHost function not found after loading LanguageHelper.ps1"
+                }
+            } else {
+                Write-Warning "[WARN] ConfigEditor: 'scripts/LanguageHelper.ps1' not found at expected path"
+            }
         } catch {
             Write-Warning "[WARN] ConfigEditor: Could not load 'scripts/LanguageHelper.ps1'. Some functionality may be affected. Details: $($_.Exception.Message)"
         }
@@ -706,7 +742,7 @@ function Import-AdditionalModules {
         # --- Load Version.ps1 (for version info) - Load to GLOBAL scope ---
         try {
             Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing additional module - build-tools/Version.ps1"
-            $versionPath = Join-Path -Path $appRoot -ChildPath "build-tools/Version.ps1"
+            $versionPath = Join-Path -Path $script:appRoot -ChildPath "build-tools/Version.ps1"
             Write-Verbose "[DEBUG] ConfigEditor: Version.ps1 path: $versionPath"
             Write-Verbose "[DEBUG] ConfigEditor: Version.ps1 exists: $(Test-Path $versionPath)"
 
@@ -745,7 +781,7 @@ function Import-AdditionalModules {
         # --- Load UpdateChecker.ps1 (for update checks) - Load to GLOBAL scope ---
         try {
             Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing additional module - src/modules/UpdateChecker.ps1"
-            $updateCheckerPath = Join-Path -Path $appRoot -ChildPath "src/modules/UpdateChecker.ps1"
+            $updateCheckerPath = Join-Path -Path $script:appRoot -ChildPath "src/modules/UpdateChecker.ps1"
             Write-Verbose "[DEBUG] ConfigEditor: UpdateChecker.ps1 path: $updateCheckerPath"
             Write-Verbose "[DEBUG] ConfigEditor: UpdateChecker.ps1 exists: $(Test-Path $updateCheckerPath)"
 
@@ -775,6 +811,58 @@ function Import-AdditionalModules {
             }
         } catch {
             Write-Verbose "[WARN] ConfigEditor: Could not load 'src/modules/UpdateChecker.ps1'. Update checks will be disabled. Details: $($_.Exception.Message)"
+        }
+
+        # --- Load WebSocketAppManagerBase.ps1 (for VTube Studio integration) ---
+        try {
+            Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing additional module - src/modules/WebSocketAppManagerBase.ps1"
+            $websocketBasePath = Join-Path -Path $script:appRoot -ChildPath "src/modules/WebSocketAppManagerBase.ps1"
+            Write-Verbose "[DEBUG] ConfigEditor: WebSocketAppManagerBase.ps1 path: $websocketBasePath"
+            Write-Verbose "[DEBUG] ConfigEditor: WebSocketAppManagerBase.ps1 exists: $(Test-Path $websocketBasePath)"
+
+            if (Test-Path $websocketBasePath) {
+                # Load the module normally (classes and functions)
+                . $websocketBasePath
+                Write-Verbose "[OK] ConfigEditor: Loaded: WebSocketAppManagerBase.ps1"
+
+                # Explicitly register the function in global scope
+                if (Test-Path function:\New-WebSocketAppManagerBase) {
+                    $global:NewWebSocketAppManagerBaseFunc = Get-Command New-WebSocketAppManagerBase
+                    Write-Verbose "[OK] ConfigEditor: New-WebSocketAppManagerBase function registered globally"
+                } else {
+                    Write-Verbose "[WARN] ConfigEditor: New-WebSocketAppManagerBase function not found after loading WebSocketAppManagerBase.ps1"
+                }
+            } else {
+                Write-Verbose "[WARN] ConfigEditor: WebSocketAppManagerBase.ps1 not found at: $websocketBasePath"
+            }
+        } catch {
+            Write-Warning "[WARN] ConfigEditor: Could not load 'src/modules/WebSocketAppManagerBase.ps1'. VTube Studio integration may be affected. Details: $($_.Exception.Message)"
+        }
+
+        # --- Load VTubeStudioManager.ps1 (for VTube Studio integration) ---
+        try {
+            Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing additional module - src/modules/VTubeStudioManager.ps1"
+            $vtubeManagerPath = Join-Path -Path $script:appRoot -ChildPath "src/modules/VTubeStudioManager.ps1"
+            Write-Verbose "[DEBUG] ConfigEditor: VTubeStudioManager.ps1 path: $vtubeManagerPath"
+            Write-Verbose "[DEBUG] ConfigEditor: VTubeStudioManager.ps1 exists: $(Test-Path $vtubeManagerPath)"
+
+            if (Test-Path $vtubeManagerPath) {
+                # Load the module normally (classes and functions)
+                . $vtubeManagerPath
+                Write-Verbose "[OK] ConfigEditor: Loaded: VTubeStudioManager.ps1"
+
+                # Explicitly register the function in global scope
+                if (Test-Path function:\New-VTubeStudioManager) {
+                    $global:NewVTubeStudioManagerFunc = Get-Command New-VTubeStudioManager
+                    Write-Verbose "[OK] ConfigEditor: New-VTubeStudioManager function registered globally"
+                } else {
+                    Write-Verbose "[WARN] ConfigEditor: New-VTubeStudioManager function not found after loading VTubeStudioManager.ps1"
+                }
+            } else {
+                Write-Verbose "[WARN] ConfigEditor: VTubeStudioManager.ps1 not found at: $vtubeManagerPath"
+            }
+        } catch {
+            Write-Warning "[WARN] ConfigEditor: Could not load 'src/modules/VTubeStudioManager.ps1'. VTube Studio integration will be disabled. Details: $($_.Exception.Message)"
         }
     } catch {
         Write-Verbose "[WARNING] ConfigEditor: Failed to import additional modules - $($_.Exception.Message)"
@@ -1169,7 +1257,7 @@ function Show-LanguageChangeRestartMessage {
                 # Get the current script path
                 $currentScript = $PSCommandPath
                 if (-not $currentScript) {
-                    $currentScript = Join-Path -Path $appRoot -ChildPath "gui/ConfigEditor.ps1"
+                    $currentScript = Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.ps1"
                 }
 
                 # Start new instance with proper process configuration
@@ -1412,9 +1500,8 @@ function Show-SafeMessage {
                 }
             } elseif ($script:Localization) {
                 $messageText = $script:Localization.GetMessage($Key, $FormatArgs)
-            } elseif ($script:UIManager) {
-                $messageText = $script:UIManager.GetLocalizedMessage($Key)
-                if ($FormatArgs -and $FormatArgs.Count -gt 0) { $messageText = $messageText -f $FormatArgs }
+            } elseif ($script:UIManager -and $script:UIManager.localization) {
+                $messageText = $script:UIManager.localization.GetMessage($Key, $FormatArgs)
             } else {
                 Write-Warning "Localization not available, using key as message: $Key"
                 $messageText = $Key
@@ -1428,8 +1515,8 @@ function Show-SafeMessage {
             $titleText = $script:ConfigEditorForm.Messages.$titleKeyToUse
         } elseif ($script:Localization) {
             $titleText = $script:Localization.GetMessage($titleKeyToUse, @())
-        } elseif ($script:UIManager) {
-            $titleText = $script:UIManager.GetLocalizedMessage($titleKeyToUse)
+        } elseif ($script:UIManager -and $script:UIManager.localization) {
+            $titleText = $script:UIManager.localization.GetMessage($titleKeyToUse, @())
         } else {
             $titleText = $titleKeyToUse
         }

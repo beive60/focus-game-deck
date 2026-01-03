@@ -1372,6 +1372,27 @@ class ConfigEditorUI {
                     if ($vtubeAutoStopCheckBox) {
                         $vtubeAutoStopCheckBox.IsChecked = ($ConfigData.integrations.vtubeStudio.gameEndAction -eq "exit-game-mode")
                     }
+
+                    # Load VTube Studio WebSocket settings
+                    if ($ConfigData.integrations.vtubeStudio.websocket) {
+                        $vtubeWebSocketEnableCheckBox = $self.Window.FindName("VTubeWebSocketEnableCheckBox")
+                        if ($vtubeWebSocketEnableCheckBox) {
+                            $vtubeWebSocketEnableCheckBox.IsChecked = [bool]$ConfigData.integrations.vtubeStudio.websocket.enabled
+                            Write-Verbose "Loaded VTube Studio WebSocket enabled: $($ConfigData.integrations.vtubeStudio.websocket.enabled)"
+                        }
+
+                        $vtubeHostTextBox = $self.Window.FindName("VTubeHostTextBox")
+                        if ($vtubeHostTextBox -and $ConfigData.integrations.vtubeStudio.websocket.host) {
+                            $vtubeHostTextBox.Text = $ConfigData.integrations.vtubeStudio.websocket.host
+                            Write-Verbose "Loaded VTube Studio WebSocket host: $($ConfigData.integrations.vtubeStudio.websocket.host)"
+                        }
+
+                        $vtubePortTextBox = $self.Window.FindName("VTubePortTextBox")
+                        if ($vtubePortTextBox -and $ConfigData.integrations.vtubeStudio.websocket.port) {
+                            $vtubePortTextBox.Text = $ConfigData.integrations.vtubeStudio.websocket.port.ToString()
+                            Write-Verbose "Loaded VTube Studio WebSocket port: $($ConfigData.integrations.vtubeStudio.websocket.port)"
+                        }
+                    }
                 }
 
                 $langCombo = $self.Window.FindName("LanguageCombo")
