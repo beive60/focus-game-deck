@@ -215,6 +215,66 @@ class OBSManager {
         }
     }
 
+    # Get current program scene
+    [string] GetCurrentProgramScene() {
+        try {
+            $requestId = [System.Guid]::NewGuid().ToString()
+            $command = @{
+                op = 6
+                d = @{
+                    requestType = "GetCurrentProgramScene"
+                    requestId = $requestId
+                }
+            }
+
+            $this.SendMessage($command)
+            $response = $this.ReceiveWebSocketResponse(5)
+
+            if ($response -and $response.op -eq 7 -and $response.d.requestStatus.result) {
+                $sceneName = $response.d.responseData.currentProgramSceneName
+                Write-LocalizedHost -Messages $this.Messages -Key "obs_current_scene" -Args @($sceneName) -Default "Current OBS scene: {0}" -Level "INFO" -Component "OBSManager"
+                return $sceneName
+            } else {
+                Write-LocalizedHost -Messages $this.Messages -Key "obs_get_scene_failed" -Args @("No valid response") -Default "Failed to get current OBS scene: {0}" -Level "WARNING" -Component "OBSManager"
+                return $null
+            }
+        } catch {
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_get_scene_failed" -Args @($_) -Default "Failed to get current OBS scene: {0}" -Level "WARNING" -Component "OBSManager"
+            return $null
+        }
+    }
+
+    # Set current program scene
+    [bool] SetCurrentProgramScene([string] $sceneName) {
+        try {
+            $requestId = [System.Guid]::NewGuid().ToString()
+            $command = @{
+                op = 6
+                d = @{
+                    requestType = "SetCurrentProgramScene"
+                    requestId = $requestId
+                    requestData = @{
+                        sceneName = $sceneName
+                    }
+                }
+            }
+
+            $this.SendMessage($command)
+            $response = $this.ReceiveWebSocketResponse(5)
+
+            if ($response -and $response.op -eq 7 -and $response.d.requestStatus.result) {
+                Write-LocalizedHost -Messages $this.Messages -Key "obs_scene_switched" -Args @($sceneName) -Default "OBS scene switched to: {0}" -Level "OK" -Component "OBSManager"
+                return $true
+            } else {
+                Write-LocalizedHost -Messages $this.Messages -Key "obs_scene_switch_failed" -Args @("Request failed") -Default "Failed to switch OBS scene: {0}" -Level "WARNING" -Component "OBSManager"
+                return $false
+            }
+        } catch {
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_scene_switch_failed" -Args @($_) -Default "Failed to switch OBS scene: {0}" -Level "WARNING" -Component "OBSManager"
+            return $false
+        }
+    }
+
     # Disconnect from OBS WebSocket
     [void] Disconnect() {
         if ($this.WebSocket) {

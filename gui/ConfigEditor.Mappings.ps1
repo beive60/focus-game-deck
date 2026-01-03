@@ -138,6 +138,9 @@ $script:LabelMappings = @{
     "VTubeModelIdLabel" = "vtubeModelIdLabel"
     "VTubeOnLaunchHotkeysLabel" = "vtubeOnLaunchHotkeysLabel"
     "VTubeOnExitHotkeysLabel" = "vtubeOnExitHotkeysLabel"
+    "OBSGameSpecificSettingsGroup" = "obsGameSpecificSettingsGroup"
+    "OBSReplayBufferBehaviorLabel" = "obsReplayBufferBehaviorLabel"
+    "OBSTargetSceneLabel" = "obsTargetSceneLabel"
 }
 
 # Tab header mappings
@@ -180,6 +183,7 @@ $script:CheckBoxMappings = @{
     "VTubeAutoStartCheckBox" = "vtubeAutoStart"
     "VTubeAutoStopCheckBox" = "vtubeAutoStop"
     "VTubeWebSocketEnableCheckBox" = "vtubeEnableWebsocket"
+    "OBSEnableRollbackCheckBox" = "obsEnableRollbackLabel"
 }
 
 # RadioButton content mappings
@@ -286,6 +290,9 @@ $script:ComboBoxItemMappings = @{
     "DiscordStatusOnEndDndItem" = "discordStatusDnd"
     "DiscordStatusOnEndIdleItem" = "discordStatusIdle"
     "DiscordStatusOnEndInvisibleItem" = "discordStatusInvisible"
+    "OBSReplayBufferGlobalItem" = "obsReplayBufferGlobal"
+    "OBSReplayBufferEnableItem" = "obsReplayBufferEnable"
+    "OBSReplayBufferDisableItem" = "obsReplayBufferDisable"
 }
 
 # Game action message key mappings (used for dynamic ComboBoxItem creation)

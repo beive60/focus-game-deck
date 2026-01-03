@@ -606,5 +606,20 @@
     "vtube_websocket_receive_error": "Erreur de réception WebSocket",
     "vtube_websocket_send_error": "Erreur d'envoi WebSocket",
     "vtubeHotkeysTooltip": "Sélectionnez les raccourcis à déclencher dans VTube Studio.",
-    "vtubeModelIdTooltip": "Sélectionnez le modèle à charger automatiquement."
+    "vtubeModelIdTooltip": "Sélectionnez le modèle à charger automatiquement.",
+    "obsGameSpecificSettingsGroup": "",
+    "obsReplayBufferBehaviorLabel": "",
+    "obsReplayBufferBehaviorTooltip": "",
+    "obsReplayBufferGlobal": "",
+    "obsReplayBufferEnable": "",
+    "obsReplayBufferDisable": "",
+    "obsTargetSceneLabel": "",
+    "obsTargetSceneTooltip": "",
+    "obsEnableRollbackLabel": "",
+    "obsEnableRollbackTooltip": "",
+    "obs_scene_switched": "",
+    "obs_scene_restored": "",
+    "obs_scene_switch_failed": "",
+    "obs_scene_restore_failed": "",
+    "obs_get_scene_failed": ""
 }

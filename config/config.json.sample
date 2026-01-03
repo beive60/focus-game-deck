@@ -35,7 +35,13 @@
             "integrations": {
                 "useOBS": true,
                 "useDiscord": false,
-                "useVTubeStudio": false
+                "useVTubeStudio": false,
+                "obsSettings": {
+                    "replayBufferBehavior": "UseGlobal",
+                    "targetSceneName": "",
+                    "enableRollback": false,
+                    "_comment": "replayBufferBehavior: UseGlobal|Enable|Disable. targetSceneName: Scene to switch to on game start. enableRollback: Restore previous scene on game end."
+                }
             }
         },
         "valorant": {
@@ -48,6 +54,12 @@
                 "useOBS": true,
                 "useDiscord": false,
                 "useVTubeStudio": true,
+                "obsSettings": {
+                    "replayBufferBehavior": "Enable",
+                    "targetSceneName": "Gaming",
+                    "enableRollback": true,
+                    "_comment": "replayBufferBehavior: UseGlobal|Enable|Disable. targetSceneName: Scene to switch to on game start. enableRollback: Restore previous scene on game end."
+                },
                 "vtubeStudioSettings": {
                     "modelId": "Models/Game/valorant_avatar.vtube.json",
                     "onLaunchHotkeys": [

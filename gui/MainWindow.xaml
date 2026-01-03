@@ -573,6 +573,53 @@
                                                 VerticalAlignment="Center" />
                                         </StackPanel>
 
+                                        <!-- OBS Game-Specific Settings -->
+                                        <GroupBox
+                                            x:Name="OBSGameSpecificSettingsGroup"
+                                            Header="[OBS_GAME_SPECIFIC_SETTINGS_GROUP]"
+                                            Margin="20,10,0,10"
+                                            IsEnabled="{Binding ElementName=UseOBSIntegrationCheckBox, Path=IsChecked}">
+                                            <StackPanel Margin="10">
+                                                <!-- Replay Buffer Behavior -->
+                                                <Label
+                                                    x:Name="OBSReplayBufferBehaviorLabel"
+                                                    Content="[OBS_REPLAY_BUFFER_BEHAVIOR_LABEL]"
+                                                    Margin="0,5,0,2" />
+                                                <ComboBox
+                                                    x:Name="OBSReplayBufferBehaviorCombo"
+                                                    Margin="0,0,0,10"
+                                                    ToolTip="[OBS_REPLAY_BUFFER_BEHAVIOR_TOOLTIP]">
+                                                    <ComboBoxItem
+                                                        Content="[OBS_REPLAY_BUFFER_GLOBAL]"
+                                                        Tag="UseGlobal" />
+                                                    <ComboBoxItem
+                                                        Content="[OBS_REPLAY_BUFFER_ENABLE]"
+                                                        Tag="Enable" />
+                                                    <ComboBoxItem
+                                                        Content="[OBS_REPLAY_BUFFER_DISABLE]"
+                                                        Tag="Disable" />
+                                                </ComboBox>
+
+                                                <!-- Target Scene -->
+                                                <Label
+                                                    x:Name="OBSTargetSceneLabel"
+                                                    Content="[OBS_TARGET_SCENE_LABEL]"
+                                                    Margin="0,5,0,2" />
+                                                <TextBox
+                                                    x:Name="OBSTargetSceneTextBox"
+                                                    Margin="0,0,0,10"
+                                                    VerticalContentAlignment="Center"
+                                                    ToolTip="[OBS_TARGET_SCENE_TOOLTIP]" />
+
+                                                <!-- Enable Rollback -->
+                                                <CheckBox
+                                                    x:Name="OBSEnableRollbackCheckBox"
+                                                    Content="[OBS_ENABLE_ROLLBACK_LABEL]"
+                                                    Margin="0,5,0,5"
+                                                    ToolTip="[OBS_ENABLE_ROLLBACK_TOOLTIP]" />
+                                            </StackPanel>
+                                        </GroupBox>
+
                                         <!-- TODO: Re-enable in future release -->
                                         <!-- Disabled for v1.0 - Discord integration has known bugs -->
                                         <StackPanel Orientation="Horizontal"
