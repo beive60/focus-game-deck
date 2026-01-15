@@ -121,6 +121,9 @@ $script:LabelMappings = @{
     "ExecutablePathLabel" = "executablePathLabel"
     "ObsGameIntegrationGroup" = "gameIntegrationGroup"
     "ObsExecutableGroup" = "executableFileGroup"
+    "OBSGameSpecificSettingsGroup" = "obsGameSpecificSettingsGroup"
+    "OBSReplayBufferBehaviorLabel" = "obsReplayBufferBehaviorLabel"
+    "OBSTargetSceneLabel" = "obsTargetSceneLabel"
     "DiscordGameIntegrationGroup" = "gameIntegrationGroup"
     "DiscordExecutableGroup" = "executableFileGroup"
     "DiscordStatusOnStartLabel" = "discordStatusOnStart"
@@ -138,9 +141,6 @@ $script:LabelMappings = @{
     "VTubeModelIdLabel" = "vtubeModelIdLabel"
     "VTubeOnLaunchHotkeysLabel" = "vtubeOnLaunchHotkeysLabel"
     "VTubeOnExitHotkeysLabel" = "vtubeOnExitHotkeysLabel"
-    "OBSGameSpecificSettingsGroup" = "obsGameSpecificSettingsGroup"
-    "OBSReplayBufferBehaviorLabel" = "obsReplayBufferBehaviorLabel"
-    "OBSTargetSceneLabel" = "obsTargetSceneLabel"
 }
 
 # Tab header mappings
@@ -173,6 +173,8 @@ $script:TextMappings = @{
 
 # CheckBox content mappings
 $script:CheckBoxMappings = @{
+    "UseOBSIntegrationCheckBox" = "useObsIntegrationCheckBox"
+    "OBSEnableRollbackCheckBox" = "obsEnableRollbackCheckBox"
     "OBSAutoStartCheckBox" = "gameStartObsLabel"
     "OBSAutoStopCheckBox" = "gameStopReplayBufferLabel"
     "OBSReplayBufferCheckBox" = "replayBufferLabel"
@@ -183,7 +185,8 @@ $script:CheckBoxMappings = @{
     "VTubeAutoStartCheckBox" = "vtubeAutoStart"
     "VTubeAutoStopCheckBox" = "vtubeAutoStop"
     "VTubeWebSocketEnableCheckBox" = "vtubeEnableWebsocket"
-    "OBSEnableRollbackCheckBox" = "obsEnableRollbackLabel"
+    "UseDiscordIntegrationCheckBox" = "useDiscordIntegrationCheckBox"
+    "UseVTubeStudioIntegrationCheckBox" = "useVTubeStudioIntegrationCheckBox"
 }
 
 # RadioButton content mappings
@@ -264,6 +267,11 @@ $script:TooltipMappings = @{
     "AppArgumentsLabelPanel" = "tooltipLaunchArguments"
     "TerminationMethodLabelPanel" = "tooltipTerminationMethod"
     "GracefulTimeoutLabelPanel" = "tooltipGracefulTimeout"
+
+    # OBS integration tooltips
+    "OBSReplayBufferBehaviorCombo" = "obsReplayBufferBehaviorTooltip"
+    "OBSTargetSceneTextBox" = "obsTargetSceneTooltip"
+    "OBSEnableRollbackCheckBox" = "obsEnableRollbackTooltip"
 }
 
 # ComboBoxItem content mappings

@@ -377,7 +377,7 @@ class AppManager {
                 # Handle replay buffer if needed
                 if ($shouldStartReplayBuffer) {
                     if (-not $manager.WebSocket -or $manager.WebSocket.State -ne "Open") {
-                        Start-Sleep -Milliseconds 2000
+                        Start-Sleep -Milliseconds 3000
                         $success = $manager.Connect()
                         if (-not $success) {
                             Write-LocalizedHost -Messages $this.Messages -Key "console_obs_websocket_failed" -Default "Failed to connect to OBS websocket" -Level "WARNING" -Component "OBSManager"
@@ -589,7 +589,7 @@ class AppManager {
                 if ($vtubeSettings -and $vtubeSettings.modelId) {
                     Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_loading_model" -Args @($vtubeSettings.modelId) -Default "Loading VTube Studio model: {0}" -Level "INFO" -Component "VTubeStudioManager"
                     if ($this.Logger) { $this.Logger.Info("Loading model: $($vtubeSettings.modelId)", "VTube") }
-                    
+
                     $modelSuccess = $manager.LoadModel($vtubeSettings.modelId)
                     if (-not $modelSuccess) {
                         Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_model_load_failed" -Args @($vtubeSettings.modelId) -Default "Failed to load model: {0}" -Level "WARNING" -Component "VTubeStudioManager"
@@ -601,7 +601,7 @@ class AppManager {
                 if ($vtubeSettings -and $vtubeSettings.onLaunchHotkeys -and $vtubeSettings.onLaunchHotkeys.Count -gt 0) {
                     Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_triggering_launch_hotkeys" -Default "Triggering VTube Studio launch hotkeys" -Level "INFO" -Component "VTubeStudioManager"
                     if ($this.Logger) { $this.Logger.Info("Triggering launch hotkeys", "VTube") }
-                    
+
                     $hotkeySuccess = $manager.TriggerHotkeys($vtubeSettings.onLaunchHotkeys)
                     if (-not $hotkeySuccess) {
                         Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_hotkey_trigger_failed" -Default "Failed to trigger some hotkeys" -Level "WARNING" -Component "VTubeStudioManager"
@@ -624,7 +624,7 @@ class AppManager {
                 if ($vtubeSettings -and $vtubeSettings.onExitHotkeys -and $vtubeSettings.onExitHotkeys.Count -gt 0) {
                     Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_triggering_exit_hotkeys" -Default "Triggering VTube Studio exit hotkeys" -Level "INFO" -Component "VTubeStudioManager"
                     if ($this.Logger) { $this.Logger.Info("Triggering exit hotkeys", "VTube") }
-                    
+
                     $hotkeySuccess = $manager.TriggerHotkeys($vtubeSettings.onExitHotkeys)
                     if (-not $hotkeySuccess) {
                         Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_exit_hotkey_failed" -Default "Failed to trigger some exit hotkeys" -Level "WARNING" -Component "VTubeStudioManager"
@@ -641,7 +641,7 @@ class AppManager {
                 if ($defaultModelId) {
                     Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_restoring_default_model" -Args @($defaultModelId) -Default "Restoring default VTube Studio model: {0}" -Level "INFO" -Component "VTubeStudioManager"
                     if ($this.Logger) { $this.Logger.Info("Restoring default model: $defaultModelId", "VTube") }
-                    
+
                     $rollbackSuccess = $manager.LoadModel($defaultModelId)
                     if (-not $rollbackSuccess) {
                         Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_default_model_failed" -Args @($defaultModelId) -Default "Failed to restore default model: {0}" -Level "WARNING" -Component "VTubeStudioManager"
