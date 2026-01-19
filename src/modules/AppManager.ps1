@@ -36,6 +36,7 @@ class AppManager {
     [object] $GameConfig
     [object] $ManagedApps
     [hashtable] $IntegrationManagers
+    [string] $PreviousOBSScene
 
     <#
     .SYNOPSIS
@@ -317,43 +318,146 @@ class AppManager {
                     return $success
                 }
 
-                if (-not $config.replayBuffer) { return $true }
+                # Evaluate replay buffer behavior
+                $shouldStartReplayBuffer = $false
+                $gameObsSettings = if ($this.GameConfig.integrations.obsSettings) { $this.GameConfig.integrations.obsSettings } else { $null }
+                $replayBufferBehavior = if ($gameObsSettings -and $gameObsSettings.replayBufferBehavior) { $gameObsSettings.replayBufferBehavior } else { "UseGlobal" }
 
-                # Handle replay buffer if configured
-                Start-Sleep -Milliseconds 2000
-                $success = $manager.Connect()
-                if ($success) {
-                    if ($this.Logger) { $this.Logger.Info("OBS websocket connection established", "OBS") }
-                } else {
-                    Write-LocalizedHost -Messages $this.Messages -Key "console_obs_websocket_failed" -Default "Failed to connect to OBS websocket" -Level "WARNING" -Component "OBSManager"
-                    if ($this.Logger) { $this.Logger.Warning("Failed to connect to OBS websocket", "OBS") }
-                    return $false
+                switch ($replayBufferBehavior) {
+                    "Enable" {
+                        $shouldStartReplayBuffer = $true
+                        if ($this.Logger) { $this.Logger.Info("Game-specific OBS setting: Force enable replay buffer", "OBS") }
+                    }
+                    "Disable" {
+                        $shouldStartReplayBuffer = $false
+                        if ($this.Logger) { $this.Logger.Info("Game-specific OBS setting: Force disable replay buffer", "OBS") }
+                    }
+                    default {
+                        # UseGlobal
+                        $shouldStartReplayBuffer = $config.replayBuffer -eq $true
+                        if ($this.Logger) { $this.Logger.Info("Using global OBS replay buffer setting: $($config.replayBuffer)", "OBS") }
+                    }
                 }
 
-                try {
-                    $success = $manager.StartReplayBuffer()
-                    if ($this.Logger) { $this.Logger.Info("OBS replay buffer started", "OBS") }
-                } catch {
-                    Write-LocalizedHost -Messages $this.Messages -Key "console_obs_replay_failed" -Default "Failed to connect to OBS for replay buffer" -Level "WARNING" -Component "OBSManager"
-                    if ($this.Logger) { $this.Logger.Warning("Failed to connect to OBS for replay buffer", "OBS") }
-                    return $false
-                } finally {
-                    [void]$manager.Disconnect()
+                # Handle scene switching
+                $targetSceneName = if ($gameObsSettings -and $gameObsSettings.targetSceneName) { $gameObsSettings.targetSceneName.Trim() } else { "" }
+                $enableRollback = ($gameObsSettings -and $gameObsSettings.enableRollback) -eq $true
+
+                if ($targetSceneName) {
+                    Start-Sleep -Milliseconds 2000
+                    $connectSuccess = $manager.Connect()
+                    if ($connectSuccess) {
+                        try {
+                            # Get current scene before switching (for rollback)
+                            if ($enableRollback) {
+                                $this.PreviousOBSScene = $manager.GetCurrentProgramScene()
+                                if ($this.PreviousOBSScene) {
+                                    if ($this.Logger) { $this.Logger.Info("Saved current OBS scene for rollback: $($this.PreviousOBSScene)", "OBS") }
+                                }
+                            }
+
+                            # Switch to target scene
+                            $sceneSuccess = $manager.SetCurrentProgramScene($targetSceneName)
+                            if ($sceneSuccess) {
+                                if ($this.Logger) { $this.Logger.Info("Switched OBS scene to: $targetSceneName", "OBS") }
+                            } else {
+                                if ($this.Logger) { $this.Logger.Warning("Failed to switch OBS scene", "OBS") }
+                            }
+                        } finally {
+                            if (-not $shouldStartReplayBuffer) {
+                                $manager.Disconnect()
+                            }
+                        }
+                    } else {
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_obs_websocket_failed" -Default "Failed to connect to OBS websocket" -Level "WARNING" -Component "OBSManager"
+                        if ($this.Logger) { $this.Logger.Warning("Failed to connect to OBS websocket for scene switching", "OBS") }
+                    }
                 }
-                return $success
+
+                # Handle replay buffer if needed
+                if ($shouldStartReplayBuffer) {
+                    if (-not $manager.WebSocket -or $manager.WebSocket.State -ne "Open") {
+                        Start-Sleep -Milliseconds 3000
+                        $success = $manager.Connect()
+                        if (-not $success) {
+                            Write-LocalizedHost -Messages $this.Messages -Key "console_obs_websocket_failed" -Default "Failed to connect to OBS websocket" -Level "WARNING" -Component "OBSManager"
+                            if ($this.Logger) { $this.Logger.Warning("Failed to connect to OBS websocket", "OBS") }
+                            return $false
+                        }
+                    }
+
+                    try {
+                        $success = $manager.StartReplayBuffer()
+                        if ($this.Logger) { $this.Logger.Info("OBS replay buffer started", "OBS") }
+                    } catch {
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_obs_replay_failed" -Default "Failed to connect to OBS for replay buffer" -Level "WARNING" -Component "OBSManager"
+                        if ($this.Logger) { $this.Logger.Warning("Failed to connect to OBS for replay buffer", "OBS") }
+                        return $false
+                    } finally {
+                        [void]$manager.Disconnect()
+                    }
+                    return $success
+                }
+
+                return $true
             }
             "exit-game-mode" {
                 $success = $true
-                # Handle replay buffer shutdown
-                if ($config.replayBuffer) {
+
+                # Evaluate replay buffer behavior for stopping
+                $gameObsSettings = if ($this.GameConfig.integrations.obsSettings) { $this.GameConfig.integrations.obsSettings } else { $null }
+                $replayBufferBehavior = if ($gameObsSettings -and $gameObsSettings.replayBufferBehavior) { $gameObsSettings.replayBufferBehavior } else { "UseGlobal" }
+
+                $shouldStopReplayBuffer = $false
+                switch ($replayBufferBehavior) {
+                    "Enable" {
+                        $shouldStopReplayBuffer = $true
+                    }
+                    "Disable" {
+                        $shouldStopReplayBuffer = $false
+                    }
+                    default {
+                        # UseGlobal
+                        $shouldStopReplayBuffer = $config.replayBuffer -eq $true
+                    }
+                }
+
+                # Handle scene rollback
+                $enableRollback = ($gameObsSettings -and $gameObsSettings.enableRollback) -eq $true
+                if ($enableRollback -and $this.PreviousOBSScene) {
                     if ($manager.Connect()) {
+                        try {
+                            $success = $manager.SetCurrentProgramScene($this.PreviousOBSScene)
+                            if ($success) {
+                                Write-LocalizedHost -Messages $this.Messages -Key "obs_scene_restored" -Args @($this.PreviousOBSScene) -Default "OBS scene restored to: {0}" -Level "OK" -Component "OBSManager"
+                                if ($this.Logger) { $this.Logger.Info("Restored OBS scene to: $($this.PreviousOBSScene)", "OBS") }
+                            }
+                            $this.PreviousOBSScene = $null
+                        } finally {
+                            if (-not $shouldStopReplayBuffer) {
+                                $manager.Disconnect()
+                            }
+                        }
+                    }
+                }
+
+                # Handle replay buffer shutdown
+                if ($shouldStopReplayBuffer) {
+                    if (-not $manager.WebSocket -or $manager.WebSocket.State -ne "Open") {
+                        if ($manager.Connect()) {
+                            $success = $manager.StopReplayBuffer()
+                            $manager.Disconnect()
+                            if ($this.Logger) { $this.Logger.Info("OBS replay buffer stopped", "OBS") }
+                        } else {
+                            if ($this.Logger) { $this.Logger.Warning("Failed to stop OBS replay buffer", "OBS") }
+                        }
+                    } else {
                         $success = $manager.StopReplayBuffer()
                         $manager.Disconnect()
                         if ($this.Logger) { $this.Logger.Info("OBS replay buffer stopped", "OBS") }
-                    } else {
-                        if ($this.Logger) { $this.Logger.Warning("Failed to stop OBS replay buffer", "OBS") }
                     }
                 }
+
                 return $success
 
                 # # Stop OBS process
@@ -485,7 +589,7 @@ class AppManager {
                 if ($vtubeSettings -and $vtubeSettings.modelId) {
                     Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_loading_model" -Args @($vtubeSettings.modelId) -Default "Loading VTube Studio model: {0}" -Level "INFO" -Component "VTubeStudioManager"
                     if ($this.Logger) { $this.Logger.Info("Loading model: $($vtubeSettings.modelId)", "VTube") }
-                    
+
                     $modelSuccess = $manager.LoadModel($vtubeSettings.modelId)
                     if (-not $modelSuccess) {
                         Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_model_load_failed" -Args @($vtubeSettings.modelId) -Default "Failed to load model: {0}" -Level "WARNING" -Component "VTubeStudioManager"
@@ -497,7 +601,7 @@ class AppManager {
                 if ($vtubeSettings -and $vtubeSettings.onLaunchHotkeys -and $vtubeSettings.onLaunchHotkeys.Count -gt 0) {
                     Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_triggering_launch_hotkeys" -Default "Triggering VTube Studio launch hotkeys" -Level "INFO" -Component "VTubeStudioManager"
                     if ($this.Logger) { $this.Logger.Info("Triggering launch hotkeys", "VTube") }
-                    
+
                     $hotkeySuccess = $manager.TriggerHotkeys($vtubeSettings.onLaunchHotkeys)
                     if (-not $hotkeySuccess) {
                         Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_hotkey_trigger_failed" -Default "Failed to trigger some hotkeys" -Level "WARNING" -Component "VTubeStudioManager"
@@ -520,7 +624,7 @@ class AppManager {
                 if ($vtubeSettings -and $vtubeSettings.onExitHotkeys -and $vtubeSettings.onExitHotkeys.Count -gt 0) {
                     Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_triggering_exit_hotkeys" -Default "Triggering VTube Studio exit hotkeys" -Level "INFO" -Component "VTubeStudioManager"
                     if ($this.Logger) { $this.Logger.Info("Triggering exit hotkeys", "VTube") }
-                    
+
                     $hotkeySuccess = $manager.TriggerHotkeys($vtubeSettings.onExitHotkeys)
                     if (-not $hotkeySuccess) {
                         Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_exit_hotkey_failed" -Default "Failed to trigger some exit hotkeys" -Level "WARNING" -Component "VTubeStudioManager"
@@ -537,7 +641,7 @@ class AppManager {
                 if ($defaultModelId) {
                     Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_restoring_default_model" -Args @($defaultModelId) -Default "Restoring default VTube Studio model: {0}" -Level "INFO" -Component "VTubeStudioManager"
                     if ($this.Logger) { $this.Logger.Info("Restoring default model: $defaultModelId", "VTube") }
-                    
+
                     $rollbackSuccess = $manager.LoadModel($defaultModelId)
                     if (-not $rollbackSuccess) {
                         Write-LocalizedHost -Messages $this.Messages -Key "console_vtube_default_model_failed" -Args @($defaultModelId) -Default "Failed to restore default model: {0}" -Level "WARNING" -Component "VTubeStudioManager"

@@ -28,9 +28,9 @@ class PlatformManager {
     [void] InitializePlatforms() {
         # Steam Platform (existing support continued)
         $this.Platforms["steam"] = @{
-            Name           = "Steam"
-            DetectPath     = { $this.DetectSteamPath() }
-            LaunchCommand  = { param($gamePath, $gameId)
+            Name = "Steam"
+            DetectPath = { $this.DetectSteamPath() }
+            LaunchCommand = { param($gamePath, $gameId)
                 $steamPath = $this.Config.paths.steam
                 if (-not $steamPath -or -not (Test-Path $steamPath)) {
                     throw "Steam executable not found at configured path: $steamPath"
@@ -40,15 +40,15 @@ class PlatformManager {
                 return $process
             }
             GameIdProperty = "steamAppId"
-            ProcessCheck   = "steam"
-            Required       = $true
+            ProcessCheck = "steam"
+            Required = $true
         }
 
         # Epic Games Platform (v1.0 new support)
         $this.Platforms["epic"] = @{
-            Name           = "Epic Games"
-            DetectPath     = { $this.DetectEpicPath() }
-            LaunchCommand  = { param($gamePath, $gameId)
+            Name = "Epic Games"
+            DetectPath = { $this.DetectEpicPath() }
+            LaunchCommand = { param($gamePath, $gameId)
                 $epicUri = $gameId
                 if ($gameId -notlike "com.epicgames.launcher://*") {
                     if ($gameId -notlike "apps/*") {
@@ -57,7 +57,7 @@ class PlatformManager {
                         $epicUri = "com.epicgames.launcher://$gameId"
                     }
                 }
-                
+
                 try {
                     # URI-based launch is the standard for Epic Games.
                     $process = Start-Process -FilePath $epicUri -PassThru
@@ -70,15 +70,15 @@ class PlatformManager {
                 }
             }
             GameIdProperty = "epicGameId"
-            ProcessCheck   = "EpicGamesLauncher"
-            Required       = $false
+            ProcessCheck = "EpicGamesLauncher"
+            Required = $false
         }
 
         # Riot Client Platform (v1.0 new support)
         $this.Platforms["riot"] = @{
-            Name           = "Riot Client"
-            DetectPath     = { $this.DetectRiotPath() }
-            LaunchCommand  = { param($gamePath, $gameId)
+            Name = "Riot Client"
+            DetectPath = { $this.DetectRiotPath() }
+            LaunchCommand = { param($gamePath, $gameId)
                 $riotPath = $this.Config.paths.riot
                 if (-not $riotPath -or -not (Test-Path $riotPath)) {
                     # Fallback: try auto-detection
@@ -93,15 +93,15 @@ class PlatformManager {
                 return $process
             }
             GameIdProperty = "riotGameId"
-            ProcessCheck   = "RiotClientServices"
-            Required       = $false
+            ProcessCheck = "RiotClientServices"
+            Required = $false
         }
 
         # Direct Platform (v1.0 new support for standalone executables)
         $this.Platforms["direct"] = @{
-            Name           = "Direct Execution"
-            DetectPath     = { return "available" }  # Always available, return dummy string for compatibility
-            LaunchCommand  = { param($gamePath, $gameId)
+            Name = "Direct Execution"
+            DetectPath = { return "available" }  # Always available, return dummy string for compatibility
+            LaunchCommand = { param($gamePath, $gameId)
                 # For direct execution, gamePath is the executable path and gameId is ignored
                 if (-not $gamePath -or -not (Test-Path $gamePath)) {
                     throw "Executable not found at path: $gamePath"
@@ -124,8 +124,8 @@ class PlatformManager {
                 }
             }
             GameIdProperty = "executablePath"
-            ProcessCheck   = $null
-            Required       = $false
+            ProcessCheck = $null
+            Required = $false
         }
     }
 
@@ -204,14 +204,14 @@ class PlatformManager {
 
             if ($detectedPath) {
                 $detectedPlatforms[$platformKey] = @{
-                    Name      = $platform.Name
-                    Path      = $detectedPath
+                    Name = $platform.Name
+                    Path = $detectedPath
                     Available = $true
                 }
             } else {
                 $detectedPlatforms[$platformKey] = @{
-                    Name      = $platform.Name
-                    Path      = $null
+                    Name = $platform.Name
+                    Path = $null
                     Available = $false
                 }
             }

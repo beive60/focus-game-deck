@@ -18,35 +18,35 @@
                 Header="[REFRESH_MENU_HEADER]">
                 <MenuItem
                     x:Name="RefreshGameListMenuItem"
-                    Header="[REFRESH_GAME_LIST]" />
+                    Header="[REFRESH_GAME_LIST]"/>
                 <MenuItem
                     x:Name="RefreshManagedAppsListMenuItem"
-                    Header="[REFRESH_MANAGED_APPS_LIST]" />
-                <Separator />
+                    Header="[REFRESH_MANAGED_APPS_LIST]"/>
+                <Separator/>
                 <MenuItem
                     x:Name="RefreshAllMenuItem"
-                    Header="[REFRESH_ALL]" />
+                    Header="[REFRESH_ALL]"/>
             </MenuItem>
             <MenuItem
                 x:Name="ToolsMenu"
                 Header="[TOOLS_MENU_HEADER]">
                 <MenuItem
                     x:Name="CreateAllShortcutsMenuItem"
-                    Header="[CREATE_ALL_SHORTCUTS]" />
+                    Header="[CREATE_ALL_SHORTCUTS]"/>
             </MenuItem>
             <MenuItem
                 x:Name="HelpMenu"
                 Header="[HELP_MENU_HEADER]">
                 <MenuItem
                     x:Name="CheckUpdateMenuItem"
-                    Header="[CHECK_UPDATE]" />
+                    Header="[CHECK_UPDATE]"/>
                 <MenuItem
                     x:Name="FeedbackMenuItem"
-                    Header="[FEEDBACK_MENU_ITEM]" />
-                <Separator />
+                    Header="[FEEDBACK_MENU_ITEM]"/>
+                <Separator/>
                 <MenuItem
                     x:Name="AboutMenuItem"
-                    Header="[ABOUT]" />
+                    Header="[ABOUT]"/>
             </MenuItem>
         </Menu>
 
@@ -54,58 +54,58 @@
             DockPanel.Dock="Bottom"
             Height="35">
             <StackPanel Orientation="Horizontal"
-                VerticalAlignment="Center"
-                Margin="20,0">
+                        VerticalAlignment="Center"
+                        Margin="20,0">
                 <TextBlock
                     x:Name="VersionLabel"
                     Text="[VERSION_LABEL]"
                     VerticalAlignment="Center"
                     FontSize="11"
-                    Foreground="#666" />
+                    Foreground="#666"/>
                 <TextBlock
                     x:Name="VersionText"
                     Text="1.0.1-alpha"
                     VerticalAlignment="Center"
                     FontSize="11"
                     Foreground="#666"
-                    Margin="5,0,0,0" />
+                    Margin="5,0,0,0"/>
             </StackPanel>
 
             <!-- Notification snackbar in footer area -->
             <Border x:Name="NotificationOverlay"
-                VerticalAlignment="Center"
-                HorizontalAlignment="Right"
-                Margin="0,0,20,0"
-                Padding="10,4"
-                CornerRadius="3"
-                Background="White"
-                BorderBrush="Black"
-                BorderThickness="1"
-                Visibility="Collapsed"
-                Panel.ZIndex="100"
-                IsHitTestVisible="False">
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Right"
+                    Margin="0,0,20,0"
+                    Padding="10,4"
+                    CornerRadius="3"
+                    Background="White"
+                    BorderBrush="Black"
+                    BorderThickness="1"
+                    Visibility="Collapsed"
+                    Panel.ZIndex="100"
+                    IsHitTestVisible="False">
                 <TextBlock
                     x:Name="NotificationText"
                     Text="Notification Message"
                     Foreground="Black"
                     FontSize="11"
-                    FontWeight="Normal" />
+                    FontWeight="Normal"/>
             </Border>
         </Grid>
 
         <!-- Wrap main content and overlay in a single grid -->
         <Grid>
             <TabControl x:Name="MainTabControl"
-                Margin="10">
+                        Margin="10">
 
                 <TabItem
                     x:Name="GameLauncherTab"
                     Header="[GAME_LAUNCHER_TAB_HEADER]">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="70" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="100" />
+                            <RowDefinition Height="70"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="100"/>
                         </Grid.RowDefinitions>
 
                         <Grid
@@ -117,13 +117,13 @@
                                     x:Name="LauncherWelcomeText"
                                     Text="[LAUNCHER_WELCOME_TEXT]"
                                     FontSize="16"
-                                    FontWeight="Bold" />
+                                    FontWeight="Bold"/>
                                 <TextBlock
                                     x:Name="LauncherSubtitleText"
                                     Text="[LAUNCHER_SUBTITLE_TEXT]"
                                     FontSize="12"
                                     Foreground="#666"
-                                    Margin="0,2,0,0" />
+                                    Margin="0,2,0,0"/>
                             </StackPanel>
                         </Grid>
 
@@ -133,7 +133,7 @@
                             Margin="20,0,20,10">
                             <ItemsControl
                                 x:Name="GameLauncherList"
-                                Margin="0,10" />
+                                Margin="0,10"/>
                         </ScrollViewer>
 
                         <Grid
@@ -147,13 +147,13 @@
                                     x:Name="LauncherStatusText"
                                     Text="[READY_TO_LAUNCH]"
                                     FontSize="12"
-                                    Foreground="#666" />
+                                    Foreground="#666"/>
                                 <TextBlock
                                     x:Name="LauncherHintText"
                                     Text="[LAUNCHER_HINT_TEXT]"
                                     FontSize="10"
                                     Foreground="#888"
-                                    Margin="0,2,0,0" />
+                                    Margin="0,2,0,0"/>
                             </StackPanel>
                         </Grid>
                     </Grid>
@@ -164,30 +164,30 @@
                     Header="[GAMES_TAB_HEADER]">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="50" />
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="50"/>
                         </Grid.RowDefinitions>
 
                         <Grid Grid.Row="0">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="250" />
-                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="250"/>
+                                <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
                             <Grid
                                 Grid.Column="0"
                                 Margin="10,0,5,0">
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="30" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="55" />
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="55"/>
                                 </Grid.RowDefinitions>
 
                                 <Label
                                     x:Name="GamesListLabel"
                                     Content="[GAMES_LIST_LABEL]"
                                     Grid.Row="0"
-                                    FontWeight="Bold" />
+                                    FontWeight="Bold"/>
                                 <ListBox
                                     x:Name="GamesList"
                                     Grid.Row="1"
@@ -195,7 +195,8 @@
                                     AllowDrop="True">
                                     <ListBox.ItemContainerStyle>
                                         <Style TargetType="ListBoxItem">
-                                            <Setter Property="AllowDrop" Value="True" />
+                                            <Setter Property="AllowDrop"
+                                                    Value="True"/>
                                         </Style>
                                     </ListBox.ItemContainerStyle>
                                 </ListBox>
@@ -209,7 +210,7 @@
                                         FontSize="11"
                                         Foreground="#666"
                                         HorizontalAlignment="Center"
-                                        Margin="0,10,0,0" />
+                                        Margin="0,10,0,0"/>
                                 </StackPanel>
                             </Grid>
 
@@ -218,14 +219,14 @@
                                 VerticalScrollBarVisibility="Auto">
                                 <Grid Margin="5,0,10,0">
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
 
                                     <Label
@@ -233,25 +234,25 @@
                                         Content="[GAME_DETAILS_LABEL]"
                                         Grid.Row="0"
                                         FontWeight="Bold"
-                                        FontSize="14" />
+                                        FontSize="14"/>
 
                                     <Grid
                                         Grid.Row="1"
                                         Margin="0,10">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="120" />
-                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <Grid.RowDefinitions>
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="60" />
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="60"/>
                                         </Grid.RowDefinitions>
 
                                         <StackPanel
@@ -264,7 +265,7 @@
                                             <Label
                                                 x:Name="GameIdLabel"
                                                 Content="[GAME_ID_LABEL]"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="GameIdTooltip"
                                                 Text="?"
@@ -272,7 +273,7 @@
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
                                                 VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_GAME_ID]" />
+                                                ToolTip="[TOOLTIP_GAME_ID]"/>
                                         </StackPanel>
                                         <StackPanel
                                             Grid.Row="0"
@@ -280,7 +281,7 @@
                                             Margin="5">
                                             <TextBox
                                                 x:Name="GameIdTextBox"
-                                                VerticalContentAlignment="Center" />
+                                                VerticalContentAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="GameIdTextBoxErrorText"
                                                 Text="Error Message"
@@ -288,7 +289,7 @@
                                                 FontSize="11"
                                                 Margin="2,2,0,0"
                                                 FontWeight="SemiBold"
-                                                Visibility="Collapsed" />
+                                                Visibility="Collapsed"/>
                                         </StackPanel>
 
                                         <StackPanel
@@ -301,7 +302,7 @@
                                             <Label
                                                 x:Name="GameNameLabel"
                                                 Content="[GAME_NAME_LABEL]"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="GameNameTooltip"
                                                 Text="?"
@@ -309,21 +310,21 @@
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
                                                 VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_DISPLAY_NAME]" />
+                                                ToolTip="[TOOLTIP_DISPLAY_NAME]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="GameNameTextBox"
                                             Grid.Row="1"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
-                                            Margin="5" />
+                                            Margin="5"/>
 
                                         <Label
                                             x:Name="PlatformLabel"
                                             Content="[PLATFORM_LABEL]"
                                             Grid.Row="2"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center" />
+                                            VerticalAlignment="Center"/>
                                         <ComboBox
                                             x:Name="PlatformComboBox"
                                             Grid.Row="2"
@@ -332,19 +333,19 @@
                                             <ComboBoxItem
                                                 x:Name="PlatformStandaloneItem"
                                                 Content="[STANDALONE_PLATFORM]"
-                                                Tag="standalone" />
+                                                Tag="standalone"/>
                                             <ComboBoxItem
                                                 x:Name="PlatformSteamItem"
                                                 Content="[STEAM_PLATFORM]"
-                                                Tag="steam" />
+                                                Tag="steam"/>
                                             <ComboBoxItem
                                                 x:Name="PlatformEpicItem"
                                                 Content="[EPIC_PLATFORM]"
-                                                Tag="epic" />
+                                                Tag="epic"/>
                                             <ComboBoxItem
                                                 x:Name="PlatformRiotItem"
                                                 Content="[RIOT_PLATFORM]"
-                                                Tag="riot" />
+                                                Tag="riot"/>
                                         </ComboBox>
 
                                         <StackPanel
@@ -357,7 +358,7 @@
                                             <Label
                                                 x:Name="SteamAppIdLabel"
                                                 Content="[STEAM_APP_ID_LABEL]"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="SteamAppIdTooltip"
                                                 Text="?"
@@ -365,7 +366,7 @@
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
                                                 VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_STEAM_APP_ID]" />
+                                                ToolTip="[TOOLTIP_STEAM_APP_ID]"/>
                                         </StackPanel>
                                         <StackPanel
                                             Grid.Row="3"
@@ -373,7 +374,7 @@
                                             Margin="5">
                                             <TextBox
                                                 x:Name="SteamAppIdTextBox"
-                                                VerticalContentAlignment="Center" />
+                                                VerticalContentAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="SteamAppIdTextBoxErrorText"
                                                 Text="Error Message"
@@ -381,7 +382,7 @@
                                                 FontSize="11"
                                                 Margin="2,2,0,0"
                                                 FontWeight="SemiBold"
-                                                Visibility="Collapsed" />
+                                                Visibility="Collapsed"/>
                                         </StackPanel>
 
                                         <StackPanel
@@ -394,7 +395,7 @@
                                             <Label
                                                 x:Name="EpicGameIdLabel"
                                                 Content="[EPIC_GAME_ID_LABEL]"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="EpicGameIdTooltip"
                                                 Text="?"
@@ -402,14 +403,14 @@
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
                                                 VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_EPIC_GAME_ID]" />
+                                                ToolTip="[TOOLTIP_EPIC_GAME_ID]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="EpicGameIdTextBox"
                                             Grid.Row="4"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
-                                            Margin="5" />
+                                            Margin="5"/>
 
                                         <StackPanel
                                             x:Name="RiotGameIdLabelPanel"
@@ -421,7 +422,7 @@
                                             <Label
                                                 x:Name="RiotGameIdLabel"
                                                 Content="[RIOT_GAME_ID_LABEL]"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="RiotGameIdTooltip"
                                                 Text="?"
@@ -429,14 +430,14 @@
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
                                                 VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_RIOT_GAME_ID]" />
+                                                ToolTip="[TOOLTIP_RIOT_GAME_ID]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="RiotGameIdTextBox"
                                             Grid.Row="5"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
-                                            Margin="5" />
+                                            Margin="5"/>
 
                                         <StackPanel
                                             x:Name="ExecutablePathLabelPanel"
@@ -448,7 +449,7 @@
                                             <Label
                                                 x:Name="ExecutablePathLabel"
                                                 Content="[EXECUTABLE_PATH_LABEL]"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="ExecutablePathTooltip"
                                                 Text="?"
@@ -456,28 +457,28 @@
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
                                                 VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_EXECUTABLE_PATH]" />
+                                                ToolTip="[TOOLTIP_EXECUTABLE_PATH]"/>
                                         </StackPanel>
                                         <Grid
                                             x:Name="ExecutablePathInputGrid"
                                             Grid.Row="6"
                                             Grid.Column="1">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="80" />
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="80"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBox
                                                 x:Name="ExecutablePathTextBox"
                                                 Grid.Column="0"
                                                 VerticalContentAlignment="Center"
-                                                Margin="5" />
+                                                Margin="5"/>
                                             <Button
                                                 x:Name="BrowseExecutablePathButton"
                                                 Content="[BROWSE_BUTTON]"
                                                 Grid.Column="1"
                                                 Width="70"
                                                 Height="25"
-                                                Margin="5,0,5,0" />
+                                                Margin="5,0,5,0"/>
                                         </Grid>
 
                                         <StackPanel
@@ -490,7 +491,7 @@
                                             <Label
                                                 x:Name="ProcessNameLabel"
                                                 Content="[PROCESS_NAME_LABEL]"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="ProcessNameTooltip"
                                                 Text="?"
@@ -498,14 +499,14 @@
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
                                                 VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_PROCESS_NAME]" />
+                                                ToolTip="[TOOLTIP_PROCESS_NAME]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="ProcessNameTextBox"
                                             Grid.Row="7"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
-                                            Margin="5" />
+                                            Margin="5"/>
 
                                         <Label
                                             x:Name="GameCommentLabel"
@@ -513,7 +514,7 @@
                                             Grid.Column="0"
                                             Content="[COMMENT_LABEL]"
                                             VerticalAlignment="Top"
-                                            Margin="0,5,0,0" />
+                                            Margin="0,5,0,0"/>
                                         <TextBox
                                             x:Name="GameCommentTextBox"
                                             Grid.Row="8"
@@ -524,7 +525,7 @@
                                             Height="50"
                                             Margin="5"
                                             VerticalContentAlignment="Top"
-                                            Tag="[commentPlaceholder]" />
+                                            Tag="[commentPlaceholder]"/>
                                     </Grid>
 
                                     <Label
@@ -532,11 +533,11 @@
                                         Content="[APPS_TO_MANAGE_LABEL]"
                                         Grid.Row="2"
                                         FontWeight="Bold"
-                                        Margin="0,10,0,5" />
+                                        Margin="0,10,0,5"/>
                                     <StackPanel
                                         x:Name="AppsToManagePanel"
                                         Grid.Row="3"
-                                        Margin="10,0" />
+                                        Margin="10,0"/>
 
                                     <!-- App Integration Section -->
                                     <Label
@@ -544,7 +545,7 @@
                                         Content="[GAME_INTEGRATION_SECTION_LABEL]"
                                         Grid.Row="4"
                                         FontWeight="Bold"
-                                        Margin="0,20,0,5" />
+                                        Margin="0,20,0,5"/>
                                     <StackPanel
                                         Grid.Row="5"
                                         Margin="10,5,0,0">
@@ -553,15 +554,15 @@
                                             Text="[GAME_INTEGRATION_DESCRIPTION]"
                                             Foreground="#666"
                                             FontSize="11"
-                                            Margin="0,0,0,10" />
+                                            Margin="0,0,0,10"/>
 
                                         <StackPanel Orientation="Horizontal"
-                                            Margin="0,5">
+                                                    Margin="0,5">
                                             <CheckBox
                                                 x:Name="UseOBSIntegrationCheckBox"
                                                 Content="OBS Studio"
                                                 Width="150"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <Button
                                                 x:Name="OpenOBSTabButton"
                                                 Content="[OPEN_INTEGRATION_SETTINGS]"
@@ -570,19 +571,59 @@
                                                 Foreground="#0078D4"
                                                 Cursor="Hand"
                                                 Padding="5,0"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                         </StackPanel>
+
+                                        <!-- OBS Game-Specific Settings -->
+                                        <GroupBox
+                                            x:Name="OBSGameSpecificSettingsGroup"
+                                            Margin="20,10,0,10"
+                                            IsEnabled="{Binding ElementName=UseOBSIntegrationCheckBox, Path=IsChecked}">
+                                            <StackPanel Margin="10">
+                                                <!-- Replay Buffer Behavior -->
+                                                <Label
+                                                    x:Name="OBSReplayBufferBehaviorLabel"
+                                                    Margin="0,5,0,2"/>
+                                                <ComboBox
+                                                    x:Name="OBSReplayBufferBehaviorCombo"
+                                                    Margin="0,0,0,10">
+                                                    <ComboBoxItem
+                                                        x:Name="OBSReplayBufferGlobalItem"
+                                                        Tag="UseGlobal"/>
+                                                    <ComboBoxItem
+                                                        x:Name="OBSReplayBufferEnableItem"
+                                                        Tag="Enable"/>
+                                                    <ComboBoxItem
+                                                        x:Name="OBSReplayBufferDisableItem"
+                                                        Tag="Disable"/>
+                                                </ComboBox>
+
+                                                <!-- Target Scene -->
+                                                <Label
+                                                    x:Name="OBSTargetSceneLabel"
+                                                    Margin="0,5,0,2"/>
+                                                <TextBox
+                                                    x:Name="OBSTargetSceneTextBox"
+                                                    Margin="0,0,0,10"
+                                                    VerticalContentAlignment="Center"/>
+
+                                                <!-- Enable Rollback -->
+                                                <CheckBox
+                                                    x:Name="OBSEnableRollbackCheckBox"
+                                                    Margin="0,5,0,5"/>
+                                            </StackPanel>
+                                        </GroupBox>
 
                                         <!-- TODO: Re-enable in future release -->
                                         <!-- Disabled for v1.0 - Discord integration has known bugs -->
                                         <StackPanel Orientation="Horizontal"
-                                            Margin="0,5"
-                                            Visibility="Collapsed">
+                                                    Margin="0,5"
+                                                    Visibility="Collapsed">
                                             <CheckBox
                                                 x:Name="UseDiscordIntegrationCheckBox"
                                                 Content="Discord"
                                                 Width="150"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <Button
                                                 x:Name="OpenDiscordTabButton"
                                                 Content="[OPEN_INTEGRATION_SETTINGS]"
@@ -591,16 +632,16 @@
                                                 Foreground="#0078D4"
                                                 Cursor="Hand"
                                                 Padding="5,0"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal"
-                                            Margin="0,5">
+                                                    Margin="0,5">
                                             <CheckBox
                                                 x:Name="UseVTubeStudioIntegrationCheckBox"
                                                 Content="VTube Studio"
                                                 Width="150"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <Button
                                                 x:Name="OpenVTubeStudioTabButton"
                                                 Content="[OPEN_INTEGRATION_SETTINGS]"
@@ -609,7 +650,7 @@
                                                 Foreground="#0078D4"
                                                 Cursor="Hand"
                                                 Padding="5,0"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                         </StackPanel>
 
                                         <!-- VTube Studio Game-Specific Settings -->
@@ -617,91 +658,91 @@
                                             x:Name="VTubeGameSpecificSettingsGroup"
                                             Header="[vtubeGameSpecificSettingsGroup]"
                                             Margin="20,10,0,10">
-                                        <StackPanel Margin="10">
-                                            <!-- Model ID -->
-                                            <Label
-                                                x:Name="VTubeModelIdLabel"
-                                                Content="[vtubeModelIdLabel]"
-                                                Margin="0,5,0,2"/>
-                                            <Grid Margin="0,0,0,10">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="120"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBox
-                                                    x:Name="VTubeModelIdTextBox"
-                                                    Grid.Column="0"
-                                                    VerticalContentAlignment="Center"
-                                                    Margin="0,0,5,0"
-                                                    ToolTip="[vtubeModelIdTooltip]"/>
-                                                <Button
-                                                    x:Name="GetModelListButton"
-                                                    Content="[GET_MODEL_LIST_BUTTON]"
-                                                    Grid.Column="1"
-                                                    Height="25"/>
-                                            </Grid>
+                                            <StackPanel Margin="10">
+                                                <!-- Model ID -->
+                                                <Label
+                                                    x:Name="VTubeModelIdLabel"
+                                                    Content="[vtubeModelIdLabel]"
+                                                    Margin="0,5,0,2"/>
+                                                <Grid Margin="0,0,0,10">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="120"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox
+                                                        x:Name="VTubeModelIdTextBox"
+                                                        Grid.Column="0"
+                                                        VerticalContentAlignment="Center"
+                                                        Margin="0,0,5,0"
+                                                        ToolTip="[vtubeModelIdTooltip]"/>
+                                                    <Button
+                                                        x:Name="GetModelListButton"
+                                                        Content="[GET_MODEL_LIST_BUTTON]"
+                                                        Grid.Column="1"
+                                                        Height="25"/>
+                                                </Grid>
 
-                                            <!-- Launch Hotkeys -->
-                                            <Label
-                                                x:Name="VTubeOnLaunchHotkeysLabel"
-                                                Content="[vtubeOnLaunchHotkeysLabel]"
-                                                Margin="0,5,0,2"/>
-                                            <Grid Margin="0,0,0,10">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="120"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBox
-                                                    x:Name="VTubeOnLaunchHotkeysTextBox"
-                                                    Grid.Column="0"
-                                                    VerticalContentAlignment="Center"
-                                                    Margin="0,0,5,0"
-                                                    ToolTip="[vtubeHotkeysTooltip]"/>
-                                                <Button
-                                                    x:Name="GetLaunchHotkeyListButton"
-                                                    Content="[GET_HOTKEY_LIST_BUTTON]"
-                                                    Grid.Column="1"
-                                                    Height="25"/>
-                                            </Grid>
+                                                <!-- Launch Hotkeys -->
+                                                <Label
+                                                    x:Name="VTubeOnLaunchHotkeysLabel"
+                                                    Content="[vtubeOnLaunchHotkeysLabel]"
+                                                    Margin="0,5,0,2"/>
+                                                <Grid Margin="0,0,0,10">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="120"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox
+                                                        x:Name="VTubeOnLaunchHotkeysTextBox"
+                                                        Grid.Column="0"
+                                                        VerticalContentAlignment="Center"
+                                                        Margin="0,0,5,0"
+                                                        ToolTip="[vtubeHotkeysTooltip]"/>
+                                                    <Button
+                                                        x:Name="GetLaunchHotkeyListButton"
+                                                        Content="[GET_HOTKEY_LIST_BUTTON]"
+                                                        Grid.Column="1"
+                                                        Height="25"/>
+                                                </Grid>
 
-                                            <!-- Exit Hotkeys -->
-                                            <Label
-                                                x:Name="VTubeOnExitHotkeysLabel"
-                                                Content="[vtubeOnExitHotkeysLabel]"
-                                                Margin="0,5,0,2"/>
-                                            <Grid Margin="0,0,0,5">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="120"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBox
-                                                    x:Name="VTubeOnExitHotkeysTextBox"
-                                                    Grid.Column="0"
-                                                    VerticalContentAlignment="Center"
-                                                    Margin="0,0,5,0"
-                                                    ToolTip="[vtubeHotkeysTooltip]"/>
-                                                <Button
-                                                    x:Name="GetExitHotkeyListButton"
-                                                    Content="[GET_HOTKEY_LIST_BUTTON]"
-                                                    Grid.Column="1"
-                                                    Height="25"/>
-                                            </Grid>
-                                        </StackPanel>
-                                    </GroupBox>
-                                </StackPanel>
+                                                <!-- Exit Hotkeys -->
+                                                <Label
+                                                    x:Name="VTubeOnExitHotkeysLabel"
+                                                    Content="[vtubeOnExitHotkeysLabel]"
+                                                    Margin="0,5,0,2"/>
+                                                <Grid Margin="0,0,0,5">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="120"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox
+                                                        x:Name="VTubeOnExitHotkeysTextBox"
+                                                        Grid.Column="0"
+                                                        VerticalContentAlignment="Center"
+                                                        Margin="0,0,5,0"
+                                                        ToolTip="[vtubeHotkeysTooltip]"/>
+                                                    <Button
+                                                        x:Name="GetExitHotkeyListButton"
+                                                        Content="[GET_HOTKEY_LIST_BUTTON]"
+                                                        Grid.Column="1"
+                                                        Height="25"/>
+                                                </Grid>
+                                            </StackPanel>
+                                        </GroupBox>
+                                    </StackPanel>
 
-                                <Grid
+                                    <Grid
                                         Grid.Row="6"
                                         Margin="0,20,0,10">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="120" />
-                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <Label
                                             x:Name="LauncherTypeLabel2"
                                             Content="[LAUNCHER_TYPE_LABEL]"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center" />
+                                            VerticalAlignment="Center"/>
                                         <StackPanel
                                             Grid.Column="1"
                                             Orientation="Horizontal"
@@ -714,18 +755,18 @@
                                                     x:Name="GameLauncherTypeEnhancedItem"
                                                     Content="[ENHANCED_SHORTCUTS]"
                                                     Tag="lnk"
-                                                    IsSelected="True" />
+                                                    IsSelected="True"/>
                                                 <ComboBoxItem
                                                     x:Name="GameLauncherTypeTraditionalItem"
                                                     Content="[TRADITIONAL_BATCH]"
-                                                    Tag="bat" />
+                                                    Tag="bat"/>
                                             </ComboBox>
                                             <Button
                                                 x:Name="GenerateLaunchersButton"
                                                 Content="[GENERATE_LAUNCHERS]"
                                                 Width="130"
                                                 Height="25"
-                                                Margin="10,0,0,0" />
+                                                Margin="10,0,0,0"/>
                                         </StackPanel>
                                     </Grid>
                                 </Grid>
@@ -746,7 +787,7 @@
                                 Margin="0,0,20,0"
                                 Background="#0078D4"
                                 Foreground="White"
-                                BorderThickness="0" />
+                                BorderThickness="0"/>
                         </Grid>
                     </Grid>
                 </TabItem>
@@ -756,30 +797,30 @@
                     Header="[MANAGED_APPS_TAB_HEADER]">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="50" />
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="50"/>
                         </Grid.RowDefinitions>
 
                         <Grid Grid.Row="0">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="250" />
-                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="250"/>
+                                <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
                             <Grid
                                 Grid.Column="0"
                                 Margin="10,0,5,0">
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="30" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="55" />
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="55"/>
                                 </Grid.RowDefinitions>
 
                                 <Label
                                     x:Name="AppsListLabel"
                                     Content="[APPS_LIST_LABEL]"
                                     Grid.Row="0"
-                                    FontWeight="Bold" />
+                                    FontWeight="Bold"/>
                                 <ListBox
                                     x:Name="ManagedAppsList"
                                     Grid.Row="1"
@@ -787,7 +828,8 @@
                                     AllowDrop="True">
                                     <ListBox.ItemContainerStyle>
                                         <Style TargetType="ListBoxItem">
-                                            <Setter Property="AllowDrop" Value="True" />
+                                            <Setter Property="AllowDrop"
+                                                    Value="True"/>
                                         </Style>
                                     </ListBox.ItemContainerStyle>
                                 </ListBox>
@@ -801,7 +843,7 @@
                                         FontSize="11"
                                         Foreground="#666"
                                         HorizontalAlignment="Center"
-                                        Margin="0,10,0,0" />
+                                        Margin="0,10,0,0"/>
                                 </StackPanel>
                             </Grid>
 
@@ -810,9 +852,9 @@
                                 VerticalScrollBarVisibility="Auto">
                                 <Grid Margin="5,0,10,0">
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
                                     <Label
@@ -820,28 +862,28 @@
                                         Content="[APP_DETAILS_LABEL]"
                                         Grid.Row="0"
                                         FontWeight="Bold"
-                                        FontSize="14" />
+                                        FontSize="14"/>
 
                                     <Grid
                                         Grid.Row="1"
                                         Margin="0,10">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="150" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="80"/>
                                         </Grid.ColumnDefinitions>
                                         <Grid.RowDefinitions>
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="30" />
-                                            <RowDefinition Height="60" />
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="60"/>
                                         </Grid.RowDefinitions>
 
                                         <StackPanel
@@ -855,7 +897,7 @@
                                             <Label
                                                 x:Name="AppIdLabel"
                                                 Content="[APP_ID_LABEL]"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="AppIdTooltip"
                                                 Text="?"
@@ -863,47 +905,47 @@
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
                                                 VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_APP_ID]" />
+                                                ToolTip="[TOOLTIP_APP_ID]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="AppIdTextBox"
                                             Grid.Row="0"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
-                                            Margin="5" />
+                                            Margin="5"/>
 
                                         <Label
                                             x:Name="AppDisplayNameLabel"
                                             Grid.Row="1"
                                             Grid.Column="0"
                                             Content="[APP_DISPLAY_NAME_LABEL]"
-                                            VerticalAlignment="Center" />
+                                            VerticalAlignment="Center"/>
                                         <TextBox
                                             x:Name="AppDisplayNameTextBox"
                                             Grid.Row="1"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
-                                            Margin="5" />
+                                            Margin="5"/>
 
                                         <Label
                                             x:Name="AppPathLabel"
                                             Grid.Row="2"
                                             Grid.Column="0"
                                             Content="[APP_PATH_LABEL]"
-                                            VerticalAlignment="Center" />
+                                            VerticalAlignment="Center"/>
                                         <TextBox
                                             x:Name="AppPathTextBox"
                                             Grid.Row="2"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
-                                            Margin="5" />
+                                            Margin="5"/>
                                         <Button
                                             x:Name="BrowseAppPathButton"
                                             Content="[BROWSE_BUTTON]"
                                             Grid.Row="2"
                                             Grid.Column="2"
                                             Width="70"
-                                            Height="25" />
+                                            Height="25"/>
 
                                         <StackPanel
                                             x:Name="WorkingDirectoryLabelPanel"
@@ -915,7 +957,7 @@
                                             <Label
                                                 x:Name="WorkingDirectoryLabel"
                                                 Content="[WORKING_DIRECTORY_LABEL]"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="WorkingDirectoryTooltip"
                                                 Text="?"
@@ -923,21 +965,21 @@
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
                                                 VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_WORKING_DIRECTORY]" />
+                                                ToolTip="[TOOLTIP_WORKING_DIRECTORY]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="WorkingDirectoryTextBox"
                                             Grid.Row="3"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
-                                            Margin="5" />
+                                            Margin="5"/>
                                         <Button
                                             x:Name="BrowseWorkingDirectoryButton"
                                             Content="[BROWSE_FOLDER_BUTTON]"
                                             Grid.Row="3"
                                             Grid.Column="2"
                                             Width="70"
-                                            Height="25" />
+                                            Height="25"/>
 
                                         <StackPanel
                                             x:Name="AppArgumentsLabelPanel"
@@ -949,7 +991,7 @@
                                             <Label
                                                 x:Name="AppArgumentsLabel"
                                                 Content="[ARGUMENTS_LABEL]"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="AppArgumentsTooltip"
                                                 Text="?"
@@ -957,7 +999,7 @@
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
                                                 VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_LAUNCH_ARGUMENTS]" />
+                                                ToolTip="[TOOLTIP_LAUNCH_ARGUMENTS]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="AppArgumentsTextBox"
@@ -965,7 +1007,7 @@
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
                                             Margin="5"
-                                            Tag="[argumentsPlaceholder]" />
+                                            Tag="[argumentsPlaceholder]"/>
 
                                         <StackPanel
                                             x:Name="AppProcessNameLabelPanel"
@@ -977,7 +1019,7 @@
                                             <Label
                                                 x:Name="AppProcessNameLabel"
                                                 Content="[PROCESS_NAME_LABEL]"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="AppProcessNameTooltip"
                                                 Text="?"
@@ -985,14 +1027,14 @@
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
                                                 VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_PROCESS_NAME]" />
+                                                ToolTip="[TOOLTIP_PROCESS_NAME]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="AppProcessNameTextBox"
                                             Grid.Row="5"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
-                                            Margin="5" />
+                                            Margin="5"/>
 
                                         <StackPanel
                                             x:Name="GameStartActionLabelPanel"
@@ -1004,7 +1046,7 @@
                                             <Label
                                                 x:Name="GameStartActionLabel"
                                                 Content="[GAME_START_ACTION_LABEL]"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="GameStartActionTooltip"
                                                 Text="?"
@@ -1012,7 +1054,7 @@
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
                                                 VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_GAME_ACTIONS]" />
+                                                ToolTip="[TOOLTIP_GAME_ACTIONS]"/>
                                         </StackPanel>
                                         <ComboBox
                                             x:Name="GameStartActionCombo"
@@ -1032,7 +1074,7 @@
                                             <Label
                                                 x:Name="GameEndActionLabel"
                                                 Content="[GAME_END_ACTION_LABEL]"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="GameEndActionTooltip"
                                                 Text="?"
@@ -1040,7 +1082,7 @@
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
                                                 VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_GAME_ACTIONS]" />
+                                                ToolTip="[TOOLTIP_GAME_ACTIONS]"/>
                                         </StackPanel>
                                         <ComboBox
                                             x:Name="GameEndActionCombo"
@@ -1060,7 +1102,7 @@
                                             <Label
                                                 x:Name="TerminationMethodLabel"
                                                 Content="[TERMINATION_METHOD_LABEL]"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="TerminationMethodTooltip"
                                                 Text="?"
@@ -1068,13 +1110,13 @@
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
                                                 VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_TERMINATION_METHOD]" />
+                                                ToolTip="[TOOLTIP_TERMINATION_METHOD]"/>
                                         </StackPanel>
                                         <ComboBox
                                             x:Name="TerminationMethodCombo"
                                             Grid.Row="8"
                                             Grid.Column="1"
-                                            Margin="5" />
+                                            Margin="5"/>
 
                                         <StackPanel
                                             x:Name="GracefulTimeoutLabelPanel"
@@ -1086,7 +1128,7 @@
                                             <Label
                                                 x:Name="GracefulTimeoutLabel"
                                                 Content="[GRACEFUL_TIMEOUT_LABEL]"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="GracefulTimeoutTooltip"
                                                 Text="?"
@@ -1094,14 +1136,14 @@
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
                                                 VerticalAlignment="Center"
-                                                ToolTip="[TOOLTIP_GRACEFUL_TIMEOUT]" />
+                                                ToolTip="[TOOLTIP_GRACEFUL_TIMEOUT]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="GracefulTimeoutTextBox"
                                             Grid.Row="9"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
-                                            Margin="5" />
+                                            Margin="5"/>
 
                                         <Label
                                             x:Name="AppCommentLabel"
@@ -1109,7 +1151,7 @@
                                             Grid.Column="0"
                                             Content="[COMMENT_LABEL]"
                                             VerticalAlignment="Top"
-                                            Margin="0,5,0,0" />
+                                            Margin="0,5,0,0"/>
                                         <TextBox
                                             x:Name="AppCommentTextBox"
                                             Grid.Row="10"
@@ -1121,7 +1163,7 @@
                                             Height="50"
                                             Margin="5"
                                             VerticalContentAlignment="Top"
-                                            Tag="[commentPlaceholder]" />
+                                            Tag="[commentPlaceholder]"/>
                                     </Grid>
                                 </Grid>
                             </ScrollViewer>
@@ -1142,7 +1184,7 @@
                                 Margin="0,0,20,0"
                                 Background="#0078D4"
                                 Foreground="White"
-                                BorderThickness="0" />
+                                BorderThickness="0"/>
                         </Grid>
                     </Grid>
                 </TabItem>
@@ -1155,8 +1197,8 @@
                     Header="[OBS_TAB_HEADER]">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="50" />
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="50"/>
                         </Grid.RowDefinitions>
 
                         <ScrollViewer
@@ -1168,7 +1210,7 @@
                                     Text="[integrationTitleObs]"
                                     FontSize="16"
                                     FontWeight="Bold"
-                                    Margin="0,0,0,15" />
+                                    Margin="0,0,0,15"/>
 
                                 <!-- ゲーム連動設定 -->
                                 <GroupBox
@@ -1179,15 +1221,15 @@
                                         <CheckBox
                                             x:Name="OBSAutoStartCheckBox"
                                             Content="[GAME_START_OBS_LABEL]"
-                                            Margin="0,5" />
+                                            Margin="0,5"/>
                                         <CheckBox
                                             x:Name="OBSAutoStopCheckBox"
                                             Content="[GAME_STOP_REPLAY_BUFFER_LABEL]"
-                                            Margin="0,5" />
+                                            Margin="0,5"/>
                                         <CheckBox
                                             x:Name="OBSReplayBufferCheckBox"
                                             Content="[REPLAY_BUFFER_LABEL]"
-                                            Margin="0,5" />
+                                            Margin="0,5"/>
                                     </StackPanel>
                                 </GroupBox>
 
@@ -1198,13 +1240,13 @@
                                     Margin="0,0,0,15">
                                     <Grid Margin="10">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="120" />
-                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <Grid.RowDefinitions>
-                                            <RowDefinition Height="35" />
-                                            <RowDefinition Height="35" />
-                                            <RowDefinition Height="35" />
+                                            <RowDefinition Height="35"/>
+                                            <RowDefinition Height="35"/>
+                                            <RowDefinition Height="35"/>
                                         </Grid.RowDefinitions>
 
                                         <Label
@@ -1212,38 +1254,38 @@
                                             Content="[HOST_LABEL]"
                                             Grid.Row="0"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center" />
+                                            VerticalAlignment="Center"/>
                                         <TextBox
                                             x:Name="OBSHostTextBox"
                                             Grid.Row="0"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
-                                            Margin="5" />
+                                            Margin="5"/>
 
                                         <Label
                                             x:Name="PortLabel"
                                             Content="[PORT_LABEL]"
                                             Grid.Row="1"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center" />
+                                            VerticalAlignment="Center"/>
                                         <TextBox
                                             x:Name="OBSPortTextBox"
                                             Grid.Row="1"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
-                                            Margin="5" />
+                                            Margin="5"/>
 
                                         <Label
                                             x:Name="PasswordLabel"
                                             Content="[PASSWORD_LABEL]"
                                             Grid.Row="2"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center" />
+                                            VerticalAlignment="Center"/>
                                         <PasswordBox
                                             x:Name="OBSPasswordBox"
                                             Grid.Row="2"
                                             Grid.Column="1"
-                                            Margin="5" />
+                                            Margin="5"/>
                                     </Grid>
                                 </GroupBox>
 
@@ -1256,34 +1298,34 @@
                                         <Label
                                             x:Name="ObsPathLabel"
                                             Content="[OBS_PATH_LABEL]"
-                                            Margin="0,0,0,5" />
+                                            Margin="0,0,0,5"/>
 
                                         <Grid>
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="80" />
-                                                <ColumnDefinition Width="90" />
-                                                <ColumnDefinition Width="25" />
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="80"/>
+                                                <ColumnDefinition Width="90"/>
+                                                <ColumnDefinition Width="25"/>
                                             </Grid.ColumnDefinitions>
 
                                             <TextBox
                                                 x:Name="OBSPathTextBox"
                                                 Grid.Column="0"
                                                 VerticalContentAlignment="Center"
-                                                Margin="0,0,5,0" />
+                                                Margin="0,0,5,0"/>
                                             <Button
                                                 x:Name="BrowseOBSPathButton"
                                                 Content="[BROWSE_BUTTON]"
                                                 Grid.Column="1"
                                                 Width="70"
                                                 Height="25"
-                                                Margin="0,0,5,0" />
+                                                Margin="0,0,5,0"/>
                                             <Button
                                                 x:Name="AutoDetectOBSButton"
                                                 Content="[AUTO_DETECT_BUTTON]"
                                                 Grid.Column="2"
                                                 Width="85"
-                                                Height="25" />
+                                                Height="25"/>
                                             <TextBlock
                                                 x:Name="AutoDetectObsTooltip"
                                                 Text="?"
@@ -1291,7 +1333,7 @@
                                                 FontWeight="Bold"
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                         </Grid>
                                     </StackPanel>
                                 </GroupBox>
@@ -1312,7 +1354,7 @@
                                 Margin="0,0,20,0"
                                 Background="#0078D4"
                                 Foreground="White"
-                                BorderThickness="0" />
+                                BorderThickness="0"/>
                         </Grid>
                     </Grid>
                 </TabItem>
@@ -1328,8 +1370,8 @@
                     Visibility="Collapsed">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="50" />
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="50"/>
                         </Grid.RowDefinitions>
 
                         <ScrollViewer
@@ -1341,7 +1383,7 @@
                                     Text="[integrationTitleDiscord]"
                                     FontSize="16"
                                     FontWeight="Bold"
-                                    Margin="0,0,0,15" />
+                                    Margin="0,0,0,15"/>
 
                                 <!-- ゲーム連動動作 -->
                                 <GroupBox
@@ -1352,61 +1394,61 @@
                                         <CheckBox
                                             x:Name="DiscordEnableGameModeCheckBox"
                                             Content="[discordEnableAutoControl]"
-                                            Margin="0,5" />
+                                            Margin="0,5"/>
 
                                         <StackPanel Orientation="Horizontal"
-                                            Margin="0,10,0,5">
+                                                    Margin="0,10,0,5">
                                             <Label x:Name="DiscordStatusOnStartLabel"
-                                                Content="[discordStatusOnStart]"
-                                                Width="120" />
+                                                   Content="[discordStatusOnStart]"
+                                                   Width="120"/>
                                             <ComboBox x:Name="DiscordStatusOnStartCombo"
-                                                Width="200">
+                                                      Width="200">
                                                 <ComboBoxItem
                                                     x:Name="DiscordStatusOnStartOnlineItem"
                                                     Content="[discordStatusOnline]"
-                                                    Tag="online" />
+                                                    Tag="online"/>
                                                 <ComboBoxItem x:Name="DiscordStatusOnStartDndItem"
-                                                    Content="[discordStatusDnd]"
-                                                    Tag="dnd"
-                                                    IsSelected="True" />
+                                                              Content="[discordStatusDnd]"
+                                                              Tag="dnd"
+                                                              IsSelected="True"/>
                                                 <ComboBoxItem x:Name="DiscordStatusOnStartIdleItem"
-                                                    Content="[discordStatusIdle]"
-                                                    Tag="idle" />
+                                                              Content="[discordStatusIdle]"
+                                                              Tag="idle"/>
                                                 <ComboBoxItem
                                                     x:Name="DiscordStatusOnStartInvisibleItem"
                                                     Content="[discordStatusInvisible]"
-                                                    Tag="invisible" />
+                                                    Tag="invisible"/>
                                             </ComboBox>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal"
-                                            Margin="0,5">
+                                                    Margin="0,5">
                                             <Label x:Name="DiscordStatusOnEndLabel"
-                                                Content="[discordStatusOnEnd]"
-                                                Width="120" />
+                                                   Content="[discordStatusOnEnd]"
+                                                   Width="120"/>
                                             <ComboBox x:Name="DiscordStatusOnEndCombo"
-                                                Width="200">
+                                                      Width="200">
                                                 <ComboBoxItem x:Name="DiscordStatusOnEndOnlineItem"
-                                                    Content="[discordStatusOnline]"
-                                                    Tag="online"
-                                                    IsSelected="True" />
+                                                              Content="[discordStatusOnline]"
+                                                              Tag="online"
+                                                              IsSelected="True"/>
                                                 <ComboBoxItem x:Name="DiscordStatusOnEndDndItem"
-                                                    Content="[discordStatusDnd]"
-                                                    Tag="dnd" />
+                                                              Content="[discordStatusDnd]"
+                                                              Tag="dnd"/>
                                                 <ComboBoxItem x:Name="DiscordStatusOnEndIdleItem"
-                                                    Content="[discordStatusIdle]"
-                                                    Tag="idle" />
+                                                              Content="[discordStatusIdle]"
+                                                              Tag="idle"/>
                                                 <ComboBoxItem
                                                     x:Name="DiscordStatusOnEndInvisibleItem"
                                                     Content="[discordStatusInvisible]"
-                                                    Tag="invisible" />
+                                                    Tag="invisible"/>
                                             </ComboBox>
                                         </StackPanel>
 
                                         <CheckBox
                                             x:Name="DiscordDisableOverlayCheckBox"
                                             Content="[discordDisableOverlay]"
-                                            Margin="0,10,0,5" />
+                                            Margin="0,10,0,5"/>
                                     </StackPanel>
                                 </GroupBox>
 
@@ -1419,16 +1461,16 @@
                                         <CheckBox
                                             x:Name="DiscordRPCEnableCheckBox"
                                             Content="[discordEnableRichPresence]"
-                                            Margin="0,5" />
+                                            Margin="0,5"/>
                                         <StackPanel Orientation="Horizontal"
-                                            Margin="0,10,0,5">
+                                                    Margin="0,10,0,5">
                                             <Label x:Name="DiscordAppIdLabel"
-                                                Content="[discordAppIdLabel]"
-                                                Width="120" />
+                                                   Content="[discordAppIdLabel]"
+                                                   Width="120"/>
                                             <TextBox
                                                 x:Name="DiscordRPCAppIdTextBox"
                                                 Width="300"
-                                                VerticalContentAlignment="Center" />
+                                                VerticalContentAlignment="Center"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </GroupBox>
@@ -1445,35 +1487,35 @@
                                             Foreground="#0078D4"
                                             FontSize="11"
                                             TextWrapping="Wrap"
-                                            Margin="0,0,0,8" />
+                                            Margin="0,0,0,8"/>
 
                                         <!-- パス入力とボタン -->
                                         <Grid>
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="80" />
-                                                <ColumnDefinition Width="90" />
-                                                <ColumnDefinition Width="25" />
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="80"/>
+                                                <ColumnDefinition Width="90"/>
+                                                <ColumnDefinition Width="25"/>
                                             </Grid.ColumnDefinitions>
 
                                             <TextBox
                                                 x:Name="DiscordPathTextBox"
                                                 Grid.Column="0"
                                                 VerticalContentAlignment="Center"
-                                                Margin="0,0,5,0" />
+                                                Margin="0,0,5,0"/>
                                             <Button
                                                 x:Name="BrowseDiscordPathButton"
                                                 Content="[BROWSE_BUTTON]"
                                                 Grid.Column="1"
                                                 Width="70"
                                                 Height="25"
-                                                Margin="0,0,5,0" />
+                                                Margin="0,0,5,0"/>
                                             <Button
                                                 x:Name="AutoDetectDiscordButton"
                                                 Content="[AUTO_DETECT_BUTTON]"
                                                 Grid.Column="2"
                                                 Width="85"
-                                                Height="25" />
+                                                Height="25"/>
                                             <TextBlock
                                                 x:Name="AutoDetectDiscordTooltip"
                                                 Text="?"
@@ -1481,7 +1523,7 @@
                                                 FontWeight="Bold"
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                         </Grid>
                                     </StackPanel>
                                 </GroupBox>
@@ -1502,7 +1544,7 @@
                                 Margin="0,0,20,0"
                                 Background="#0078D4"
                                 Foreground="White"
-                                BorderThickness="0" />
+                                BorderThickness="0"/>
                         </Grid>
                     </Grid>
                 </TabItem>
@@ -1515,8 +1557,8 @@
                     Header="[VTUBESTUDIOTAB_HEADER]">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="50" />
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="50"/>
                         </Grid.RowDefinitions>
 
                         <ScrollViewer
@@ -1528,7 +1570,7 @@
                                     Text="[integrationTitleVtube]"
                                     FontSize="16"
                                     FontWeight="Bold"
-                                    Margin="0,0,0,15" />
+                                    Margin="0,0,0,15"/>
 
                                 <!-- ゲーム連動設定 -->
                                 <GroupBox
@@ -1539,11 +1581,11 @@
                                         <CheckBox
                                             x:Name="VTubeAutoStartCheckBox"
                                             Content="[vtubeAutoStart]"
-                                            Margin="0,5" />
+                                            Margin="0,5"/>
                                         <CheckBox
                                             x:Name="VTubeAutoStopCheckBox"
                                             Content="[vtubeAutoStop]"
-                                            Margin="0,5" />
+                                            Margin="0,5"/>
                                     </StackPanel>
                                 </GroupBox>
 
@@ -1556,32 +1598,32 @@
                                         <CheckBox
                                             x:Name="VTubeWebSocketEnableCheckBox"
                                             Content="[vtubeEnableWebsocket]"
-                                            Margin="0,5" />
+                                            Margin="0,5"/>
 
                                         <StackPanel Orientation="Horizontal"
-                                            Margin="0,10,0,5">
+                                                    Margin="0,10,0,5">
                                             <Label
                                                 x:Name="VTubeHostLabel"
                                                 Content="[HOST_LABEL]"
-                                                Width="80" />
+                                                Width="80"/>
                                             <TextBox
                                                 x:Name="VTubeHostTextBox"
                                                 Width="200"
                                                 VerticalContentAlignment="Center"
-                                                Text="localhost" />
+                                                Text="localhost"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal"
-                                            Margin="0,5">
+                                                    Margin="0,5">
                                             <Label
                                                 x:Name="VTubePortLabel"
                                                 Content="[PORT_LABEL]"
-                                                Width="80" />
+                                                Width="80"/>
                                             <TextBox
                                                 x:Name="VTubePortTextBox"
                                                 Width="100"
                                                 VerticalContentAlignment="Center"
-                                                Text="8001" />
+                                                Text="8001"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </GroupBox>
@@ -1597,51 +1639,51 @@
                                             Content="[vtubeLaunchViaSteam]"
                                             GroupName="VTubeLaunchMethod"
                                             IsChecked="True"
-                                            Margin="0,5" />
+                                            Margin="0,5"/>
                                         <StackPanel Orientation="Horizontal"
-                                            Margin="20,5,0,5">
+                                                    Margin="20,5,0,5">
                                             <Label
                                                 x:Name="VTubeSteamAppIdLabel"
                                                 Content="[vtubeSteamAppIdLabel]"
-                                                Width="100" />
+                                                Width="100"/>
                                             <TextBox
                                                 x:Name="VTubeSteamAppIdTextBox"
                                                 Width="150"
                                                 VerticalContentAlignment="Center"
-                                                Text="1325860" />
+                                                Text="1325860"/>
                                         </StackPanel>
 
                                         <RadioButton
                                             x:Name="VTubeLaunchDirectRadio"
                                             Content="[vtubeLaunchDirect]"
                                             GroupName="VTubeLaunchMethod"
-                                            Margin="0,10,0,5" />
+                                            Margin="0,10,0,5"/>
                                         <Grid Margin="20,5,0,5">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="80" />
-                                                <ColumnDefinition Width="90" />
-                                                <ColumnDefinition Width="25" />
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="80"/>
+                                                <ColumnDefinition Width="90"/>
+                                                <ColumnDefinition Width="25"/>
                                             </Grid.ColumnDefinitions>
 
                                             <TextBox
                                                 x:Name="VTubePathTextBox"
                                                 Grid.Column="0"
                                                 VerticalContentAlignment="Center"
-                                                Margin="0,0,5,0" />
+                                                Margin="0,0,5,0"/>
                                             <Button
                                                 x:Name="BrowseVTubePathButton"
                                                 Content="[BROWSE_BUTTON]"
                                                 Grid.Column="1"
                                                 Width="70"
                                                 Height="25"
-                                                Margin="0,0,5,0" />
+                                                Margin="0,0,5,0"/>
                                             <Button
                                                 x:Name="AutoDetectVTubeButton"
                                                 Content="[AUTO_DETECT_BUTTON]"
                                                 Grid.Column="2"
                                                 Width="85"
-                                                Height="25" />
+                                                Height="25"/>
                                             <TextBlock
                                                 x:Name="AutoDetectVTubeStudioTooltip"
                                                 Text="?"
@@ -1649,7 +1691,7 @@
                                                 FontWeight="Bold"
                                                 Foreground="#0078D4"
                                                 Margin="3,0,0,0"
-                                                VerticalAlignment="Center" />
+                                                VerticalAlignment="Center"/>
                                         </Grid>
                                     </StackPanel>
                                 </GroupBox>
@@ -1664,7 +1706,7 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            
+
                             <Button
                                 x:Name="StartVTubeStudioButton"
                                 Content="[START_VTUBE_STUDIO_BUTTON]"
@@ -1688,7 +1730,7 @@
                                 Margin="0,0,20,0"
                                 Background="#0078D4"
                                 Foreground="White"
-                                BorderThickness="0" />
+                                BorderThickness="0"/>
                         </Grid>
                     </Grid>
                 </TabItem>
@@ -1698,8 +1740,8 @@
                     Header="[GLOBAL_SETTINGS_TAB_HEADER]">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="50" />
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="50"/>
                         </Grid.RowDefinitions>
 
                         <ScrollViewer
@@ -1713,19 +1755,19 @@
                                     Margin="0,0,0,20">
                                     <Grid Margin="10">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="150" />
-                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <Grid.RowDefinitions>
-                                            <RowDefinition Height="35" />
-                                            <RowDefinition Height="35" />
-                                            <RowDefinition Height="35" />
+                                            <RowDefinition Height="35"/>
+                                            <RowDefinition Height="35"/>
+                                            <RowDefinition Height="35"/>
                                             <!-- TODO: Re-enable in future release (Change back to
                                             Height="35") -->
                                             <!-- Disabled for v1.0 - Changed to Auto to collapse
                                             space when content is hidden -->
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
 
                                         <Label
@@ -1733,21 +1775,21 @@
                                             Content="[LANGUAGE_LABEL]"
                                             Grid.Row="0"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center" />
+                                            VerticalAlignment="Center"/>
                                         <ComboBox
                                             x:Name="LanguageCombo"
                                             Grid.Row="0"
                                             Grid.Column="1"
                                             Width="200"
                                             HorizontalAlignment="Left"
-                                            Margin="5" />
+                                            Margin="5"/>
 
                                         <Label
                                             x:Name="LauncherTypeLabel"
                                             Content="[LAUNCHER_TYPE_LABEL]"
                                             Grid.Row="1"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center" />
+                                            VerticalAlignment="Center"/>
                                         <ComboBox
                                             x:Name="LauncherTypeCombo"
                                             Grid.Row="1"
@@ -1759,11 +1801,11 @@
                                                 x:Name="LauncherTypeEnhancedItem"
                                                 Content="[ENHANCED_SHORTCUTS]"
                                                 Tag="lnk"
-                                                IsSelected="True" />
+                                                IsSelected="True"/>
                                             <ComboBoxItem
                                                 x:Name="LauncherTypeTraditionalItem"
                                                 Content="[TRADITIONAL_BATCH]"
-                                                Tag="bat" />
+                                                Tag="bat"/>
                                         </ComboBox>
 
                                         <Label
@@ -1771,7 +1813,7 @@
                                             Content="[LOG_RETENTION_LABEL]"
                                             Grid.Row="2"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center" />
+                                            VerticalAlignment="Center"/>
                                         <ComboBox
                                             x:Name="LogRetentionCombo"
                                             Grid.Row="2"
@@ -1782,20 +1824,20 @@
                                             <ComboBoxItem
                                                 x:Name="LogRetention7Item"
                                                 Content="[LOG_RETENTION_7]"
-                                                Tag="7" />
+                                                Tag="7"/>
                                             <ComboBoxItem
                                                 x:Name="LogRetention30Item"
                                                 Content="[LOG_RETENTION_30]"
                                                 Tag="30"
-                                                IsSelected="True" />
+                                                IsSelected="True"/>
                                             <ComboBoxItem
                                                 x:Name="LogRetention180Item"
                                                 Content="[LOG_RETENTION_180]"
-                                                Tag="180" />
+                                                Tag="180"/>
                                             <ComboBoxItem
                                                 x:Name="LogRetentionUnlimitedItem"
                                                 Content="[LOG_RETENTION_UNLIMITED]"
-                                                Tag="-1" />
+                                                Tag="-1"/>
                                         </ComboBox>
 
                                         <!-- TODO: Re-enable in future release -->
@@ -1809,7 +1851,7 @@
                                             Grid.ColumnSpan="2"
                                             VerticalAlignment="Center"
                                             Margin="5"
-                                            Visibility="Collapsed" />
+                                            Visibility="Collapsed"/>
 
                                         <TextBlock
                                             x:Name="LauncherHelpText"
@@ -1819,7 +1861,7 @@
                                             TextWrapping="Wrap"
                                             FontSize="11"
                                             Foreground="#666"
-                                            Margin="5,5,0,0" />
+                                            Margin="5,5,0,0"/>
                                     </Grid>
                                 </GroupBox>
 
@@ -1828,16 +1870,16 @@
                                     Header="[PATH_SETTINGS_GROUP]">
                                     <Grid Margin="10">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="180" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="80" />
-                                            <ColumnDefinition Width="80" />
-                                            <ColumnDefinition Width="25" />
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition Width="25"/>
                                         </Grid.ColumnDefinitions>
                                         <Grid.RowDefinitions>
-                                            <RowDefinition Height="35" />
-                                            <RowDefinition Height="35" />
-                                            <RowDefinition Height="35" />
+                                            <RowDefinition Height="35"/>
+                                            <RowDefinition Height="35"/>
+                                            <RowDefinition Height="35"/>
                                         </Grid.RowDefinitions>
 
                                         <Label
@@ -1845,20 +1887,20 @@
                                             Content="[STEAM_PATH_LABEL]"
                                             Grid.Row="0"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center" />
+                                            VerticalAlignment="Center"/>
                                         <TextBox
                                             x:Name="SteamPathTextBox"
                                             Grid.Row="0"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
-                                            Margin="5" />
+                                            Margin="5"/>
                                         <Button
                                             x:Name="BrowseSteamPathButton"
                                             Content="[BROWSE_BUTTON]"
                                             Grid.Row="0"
                                             Grid.Column="2"
                                             Width="70"
-                                            Height="25" />
+                                            Height="25"/>
                                         <Button
                                             x:Name="AutoDetectSteamButton"
                                             Content="[AUTO_DETECT_BUTTON]"
@@ -1866,7 +1908,7 @@
                                             Grid.Column="3"
                                             Width="70"
                                             Height="25"
-                                            Margin="5,0,0,0" />
+                                            Margin="5,0,0,0"/>
                                         <TextBlock
                                             x:Name="AutoDetectSteamTooltip"
                                             Text="?"
@@ -1876,27 +1918,27 @@
                                             Foreground="#0078D4"
                                             Margin="3,0,0,0"
                                             VerticalAlignment="Center"
-                                            ToolTip="[AUTO_DETECT_STEAM_TOOLTIP]" />
+                                            ToolTip="[AUTO_DETECT_STEAM_TOOLTIP]"/>
 
                                         <Label
                                             x:Name="EpicPathLabel"
                                             Content="[EPIC_PATH_LABEL]"
                                             Grid.Row="1"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center" />
+                                            VerticalAlignment="Center"/>
                                         <TextBox
                                             x:Name="EpicPathTextBox"
                                             Grid.Row="1"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
-                                            Margin="5" />
+                                            Margin="5"/>
                                         <Button
                                             x:Name="BrowseEpicPathButton"
                                             Content="[BROWSE_BUTTON]"
                                             Grid.Row="1"
                                             Grid.Column="2"
                                             Width="70"
-                                            Height="25" />
+                                            Height="25"/>
                                         <Button
                                             x:Name="AutoDetectEpicButton"
                                             Content="[AUTO_DETECT_BUTTON]"
@@ -1904,7 +1946,7 @@
                                             Grid.Column="3"
                                             Width="70"
                                             Height="25"
-                                            Margin="5,0,0,0" />
+                                            Margin="5,0,0,0"/>
                                         <TextBlock
                                             x:Name="AutoDetectEpicTooltip"
                                             Text="?"
@@ -1914,27 +1956,27 @@
                                             Foreground="#0078D4"
                                             Margin="3,0,0,0"
                                             VerticalAlignment="Center"
-                                            ToolTip="[AUTO_DETECT_EPIC_TOOLTIP]" />
+                                            ToolTip="[AUTO_DETECT_EPIC_TOOLTIP]"/>
 
                                         <Label
                                             x:Name="RiotPathLabel"
                                             Content="[RIOT_PATH_LABEL]"
                                             Grid.Row="2"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center" />
+                                            VerticalAlignment="Center"/>
                                         <TextBox
                                             x:Name="RiotPathTextBox"
                                             Grid.Row="2"
                                             Grid.Column="1"
                                             VerticalContentAlignment="Center"
-                                            Margin="5" />
+                                            Margin="5"/>
                                         <Button
                                             x:Name="BrowseRiotPathButton"
                                             Content="[BROWSE_BUTTON]"
                                             Grid.Row="2"
                                             Grid.Column="2"
                                             Width="70"
-                                            Height="25" />
+                                            Height="25"/>
                                         <Button
                                             x:Name="AutoDetectRiotButton"
                                             Content="[AUTO_DETECT_BUTTON]"
@@ -1942,7 +1984,7 @@
                                             Grid.Column="3"
                                             Width="70"
                                             Height="25"
-                                            Margin="5,0,0,0" />
+                                            Margin="5,0,0,0"/>
                                         <TextBlock
                                             x:Name="AutoDetectRiotTooltip"
                                             Text="?"
@@ -1952,7 +1994,7 @@
                                             Foreground="#0078D4"
                                             Margin="3,0,0,0"
                                             VerticalAlignment="Center"
-                                            ToolTip="[AUTO_DETECT_RIOT_TOOLTIP]" />
+                                            ToolTip="[AUTO_DETECT_RIOT_TOOLTIP]"/>
                                     </Grid>
                                 </GroupBox>
                             </StackPanel>
@@ -1972,7 +2014,7 @@
                                 Margin="0,0,20,0"
                                 Background="#0078D4"
                                 Foreground="White"
-                                BorderThickness="0" />
+                                BorderThickness="0"/>
                         </Grid>
                     </Grid>
                 </TabItem>
