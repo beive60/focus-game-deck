@@ -339,15 +339,15 @@ $xslt = @"
                         <xsl:choose>
                             <xsl:when test="@result='Success'">
                                 <xsl:attribute name="class">test-status status-success</xsl:attribute>
-                                ✓ PASS
+                                PASS
                             </xsl:when>
                             <xsl:when test="@result='Failure'">
                                 <xsl:attribute name="class">test-status status-failure</xsl:attribute>
-                                ✗ FAIL
+                                FAIL
                             </xsl:when>
                             <xsl:when test="@result='Ignored'">
                                 <xsl:attribute name="class">test-status status-ignored</xsl:attribute>
-                                ⊘ SKIP
+                                SKIP
                             </xsl:when>
                         </xsl:choose>
                     </span>
