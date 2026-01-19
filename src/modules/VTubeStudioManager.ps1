@@ -46,15 +46,25 @@ class VTubeStudioManager {
         }
 
         try {
-            $steamPath = $this.GetSteamPath()
-            if ($steamPath -and (Test-Path $steamPath)) {
+            $configPath = $this.Config.path
+
+            # Check if config path points to Steam.exe
+            if ($configPath -and (Test-Path $configPath) -and $configPath -match "steam\.exe$") {
                 & $global:WriteLocalizedHostFunc -Messages $this.Messages -Key "vtube_starting_via_steam" -Default "Starting VTube Studio via Steam..." -Level "INFO" -Component "VTubeStudioManager"
-                Start-Process $steamPath -ArgumentList "-applaunch $($this.SteamAppId)"
+                Start-Process $configPath -ArgumentList "-applaunch $($this.SteamAppId)"
                 if ($this.Logger) {
                     $this.Logger.Info("Started VTube Studio via Steam (AppID: $($this.SteamAppId))", "VTUBE")
                 }
+            }
+            # Check if config path points to VTube Studio.exe directly
+            elseif ($configPath -and (Test-Path $configPath) -and $configPath -match "VTube Studio\.exe$") {
+                & $global:WriteLocalizedHostFunc -Messages $this.Messages -Key "vtube_starting_direct" -Default "Starting VTube Studio directly..." -Level "INFO" -Component "VTubeStudioManager"
+                Start-Process $configPath -ArgumentList "-nosteam"
+                if ($this.Logger) {
+                    $this.Logger.Info("Started VTube Studio directly with -nosteam argument", "VTUBE")
+                }
             } else {
-                & $global:WriteLocalizedHostFunc -Messages $this.Messages -Key "vtube_steam_not_found" -Default "Steam not found" -Level "WARNING" -Component "VTubeStudioManager"
+                & $global:WriteLocalizedHostFunc -Messages $this.Messages -Key "vtube_path_not_found" -Default "VTube Studio path not found or invalid" -Level "WARNING" -Component "VTubeStudioManager"
                 return $false
             }
 
