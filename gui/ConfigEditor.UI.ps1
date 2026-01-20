@@ -1316,44 +1316,42 @@ class ConfigEditorUI {
                         $enableGameModeCheckBox.IsChecked = ($ConfigData.integrations.discord.gameStartAction -eq "enter-game-mode")
                     }
 
-                    # Load settings from discord.discord subsection
-                    if ($ConfigData.integrations.discord.discord) {
-                        $statusOnStartCombo = $self.Window.FindName("DiscordStatusOnStartCombo")
-                        if ($statusOnStartCombo -and $ConfigData.integrations.discord.discord.statusOnGameStart) {
-                            for ($i = 0; $i -lt $statusOnStartCombo.Items.Count; $i++) {
-                                if ($statusOnStartCombo.Items[$i].Tag -eq $ConfigData.integrations.discord.discord.statusOnGameStart) {
-                                    $statusOnStartCombo.SelectedIndex = $i
-                                    break
-                                }
+                    # Load settings from discord section (flattened structure)
+                    $statusOnStartCombo = $self.Window.FindName("DiscordStatusOnStartCombo")
+                    if ($statusOnStartCombo -and $ConfigData.integrations.discord.statusOnGameStart) {
+                        for ($i = 0; $i -lt $statusOnStartCombo.Items.Count; $i++) {
+                            if ($statusOnStartCombo.Items[$i].Tag -eq $ConfigData.integrations.discord.statusOnGameStart) {
+                                $statusOnStartCombo.SelectedIndex = $i
+                                break
                             }
                         }
+                    }
 
-                        $statusOnEndCombo = $self.Window.FindName("DiscordStatusOnEndCombo")
-                        if ($statusOnEndCombo -and $ConfigData.integrations.discord.discord.statusOnGameEnd) {
-                            for ($i = 0; $i -lt $statusOnEndCombo.Items.Count; $i++) {
-                                if ($statusOnEndCombo.Items[$i].Tag -eq $ConfigData.integrations.discord.discord.statusOnGameEnd) {
-                                    $statusOnEndCombo.SelectedIndex = $i
-                                    break
-                                }
+                    $statusOnEndCombo = $self.Window.FindName("DiscordStatusOnEndCombo")
+                    if ($statusOnEndCombo -and $ConfigData.integrations.discord.statusOnGameEnd) {
+                        for ($i = 0; $i -lt $statusOnEndCombo.Items.Count; $i++) {
+                            if ($statusOnEndCombo.Items[$i].Tag -eq $ConfigData.integrations.discord.statusOnGameEnd) {
+                                $statusOnEndCombo.SelectedIndex = $i
+                                break
                             }
                         }
+                    }
 
-                        $disableOverlayCheckBox = $self.Window.FindName("DiscordDisableOverlayCheckBox")
-                        if ($disableOverlayCheckBox) {
-                            $disableOverlayCheckBox.IsChecked = [bool]$ConfigData.integrations.discord.discord.disableOverlay
+                    $disableOverlayCheckBox = $self.Window.FindName("DiscordDisableOverlayCheckBox")
+                    if ($disableOverlayCheckBox) {
+                        $disableOverlayCheckBox.IsChecked = [bool]$ConfigData.integrations.discord.disableOverlay
+                    }
+
+                    # Load Rich Presence settings from discord.rpc subsection
+                    if ($ConfigData.integrations.discord.rpc) {
+                        $rpcEnableCheckBox = $self.Window.FindName("DiscordRPCEnableCheckBox")
+                        if ($rpcEnableCheckBox) {
+                            $rpcEnableCheckBox.IsChecked = [bool]$ConfigData.integrations.discord.rpc.enabled
                         }
 
-                        # Load Rich Presence settings from discord.discord.rpc subsection
-                        if ($ConfigData.integrations.discord.discord.rpc) {
-                            $rpcEnableCheckBox = $self.Window.FindName("DiscordRPCEnableCheckBox")
-                            if ($rpcEnableCheckBox) {
-                                $rpcEnableCheckBox.IsChecked = [bool]$ConfigData.integrations.discord.discord.rpc.enabled
-                            }
-
-                            $rpcAppIdTextBox = $self.Window.FindName("DiscordRPCAppIdTextBox")
-                            if ($rpcAppIdTextBox) {
-                                $rpcAppIdTextBox.Text = $ConfigData.integrations.discord.discord.rpc.applicationId
-                            }
+                        $rpcAppIdTextBox = $self.Window.FindName("DiscordRPCAppIdTextBox")
+                        if ($rpcAppIdTextBox) {
+                            $rpcAppIdTextBox.Text = $ConfigData.integrations.discord.rpc.applicationId
                         }
                     }
                 }
