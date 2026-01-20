@@ -1000,6 +1000,30 @@ function Save-DiscordSettingsData {
             Write-Verbose "Save-DiscordSettingsData: Discord path set to $($discordPathTextBox.Text)"
         }
 
+        # Get process name
+        $discordProcessNameTextBox = $script:Window.FindName("DiscordProcessNameTextBox")
+        if ($discordProcessNameTextBox) {
+            $processName = $discordProcessNameTextBox.Text.Trim()
+            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["processName"]) {
+                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "processName" -NotePropertyValue $processName -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.discord.processName = $processName
+            }
+            Write-Verbose "Save-DiscordSettingsData: Discord processName set to $processName"
+        }
+
+        # Get arguments
+        $discordArgumentsTextBox = $script:Window.FindName("DiscordArgumentsTextBox")
+        if ($discordArgumentsTextBox) {
+            $arguments = $discordArgumentsTextBox.Text.Trim()
+            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["arguments"]) {
+                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "arguments" -NotePropertyValue $arguments -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.discord.arguments = $arguments
+            }
+            Write-Verbose "Save-DiscordSettingsData: Discord arguments set to $arguments"
+        }
+
         # Get game mode checkbox and map to gameStartAction
         $enableGameModeCheckBox = $script:Window.FindName("DiscordEnableGameModeCheckBox")
         if ($enableGameModeCheckBox) {
@@ -1010,6 +1034,47 @@ function Save-DiscordSettingsData {
                 $script:StateManager.ConfigData.integrations.discord.gameStartAction = $gameStartAction
             }
             Write-Verbose "Save-DiscordSettingsData: gameStartAction set to $gameStartAction"
+        }
+
+        # Get game end action from ComboBox
+        $discordGameEndActionCombo = $script:Window.FindName("DiscordGameEndActionCombo")
+        if ($discordGameEndActionCombo -and $discordGameEndActionCombo.SelectedItem) {
+            $gameEndAction = $discordGameEndActionCombo.SelectedItem.Tag
+            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["gameEndAction"]) {
+                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "gameEndAction" -NotePropertyValue $gameEndAction -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.discord.gameEndAction = $gameEndAction
+            }
+            Write-Verbose "Save-DiscordSettingsData: gameEndAction set to $gameEndAction"
+        }
+
+        # Get termination method
+        $discordTerminationMethodCombo = $script:Window.FindName("DiscordTerminationMethodCombo")
+        if ($discordTerminationMethodCombo -and $discordTerminationMethodCombo.SelectedItem) {
+            $terminationMethod = $discordTerminationMethodCombo.SelectedItem.Tag
+            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["terminationMethod"]) {
+                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "terminationMethod" -NotePropertyValue $terminationMethod -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.discord.terminationMethod = $terminationMethod
+            }
+            Write-Verbose "Save-DiscordSettingsData: terminationMethod set to $terminationMethod"
+        }
+
+        # Get graceful timeout
+        $discordGracefulTimeoutTextBox = $script:Window.FindName("DiscordGracefulTimeoutTextBox")
+        if ($discordGracefulTimeoutTextBox) {
+            $timeoutSeconds = 8  # Discord default
+            if ([int]::TryParse($discordGracefulTimeoutTextBox.Text, [ref]$timeoutSeconds)) {
+                $timeoutMs = $timeoutSeconds * 1000
+            } else {
+                $timeoutMs = 8000  # Default 8 seconds for Discord
+            }
+            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["gracefulTimeoutMs"]) {
+                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "gracefulTimeoutMs" -NotePropertyValue $timeoutMs -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.discord.gracefulTimeoutMs = $timeoutMs
+            }
+            Write-Verbose "Save-DiscordSettingsData: gracefulTimeoutMs set to $timeoutMs"
         }
 
         # Get status settings and save to discord section (flattened structure)
