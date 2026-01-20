@@ -278,6 +278,51 @@ function Save-CurrentGameData {
         Set-PropertyValue -Object $gameData -PropertyName "executablePath" -Value $normalizedPath
     }
 
+    # Save console-specific settings if platform is console
+    $platformCombo = $script:Window.FindName("PlatformComboBox")
+    if ($platformCombo -and $platformCombo.SelectedItem -and $platformCombo.SelectedItem.Tag -eq "console") {
+        # Save console type
+        $consoleTypeCombo = $script:Window.FindName("ConsoleTypeCombo")
+        if ($consoleTypeCombo -and $consoleTypeCombo.SelectedItem) {
+            Set-PropertyValue -Object $gameData -PropertyName "consoleType" -Value $consoleTypeCombo.SelectedItem.Tag
+        }
+
+        # Save console game ID
+        $consoleGameIdTextBox = $script:Window.FindName("ConsoleGameIdTextBox")
+        if ($consoleGameIdTextBox) {
+            Set-PropertyValue -Object $gameData -PropertyName "consoleGameId" -Value $consoleGameIdTextBox.Text
+        }
+
+        # Save requires manual exit
+        $requiresManualExitCheckBox = $script:Window.FindName("RequiresManualExitCheckBox")
+        if ($requiresManualExitCheckBox) {
+            Set-PropertyValue -Object $gameData -PropertyName "requiresManualExit" -Value ([bool]$requiresManualExitCheckBox.IsChecked)
+        }
+
+        # Save display settings
+        $displayProfilePathTextBox = $script:Window.FindName("DisplayProfilePathTextBox")
+        $restoreDisplayOnExitCheckBox = $script:Window.FindName("RestoreDisplayOnExitCheckBox")
+        
+        # Only create display object if profile path is specified
+        if ($displayProfilePathTextBox -and $displayProfilePathTextBox.Text.Trim() -ne "") {
+            if (-not $gameData.PSObject.Properties["display"]) {
+                $gameData | Add-Member -NotePropertyName "display" -NotePropertyValue ([PSCustomObject]@{}) -Force
+            }
+            
+            $normalizedDisplayPath = $displayProfilePathTextBox.Text -replace '\\', '/'
+            Set-PropertyValue -Object $gameData.display -PropertyName "profilePath" -Value $normalizedDisplayPath
+            
+            if ($restoreDisplayOnExitCheckBox) {
+                Set-PropertyValue -Object $gameData.display -PropertyName "restoreOnExit" -Value ([bool]$restoreDisplayOnExitCheckBox.IsChecked)
+            }
+        } else {
+            # Remove display property if no profile path is specified
+            if ($gameData.PSObject.Properties["display"]) {
+                $gameData.PSObject.Properties.Remove("display")
+            }
+        }
+    }
+
     # Save managed apps list
     $appsToManagePanel = $script:Window.FindName("AppsToManagePanel")
     if ($appsToManagePanel) {

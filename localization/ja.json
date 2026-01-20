@@ -661,5 +661,6 @@
     "DISPLAY_PROFILE_PATH_TOOLTIP": "ディスプレイ設定用のDisplayMan XMLプロファイルのパス",
     "RESTORE_DISPLAY_ON_EXIT_LABEL": "終了時にディスプレイを復元",
     "RESTORE_DISPLAY_ON_EXIT_TOOLTIP": "セッション終了時に自動的にデフォルトのディスプレイ設定を復元します",
-    "BROWSE_BUTTON": "参照..."
+    "BROWSE_BUTTON": "参照...",
+    "CONSOLE_SETTINGS_HEADER": "コンシューマーゲーム設定"
 }

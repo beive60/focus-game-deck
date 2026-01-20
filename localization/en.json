@@ -661,5 +661,6 @@
     "DISPLAY_PROFILE_PATH_TOOLTIP": "Path to DisplayMan XML profile for display configuration",
     "RESTORE_DISPLAY_ON_EXIT_LABEL": "Restore Display on Exit",
     "RESTORE_DISPLAY_ON_EXIT_TOOLTIP": "Automatically restore default display settings when session ends",
-    "BROWSE_BUTTON": "Browse..."
+    "BROWSE_BUTTON": "Browse...",
+    "CONSOLE_SETTINGS_HEADER": "Console Game Settings"
 }
