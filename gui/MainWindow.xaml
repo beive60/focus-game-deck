@@ -1628,6 +1628,40 @@
                                     </StackPanel>
                                 </GroupBox>
 
+                                <!-- 認証とモデル設定 -->
+                                <GroupBox
+                                    x:Name="VTubeAuthModelGroup"
+                                    Header="[vtubeAuthModelGroup]"
+                                    Margin="0,0,0,15">
+                                    <StackPanel Margin="10">
+                                        <StackPanel Orientation="Horizontal"
+                                                Margin="0,5">
+                                            <Label
+                                                x:Name="VTubeAuthTokenLabel"
+                                                Content="[vtubeAuthTokenLabel]"
+                                                Width="140"/>
+                                            <PasswordBox
+                                                x:Name="VTubeAuthTokenPasswordBox"
+                                                Width="300"
+                                                VerticalContentAlignment="Center"
+                                                ToolTip="[vtubeAuthTokenTooltip]"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal"
+                                                Margin="0,10,0,5">
+                                            <Label
+                                                x:Name="VTubeDefaultModelIdLabel"
+                                                Content="[vtubeDefaultModelIdLabel]"
+                                                Width="140"/>
+                                            <TextBox
+                                                x:Name="VTubeDefaultModelIdTextBox"
+                                                Width="300"
+                                                VerticalContentAlignment="Center"
+                                                ToolTip="[vtubeDefaultModelIdTooltip]"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+
                                 <!-- 起動方法 -->
                                 <GroupBox
                                     x:Name="VTubeLaunchMethodGroup"

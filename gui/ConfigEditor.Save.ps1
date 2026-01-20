@@ -1012,63 +1012,74 @@ function Save-DiscordSettingsData {
             Write-Verbose "Save-DiscordSettingsData: gameStartAction set to $gameStartAction"
         }
 
-        # Get status settings
+        # Ensure integrations.discord.discord section exists
+        if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["discord"]) {
+            $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "discord" -NotePropertyValue ([PSCustomObject]@{}) -Force
+        }
+
+        # Get status settings and save to discord.discord subsection
         $statusOnStartCombo = $script:Window.FindName("DiscordStatusOnStartCombo")
         if ($statusOnStartCombo -and $statusOnStartCombo.SelectedItem) {
-            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["statusOnStart"]) {
-                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "statusOnStart" -NotePropertyValue $statusOnStartCombo.SelectedItem.Tag -Force
+            if (-not $script:StateManager.ConfigData.integrations.discord.discord.PSObject.Properties["statusOnGameStart"]) {
+                $script:StateManager.ConfigData.integrations.discord.discord | Add-Member -NotePropertyName "statusOnGameStart" -NotePropertyValue $statusOnStartCombo.SelectedItem.Tag -Force
             } else {
-                $script:StateManager.ConfigData.integrations.discord.statusOnStart = $statusOnStartCombo.SelectedItem.Tag
+                $script:StateManager.ConfigData.integrations.discord.discord.statusOnGameStart = $statusOnStartCombo.SelectedItem.Tag
             }
-            Write-Verbose "Save-DiscordSettingsData: Status on start set to $($statusOnStartCombo.SelectedItem.Tag)"
+            Write-Verbose "Save-DiscordSettingsData: statusOnGameStart set to $($statusOnStartCombo.SelectedItem.Tag)"
         }
 
         $statusOnEndCombo = $script:Window.FindName("DiscordStatusOnEndCombo")
         if ($statusOnEndCombo -and $statusOnEndCombo.SelectedItem) {
-            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["statusOnEnd"]) {
-                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "statusOnEnd" -NotePropertyValue $statusOnEndCombo.SelectedItem.Tag -Force
+            if (-not $script:StateManager.ConfigData.integrations.discord.discord.PSObject.Properties["statusOnGameEnd"]) {
+                $script:StateManager.ConfigData.integrations.discord.discord | Add-Member -NotePropertyName "statusOnGameEnd" -NotePropertyValue $statusOnEndCombo.SelectedItem.Tag -Force
             } else {
-                $script:StateManager.ConfigData.integrations.discord.statusOnEnd = $statusOnEndCombo.SelectedItem.Tag
+                $script:StateManager.ConfigData.integrations.discord.discord.statusOnGameEnd = $statusOnEndCombo.SelectedItem.Tag
             }
-            Write-Verbose "Save-DiscordSettingsData: Status on end set to $($statusOnEndCombo.SelectedItem.Tag)"
+            Write-Verbose "Save-DiscordSettingsData: statusOnGameEnd set to $($statusOnEndCombo.SelectedItem.Tag)"
         }
 
         # Get overlay checkbox
         $disableOverlayCheckBox = $script:Window.FindName("DiscordDisableOverlayCheckBox")
         if ($disableOverlayCheckBox) {
-            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["disableOverlay"]) {
-                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "disableOverlay" -NotePropertyValue $disableOverlayCheckBox.IsChecked -Force
+            if (-not $script:StateManager.ConfigData.integrations.discord.discord.PSObject.Properties["disableOverlay"]) {
+                $script:StateManager.ConfigData.integrations.discord.discord | Add-Member -NotePropertyName "disableOverlay" -NotePropertyValue $disableOverlayCheckBox.IsChecked -Force
             } else {
-                $script:StateManager.ConfigData.integrations.discord.disableOverlay = $disableOverlayCheckBox.IsChecked
+                $script:StateManager.ConfigData.integrations.discord.discord.disableOverlay = $disableOverlayCheckBox.IsChecked
             }
-            Write-Verbose "Save-DiscordSettingsData: Disable overlay set to $($disableOverlayCheckBox.IsChecked)"
+            Write-Verbose "Save-DiscordSettingsData: disableOverlay set to $($disableOverlayCheckBox.IsChecked)"
         }
 
-        # Get Rich Presence settings
+        # Ensure customPresence section exists and preserve existing values
+        if (-not $script:StateManager.ConfigData.integrations.discord.discord.PSObject.Properties["customPresence"]) {
+            $script:StateManager.ConfigData.integrations.discord.discord | Add-Member -NotePropertyName "customPresence" -NotePropertyValue ([PSCustomObject]@{
+                    enabled = $false
+                    state = "Focus Gaming Mode"
+                }) -Force
+        }
+
+        # Get Rich Presence settings and save to discord.discord.rpc subsection
+        if (-not $script:StateManager.ConfigData.integrations.discord.discord.PSObject.Properties["rpc"]) {
+            $script:StateManager.ConfigData.integrations.discord.discord | Add-Member -NotePropertyName "rpc" -NotePropertyValue ([PSCustomObject]@{}) -Force
+        }
+
         $rpcEnableCheckBox = $script:Window.FindName("DiscordRPCEnableCheckBox")
         if ($rpcEnableCheckBox) {
-            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["rpc"]) {
-                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "rpc" -NotePropertyValue @{} -Force
-            }
-            if (-not $script:StateManager.ConfigData.integrations.discord.rpc.PSObject.Properties["enabled"]) {
-                $script:StateManager.ConfigData.integrations.discord.rpc | Add-Member -NotePropertyName "enabled" -NotePropertyValue $rpcEnableCheckBox.IsChecked -Force
+            if (-not $script:StateManager.ConfigData.integrations.discord.discord.rpc.PSObject.Properties["enabled"]) {
+                $script:StateManager.ConfigData.integrations.discord.discord.rpc | Add-Member -NotePropertyName "enabled" -NotePropertyValue $rpcEnableCheckBox.IsChecked -Force
             } else {
-                $script:StateManager.ConfigData.integrations.discord.rpc.enabled = $rpcEnableCheckBox.IsChecked
+                $script:StateManager.ConfigData.integrations.discord.discord.rpc.enabled = $rpcEnableCheckBox.IsChecked
             }
             Write-Verbose "Save-DiscordSettingsData: RPC enabled set to $($rpcEnableCheckBox.IsChecked)"
         }
 
         $rpcAppIdTextBox = $script:Window.FindName("DiscordRPCAppIdTextBox")
         if ($rpcAppIdTextBox) {
-            if (-not $script:StateManager.ConfigData.integrations.discord.PSObject.Properties["rpc"]) {
-                $script:StateManager.ConfigData.integrations.discord | Add-Member -NotePropertyName "rpc" -NotePropertyValue @{} -Force
-            }
-            if (-not $script:StateManager.ConfigData.integrations.discord.rpc.PSObject.Properties["applicationId"]) {
-                $script:StateManager.ConfigData.integrations.discord.rpc | Add-Member -NotePropertyName "applicationId" -NotePropertyValue $rpcAppIdTextBox.Text -Force
+            if (-not $script:StateManager.ConfigData.integrations.discord.discord.rpc.PSObject.Properties["applicationId"]) {
+                $script:StateManager.ConfigData.integrations.discord.discord.rpc | Add-Member -NotePropertyName "applicationId" -NotePropertyValue $rpcAppIdTextBox.Text -Force
             } else {
-                $script:StateManager.ConfigData.integrations.discord.rpc.applicationId = $rpcAppIdTextBox.Text
+                $script:StateManager.ConfigData.integrations.discord.discord.rpc.applicationId = $rpcAppIdTextBox.Text
             }
-            Write-Verbose "Save-DiscordSettingsData: RPC application ID set to $($rpcAppIdTextBox.Text)"
+            Write-Verbose "Save-DiscordSettingsData: RPC applicationId set to $($rpcAppIdTextBox.Text)"
         }
 
         # Mark configuration as modified
@@ -1093,6 +1104,8 @@ function Save-VTubeStudioSettingsData {
         $vtubeWebSocketEnableCheckBox = $script:Window.FindName("VTubeWebSocketEnableCheckBox")
         $vtubeHostTextBox = $script:Window.FindName("VTubeHostTextBox")
         $vtubePortTextBox = $script:Window.FindName("VTubePortTextBox")
+        $vtubeAuthTokenPasswordBox = $script:Window.FindName("VTubeAuthTokenPasswordBox")
+        $vtubeDefaultModelIdTextBox = $script:Window.FindName("VTubeDefaultModelIdTextBox")
 
         # Ensure integrations section exists
         if (-not $script:StateManager.ConfigData.integrations) {
@@ -1184,6 +1197,37 @@ function Save-VTubeStudioSettingsData {
                 $script:StateManager.ConfigData.integrations.vtubeStudio.websocket.port = $port
             }
             Write-Verbose "Saved VTube Studio WebSocket port: $port"
+        }
+
+        # Save authentication token (encrypt using DPAPI)
+        if ($vtubeAuthTokenPasswordBox) {
+            if ($vtubeAuthTokenPasswordBox.Password.Length -gt 0) {
+                $encryptedToken = Protect-Password -PlainTextPassword $vtubeAuthTokenPasswordBox.Password
+                if (-not $script:StateManager.ConfigData.integrations.vtubeStudio.PSObject.Properties["authenticationToken"]) {
+                    $script:StateManager.ConfigData.integrations.vtubeStudio | Add-Member -NotePropertyName "authenticationToken" -NotePropertyValue $encryptedToken -Force
+                } else {
+                    $script:StateManager.ConfigData.integrations.vtubeStudio.authenticationToken = $encryptedToken
+                }
+                Write-Verbose "Saved VTube Studio authentication token (encrypted)"
+            } elseif ($vtubeAuthTokenPasswordBox.Tag -eq "SAVED") {
+                Write-Verbose "VTube Studio authentication token unchanged (keeping existing encrypted token)"
+            } else {
+                if ($script:StateManager.ConfigData.integrations.vtubeStudio.PSObject.Properties["authenticationToken"]) {
+                    $script:StateManager.ConfigData.integrations.vtubeStudio.authenticationToken = ""
+                }
+                Write-Verbose "VTube Studio authentication token cleared"
+            }
+        }
+
+        # Save default model ID
+        if ($vtubeDefaultModelIdTextBox) {
+            $modelId = $vtubeDefaultModelIdTextBox.Text.Trim()
+            if (-not $script:StateManager.ConfigData.integrations.vtubeStudio.PSObject.Properties["defaultModelId"]) {
+                $script:StateManager.ConfigData.integrations.vtubeStudio | Add-Member -NotePropertyName "defaultModelId" -NotePropertyValue $modelId -Force
+            } else {
+                $script:StateManager.ConfigData.integrations.vtubeStudio.defaultModelId = $modelId
+            }
+            Write-Verbose "Saved VTube Studio default model ID: $modelId"
         }
 
         # Mark configuration as modified

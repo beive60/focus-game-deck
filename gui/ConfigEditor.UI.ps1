@@ -1316,41 +1316,44 @@ class ConfigEditorUI {
                         $enableGameModeCheckBox.IsChecked = ($ConfigData.integrations.discord.gameStartAction -eq "enter-game-mode")
                     }
 
-                    $statusOnStartCombo = $self.Window.FindName("DiscordStatusOnStartCombo")
-                    if ($statusOnStartCombo -and $ConfigData.integrations.discord.statusOnStart) {
-                        for ($i = 0; $i -lt $statusOnStartCombo.Items.Count; $i++) {
-                            if ($statusOnStartCombo.Items[$i].Tag -eq $ConfigData.integrations.discord.statusOnStart) {
-                                $statusOnStartCombo.SelectedIndex = $i
-                                break
+                    # Load settings from discord.discord subsection
+                    if ($ConfigData.integrations.discord.discord) {
+                        $statusOnStartCombo = $self.Window.FindName("DiscordStatusOnStartCombo")
+                        if ($statusOnStartCombo -and $ConfigData.integrations.discord.discord.statusOnGameStart) {
+                            for ($i = 0; $i -lt $statusOnStartCombo.Items.Count; $i++) {
+                                if ($statusOnStartCombo.Items[$i].Tag -eq $ConfigData.integrations.discord.discord.statusOnGameStart) {
+                                    $statusOnStartCombo.SelectedIndex = $i
+                                    break
+                                }
                             }
                         }
-                    }
 
-                    $statusOnEndCombo = $self.Window.FindName("DiscordStatusOnEndCombo")
-                    if ($statusOnEndCombo -and $ConfigData.integrations.discord.statusOnEnd) {
-                        for ($i = 0; $i -lt $statusOnEndCombo.Items.Count; $i++) {
-                            if ($statusOnEndCombo.Items[$i].Tag -eq $ConfigData.integrations.discord.statusOnEnd) {
-                                $statusOnEndCombo.SelectedIndex = $i
-                                break
+                        $statusOnEndCombo = $self.Window.FindName("DiscordStatusOnEndCombo")
+                        if ($statusOnEndCombo -and $ConfigData.integrations.discord.discord.statusOnGameEnd) {
+                            for ($i = 0; $i -lt $statusOnEndCombo.Items.Count; $i++) {
+                                if ($statusOnEndCombo.Items[$i].Tag -eq $ConfigData.integrations.discord.discord.statusOnGameEnd) {
+                                    $statusOnEndCombo.SelectedIndex = $i
+                                    break
+                                }
                             }
                         }
-                    }
 
-                    $disableOverlayCheckBox = $self.Window.FindName("DiscordDisableOverlayCheckBox")
-                    if ($disableOverlayCheckBox) {
-                        $disableOverlayCheckBox.IsChecked = [bool]$ConfigData.integrations.discord.disableOverlay
-                    }
-
-                    # Load Rich Presence settings
-                    if ($ConfigData.integrations.discord.rpc) {
-                        $rpcEnableCheckBox = $self.Window.FindName("DiscordRPCEnableCheckBox")
-                        if ($rpcEnableCheckBox) {
-                            $rpcEnableCheckBox.IsChecked = [bool]$ConfigData.integrations.discord.rpc.enabled
+                        $disableOverlayCheckBox = $self.Window.FindName("DiscordDisableOverlayCheckBox")
+                        if ($disableOverlayCheckBox) {
+                            $disableOverlayCheckBox.IsChecked = [bool]$ConfigData.integrations.discord.discord.disableOverlay
                         }
 
-                        $rpcAppIdTextBox = $self.Window.FindName("DiscordRPCAppIdTextBox")
-                        if ($rpcAppIdTextBox) {
-                            $rpcAppIdTextBox.Text = $ConfigData.integrations.discord.rpc.applicationId
+                        # Load Rich Presence settings from discord.discord.rpc subsection
+                        if ($ConfigData.integrations.discord.discord.rpc) {
+                            $rpcEnableCheckBox = $self.Window.FindName("DiscordRPCEnableCheckBox")
+                            if ($rpcEnableCheckBox) {
+                                $rpcEnableCheckBox.IsChecked = [bool]$ConfigData.integrations.discord.discord.rpc.enabled
+                            }
+
+                            $rpcAppIdTextBox = $self.Window.FindName("DiscordRPCAppIdTextBox")
+                            if ($rpcAppIdTextBox) {
+                                $rpcAppIdTextBox.Text = $ConfigData.integrations.discord.discord.rpc.applicationId
+                            }
                         }
                     }
                 }
@@ -1393,6 +1396,30 @@ class ConfigEditorUI {
                             $vtubePortTextBox.Text = $ConfigData.integrations.vtubeStudio.websocket.port.ToString()
                             Write-Verbose "Loaded VTube Studio WebSocket port: $($ConfigData.integrations.vtubeStudio.websocket.port)"
                         }
+                    }
+
+                    # Load VTube Studio authentication token
+                    $vtubeAuthTokenPasswordBox = $self.Window.FindName("VTubeAuthTokenPasswordBox")
+                    if ($vtubeAuthTokenPasswordBox -and $ConfigData.integrations.vtubeStudio.authenticationToken) {
+                        try {
+                            $decryptedToken = Unprotect-Password -EncryptedPassword $ConfigData.integrations.vtubeStudio.authenticationToken
+                            if ($decryptedToken) {
+                                $vtubeAuthTokenPasswordBox.Password = $decryptedToken
+                                $vtubeAuthTokenPasswordBox.Tag = "SAVED"
+                                Write-Verbose "Loaded VTube Studio authentication token (encrypted)"
+                            }
+                        } catch {
+                            Write-Warning "Failed to decrypt VTube Studio authentication token: $($_.Exception.Message)"
+                            $vtubeAuthTokenPasswordBox.Password = ""
+                            $vtubeAuthTokenPasswordBox.Tag = $null
+                        }
+                    }
+
+                    # Load VTube Studio default model ID
+                    $vtubeDefaultModelIdTextBox = $self.Window.FindName("VTubeDefaultModelIdTextBox")
+                    if ($vtubeDefaultModelIdTextBox -and $ConfigData.integrations.vtubeStudio.defaultModelId) {
+                        $vtubeDefaultModelIdTextBox.Text = $ConfigData.integrations.vtubeStudio.defaultModelId
+                        Write-Verbose "Loaded VTube Studio default model ID: $($ConfigData.integrations.vtubeStudio.defaultModelId)"
                     }
                 }
 
