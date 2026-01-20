@@ -127,6 +127,21 @@ class PlatformManager {
             ProcessCheck = $null
             Required = $false
         }
+
+        # Console Platform (v1.1 new support for console games via capture cards)
+        $this.Platforms["console"] = @{
+            Name = "Console Game"
+            DetectPath = { return "available" }  # Always available, no external dependency
+            LaunchCommand = { param($gamePath, $gameId)
+                # Console games don't have a launch command - they're manually controlled
+                if ($this.Logger) { $this.Logger.Info("Console game session started: $gameId", "PLATFORM") }
+                return $null  # No process to return
+            }
+            GameIdProperty = "consoleGameId"
+            ProcessCheck = $null
+            Required = $false
+            IsManual = $true  # Flag indicating manual session control
+        }
     }
 
     [string] DetectSteamPath() {
