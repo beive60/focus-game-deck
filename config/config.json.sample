@@ -36,6 +36,7 @@
                 "useOBS": true,
                 "useDiscord": false,
                 "useVTubeStudio": false,
+                "useVoiceMeeter": false,
                 "obsSettings": {
                     "replayBufferBehavior": "UseGlobal",
                     "targetSceneName": "",
@@ -54,6 +55,7 @@
                 "useOBS": true,
                 "useDiscord": false,
                 "useVTubeStudio": true,
+                "useVoiceMeeter": false,
                 "obsSettings": {
                     "replayBufferBehavior": "Enable",
                     "targetSceneName": "Gaming",
@@ -70,6 +72,11 @@
                         "gaming_mode_off"
                     ],
                     "_comment": "modelId: Path to the VTube Studio model to load. onLaunchHotkeys: Hotkeys to trigger when game starts. onExitHotkeys: Hotkeys to trigger when game ends."
+                },
+                "voiceMeeterSettings": {
+                    "action": "load-profile",
+                    "profilePath": "./profiles/valorant_game.xml",
+                    "_comment": "action: load-profile|apply-params. profilePath: Path to VoiceMeeter XML profile. For apply-params, use parameters object instead."
                 }
             },
             "steamAppId": "",
@@ -166,6 +173,15 @@
             "authenticationToken": "",
             "defaultModelId": "Models/Default/default.vtube.json",
             "_comment": "authenticationToken will be encrypted when saved from GUI. defaultModelId is used to restore the original model when game ends."
+        },
+        "voiceMeeter": {
+            "enabled": false,
+            "dllPath": "C:/Program Files (x86)/VB/Voicemeeter/VoicemeeterRemote64.dll",
+            "type": "banana",
+            "gameStartAction": "enter-game-mode",
+            "gameEndAction": "exit-game-mode",
+            "defaultProfile": "",
+            "_comment": "type: standard|banana|potato. gameStartAction/gameEndAction control profile loading. defaultProfile is used to restore settings on game end."
         }
     },
     "logging": {
