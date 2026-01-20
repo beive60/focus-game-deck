@@ -1400,18 +1400,62 @@ class ConfigEditorUI {
 
                     # Load VTube Studio authentication token
                     $vtubeAuthTokenPasswordBox = $self.Window.FindName("VTubeAuthTokenPasswordBox")
-                    if ($vtubeAuthTokenPasswordBox -and $ConfigData.integrations.vtubeStudio.authenticationToken) {
-                        try {
-                            $decryptedToken = Unprotect-Password -EncryptedPassword $ConfigData.integrations.vtubeStudio.authenticationToken
-                            if ($decryptedToken) {
-                                $vtubeAuthTokenPasswordBox.Password = $decryptedToken
-                                $vtubeAuthTokenPasswordBox.Tag = "SAVED"
-                                Write-Verbose "Loaded VTube Studio authentication token (encrypted)"
+                    if ($vtubeAuthTokenPasswordBox -and $ConfigData.integrations.vtubeStudio) {
+                        if ($ConfigData.integrations.vtubeStudio.authenticationToken) {
+                            # Token is saved - show placeholder text using a helper TextBlock
+                            # Set Tag to indicate token exists (will be used during save)
+                            $vtubeAuthTokenPasswordBox.Tag = "SAVED"
+
+                            # Clear the PasswordBox but mark it as having a saved token
+                            $vtubeAuthTokenPasswordBox.Password = ""
+
+                            # Create helper TextBlock for placeholder effect if it doesn't exist
+                            $tokenPanel = $vtubeAuthTokenPasswordBox.Parent
+                            if ($tokenPanel) {
+                                $existingPlaceholder = $tokenPanel.Children | Where-Object { $_.Name -eq "VtubeAuthTokenPlaceholder" }
+                                if (-not $existingPlaceholder) {
+                                    $placeholderText = New-Object System.Windows.Controls.TextBlock
+                                    $placeholderText.Name = "VtubeAuthTokenPlaceholder"
+                                    $placeholderText.Text = $self.Messages.passwordSavedPlaceholder
+                                    # use static property reference to string (type converter will handle)
+                                    $placeholderText.Foreground = "Gray"
+                                    $placeholderText.IsHitTestVisible = $false
+                                    $placeholderText.Margin = New-Object System.Windows.Thickness(10, 0, 0, 0)
+                                    # use static property reference to string (type converter will handle)
+                                    $placeholderText.VerticalAlignment = "Center"
+
+                                    # Set Grid position to match PasswordBox
+                                    # use dynamic type resolution for static method calls
+                                    ("System.Windows.Controls.Grid" -as [type])::SetRow($placeholderText, ("System.Windows.Controls.Grid" -as [type])::GetRow($vtubeAuthTokenPasswordBox))
+                                    ("System.Windows.Controls.Grid" -as [type])::SetColumn($placeholderText, ("System.Windows.Controls.Grid" -as [type])::GetColumn($vtubeAuthTokenPasswordBox))
+
+                                    $tokenPanel.Children.Add($placeholderText) | Out-Null
+
+                                    # Add event handler to hide placeholder when user types
+                                    $vtubeAuthTokenPasswordBox.add_PasswordChanged({
+                                            param($s, $e)
+                                            $placeholder = $s.Parent.Children | Where-Object { $_.Name -eq "VtubeAuthTokenPlaceholder" }
+                                            if ($placeholder) {
+                                                # use static property reference to string (type converter will handle)
+                                                $placeholder.Visibility = if ($s.Password.Length -eq 0) {
+                                                    "Visible"
+                                                } else {
+                                                    "Collapsed"
+                                                }
+                                            }
+                                            # Clear SAVED tag when user starts typing
+                                            if ($s.Password.Length -gt 0) {
+                                                $s.Tag = $null
+                                            }
+                                        }.GetNewClosure())
+                                }
                             }
-                        } catch {
-                            Write-Warning "Failed to decrypt VTube Studio authentication token: $($_.Exception.Message)"
+                            Write-Verbose "VTube Studio authentication token exists in config - placeholder set"
+                        } else {
+                            # No token saved
                             $vtubeAuthTokenPasswordBox.Password = ""
                             $vtubeAuthTokenPasswordBox.Tag = $null
+                            Write-Verbose "No VTube Studio authentication token in config"
                         }
                     }
 
