@@ -14,6 +14,9 @@ Focus Game Deck automates your gaming session from start to finish - handling te
 ## Key Features
 
 - **Automated Game Environments** - Custom environment setup/teardown for each game
+- **Multi-Platform Support** - Steam, Epic Games, Riot Client, standalone executables, and console games
+- **Console Game Integration** - Manual session management for Nintendo Switch, PlayStation, Xbox via capture cards
+- **Display Configuration Management** - Automatic display switching for console gaming setups
 - **Smart App Management** - Control any application with configurable startup/shutdown actions
 - **Zero-Config Setup** - Intelligent defaults with optional GUI configuration
 - **Robust Design** - Comprehensive validation and cleanup even if interrupted
@@ -84,7 +87,9 @@ All three executables are digitally signed to ensure code integrity. See [Archit
 | Document | Purpose |
 |----------|---------|
 | **[Configuration Guide](docs/user-guide/configuration.md)** | Complete setup and configuration instructions |
+| **[Console Games Guide](docs/user-guide/console-games.md)** | Console game setup with capture cards and display management |
 | **[Build System](docs/developer-guide/build-system.md)** | Development build system and security guidelines |
+| **[DisplayManager Integration](docs/developer-guide/display-manager-integration.md)** | Display configuration management for console games |
 | **[Release Process](docs/developer-guide/release-process.md)** | Developer release workflow and procedures |
 | **[Roadmap](docs/project-info/roadmap.md)** | Project timeline and planned features |
 | **[All Documentation](docs/DOCUMENTATION-INDEX.md)** | Complete documentation index |
