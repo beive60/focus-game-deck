@@ -898,6 +898,39 @@ class ConfigEditorEvents {
                 # Update platform-specific fields
                 Update-PlatformFields -Platform $platform
 
+                # Load console-specific settings if platform is console
+                if ($platform -eq "console") {
+                    # Load console type
+                    $consoleTypeCombo = $script:Window.FindName("ConsoleTypeCombo")
+                    if ($consoleTypeCombo) {
+                        $consoleType = if ($gameData.consoleType) { $gameData.consoleType } else { "other" }
+                        $this.SetComboBoxSelectionByTag($consoleTypeCombo, $consoleType)
+                    }
+
+                    # Load console game ID
+                    $consoleGameIdTextBox = $script:Window.FindName("ConsoleGameIdTextBox")
+                    if ($consoleGameIdTextBox) {
+                        $consoleGameIdTextBox.Text = if ($gameData.consoleGameId) { $gameData.consoleGameId } else { "" }
+                    }
+
+                    # Load requires manual exit
+                    $requiresManualExitCheckBox = $script:Window.FindName("RequiresManualExitCheckBox")
+                    if ($requiresManualExitCheckBox) {
+                        $requiresManualExitCheckBox.IsChecked = if ($gameData.requiresManualExit -ne $null) { $gameData.requiresManualExit } else { $true }
+                    }
+
+                    # Load display profile settings
+                    $displayProfilePathTextBox = $script:Window.FindName("DisplayProfilePathTextBox")
+                    if ($displayProfilePathTextBox) {
+                        $displayProfilePathTextBox.Text = if ($gameData.display -and $gameData.display.profilePath) { $gameData.display.profilePath } else { "" }
+                    }
+
+                    $restoreDisplayOnExitCheckBox = $script:Window.FindName("RestoreDisplayOnExitCheckBox")
+                    if ($restoreDisplayOnExitCheckBox) {
+                        $restoreDisplayOnExitCheckBox.IsChecked = if ($gameData.display -and $gameData.display.restoreOnExit -ne $null) { $gameData.display.restoreOnExit } else { $true }
+                    }
+                }
+
                 # Update available actions for this game
                 # The game ID is the dictionary key, never use appId property (legacy bug)
                 $executablePath = if ($gameData.executablePath) { $gameData.executablePath } else { "" }
@@ -1756,6 +1789,18 @@ class ConfigEditorEvents {
         if ($openFileDialog.ShowDialog()) {
             $script:Window.FindName("OBSPathTextBox").Text = $openFileDialog.FileName
             Write-Verbose "Selected OBS executable path: $($openFileDialog.FileName)"
+        }
+    }
+
+    # Handle browse display profile (for Console Games)
+    [void] HandleBrowseDisplayProfile() {
+        $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $openFileDialog.Filter = "DisplayMan XML files (*.xml)|*.xml|All files (*.*)|*.*"
+        $openFileDialog.Title = "Select Display Profile XML"
+
+        if ($openFileDialog.ShowDialog()) {
+            $script:Window.FindName("DisplayProfilePathTextBox").Text = $openFileDialog.FileName
+            Write-Verbose "Selected display profile: $($openFileDialog.FileName)"
         }
     }
 
@@ -3295,6 +3340,7 @@ class ConfigEditorEvents {
             $gameStartCombo = $this.uiManager.Window.FindName("GameStartActionCombo"); if ($gameStartCombo) { $gameStartCombo.add_SelectionChanged({ $self.UpdateTerminationMethodState() }.GetNewClosure()) } else { Write-Verbose "GameStartActionCombo not found" }
             $gameEndCombo = $this.uiManager.Window.FindName("GameEndActionCombo"); if ($gameEndCombo) { $gameEndCombo.add_SelectionChanged({ $self.UpdateTerminationMethodState() }.GetNewClosure()) } else { Write-Verbose "GameEndActionCombo not found" }
             $browseExecBtn = $this.uiManager.Window.FindName("BrowseExecutablePathButton"); if ($browseExecBtn) { $browseExecBtn.add_Click({ $self.HandleBrowseExecutablePath() }.GetNewClosure()) } else { Write-Verbose "BrowseExecutablePathButton not found" }
+            $browseDisplayProfileBtn = $this.uiManager.Window.FindName("BrowseDisplayProfileButton"); if ($browseDisplayProfileBtn) { $browseDisplayProfileBtn.add_Click({ $self.HandleBrowseDisplayProfile() }.GetNewClosure()) } else { Write-Verbose "BrowseDisplayProfileButton not found" }
             $saveGameBtn = $this.uiManager.Window.FindName("SaveGameSettingsButton"); if ($saveGameBtn) { $saveGameBtn.add_Click({ $self.HandleSaveGameSettings() }.GetNewClosure()) } else { Write-Verbose "SaveGameSettingsButton not found" }
             $this.uiManager.Window.FindName("OpenOBSTabButton").add_Click({ $self.HandleOpenIntegrationTab("OBS") }.GetNewClosure())
             $this.uiManager.Window.FindName("OpenDiscordTabButton").add_Click({ $self.HandleOpenIntegrationTab("Discord") }.GetNewClosure())

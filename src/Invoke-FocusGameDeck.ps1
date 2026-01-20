@@ -55,6 +55,7 @@ $localizationDir = Join-Path $appRoot "localization"
 # Disabled for v1.0 - Discord integration has known bugs
 . (Join-Path -Path $appRoot -ChildPath "src/modules/DiscordManager.ps1")
 . (Join-Path -Path $appRoot -ChildPath "src/modules/DiscordRPCClient.ps1")
+. (Join-Path -Path $appRoot -ChildPath "src/modules/DisplayManager.ps1")
 . (Join-Path -Path $appRoot -ChildPath "src/modules/Logger.ps1")
 . (Join-Path -Path $appRoot -ChildPath "src/modules/OBSManager.ps1")
 . (Join-Path -Path $appRoot -ChildPath "src/modules/UpdateChecker.ps1")
@@ -246,67 +247,148 @@ try {
     # Execute environment setup
     Invoke-GameStartup
 
-    # Launch game via appropriate platform
-    Write-LocalizedHost -Messages $msg -Key "console_launching_via_platform" -Args @($detectedPlatforms[$gamePlatform].Name) -Default ("Launching game via {0}..." -f $detectedPlatforms[$gamePlatform].Name) -Level "INFO" -Component "GameLauncher"
-    try {
-        [void]$platformManager.LaunchGame($gamePlatform, $gameConfig)
-        Write-LocalizedHost -Messages $msg -Key "starting_game_name" -Args @($gameConfig.name) -Default ("Starting game: {0}" -f $gameConfig.name) -Level "INFO" -Component "GameLauncher"
-        if ($logger) { $logger.Info("Game launch command sent to $($detectedPlatforms[$gamePlatform].Name): $($gameConfig.name)", "GAME") }
-    } catch {
-        $errorMsg = "Failed to launch game via $($detectedPlatforms[$gamePlatform].Name): $_"
-        Write-Error $errorMsg
-        if ($logger) { $logger.Error($errorMsg, "GAME") }
-        throw
-    }
+    # Check if this is a console game requiring manual session management
+    if ($gamePlatform -eq "console" -and $gameConfig.requiresManualExit) {
+        # Console game manual session flow
+        Write-LocalizedHost -Messages $msg -Key "console_session_starting" -Default "Starting console game session..." -Level "INFO" -Component "GameLauncher"
+        if ($logger) { $logger.Info("Console game session started: $($gameConfig.name)", "GAME") }
 
-    # Wait for actual game process to start (not the launcher)
-    Write-LocalizedHost -Messages $msg -Key "cli_waiting_process" -Default "Waiting for game process to start..." -Level "INFO" -Component "GameMonitor"
-    $gameProcess = $null
-    $processStartTimeout = 300  # 5 minutes timeout
-    $startTime = Get-Date
-
-    do {
-        Start-Sleep -Seconds 3
-        $elapsed = (Get-Date) - $startTime
-        if ([int]$elapsed.TotalSeconds % 30 -eq 0 -and $elapsed.TotalSeconds -gt 0) {
-            Write-Host "." -NoNewline
-        }
-        $gameProcess = Get-Process $gameConfig.processName -ErrorAction SilentlyContinue
-    } while (-not $gameProcess -and $elapsed.TotalSeconds -lt $processStartTimeout)
-
-    if ($gameProcess) {
-        Write-LocalizedHost -Messages $msg -Key "console_game_process_detected" -Args @($gameConfig.name) -Default ("Game process detected: {0}" -f $gameConfig.name) -Level "OK" -Component "GameMonitor"
-        if ($logger) { $logger.Info("Game process detected and monitoring started: $($gameConfig.processName)", "GAME") }
-
-        # Wait for the game process to end.
-        # If direct Wait-Process fails (e.g., due to admin privilege issues),
-        # fall back to polling the process status.
-        try {
-            if ($logger) { $logger.Debug("Attempting to wait for process directly: $($gameProcess.Name) (PID: $($gameProcess.Id))", "GAME") }
-            Wait-Process -InputObject $gameProcess -ErrorAction Stop
-        } catch {
-            if ($logger) { $logger.Warning("Direct wait failed. Falling back to polling for process exit: $($gameProcess.Name) (PID: $($gameProcess.Id)). This can happen with admin-level processes.", "GAME") }
-            Write-LocalizedHost -Messages $msg -Key "console_process_wait_fallback" -Default "Direct process wait failed - Monitoring in fallback mode (polling every 3s)" -Level "WARNING" -Component "GameMonitor"
-
-            while ($true) {
-                $processCheck = Get-Process -Id $gameProcess.Id -ErrorAction SilentlyContinue
-                if (-not $processCheck) {
-                    if ($logger) { $logger.Info("Process has exited (detected by polling): $($gameProcess.Name) (PID: $($gameProcess.Id))", "GAME") }
-                    break # Exit the loop
+        # Apply display profile if configured
+        $displayManager = $null
+        if ($gameConfig.display -and $gameConfig.display.profilePath) {
+            try {
+                $displayManager = New-DisplayProfileManager -Config $config -Logger $logger
+                if ($displayManager.IsAvailable()) {
+                    $profileApplied = $displayManager.SetProfile($gameConfig.display.profilePath)
+                    if ($profileApplied) {
+                        Write-LocalizedHost -Messages $msg -Key "display_profile_applied" -Args @($gameConfig.display.profilePath) -Default ("Display profile applied: {0}" -f $gameConfig.display.profilePath) -Level "OK" -Component "DisplayManager"
+                    } else {
+                        Write-LocalizedHost -Messages $msg -Key "display_profile_apply_failed" -Default "Failed to apply display profile" -Level "WARNING" -Component "DisplayManager"
+                    }
+                } else {
+                    Write-LocalizedHost -Messages $msg -Key "display_manager_not_available" -Default "DisplayMan.exe not found. Display profile management unavailable." -Level "WARNING" -Component "DisplayManager"
                 }
-                Start-Sleep -Seconds 3
+            } catch {
+                Write-LocalizedHost -Messages $msg -Key "display_manager_error" -Default "Error initializing display manager: $_" -Level "WARNING" -Component "DisplayManager"
+                if ($logger) { $logger.Warning("Display manager error: $_", "DISPLAY") }
             }
         }
 
-        Write-LocalizedHost -Messages $msg -Key "console_game_process_ended" -Args @($gameConfig.name) -Default ("Game process ended: {0}" -f $gameConfig.name) -Level "INFO" -Component "GameMonitor"
-        if ($logger) { $logger.Info("Game process ended: $($gameConfig.name)", "GAME") }
-    } else {
-        Write-LocalizedHost -Messages $msg -Key "cli_process_timeout" -Args @($gameConfig.processName) -Default ("Game process '{0}' was not detected within timeout period" -f $gameConfig.processName) -Level "WARNING" -Component "GameMonitor"
-        if ($logger) { $logger.Warning("Game process not detected within timeout: $($gameConfig.processName)", "GAME") }
-    }
+        # Display console session banner
+        Write-Host "`n========================================" -ForegroundColor Cyan
+        Write-LocalizedHost -Messages $msg -Key "console_session_active" -Default "Console Game Session Active" -Level "INFO" -NoNewline
+        Write-Host ""
+        Write-Host "Game: $($gameConfig.name)" -ForegroundColor Yellow
+        Write-Host "========================================`n" -ForegroundColor Cyan
 
-    # Execute cleanup processing when game exits
-    Invoke-GameCleanup
+        # Manual session control loop
+        $sessionActive = $true
+        while ($sessionActive) {
+            Write-LocalizedHost -Messages $msg -Key "console_press_q_to_quit" -Default "Press [Q] then [Enter] to end session..." -Level "INFO"
+            
+            $userInput = ""
+            do {
+                $userInput = Read-Host "Type 'Q' to quit"
+            } while ($userInput -ne 'Q' -and $userInput -ne 'q')
+
+            # Confirmation prompt to prevent accidental exit
+            Write-LocalizedHost -Messages $msg -Key "console_confirm_exit" -Default "Are you sure you want to end the session? (Y/N)" -Level "INFO" -NoNewline
+            Write-Host " " -NoNewline
+            $confirm = Read-Host
+            
+            if ($confirm -eq 'Y' -or $confirm -eq 'y') {
+                $sessionActive = $false
+                Write-LocalizedHost -Messages $msg -Key "console_session_ending" -Default "Ending console game session..." -Level "INFO" -Component "GameLauncher"
+                if ($logger) { $logger.Info("Console game session ended by user", "GAME") }
+            } else {
+                Write-LocalizedHost -Messages $msg -Key "console_session_continues" -Default "Session continues..." -Level "INFO" -Component "GameLauncher"
+            }
+        }
+
+        # Restore display profile if configured
+        if ($displayManager -and $gameConfig.display -and $gameConfig.display.restoreOnExit) {
+            try {
+                if ($displayManager.IsAvailable()) {
+                    $profileRestored = $displayManager.RestoreDefault()
+                    if ($profileRestored) {
+                        Write-LocalizedHost -Messages $msg -Key "display_profile_restored" -Default "Display profile restored to default" -Level "OK" -Component "DisplayManager"
+                    } else {
+                        Write-LocalizedHost -Messages $msg -Key "display_profile_restore_failed" -Default "Failed to restore display profile" -Level "WARNING" -Component "DisplayManager"
+                    }
+                }
+            } catch {
+                Write-LocalizedHost -Messages $msg -Key "display_manager_error" -Default "Error restoring display profile: $_" -Level "WARNING" -Component "DisplayManager"
+                if ($logger) { $logger.Warning("Display profile restore error: $_", "DISPLAY") }
+            }
+        }
+
+        # Execute cleanup for console game
+        Invoke-GameCleanup
+
+    } else {
+        # Standard process-monitored game flow
+        # Launch game via appropriate platform
+        Write-LocalizedHost -Messages $msg -Key "console_launching_via_platform" -Args @($detectedPlatforms[$gamePlatform].Name) -Default ("Launching game via {0}..." -f $detectedPlatforms[$gamePlatform].Name) -Level "INFO" -Component "GameLauncher"
+        try {
+            [void]$platformManager.LaunchGame($gamePlatform, $gameConfig)
+            Write-LocalizedHost -Messages $msg -Key "starting_game_name" -Args @($gameConfig.name) -Default ("Starting game: {0}" -f $gameConfig.name) -Level "INFO" -Component "GameLauncher"
+            if ($logger) { $logger.Info("Game launch command sent to $($detectedPlatforms[$gamePlatform].Name): $($gameConfig.name)", "GAME") }
+        } catch {
+            $errorMsg = "Failed to launch game via $($detectedPlatforms[$gamePlatform].Name): $_"
+            Write-Error $errorMsg
+            if ($logger) { $logger.Error($errorMsg, "GAME") }
+            throw
+        }
+
+        # Wait for actual game process to start (not the launcher)
+        Write-LocalizedHost -Messages $msg -Key "cli_waiting_process" -Default "Waiting for game process to start..." -Level "INFO" -Component "GameMonitor"
+        $gameProcess = $null
+        $processStartTimeout = 300  # 5 minutes timeout
+        $startTime = Get-Date
+
+        do {
+            Start-Sleep -Seconds 3
+            $elapsed = (Get-Date) - $startTime
+            if ([int]$elapsed.TotalSeconds % 30 -eq 0 -and $elapsed.TotalSeconds -gt 0) {
+                Write-Host "." -NoNewline
+            }
+            $gameProcess = Get-Process $gameConfig.processName -ErrorAction SilentlyContinue
+        } while (-not $gameProcess -and $elapsed.TotalSeconds -lt $processStartTimeout)
+
+        if ($gameProcess) {
+            Write-LocalizedHost -Messages $msg -Key "console_game_process_detected" -Args @($gameConfig.name) -Default ("Game process detected: {0}" -f $gameConfig.name) -Level "OK" -Component "GameMonitor"
+            if ($logger) { $logger.Info("Game process detected and monitoring started: $($gameConfig.processName)", "GAME") }
+
+            # Wait for the game process to end.
+            # If direct Wait-Process fails (e.g., due to admin privilege issues),
+            # fall back to polling the process status.
+            try {
+                if ($logger) { $logger.Debug("Attempting to wait for process directly: $($gameProcess.Name) (PID: $($gameProcess.Id))", "GAME") }
+                Wait-Process -InputObject $gameProcess -ErrorAction Stop
+            } catch {
+                if ($logger) { $logger.Warning("Direct wait failed. Falling back to polling for process exit: $($gameProcess.Name) (PID: $($gameProcess.Id)). This can happen with admin-level processes.", "GAME") }
+                Write-LocalizedHost -Messages $msg -Key "console_process_wait_fallback" -Default "Direct process wait failed - Monitoring in fallback mode (polling every 3s)" -Level "WARNING" -Component "GameMonitor"
+
+                while ($true) {
+                    $processCheck = Get-Process -Id $gameProcess.Id -ErrorAction SilentlyContinue
+                    if (-not $processCheck) {
+                        if ($logger) { $logger.Info("Process has exited (detected by polling): $($gameProcess.Name) (PID: $($gameProcess.Id))", "GAME") }
+                        break # Exit the loop
+                    }
+                    Start-Sleep -Seconds 3
+                }
+            }
+
+            Write-LocalizedHost -Messages $msg -Key "console_game_process_ended" -Args @($gameConfig.name) -Default ("Game process ended: {0}" -f $gameConfig.name) -Level "INFO" -Component "GameMonitor"
+            if ($logger) { $logger.Info("Game process ended: $($gameConfig.name)", "GAME") }
+        } else {
+            Write-LocalizedHost -Messages $msg -Key "cli_process_timeout" -Args @($gameConfig.processName) -Default ("Game process '{0}' was not detected within timeout period" -f $gameConfig.processName) -Level "WARNING" -Component "GameMonitor"
+            if ($logger) { $logger.Warning("Game process not detected within timeout: $($gameConfig.processName)", "GAME") }
+        }
+
+        # Execute cleanup processing when game exits
+        Invoke-GameCleanup
+    }
 
     if ($logger) {
         $logger.LogOperationEnd("Multi-Platform Game Launch Sequence", $startTime, "MAIN")

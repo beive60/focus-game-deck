@@ -20,7 +20,8 @@
             "mock-calc",
             "apex",
             "valorant",
-            "fallguys"
+            "fallguys",
+            "switch-zelda"
         ],
         "mock-calc": {
             "_comment": "A lightweight mock game for development and testing. Uses the calculator instead of a real game",
@@ -105,12 +106,43 @@
                 "useDiscord": false,
                 "useVTubeStudio": false
             }
+        },
+        "switch-zelda": {
+            "_comment": "Example console game configuration for Nintendo Switch via capture card",
+            "name": "The Legend of Zelda (Switch)",
+            "platform": "console",
+            "consoleType": "switch",
+            "consoleGameId": "switch-zelda-001",
+            "requiresManualExit": true,
+            "processName": "",
+            "steamAppId": "",
+            "epicGameId": "",
+            "riotGameId": "",
+            "executablePath": "",
+            "appsToManage": [],
+            "display": {
+                "profilePath": "C:/DisplayConfigs/switch-hdmi.xml",
+                "restoreOnExit": true,
+                "_comment": "Optional: Display profile for capture card passthrough"
+            },
+            "integrations": {
+                "useOBS": true,
+                "useDiscord": false,
+                "useVTubeStudio": false,
+                "obsSettings": {
+                    "replayBufferBehavior": "Enable",
+                    "targetSceneName": "Switch Capture",
+                    "enableRollback": true,
+                    "_comment": "OBS settings for console game recording"
+                }
+            }
         }
     },
     "paths": {
         "steam": "C:/Program Files (x86)/Steam/steam.exe",
         "epic": "C:/Program Files (x86)/Epic Games/Launcher/Engine/Binaries/Win64/EpicGamesLauncher.exe",
-        "riot": "C:/Riot Games/Riot Client/RiotClientElectron/Riot Client.exe"
+        "riot": "C:/Riot Games/Riot Client/RiotClientElectron/Riot Client.exe",
+        "displayManager": "./tools/DisplayMan.exe"
     },
     "integrations": {
         "obs": {

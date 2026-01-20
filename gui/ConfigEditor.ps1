@@ -1086,6 +1086,7 @@ function Update-PlatformFields {
         $riotGameIdTextBox = $script:Window.FindName("RiotGameIdTextBox")
         $executablePathTextBox = $script:Window.FindName("ExecutablePathTextBox")
         $browseExecutablePathButton = $script:Window.FindName("BrowseExecutablePathButton")
+        $consoleSettingsPanel = $script:Window.FindName("ConsoleSettingsPanel")
 
         # Disable all platform fields and set gray background
         if ($steamAppIdTextBox) {
@@ -1106,6 +1107,11 @@ function Update-PlatformFields {
         }
         if ($browseExecutablePathButton) {
             $browseExecutablePathButton.IsEnabled = $false
+        }
+
+        # Hide console settings panel by default
+        if ($consoleSettingsPanel) {
+            $consoleSettingsPanel.Visibility = [System.Windows.Visibility]::Collapsed
         }
 
         # Enable the appropriate field based on platform and clear others
@@ -1152,6 +1158,19 @@ function Update-PlatformFields {
                 if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
                 if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
                 Write-Verbose "  Enabled Executable Path field"
+            }
+            "console" {
+                # Clear other platform fields
+                if ($steamAppIdTextBox) { $steamAppIdTextBox.Text = "" }
+                if ($epicGameIdTextBox) { $epicGameIdTextBox.Text = "" }
+                if ($riotGameIdTextBox) { $riotGameIdTextBox.Text = "" }
+                if ($executablePathTextBox) { $executablePathTextBox.Text = "" }
+                
+                # Show console settings panel
+                if ($consoleSettingsPanel) {
+                    $consoleSettingsPanel.Visibility = [System.Windows.Visibility]::Visible
+                }
+                Write-Verbose "  Enabled Console Game settings panel"
             }
             default {
                 Write-Warning "Unknown platform: $Platform, defaulting to standalone"
