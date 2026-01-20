@@ -20,15 +20,22 @@ class DisplayProfileManager {
         
         # Resolve relative path if needed
         if (-not [System.IO.Path]::IsPathRooted($this.DisplayManPath)) {
-            # Get the application root directory
-            $currentProcess = Get-Process -Id $PID
-            $isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
+            # Get the application root directory using global $PSScriptRoot context
+            # In class context, we need to use script-level variables
+            $appRoot = $null
             
-            if ($isExecutable) {
-                $appRoot = Split-Path -Parent $currentProcess.Path
+            # Try to get from calling context (works in most cases)
+            if ($script:appRoot) {
+                $appRoot = $script:appRoot
             } else {
-                # In development mode, get the project root (two levels up from modules)
-                $appRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+                # Fallback: assume we're in src/modules and go up two levels
+                $modulePath = $PSScriptRoot
+                if ($modulePath) {
+                    $appRoot = Split-Path -Parent (Split-Path -Parent $modulePath)
+                } else {
+                    # Last resort: use current directory
+                    $appRoot = Get-Location
+                }
             }
             
             $this.DisplayManPath = Join-Path -Path $appRoot -ChildPath $this.DisplayManPath
