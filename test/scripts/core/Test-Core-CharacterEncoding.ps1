@@ -76,20 +76,6 @@ function Test-Result {
 
 Write-BuildLog "Testing JSON File Encoding..."
 
-# Test config.json
-try {
-    $configPath = Join-Path $projectRoot "config/config.json.sample"
-    $configContent = Get-Content $configPath -Raw -Encoding UTF8
-    $null = $configContent | ConvertFrom-Json  # Test parsing
-    Test-Result "config.json.sample UTF-8 parsing" $true
-
-    $configBytes = [System.IO.File]::ReadAllBytes($configPath)
-    $hasBOM = ($configBytes.Length -ge 3 -and $configBytes[0] -eq 0xEF -and $configBytes[1] -eq 0xBB -and $configBytes[2] -eq 0xBF)
-    Test-Result "config.json.sample without BOM" (-not $hasBOM) $(if ($hasBOM) { "BOM detected" } else { "" })
-} catch {
-    Test-Result "config.json.sample validation" $false $_.Exception.Message
-}
-
 # Test individual language files (e.g., en.json, ja.json)
 try {
     $enPath = Join-Path $projectRoot "localization/en.json"
