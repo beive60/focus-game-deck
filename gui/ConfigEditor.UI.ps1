@@ -1316,10 +1316,11 @@ class ConfigEditorUI {
                         $enableGameModeCheckBox.IsChecked = ($ConfigData.integrations.discord.gameStartAction -eq "enter-game-mode")
                     }
 
+                    # Load settings from discord section (flattened structure)
                     $statusOnStartCombo = $self.Window.FindName("DiscordStatusOnStartCombo")
-                    if ($statusOnStartCombo -and $ConfigData.integrations.discord.statusOnStart) {
+                    if ($statusOnStartCombo -and $ConfigData.integrations.discord.statusOnGameStart) {
                         for ($i = 0; $i -lt $statusOnStartCombo.Items.Count; $i++) {
-                            if ($statusOnStartCombo.Items[$i].Tag -eq $ConfigData.integrations.discord.statusOnStart) {
+                            if ($statusOnStartCombo.Items[$i].Tag -eq $ConfigData.integrations.discord.statusOnGameStart) {
                                 $statusOnStartCombo.SelectedIndex = $i
                                 break
                             }
@@ -1327,9 +1328,9 @@ class ConfigEditorUI {
                     }
 
                     $statusOnEndCombo = $self.Window.FindName("DiscordStatusOnEndCombo")
-                    if ($statusOnEndCombo -and $ConfigData.integrations.discord.statusOnEnd) {
+                    if ($statusOnEndCombo -and $ConfigData.integrations.discord.statusOnGameEnd) {
                         for ($i = 0; $i -lt $statusOnEndCombo.Items.Count; $i++) {
-                            if ($statusOnEndCombo.Items[$i].Tag -eq $ConfigData.integrations.discord.statusOnEnd) {
+                            if ($statusOnEndCombo.Items[$i].Tag -eq $ConfigData.integrations.discord.statusOnGameEnd) {
                                 $statusOnEndCombo.SelectedIndex = $i
                                 break
                             }
@@ -1341,7 +1342,7 @@ class ConfigEditorUI {
                         $disableOverlayCheckBox.IsChecked = [bool]$ConfigData.integrations.discord.disableOverlay
                     }
 
-                    # Load Rich Presence settings
+                    # Load Rich Presence settings from discord.rpc subsection
                     if ($ConfigData.integrations.discord.rpc) {
                         $rpcEnableCheckBox = $self.Window.FindName("DiscordRPCEnableCheckBox")
                         if ($rpcEnableCheckBox) {
@@ -1393,6 +1394,74 @@ class ConfigEditorUI {
                             $vtubePortTextBox.Text = $ConfigData.integrations.vtubeStudio.websocket.port.ToString()
                             Write-Verbose "Loaded VTube Studio WebSocket port: $($ConfigData.integrations.vtubeStudio.websocket.port)"
                         }
+                    }
+
+                    # Load VTube Studio authentication token
+                    $vtubeAuthTokenPasswordBox = $self.Window.FindName("VTubeAuthTokenPasswordBox")
+                    if ($vtubeAuthTokenPasswordBox -and $ConfigData.integrations.vtubeStudio) {
+                        if ($ConfigData.integrations.vtubeStudio.authenticationToken) {
+                            # Token is saved - show placeholder text using a helper TextBlock
+                            # Set Tag to indicate token exists (will be used during save)
+                            $vtubeAuthTokenPasswordBox.Tag = "SAVED"
+
+                            # Clear the PasswordBox but mark it as having a saved token
+                            $vtubeAuthTokenPasswordBox.Password = ""
+
+                            # Create helper TextBlock for placeholder effect if it doesn't exist
+                            $tokenPanel = $vtubeAuthTokenPasswordBox.Parent
+                            if ($tokenPanel) {
+                                $existingPlaceholder = $tokenPanel.Children | Where-Object { $_.Name -eq "VtubeAuthTokenPlaceholder" }
+                                if (-not $existingPlaceholder) {
+                                    $placeholderText = New-Object System.Windows.Controls.TextBlock
+                                    $placeholderText.Name = "VtubeAuthTokenPlaceholder"
+                                    $placeholderText.Text = $self.Messages.passwordSavedPlaceholder
+                                    # use static property reference to string (type converter will handle)
+                                    $placeholderText.Foreground = "Gray"
+                                    $placeholderText.IsHitTestVisible = $false
+                                    $placeholderText.Margin = New-Object System.Windows.Thickness(10, 0, 0, 0)
+                                    # use static property reference to string (type converter will handle)
+                                    $placeholderText.VerticalAlignment = "Center"
+
+                                    # Set Grid position to match PasswordBox
+                                    # use dynamic type resolution for static method calls
+                                    ("System.Windows.Controls.Grid" -as [type])::SetRow($placeholderText, ("System.Windows.Controls.Grid" -as [type])::GetRow($vtubeAuthTokenPasswordBox))
+                                    ("System.Windows.Controls.Grid" -as [type])::SetColumn($placeholderText, ("System.Windows.Controls.Grid" -as [type])::GetColumn($vtubeAuthTokenPasswordBox))
+
+                                    $tokenPanel.Children.Add($placeholderText) | Out-Null
+
+                                    # Add event handler to hide placeholder when user types
+                                    $vtubeAuthTokenPasswordBox.add_PasswordChanged({
+                                            param($s, $e)
+                                            $placeholder = $s.Parent.Children | Where-Object { $_.Name -eq "VtubeAuthTokenPlaceholder" }
+                                            if ($placeholder) {
+                                                # use static property reference to string (type converter will handle)
+                                                $placeholder.Visibility = if ($s.Password.Length -eq 0) {
+                                                    "Visible"
+                                                } else {
+                                                    "Collapsed"
+                                                }
+                                            }
+                                            # Clear SAVED tag when user starts typing
+                                            if ($s.Password.Length -gt 0) {
+                                                $s.Tag = $null
+                                            }
+                                        }.GetNewClosure())
+                                }
+                            }
+                            Write-Verbose "VTube Studio authentication token exists in config - placeholder set"
+                        } else {
+                            # No token saved
+                            $vtubeAuthTokenPasswordBox.Password = ""
+                            $vtubeAuthTokenPasswordBox.Tag = $null
+                            Write-Verbose "No VTube Studio authentication token in config"
+                        }
+                    }
+
+                    # Load VTube Studio default model ID
+                    $vtubeDefaultModelIdTextBox = $self.Window.FindName("VTubeDefaultModelIdTextBox")
+                    if ($vtubeDefaultModelIdTextBox -and $ConfigData.integrations.vtubeStudio.defaultModelId) {
+                        $vtubeDefaultModelIdTextBox.Text = $ConfigData.integrations.vtubeStudio.defaultModelId
+                        Write-Verbose "Loaded VTube Studio default model ID: $($ConfigData.integrations.vtubeStudio.defaultModelId)"
                     }
                 }
 
