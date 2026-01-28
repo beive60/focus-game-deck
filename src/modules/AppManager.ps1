@@ -386,7 +386,8 @@ class AppManager {
                     if ($isExecutable) {
                         $appRoot = Split-Path -Parent $currentProcess.Path
                     } else {
-                        $appRoot = Split-Path -Parent $PSScriptRoot
+                        # For script mode: AppManager.ps1 is in src/modules, need to go up two levels
+                        $appRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
                     }
 
                     # Prepare parameters for background script
@@ -394,12 +395,14 @@ class AppManager {
                     $logFilePath = if ($this.Logger -and $this.Logger.FilePath) { $this.Logger.FilePath } else { $null }
 
                     # Start background job
+                    $jobStarted = $false
                     try {
                         $job = Start-Job -ScriptBlock {
                             param($scriptPath, $obsConfig, $messages, $logPath, $appRootPath)
                             & $scriptPath -OBSConfig $obsConfig -Messages $messages -LogFilePath $logPath -WaitBeforeConnect 3000 -AppRoot $appRootPath
                         } -ArgumentList $backgroundScriptPath, $config, $this.Messages, $logFilePath, $appRoot
 
+                        $jobStarted = $true
                         if ($this.Logger) {
                             $this.Logger.Info("Background job started for OBS replay buffer (Job ID: $($job.Id))", "OBS")
                         }
@@ -414,10 +417,11 @@ class AppManager {
                     } catch {
                         Write-LocalizedHost -Messages $this.Messages -Key "console_obs_replay_buffer_job_failed" -Default "Failed to start background job for replay buffer" -Level "WARNING" -Component "OBSManager"
                         if ($this.Logger) { $this.Logger.Warning("Failed to start background job for OBS replay buffer: $_", "OBS") }
+                        return $false
                     }
 
-                    # Return success immediately - background job handles the actual operation
-                    return $true
+                    # Return success only if job was started
+                    return $jobStarted
                 }
 
                 return $true
@@ -1094,24 +1098,41 @@ class AppManager {
 
         # Clean up any background jobs
         if ($this.Config.PSObject.Properties['BackgroundJobs'] -and $this.Config.BackgroundJobs) {
-            foreach ($jobKey in $this.Config.BackgroundJobs.Keys) {
+            # Create a copy of keys to avoid collection modification during iteration
+            $jobKeys = @($this.Config.BackgroundJobs.Keys)
+            foreach ($jobKey in $jobKeys) {
                 $job = $this.Config.BackgroundJobs[$jobKey]
-                if ($job -and ($job.State -eq 'Running' -or $job.State -eq 'NotStarted')) {
-                    if ($this.Logger) { $this.Logger.Info("Waiting for background job '$jobKey' to complete (Job ID: $($job.Id))...", "APP") }
+                if ($job) {
+                    switch ($job.State) {
+                        'Running' {
+                            if ($this.Logger) { $this.Logger.Info("Waiting for background job '$jobKey' to complete (Job ID: $($job.Id))...", "APP") }
+                            # Wait for up to 10 seconds for the job to complete
+                            $null = Wait-Job -Job $job -Timeout 10
 
-                    # Wait for up to 10 seconds for the job to complete
-                    $waitResult = Wait-Job -Job $job -Timeout 10
-
-                    if ($job.State -eq 'Completed') {
-                        $jobResult = Receive-Job -Job $job -ErrorAction SilentlyContinue
-                        if ($this.Logger) { $this.Logger.Info("Background job '$jobKey' completed successfully. Result: $jobResult", "APP") }
-                    } elseif ($job.State -eq 'Failed') {
-                        if ($this.Logger) { $this.Logger.Warning("Background job '$jobKey' failed", "APP") }
-                    } else {
-                        if ($this.Logger) { $this.Logger.Warning("Background job '$jobKey' did not complete within timeout, stopping job", "APP") }
-                        Stop-Job -Job $job -ErrorAction SilentlyContinue
+                            if ($job.State -eq 'Completed') {
+                                $jobResult = Receive-Job -Job $job -ErrorAction SilentlyContinue
+                                if ($this.Logger) { $this.Logger.Info("Background job '$jobKey' completed successfully. Result: $jobResult", "APP") }
+                            } else {
+                                if ($this.Logger) { $this.Logger.Warning("Background job '$jobKey' did not complete within timeout, stopping job", "APP") }
+                                Stop-Job -Job $job -ErrorAction SilentlyContinue
+                            }
+                        }
+                        'NotStarted' {
+                            if ($this.Logger) { $this.Logger.Info("Background job '$jobKey' never started, removing", "APP") }
+                        }
+                        'Completed' {
+                            $jobResult = Receive-Job -Job $job -ErrorAction SilentlyContinue
+                            if ($this.Logger) { $this.Logger.Info("Background job '$jobKey' was already completed. Result: $jobResult", "APP") }
+                        }
+                        'Failed' {
+                            if ($this.Logger) { $this.Logger.Warning("Background job '$jobKey' had failed", "APP") }
+                        }
+                        default {
+                            if ($this.Logger) { $this.Logger.Info("Background job '$jobKey' in state: $($job.State)", "APP") }
+                        }
                     }
-
+                    
+                    # Remove the job
                     Remove-Job -Job $job -Force -ErrorAction SilentlyContinue
                 }
             }

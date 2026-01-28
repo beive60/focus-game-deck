@@ -68,32 +68,40 @@ try {
         Start-Sleep -Milliseconds $WaitBeforeConnect
     }
 
-    # Connect to OBS WebSocket
-    Write-BackgroundLog "Attempting to connect to OBS WebSocket"
-    $connected = $obsManager.Connect()
+    # Track if we successfully connected
+    $connected = $false
 
-    if (-not $connected) {
-        Write-BackgroundLog "Failed to connect to OBS WebSocket" "WARNING"
-        return $false
+    try {
+        # Connect to OBS WebSocket
+        Write-BackgroundLog "Attempting to connect to OBS WebSocket"
+        $connected = $obsManager.Connect()
+
+        if (-not $connected) {
+            Write-BackgroundLog "Failed to connect to OBS WebSocket" "WARNING"
+            return $false
+        }
+
+        Write-BackgroundLog "Successfully connected to OBS WebSocket"
+
+        # Start Replay Buffer
+        Write-BackgroundLog "Starting OBS Replay Buffer"
+        $success = $obsManager.StartReplayBuffer()
+
+        if ($success) {
+            Write-BackgroundLog "OBS Replay Buffer started successfully" "OK"
+        } else {
+            Write-BackgroundLog "Failed to start OBS Replay Buffer" "WARNING"
+        }
+
+        return $success
+
+    } finally {
+        # Ensure disconnection if we connected
+        if ($connected) {
+            $obsManager.Disconnect()
+            Write-BackgroundLog "Disconnected from OBS WebSocket"
+        }
     }
-
-    Write-BackgroundLog "Successfully connected to OBS WebSocket"
-
-    # Start Replay Buffer
-    Write-BackgroundLog "Starting OBS Replay Buffer"
-    $success = $obsManager.StartReplayBuffer()
-
-    if ($success) {
-        Write-BackgroundLog "OBS Replay Buffer started successfully" "OK"
-    } else {
-        Write-BackgroundLog "Failed to start OBS Replay Buffer" "WARNING"
-    }
-
-    # Disconnect
-    $obsManager.Disconnect()
-    Write-BackgroundLog "Disconnected from OBS WebSocket"
-
-    return $success
 
 } catch {
     Write-BackgroundLog "Exception in background worker: $_" "ERROR"
