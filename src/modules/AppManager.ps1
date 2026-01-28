@@ -380,16 +380,25 @@ class AppManager {
                     Write-LocalizedHost -Messages $this.Messages -Key "console_obs_replay_buffer_starting_async" -Default "Starting OBS replay buffer asynchronously..." -Level "INFO" -Component "OBSManager"
                     if ($this.Logger) { $this.Logger.Info("Starting OBS replay buffer in background job", "OBS") }
 
+                    # Determine application root
+                    $currentProcess = Get-Process -Id $PID
+                    $isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
+                    if ($isExecutable) {
+                        $appRoot = Split-Path -Parent $currentProcess.Path
+                    } else {
+                        $appRoot = Split-Path -Parent $PSScriptRoot
+                    }
+
                     # Prepare parameters for background script
-                    $backgroundScriptPath = Join-Path -Path (Split-Path -Parent $PSScriptRoot) -ChildPath "src/modules/OBSReplayBufferBackground.ps1"
+                    $backgroundScriptPath = Join-Path -Path $appRoot -ChildPath "src/modules/OBSReplayBufferBackground.ps1"
                     $logFilePath = if ($this.Logger -and $this.Logger.FilePath) { $this.Logger.FilePath } else { $null }
 
                     # Start background job
                     try {
                         $job = Start-Job -ScriptBlock {
-                            param($scriptPath, $obsConfig, $messages, $logPath)
-                            & $scriptPath -OBSConfig $obsConfig -Messages $messages -LogFilePath $logPath -WaitBeforeConnect 3000
-                        } -ArgumentList $backgroundScriptPath, $config, $this.Messages, $logFilePath
+                            param($scriptPath, $obsConfig, $messages, $logPath, $appRootPath)
+                            & $scriptPath -OBSConfig $obsConfig -Messages $messages -LogFilePath $logPath -WaitBeforeConnect 3000 -AppRoot $appRootPath
+                        } -ArgumentList $backgroundScriptPath, $config, $this.Messages, $logFilePath, $appRoot
 
                         if ($this.Logger) {
                             $this.Logger.Info("Background job started for OBS replay buffer (Job ID: $($job.Id))", "OBS")

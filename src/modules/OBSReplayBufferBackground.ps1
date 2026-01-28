@@ -13,14 +13,22 @@ param(
     [string] $LogFilePath,
 
     [Parameter(Mandatory = $false)]
-    [int] $WaitBeforeConnect = 3000
+    [int] $WaitBeforeConnect = 3000,
+
+    [Parameter(Mandatory = $false)]
+    [string] $AppRoot
 )
 
+# Determine application root - provided as parameter when run in background job
+if (-not $AppRoot) {
+    # Fallback: calculate from script location
+    $AppRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+}
+
 # Import required modules
-$scriptRoot = Split-Path -Parent $PSScriptRoot
-. (Join-Path -Path $scriptRoot -ChildPath "scripts/LanguageHelper.ps1")
-. (Join-Path -Path $scriptRoot -ChildPath "src/modules/WebSocketAppManagerBase.ps1")
-. (Join-Path -Path $scriptRoot -ChildPath "src/modules/OBSManager.ps1")
+. (Join-Path -Path $AppRoot -ChildPath "scripts/LanguageHelper.ps1")
+. (Join-Path -Path $AppRoot -ChildPath "src/modules/WebSocketAppManagerBase.ps1")
+. (Join-Path -Path $AppRoot -ChildPath "src/modules/OBSManager.ps1")
 
 # Helper function to log to file if path provided
 function Write-BackgroundLog {
