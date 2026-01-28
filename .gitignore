@@ -42,6 +42,7 @@ launcher-debug.txt
 # Test results
 test/test-results.xml
 test/test-results.html
+test/localization-diagnostic.json
 test/history/*.xml
 test/test-results/*
 gui/localization-diagnostic-*.json
