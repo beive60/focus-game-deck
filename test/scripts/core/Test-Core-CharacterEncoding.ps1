@@ -110,7 +110,7 @@ try {
 
         # If key consistency check failed, suggest running the diagnostic tool
         if (-not $allCountsMatch) {
-            Write-BuildLog "  Hint: Run './test/Test-LocalizationConsistency.ps1 -Target App -ShowDetails' to identify missing or extra keys"
+            Write-BuildLog "  Hint: Run './test/scripts/localization/Test-LocalizationConsistency.ps1 -Target App -ShowDetails' to identify missing or extra keys"
         }
 
         # Test Japanese text
@@ -150,7 +150,7 @@ try {
 
             # If key consistency check failed, suggest running the diagnostic tool
             if (-not $allCountsMatch) {
-                Write-BuildLog "  Hint: Run './test/Test-LocalizationConsistency.ps1 -Target Website -ShowDetails' to identify missing or extra keys"
+                Write-BuildLog "  Hint: Run './test/scripts/localization/Test-LocalizationConsistency.ps1 -Target Website -ShowDetails' to identify missing or extra keys"
             }
 
             # Test Japanese text
