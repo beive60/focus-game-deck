@@ -30,7 +30,7 @@
                                                                                                                "generates",
                                                                                                                "that"
                                                                                                            ],
-                                                                                     "Size":  96865
+                                                                                     "Size":  102060
                                                                                  },
                                                          "ConfigEditor.Events.ps1":  {
                                                                                          "Dependencies":  [
@@ -52,7 +52,7 @@
                                                                                                                    "from",
                                                                                                                    "is"
                                                                                                                ],
-                                                                                         "Size":  161819
+                                                                                         "Size":  169274
                                                                                      },
                                                          "ConfigEditor.JsonHelper.ps1":  {
                                                                                              "Dependencies":  [
@@ -89,7 +89,7 @@
                                                                                                                      "checks",
                                                                                                                      "Test-ComboBoxItemMappings"
                                                                                                                  ],
-                                                                                           "Size":  22587
+                                                                                           "Size":  22867
                                                                                        },
                                                          "ConfigEditor.State.ps1":  {
                                                                                         "Dependencies":  [
@@ -117,7 +117,7 @@
                                                                                                                  "Save-VTubeStudioSettingsData",
                                                                                                                  "Save-OriginalConfig"
                                                                                                              ],
-                                                                                       "Size":  58903
+                                                                                       "Size":  65557
                                                                                    }
                                                      }
                              },
@@ -130,7 +130,7 @@
                                                 "MovementButtonMappings":  8,
                                                 "CrudButtonMappings":  6,
                                                 "AutoDetectButtonMappings":  6,
-                                                "LabelMappings":  61,
+                                                "LabelMappings":  66,
                                                 "ActionButtonMappings":  14,
                                                 "TooltipMappings":  49,
                                                 "TabMappings":  7,
@@ -459,6 +459,11 @@
                                                                                                        "OBSPathTextBox",
                                                                                                        "AutoDetectObsTooltip",
                                                                                                        "DiscordEnableGameModeCheckBox",
+                                                                                                       "DiscordGameEndActionCombo",
+                                                                                                       "DiscordProcessNameTextBox",
+                                                                                                       "DiscordArgumentsTextBox",
+                                                                                                       "DiscordTerminationMethodCombo",
+                                                                                                       "DiscordGracefulTimeoutTextBox",
                                                                                                        "DiscordStatusOnStartCombo",
                                                                                                        "DiscordStatusOnStartOnlineItem",
                                                                                                        "DiscordStatusOnStartDndItem",
@@ -479,6 +484,11 @@
                                                                                                        "VTubeWebSocketEnableCheckBox",
                                                                                                        "VTubeHostTextBox",
                                                                                                        "VTubePortTextBox",
+                                                                                                       "VTubeAuthModelGroup",
+                                                                                                       "VTubeAuthTokenLabel",
+                                                                                                       "VTubeAuthTokenPasswordBox",
+                                                                                                       "VTubeDefaultModelIdLabel",
+                                                                                                       "VTubeDefaultModelIdTextBox",
                                                                                                        "VTubeLaunchViaSteamRadio",
                                                                                                        "VTubeLaunchMethod",
                                                                                                        "VTubeSteamAppIdTextBox",
@@ -503,8 +513,8 @@
                                                                                                        "RiotPathTextBox",
                                                                                                        "AutoDetectRiotTooltip"
                                                                                                    ],
-                                                                              "TotalNamedElements":  253,
-                                                                              "MappedElements":  110,
+                                                                              "TotalNamedElements":  268,
+                                                                              "MappedElements":  115,
                                                                               "Elements":  [
                                                                                                "RefreshMenu",
                                                                                                "RefreshGameListMenuItem",
@@ -678,6 +688,16 @@
                                                                                                "DiscordIntegrationTitle",
                                                                                                "DiscordGameIntegrationGroup",
                                                                                                "DiscordEnableGameModeCheckBox",
+                                                                                               "DiscordGameEndActionLabel",
+                                                                                               "DiscordGameEndActionCombo",
+                                                                                               "DiscordProcessNameLabel",
+                                                                                               "DiscordProcessNameTextBox",
+                                                                                               "DiscordArgumentsLabel",
+                                                                                               "DiscordArgumentsTextBox",
+                                                                                               "DiscordTerminationMethodLabel",
+                                                                                               "DiscordTerminationMethodCombo",
+                                                                                               "DiscordGracefulTimeoutLabel",
+                                                                                               "DiscordGracefulTimeoutTextBox",
                                                                                                "DiscordStatusOnStartLabel",
                                                                                                "DiscordStatusOnStartCombo",
                                                                                                "DiscordStatusOnStartOnlineItem",
@@ -713,6 +733,11 @@
                                                                                                "VTubeHostTextBox",
                                                                                                "VTubePortLabel",
                                                                                                "VTubePortTextBox",
+                                                                                               "VTubeAuthModelGroup",
+                                                                                               "VTubeAuthTokenLabel",
+                                                                                               "VTubeAuthTokenPasswordBox",
+                                                                                               "VTubeDefaultModelIdLabel",
+                                                                                               "VTubeDefaultModelIdTextBox",
                                                                                                "VTubeLaunchMethodGroup",
                                                                                                "VTubeLaunchViaSteamRadio",
                                                                                                "VTubeLaunchMethod",
@@ -969,7 +994,7 @@
                               "KeyCoverage":  {
                                                   "zh-CN.json":  {
                                                                      "MappedKeys":  88,
-                                                                     "TotalKeys":  627,
+                                                                     "TotalKeys":  632,
                                                                      "UnmappedKeys":  [
                                                                                           "textLabel",
                                                                                           "warning_no_path_specified",
@@ -1189,6 +1214,11 @@
                                                                                           "vtubeAutoStart",
                                                                                           "vtubeAutoStop",
                                                                                           "vtubeEnableWebsocket",
+                                                                                          "vtubeAuthModelGroup",
+                                                                                          "vtubeAuthTokenLabel",
+                                                                                          "vtubeAuthTokenTooltip",
+                                                                                          "vtubeDefaultModelIdLabel",
+                                                                                          "vtubeDefaultModelIdTooltip",
                                                                                           "vtubeLaunchViaSteam",
                                                                                           "vtubeLaunchDirect",
                                                                                           "vtubeStudioSettingsSaved",
@@ -1514,7 +1544,7 @@
                                                                  },
                                                   "es.json":  {
                                                                   "MappedKeys":  88,
-                                                                  "TotalKeys":  627,
+                                                                  "TotalKeys":  632,
                                                                   "UnmappedKeys":  [
                                                                                        "textLabel",
                                                                                        "warning_no_path_specified",
@@ -1734,6 +1764,11 @@
                                                                                        "vtubeAutoStart",
                                                                                        "vtubeAutoStop",
                                                                                        "vtubeEnableWebsocket",
+                                                                                       "vtubeAuthModelGroup",
+                                                                                       "vtubeAuthTokenLabel",
+                                                                                       "vtubeAuthTokenTooltip",
+                                                                                       "vtubeDefaultModelIdLabel",
+                                                                                       "vtubeDefaultModelIdTooltip",
                                                                                        "vtubeLaunchViaSteam",
                                                                                        "vtubeLaunchDirect",
                                                                                        "vtubeStudioSettingsSaved",
@@ -2059,7 +2094,7 @@
                                                               },
                                                   "fr.json":  {
                                                                   "MappedKeys":  88,
-                                                                  "TotalKeys":  627,
+                                                                  "TotalKeys":  632,
                                                                   "UnmappedKeys":  [
                                                                                        "textLabel",
                                                                                        "warning_no_path_specified",
@@ -2279,6 +2314,11 @@
                                                                                        "vtubeAutoStart",
                                                                                        "vtubeAutoStop",
                                                                                        "vtubeEnableWebsocket",
+                                                                                       "vtubeAuthModelGroup",
+                                                                                       "vtubeAuthTokenLabel",
+                                                                                       "vtubeAuthTokenTooltip",
+                                                                                       "vtubeDefaultModelIdLabel",
+                                                                                       "vtubeDefaultModelIdTooltip",
                                                                                        "vtubeLaunchViaSteam",
                                                                                        "vtubeLaunchDirect",
                                                                                        "vtubeStudioSettingsSaved",
@@ -2615,7 +2655,7 @@
                                                                     },
                                                   "id-ID.json":  {
                                                                      "MappedKeys":  88,
-                                                                     "TotalKeys":  627,
+                                                                     "TotalKeys":  632,
                                                                      "UnmappedKeys":  [
                                                                                           "textLabel",
                                                                                           "warning_no_path_specified",
@@ -2835,6 +2875,11 @@
                                                                                           "vtubeAutoStart",
                                                                                           "vtubeAutoStop",
                                                                                           "vtubeEnableWebsocket",
+                                                                                          "vtubeAuthModelGroup",
+                                                                                          "vtubeAuthTokenLabel",
+                                                                                          "vtubeAuthTokenTooltip",
+                                                                                          "vtubeDefaultModelIdLabel",
+                                                                                          "vtubeDefaultModelIdTooltip",
                                                                                           "vtubeLaunchViaSteam",
                                                                                           "vtubeLaunchDirect",
                                                                                           "vtubeStudioSettingsSaved",
@@ -3160,7 +3205,7 @@
                                                                  },
                                                   "pt-BR.json":  {
                                                                      "MappedKeys":  88,
-                                                                     "TotalKeys":  627,
+                                                                     "TotalKeys":  632,
                                                                      "UnmappedKeys":  [
                                                                                           "textLabel",
                                                                                           "warning_no_path_specified",
@@ -3380,6 +3425,11 @@
                                                                                           "vtubeAutoStart",
                                                                                           "vtubeAutoStop",
                                                                                           "vtubeEnableWebsocket",
+                                                                                          "vtubeAuthModelGroup",
+                                                                                          "vtubeAuthTokenLabel",
+                                                                                          "vtubeAuthTokenTooltip",
+                                                                                          "vtubeDefaultModelIdLabel",
+                                                                                          "vtubeDefaultModelIdTooltip",
                                                                                           "vtubeLaunchViaSteam",
                                                                                           "vtubeLaunchDirect",
                                                                                           "vtubeStudioSettingsSaved",
@@ -3705,7 +3755,7 @@
                                                                  },
                                                   "ja.json":  {
                                                                   "MappedKeys":  88,
-                                                                  "TotalKeys":  627,
+                                                                  "TotalKeys":  632,
                                                                   "UnmappedKeys":  [
                                                                                        "textLabel",
                                                                                        "warning_no_path_specified",
@@ -3924,6 +3974,11 @@
                                                                                        "vtubeAutoStart",
                                                                                        "vtubeAutoStop",
                                                                                        "vtubeEnableWebSocket",
+                                                                                       "vtubeAuthModelGroup",
+                                                                                       "vtubeAuthTokenLabel",
+                                                                                       "vtubeAuthTokenTooltip",
+                                                                                       "vtubeDefaultModelIdLabel",
+                                                                                       "vtubeDefaultModelIdTooltip",
                                                                                        "vtubeLaunchViaSteam",
                                                                                        "vtubeLaunchDirect",
                                                                                        "vtubeStudioSettingsSaved",
@@ -4259,7 +4314,7 @@
                                                                      },
                                                   "ru.json":  {
                                                                   "MappedKeys":  88,
-                                                                  "TotalKeys":  627,
+                                                                  "TotalKeys":  632,
                                                                   "UnmappedKeys":  [
                                                                                        "textLabel",
                                                                                        "warning_no_path_specified",
@@ -4479,6 +4534,11 @@
                                                                                        "vtubeAutoStart",
                                                                                        "vtubeAutoStop",
                                                                                        "vtubeEnableWebsocket",
+                                                                                       "vtubeAuthModelGroup",
+                                                                                       "vtubeAuthTokenLabel",
+                                                                                       "vtubeAuthTokenTooltip",
+                                                                                       "vtubeDefaultModelIdLabel",
+                                                                                       "vtubeDefaultModelIdTooltip",
                                                                                        "vtubeLaunchViaSteam",
                                                                                        "vtubeLaunchDirect",
                                                                                        "vtubeStudioSettingsSaved",
@@ -4804,7 +4864,7 @@
                                                               },
                                                   "en.json":  {
                                                                   "MappedKeys":  88,
-                                                                  "TotalKeys":  627,
+                                                                  "TotalKeys":  632,
                                                                   "UnmappedKeys":  [
                                                                                        "textLabel",
                                                                                        "warning_no_path_specified",
@@ -5022,6 +5082,11 @@
                                                                                        "vtubeAutoStart",
                                                                                        "vtubeAutoStop",
                                                                                        "vtubeEnableWebsocket",
+                                                                                       "vtubeAuthModelGroup",
+                                                                                       "vtubeAuthTokenLabel",
+                                                                                       "vtubeAuthTokenTooltip",
+                                                                                       "vtubeDefaultModelIdLabel",
+                                                                                       "vtubeDefaultModelIdTooltip",
                                                                                        "vtubeLaunchViaSteam",
                                                                                        "vtubeLaunchDirect",
                                                                                        "START_VTUBE_STUDIO_BUTTON",

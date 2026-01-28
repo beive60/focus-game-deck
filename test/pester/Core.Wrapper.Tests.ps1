@@ -56,4 +56,13 @@ Describe "Core Functionality Tests" -Tag "Core" {
             $exitCode | Should -Be 0 -Because "Configuration validation test should pass (exit code: $exitCode)"
         }
     }
+
+    Context "AppManager Parallel Execution" {
+        It "should pass AppManager parallel execution unit tests" {
+            $testScript = Join-Path -Path $projectRoot -ChildPath "test/scripts/core/Test-Core-AppManagerParallelExecution.ps1"
+            $null = & $testScript *>&1
+            $exitCode = $LASTEXITCODE
+            $exitCode | Should -Be 0 -Because "AppManager parallel execution test should pass (exit code: $exitCode)"
+        }
+    }
 }
