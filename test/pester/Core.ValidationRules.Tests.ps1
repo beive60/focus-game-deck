@@ -27,7 +27,7 @@ BeforeAll {
     Write-BuildLog "[INFO] ValidationRules Tests: Loaded validation module"
 }
 
-Describe "Test-GameIdFormat" -Tag "Core", "ValidationRules" {
+Describe "Test-GameIdFormat" -Tag "Unit", "Core", "ValidationRules" {
 
     Context "Valid Game IDs" {
         It "Should accept alphanumeric characters" {
@@ -83,7 +83,7 @@ Describe "Test-GameIdFormat" -Tag "Core", "ValidationRules" {
     }
 }
 
-Describe "Test-SteamAppIdFormat" -Tag "Core", "ValidationRules" {
+Describe "Test-SteamAppIdFormat" -Tag "Unit", "Core", "ValidationRules" {
 
     Context "Valid Steam AppIDs" {
         It "Should accept valid 7-digit Steam AppID" {
@@ -109,7 +109,7 @@ Describe "Test-SteamAppIdFormat" -Tag "Core", "ValidationRules" {
     }
 }
 
-Describe "Test-EpicGameIdFormat" -Tag "Core", "ValidationRules" {
+Describe "Test-EpicGameIdFormat" -Tag "Unit", "Core", "ValidationRules" {
 
     Context "Valid Epic Game IDs" {
         It "Should accept 'apps/' prefix" {
@@ -144,7 +144,7 @@ Describe "Test-EpicGameIdFormat" -Tag "Core", "ValidationRules" {
     }
 }
 
-Describe "Test-RiotGameIdFormat" -Tag "Core", "ValidationRules" {
+Describe "Test-RiotGameIdFormat" -Tag "Unit", "Core", "ValidationRules" {
 
     Context "Valid Riot Game IDs" {
         It "Should accept 'valorant'" {
@@ -175,7 +175,7 @@ Describe "Test-RiotGameIdFormat" -Tag "Core", "ValidationRules" {
     }
 }
 
-Describe "Test-ConfigPathExists" -Tag "Core", "ValidationRules" {
+Describe "Test-ConfigPathExists" -Tag "Unit", "Core", "ValidationRules" {
 
     BeforeAll {
         # Create a temporary file for testing
@@ -212,7 +212,7 @@ Describe "Test-ConfigPathExists" -Tag "Core", "ValidationRules" {
     }
 }
 
-Describe "Test-GameConfiguration" -Tag "Core", "ValidationRules" {
+Describe "Test-GameConfiguration" -Tag "Unit", "Core", "ValidationRules" {
 
     BeforeAll {
         # Create a temporary executable file for testing

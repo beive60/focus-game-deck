@@ -4,6 +4,10 @@
 .DESCRIPTION
     Validates log retention policies and cleanup behavior
     Tests retention periods: 7, 30, 90, 180 days, and unlimited
+.NOTES
+    Author: Focus Game Deck Team
+    Version: 1.0.0
+    Tags: Unit, Core, Logging
 #>
 
 BeforeAll {
@@ -20,7 +24,7 @@ BeforeAll {
     # . (Join-Path -Path $projectRoot -ChildPath "src/modules/Logger.ps1")
 }
 
-Describe "Log Rotation Tests" -Tag "Core", "Logging" {
+Describe "Log Rotation Tests" -Tag "Unit", "Core", "Logging" {
 
     Context "Log Retention Policies" {
         BeforeEach {

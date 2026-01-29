@@ -18,7 +18,7 @@
 .NOTES
     Author: Focus Game Deck Team
     Version: 1.0.0
-    Tags: GUI, Localization, Diagnostic
+    Tags: Unit, GUI, Localization, Diagnostic
 
     Dependencies:
     - test/scripts/gui/Test-GUI-LocalizationIntegrity.ps1
@@ -37,7 +37,7 @@ BeforeAll {
     }
 }
 
-Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization", "Diagnostic") {
+Describe "GUI Localization Integrity Diagnostics" -Tag "Unit", "GUI", "Localization", "Diagnostic" {
 
     Context "Localization Control Flow Analysis" {
 
@@ -94,13 +94,42 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
             $mappingIntegrity = $analysis.MappingIntegrity
 
             if ($mappingIntegrity.Duplicates.Count -gt 0) {
-                Write-Host "Warning: Duplicate mapping keys detected:"
+                # Filter out intentional duplicates:
+                # - CheckBox + Tooltip combinations are expected (checkbox has content and tooltip)
+                $intentionalDuplicatePatterns = @(
+                    @{ Pattern = 'CheckBoxMappings'; Partner = 'TooltipMappings' }
+                )
+
+                $unexpectedDuplicates = @{}
                 foreach ($dup in $mappingIntegrity.Duplicates.Keys) {
-                    Write-Host "  - $dup : $($mappingIntegrity.Duplicates[$dup] -join ', ')"
+                    $tables = $mappingIntegrity.Duplicates[$dup]
+                    $isIntentional = $false
+
+                    foreach ($pattern in $intentionalDuplicatePatterns) {
+                        if (($tables -contains $pattern.Pattern) -and ($tables -contains $pattern.Partner) -and ($tables.Count -eq 2)) {
+                            $isIntentional = $true
+                            break
+                        }
+                    }
+
+                    if (-not $isIntentional) {
+                        $unexpectedDuplicates[$dup] = $tables
+                    }
                 }
-                Set-ItResult -Skipped -Because "Duplicate keys found but not critical for test execution"
+
+                if ($unexpectedDuplicates.Count -gt 0) {
+                    $duplicateDetails = @()
+                    foreach ($dup in $unexpectedDuplicates.Keys) {
+                        $duplicateDetails += "$dup : $($unexpectedDuplicates[$dup] -join ', ')"
+                    }
+                    $errorMessage = "Unexpected duplicate mapping keys detected:`n" + ($duplicateDetails -join "`n")
+                    $unexpectedDuplicates.Count | Should -Be 0 -Because $errorMessage
+                } else {
+                    # All duplicates are intentional design patterns
+                    $true | Should -Be $true -Because "Only intentional duplicates (CheckBox+Tooltip) exist"
+                }
             } else {
-                $true | Should -Be $true
+                $mappingIntegrity.Duplicates.Count | Should -Be 0 -Because "No duplicate mapping keys should exist"
             }
         }
     }
@@ -136,15 +165,20 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
 
         It "Should report missing JSON keys if any" {
             $jsonValidation = $analysis.JsonKeyValidation
+            $missingKeysCount = $jsonValidation.MissingKeys.Count
 
-            if ($jsonValidation.MissingKeys.Count -gt 0) {
-                Write-Host "Warning: Missing JSON keys detected ($($jsonValidation.MissingKeys.Count)):"
-                $jsonValidation.MissingKeys | Select-Object -First 5 | ForEach-Object {
-                    Write-Host "  - $_"
+            # Define acceptable threshold for missing keys (0 for strict validation)
+            $acceptableThreshold = 0
+
+            if ($missingKeysCount -gt $acceptableThreshold) {
+                $keyDetails = $jsonValidation.MissingKeys | Select-Object -First 10
+                $errorMessage = "Found $missingKeysCount missing JSON keys (threshold: $acceptableThreshold):`n" + ($keyDetails -join "`n")
+                if ($missingKeysCount -gt 10) {
+                    $errorMessage += "`n... and $($missingKeysCount - 10) more"
                 }
-                Set-ItResult -Skipped -Because "Missing keys found but not critical for test execution"
+                $missingKeysCount | Should -BeLessOrEqual $acceptableThreshold -Because $errorMessage
             } else {
-                $true | Should -Be $true
+                $missingKeysCount | Should -BeLessOrEqual $acceptableThreshold -Because "All required JSON keys should be present"
             }
         }
     }
@@ -182,15 +216,34 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
             $xamlAccess = $analysis.XamlElementAccess
 
             $totalUnmapped = 0
+            $totalElements = 0
+            $fileDetails = @()
+
             foreach ($file in $xamlAccess.ElementAnalysis.Keys) {
-                $totalUnmapped += $xamlAccess.ElementAnalysis[$file].UnmappedElements.Count
+                $elementData = $xamlAccess.ElementAnalysis[$file]
+                $totalUnmapped += $elementData.UnmappedElements.Count
+                $totalElements += $elementData.TotalNamedElements
+
+                if ($elementData.UnmappedElements.Count -gt 0) {
+                    $fileName = Split-Path -Leaf $file
+                    $fileDetails += "$fileName : $($elementData.UnmappedElements.Count)/$($elementData.TotalNamedElements) unmapped"
+                    $unmappedList = $elementData.UnmappedElements | Select-Object -First 5
+                    $fileDetails += "  Elements: $($unmappedList -join ', ')"
+                }
             }
 
+            # Calculate percentage of unmapped elements
+            # Note: Many elements use data binding or are set programmatically, so a higher threshold is acceptable
+            # - Elements like ListBox, ComboBox, Grid, etc. don't need localization mappings
+            # - Elements that display dynamic data (game names, paths) are handled via binding
+            $acceptableUnmappedPercentage = 40.0
+            $unmappedPercentage = if ($totalElements -gt 0) { ($totalUnmapped / $totalElements) * 100 } else { 0 }
+
             if ($totalUnmapped -gt 0) {
-                Write-Host "Warning: $totalUnmapped unmapped XAML elements detected"
-                Set-ItResult -Skipped -Because "Unmapped elements found but not critical for test execution"
+                $errorMessage = "Found $totalUnmapped unmapped XAML elements out of $totalElements total ($([math]::Round($unmappedPercentage, 2))%):`n" + ($fileDetails -join "`n")
+                $unmappedPercentage | Should -BeLessOrEqual $acceptableUnmappedPercentage -Because $errorMessage
             } else {
-                $true | Should -Be $true
+                $totalUnmapped | Should -Be 0 -Because "All named XAML elements should be mapped for localization"
             }
         }
     }
@@ -225,15 +278,41 @@ Describe "GUI Localization Integrity Diagnostics" -Tags @("GUI", "Localization",
 
         It "Should report string replacement issues if any" {
             $stringFlow = $analysis.StringReplacementFlow
+            $issuesCount = $stringFlow.Issues.Count
 
-            if ($stringFlow.Issues.Count -gt 0) {
-                Write-Host "Warning: String replacement issues detected ($($stringFlow.Issues.Count)):"
-                $stringFlow.Issues | Select-Object -First 5 | ForEach-Object {
-                    Write-Host "  - $_"
+            # Define acceptable threshold for string replacement issues
+            $acceptableThreshold = 0
+
+            if ($issuesCount -gt $acceptableThreshold) {
+                # Categorize issues by severity
+                $criticalIssues = @($stringFlow.Issues | Where-Object { $_ -match "critical|error|failed" })
+                $warningIssues = @($stringFlow.Issues | Where-Object { $_ -match "warning|missing" })
+                $infoIssues = @($stringFlow.Issues | Where-Object { $_ -notmatch "critical|error|failed|warning|missing" })
+
+                $issueDetails = @()
+                if ($criticalIssues.Count -gt 0) {
+                    $issueDetails += "Critical Issues ($($criticalIssues.Count)):"
+                    $issueDetails += $criticalIssues | Select-Object -First 5
                 }
-                Set-ItResult -Skipped -Because "Issues found but not critical for test execution"
+                if ($warningIssues.Count -gt 0) {
+                    $issueDetails += "Warnings ($($warningIssues.Count)):"
+                    $issueDetails += $warningIssues | Select-Object -First 5
+                }
+                if ($infoIssues.Count -gt 0) {
+                    $issueDetails += "Info ($($infoIssues.Count)):"
+                    $issueDetails += $infoIssues | Select-Object -First 3
+                }
+
+                $errorMessage = "Found $issuesCount string replacement issues (threshold: $acceptableThreshold):`n" + ($issueDetails -join "`n")
+
+                # Fail test if critical issues exist, otherwise just report
+                if ($criticalIssues.Count -gt 0) {
+                    $issuesCount | Should -Be 0 -Because $errorMessage
+                } else {
+                    $issuesCount | Should -BeLessOrEqual $acceptableThreshold -Because $errorMessage
+                }
             } else {
-                $true | Should -Be $true
+                $issuesCount | Should -Be 0 -Because "No string replacement issues should exist"
             }
         }
     }

@@ -27,7 +27,7 @@ BeforeAll {
     Write-BuildLog "[INFO] ConfigValidation Tests: Loaded validation module"
 }
 
-Describe "Invoke-ConfigurationValidation" -Tag "Core", "Validation" {
+Describe "Invoke-ConfigurationValidation" -Tag "Unit", "Core", "Validation" {
 
     Context "Game ID Validation" {
         It "Should accept valid Game ID with alphanumeric characters" {

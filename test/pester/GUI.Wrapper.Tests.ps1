@@ -5,6 +5,10 @@
     Wraps existing Test-GUI-*.ps1 scripts without modifying them
     This wrapper enables unified test reporting via Pester framework
     without requiring modifications to legacy test scripts
+.NOTES
+    Author: Focus Game Deck Team
+    Version: 1.0.0
+    Tags: Unit, GUI
 #>
 
 BeforeAll {
@@ -17,7 +21,7 @@ BeforeAll {
     }
 }
 
-Describe "GUI Tests" -Tag "GUI" {
+Describe "GUI Tests" -Tag "Unit", "GUI" {
 
     Context "ConfigEditor Consistency" {
         It "should have all required UI element mappings" {

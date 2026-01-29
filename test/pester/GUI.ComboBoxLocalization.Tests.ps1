@@ -4,6 +4,10 @@
 .DESCRIPTION
     Validates that ComboBox items are properly localized
     Tests Japanese language support and message key mappings
+.NOTES
+    Author: Focus Game Deck Team
+    Version: 1.0.0
+    Tags: Unit, GUI, Localization
 #>
 
 BeforeAll {
@@ -20,7 +24,7 @@ BeforeAll {
     . (Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.Localization.ps1")
 }
 
-Describe "GUI ComboBox Localization Tests" -Tag "GUI", "Localization" {
+Describe "GUI ComboBox Localization Tests" -Tag "Unit", "GUI", "Localization" {
 
     Context "ComboBox Item Mappings" {
         It "should have ComboBoxItemMappings defined" {
