@@ -42,8 +42,10 @@ jobs:
                   # Exit immediately if an error occurs
 
                   $ErrorActionPreference = "Stop"
-                  # Exclude Integration tests in CI environment (no external services available)
-                  .\test\runners\Invoke-PesterTests.ps1 -ExcludeTag "Integration"
+                  # Exclude Integration and Local tests in CI environment
+                  # Integration: requires external services
+                  # Local: requires desktop environment (e.g., GUI tests)
+                  .\test\runners\Invoke-PesterTests.ps1 -ExcludeTag "Integration", "Local"
 
             - name: Build Application (Development Mode)
               shell: powershell
@@ -51,6 +53,42 @@ jobs:
                   # Execute build in Development mode without cloud signing
 
                   .\build-tools\Release-Manager.ps1 -Development -Verbose
+
+            - name: Smoke Test - Bundled Executables
+              shell: powershell
+              run: |
+                  # Smoke test with explicit exit code checking
+                  $ErrorActionPreference = "Stop"
+
+                  Write-Host "Testing Focus-Game-Deck.exe command-line arguments..."
+
+                  # Test --help (should exit with 0)
+                  & ".\release\Focus-Game-Deck.exe" --help
+                  if ($LASTEXITCODE -ne 0) {
+                      throw "Help command failed with exit code: $LASTEXITCODE"
+                  }
+                  Write-Host "✓ --help command succeeded"
+
+                  # Test --version (should exit with 0)
+                  & ".\release\Focus-Game-Deck.exe" --version
+                  if ($LASTEXITCODE -ne 0) {
+                      throw "Version command failed with exit code: $LASTEXITCODE"
+                  }
+                  Write-Host "✓ --version command succeeded"
+
+                  # Test --list (should exit with 0 if games configured, 1 if not)
+                  & ".\release\Focus-Game-Deck.exe" --list
+                  $listExitCode = $LASTEXITCODE
+                  if ($listExitCode -eq 0) {
+                      Write-Host "✓ --list command succeeded (games configured)"
+                  } elseif ($listExitCode -eq 1) {
+                      Write-Host "⚠ --list command reported no games configured (expected in CI)"
+                  } else {
+                      throw "List command failed with unexpected exit code: $listExitCode"
+                  }
+
+                  Write-Host ""
+                  Write-Host "All smoke tests passed successfully!"
 
             - name: Archive Release Artifacts
               shell: powershell
