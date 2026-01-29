@@ -18,8 +18,8 @@ function Test-IsCI {
     .SYNOPSIS
         Detects if running in a CI/CD environment.
     #>
-    return ($env:GITHUB_ACTIONS -eq 'true') -or 
-           ($env:CI -eq 'true') -or 
+    return ($env:GITHUB_ACTIONS -eq 'true') -or
+           ($env:CI -eq 'true') -or
            ($env:TF_BUILD -eq 'true') -or
            ($env:JENKINS_URL -ne $null)
 }
@@ -36,7 +36,7 @@ function Test-HasIntegrationTarget {
     <#
     .SYNOPSIS
         Checks if a specific integration target is available.
-    
+
     .PARAMETER Target
         The integration target to check (Discord, OBS, VTubeStudio).
     #>
@@ -85,7 +85,7 @@ function Skip-TestIfCI {
     <#
     .SYNOPSIS
         Skips the current test if running in CI environment.
-    
+
     .PARAMETER Reason
         The reason for skipping.
     #>
@@ -104,7 +104,7 @@ function Skip-TestIfNoIntegration {
     <#
     .SYNOPSIS
         Skips the current test if the integration target is not available.
-    
+
     .PARAMETER Target
         The integration target required.
     #>

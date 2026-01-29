@@ -47,6 +47,7 @@ Tests are organized using a hierarchical tag system:
 ```
 
 Examples:
+
 - `Core.CharacterEncoding.Tests.ps1`
 - `Core.ConfigValidation.Tests.ps1`
 - `GUI.ComboBoxLocalization.Tests.ps1`
