@@ -1360,6 +1360,8 @@ function Save-VoiceMeeterSettingsData {
         $voiceMeeterDefaultProfileTextBox = $script:Window.FindName("VoiceMeeterDefaultProfileTextBox")
         $voiceMeeterGameStartActionCombo = $script:Window.FindName("VoiceMeeterGameStartActionCombo")
         $voiceMeeterGameEndActionCombo = $script:Window.FindName("VoiceMeeterGameEndActionCombo")
+        $voiceMeeterGameStartProfileTextBox = $script:Window.FindName("VoiceMeeterGameStartProfileTextBox")
+        $voiceMeeterGameEndProfileTextBox = $script:Window.FindName("VoiceMeeterGameEndProfileTextBox")
 
         # Ensure integrations section exists
         if (-not $script:StateManager.ConfigData.integrations) {
@@ -1420,6 +1422,20 @@ function Save-VoiceMeeterSettingsData {
             }
             Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "gameEndAction" -Value $gameEndAction
             Write-Verbose "Saved VoiceMeeter gameEndAction: $gameEndAction"
+        }
+
+        # Save game start profile path
+        if ($voiceMeeterGameStartProfileTextBox) {
+            $normalizedPath = $voiceMeeterGameStartProfileTextBox.Text -replace '\\', '/'
+            Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "gameStartProfile" -Value $normalizedPath
+            Write-Verbose "Saved VoiceMeeter game start profile: $normalizedPath"
+        }
+
+        # Save game end profile path
+        if ($voiceMeeterGameEndProfileTextBox) {
+            $normalizedPath = $voiceMeeterGameEndProfileTextBox.Text -replace '\\', '/'
+            Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "gameEndProfile" -Value $normalizedPath
+            Write-Verbose "Saved VoiceMeeter game end profile: $normalizedPath"
         }
 
         # Mark configuration as modified

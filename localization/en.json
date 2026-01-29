@@ -683,6 +683,8 @@
     "console_unknown_voicemeeter_action": "Unknown action: {0}",
     "voicemeeterSettingsSaved": "VoiceMeeter settings have been saved",
     "voicemeeterSettingsSaveFailed": "Failed to save VoiceMeeter settings",
+    "voicemeeterGameStartProfileLabel": "Game Start Profile (XML):",
+    "voicemeeterGameEndProfileLabel": "Game End Profile (XML):",
     "voicemeeterIntegrationTitle": "VoiceMeeter Integration Settings",
     "voicemeeterEnabledCheckBox": "Enable VoiceMeeter Integration",
     "voicemeeterDllPathLabel": "DLL Path:",

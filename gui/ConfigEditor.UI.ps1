@@ -1530,6 +1530,20 @@ class ConfigEditorUI {
                             }
                         }
                     }
+
+                    # Load VoiceMeeter game start profile path
+                    $vmGameStartProfileTextBox = $self.Window.FindName("VoiceMeeterGameStartProfileTextBox")
+                    if ($vmGameStartProfileTextBox -and $ConfigData.integrations.voiceMeeter.gameStartProfile) {
+                        $vmGameStartProfileTextBox.Text = $ConfigData.integrations.voiceMeeter.gameStartProfile
+                        Write-Verbose "Loaded VoiceMeeter game start profile: $($ConfigData.integrations.voiceMeeter.gameStartProfile)"
+                    }
+
+                    # Load VoiceMeeter game end profile path
+                    $vmGameEndProfileTextBox = $self.Window.FindName("VoiceMeeterGameEndProfileTextBox")
+                    if ($vmGameEndProfileTextBox -and $ConfigData.integrations.voiceMeeter.gameEndProfile) {
+                        $vmGameEndProfileTextBox.Text = $ConfigData.integrations.voiceMeeter.gameEndProfile
+                        Write-Verbose "Loaded VoiceMeeter game end profile: $($ConfigData.integrations.voiceMeeter.gameEndProfile)"
+                    }
                 }
 
                 $langCombo = $self.Window.FindName("LanguageCombo")

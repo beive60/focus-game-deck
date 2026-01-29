@@ -3167,6 +3167,28 @@ class ConfigEditorEvents {
         }
     }
 
+    # Handle browse VoiceMeeter game start profile
+    [void] HandleBrowseVoiceMeeterGameStartProfile() {
+        $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $openFileDialog.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*"
+        $openFileDialog.Title = "Select VoiceMeeter Game Start Profile"
+        if ($openFileDialog.ShowDialog()) {
+            $script:Window.FindName("VoiceMeeterGameStartProfileTextBox").Text = $openFileDialog.FileName
+            Write-Verbose "Selected VoiceMeeter game start profile: $($openFileDialog.FileName)"
+        }
+    }
+
+    # Handle browse VoiceMeeter game end profile
+    [void] HandleBrowseVoiceMeeterGameEndProfile() {
+        $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $openFileDialog.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*"
+        $openFileDialog.Title = "Select VoiceMeeter Game End Profile"
+        if ($openFileDialog.ShowDialog()) {
+            $script:Window.FindName("VoiceMeeterGameEndProfileTextBox").Text = $openFileDialog.FileName
+            Write-Verbose "Selected VoiceMeeter game end profile: $($openFileDialog.FileName)"
+        }
+    }
+
     # Handle opening integration tab from game settings
     [void] HandleOpenIntegrationTab([string]$TabName) {
         try {
@@ -3633,6 +3655,8 @@ class ConfigEditorEvents {
             # --- VoiceMeeter Tab ---
             $this.uiManager.Window.FindName("BrowseVoiceMeeterDllPathButton").add_Click({ $self.HandleBrowseVoiceMeeterDllPath() }.GetNewClosure())
             $this.uiManager.Window.FindName("BrowseVoiceMeeterDefaultProfileButton").add_Click({ $self.HandleBrowseVoiceMeeterDefaultProfile() }.GetNewClosure())
+            $this.uiManager.Window.FindName("BrowseVoiceMeeterGameStartProfileButton").add_Click({ $self.HandleBrowseVoiceMeeterGameStartProfile() }.GetNewClosure())
+            $this.uiManager.Window.FindName("BrowseVoiceMeeterGameEndProfileButton").add_Click({ $self.HandleBrowseVoiceMeeterGameEndProfile() }.GetNewClosure())
             $this.uiManager.Window.FindName("AutoDetectVoiceMeeterButton").add_Click({ $self.HandleAutoDetectPath("VoiceMeeter") }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveVoiceMeeterSettingsButton").add_Click({ $self.HandleSaveVoiceMeeterSettings() }.GetNewClosure())
 

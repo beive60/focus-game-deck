@@ -1962,6 +1962,31 @@
                                                 Width="200"/>
                                         </StackPanel>
 
+                                        <StackPanel Margin="0,5,0,10">
+                                            <Label 
+                                                x:Name="VoiceMeeterGameStartProfileLabel"
+                                                Content="[voicemeeterGameStartProfileLabel]" 
+                                                Margin="0,0,0,5"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="80"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBox
+                                                    x:Name="VoiceMeeterGameStartProfileTextBox"
+                                                    Grid.Column="0"
+                                                    VerticalContentAlignment="Center"
+                                                    Margin="0,0,5,0"/>
+                                                <Button
+                                                    x:Name="BrowseVoiceMeeterGameStartProfileButton"
+                                                    Content="[BROWSE_BUTTON]"
+                                                    Grid.Column="1"
+                                                    Width="70"
+                                                    Height="25"/>
+                                            </Grid>
+                                        </StackPanel>
+
                                         <StackPanel Orientation="Horizontal" Margin="0,5">
                                             <Label 
                                                 x:Name="VoiceMeeterGameEndActionLabel"
@@ -1970,6 +1995,31 @@
                                             <ComboBox 
                                                 x:Name="VoiceMeeterGameEndActionCombo" 
                                                 Width="200"/>
+                                        </StackPanel>
+
+                                        <StackPanel Margin="0,5,0,10">
+                                            <Label 
+                                                x:Name="VoiceMeeterGameEndProfileLabel"
+                                                Content="[voicemeeterGameEndProfileLabel]" 
+                                                Margin="0,0,0,5"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="80"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBox
+                                                    x:Name="VoiceMeeterGameEndProfileTextBox"
+                                                    Grid.Column="0"
+                                                    VerticalContentAlignment="Center"
+                                                    Margin="0,0,5,0"/>
+                                                <Button
+                                                    x:Name="BrowseVoiceMeeterGameEndProfileButton"
+                                                    Content="[BROWSE_BUTTON]"
+                                                    Grid.Column="1"
+                                                    Width="70"
+                                                    Height="25"/>
+                                            </Grid>
                                         </StackPanel>
                                     </StackPanel>
                                 </GroupBox>

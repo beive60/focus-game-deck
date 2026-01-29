@@ -62,6 +62,8 @@ $script:ActionButtonMappings = @{
     "OpenVTubeStudioTabButton" = "openIntegrationSettings"
     "SaveVoiceMeeterSettingsButton" = "saveButton"
     "OpenVoiceMeeterTabButton" = "openIntegrationSettings"
+    "BrowseVoiceMeeterGameStartProfileButton" = "browseButton"
+    "BrowseVoiceMeeterGameEndProfileButton" = "browseButton"
 }
 
 # List movement buttons
@@ -159,6 +161,8 @@ $script:LabelMappings = @{
     "VoiceMeeterTypeLabel" = "voicemeeterTypeLabel"
     "VoiceMeeterGameStartActionLabel" = "gameStartActionLabel"
     "VoiceMeeterGameEndActionLabel" = "gameEndActionLabel"
+    "VoiceMeeterGameStartProfileLabel" = "voicemeeterGameStartProfileLabel"
+    "VoiceMeeterGameEndProfileLabel" = "voicemeeterGameEndProfileLabel"
     "VoiceMeeterDllPathLabel" = "voicemeeterDllPathLabel"
     "VoiceMeeterGameSpecificSettingsGroup" = "voicemeeterGameSpecificSettingsGroup"
     "VoiceMeeterActionLabel" = "voicemeeterActionLabel"
