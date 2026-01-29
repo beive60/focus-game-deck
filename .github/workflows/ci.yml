@@ -36,11 +36,14 @@ jobs:
 
             - name: Run Tests
               shell: powershell
+              env:
+                  CI: true
               run: |
                   # Exit immediately if an error occurs
 
                   $ErrorActionPreference = "Stop"
-                  .\test\runners\Invoke-PesterTests.ps1
+                  # Exclude Integration tests in CI environment (no external services available)
+                  .\test\runners\Invoke-PesterTests.ps1 -ExcludeTag "Integration"
 
             - name: Build Application (Development Mode)
               shell: powershell

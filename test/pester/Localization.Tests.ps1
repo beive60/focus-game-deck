@@ -28,7 +28,7 @@ BeforeAll {
     Write-Information $projectRoot
 }
 
-Describe "Localization Functionality Tests" -Tag "Localization" {
+Describe "Localization Functionality Tests" -Tag "Unit", "Localization" {
 
     Context "File Structure" {
         It "should pass localization file structure validation" {
