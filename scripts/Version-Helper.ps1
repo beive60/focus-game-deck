@@ -91,7 +91,7 @@ function Test-ReleaseValidation {
 
     # Check for required files
     $requiredFiles = @(
-        "Version.ps1",
+        "build-tools/Version.ps1",
         "README.md",
         "LICENSE.md",
         "CONTRIBUTING.md"
@@ -110,9 +110,9 @@ function Test-ReleaseValidation {
     # Check documentation files
     $docsPath = Join-Path $rootPath "docs"
     $requiredDocs = @(
-        "VERSION-MANAGEMENT.md",
-        "GITHUB-RELEASES-GUIDE.md",
-        "ARCHITECTURE.md"
+        "project-info/version-management.md",
+        "developer-guide/release-process.md",
+        "developer-guide/architecture.md"
     )
 
     foreach ($doc in $requiredDocs) {

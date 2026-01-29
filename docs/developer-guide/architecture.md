@@ -291,10 +291,10 @@ For detailed build system information, see [Build System Documentation](build-sy
 
 **Technical Implementation:**
 
-- **Main Application**: `Focus-Game-Deck.exe` (console-based launcher)
-- **Multi-platform Version**: `Focus-Game-Deck-MultiPlatform.exe` (extended platform support)
-- **GUI Configuration**: `Focus-Game-Deck-Config-Editor.exe` (WPF-based, no console window)
-- **Automated Build Pipeline**: Three-tier build system (individual → integrated → master orchestration)
+- **Main Router**: `Focus-Game-Deck.exe` (lightweight entry point)
+- **Game Launcher**: `Invoke-FocusGameDeck.exe` (console-based game automation)
+- **GUI Configuration**: `ConfigEditor.exe` (WPF-based, no console window)
+- **Automated Build Pipeline**: SRP-based tool scripts orchestrated by Release-Manager.ps1
 
 #### 4. Digital Signature Strategy: Extended Validation Certificate
 
