@@ -90,6 +90,9 @@ jobs:
                   Write-Host ""
                   Write-Host "All smoke tests passed successfully!"
 
+                  # Exit with success code (overrides $LASTEXITCODE from --list command)
+                  exit 0
+
             - name: Archive Release Artifacts
               shell: powershell
               run: |
