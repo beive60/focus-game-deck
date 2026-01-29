@@ -725,7 +725,7 @@ function Initialize-ConfigEditor {
                     }
                 }
                 else {
-                    Write-Verbose "[INFO] ConfigEditor: Tutorial was skipped"
+                    Write-Verbose "[INFO] ConfigEditor: Tutorial was skipped - will show again on next launch"
                 }
             }
             catch {

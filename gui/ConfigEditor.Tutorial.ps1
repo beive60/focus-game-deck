@@ -96,7 +96,8 @@ class TutorialManager {
 
     [string]ReplaceLocalizationPlaceholders([string]$xaml) {
         # Replace all [KEY] patterns with localized strings
-        $pattern = '\[([A-Z_]+)\]'
+        # Pattern matches camelCase keys inside square brackets
+        $pattern = '\[([a-zA-Z][a-zA-Z0-9_]*)\]'
         $xaml = [regex]::Replace($xaml, $pattern, {
             param($match)
             $key = $match.Groups[1].Value
@@ -163,10 +164,13 @@ class TutorialManager {
     }
 
     [void]SkipTutorial() {
-        $this.CompleteTutorial()
+        # Mark as skipped (DialogResult = false means not completed)
+        $this.Window.DialogResult = $false
+        $this.Window.Close()
     }
 
     [void]CompleteTutorial() {
+        # Mark as completed (DialogResult = true means completed successfully)
         $this.Window.DialogResult = $true
         $this.Window.Close()
     }

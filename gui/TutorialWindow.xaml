@@ -1,7 +1,7 @@
 <Window
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="[TUTORIAL_WINDOW_TITLE]"
+    Title="[tutorialWindowTitle]"
     Width="800"
     Height="600"
     MinWidth="700"
@@ -25,14 +25,14 @@
             <StackPanel>
                 <TextBlock 
                     x:Name="TutorialTitle"
-                    Text="[TUTORIAL_WELCOME_TITLE]"
+                    Text="[tutorialWelcomeTitle]"
                     FontSize="24"
                     FontWeight="Bold"
                     Foreground="White"
                     TextAlignment="Center"/>
                 <TextBlock 
                     x:Name="TutorialSubtitle"
-                    Text="[TUTORIAL_WELCOME_SUBTITLE]"
+                    Text="[tutorialWelcomeSubtitle]"
                     FontSize="14"
                     Foreground="White"
                     TextAlignment="Center"
@@ -85,7 +85,7 @@
                         <!-- Description text -->
                         <TextBlock 
                             x:Name="TutorialDescription"
-                            Text="[TUTORIAL_DESCRIPTION_PLACEHOLDER]"
+                            Text="[tutorialDescriptionPlaceholder]"
                             FontSize="14"
                             TextWrapping="Wrap"
                             LineHeight="24"
@@ -100,13 +100,13 @@
                            HorizontalAlignment="Center"
                            Margin="0,15,0,0">
                     <TextBlock 
-                        Text="[TUTORIAL_MORE_INFO]"
+                        Text="[tutorialMoreInfo]"
                         FontSize="12"
                         Foreground="#666"
                         VerticalAlignment="Center"/>
                     <TextBlock 
                         x:Name="DocumentationLink"
-                        Text="[TUTORIAL_DOCUMENTATION_LINK]"
+                        Text="[tutorialDocumentationLink]"
                         FontSize="12"
                         Foreground="#2196F3"
                         TextDecorations="Underline"
@@ -133,7 +133,7 @@
                 <!-- Skip button (left) -->
                 <Button 
                     x:Name="SkipButton"
-                    Content="[TUTORIAL_SKIP_BUTTON]"
+                    Content="[tutorialSkipButton]"
                     Width="100"
                     Height="36"
                     HorizontalAlignment="Left"
@@ -145,14 +145,14 @@
                            HorizontalAlignment="Center">
                     <Button 
                         x:Name="BackButton"
-                        Content="[TUTORIAL_BACK_BUTTON]"
+                        Content="[tutorialBackButton]"
                         Width="100"
                         Height="36"
                         Margin="0,0,10,0"
                         FontSize="13"/>
                     <Button 
                         x:Name="NextButton"
-                        Content="[TUTORIAL_NEXT_BUTTON]"
+                        Content="[tutorialNextButton]"
                         Width="100"
                         Height="36"
                         IsDefault="True"
