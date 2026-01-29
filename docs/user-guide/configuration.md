@@ -18,11 +18,23 @@ This document provides detailed instructions for configuring Focus Game Deck to 
 
 ## Quick Start
 
+### 0. First-Time Setup Tutorial
+
+When you launch the Configuration Editor for the first time, an interactive tutorial will automatically appear to guide you through:
+
+- **Basic game registration** - How to add games to Focus Game Deck
+- **Application management** - Setting up applications to control
+- **OBS/Discord/VTube Studio integration** - Connecting streaming and communication tools
+- **Game launching** - Creating shortcuts and launching games
+
+The tutorial can be skipped at any time and won't show again after completion.
+
 ### 1. Choose Configuration Method
 
 **Option A: GUI Configuration Editor (Recommended)**
 
 - Run `Focus-Game-Deck-Config-Editor.exe`
+- Follow the first-launch tutorial if it's your first time
 - Use the intuitive interface to configure all settings
 - Automatically generates valid `config.json`
 
