@@ -6,6 +6,15 @@
     These tests may require external services to be running
     This wrapper enables unified test reporting via Pester framework
     without requiring modifications to legacy test scripts
+.NOTES
+    Author: Focus Game Deck Team
+    Version: 1.0.0
+    Tags: Integration
+
+    Dependencies:
+    - Discord Desktop App (for Discord tests)
+    - OBS Studio (for OBS tests)
+    - VTube Studio (for VTube Studio tests)
 #>
 
 BeforeAll {
