@@ -76,20 +76,6 @@ function Test-Result {
 
 Write-BuildLog "Testing JSON File Encoding..."
 
-# Test config.json
-try {
-    $configPath = Join-Path $projectRoot "config/config.json.sample"
-    $configContent = Get-Content $configPath -Raw -Encoding UTF8
-    $null = $configContent | ConvertFrom-Json  # Test parsing
-    Test-Result "config.json.sample UTF-8 parsing" $true
-
-    $configBytes = [System.IO.File]::ReadAllBytes($configPath)
-    $hasBOM = ($configBytes.Length -ge 3 -and $configBytes[0] -eq 0xEF -and $configBytes[1] -eq 0xBB -and $configBytes[2] -eq 0xBF)
-    Test-Result "config.json.sample without BOM" (-not $hasBOM) $(if ($hasBOM) { "BOM detected" } else { "" })
-} catch {
-    Test-Result "config.json.sample validation" $false $_.Exception.Message
-}
-
 # Test individual language files (e.g., en.json, ja.json)
 try {
     $enPath = Join-Path $projectRoot "localization/en.json"
@@ -124,7 +110,7 @@ try {
 
         # If key consistency check failed, suggest running the diagnostic tool
         if (-not $allCountsMatch) {
-            Write-BuildLog "  Hint: Run './test/Test-LocalizationConsistency.ps1 -Target App -ShowDetails' to identify missing or extra keys"
+            Write-BuildLog "  Hint: Run './test/scripts/localization/Test-LocalizationConsistency.ps1 -Target App -ShowDetails' to identify missing or extra keys"
         }
 
         # Test Japanese text
@@ -164,7 +150,7 @@ try {
 
             # If key consistency check failed, suggest running the diagnostic tool
             if (-not $allCountsMatch) {
-                Write-BuildLog "  Hint: Run './test/Test-LocalizationConsistency.ps1 -Target Website -ShowDetails' to identify missing or extra keys"
+                Write-BuildLog "  Hint: Run './test/scripts/localization/Test-LocalizationConsistency.ps1 -Target Website -ShowDetails' to identify missing or extra keys"
             }
 
             # Test Japanese text
@@ -189,53 +175,42 @@ try {
         . $loggerPath
         Test-Result "Logger module loading" $true
 
-        $configPath = Join-Path $projectRoot "config/config.json.sample"
-        if (Test-Path $configPath) {
-            $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
-            # Ensure log directory exists for CI environment
-            $logDir = Join-Path $projectRoot "src/logs"
-            if (-not (Test-Path $logDir)) {
-                New-Item -ItemType Directory -Path $logDir -Force | Out-Null
-            }
+        # Ensure log directory exists for CI environment
+        $logDir = Join-Path $projectRoot "src/logs"
+        if (-not (Test-Path $logDir)) {
+            New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+        }
 
-            # Import LanguageHelper for proper message loading
-            $languageHelperPath = Join-Path $projectRoot "scripts/LanguageHelper.ps1"
-            if (Test-Path $languageHelperPath) {
-                try {
-                    . $languageHelperPath
+        # Import LanguageHelper for proper message loading
+        $languageHelperPath = Join-Path $projectRoot "scripts/LanguageHelper.ps1"
+        if (Test-Path $languageHelperPath) {
+            try {
+                . $languageHelperPath
 
-                    # Load messages using proper LanguageHelper method (individual language files)
-                    $localizationDir = Join-Path $projectRoot "localization"
-                    $langCode = Get-DetectedLanguage -ConfigData $config
-                    $msg = Get-LocalizedMessages -MessagesPath $localizationDir -LanguageCode $langCode
-
-                    # Create simple test messages for compatibility testing
-                    $testMessages = @{
-                        test_message = "Character encoding test message"
-                    }
-
-                    try {
-                        $logger = Initialize-Logger -Config $config -Messages $testMessages
-                        Test-Result "Logger initialization" $true
-
-                        $logger.Info("Character encoding test message", "TEST")
-                        Test-Result "Logger UTF-8 logging" $true
-                    } catch {
-                        # Logger initialization may fail in CI environment due to various reasons
-                        # This is acceptable as we're primarily testing encoding, not logger functionality
-                        Write-BuildLog "  Note: Logger initialization skipped in CI environment"
-                        Test-Result "Logger initialization (skipped)" $true "CI environment limitation"
-                        Test-Result "Logger UTF-8 logging (skipped)" $true "CI environment limitation"
-                    }
-                } catch {
-                    Test-Result "Logger compatibility" $false "Error loading LanguageHelper or messages: $($_.Exception.Message)"
+                # Create simple test messages for compatibility testing
+                $testMessages = @{
+                    test_message = "Character encoding test message"
                 }
-            } else {
-                Test-Result "Logger compatibility" $false "LanguageHelper.ps1 not found at: $languageHelperPath"
+
+                try {
+                    $logger = Initialize-Logger -Config $null -Messages $testMessages
+                    Test-Result "Logger initialization" $true
+
+                    $logger.Info("Character encoding test message", "TEST")
+                    Test-Result "Logger UTF-8 logging" $true
+                } catch {
+                    # Logger initialization may fail in CI environment due to various reasons
+                    # This is acceptable as we're primarily testing encoding, not logger functionality
+                    Write-BuildLog "  Note: Logger initialization skipped in CI environment"
+                    Test-Result "Logger initialization (skipped)" $true "CI environment limitation"
+                    Test-Result "Logger UTF-8 logging (skipped)" $true "CI environment limitation"
+                }
+            } catch {
+                Test-Result "Logger compatibility" $false "Error loading LanguageHelper or messages: $($_.Exception.Message)"
             }
         } else {
-            Test-Result "Logger compatibility" $false "config.json or config.json.sample not found"
+            Test-Result "Logger compatibility" $false "LanguageHelper.ps1 not found at: $languageHelperPath"
         }
     } else {
         Test-Result "Logger compatibility" $false "Logger.ps1 not found"

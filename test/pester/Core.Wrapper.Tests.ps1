@@ -5,6 +5,10 @@
     Wraps existing Test-Core-*.ps1 scripts without modifying them
     This wrapper enables unified test reporting via Pester framework
     without requiring modifications to legacy test scripts
+.NOTES
+    Author: Focus Game Deck Team
+    Version: 1.0.0
+    Tags: Unit, Core
 #>
 
 BeforeAll {
@@ -13,7 +17,7 @@ BeforeAll {
     Write-Information $projectRoot
 }
 
-Describe "Core Functionality Tests" -Tag "Core" {
+Describe "Core Functionality Tests" -Tag "Unit", "Core" {
 
     Context "Character Encoding" {
         It "should pass character encoding validation" {
@@ -54,6 +58,15 @@ Describe "Core Functionality Tests" -Tag "Core" {
             $null = & $testScript *>&1
             $exitCode = $LASTEXITCODE
             $exitCode | Should -Be 0 -Because "Configuration validation test should pass (exit code: $exitCode)"
+        }
+    }
+
+    Context "AppManager Parallel Execution" {
+        It "should pass AppManager parallel execution unit tests" {
+            $testScript = Join-Path -Path $projectRoot -ChildPath "test/scripts/core/Test-Core-AppManagerParallelExecution.ps1"
+            $null = & $testScript *>&1
+            $exitCode = $LASTEXITCODE
+            $exitCode | Should -Be 0 -Because "AppManager parallel execution test should pass (exit code: $exitCode)"
         }
     }
 }

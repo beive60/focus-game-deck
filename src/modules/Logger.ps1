@@ -79,18 +79,25 @@ class Logger {
     .DESCRIPTION
         Creates a new logger with configuration from the provided config object.
         Sets up logging targets, retention policies, and authentication properties.
+        If config or messages are not provided, uses safe defaults (Debug level, en language).
 
     .PARAMETER config
         Configuration object containing logging settings (level, file path, retention, etc.)
+        Optional - if null, defaults to Debug level with file logging disabled.
 
     .PARAMETER messages
         Localization messages object for internationalized log messages
+        Optional - if null, logger will work without localized messages.
 
     .PARAMETER appRoot
         Application root directory for resolving log file paths (optional, defaults to calculating from $PSScriptRoot)
 
     .EXAMPLE
         $logger = [Logger]::new($config, $messages, $appRoot)
+
+    .EXAMPLE
+        # Create logger with defaults when config is unavailable
+        $logger = [Logger]::new($null, $null)
     #>
     Logger([object] $config, [object] $messages) {
         $this.InitializeLogger($config, $messages, $null)
@@ -101,13 +108,15 @@ class Logger {
     }
 
     hidden [void] InitializeLogger([object] $config, [object] $messages, [string] $appRoot) {
+        # Set default values to ensure logger works even without config
         $this.Messages = $messages
-        $this.MinimumLevel = [LogLevel]::Info
+        $this.MinimumLevel = [LogLevel]::Debug  # Default to Debug level
         $this.EnableConsoleLogging = $true
         $this.EnableFileLogging = $false
         $this.EnableNotarization = $false
 
-        if ($config.logging) {
+        # Process config if provided
+        if ($config -and $config.logging) {
             if ($config.logging.level) {
                 $this.MinimumLevel = [LogLevel]::$($config.logging.level)
             }
@@ -169,7 +178,12 @@ class Logger {
 
         # Clean up old log files based on retention policy
         if ($this.EnableFileLogging) {
-            $this.CleanupOldLogs($config)
+            if ($config) {
+                $this.CleanupOldLogs($config)
+            } else {
+                # Use default retention (90 days) when config is not provided
+                $this.CleanupOldLogs($null)
+            }
         }
 
         # Initialize self-authentication properties for log integrity verification
@@ -436,7 +450,7 @@ class Logger {
         try {
             # Get log retention days from config, default to 90 if not specified or invalid
             $retentionDays = 90
-            if ($config.logging -and $config.logging.logRetentionDays) {
+            if ($config -and $config.logging -and $config.logging.logRetentionDays) {
                 $configuredDays = $config.logging.logRetentionDays
                 if ($configuredDays -is [int] -and $configuredDays -gt 0) {
                     $retentionDays = $configuredDays

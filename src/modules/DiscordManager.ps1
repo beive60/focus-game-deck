@@ -15,7 +15,7 @@ class DiscordManager {
         $this.Config = $discordConfig
         $this.Messages = $messages
         $this.Logger = $logger
-        $this.DiscordConfig = $discordConfig.discord
+        $this.DiscordConfig = $discordConfig
         $this.DetectedDiscordPath = $this.DetectDiscordPath()
         $this.RPCClient = $null
         $this.OriginalStatus = "online"
@@ -46,9 +46,9 @@ class DiscordManager {
         #>
 
         # Fallback to configured path
-        if ($this.DiscordConfig.Path -and ($this.DiscordConfig.Path -ne "")) {
+        if ($this.DiscordConfig.path -and ($this.DiscordConfig.path -ne "")) {
             # Handle wildcard paths (e.g., "%LOCALAPPDATA%/Discord/app-*/Discord.exe")
-            $discordPathWithWildcard = $this.DiscordConfig.Path
+            $discordPathWithWildcard = $this.DiscordConfig.path
 
             # Expand environment variables
             $expandedPath = [Environment]::ExpandEnvironmentVariables($discordPathWithWildcard)

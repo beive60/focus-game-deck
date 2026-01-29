@@ -390,27 +390,52 @@ class AppManager {
 
                 # Handle replay buffer if needed
                 if ($shouldStartReplayBuffer) {
-                    if (-not $manager.WebSocket -or $manager.WebSocket.State -ne "Open") {
-                        Start-Sleep -Milliseconds 3000
-                        $success = $manager.Connect()
-                        if (-not $success) {
-                            Write-LocalizedHost -Messages $this.Messages -Key "console_obs_websocket_failed" -Default "Failed to connect to OBS websocket" -Level "WARNING" -Component "OBSManager"
-                            if ($this.Logger) { $this.Logger.Warning("Failed to connect to OBS websocket", "OBS") }
-                            return $false
-                        }
+                    # Start replay buffer in background job to avoid blocking game launch
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_obs_replay_buffer_starting_async" -Default "Starting OBS replay buffer asynchronously..." -Level "INFO" -Component "OBSManager"
+                    if ($this.Logger) { $this.Logger.Info("Starting OBS replay buffer in background job", "OBS") }
+
+                    # Determine application root
+                    $currentProcess = Get-Process -Id $PID
+                    $isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
+                    if ($isExecutable) {
+                        $appRoot = Split-Path -Parent $currentProcess.Path
+                    } else {
+                        # For script mode: AppManager.ps1 is in src/modules, need to go up two levels
+                        $appRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
                     }
 
+                    # Prepare parameters for background script
+                    $backgroundScriptPath = Join-Path -Path $appRoot -ChildPath "src/modules/OBSReplayBufferBackground.ps1"
+                    $logFilePath = if ($this.Logger -and $this.Logger.FilePath) { $this.Logger.FilePath } else { $null }
+
+                    # Start background job
+                    $jobStarted = $false
                     try {
-                        $success = $manager.StartReplayBuffer()
-                        if ($this.Logger) { $this.Logger.Info("OBS replay buffer started", "OBS") }
+                        $job = Start-Job -ScriptBlock {
+                            param($scriptPath, $obsConfig, $messages, $logPath, $appRootPath)
+                            & $scriptPath -OBSConfig $obsConfig -Messages $messages -LogFilePath $logPath -WaitBeforeConnect 3000 -AppRoot $appRootPath
+                        } -ArgumentList $backgroundScriptPath, $config, $this.Messages, $logFilePath, $appRoot
+
+                        $jobStarted = $true
+                        if ($this.Logger) {
+                            $this.Logger.Info("Background job started for OBS replay buffer (Job ID: $($job.Id))", "OBS")
+                        }
+
+                        # Store job reference for potential cleanup
+                        if (-not $this.Config.PSObject.Properties['BackgroundJobs']) {
+                            $this.Config | Add-Member -NotePropertyName 'BackgroundJobs' -NotePropertyValue @{} -Force
+                        }
+                        $this.Config.BackgroundJobs['OBSReplayBuffer'] = $job
+
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_obs_replay_buffer_async_started" -Default "OBS replay buffer starting in background (non-blocking)" -Level "OK" -Component "OBSManager"
                     } catch {
-                        Write-LocalizedHost -Messages $this.Messages -Key "console_obs_replay_failed" -Default "Failed to connect to OBS for replay buffer" -Level "WARNING" -Component "OBSManager"
-                        if ($this.Logger) { $this.Logger.Warning("Failed to connect to OBS for replay buffer", "OBS") }
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_obs_replay_buffer_job_failed" -Default "Failed to start background job for replay buffer" -Level "WARNING" -Component "OBSManager"
+                        if ($this.Logger) { $this.Logger.Warning("Failed to start background job for OBS replay buffer: $_", "OBS") }
                         return $false
-                    } finally {
-                        [void]$manager.Disconnect()
                     }
-                    return $success
+
+                    # Return success only if job was started
+                    return $jobStarted
                 }
 
                 return $true
@@ -1156,17 +1181,59 @@ class AppManager {
 
         if ($apps.Count -eq 0) {
             if ($this.Logger) { $this.Logger.Info("No applications to manage for shutdown", "APP") }
-            return $true
+        } else {
+            foreach ($appId in $apps) {
+                $action = $this.GetShutdownAction($appId)
+                $success = $this.InvokeAction($appId, $action)
+                if (-not $success) {
+                    $allSuccess = $false
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_app_shutdown_action_failed" -Args @($appId, $action) -Default ("Failed to shutdown app '{0}' with action: {1}" -f $appId, $action) -Level "WARNING" -Component "AppManager"
+                    if ($this.Logger) { $this.Logger.Warning("Failed to shutdown $appId with action: $action", "APP") }
+                }
+            }
         }
 
-        foreach ($appId in $apps) {
-            $action = $this.GetShutdownAction($appId)
-            $success = $this.InvokeAction($appId, $action)
-            if (-not $success) {
-                $allSuccess = $false
-                Write-LocalizedHost -Messages $this.Messages -Key "console_app_shutdown_action_failed" -Args @($appId, $action) -Default ("Failed to shutdown app '{0}' with action: {1}" -f $appId, $action) -Level "WARNING" -Component "AppManager"
-                if ($this.Logger) { $this.Logger.Warning("Failed to shutdown $appId with action: $action", "APP") }
+        # Clean up any background jobs
+        if ($this.Config.PSObject.Properties['BackgroundJobs'] -and $this.Config.BackgroundJobs) {
+            # Create a copy of keys to avoid collection modification during iteration
+            $jobKeys = @($this.Config.BackgroundJobs.Keys)
+            foreach ($jobKey in $jobKeys) {
+                $job = $this.Config.BackgroundJobs[$jobKey]
+                if ($job) {
+                    switch ($job.State) {
+                        'Running' {
+                            if ($this.Logger) { $this.Logger.Info("Waiting for background job '$jobKey' to complete (Job ID: $($job.Id))...", "APP") }
+                            # Wait for up to 10 seconds for the job to complete
+                            $null = Wait-Job -Job $job -Timeout 10
+
+                            if ($job.State -eq 'Completed') {
+                                $jobResult = Receive-Job -Job $job -ErrorAction SilentlyContinue
+                                if ($this.Logger) { $this.Logger.Info("Background job '$jobKey' completed successfully. Result: $jobResult", "APP") }
+                            } else {
+                                if ($this.Logger) { $this.Logger.Warning("Background job '$jobKey' did not complete within timeout, stopping job", "APP") }
+                                Stop-Job -Job $job -ErrorAction SilentlyContinue
+                            }
+                        }
+                        'NotStarted' {
+                            if ($this.Logger) { $this.Logger.Info("Background job '$jobKey' never started, removing", "APP") }
+                        }
+                        'Completed' {
+                            $jobResult = Receive-Job -Job $job -ErrorAction SilentlyContinue
+                            if ($this.Logger) { $this.Logger.Info("Background job '$jobKey' was already completed. Result: $jobResult", "APP") }
+                        }
+                        'Failed' {
+                            if ($this.Logger) { $this.Logger.Warning("Background job '$jobKey' had failed", "APP") }
+                        }
+                        default {
+                            if ($this.Logger) { $this.Logger.Info("Background job '$jobKey' in state: $($job.State)", "APP") }
+                        }
+                    }
+                    
+                    # Remove the job
+                    Remove-Job -Job $job -Force -ErrorAction SilentlyContinue
+                }
             }
+            $this.Config.BackgroundJobs.Clear()
         }
 
         return $allSuccess

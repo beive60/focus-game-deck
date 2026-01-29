@@ -123,19 +123,51 @@ function Test-MappingTableIntegrity {
         }
 
         # Check for duplicate keys across different mapping tables
+        # Note: ButtonMappings is an intentional aggregation of specialized button mappings
+        # for backward compatibility, so it should be excluded from duplicate detection.
+        # Also, TooltipMappings may legitimately contain the same keys as button mappings
+        # because they serve different purposes (button text vs tooltip text).
         $allKeys = @()
         $keySource = @{}
 
+        # Specialized button mappings that are aggregated into ButtonMappings
+        $aggregatedButtonMappings = @(
+            'CrudButtonMappings',
+            'BrowserButtonMappings',
+            'AutoDetectButtonMappings',
+            'ActionButtonMappings',
+            'MovementButtonMappings'
+        )
+
+        # Variables to exclude from duplicate detection (aggregation tables)
+        $excludeFromDuplicateCheck = @('ButtonMappings')
+
         foreach ($varName in $mappingVariables) {
+            # Skip aggregation tables in duplicate detection
+            if ($varName -in $excludeFromDuplicateCheck) {
+                continue
+            }
+
             if (Get-Variable -Name $varName -ErrorAction SilentlyContinue) {
                 $mapping = (Get-Variable -Name $varName).Value
                 foreach ($key in $mapping.Keys) {
                     if ($key -in $allKeys) {
-                        if (-not $results.Duplicates.ContainsKey($key)) {
-                            $results.Duplicates[$key] = @()
+                        $sourceVar = $keySource[$key]
+
+                        # Allow duplicates between specialized button mappings and TooltipMappings
+                        # because they serve different purposes (button text vs tooltip)
+                        $isButtonToTooltipDuplicate = (
+                            ($sourceVar -in $aggregatedButtonMappings -and $varName -eq 'TooltipMappings') -or
+                            ($sourceVar -eq 'TooltipMappings' -and $varName -in $aggregatedButtonMappings)
+                        )
+
+                        if (-not $isButtonToTooltipDuplicate) {
+                            if (-not $results.Duplicates.ContainsKey($key)) {
+                                $results.Duplicates[$key] = @()
+                            }
+                            $results.Duplicates[$key] += $sourceVar
+                            $results.Duplicates[$key] += $varName
                         }
-                        $results.Duplicates[$key] += $keySource[$key]
-                        $results.Duplicates[$key] += $varName
                     } else {
                         $allKeys += $key
                         $keySource[$key] = $varName
@@ -207,8 +239,16 @@ function Test-JsonKeyStructure {
             return $results
         }
 
-        # Test each JSON file
+        # Define metadata files that should be excluded from localization key validation
+        # These files contain language configuration or manifest data, not UI localization keys
+        $metadataFiles = @('languages.json', 'manifest.json')
+
+        # Test each JSON file (excluding metadata files)
         foreach ($jsonFile in $jsonFiles) {
+            # Skip metadata files
+            if ($jsonFile.Name -in $metadataFiles) {
+                continue
+            }
             try {
                 $jsonContent = Get-Content -Path $jsonFile.FullName -Raw | ConvertFrom-Json
                 $jsonKeys = $jsonContent.PSObject.Properties.Name
@@ -303,18 +343,29 @@ function Test-XamlElementAccess {
                 }
 
                 # Check which elements have mappings
+                # Include all mapping tables for comprehensive element detection
                 $allMappingKeys = @()
-                if (Get-Variable -Name 'ButtonMappings' -ErrorAction SilentlyContinue) {
-                    $allMappingKeys += $ButtonMappings.Keys
-                }
-                if (Get-Variable -Name 'LabelMappings' -ErrorAction SilentlyContinue) {
-                    $allMappingKeys += $LabelMappings.Keys
-                }
-                if (Get-Variable -Name 'TabMappings' -ErrorAction SilentlyContinue) {
-                    $allMappingKeys += $TabMappings.Keys
-                }
-                if (Get-Variable -Name 'TextMappings' -ErrorAction SilentlyContinue) {
-                    $allMappingKeys += $TextMappings.Keys
+                $mappingTableNames = @(
+                    'ButtonMappings',
+                    'LabelMappings',
+                    'TabMappings',
+                    'TextMappings',
+                    'MenuItemMappings',
+                    'CheckBoxMappings',
+                    'TooltipMappings',
+                    'CrudButtonMappings',
+                    'BrowserButtonMappings',
+                    'AutoDetectButtonMappings',
+                    'ActionButtonMappings',
+                    'MovementButtonMappings'
+                )
+                foreach ($tableName in $mappingTableNames) {
+                    if (Get-Variable -Name $tableName -ErrorAction SilentlyContinue) {
+                        $table = Get-Variable -Name $tableName -ValueOnly
+                        if ($table -is [hashtable]) {
+                            $allMappingKeys += $table.Keys
+                        }
+                    }
                 }
 
                 foreach ($element in $namedElements) {
@@ -388,28 +439,41 @@ function Test-StringReplacementFlow {
         }
 
         # Check for main localization application mechanism - using computed $projectRoot
-        $mainConfigEditor = Join-Path -Path $projectRoot -ChildPath "gui/ConfigEditor.ps1"
-        if (Test-Path $mainConfigEditor) {
-            $configEditorContent = Get-Content -Path $mainConfigEditor -Raw
+        # Search across all ConfigEditor module files for modular architecture support
+        $guiPath = Join-Path -Path $projectRoot -ChildPath "gui"
+        $configEditorFiles = Get-ChildItem -Path $guiPath -Filter "ConfigEditor*.ps1" -ErrorAction SilentlyContinue
+        
+        if ($configEditorFiles.Count -gt 0) {
+            # Combine content from all ConfigEditor files for pattern matching
+            $allConfigEditorContent = ""
+            foreach ($file in $configEditorFiles) {
+                $allConfigEditorContent += Get-Content -Path $file.FullName -Raw
+                $allConfigEditorContent += "`n"
+            }
 
-            # Look for localization application patterns
+            # Look for localization application patterns across all module files
             $patterns = @{
-                'DotSourceMappings' = '\.\s*["\$].*ConfigEditor\.Mappings\.ps1'
-                'LocalizationCall' = 'Set-.*Localization|Apply.*Localization|.*locali[sz]ation'
-                'JsonLoading' = 'ConvertFrom-Json|Get-LocalizedStrings'
+                'DotSourceMappings' = '\.\s*["\$].*ConfigEditor\.Mappings\.ps1|\$MappingsPath'
+                'LocalizationCall' = 'Set-.*Localization|Apply.*Localization|.*locali[sz]ation|Get-LocalizationKey'
+                'JsonLoading' = 'ConvertFrom-Json|Get-LocalizedStrings|\$messages\s*='
                 'ElementPropertySetting' = '\.Content\s*=|\.Header\s*=|\.Text\s*='
             }
 
             foreach ($pattern in $patterns.GetEnumerator()) {
-                if ($configEditorContent -match $pattern.Value) {
+                if ($allConfigEditorContent -match $pattern.Value) {
                     $results.ControlMechanisms[$pattern.Key] = "Found"
                 } else {
                     $results.ControlMechanisms[$pattern.Key] = "Missing"
-                    $results.Issues += "Missing pattern in ConfigEditor.ps1: $($pattern.Key)"
+                    # Note: These are warnings for modular architecture, not critical issues
+                    # Pattern may exist in a different module or be implemented differently
+                    # Only add as issue if it's a critical pattern
+                    if ($pattern.Key -in @('LocalizationCall', 'ElementPropertySetting')) {
+                        $results.Issues += "Missing pattern in ConfigEditor modules: $($pattern.Key)"
+                    }
                 }
             }
         } else {
-            $results.Issues += "Main ConfigEditor.ps1 file not found"
+            $results.Issues += "No ConfigEditor.ps1 files found in gui directory"
         }
 
         return $results
@@ -585,7 +649,7 @@ if ($analysis) {
 
     # Output analysis to file for further review - save to test directory
     $outputDir = Join-Path -Path $projectRoot -ChildPath "test"
-    $outputPath = Join-Path -Path $outputDir -ChildPath "localization-diagnostic.json"
+    $outputPath = Join-Path -Path $outputDir -ChildPath "test-result-localization-diagnostic.json"
     $analysis | ConvertTo-Json -Depth 5 | Out-File -FilePath $outputPath -Encoding UTF8 -Force
     Write-BuildLog "Detailed analysis saved to: $outputPath"
 

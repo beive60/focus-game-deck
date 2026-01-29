@@ -336,6 +336,31 @@
                     </StackPanel>
                 </GroupBox>
 
+                <!-- 認証とモデル設定 -->
+                <GroupBox
+                    Header="認証とモデル設定 (オプション)"
+                    Margin="0,0,0,15">
+                    <StackPanel Margin="10">
+                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                            <Label Content="認証トークン:" Width="120"/>
+                            <PasswordBox
+                                x:Name="VTubeAuthTokenPasswordBox"
+                                Width="300"
+                                VerticalContentAlignment="Center"
+                                ToolTip="VTube Studio API認証トークン（暗号化して保存されます）"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,5">
+                            <Label Content="デフォルトモデルID:" Width="120"/>
+                            <TextBox
+                                x:Name="VTubeDefaultModelIdTextBox"
+                                Width="300"
+                                VerticalContentAlignment="Center"
+                                ToolTip="ゲーム終了後に復元するデフォルトモデルのID"/>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
                 <!-- 起動方法 -->
                 <GroupBox
                     Header="起動方法"

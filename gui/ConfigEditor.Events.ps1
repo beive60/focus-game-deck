@@ -114,6 +114,153 @@ class ConfigEditorEvents {
         Write-Verbose "TerminationMethod enabled: $shouldEnableTermination (StartAction: $startAction, EndAction: $endAction)"
     }
 
+    # Initialize Discord action ComboBoxes with localized items
+    [void] InitializeDiscordActionCombos() {
+        try {
+            Write-Verbose "Initializing Discord action ComboBoxes"
+
+            $discordGameEndActionCombo = $script:Window.FindName("DiscordGameEndActionCombo")
+            $discordTerminationMethodCombo = $script:Window.FindName("DiscordTerminationMethodCombo")
+
+            if (-not $discordGameEndActionCombo) {
+                Write-Warning "DiscordGameEndActionCombo not found"
+                return
+            }
+
+            # Get action mappings from script scope
+            $gameActionMappings = $this.uiManager.GetMappingFromScope("GameActionMessageKeys")
+            $terminationMethodMappings = $this.uiManager.GetMappingFromScope("TerminationMethodMessageKeys")
+
+            # Clear existing items
+            $discordGameEndActionCombo.Items.Clear()
+            if ($discordTerminationMethodCombo) {
+                $discordTerminationMethodCombo.Items.Clear()
+            }
+
+            # Populate game end action ComboBox
+            foreach ($kvp in $gameActionMappings.GetEnumerator()) {
+                $actionTag = $kvp.Key
+                $messageKey = $kvp.Value
+                $localizedText = $this.uiManager.GetLocalizedMessage($messageKey)
+
+                $item = New-Object System.Windows.Controls.ComboBoxItem
+                $item.Content = $localizedText
+                $item.Tag = $actionTag
+                $discordGameEndActionCombo.Items.Add($item) | Out-Null
+            }
+
+            # Populate termination method ComboBox
+            if ($discordTerminationMethodCombo -and $terminationMethodMappings.Count -gt 0) {
+                foreach ($kvp in $terminationMethodMappings.GetEnumerator()) {
+                    $methodTag = $kvp.Key
+                    $messageKey = $kvp.Value
+                    $localizedText = $this.uiManager.GetLocalizedMessage($messageKey)
+
+                    $item = New-Object System.Windows.Controls.ComboBoxItem
+                    $item.Content = $localizedText
+                    $item.Tag = $methodTag
+                    $discordTerminationMethodCombo.Items.Add($item) | Out-Null
+                }
+            }
+
+            Write-Verbose "Discord action ComboBoxes initialized successfully"
+        } catch {
+            Write-Warning "Failed to initialize Discord action ComboBoxes: $($_.Exception.Message)"
+        }
+    }
+
+    # Load Discord settings from configuration
+    [void] LoadDiscordSettings() {
+        try {
+            Write-Verbose "Loading Discord settings"
+
+            if (-not $this.stateManager.ConfigData.integrations -or
+                -not $this.stateManager.ConfigData.integrations.discord) {
+                Write-Verbose "No Discord settings in configuration"
+                return
+            }
+
+            $discordSettings = $this.stateManager.ConfigData.integrations.discord
+
+            # Load path
+            $discordPathTextBox = $script:Window.FindName("DiscordPathTextBox")
+            if ($discordPathTextBox -and $discordSettings.path) {
+                $discordPathTextBox.Text = $discordSettings.path
+            }
+
+            # Load process name
+            $discordProcessNameTextBox = $script:Window.FindName("DiscordProcessNameTextBox")
+            if ($discordProcessNameTextBox -and $discordSettings.processName) {
+                $discordProcessNameTextBox.Text = $discordSettings.processName
+            }
+
+            # Load arguments
+            $discordArgumentsTextBox = $script:Window.FindName("DiscordArgumentsTextBox")
+            if ($discordArgumentsTextBox -and $discordSettings.arguments) {
+                $discordArgumentsTextBox.Text = $discordSettings.arguments
+            }
+
+            # Load game start action (checkbox)
+            $enableGameModeCheckBox = $script:Window.FindName("DiscordEnableGameModeCheckBox")
+            if ($enableGameModeCheckBox -and $discordSettings.gameStartAction) {
+                $enableGameModeCheckBox.IsChecked = ($discordSettings.gameStartAction -eq "enter-game-mode")
+            }
+
+            # Load game end action (ComboBox)
+            $discordGameEndActionCombo = $script:Window.FindName("DiscordGameEndActionCombo")
+            if ($discordGameEndActionCombo -and $discordSettings.gameEndAction) {
+                $this.SetComboBoxSelectionByTag($discordGameEndActionCombo, $discordSettings.gameEndAction)
+            }
+
+            # Load termination method
+            $discordTerminationMethodCombo = $script:Window.FindName("DiscordTerminationMethodCombo")
+            if ($discordTerminationMethodCombo -and $discordSettings.terminationMethod) {
+                $this.SetComboBoxSelectionByTag($discordTerminationMethodCombo, $discordSettings.terminationMethod)
+            }
+
+            # Load graceful timeout
+            $discordGracefulTimeoutTextBox = $script:Window.FindName("DiscordGracefulTimeoutTextBox")
+            if ($discordGracefulTimeoutTextBox -and $discordSettings.gracefulTimeoutMs) {
+                $timeoutSeconds = [math]::Round($discordSettings.gracefulTimeoutMs / 1000)
+                $discordGracefulTimeoutTextBox.Text = $timeoutSeconds.ToString()
+            }
+
+            # Load status settings
+            $statusOnStartCombo = $script:Window.FindName("DiscordStatusOnStartCombo")
+            if ($statusOnStartCombo -and $discordSettings.statusOnGameStart) {
+                $this.SetComboBoxSelectionByTag($statusOnStartCombo, $discordSettings.statusOnGameStart)
+            }
+
+            $statusOnEndCombo = $script:Window.FindName("DiscordStatusOnEndCombo")
+            if ($statusOnEndCombo -and $discordSettings.statusOnGameEnd) {
+                $this.SetComboBoxSelectionByTag($statusOnEndCombo, $discordSettings.statusOnGameEnd)
+            }
+
+            # Load overlay setting
+            $disableOverlayCheckBox = $script:Window.FindName("DiscordDisableOverlayCheckBox")
+            if ($disableOverlayCheckBox) {
+                $disableOverlayCheckBox.IsChecked = if ($discordSettings.disableOverlay) { $discordSettings.disableOverlay } else { $false }
+            }
+
+            # Load RPC settings
+            if ($discordSettings.rpc) {
+                $rpcEnableCheckBox = $script:Window.FindName("DiscordRPCEnableCheckBox")
+                if ($rpcEnableCheckBox) {
+                    $rpcEnableCheckBox.IsChecked = if ($discordSettings.rpc.enabled) { $discordSettings.rpc.enabled } else { $false }
+                }
+
+                $rpcAppIdTextBox = $script:Window.FindName("DiscordRPCAppIdTextBox")
+                if ($rpcAppIdTextBox -and $discordSettings.rpc.applicationId) {
+                    $rpcAppIdTextBox.Text = $discordSettings.rpc.applicationId
+                }
+            }
+
+            Write-Verbose "Discord settings loaded successfully"
+        } catch {
+            Write-Warning "Failed to load Discord settings: $($_.Exception.Message)"
+        }
+    }
+
     # Helper method to reorder items in an array
     # Returns the new order array with the item moved from sourceIndex to targetIndex
     [array] ReorderItems([array]$currentOrder, [int]$sourceIndex, [int]$targetIndex) {
@@ -3223,6 +3370,10 @@ class ConfigEditorEvents {
                                 if ($managedAppsList -and $managedAppsList.Items.Count -gt 0 -and $managedAppsList.SelectedIndex -lt 0) {
                                     $managedAppsList.SelectedIndex = 0
                                 }
+                            } elseif ($selectedTab -and $selectedTab.Name -eq "DiscordTab") {
+                                # Initialize Discord action ComboBoxes and load settings when switching to Discord tab
+                                $self.InitializeDiscordActionCombos()
+                                $self.LoadDiscordSettings()
                             }
                         } catch {
                             Write-Warning "Error in tab selection changed: $($_.Exception.Message)"

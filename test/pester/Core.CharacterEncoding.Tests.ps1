@@ -4,6 +4,10 @@
 .DESCRIPTION
     Validates UTF-8 encoding compliance across configuration files
     and ensures proper character handling per architecture guidelines
+.NOTES
+    Author: Focus Game Deck Team
+    Version: 1.0.0
+    Tags: Unit, Core, Encoding
 #>
 
 BeforeAll {
@@ -19,7 +23,7 @@ BeforeAll {
     $MessagesPath = Join-Path -Path $LocalizationDir -ChildPath "en.json"
 }
 
-Describe "Character Encoding Tests" -Tag "Core", "Encoding" {
+Describe "Character Encoding Tests" -Tag "Unit", "Core", "Encoding" {
 
     Context "JSON File Encoding" {
         It "config.json should be UTF-8 without BOM" {
