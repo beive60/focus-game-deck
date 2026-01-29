@@ -35,7 +35,7 @@ For experienced developers, here's the simplified workflow:
 
 **Important**: This project has two different Release-Manager.ps1 scripts with distinct purposes:
 
-| Script | Location | Purpose |
+| Script | Category | Purpose |
 |--------|----------|---------|
 | `scripts/Release-Manager.ps1` | Version management | Updates version, creates git tags, generates release notes |
 | `build-tools/Release-Manager.ps1` | Build orchestration | Compiles executables, signs code, creates release packages |
