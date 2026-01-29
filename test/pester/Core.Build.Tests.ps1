@@ -176,18 +176,18 @@ Describe "Bundled Script Syntax Validation" -Tag "Unit", "Core", "Build" {
                 return
             }
 
-            # Use PowerShell's tokenizer to check syntax
+            # Use modern PowerShell parser API (recommended over deprecated PSParser)
             $parseErrors = $null
-            $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content $outputPath -Raw), [ref]$parseErrors)
+            $null = [System.Management.Automation.Language.Parser]::ParseFile($outputPath, [ref]$null, [ref]$parseErrors)
             
             if ($parseErrors.Count -gt 0) {
-                Write-BuildLog "[ERROR] Syntax errors found in bundled ConfigEditor:"
+                Write-BuildLog "[ERROR] Parse errors found in bundled ConfigEditor:"
                 foreach ($parseError in $parseErrors) {
-                    Write-BuildLog "[ERROR]   Line $($parseError.Token.StartLine): $($parseError.Message)"
+                    Write-BuildLog "[ERROR]   Line $($parseError.Extent.StartLineNumber): $($parseError.Message)"
                 }
             }
 
-            $parseErrors.Count | Should -Be 0 -Because "Bundled script should have no syntax errors"
+            $parseErrors.Count | Should -Be 0 -Because "Bundled script should have no parse errors"
             Write-BuildLog "[OK] ConfigEditor bundled script has valid syntax"
         }
 
@@ -199,26 +199,24 @@ Describe "Bundled Script Syntax Validation" -Tag "Unit", "Core", "Build" {
                 return
             }
 
-            # Use PowerShell's tokenizer to check syntax
+            # Use modern PowerShell parser API (recommended over deprecated PSParser)
             $parseErrors = $null
-            $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content $outputPath -Raw), [ref]$parseErrors)
+            $null = [System.Management.Automation.Language.Parser]::ParseFile($outputPath, [ref]$null, [ref]$parseErrors)
             
             if ($parseErrors.Count -gt 0) {
                 Write-BuildLog "[WARNING] Parser warnings found in bundled Invoke-FocusGameDeck:"
                 foreach ($parseError in $parseErrors) {
-                    Write-BuildLog "[WARNING]   Line $($parseError.Token.StartLine): $($parseError.Message)"
+                    Write-BuildLog "[WARNING]   Line $($parseError.Extent.StartLineNumber): $($parseError.Message)"
                 }
                 # Note: These are parser warnings, not critical errors
                 # The script can still execute successfully despite these warnings
                 # Common warnings include: "Variable is not assigned in the method", variable shadowing, etc.
             }
 
-            # For now, we just log warnings and don't fail the test
-            # The bundling process itself validates that scripts are syntactically correct
-            Write-BuildLog "[OK] Invoke-FocusGameDeck bundled script syntax check completed (found $($parseErrors.Count) parser warnings)"
-            
-            # We consider the test passed if bundling succeeded, as parser warnings are not critical
-            $true | Should -Be $true
+            # Test passes if warnings are within acceptable threshold
+            # This provides value by detecting when new significant parse errors are introduced
+            $parseErrors.Count | Should -BeLessOrEqual 5 -Because "Bundled script should have minimal parser warnings (currently: $($parseErrors.Count))"
+            Write-BuildLog "[OK] Invoke-FocusGameDeck bundled script syntax check completed with $($parseErrors.Count) acceptable parser warnings"
         }
     }
 
@@ -292,11 +290,11 @@ Describe "Build Script Execution" -Tag "Unit", "Core", "Build" {
         It "Should be able to parse Build-Executables.ps1 without errors" {
             $buildExePath = Join-Path $projectRoot "build-tools/Build-Executables.ps1"
             
-            # Check syntax of build script itself
-            $errors = $null
-            $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content $buildExePath -Raw), [ref]$errors)
+            # Check syntax using modern parser API
+            $parseErrors = $null
+            $null = [System.Management.Automation.Language.Parser]::ParseFile($buildExePath, [ref]$null, [ref]$parseErrors)
             
-            $errors.Count | Should -Be 0 -Because "Build-Executables.ps1 should have valid syntax"
+            $parseErrors.Count | Should -Be 0 -Because "Build-Executables.ps1 should have valid syntax"
             Write-BuildLog "[OK] Build-Executables.ps1 has valid syntax"
         }
     }
@@ -305,11 +303,11 @@ Describe "Build Script Execution" -Tag "Unit", "Core", "Build" {
         It "Should be able to parse Release-Manager.ps1 without errors" {
             $releaseManagerPath = Join-Path $projectRoot "build-tools/Release-Manager.ps1"
             
-            # Check syntax of release manager script
-            $errors = $null
-            $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content $releaseManagerPath -Raw), [ref]$errors)
+            # Check syntax using modern parser API
+            $parseErrors = $null
+            $null = [System.Management.Automation.Language.Parser]::ParseFile($releaseManagerPath, [ref]$null, [ref]$parseErrors)
             
-            $errors.Count | Should -Be 0 -Because "Release-Manager.ps1 should have valid syntax"
+            $parseErrors.Count | Should -Be 0 -Because "Release-Manager.ps1 should have valid syntax"
             Write-BuildLog "[OK] Release-Manager.ps1 has valid syntax"
         }
     }
