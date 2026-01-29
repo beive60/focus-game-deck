@@ -1357,9 +1357,8 @@ function Save-VoiceMeeterSettingsData {
         $voiceMeeterEnabledCheckBox = $script:Window.FindName("VoiceMeeterEnabledCheckBox")
         $voiceMeeterTypeCombo = $script:Window.FindName("VoiceMeeterTypeCombo")
         $voiceMeeterDllPathTextBox = $script:Window.FindName("VoiceMeeterDllPathTextBox")
-        $voiceMeeterDefaultProfileTextBox = $script:Window.FindName("VoiceMeeterDefaultProfileTextBox")
-        $voiceMeeterGameStartActionCombo = $script:Window.FindName("VoiceMeeterGameStartActionCombo")
-        $voiceMeeterGameEndActionCombo = $script:Window.FindName("VoiceMeeterGameEndActionCombo")
+        $voiceMeeterLaunchOnGameStartCheckBox = $script:Window.FindName("VoiceMeeterLaunchOnGameStartCheckBox")
+        $voiceMeeterExitOnGameEndCheckBox = $script:Window.FindName("VoiceMeeterExitOnGameEndCheckBox")
         $voiceMeeterGameStartProfileTextBox = $script:Window.FindName("VoiceMeeterGameStartProfileTextBox")
         $voiceMeeterGameEndProfileTextBox = $script:Window.FindName("VoiceMeeterGameEndProfileTextBox")
 
@@ -1397,31 +1396,18 @@ function Save-VoiceMeeterSettingsData {
             Write-Verbose "Saved VoiceMeeter DLL path: $normalizedPath"
         }
 
-        # Save VoiceMeeter default profile
-        if ($voiceMeeterDefaultProfileTextBox) {
-            $normalizedPath = $voiceMeeterDefaultProfileTextBox.Text -replace '\\', '/'
-            Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "defaultProfile" -Value $normalizedPath
-            Write-Verbose "Saved VoiceMeeter default profile: $normalizedPath"
+        # Save launch on game start checkbox
+        if ($voiceMeeterLaunchOnGameStartCheckBox) {
+            $shouldLaunch = [bool]$voiceMeeterLaunchOnGameStartCheckBox.IsChecked
+            Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "launchOnGameStart" -Value $shouldLaunch
+            Write-Verbose "Saved VoiceMeeter launch on game start: $shouldLaunch"
         }
 
-        # Save game start action from ComboBox
-        if ($voiceMeeterGameStartActionCombo -and $voiceMeeterGameStartActionCombo.SelectedItem) {
-            $gameStartAction = $voiceMeeterGameStartActionCombo.SelectedItem.Tag
-            if ([string]::IsNullOrWhiteSpace($gameStartAction)) {
-                $gameStartAction = "none"  # Default to none
-            }
-            Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "gameStartAction" -Value $gameStartAction
-            Write-Verbose "Saved VoiceMeeter gameStartAction: $gameStartAction"
-        }
-
-        # Save game end action from ComboBox
-        if ($voiceMeeterGameEndActionCombo -and $voiceMeeterGameEndActionCombo.SelectedItem) {
-            $gameEndAction = $voiceMeeterGameEndActionCombo.SelectedItem.Tag
-            if ([string]::IsNullOrWhiteSpace($gameEndAction)) {
-                $gameEndAction = "none"  # Default to none
-            }
-            Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "gameEndAction" -Value $gameEndAction
-            Write-Verbose "Saved VoiceMeeter gameEndAction: $gameEndAction"
+        # Save exit on game end checkbox
+        if ($voiceMeeterExitOnGameEndCheckBox) {
+            $shouldExit = [bool]$voiceMeeterExitOnGameEndCheckBox.IsChecked
+            Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "exitOnGameEnd" -Value $shouldExit
+            Write-Verbose "Saved VoiceMeeter exit on game end: $shouldExit"
         }
 
         # Save game start profile path

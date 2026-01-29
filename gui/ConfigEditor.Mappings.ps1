@@ -159,8 +159,6 @@ $script:LabelMappings = @{
     "VoiceMeeterDllPathGroup" = "pathSettingsGroup"
     "VoiceMeeterProfileGroup" = "voicemeeterDefaultProfileLabel"
     "VoiceMeeterTypeLabel" = "voicemeeterTypeLabel"
-    "VoiceMeeterGameStartActionLabel" = "gameStartActionLabel"
-    "VoiceMeeterGameEndActionLabel" = "gameEndActionLabel"
     "VoiceMeeterGameStartProfileLabel" = "voicemeeterGameStartProfileLabel"
     "VoiceMeeterGameEndProfileLabel" = "voicemeeterGameEndProfileLabel"
     "VoiceMeeterDllPathLabel" = "voicemeeterDllPathLabel"
@@ -218,6 +216,8 @@ $script:CheckBoxMappings = @{
     "UseVTubeStudioIntegrationCheckBox" = "useVTubeStudioIntegrationCheckBox"
     "UseVoiceMeeterIntegrationCheckBox" = "useVoiceMeeterIntegrationCheckBox"
     "VoiceMeeterEnabledCheckBox" = "voicemeeterEnabledCheckBox"
+    "VoiceMeeterLaunchOnGameStartCheckBox" = "voicemeeterLaunchOnGameStartCheckBox"
+    "VoiceMeeterExitOnGameEndCheckBox" = "voicemeeterExitOnGameEndCheckBox"
 }
 
 # RadioButton content mappings
