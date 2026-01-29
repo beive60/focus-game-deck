@@ -338,16 +338,17 @@
                                         <StackPanel
                                             Grid.Row="0"
                                             Grid.Column="1"
-                                            Margin="5">
+                                            Margin="0,0,0,16">
                                             <TextBox
                                                 x:Name="GameIdTextBox"
-                                                VerticalContentAlignment="Center"/>
+                                                Style="{StaticResource ModernTextBox}"/>
                                             <TextBlock
                                                 x:Name="GameIdTextBoxErrorText"
                                                 Text="Error Message"
-                                                Foreground="#D32F2F"
-                                                FontSize="11"
-                                                Margin="2,2,0,0"
+                                                Foreground="{DynamicResource ErrorBrush}"
+                                                FontSize="{StaticResource FontSizeSmall}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Margin="4,4,0,0"
                                                 FontWeight="SemiBold"
                                                 Visibility="Collapsed"/>
                                         </StackPanel>
@@ -357,18 +358,22 @@
                                             Grid.Row="1"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
-                                            VerticalAlignment="Center"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"
                                             ToolTip="[TOOLTIP_DISPLAY_NAME]">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="GameNameLabel"
-                                                Content="[GAME_NAME_LABEL]"
+                                                Text="[GAME_NAME_LABEL]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                 VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="GameNameTooltip"
                                                 Text="?"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_DISPLAY_NAME]"/>
                                         </StackPanel>
@@ -376,20 +381,25 @@
                                             x:Name="GameNameTextBox"
                                             Grid.Row="1"
                                             Grid.Column="1"
-                                            VerticalContentAlignment="Center"
-                                            Margin="5"/>
+                                            Style="{StaticResource ModernTextBox}"
+                                            Margin="0,0,0,16"/>
 
-                                        <Label
+                                        <TextBlock
                                             x:Name="PlatformLabel"
-                                            Content="[PLATFORM_LABEL]"
+                                            Text="[PLATFORM_LABEL]"
                                             Grid.Row="2"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center"/>
+                                            FontSize="{StaticResource FontSizeBody}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            Foreground="{DynamicResource TextPrimaryBrush}"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"/>
                                         <ComboBox
                                             x:Name="PlatformComboBox"
+                                            Style="{StaticResource ModernComboBox}"
                                             Grid.Row="2"
                                             Grid.Column="1"
-                                            Margin="5">
+                                            Margin="0,0,0,16">
                                             <ComboBoxItem
                                                 x:Name="PlatformStandaloneItem"
                                                 Content="[STANDALONE_PLATFORM]"
@@ -413,34 +423,39 @@
                                             Grid.Row="3"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
-                                            VerticalAlignment="Center"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"
                                             ToolTip="[TOOLTIP_STEAM_APP_ID]">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="SteamAppIdLabel"
-                                                Content="[STEAM_APP_ID_LABEL]"
+                                                Text="[STEAM_APP_ID_LABEL]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                 VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="SteamAppIdTooltip"
                                                 Text="?"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_STEAM_APP_ID]"/>
                                         </StackPanel>
                                         <StackPanel
                                             Grid.Row="3"
                                             Grid.Column="1"
-                                            Margin="5">
+                                            Margin="0,0,0,16">
                                             <TextBox
                                                 x:Name="SteamAppIdTextBox"
-                                                VerticalContentAlignment="Center"/>
+                                                Style="{StaticResource ModernTextBox}"/>
                                             <TextBlock
                                                 x:Name="SteamAppIdTextBoxErrorText"
                                                 Text="Error Message"
-                                                Foreground="#D32F2F"
-                                                FontSize="11"
-                                                Margin="2,2,0,0"
+                                                Foreground="{DynamicResource ErrorBrush}"
+                                                FontSize="{StaticResource FontSizeSmall}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Margin="4,4,0,0"
                                                 FontWeight="SemiBold"
                                                 Visibility="Collapsed"/>
                                         </StackPanel>
@@ -450,88 +465,101 @@
                                             Grid.Row="4"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
-                                            VerticalAlignment="Center"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"
                                             ToolTip="[TOOLTIP_EPIC_GAME_ID]">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="EpicGameIdLabel"
-                                                Content="[EPIC_GAME_ID_LABEL]"
+                                                Text="[EPIC_GAME_ID_LABEL]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                 VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="EpicGameIdTooltip"
                                                 Text="?"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_EPIC_GAME_ID]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="EpicGameIdTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="4"
                                             Grid.Column="1"
-                                            VerticalContentAlignment="Center"
-                                            Margin="5"/>
+                                            Margin="0,0,0,16"/>
 
                                         <StackPanel
                                             x:Name="RiotGameIdLabelPanel"
                                             Grid.Row="5"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
-                                            VerticalAlignment="Center"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"
                                             ToolTip="[TOOLTIP_RIOT_GAME_ID]">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="RiotGameIdLabel"
-                                                Content="[RIOT_GAME_ID_LABEL]"
+                                                Text="[RIOT_GAME_ID_LABEL]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                 VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="RiotGameIdTooltip"
                                                 Text="?"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_RIOT_GAME_ID]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="RiotGameIdTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="5"
                                             Grid.Column="1"
-                                            VerticalContentAlignment="Center"
-                                            Margin="5"/>
+                                            Margin="0,0,0,16"/>
 
                                         <StackPanel
                                             x:Name="ExecutablePathLabelPanel"
                                             Grid.Row="6"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
-                                            VerticalAlignment="Center"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"
                                             ToolTip="[TOOLTIP_EXECUTABLE_PATH]">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="ExecutablePathLabel"
-                                                Content="[EXECUTABLE_PATH_LABEL]"
+                                                Text="[EXECUTABLE_PATH_LABEL]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                 VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="ExecutablePathTooltip"
                                                 Text="?"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_EXECUTABLE_PATH]"/>
                                         </StackPanel>
                                         <Grid
                                             x:Name="ExecutablePathInputGrid"
                                             Grid.Row="6"
-                                            Grid.Column="1">
+                                            Grid.Column="1"
+                                            Margin="0,0,0,16">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="80"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBox
                                                 x:Name="ExecutablePathTextBox"
+                                                Style="{StaticResource ModernTextBox}"
                                                 Grid.Column="0"
-                                                VerticalContentAlignment="Center"
-                                                Margin="5"/>
+                                                Margin="0,0,5,0"/>
                                             <Button
                                                 x:Name="BrowseExecutablePathButton"
                                                 Content="[BROWSE_BUTTON]"
@@ -546,51 +574,62 @@
                                             Grid.Row="7"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
-                                            VerticalAlignment="Center"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"
                                             ToolTip="[TOOLTIP_PROCESS_NAME]">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="ProcessNameLabel"
-                                                Content="[PROCESS_NAME_LABEL]"
+                                                Text="[PROCESS_NAME_LABEL]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                 VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="ProcessNameTooltip"
                                                 Text="?"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_PROCESS_NAME]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="ProcessNameTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="7"
                                             Grid.Column="1"
-                                            VerticalContentAlignment="Center"
-                                            Margin="5"/>
+                                            Margin="0,0,0,16"/>
 
-                                        <Label
+                                        <TextBlock
                                             x:Name="GameCommentLabel"
                                             Grid.Row="8"
                                             Grid.Column="0"
-                                            Content="[COMMENT_LABEL]"
+                                            Text="[COMMENT_LABEL]"
+                                            FontSize="{StaticResource FontSizeBody}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                             VerticalAlignment="Top"
-                                            Margin="0,5,0,0"/>
+                                            Margin="0,8,0,0"/>
                                         <TextBox
                                             x:Name="GameCommentTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="8"
                                             Grid.Column="1"
                                             TextWrapping="Wrap"
                                             AcceptsReturn="True"
                                             VerticalScrollBarVisibility="Auto"
                                             Height="50"
-                                            Margin="5"
+                                            Margin="0,0,0,16"
                                             VerticalContentAlignment="Top"
                                             Tag="[commentPlaceholder]"/>
                                     </Grid>
 
-                                    <Label
+                                    <TextBlock
                                         x:Name="AppsToManageLabel"
-                                        Content="[APPS_TO_MANAGE_LABEL]"
+                                        Text="[APPS_TO_MANAGE_LABEL]"
+                                        FontSize="{StaticResource FontSizeBody}"
+                                        FontFamily="{StaticResource PrimaryFontFamily}"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                         Grid.Row="2"
                                         FontWeight="Bold"
                                         Margin="0,10,0,5"/>
@@ -600,9 +639,12 @@
                                         Margin="10,0"/>
 
                                     <!-- App Integration Section -->
-                                    <Label
+                                    <TextBlock
                                         x:Name="GameIntegrationSectionLabel"
-                                        Content="[GAME_INTEGRATION_SECTION_LABEL]"
+                                        Text="[GAME_INTEGRATION_SECTION_LABEL]"
+                                        FontSize="{StaticResource FontSizeBody}"
+                                        FontFamily="{StaticResource PrimaryFontFamily}"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                         Grid.Row="4"
                                         FontWeight="Bold"
                                         Margin="0,20,0,5"/>
@@ -641,12 +683,16 @@
                                             IsEnabled="{Binding ElementName=UseOBSIntegrationCheckBox, Path=IsChecked}">
                                             <StackPanel Margin="10">
                                                 <!-- Replay Buffer Behavior -->
-                                                <Label
+                                                <TextBlock
                                                     x:Name="OBSReplayBufferBehaviorLabel"
-                                                    Margin="0,5,0,2"/>
+                                                    FontSize="{StaticResource FontSizeBody}"
+                                                    FontFamily="{StaticResource PrimaryFontFamily}"
+                                                    Foreground="{DynamicResource TextPrimaryBrush}"
+                                                    Margin="0,8,0,0"/>
                                                 <ComboBox
                                                     x:Name="OBSReplayBufferBehaviorCombo"
-                                                    Margin="0,0,0,10">
+                                                    Style="{StaticResource ModernComboBox}"
+                                                    Margin="0,0,0,16">
                                                     <ComboBoxItem
                                                         x:Name="OBSReplayBufferGlobalItem"
                                                         Tag="UseGlobal"/>
@@ -659,13 +705,16 @@
                                                 </ComboBox>
 
                                                 <!-- Target Scene -->
-                                                <Label
+                                                <TextBlock
                                                     x:Name="OBSTargetSceneLabel"
-                                                    Margin="0,5,0,2"/>
+                                                    FontSize="{StaticResource FontSizeBody}"
+                                                    FontFamily="{StaticResource PrimaryFontFamily}"
+                                                    Foreground="{DynamicResource TextPrimaryBrush}"
+                                                    Margin="0,8,0,0"/>
                                                 <TextBox
                                                     x:Name="OBSTargetSceneTextBox"
-                                                    Margin="0,0,0,10"
-                                                    VerticalContentAlignment="Center"/>
+                                                    Style="{StaticResource ModernTextBox}"
+                                                    Margin="0,0,0,16"/>
 
                                                 <!-- Enable Rollback -->
                                                 <CheckBox
@@ -720,19 +769,22 @@
                                             Margin="20,10,0,10">
                                             <StackPanel Margin="10">
                                                 <!-- Model ID -->
-                                                <Label
+                                                <TextBlock
                                                     x:Name="VTubeModelIdLabel"
-                                                    Content="[vtubeModelIdLabel]"
-                                                    Margin="0,5,0,2"/>
-                                                <Grid Margin="0,0,0,10">
+                                                    Text="[vtubeModelIdLabel]"
+                                                    FontSize="{StaticResource FontSizeBody}"
+                                                    FontFamily="{StaticResource PrimaryFontFamily}"
+                                                    Foreground="{DynamicResource TextPrimaryBrush}"
+                                                    Margin="0,8,0,0"/>
+                                                <Grid Margin="0,0,0,16">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*"/>
                                                         <ColumnDefinition Width="120"/>
                                                     </Grid.ColumnDefinitions>
                                                     <TextBox
                                                         x:Name="VTubeModelIdTextBox"
+                                                        Style="{StaticResource ModernTextBox}"
                                                         Grid.Column="0"
-                                                        VerticalContentAlignment="Center"
                                                         Margin="0,0,5,0"
                                                         ToolTip="[vtubeModelIdTooltip]"/>
                                                     <Button
@@ -743,19 +795,22 @@
                                                 </Grid>
 
                                                 <!-- Launch Hotkeys -->
-                                                <Label
+                                                <TextBlock
                                                     x:Name="VTubeOnLaunchHotkeysLabel"
-                                                    Content="[vtubeOnLaunchHotkeysLabel]"
-                                                    Margin="0,5,0,2"/>
-                                                <Grid Margin="0,0,0,10">
+                                                    Text="[vtubeOnLaunchHotkeysLabel]"
+                                                    FontSize="{StaticResource FontSizeBody}"
+                                                    FontFamily="{StaticResource PrimaryFontFamily}"
+                                                    Foreground="{DynamicResource TextPrimaryBrush}"
+                                                    Margin="0,8,0,0"/>
+                                                <Grid Margin="0,0,0,16">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*"/>
                                                         <ColumnDefinition Width="120"/>
                                                     </Grid.ColumnDefinitions>
                                                     <TextBox
                                                         x:Name="VTubeOnLaunchHotkeysTextBox"
+                                                        Style="{StaticResource ModernTextBox}"
                                                         Grid.Column="0"
-                                                        VerticalContentAlignment="Center"
                                                         Margin="0,0,5,0"
                                                         ToolTip="[vtubeHotkeysTooltip]"/>
                                                     <Button
@@ -766,19 +821,22 @@
                                                 </Grid>
 
                                                 <!-- Exit Hotkeys -->
-                                                <Label
+                                                <TextBlock
                                                     x:Name="VTubeOnExitHotkeysLabel"
-                                                    Content="[vtubeOnExitHotkeysLabel]"
-                                                    Margin="0,5,0,2"/>
-                                                <Grid Margin="0,0,0,5">
+                                                    Text="[vtubeOnExitHotkeysLabel]"
+                                                    FontSize="{StaticResource FontSizeBody}"
+                                                    FontFamily="{StaticResource PrimaryFontFamily}"
+                                                    Foreground="{DynamicResource TextPrimaryBrush}"
+                                                    Margin="0,8,0,0"/>
+                                                <Grid Margin="0,0,0,16">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*"/>
                                                         <ColumnDefinition Width="120"/>
                                                     </Grid.ColumnDefinitions>
                                                     <TextBox
                                                         x:Name="VTubeOnExitHotkeysTextBox"
+                                                        Style="{StaticResource ModernTextBox}"
                                                         Grid.Column="0"
-                                                        VerticalContentAlignment="Center"
                                                         Margin="0,0,5,0"
                                                         ToolTip="[vtubeHotkeysTooltip]"/>
                                                     <Button
@@ -798,19 +856,25 @@
                                             <ColumnDefinition Width="120"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <Label
+                                        <TextBlock
                                             x:Name="LauncherTypeLabel2"
-                                            Content="[LAUNCHER_TYPE_LABEL]"
+                                            Text="[LAUNCHER_TYPE_LABEL]"
+                                            FontSize="{StaticResource FontSizeBody}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center"/>
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"/>
                                         <StackPanel
                                             Grid.Column="1"
                                             Orientation="Horizontal"
-                                            Margin="5">
+                                            Margin="0,0,0,16">
                                             <ComboBox
                                                 x:Name="GameLauncherTypeCombo"
+                                                Style="{StaticResource ModernComboBox}"
                                                 Width="200"
-                                                HorizontalAlignment="Left">
+                                                HorizontalAlignment="Left"
+                                                Margin="0,0,10,0">
                                                 <ComboBoxItem
                                                     x:Name="GameLauncherTypeEnhancedItem"
                                                     Content="[ENHANCED_SHORTCUTS]"
@@ -826,7 +890,7 @@
                                                 Content="[GENERATE_LAUNCHERS]"
                                                 Width="130"
                                                 Height="25"
-                                                Margin="10,0,0,0"/>
+                                                Margin="0,0,0,0"/>
                                         </StackPanel>
                                     </Grid>
                                 </Grid>
@@ -876,9 +940,12 @@
                                     <RowDefinition Height="55"/>
                                 </Grid.RowDefinitions>
 
-                                <Label
+                                <TextBlock
                                     x:Name="AppsListLabel"
-                                    Content="[APPS_LIST_LABEL]"
+                                    Text="[APPS_LIST_LABEL]"
+                                    FontSize="{StaticResource FontSizeBody}"
+                                    FontFamily="{StaticResource PrimaryFontFamily}"
+                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                     Grid.Row="0"
                                     FontWeight="Bold"/>
                                 <ListBox
@@ -917,12 +984,14 @@
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
-                                    <Label
+                                    <TextBlock
                                         x:Name="AppDetailsLabel"
-                                        Content="[APP_DETAILS_LABEL]"
+                                        Text="[APP_DETAILS_LABEL]"
+                                        FontSize="14"
+                                        FontFamily="{StaticResource PrimaryFontFamily}"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                         Grid.Row="0"
-                                        FontWeight="Bold"
-                                        FontSize="14"/>
+                                        FontWeight="Bold"/>
 
                                     <Grid
                                         Grid.Row="1"
@@ -951,54 +1020,66 @@
                                             Grid.Row="0"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
-                                            VerticalAlignment="Center"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"
                                             ToolTip="[TOOLTIP_APP_ID]">
 
-                                            <Label
+                                            <TextBlock
                                                 x:Name="AppIdLabel"
-                                                Content="[APP_ID_LABEL]"
+                                                Text="[APP_ID_LABEL]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                 VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="AppIdTooltip"
                                                 Text="?"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_APP_ID]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="AppIdTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="0"
                                             Grid.Column="1"
-                                            VerticalContentAlignment="Center"
-                                            Margin="5"/>
+                                            Margin="0,0,0,16"/>
 
-                                        <Label
+                                        <TextBlock
                                             x:Name="AppDisplayNameLabel"
                                             Grid.Row="1"
                                             Grid.Column="0"
-                                            Content="[APP_DISPLAY_NAME_LABEL]"
-                                            VerticalAlignment="Center"/>
+                                            Text="[APP_DISPLAY_NAME_LABEL]"
+                                            FontSize="{StaticResource FontSizeBody}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            Foreground="{DynamicResource TextPrimaryBrush}"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"/>
                                         <TextBox
                                             x:Name="AppDisplayNameTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="1"
                                             Grid.Column="1"
-                                            VerticalContentAlignment="Center"
-                                            Margin="5"/>
+                                            Margin="0,0,0,16"/>
 
-                                        <Label
+                                        <TextBlock
                                             x:Name="AppPathLabel"
                                             Grid.Row="2"
                                             Grid.Column="0"
-                                            Content="[APP_PATH_LABEL]"
-                                            VerticalAlignment="Center"/>
+                                            Text="[APP_PATH_LABEL]"
+                                            FontSize="{StaticResource FontSizeBody}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            Foreground="{DynamicResource TextPrimaryBrush}"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"/>
                                         <TextBox
                                             x:Name="AppPathTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="2"
                                             Grid.Column="1"
-                                            VerticalContentAlignment="Center"
-                                            Margin="5"/>
+                                            Margin="0,0,5,16"/>
                                         <Button
                                             x:Name="BrowseAppPathButton"
                                             Content="[BROWSE_BUTTON]"
@@ -1012,27 +1093,31 @@
                                             Grid.Row="3"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
-                                            VerticalAlignment="Center"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"
                                             ToolTip="[TOOLTIP_WORKING_DIRECTORY]">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="WorkingDirectoryLabel"
-                                                Content="[WORKING_DIRECTORY_LABEL]"
+                                                Text="[WORKING_DIRECTORY_LABEL]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                 VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="WorkingDirectoryTooltip"
                                                 Text="?"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_WORKING_DIRECTORY]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="WorkingDirectoryTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="3"
                                             Grid.Column="1"
-                                            VerticalContentAlignment="Center"
-                                            Margin="5"/>
+                                            Margin="0,0,5,16"/>
                                         <Button
                                             x:Name="BrowseWorkingDirectoryButton"
                                             Content="[BROWSE_FOLDER_BUTTON]"
@@ -1046,27 +1131,31 @@
                                             Grid.Row="4"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
-                                            VerticalAlignment="Center"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"
                                             ToolTip="[TOOLTIP_LAUNCH_ARGUMENTS]">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="AppArgumentsLabel"
-                                                Content="[ARGUMENTS_LABEL]"
+                                                Text="[ARGUMENTS_LABEL]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                 VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="AppArgumentsTooltip"
                                                 Text="?"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_LAUNCH_ARGUMENTS]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="AppArgumentsTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="4"
                                             Grid.Column="1"
-                                            VerticalContentAlignment="Center"
-                                            Margin="5"
+                                            Margin="0,0,0,16"
                                             Tag="[argumentsPlaceholder]"/>
 
                                         <StackPanel
@@ -1074,53 +1163,62 @@
                                             Grid.Row="5"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
-                                            VerticalAlignment="Center"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"
                                             ToolTip="[TOOLTIP_PROCESS_NAME]">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="AppProcessNameLabel"
-                                                Content="[PROCESS_NAME_LABEL]"
+                                                Text="[PROCESS_NAME_LABEL]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                 VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="AppProcessNameTooltip"
                                                 Text="?"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_PROCESS_NAME]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="AppProcessNameTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="5"
                                             Grid.Column="1"
-                                            VerticalContentAlignment="Center"
-                                            Margin="5"/>
+                                            Margin="0,0,0,16"/>
 
                                         <StackPanel
                                             x:Name="GameStartActionLabelPanel"
                                             Grid.Row="6"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
-                                            VerticalAlignment="Center"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"
                                             ToolTip="[TOOLTIP_GAME_ACTIONS]">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="GameStartActionLabel"
-                                                Content="[GAME_START_ACTION_LABEL]"
+                                                Text="[GAME_START_ACTION_LABEL]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                 VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="GameStartActionTooltip"
                                                 Text="?"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_GAME_ACTIONS]"/>
                                         </StackPanel>
                                         <ComboBox
                                             x:Name="GameStartActionCombo"
+                                            Style="{StaticResource ModernComboBox}"
                                             Grid.Row="6"
                                             Grid.Column="1"
-                                            Margin="5">
+                                            Margin="0,0,0,16">
 
                                         </ComboBox>
 
@@ -1129,26 +1227,31 @@
                                             Grid.Row="7"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
-                                            VerticalAlignment="Center"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"
                                             ToolTip="[TOOLTIP_GAME_ACTIONS]">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="GameEndActionLabel"
-                                                Content="[GAME_END_ACTION_LABEL]"
+                                                Text="[GAME_END_ACTION_LABEL]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                 VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="GameEndActionTooltip"
                                                 Text="?"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_GAME_ACTIONS]"/>
                                         </StackPanel>
                                         <ComboBox
                                             x:Name="GameEndActionCombo"
+                                            Style="{StaticResource ModernComboBox}"
                                             Grid.Row="7"
                                             Grid.Column="1"
-                                            Margin="5">
+                                            Margin="0,0,0,16">
 
                                         </ComboBox>
 
@@ -1157,63 +1260,76 @@
                                             Grid.Row="8"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
-                                            VerticalAlignment="Center"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"
                                             ToolTip="[TOOLTIP_TERMINATION_METHOD]">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="TerminationMethodLabel"
-                                                Content="[TERMINATION_METHOD_LABEL]"
+                                                Text="[TERMINATION_METHOD_LABEL]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                 VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="TerminationMethodTooltip"
                                                 Text="?"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_TERMINATION_METHOD]"/>
                                         </StackPanel>
                                         <ComboBox
                                             x:Name="TerminationMethodCombo"
+                                            Style="{StaticResource ModernComboBox}"
                                             Grid.Row="8"
                                             Grid.Column="1"
-                                            Margin="5"/>
+                                            Margin="0,0,0,16"/>
 
                                         <StackPanel
                                             x:Name="GracefulTimeoutLabelPanel"
                                             Grid.Row="9"
                                             Grid.Column="0"
                                             Orientation="Horizontal"
-                                            VerticalAlignment="Center"
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"
                                             ToolTip="[TOOLTIP_GRACEFUL_TIMEOUT]">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="GracefulTimeoutLabel"
-                                                Content="[GRACEFUL_TIMEOUT_LABEL]"
+                                                Text="[GRACEFUL_TIMEOUT_LABEL]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                 VerticalAlignment="Center"/>
                                             <TextBlock
                                                 x:Name="GracefulTimeoutTooltip"
                                                 Text="?"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"
                                                 ToolTip="[TOOLTIP_GRACEFUL_TIMEOUT]"/>
                                         </StackPanel>
                                         <TextBox
                                             x:Name="GracefulTimeoutTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="9"
                                             Grid.Column="1"
-                                            VerticalContentAlignment="Center"
-                                            Margin="5"/>
+                                            Margin="0,0,0,16"/>
 
-                                        <Label
+                                        <TextBlock
                                             x:Name="AppCommentLabel"
                                             Grid.Row="10"
                                             Grid.Column="0"
-                                            Content="[COMMENT_LABEL]"
+                                            Text="[COMMENT_LABEL]"
+                                            FontSize="{StaticResource FontSizeBody}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                             VerticalAlignment="Top"
-                                            Margin="0,5,0,0"/>
+                                            Margin="0,8,0,0"/>
                                         <TextBox
                                             x:Name="AppCommentTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="10"
                                             Grid.Column="1"
                                             Grid.ColumnSpan="2"
@@ -1221,7 +1337,7 @@
                                             AcceptsReturn="True"
                                             VerticalScrollBarVisibility="Auto"
                                             Height="50"
-                                            Margin="5"
+                                            Margin="0,0,0,16"
                                             VerticalContentAlignment="Top"
                                             Tag="[commentPlaceholder]"/>
                                     </Grid>
@@ -1309,43 +1425,55 @@
                                             <RowDefinition Height="35"/>
                                         </Grid.RowDefinitions>
 
-                                        <Label
+                                        <TextBlock
                                             x:Name="HostLabel"
-                                            Content="[HOST_LABEL]"
+                                            Text="[HOST_LABEL]"
+                                            FontSize="{StaticResource FontSizeBody}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                             Grid.Row="0"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center"/>
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"/>
                                         <TextBox
                                             x:Name="OBSHostTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="0"
                                             Grid.Column="1"
-                                            VerticalContentAlignment="Center"
-                                            Margin="5"/>
+                                            Margin="0,0,0,16"/>
 
-                                        <Label
+                                        <TextBlock
                                             x:Name="PortLabel"
-                                            Content="[PORT_LABEL]"
+                                            Text="[PORT_LABEL]"
+                                            FontSize="{StaticResource FontSizeBody}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                             Grid.Row="1"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center"/>
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"/>
                                         <TextBox
                                             x:Name="OBSPortTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="1"
                                             Grid.Column="1"
-                                            VerticalContentAlignment="Center"
-                                            Margin="5"/>
+                                            Margin="0,0,0,16"/>
 
-                                        <Label
+                                        <TextBlock
                                             x:Name="PasswordLabel"
-                                            Content="[PASSWORD_LABEL]"
+                                            Text="[PASSWORD_LABEL]"
+                                            FontSize="{StaticResource FontSizeBody}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                             Grid.Row="2"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center"/>
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"/>
                                         <PasswordBox
                                             x:Name="OBSPasswordBox"
                                             Grid.Row="2"
                                             Grid.Column="1"
-                                            Margin="5"/>
+                                            Margin="0,0,0,16"/>
                                     </Grid>
                                 </GroupBox>
 
@@ -1355,12 +1483,15 @@
                                     Header="[executableFileGroup]"
                                     Margin="0,0,0,15">
                                     <StackPanel Margin="10">
-                                        <Label
+                                        <TextBlock
                                             x:Name="ObsPathLabel"
-                                            Content="[OBS_PATH_LABEL]"
+                                            Text="[OBS_PATH_LABEL]"
+                                            FontSize="{StaticResource FontSizeBody}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                             Margin="0,0,0,5"/>
 
-                                        <Grid>
+                                        <Grid Margin="0,0,0,16">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="80"/>
@@ -1370,8 +1501,8 @@
 
                                             <TextBox
                                                 x:Name="OBSPathTextBox"
+                                                Style="{StaticResource ModernTextBox}"
                                                 Grid.Column="0"
-                                                VerticalContentAlignment="Center"
                                                 Margin="0,0,5,0"/>
                                             <Button
                                                 x:Name="BrowseOBSPathButton"
@@ -1391,8 +1522,8 @@
                                                 Text="?"
                                                 Grid.Column="3"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"/>
                                         </Grid>
                                     </StackPanel>
@@ -1458,59 +1589,98 @@
 
                                         <StackPanel Orientation="Horizontal"
                                                     Margin="0,10,0,5">
-                                            <Label x:Name="DiscordGameEndActionLabel"
-                                                   Content="[gameEndActionLabel]"
-                                                   Width="120"/>
+                                            <TextBlock x:Name="DiscordGameEndActionLabel"
+                                                   Text="[gameEndActionLabel]"
+                                                   FontSize="{StaticResource FontSizeBody}"
+                                                   FontFamily="{StaticResource PrimaryFontFamily}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   Width="120"
+                                                   VerticalAlignment="Top"
+                                                   Margin="0,8,0,0"/>
                                             <ComboBox x:Name="DiscordGameEndActionCombo"
-                                                      Width="200"/>
+                                                      Style="{StaticResource ModernComboBox}"
+                                                      Width="200"
+                                                      Margin="0,0,0,16"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal"
                                                     Margin="0,5">
-                                            <Label x:Name="DiscordProcessNameLabel"
-                                                   Content="[processNameLabel]"
-                                                   Width="120"/>
+                                            <TextBlock x:Name="DiscordProcessNameLabel"
+                                                   Text="[processNameLabel]"
+                                                   FontSize="{StaticResource FontSizeBody}"
+                                                   FontFamily="{StaticResource PrimaryFontFamily}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   Width="120"
+                                                   VerticalAlignment="Top"
+                                                   Margin="0,8,0,0"/>
                                             <TextBox x:Name="DiscordProcessNameTextBox"
+                                                     Style="{StaticResource ModernTextBox}"
                                                      Width="300"
-                                                     VerticalContentAlignment="Center"/>
+                                                     Margin="0,0,0,16"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal"
                                                     Margin="0,5">
-                                            <Label x:Name="DiscordArgumentsLabel"
-                                                   Content="[argumentsLabel]"
-                                                   Width="120"/>
+                                            <TextBlock x:Name="DiscordArgumentsLabel"
+                                                   Text="[argumentsLabel]"
+                                                   FontSize="{StaticResource FontSizeBody}"
+                                                   FontFamily="{StaticResource PrimaryFontFamily}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   Width="120"
+                                                   VerticalAlignment="Top"
+                                                   Margin="0,8,0,0"/>
                                             <TextBox x:Name="DiscordArgumentsTextBox"
+                                                     Style="{StaticResource ModernTextBox}"
                                                      Width="300"
-                                                     VerticalContentAlignment="Center"/>
+                                                     Margin="0,0,0,16"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal"
                                                     Margin="0,5">
-                                            <Label x:Name="DiscordTerminationMethodLabel"
-                                                   Content="[terminationMethodLabel]"
-                                                   Width="120"/>
+                                            <TextBlock x:Name="DiscordTerminationMethodLabel"
+                                                   Text="[terminationMethodLabel]"
+                                                   FontSize="{StaticResource FontSizeBody}"
+                                                   FontFamily="{StaticResource PrimaryFontFamily}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   Width="120"
+                                                   VerticalAlignment="Top"
+                                                   Margin="0,8,0,0"/>
                                             <ComboBox x:Name="DiscordTerminationMethodCombo"
-                                                      Width="200"/>
+                                                      Style="{StaticResource ModernComboBox}"
+                                                      Width="200"
+                                                      Margin="0,0,0,16"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal"
                                                     Margin="0,5,0,10">
-                                            <Label x:Name="DiscordGracefulTimeoutLabel"
-                                                   Content="[gracefulTimeoutLabel]"
-                                                   Width="120"/>
+                                            <TextBlock x:Name="DiscordGracefulTimeoutLabel"
+                                                   Text="[gracefulTimeoutLabel]"
+                                                   FontSize="{StaticResource FontSizeBody}"
+                                                   FontFamily="{StaticResource PrimaryFontFamily}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   Width="120"
+                                                   VerticalAlignment="Top"
+                                                   Margin="0,8,0,0"/>
                                             <TextBox x:Name="DiscordGracefulTimeoutTextBox"
+                                                     Style="{StaticResource ModernTextBox}"
                                                      Width="100"
-                                                     VerticalContentAlignment="Center"/>
+                                                     Margin="0,0,0,16"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal"
                                                     Margin="0,10,0,5">
-                                            <Label x:Name="DiscordStatusOnStartLabel"
-                                                   Content="[discordStatusOnStart]"
-                                                   Width="120"/>
+                                            <TextBlock x:Name="DiscordStatusOnStartLabel"
+                                                   Text="[discordStatusOnStart]"
+                                                   FontSize="{StaticResource FontSizeBody}"
+                                                   FontFamily="{StaticResource PrimaryFontFamily}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   Width="120"
+                                                   VerticalAlignment="Top"
+                                                   Margin="0,8,0,0"/>
                                             <ComboBox x:Name="DiscordStatusOnStartCombo"
-                                                      Width="200">
+                                                      Style="{StaticResource ModernComboBox}"
+                                                      Width="200"
+                                                      Margin="0,0,0,16">
                                                 <ComboBoxItem
                                                     x:Name="DiscordStatusOnStartOnlineItem"
                                                     Content="[discordStatusOnline]"
@@ -1531,11 +1701,18 @@
 
                                         <StackPanel Orientation="Horizontal"
                                                     Margin="0,5">
-                                            <Label x:Name="DiscordStatusOnEndLabel"
-                                                   Content="[discordStatusOnEnd]"
-                                                   Width="120"/>
+                                            <TextBlock x:Name="DiscordStatusOnEndLabel"
+                                                   Text="[discordStatusOnEnd]"
+                                                   FontSize="{StaticResource FontSizeBody}"
+                                                   FontFamily="{StaticResource PrimaryFontFamily}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   Width="120"
+                                                   VerticalAlignment="Top"
+                                                   Margin="0,8,0,0"/>
                                             <ComboBox x:Name="DiscordStatusOnEndCombo"
-                                                      Width="200">
+                                                      Style="{StaticResource ModernComboBox}"
+                                                      Width="200"
+                                                      Margin="0,0,0,16">
                                                 <ComboBoxItem x:Name="DiscordStatusOnEndOnlineItem"
                                                               Content="[discordStatusOnline]"
                                                               Tag="online"
@@ -1572,13 +1749,19 @@
                                             Margin="0,5"/>
                                         <StackPanel Orientation="Horizontal"
                                                     Margin="0,10,0,5">
-                                            <Label x:Name="DiscordAppIdLabel"
-                                                   Content="[discordAppIdLabel]"
-                                                   Width="120"/>
+                                            <TextBlock x:Name="DiscordAppIdLabel"
+                                                   Text="[discordAppIdLabel]"
+                                                   FontSize="{StaticResource FontSizeBody}"
+                                                   FontFamily="{StaticResource PrimaryFontFamily}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   Width="120"
+                                                   VerticalAlignment="Top"
+                                                   Margin="0,8,0,0"/>
                                             <TextBox
                                                 x:Name="DiscordRPCAppIdTextBox"
+                                                Style="{StaticResource ModernTextBox}"
                                                 Width="300"
-                                                VerticalContentAlignment="Center"/>
+                                                Margin="0,0,0,16"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </GroupBox>
@@ -1608,8 +1791,8 @@
 
                                             <TextBox
                                                 x:Name="DiscordPathTextBox"
+                                                Style="{StaticResource ModernTextBox}"
                                                 Grid.Column="0"
-                                                VerticalContentAlignment="Center"
                                                 Margin="0,0,5,0"/>
                                             <Button
                                                 x:Name="BrowseDiscordPathButton"
@@ -1629,8 +1812,8 @@
                                                 Text="?"
                                                 Grid.Column="3"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"/>
                                         </Grid>
                                     </StackPanel>
@@ -1710,27 +1893,39 @@
 
                                         <StackPanel Orientation="Horizontal"
                                                     Margin="0,10,0,5">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="VTubeHostLabel"
-                                                Content="[HOST_LABEL]"
-                                                Width="80"/>
+                                                Text="[HOST_LABEL]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
+                                                Width="80"
+                                                VerticalAlignment="Top"
+                                                Margin="0,8,0,0"/>
                                             <TextBox
                                                 x:Name="VTubeHostTextBox"
+                                                Style="{StaticResource ModernTextBox}"
                                                 Width="200"
-                                                VerticalContentAlignment="Center"
+                                                Margin="0,0,0,16"
                                                 Text="localhost"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal"
                                                     Margin="0,5">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="VTubePortLabel"
-                                                Content="[PORT_LABEL]"
-                                                Width="80"/>
+                                                Text="[PORT_LABEL]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
+                                                Width="80"
+                                                VerticalAlignment="Top"
+                                                Margin="0,8,0,0"/>
                                             <TextBox
                                                 x:Name="VTubePortTextBox"
+                                                Style="{StaticResource ModernTextBox}"
                                                 Width="100"
-                                                VerticalContentAlignment="Center"
+                                                Margin="0,0,0,16"
                                                 Text="8001"/>
                                         </StackPanel>
                                     </StackPanel>
@@ -1744,27 +1939,38 @@
                                     <StackPanel Margin="10">
                                         <StackPanel Orientation="Horizontal"
                                                     Margin="0,5">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="VTubeAuthTokenLabel"
-                                                Content="[vtubeAuthTokenLabel]"
-                                                Width="140"/>
+                                                Text="[vtubeAuthTokenLabel]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
+                                                Width="140"
+                                                VerticalAlignment="Top"
+                                                Margin="0,8,0,0"/>
                                             <PasswordBox
                                                 x:Name="VTubeAuthTokenPasswordBox"
                                                 Width="300"
-                                                VerticalContentAlignment="Center"
+                                                Margin="0,0,0,16"
                                                 ToolTip="[vtubeAuthTokenTooltip]"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal"
                                                     Margin="0,10,0,5">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="VTubeDefaultModelIdLabel"
-                                                Content="[vtubeDefaultModelIdLabel]"
-                                                Width="140"/>
+                                                Text="[vtubeDefaultModelIdLabel]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
+                                                Width="140"
+                                                VerticalAlignment="Top"
+                                                Margin="0,8,0,0"/>
                                             <TextBox
                                                 x:Name="VTubeDefaultModelIdTextBox"
+                                                Style="{StaticResource ModernTextBox}"
                                                 Width="300"
-                                                VerticalContentAlignment="Center"
+                                                Margin="0,0,0,16"
                                                 ToolTip="[vtubeDefaultModelIdTooltip]"/>
                                         </StackPanel>
                                     </StackPanel>
@@ -1784,14 +1990,20 @@
                                             Margin="0,5"/>
                                         <StackPanel Orientation="Horizontal"
                                                     Margin="20,5,0,5">
-                                            <Label
+                                            <TextBlock
                                                 x:Name="VTubeSteamAppIdLabel"
-                                                Content="[vtubeSteamAppIdLabel]"
-                                                Width="100"/>
+                                                Text="[vtubeSteamAppIdLabel]"
+                                                FontSize="{StaticResource FontSizeBody}"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                Foreground="{DynamicResource TextPrimaryBrush}"
+                                                Width="100"
+                                                VerticalAlignment="Top"
+                                                Margin="0,8,0,0"/>
                                             <TextBox
                                                 x:Name="VTubeSteamAppIdTextBox"
+                                                Style="{StaticResource ModernTextBox}"
                                                 Width="150"
-                                                VerticalContentAlignment="Center"
+                                                Margin="0,0,0,16"
                                                 Text="1325860"/>
                                         </StackPanel>
 
@@ -1810,8 +2022,8 @@
 
                                             <TextBox
                                                 x:Name="VTubePathTextBox"
+                                                Style="{StaticResource ModernTextBox}"
                                                 Grid.Column="0"
-                                                VerticalContentAlignment="Center"
                                                 Margin="0,0,5,0"/>
                                             <Button
                                                 x:Name="BrowseVTubePathButton"
@@ -1831,8 +2043,8 @@
                                                 Text="?"
                                                 Grid.Column="3"
                                                 FontWeight="Bold"
-                                                Foreground="#0078D4"
-                                                Margin="3,0,0,0"
+                                                Foreground="{DynamicResource AccentBrush}"
+                                                Margin="6,0,0,0"
                                                 VerticalAlignment="Center"/>
                                         </Grid>
                                     </StackPanel>
@@ -1912,33 +2124,43 @@
                                             <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
 
-                                        <Label
+                                        <TextBlock
                                             x:Name="LanguageLabel"
-                                            Content="[LANGUAGE_LABEL]"
+                                            Text="[LANGUAGE_LABEL]"
+                                            FontSize="{StaticResource FontSizeBody}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                             Grid.Row="0"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center"/>
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"/>
                                         <ComboBox
                                             x:Name="LanguageCombo"
+                                            Style="{StaticResource ModernComboBox}"
                                             Grid.Row="0"
                                             Grid.Column="1"
                                             Width="200"
                                             HorizontalAlignment="Left"
-                                            Margin="5"/>
+                                            Margin="0,0,0,16"/>
 
-                                        <Label
+                                        <TextBlock
                                             x:Name="LauncherTypeLabel"
-                                            Content="[LAUNCHER_TYPE_LABEL]"
+                                            Text="[LAUNCHER_TYPE_LABEL]"
+                                            FontSize="{StaticResource FontSizeBody}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                             Grid.Row="1"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center"/>
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"/>
                                         <ComboBox
                                             x:Name="LauncherTypeCombo"
+                                            Style="{StaticResource ModernComboBox}"
                                             Grid.Row="1"
                                             Grid.Column="1"
                                             Width="200"
                                             HorizontalAlignment="Left"
-                                            Margin="5">
+                                            Margin="0,0,0,16">
                                             <ComboBoxItem
                                                 x:Name="LauncherTypeEnhancedItem"
                                                 Content="[ENHANCED_SHORTCUTS]"
@@ -1950,19 +2172,24 @@
                                                 Tag="bat"/>
                                         </ComboBox>
 
-                                        <Label
+                                        <TextBlock
                                             x:Name="LogRetentionLabel"
-                                            Content="[LOG_RETENTION_LABEL]"
+                                            Text="[LOG_RETENTION_LABEL]"
+                                            FontSize="{StaticResource FontSizeBody}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                             Grid.Row="2"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center"/>
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"/>
                                         <ComboBox
                                             x:Name="LogRetentionCombo"
+                                            Style="{StaticResource ModernComboBox}"
                                             Grid.Row="2"
                                             Grid.Column="1"
                                             Width="200"
                                             HorizontalAlignment="Left"
-                                            Margin="5">
+                                            Margin="0,0,0,16">
                                             <ComboBoxItem
                                                 x:Name="LogRetention7Item"
                                                 Content="[LOG_RETENTION_7]"
@@ -2024,18 +2251,22 @@
                                             <RowDefinition Height="35"/>
                                         </Grid.RowDefinitions>
 
-                                        <Label
+                                        <TextBlock
                                             x:Name="SteamPathLabel"
-                                            Content="[STEAM_PATH_LABEL]"
+                                            Text="[STEAM_PATH_LABEL]"
+                                            FontSize="{StaticResource FontSizeBody}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                             Grid.Row="0"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center"/>
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"/>
                                         <TextBox
                                             x:Name="SteamPathTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="0"
                                             Grid.Column="1"
-                                            VerticalContentAlignment="Center"
-                                            Margin="5"/>
+                                            Margin="0,0,5,16"/>
                                         <Button
                                             x:Name="BrowseSteamPathButton"
                                             Content="[BROWSE_BUTTON]"
@@ -2057,23 +2288,27 @@
                                             Grid.Row="0"
                                             Grid.Column="4"
                                             FontWeight="Bold"
-                                            Foreground="#0078D4"
-                                            Margin="3,0,0,0"
+                                            Foreground="{DynamicResource AccentBrush}"
+                                            Margin="6,0,0,0"
                                             VerticalAlignment="Center"
                                             ToolTip="[AUTO_DETECT_STEAM_TOOLTIP]"/>
 
-                                        <Label
+                                        <TextBlock
                                             x:Name="EpicPathLabel"
-                                            Content="[EPIC_PATH_LABEL]"
+                                            Text="[EPIC_PATH_LABEL]"
+                                            FontSize="{StaticResource FontSizeBody}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                             Grid.Row="1"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center"/>
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"/>
                                         <TextBox
                                             x:Name="EpicPathTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="1"
                                             Grid.Column="1"
-                                            VerticalContentAlignment="Center"
-                                            Margin="5"/>
+                                            Margin="0,0,5,16"/>
                                         <Button
                                             x:Name="BrowseEpicPathButton"
                                             Content="[BROWSE_BUTTON]"
@@ -2095,23 +2330,27 @@
                                             Grid.Row="1"
                                             Grid.Column="4"
                                             FontWeight="Bold"
-                                            Foreground="#0078D4"
-                                            Margin="3,0,0,0"
+                                            Foreground="{DynamicResource AccentBrush}"
+                                            Margin="6,0,0,0"
                                             VerticalAlignment="Center"
                                             ToolTip="[AUTO_DETECT_EPIC_TOOLTIP]"/>
 
-                                        <Label
+                                        <TextBlock
                                             x:Name="RiotPathLabel"
-                                            Content="[RIOT_PATH_LABEL]"
+                                            Text="[RIOT_PATH_LABEL]"
+                                            FontSize="{StaticResource FontSizeBody}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                             Grid.Row="2"
                                             Grid.Column="0"
-                                            VerticalAlignment="Center"/>
+                                            VerticalAlignment="Top"
+                                            Margin="0,8,0,0"/>
                                         <TextBox
                                             x:Name="RiotPathTextBox"
+                                            Style="{StaticResource ModernTextBox}"
                                             Grid.Row="2"
                                             Grid.Column="1"
-                                            VerticalContentAlignment="Center"
-                                            Margin="5"/>
+                                            Margin="0,0,5,16"/>
                                         <Button
                                             x:Name="BrowseRiotPathButton"
                                             Content="[BROWSE_BUTTON]"
@@ -2133,8 +2372,8 @@
                                             Grid.Row="2"
                                             Grid.Column="4"
                                             FontWeight="Bold"
-                                            Foreground="#0078D4"
-                                            Margin="3,0,0,0"
+                                            Foreground="{DynamicResource AccentBrush}"
+                                            Margin="6,0,0,0"
                                             VerticalAlignment="Center"
                                             ToolTip="[AUTO_DETECT_RIOT_TOOLTIP]"/>
                                     </Grid>
