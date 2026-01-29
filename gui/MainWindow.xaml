@@ -1471,6 +1471,8 @@
                                             Margin="0,8,0,0"/>
                                         <PasswordBox
                                             x:Name="OBSPasswordBox"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
+                                            FontSize="{StaticResource FontSizeBody}"
                                             Grid.Row="2"
                                             Grid.Column="1"
                                             Margin="0,0,0,16"/>
@@ -1775,8 +1777,9 @@
                                         <!-- 情報メッセージ -->
                                         <TextBlock
                                             x:Name="DiscordPathInfoText"
-                                            Foreground="#0078D4"
-                                            FontSize="11"
+                                            Foreground="{DynamicResource AccentBrush}"
+                                            FontSize="{StaticResource FontSizeSmall}"
+                                            FontFamily="{StaticResource PrimaryFontFamily}"
                                             TextWrapping="Wrap"
                                             Margin="0,0,0,8"/>
 
@@ -1950,6 +1953,8 @@
                                                 Margin="0,8,0,0"/>
                                             <PasswordBox
                                                 x:Name="VTubeAuthTokenPasswordBox"
+                                                FontFamily="{StaticResource PrimaryFontFamily}"
+                                                FontSize="{StaticResource FontSizeBody}"
                                                 Width="300"
                                                 Margin="0,0,0,16"
                                                 ToolTip="[vtubeAuthTokenTooltip]"/>
