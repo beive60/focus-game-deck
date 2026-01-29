@@ -67,22 +67,22 @@ jobs:
                   if ($LASTEXITCODE -ne 0) {
                       throw "Help command failed with exit code: $LASTEXITCODE"
                   }
-                  Write-Host "✓ --help command succeeded"
+                  Write-Host "[OK] --help command succeeded"
 
                   # Test --version (should exit with 0)
                   & ".\release\Focus-Game-Deck.exe" --version
                   if ($LASTEXITCODE -ne 0) {
                       throw "Version command failed with exit code: $LASTEXITCODE"
                   }
-                  Write-Host "✓ --version command succeeded"
+                  Write-Host "[OK] --version command succeeded"
 
                   # Test --list (should exit with 0 if games configured, 1 if not)
                   & ".\release\Focus-Game-Deck.exe" --list
                   $listExitCode = $LASTEXITCODE
                   if ($listExitCode -eq 0) {
-                      Write-Host "✓ --list command succeeded (games configured)"
+                      Write-Host "[OK] --list command succeeded (games configured)"
                   } elseif ($listExitCode -eq 1) {
-                      Write-Host "⚠ --list command reported no games configured (expected in CI)"
+                      Write-Host "[INFO] --list command reported no games configured (expected in CI)"
                   } else {
                       throw "List command failed with unexpected exit code: $listExitCode"
                   }
