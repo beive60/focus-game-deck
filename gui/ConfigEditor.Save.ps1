@@ -1358,6 +1358,8 @@ function Save-VoiceMeeterSettingsData {
         $voiceMeeterTypeCombo = $script:Window.FindName("VoiceMeeterTypeCombo")
         $voiceMeeterDllPathTextBox = $script:Window.FindName("VoiceMeeterDllPathTextBox")
         $voiceMeeterDefaultProfileTextBox = $script:Window.FindName("VoiceMeeterDefaultProfileTextBox")
+        $voiceMeeterGameStartActionCombo = $script:Window.FindName("VoiceMeeterGameStartActionCombo")
+        $voiceMeeterGameEndActionCombo = $script:Window.FindName("VoiceMeeterGameEndActionCombo")
 
         # Ensure integrations section exists
         if (-not $script:StateManager.ConfigData.integrations) {
@@ -1400,15 +1402,25 @@ function Save-VoiceMeeterSettingsData {
             Write-Verbose "Saved VoiceMeeter default profile: $normalizedPath"
         }
 
-        # Save game start/end actions based on enabled status
-        $gameStartAction = if ($voiceMeeterEnabledCheckBox -and $voiceMeeterEnabledCheckBox.IsChecked) { "enter-game-mode" } else { "none" }
-        $gameEndAction = if ($voiceMeeterEnabledCheckBox -and $voiceMeeterEnabledCheckBox.IsChecked) { "exit-game-mode" } else { "none" }
-        
-        Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "gameStartAction" -Value $gameStartAction
-        Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "gameEndAction" -Value $gameEndAction
-        
-        Write-Verbose "Saved VoiceMeeter gameStartAction: $gameStartAction"
-        Write-Verbose "Saved VoiceMeeter gameEndAction: $gameEndAction"
+        # Save game start action from ComboBox
+        if ($voiceMeeterGameStartActionCombo -and $voiceMeeterGameStartActionCombo.SelectedItem) {
+            $gameStartAction = $voiceMeeterGameStartActionCombo.SelectedItem.Tag
+            if ([string]::IsNullOrWhiteSpace($gameStartAction)) {
+                $gameStartAction = "none"  # Default to none
+            }
+            Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "gameStartAction" -Value $gameStartAction
+            Write-Verbose "Saved VoiceMeeter gameStartAction: $gameStartAction"
+        }
+
+        # Save game end action from ComboBox
+        if ($voiceMeeterGameEndActionCombo -and $voiceMeeterGameEndActionCombo.SelectedItem) {
+            $gameEndAction = $voiceMeeterGameEndActionCombo.SelectedItem.Tag
+            if ([string]::IsNullOrWhiteSpace($gameEndAction)) {
+                $gameEndAction = "none"  # Default to none
+            }
+            Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "gameEndAction" -Value $gameEndAction
+            Write-Verbose "Saved VoiceMeeter gameEndAction: $gameEndAction"
+        }
 
         # Mark configuration as modified
         $script:StateManager.SetModified()

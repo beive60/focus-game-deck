@@ -1946,6 +1946,34 @@
                                     </StackPanel>
                                 </GroupBox>
 
+                                <!-- ゲーム連動動作 -->
+                                <GroupBox
+                                    x:Name="VoiceMeeterGameIntegrationGroup"
+                                    Header="[gameIntegrationGroup]"
+                                    Margin="0,0,0,15">
+                                    <StackPanel Margin="10">
+                                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                                            <Label 
+                                                x:Name="VoiceMeeterGameStartActionLabel"
+                                                Content="[gameStartActionLabel]" 
+                                                Width="120"/>
+                                            <ComboBox 
+                                                x:Name="VoiceMeeterGameStartActionCombo" 
+                                                Width="200"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                                            <Label 
+                                                x:Name="VoiceMeeterGameEndActionLabel"
+                                                Content="[gameEndActionLabel]" 
+                                                Width="120"/>
+                                            <ComboBox 
+                                                x:Name="VoiceMeeterGameEndActionCombo" 
+                                                Width="200"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+
                                 <!-- DLLパス設定 -->
                                 <GroupBox
                                     x:Name="VoiceMeeterDllPathGroup"

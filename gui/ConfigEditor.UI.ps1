@@ -676,6 +676,9 @@ class ConfigEditorUI {
             # Initialize managed app action combos
             $this.InitializeManagedAppActionCombos()
 
+            # Initialize VoiceMeeter action combos
+            $this.InitializeVoiceMeeterActionCombos()
+
             # Load global settings
             $this.LoadGlobalSettings($ConfigData)
 
@@ -1504,6 +1507,29 @@ class ConfigEditorUI {
                         $voiceMeeterDefaultProfileTextBox.Text = $ConfigData.integrations.voiceMeeter.defaultProfile
                         Write-Verbose "Loaded VoiceMeeter default profile: $($ConfigData.integrations.voiceMeeter.defaultProfile)"
                     }
+
+                    # Load VoiceMeeter gameStartAction and gameEndAction
+                    if ($ConfigData.integrations.voiceMeeter.gameStartAction) {
+                        $vmGameStartCombo = $self.Window.FindName("VoiceMeeterGameStartActionCombo")
+                        if ($vmGameStartCombo) {
+                            # Find and select item by Tag
+                            $matchingItem = $vmGameStartCombo.Items | Where-Object { $_.Tag -eq $ConfigData.integrations.voiceMeeter.gameStartAction }
+                            if ($matchingItem) {
+                                $vmGameStartCombo.SelectedItem = $matchingItem
+                            }
+                        }
+                    }
+
+                    if ($ConfigData.integrations.voiceMeeter.gameEndAction) {
+                        $vmGameEndCombo = $self.Window.FindName("VoiceMeeterGameEndActionCombo")
+                        if ($vmGameEndCombo) {
+                            # Find and select item by Tag
+                            $matchingItem = $vmGameEndCombo.Items | Where-Object { $_.Tag -eq $ConfigData.integrations.voiceMeeter.gameEndAction }
+                            if ($matchingItem) {
+                                $vmGameEndCombo.SelectedItem = $matchingItem
+                            }
+                        }
+                    }
                 }
 
                 $langCombo = $self.Window.FindName("LanguageCombo")
@@ -1702,6 +1728,75 @@ class ConfigEditorUI {
             Write-Verbose "Managed app action combo boxes use same controls as game tab - already initialized"
         } catch {
             Write-Warning "Failed to initialize managed app action combo boxes: $($_.Exception.Message)"
+            Write-Warning "Stack trace: $($_.Exception.StackTrace)"
+        }
+    }
+
+    <#
+    .SYNOPSIS
+    Initializes the VoiceMeeter action combo boxes with available integration actions.
+    .DESCRIPTION
+    Populates the VoiceMeeterGameStartActionCombo and VoiceMeeterGameEndActionCombo 
+    with integration action options (enter-game-mode, exit-game-mode, none).
+    .OUTPUTS
+    None
+    .EXAMPLE
+    $this.InitializeVoiceMeeterActionCombos()
+    #>
+    [void]InitializeVoiceMeeterActionCombos() {
+        try {
+            Write-Verbose "InitializeVoiceMeeterActionCombos: Starting initialization"
+            $vmGameStartActionCombo = $this.Window.FindName("VoiceMeeterGameStartActionCombo")
+            $vmGameEndActionCombo = $this.Window.FindName("VoiceMeeterGameEndActionCombo")
+
+            if (-not $vmGameStartActionCombo) {
+                Write-Warning "VoiceMeeterGameStartActionCombo not found"
+                return
+            }
+            if (-not $vmGameEndActionCombo) {
+                Write-Warning "VoiceMeeterGameEndActionCombo not found"
+                return
+            }
+
+            # Clear existing items safely
+            try {
+                $vmGameStartActionCombo.Items.Clear()
+                $vmGameEndActionCombo.Items.Clear()
+            } catch {
+                Write-Warning "Failed to clear VoiceMeeter combo box items: $($_.Exception.Message)"
+                return
+            }
+
+            # Define VoiceMeeter integration actions
+            # These are integration-specific actions, not general game actions
+            $integrationActions = @{
+                "enter-game-mode" = "gameActionStartProcess"  # Reuse existing localization key
+                "exit-game-mode" = "gameActionStopProcess"     # Reuse existing localization key
+                "none" = "gameActionNone"
+            }
+
+            # Add localized ComboBoxItems
+            foreach ($kvp in $integrationActions.GetEnumerator()) {
+                $actionTag = $kvp.Key
+                $messageKey = $kvp.Value
+                $localizedText = $this.GetLocalizedMessage($messageKey)
+
+                # Create ComboBoxItem for start action combo
+                $startItem = New-Object System.Windows.Controls.ComboBoxItem
+                $startItem.Content = $localizedText
+                $startItem.Tag = $actionTag
+                $vmGameStartActionCombo.Items.Add($startItem) | Out-Null
+
+                # Create ComboBoxItem for end action combo
+                $endItem = New-Object System.Windows.Controls.ComboBoxItem
+                $endItem.Content = $localizedText
+                $endItem.Tag = $actionTag
+                $vmGameEndActionCombo.Items.Add($endItem) | Out-Null
+            }
+
+            Write-Verbose "VoiceMeeter action combo boxes initialized successfully with $($integrationActions.Count) actions"
+        } catch {
+            Write-Warning "Failed to initialize VoiceMeeter action combo boxes: $($_.Exception.Message)"
             Write-Warning "Stack trace: $($_.Exception.StackTrace)"
         }
     }
