@@ -1020,7 +1020,7 @@ class AppManager {
             # Start VTube Studio
             return $vtubeManager.StartVTubeStudio()
         } catch {
-            Write-Host "Failed to start VTube Studio: $_"
+            Write-Host "[ERROR] VTubeStudioManager: Failed to start VTube Studio - $_"
             return $false
         }
     }
@@ -1033,7 +1033,7 @@ class AppManager {
             if (Test-Path $modulePath) {
                 . $modulePath
             } else {
-                Write-Host "VTubeStudioManager module not found at: $modulePath"
+                Write-Host "[ERROR] VTubeStudioManager: Module not found at - $modulePath"
                 return $false
             }
 
@@ -1043,7 +1043,7 @@ class AppManager {
             # Stop VTube Studio
             return $vtubeManager.StopVTubeStudio()
         } catch {
-            Write-Host "Failed to stop VTube Studio: $_"
+            Write-Host "[ERROR] VTubeStudioManager: Failed to stop VTube Studio - $_"
             return $false
         }
     }
@@ -1059,7 +1059,7 @@ class AppManager {
                 if (Test-Path $modulePath) {
                     . $modulePath
                 } else {
-                    Write-Host "DiscordManager module not found at: $modulePath"
+                    Write-Host "[ERROR] DiscordManager: Module not found at - $modulePath"
                     return $false
                 }
 
@@ -1069,7 +1069,7 @@ class AppManager {
                 # Set Gaming Mode
                 return $discordManager.SetGamingMode($this.GameConfig.name)
             } catch {
-                Write-Host "Failed to set Discord Gaming Mode: $_"
+                Write-Host "[ERROR] DiscordManager: Failed to set Discord Gaming Mode - $_"
                 return $false
             }
         }
@@ -1088,7 +1088,7 @@ class AppManager {
                 if (Test-Path $modulePath) {
                     . $modulePath
                 } else {
-                    Write-Host "DiscordManager module not found at: $modulePath"
+                    Write-Host "[ERROR] DiscordManager: Module not found at - $modulePath"
                     return $false
                 }
 
@@ -1098,7 +1098,7 @@ class AppManager {
                 # Restore Normal Mode
                 return $discordManager.RestoreNormalMode()
             } catch {
-                Write-Host "Failed to restore Discord Normal Mode: $_"
+                Write-Host "[ERROR] DiscordManager: Failed to restore Discord Normal Mode - $_"
                 return $false
             }
         }
