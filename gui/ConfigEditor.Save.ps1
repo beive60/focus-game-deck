@@ -1363,12 +1363,12 @@ function Save-VoiceMeeterSettingsData {
 
         # Ensure integrations section exists
         if (-not $script:StateManager.ConfigData.integrations) {
-            $script:StateManager.ConfigData | Add-Member -NotePropertyName "integrations" -NotePropertyValue @{} -Force
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "integrations" -NotePropertyValue ([PSCustomObject]@{}) -Force
         }
 
         # Ensure integrations.voiceMeeter section exists
         if (-not $script:StateManager.ConfigData.integrations.voiceMeeter) {
-            $script:StateManager.ConfigData.integrations | Add-Member -NotePropertyName "voiceMeeter" -NotePropertyValue @{} -Force
+            $script:StateManager.ConfigData.integrations | Add-Member -NotePropertyName "voiceMeeter" -NotePropertyValue ([PSCustomObject]@{}) -Force
         }
 
         # Auto-enable VoiceMeeter integration if either checkbox is checked
