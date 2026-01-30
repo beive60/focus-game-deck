@@ -73,12 +73,13 @@ class Logger {
     hidden [string] $ExecutablePath
 
     # Static list of sensitive field patterns for sanitization
+    # Each pattern uses groups: group 1 = key and separator, rest = value to redact
     hidden static [string[]] $SensitivePatterns = @(
-        '(?i)(password|passwd|pwd)\s*[=:]\s*[^\s,;]+',
-        '(?i)(token|auth_token|authtoken|api_?key|apikey|secret)\s*[=:]\s*[^\s,;]+',
+        '(?i)((?:password|passwd|pwd)\s*[=:]\s*)[^\s,;]+',
+        '(?i)((?:token|auth_token|authtoken|api_?key|apikey|secret)\s*[=:]\s*)[^\s,;]+',
         '(?i)(bearer\s+)[A-Za-z0-9\-_\.]+',
         '(?i)(authorization\s*[=:]\s*)[^\s,;]+',
-        '(?i)(credentials?)\s*[=:]\s*[^\s,;]+'
+        '(?i)(credentials?\s*[=:]\s*)[^\s,;]+'
     )
 
     <#
@@ -88,6 +89,7 @@ class Logger {
     .DESCRIPTION
         Removes or masks sensitive information such as passwords, tokens, and API keys
         from log messages before they are written to the log file.
+        Preserves the key and separator while only redacting the sensitive value.
 
     .PARAMETER message
         The log message to sanitize
@@ -98,6 +100,10 @@ class Logger {
     .EXAMPLE
         $sanitized = $logger.SanitizeSensitiveData("password=secret123")
         # Returns: "password=****REDACTED****"
+
+    .EXAMPLE
+        $sanitized = $logger.SanitizeSensitiveData("token: abc123")
+        # Returns: "token: ****REDACTED****"
     #>
     hidden [string] SanitizeSensitiveData([string] $message) {
         if ([string]::IsNullOrEmpty($message)) {
@@ -107,15 +113,9 @@ class Logger {
         $sanitized = $message
 
         foreach ($pattern in [Logger]::SensitivePatterns) {
-            # Replace sensitive values with redacted placeholder while keeping the key
-            $sanitized = [regex]::Replace($sanitized, $pattern, {
-                param($match)
-                $parts = $match.Value -split '[=:\s]+'
-                if ($parts.Count -ge 2) {
-                    return "$($parts[0])=****REDACTED****"
-                }
-                return "****REDACTED****"
-            })
+            # Replace sensitive values with redacted placeholder, keeping the key and separator
+            # Group 1 captures the key + separator, we replace the entire match with group 1 + redacted
+            $sanitized = [regex]::Replace($sanitized, $pattern, '$1****REDACTED****')
         }
 
         return $sanitized

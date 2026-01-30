@@ -354,10 +354,6 @@ function Show-GameList {
     In development mode, launches the PowerShell script.
 #>
 function Start-ConfigEditor {
-    param(
-        [switch]$WithGameLauncher
-    )
-
     try {
         if ($isExecutable) {
             # Running as bundled executable - launch ConfigEditor.exe
@@ -365,8 +361,11 @@ function Start-ConfigEditor {
                 Write-Host "[INFO] Starting Configuration Editor..."
                 # Security: Use Start-Process for better process isolation and exit code handling
                 $process = Start-Process -FilePath $configEditorExe -Wait -PassThru
+                # Note: ConfigEditor is a GUI app - exit code handling is for logging purposes
+                # GUI apps typically close with exit code 0 on normal user close
                 if ($process.ExitCode -ne 0) {
                     Write-Host "[WARNING] ConfigEditor: Process exited with code $($process.ExitCode)"
+                    # Don't propagate exit code for GUI app since user closed normally
                 }
             } else {
                 Write-Host "[ERROR] ConfigEditor.exe not found: $configEditorExe"
@@ -386,7 +385,7 @@ function Start-ConfigEditor {
             $arguments = @("-ExecutionPolicy", "Bypass", "-File", $configEditorPath)
             $process = Start-Process -FilePath "powershell.exe" -ArgumentList $arguments -Wait -PassThru
 
-            # Check exit code from child process
+            # Note: ConfigEditor is a GUI app - exit code handling is for logging purposes
             if ($process.ExitCode -ne 0) {
                 Write-Host "[WARNING] ConfigEditor: Process exited with code $($process.ExitCode)"
             }
@@ -534,7 +533,7 @@ function Main {
 
         # Handle config editor launch (explicit or no arguments)
         if ($Config -or [string]::IsNullOrWhiteSpace($GameId)) {
-            Start-ConfigEditor -WithGameLauncher
+            Start-ConfigEditor
             return
         }
 

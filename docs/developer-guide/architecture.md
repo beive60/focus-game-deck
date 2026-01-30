@@ -623,10 +623,13 @@ if ($UserInput.Length -gt 64) {
 # DANGEROUS - Command injection vulnerable
 Start-Process powershell.exe -ArgumentList "-Command", "Stop-Process -Name '$processName' -Force"
 
-# SAFE - Use EncodedCommand with base64 encoding
-$command = "Stop-Process -Id $ProcessId -Force"
-$encodedCommand = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($command))
-Start-Process powershell.exe -ArgumentList "-EncodedCommand", $encodedCommand
+# SAFE - Use EncodedCommand with base64 encoding and validate PID is numeric
+$targetProcess = Get-Process -Name $processName -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($targetProcess -and $targetProcess.Id -is [int] -and $targetProcess.Id -gt 0) {
+    $command = "Stop-Process -Id $($targetProcess.Id) -Force"
+    $encodedCommand = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($command))
+    Start-Process powershell.exe -ArgumentList "-EncodedCommand", $encodedCommand
+}
 ```
 
 ### 2. Process Exit Code Handling

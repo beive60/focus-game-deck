@@ -947,6 +947,12 @@ class AppManager {
 
     # Graceful process termination (allows user dialogs)
     [bool] GracefulTermination([string] $processName, [int] $timeoutMs, [string] $appId) {
+        # Security: Validate process name to prevent injection attacks
+        if ($processName -notmatch '^[\w\-\.]+$') {
+            Write-LocalizedHost -Messages $this.Messages -Key "console_invalid_process_name" -Args @($processName) -Default ("Invalid process name format: {0}" -f $processName) -Level "ERROR" -Component "AppManager"
+            return $false
+        }
+
         try {
             # Send graceful termination signal
             Stop-Process -Name $processName -ErrorAction Stop
@@ -980,6 +986,12 @@ class AppManager {
 
     # Force process termination (immediate)
     [bool] ForceTermination([string] $processName, [string] $appId) {
+        # Security: Validate process name to prevent injection attacks
+        if ($processName -notmatch '^[\w\-\.]+$') {
+            Write-LocalizedHost -Messages $this.Messages -Key "console_invalid_process_name" -Args @($processName) -Default ("Invalid process name format: {0}" -f $processName) -Level "ERROR" -Component "AppManager"
+            return $false
+        }
+
         try {
             Stop-Process -Name $processName -Force -ErrorAction Stop
             Write-LocalizedHost -Messages $this.Messages -Key "console_force_termination_success" -Args @($processName) -Default ("Process forcefully terminated: {0}" -f $processName) -Level "OK" -Component "AppManager"
@@ -992,13 +1004,6 @@ class AppManager {
                 try {
                     Write-LocalizedHost -Messages $this.Messages -Key "console_elevating_termination" -Args @($processName) -Default ("Access denied. Attempting to terminate with admin privileges: {0}" -f $processName) -Level "WARNING" -Component "AppManager"
 
-                    # Security: Validate process name to prevent command injection
-                    # Process names should only contain alphanumeric characters, hyphens, underscores, and dots
-                    if ($processName -notmatch '^[\w\-\.]+$') {
-                        Write-LocalizedHost -Messages $this.Messages -Key "console_invalid_process_name" -Args @($processName) -Default ("Invalid process name format: {0}" -f $processName) -Level "ERROR" -Component "AppManager"
-                        return $false
-                    }
-
                     # Get process by name first to ensure it exists and get its PID for safer termination
                     $targetProcess = Get-Process -Name $processName -ErrorAction SilentlyContinue | Select-Object -First 1
                     if (-not $targetProcess) {
@@ -1006,9 +1011,16 @@ class AppManager {
                         return $false
                     }
 
+                    # Security: Validate PID is a valid positive integer before using in command
+                    $processId = $targetProcess.Id
+                    if ($processId -isnot [int] -or $processId -le 0) {
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_invalid_process_id" -Args @($processId) -Default ("Invalid process ID: {0}" -f $processId) -Level "ERROR" -Component "AppManager"
+                        return $false
+                    }
+
                     # Start PowerShell with admin privileges to terminate the process using PID (safer than name)
                     # Using -EncodedCommand with base64 encoding to prevent injection attacks
-                    $command = "Stop-Process -Id $($targetProcess.Id) -Force -ErrorAction Stop"
+                    $command = "Stop-Process -Id $processId -Force -ErrorAction Stop"
                     $encodedCommand = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($command))
                     Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile", "-EncodedCommand", $encodedCommand -WindowStyle Hidden -Wait
 
