@@ -2340,6 +2340,29 @@
                                             ToolTip="[AUTO_DETECT_RIOT_TOOLTIP]"/>
                                     </Grid>
                                 </GroupBox>
+
+                                <GroupBox
+                                    x:Name="TabVisibilityGroup"
+                                    Header="[TAB_VISIBILITY_GROUP]"
+                                    Margin="0,20,0,0">
+                                    <StackPanel Margin="10">
+                                        <CheckBox
+                                            x:Name="ShowOBSTabCheckBox"
+                                            Content="[SHOW_OBS_TAB_CHECKBOX]"
+                                            Margin="5"
+                                            IsChecked="True"/>
+                                        <CheckBox
+                                            x:Name="ShowDiscordTabCheckBox"
+                                            Content="[SHOW_DISCORD_TAB_CHECKBOX]"
+                                            Margin="5"
+                                            IsChecked="True"/>
+                                        <CheckBox
+                                            x:Name="ShowVTubeStudioTabCheckBox"
+                                            Content="[SHOW_VTUBE_STUDIO_TAB_CHECKBOX]"
+                                            Margin="5"
+                                            IsChecked="True"/>
+                                    </StackPanel>
+                                </GroupBox>
                             </StackPanel>
                         </ScrollViewer>
 

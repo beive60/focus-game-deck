@@ -694,5 +694,9 @@
     "voicemeeterProfilePathLabel": "Profile Path:",
     "voicemeeterProfilePathTooltip": "VoiceMeeter profile (XML file) to load on game start",
     "useVoiceMeeterIntegrationCheckBox": "VoiceMeeter",
-    "autoDetectVoiceMeeterTooltip": "Auto-detect VoicemeeterRemote64.dll in common installation locations and registry"
+    "autoDetectVoiceMeeterTooltip": "Auto-detect VoicemeeterRemote64.dll in common installation locations and registry",
+    "tabVisibilityGroup": "选项卡显示设置",
+    "showOBSTabCheckBox": "显示OBS选项卡",
+    "showDiscordTabCheckBox": "显示Discord选项卡",
+    "showVTubeStudioTabCheckBox": "显示VTube Studio选项卡"
 }

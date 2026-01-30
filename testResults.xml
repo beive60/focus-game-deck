@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="19" errors="0" failures="0" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2026-01-30" time="11:20:59">
+  <environment platform="Linux" user="runner" cwd="/home/runner/work/focus-game-deck/focus-game-deck" clr-version="8.0.21" os-version="6.11.0-1018-azure" user-domain="" nunit-version="2.5.8.0" machine-name="runnervmkj6or" />
+  <culture-info current-culture="" current-uiculture="" />
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Success" success="True" time="10.2524" asserts="0" description="Pester">
+    <results>
+      <test-suite type="TestFixture" name="/home/runner/work/focus-game-deck/focus-game-deck/test/pester/GUI.LocalizationIntegrity.Tests.ps1" executed="True" result="Success" success="True" time="10.2524" asserts="0" description="/home/runner/work/focus-game-deck/focus-game-deck/test/pester/GUI.LocalizationIntegrity.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="GUI Localization Integrity Diagnostics" executed="True" result="Success" success="True" time="9.9144" asserts="0" description="GUI Localization Integrity Diagnostics">
+            <results>
+              <test-suite type="TestFixture" name="GUI Localization Integrity Diagnostics.Localization Control Flow Analysis" executed="True" result="Success" success="True" time="3.0956" asserts="0" description="GUI Localization Integrity Diagnostics.Localization Control Flow Analysis">
+                <results>
+                  <test-case description="Should execute localization diagnostic without errors" name="GUI Localization Integrity Diagnostics.Localization Control Flow Analysis.Should execute localization diagnostic without errors" time="1.2725" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should generate diagnostic analysis results" name="GUI Localization Integrity Diagnostics.Localization Control Flow Analysis.Should generate diagnostic analysis results" time="1.7952" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="GUI Localization Integrity Diagnostics.Mapping Table Integrity" executed="True" result="Success" success="True" time="4.5789" asserts="0" description="GUI Localization Integrity Diagnostics.Mapping Table Integrity">
+                <results>
+                  <test-case description="Should validate mapping table structure" name="GUI Localization Integrity Diagnostics.Mapping Table Integrity.Should validate mapping table structure" time="0.0128" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should detect mapping variables" name="GUI Localization Integrity Diagnostics.Mapping Table Integrity.Should detect mapping variables" time="0.012" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should identify duplicate mapping keys if present" name="GUI Localization Integrity Diagnostics.Mapping Table Integrity.Should identify duplicate mapping keys if present" time="0.0125" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="GUI Localization Integrity Diagnostics.JSON Key Validation" executed="True" result="Success" success="True" time="5.9713" asserts="0" description="GUI Localization Integrity Diagnostics.JSON Key Validation">
+                <results>
+                  <test-case description="Should locate JSON localization files" name="GUI Localization Integrity Diagnostics.JSON Key Validation.Should locate JSON localization files" time="0.0071" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should validate JSON key coverage" name="GUI Localization Integrity Diagnostics.JSON Key Validation.Should validate JSON key coverage" time="0.0064" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should report missing JSON keys if any" name="GUI Localization Integrity Diagnostics.JSON Key Validation.Should report missing JSON keys if any" time="0.0073" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="GUI Localization Integrity Diagnostics.XAML Element Access" executed="True" result="Success" success="True" time="7.1819" asserts="0" description="GUI Localization Integrity Diagnostics.XAML Element Access">
+                <results>
+                  <test-case description="Should detect XAML files in project" name="GUI Localization Integrity Diagnostics.XAML Element Access.Should detect XAML files in project" time="0.0063" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should analyze XAML element mappings" name="GUI Localization Integrity Diagnostics.XAML Element Access.Should analyze XAML element mappings" time="0.0071" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should report unmapped XAML elements if any" name="GUI Localization Integrity Diagnostics.XAML Element Access.Should report unmapped XAML elements if any" time="0.0155" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="GUI Localization Integrity Diagnostics.String Replacement Flow" executed="True" result="Success" success="True" time="8.1359" asserts="0" description="GUI Localization Integrity Diagnostics.String Replacement Flow">
+                <results>
+                  <test-case description="Should detect localization control functions" name="GUI Localization Integrity Diagnostics.String Replacement Flow.Should detect localization control functions" time="0.0066" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should validate control mechanisms in ConfigEditor" name="GUI Localization Integrity Diagnostics.String Replacement Flow.Should validate control mechanisms in ConfigEditor" time="0.0051" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should report string replacement issues if any" name="GUI Localization Integrity Diagnostics.String Replacement Flow.Should report string replacement issues if any" time="0.0051" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="GUI Localization Integrity Diagnostics.Modularization Impact" executed="True" result="Success" success="True" time="9.0271" asserts="0" description="GUI Localization Integrity Diagnostics.Modularization Impact">
+                <results>
+                  <test-case description="Should detect ConfigEditor module files" name="GUI Localization Integrity Diagnostics.Modularization Impact.Should detect ConfigEditor module files" time="0.0051" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should verify required modules exist" name="GUI Localization Integrity Diagnostics.Modularization Impact.Should verify required modules exist" time="0.0037" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should analyze module dependencies" name="GUI Localization Integrity Diagnostics.Modularization Impact.Should analyze module dependencies" time="0.0051" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should detect circular dependencies" name="GUI Localization Integrity Diagnostics.Modularization Impact.Should detect circular dependencies" time="0.0078" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="GUI Localization Integrity Diagnostics.Overall Diagnostic Report" executed="True" result="Success" success="True" time="9.9006" asserts="0" description="GUI Localization Integrity Diagnostics.Overall Diagnostic Report">
+                <results>
+                  <test-case description="Should count total issues across all categories" name="GUI Localization Integrity Diagnostics.Overall Diagnostic Report.Should count total issues across all categories" time="0.0066" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>

@@ -1598,6 +1598,53 @@ class ConfigEditorUI {
                     $enableLogNotarizationCheckBox.IsChecked = [bool]$ConfigData.logging.enableNotarization
                 }
 
+                # Load tab visibility settings
+                $showOBSTabCheckBox = $self.Window.FindName("ShowOBSTabCheckBox")
+                $showDiscordTabCheckBox = $self.Window.FindName("ShowDiscordTabCheckBox")
+                $showVTubeStudioTabCheckBox = $self.Window.FindName("ShowVTubeStudioTabCheckBox")
+                $obsTab = $self.Window.FindName("OBSTab")
+                $discordTab = $self.Window.FindName("DiscordTab")
+                $vtubeStudioTab = $self.Window.FindName("VTubeStudioTab")
+
+                # Default all tabs to visible if tabVisibility is not set
+                $showOBS = $true
+                $showDiscord = $true
+                $showVTubeStudio = $true
+
+                if ($ConfigData.tabVisibility) {
+                    if ($ConfigData.tabVisibility.PSObject.Properties["showOBS"]) {
+                        $showOBS = [bool]$ConfigData.tabVisibility.showOBS
+                    }
+                    if ($ConfigData.tabVisibility.PSObject.Properties["showDiscord"]) {
+                        $showDiscord = [bool]$ConfigData.tabVisibility.showDiscord
+                    }
+                    if ($ConfigData.tabVisibility.PSObject.Properties["showVTubeStudio"]) {
+                        $showVTubeStudio = [bool]$ConfigData.tabVisibility.showVTubeStudio
+                    }
+                }
+
+                # Set checkbox states
+                if ($showOBSTabCheckBox) {
+                    $showOBSTabCheckBox.IsChecked = $showOBS
+                }
+                if ($showDiscordTabCheckBox) {
+                    $showDiscordTabCheckBox.IsChecked = $showDiscord
+                }
+                if ($showVTubeStudioTabCheckBox) {
+                    $showVTubeStudioTabCheckBox.IsChecked = $showVTubeStudio
+                }
+
+                # Set tab visibility
+                if ($obsTab) {
+                    $obsTab.Visibility = if ($showOBS) { "Visible" } else { "Collapsed" }
+                }
+                if ($discordTab) {
+                    $discordTab.Visibility = if ($showDiscord) { "Visible" } else { "Collapsed" }
+                }
+                if ($vtubeStudioTab) {
+                    $vtubeStudioTab.Visibility = if ($showVTubeStudio) { "Visible" } else { "Collapsed" }
+                }
+
                 Write-Verbose "Global settings loaded successfully"
             } catch {
                 Write-Warning "Failed to load global settings: $($_.Exception.Message)"

@@ -161,6 +161,7 @@ $script:LabelMappings = @{
     "VoiceMeeterGameSpecificSettingsGroup" = "voicemeeterGameSpecificSettingsGroup"
     "VoiceMeeterActionLabel" = "voicemeeterActionLabel"
     "VoiceMeeterProfilePathLabel" = "voicemeeterProfilePathLabel"
+    "TabVisibilityGroup" = "tabVisibilityGroup"
 }
 
 # Tab header mappings
@@ -212,6 +213,9 @@ $script:CheckBoxMappings = @{
     "UseVoiceMeeterIntegrationCheckBox" = "useVoiceMeeterIntegrationCheckBox"
     "VoiceMeeterLaunchOnGameStartCheckBox" = "voicemeeterLaunchOnGameStartCheckBox"
     "VoiceMeeterExitOnGameEndCheckBox" = "voicemeeterExitOnGameEndCheckBox"
+    "ShowOBSTabCheckBox" = "showOBSTabCheckBox"
+    "ShowDiscordTabCheckBox" = "showDiscordTabCheckBox"
+    "ShowVTubeStudioTabCheckBox" = "showVTubeStudioTabCheckBox"
 }
 
 # RadioButton content mappings
