@@ -57,15 +57,28 @@ class TutorialManager {
 
     [void]LoadWindow() {
         try {
-            # Load XAML
-            $xamlPath = Join-Path -Path $this.AppRoot -ChildPath "gui/TutorialWindow.xaml"
+            # Load XAML content
+            $xamlContent = $null
             
-            if (-not (Test-Path $xamlPath)) {
-                throw "Tutorial XAML file not found: $xamlPath"
+            # Check if embedded XAML variable exists (production/bundled mode)
+            if ($Global:Xaml_TutorialWindow) {
+                Write-Verbose "Loading tutorial XAML from embedded resource"
+                $xamlContent = $Global:Xaml_TutorialWindow
+            } else {
+                # Fallback to file-based loading (development mode)
+                Write-Verbose "Loading tutorial XAML from file (development mode)"
+                $xamlPath = Join-Path -Path $this.AppRoot -ChildPath "gui/TutorialWindow.xaml"
+                
+                if (-not (Test-Path $xamlPath)) {
+                    throw "Tutorial XAML file not found: $xamlPath"
+                }
+                
+                $xamlContent = Get-Content -Path $xamlPath -Raw -Encoding UTF8
             }
-
-            Write-Verbose "Loading tutorial XAML from: $xamlPath"
-            $xamlContent = Get-Content -Path $xamlPath -Raw -Encoding UTF8
+            
+            if ([string]::IsNullOrWhiteSpace($xamlContent)) {
+                throw "Tutorial XAML content is empty or null"
+            }
 
             # Replace localization placeholders
             $xamlContent = $this.ReplaceLocalizationPlaceholders($xamlContent)
