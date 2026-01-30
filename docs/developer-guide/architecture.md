@@ -50,7 +50,7 @@ The new architecture bundles all code into three separate, signed executables us
 
 1. **Focus-Game-Deck.exe (Main Router)**
    - **Purpose**: Lightweight router that launches the correct sub-process based on user arguments
-   - **Source**: `src/Main-Router.ps1`
+   - **Source**: `src/Main.PS1`
    - **Responsibility**: Argument parsing, process delegation, user interface routing
    - **Size**: ~30-40 KB
    - **Console**: Visible console window for status messages
@@ -108,7 +108,7 @@ The Focus Game Deck architecture consists of five main layers, each serving dist
 
 #### 1. Multi-Executable Entry Points
 
-- **`src/Main-Router.ps1`** - Lightweight router compiled to Focus-Game-Deck.exe
+- **`src/Main.PS1`** - Lightweight router compiled to Focus-Game-Deck.exe
 - **`gui/ConfigEditor.ps1`** - GUI application compiled to ConfigEditor.exe
 - **`src/Invoke-FocusGameDeck.ps1`** - Game launcher compiled to Invoke-FocusGameDeck.exe
 - **Routing Logic**: Main router handles argument parsing and delegates to specialized executables
@@ -149,7 +149,7 @@ The Focus Game Deck architecture consists of five main layers, each serving dist
 
 | Component Type | Key Files | Primary Responsibility | Dependencies |
 |---------------|-----------|----------------------|--------------|
-| **Main Router** | `src/Main-Router.ps1` → `Focus-Game-Deck.exe` | Entry point routing and process delegation | ConfigEditor.exe, Invoke-FocusGameDeck.exe |
+| **Main Router** | `src/Main.PS1` → `Focus-Game-Deck.exe` | Entry point routing and process delegation | ConfigEditor.exe, Invoke-FocusGameDeck.exe |
 | **GUI Application** | `gui/ConfigEditor.ps1` → `ConfigEditor.exe` | Configuration editor, game management UI | XAML files, localization, configuration |
 | **Game Launcher** | `src/Invoke-FocusGameDeck.ps1` → `Invoke-FocusGameDeck.exe` | Game session automation | Configuration, modules |
 | **Module System** | `src/modules/*.ps1` | Specialized service management | External APIs (OBS, VTube Studio) |
@@ -535,7 +535,7 @@ Focus Game Deck v3.0 Multi-Executable Architecture
                  ▼
      ┌───────────────────────────┐
      │  Focus-Game-Deck.exe      │ ← Main Router (30-40 KB)
-     │  (Main-Router.ps1)        │   - Argument parsing
+     │  (Main.PS1)               │   - Argument parsing
      │  - Digitally Signed       │   - Process delegation
      └─────────┬─────────────────┘   - User interface
                │
@@ -556,9 +556,9 @@ Focus Game Deck v3.0 Multi-Executable Architecture
 
 **Build Process Changes:**
 
-1. **New Entry Point**: Created `src/Main-Router.ps1` - lightweight router (replaces Main.PS1 as main executable)
+1. **Entry Point**: `src/Main.PS1` - lightweight router serving as the main entry point
 2. **Updated Build Script**: Modified `Build-FocusGameDeck.ps1` to build three executables:
-   - `Focus-Game-Deck.exe` from `Main-Router.ps1`
+   - `Focus-Game-Deck.exe` from `Main.PS1`
    - `ConfigEditor.exe` from `gui/ConfigEditor.ps1`
    - `Invoke-FocusGameDeck.exe` from `src/Invoke-FocusGameDeck.ps1`
 3. **Supporting Files**: All three executables share supporting files (config/, localization/, gui/, src/modules/)

@@ -342,7 +342,7 @@ class VTubeStudioManager {
                 $tokenResponse = $this.ReceiveWebSocketResponse(10)
 
                 # DEBUG: Log the raw response
-                Write-Host "[DEBUG] VTubeStudioManager: Token response received: $($tokenResponse | ConvertTo-Json -Depth 5 -Compress)" -ForegroundColor Cyan
+                Write-Host "[DEBUG] VTubeStudioManager: Token response received: $($tokenResponse | ConvertTo-Json -Depth 5 -Compress)"
 
                 if (-not $tokenResponse) {
                     & $global:WriteLocalizedHostFunc -Messages $this.Messages -Key "vtube_token_request_failed" -Default "Failed to obtain authentication token from VTube Studio (no response)" -Level "WARNING" -Component "VTubeStudioManager"
@@ -350,7 +350,7 @@ class VTubeStudioManager {
                 }
 
                 if ($tokenResponse.messageType -ne "AuthenticationTokenResponse") {
-                    Write-Host "[DEBUG] VTubeStudioManager: Unexpected messageType: $($tokenResponse.messageType)" -ForegroundColor Yellow
+                    Write-Host "[DEBUG] VTubeStudioManager: Unexpected messageType: $($tokenResponse.messageType)"
                     & $global:WriteLocalizedHostFunc -Messages $this.Messages -Key "vtube_token_request_failed" -Default "Failed to obtain authentication token from VTube Studio (unexpected response type: $($tokenResponse.messageType))" -Level "WARNING" -Component "VTubeStudioManager"
                     return $false
                 }
