@@ -3196,6 +3196,32 @@ class ConfigEditorEvents {
         }
     }
 
+    # Handle open config folder menu item
+    [void] HandleOpenConfigFolder() {
+        try {
+            $configPath = Join-Path -Path $this.appRoot -ChildPath "config"
+            if (Test-Path $configPath) {
+                Start-Process explorer.exe -ArgumentList $configPath
+                Write-Verbose "Opened config folder: $configPath"
+            } else {
+                Write-Warning "Config folder not found: $configPath"
+                Show-SafeMessage -Key "configFolderNotFound" -MessageType "Warning"
+            }
+        } catch {
+            Write-Warning "Failed to open config folder: $($_.Exception.Message)"
+        }
+    }
+
+    # Handle exit menu item
+    [void] HandleExit() {
+        try {
+            Write-Verbose "Exit menu item clicked"
+            $this.uiManager.Window.Close()
+        } catch {
+            Write-Warning "Failed to close window: $($_.Exception.Message)"
+        }
+    }
+
     # Handle refresh game list button click
     [void] HandleRefreshGameList() {
         try {
@@ -3469,13 +3495,15 @@ class ConfigEditorEvents {
                             if ($selectedTab -and $selectedTab.Name -eq "GameLauncherTab") {
                                 $self.HandleRefreshGameList()
                             } elseif ($selectedTab -and $selectedTab.Name -eq "GamesTab") {
-                                # Ensure first game is selected when switching to Games tab
+                                # Refresh games list and ensure first game is selected when switching to Games tab
+                                $self.uiManager.UpdateGamesList($self.stateManager.ConfigData)
                                 $gamesList = $self.uiManager.Window.FindName("GamesList")
                                 if ($gamesList -and $gamesList.Items.Count -gt 0 -and $gamesList.SelectedIndex -lt 0) {
                                     $gamesList.SelectedIndex = 0
                                 }
                             } elseif ($selectedTab -and $selectedTab.Name -eq "ManagedAppsTab") {
-                                # Ensure first app is selected when switching to Managed Apps tab
+                                # Refresh managed apps list and ensure first app is selected when switching to Managed Apps tab
+                                $self.uiManager.UpdateManagedAppsList($self.stateManager.ConfigData)
                                 $managedAppsList = $self.uiManager.Window.FindName("ManagedAppsList")
                                 if ($managedAppsList -and $managedAppsList.Items.Count -gt 0 -and $managedAppsList.SelectedIndex -lt 0) {
                                     $managedAppsList.SelectedIndex = 0
@@ -3646,10 +3674,34 @@ class ConfigEditorEvents {
             $this.uiManager.Window.FindName("AutoDetectRiotButton").add_Click({ $self.HandleAutoDetectPath("Riot") }.GetNewClosure())
 
             # --- Menu Items ---
-            $this.uiManager.Window.FindName("RefreshGameListMenuItem").add_Click({ $self.HandleRefreshGameList() }.GetNewClosure())
-            $this.uiManager.Window.FindName("RefreshManagedAppsListMenuItem").add_Click({ $self.HandleRefreshManagedAppsList() }.GetNewClosure())
-            $this.uiManager.Window.FindName("RefreshAllMenuItem").add_Click({ $self.HandleRefreshAll() }.GetNewClosure())
+            # File menu
+            $openConfigFolderMenuItem = $this.uiManager.Window.FindName("OpenConfigFolderMenuItem")
+            if ($openConfigFolderMenuItem) {
+                $openConfigFolderMenuItem.add_Click({ $self.HandleOpenConfigFolder() }.GetNewClosure())
+            } else {
+                Write-Verbose "OpenConfigFolderMenuItem not found"
+            }
+            $newGameMenuItem = $this.uiManager.Window.FindName("NewGameMenuItem")
+            if ($newGameMenuItem) {
+                $newGameMenuItem.add_Click({ $self.HandleAddGame() }.GetNewClosure())
+            } else {
+                Write-Verbose "NewGameMenuItem not found"
+            }
+            $newAppMenuItem = $this.uiManager.Window.FindName("NewAppMenuItem")
+            if ($newAppMenuItem) {
+                $newAppMenuItem.add_Click({ $self.HandleAddApp() }.GetNewClosure())
+            } else {
+                Write-Verbose "NewAppMenuItem not found"
+            }
+            $exitMenuItem = $this.uiManager.Window.FindName("ExitMenuItem")
+            if ($exitMenuItem) {
+                $exitMenuItem.add_Click({ $self.HandleExit() }.GetNewClosure())
+            } else {
+                Write-Verbose "ExitMenuItem not found"
+            }
+            # Tools menu
             $this.uiManager.Window.FindName("CreateAllShortcutsMenuItem").add_Click({ $self.HandleCreateAllShortcuts() }.GetNewClosure())
+            # Help menu
             $this.uiManager.Window.FindName("CheckUpdateMenuItem").add_Click({ $self.HandleCheckUpdate() }.GetNewClosure())
             $feedbackMenuItem = $this.uiManager.Window.FindName("FeedbackMenuItem")
             if ($feedbackMenuItem) {

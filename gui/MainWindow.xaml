@@ -14,18 +14,22 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem
-                x:Name="RefreshMenu"
-                Header="[REFRESH_MENU_HEADER]">
+                x:Name="FileMenu"
+                Header="[FILE_MENU_HEADER]">
                 <MenuItem
-                    x:Name="RefreshGameListMenuItem"
-                    Header="[REFRESH_GAME_LIST]"/>
-                <MenuItem
-                    x:Name="RefreshManagedAppsListMenuItem"
-                    Header="[REFRESH_MANAGED_APPS_LIST]"/>
+                    x:Name="OpenConfigFolderMenuItem"
+                    Header="[OPEN_CONFIG_FOLDER]"/>
                 <Separator/>
                 <MenuItem
-                    x:Name="RefreshAllMenuItem"
-                    Header="[REFRESH_ALL]"/>
+                    x:Name="NewGameMenuItem"
+                    Header="[NEW_GAME_MENU_ITEM]"/>
+                <MenuItem
+                    x:Name="NewAppMenuItem"
+                    Header="[NEW_APP_MENU_ITEM]"/>
+                <Separator/>
+                <MenuItem
+                    x:Name="ExitMenuItem"
+                    Header="[EXIT_MENU_ITEM]"/>
             </MenuItem>
             <MenuItem
                 x:Name="ToolsMenu"
