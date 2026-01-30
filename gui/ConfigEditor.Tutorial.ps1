@@ -70,9 +70,14 @@ class TutorialManager {
             # Replace localization placeholders
             $xamlContent = $this.ReplaceLocalizationPlaceholders($xamlContent)
 
-            # Load XAML
-            $reader = [System.Xml.XmlReader]::Create([System.IO.StringReader]$xamlContent)
-            $this.Window = [System.Windows.Markup.XamlReader]::Load($reader)
+            # Load XAML using string-based type resolution for ps2exe compatibility
+            $xmlReaderType = "System.Xml.XmlReader" -as [type]
+            $stringReaderType = "System.IO.StringReader" -as [type]
+            $xamlReaderType = "System.Windows.Markup.XamlReader" -as [type]
+            
+            $stringReader = $stringReaderType::new($xamlContent)
+            $reader = $xmlReaderType::Create($stringReader)
+            $this.Window = $xamlReaderType::Load($reader)
             $reader.Close()
 
             # Get control references
@@ -206,30 +211,39 @@ class TutorialManager {
 
     [void]LoadTutorialImage([string]$imageName) {
         try {
+            # Use string-based type resolution for ps2exe compatibility
+            $bitmapImageType = "System.Windows.Media.Imaging.BitmapImage" -as [type]
+            $uriType = "System.Uri" -as [type]
+            $uriKindType = "System.UriKind" -as [type]
+            $bitmapCacheOptionType = "System.Windows.Media.Imaging.BitmapCacheOption" -as [type]
+            $visibilityType = "System.Windows.Visibility" -as [type]
+            
             # Try to load image from assets/tutorial directory
             $imagePath = Join-Path -Path $this.AppRoot -ChildPath "assets/tutorial/$imageName"
             
             if (Test-Path $imagePath) {
-                $bitmap = New-Object System.Windows.Media.Imaging.BitmapImage
+                $bitmap = $bitmapImageType::new()
                 $bitmap.BeginInit()
-                $bitmap.UriSource = [System.Uri]::new($imagePath, [System.UriKind]::Absolute)
-                $bitmap.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+                $bitmap.UriSource = $uriType::new($imagePath, $uriKindType::Absolute)
+                $bitmap.CacheOption = $bitmapCacheOptionType::OnLoad
                 $bitmap.EndInit()
                 $bitmap.Freeze()
                 
                 $this.Controls.TutorialImage.Source = $bitmap
-                $this.Controls.TutorialImage.Visibility = [System.Windows.Visibility]::Visible
+                $this.Controls.TutorialImage.Visibility = $visibilityType::Visible
                 Write-Verbose "Loaded tutorial image: $imagePath"
             }
             else {
                 # Hide image if not found
-                $this.Controls.TutorialImage.Visibility = [System.Windows.Visibility]::Collapsed
+                $this.Controls.TutorialImage.Visibility = $visibilityType::Collapsed
                 Write-Verbose "Tutorial image not found: $imagePath"
             }
         }
         catch {
             Write-Warning "Failed to load tutorial image: $_"
-            $this.Controls.TutorialImage.Visibility = [System.Windows.Visibility]::Collapsed
+            # Use string-based type resolution for error handling
+            $visibilityType = "System.Windows.Visibility" -as [type]
+            $this.Controls.TutorialImage.Visibility = $visibilityType::Collapsed
         }
     }
 
