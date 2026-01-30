@@ -1354,7 +1354,6 @@ function Save-VoiceMeeterSettingsData {
 
     try {
         # Get references to UI controls from VoiceMeeter tab
-        $voiceMeeterEnabledCheckBox = $script:Window.FindName("VoiceMeeterEnabledCheckBox")
         $voiceMeeterTypeCombo = $script:Window.FindName("VoiceMeeterTypeCombo")
         $voiceMeeterDllPathTextBox = $script:Window.FindName("VoiceMeeterDllPathTextBox")
         $voiceMeeterLaunchOnGameStartCheckBox = $script:Window.FindName("VoiceMeeterLaunchOnGameStartCheckBox")
@@ -1372,12 +1371,12 @@ function Save-VoiceMeeterSettingsData {
             $script:StateManager.ConfigData.integrations | Add-Member -NotePropertyName "voiceMeeter" -NotePropertyValue @{} -Force
         }
 
-        # Save VoiceMeeter enabled status
-        if ($voiceMeeterEnabledCheckBox) {
-            $enabled = [bool]$voiceMeeterEnabledCheckBox.IsChecked
-            Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "enabled" -Value $enabled
-            Write-Verbose "Saved VoiceMeeter enabled: $enabled"
-        }
+        # Auto-enable VoiceMeeter integration if either checkbox is checked
+        $shouldLaunch = if ($voiceMeeterLaunchOnGameStartCheckBox) { [bool]$voiceMeeterLaunchOnGameStartCheckBox.IsChecked } else { $false }
+        $shouldExit = if ($voiceMeeterExitOnGameEndCheckBox) { [bool]$voiceMeeterExitOnGameEndCheckBox.IsChecked } else { $false }
+        $enabled = $shouldLaunch -or $shouldExit
+        Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "enabled" -Value $enabled
+        Write-Verbose "Auto-enabled VoiceMeeter integration: $enabled (launch: $shouldLaunch, exit: $shouldExit)"
 
         # Save VoiceMeeter type
         if ($voiceMeeterTypeCombo -and $voiceMeeterTypeCombo.SelectedItem) {
@@ -1397,18 +1396,12 @@ function Save-VoiceMeeterSettingsData {
         }
 
         # Save launch on game start checkbox
-        if ($voiceMeeterLaunchOnGameStartCheckBox) {
-            $shouldLaunch = [bool]$voiceMeeterLaunchOnGameStartCheckBox.IsChecked
-            Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "launchOnGameStart" -Value $shouldLaunch
-            Write-Verbose "Saved VoiceMeeter launch on game start: $shouldLaunch"
-        }
+        Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "launchOnGameStart" -Value $shouldLaunch
+        Write-Verbose "Saved VoiceMeeter launch on game start: $shouldLaunch"
 
         # Save exit on game end checkbox
-        if ($voiceMeeterExitOnGameEndCheckBox) {
-            $shouldExit = [bool]$voiceMeeterExitOnGameEndCheckBox.IsChecked
-            Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "exitOnGameEnd" -Value $shouldExit
-            Write-Verbose "Saved VoiceMeeter exit on game end: $shouldExit"
-        }
+        Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "exitOnGameEnd" -Value $shouldExit
+        Write-Verbose "Saved VoiceMeeter exit on game end: $shouldExit"
 
         # Save game start profile path
         if ($voiceMeeterGameStartProfileTextBox) {

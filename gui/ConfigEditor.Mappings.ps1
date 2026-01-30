@@ -29,8 +29,6 @@ $script:BrowserButtonMappings = @{
     "BrowseDiscordPathButton" = "browseButton"
     "BrowseVTubePathButton" = "browseButton"
     "BrowseVoiceMeeterDllPathButton" = "browseButton"
-    "BrowseVoiceMeeterDefaultProfileButton" = "browseButton"
-    "BrowseVoiceMeeterProfileButton" = "browseButton"
 }
 
 # Auto-detection buttons
@@ -156,8 +154,6 @@ $script:LabelMappings = @{
     "VTubeOnExitHotkeysLabel" = "vtubeOnExitHotkeysLabel"
     "VoiceMeeterBasicSettingsGroup" = "generalSettingsGroup"
     "VoiceMeeterGameIntegrationGroup" = "gameIntegrationGroup"
-    "VoiceMeeterDllPathGroup" = "pathSettingsGroup"
-    "VoiceMeeterProfileGroup" = "voicemeeterDefaultProfileLabel"
     "VoiceMeeterTypeLabel" = "voicemeeterTypeLabel"
     "VoiceMeeterGameStartProfileLabel" = "voicemeeterGameStartProfileLabel"
     "VoiceMeeterGameEndProfileLabel" = "voicemeeterGameEndProfileLabel"
@@ -193,7 +189,6 @@ $script:TextMappings = @{
     "DiscordIntegrationTitle" = "integrationTitleDiscord"
     "VTubeStudioIntegrationTitle" = "integrationTitleVtube"
     "VoiceMeeterIntegrationTitle" = "voicemeeterIntegrationTitle"
-    "VoiceMeeterDefaultProfileTooltipText" = "voicemeeterDefaultProfileTooltip"
     "GamesDragDropHint" = "dragDropReorderHint"
     "AppsDragDropHint" = "dragDropReorderHint"
 }
@@ -215,7 +210,6 @@ $script:CheckBoxMappings = @{
     "UseDiscordIntegrationCheckBox" = "useDiscordIntegrationCheckBox"
     "UseVTubeStudioIntegrationCheckBox" = "useVTubeStudioIntegrationCheckBox"
     "UseVoiceMeeterIntegrationCheckBox" = "useVoiceMeeterIntegrationCheckBox"
-    "VoiceMeeterEnabledCheckBox" = "voicemeeterEnabledCheckBox"
     "VoiceMeeterLaunchOnGameStartCheckBox" = "voicemeeterLaunchOnGameStartCheckBox"
     "VoiceMeeterExitOnGameEndCheckBox" = "voicemeeterExitOnGameEndCheckBox"
 }

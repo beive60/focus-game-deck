@@ -1467,12 +1467,6 @@ class ConfigEditorUI {
 
                 # Load VoiceMeeter settings
                 if ($ConfigData.integrations.voiceMeeter) {
-                    $voiceMeeterEnabledCheckBox = $self.Window.FindName("VoiceMeeterEnabledCheckBox")
-                    if ($voiceMeeterEnabledCheckBox) {
-                        $voiceMeeterEnabledCheckBox.IsChecked = ($ConfigData.integrations.voiceMeeter.enabled -eq $true)
-                        Write-Verbose "Loaded VoiceMeeter enabled: $($ConfigData.integrations.voiceMeeter.enabled)"
-                    }
-
                     # Load VoiceMeeter type
                     $voiceMeeterTypeCombo = $self.Window.FindName("VoiceMeeterTypeCombo")
                     if ($voiceMeeterTypeCombo -and $ConfigData.integrations.voiceMeeter.type) {
@@ -1496,13 +1490,6 @@ class ConfigEditorUI {
                     if ($voiceMeeterDllPathTextBox -and $ConfigData.integrations.voiceMeeter.dllPath) {
                         $voiceMeeterDllPathTextBox.Text = $ConfigData.integrations.voiceMeeter.dllPath
                         Write-Verbose "Loaded VoiceMeeter DLL path: $($ConfigData.integrations.voiceMeeter.dllPath)"
-                    }
-
-                    # Load VoiceMeeter default profile
-                    $voiceMeeterDefaultProfileTextBox = $self.Window.FindName("VoiceMeeterDefaultProfileTextBox")
-                    if ($voiceMeeterDefaultProfileTextBox -and $ConfigData.integrations.voiceMeeter.defaultProfile) {
-                        $voiceMeeterDefaultProfileTextBox.Text = $ConfigData.integrations.voiceMeeter.defaultProfile
-                        Write-Verbose "Loaded VoiceMeeter default profile: $($ConfigData.integrations.voiceMeeter.defaultProfile)"
                     }
 
                     # Load VoiceMeeter launch on game start checkbox
