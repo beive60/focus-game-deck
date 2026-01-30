@@ -236,7 +236,9 @@ function Invoke-GameCleanup {
 # Use .NET Console.CancelKeyPress event handler which works in both script and executable modes.
 $script:ctrlCPressed = $false
 
-$script:ctrlCHandler = [System.ConsoleCancelEventHandler] {
+# Use GetNewClosure() to capture the current scope (logger, appManager, msg, and functions)
+# This ensures the event handler has access to all required variables and functions
+$script:ctrlCHandler = [System.ConsoleCancelEventHandler]({
     param($sender, $eventArgs)
 
     # Prevent immediate process termination
@@ -258,7 +260,7 @@ $script:ctrlCHandler = [System.ConsoleCancelEventHandler] {
 
     # Exit the application
     [Environment]::Exit(0)
-}
+}.GetNewClosure())
 
 # Register the Ctrl+C handler using .NET event subscription
 [Console]::TreatControlCAsInput = $false
