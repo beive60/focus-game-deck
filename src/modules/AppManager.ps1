@@ -395,7 +395,9 @@ class AppManager {
                     if ($this.Logger) { $this.Logger.Info("Starting OBS replay buffer in background job", "OBS") }
 
                     # Determine application root
-                    $currentProcess = Get-Process -Id $PID
+                    # Note: Using [System.Diagnostics.Process]::GetCurrentProcess() instead of Get-Process -Id $PID
+                    # because $PID automatic variable is not accessible inside PowerShell class methods
+                    $currentProcess = [System.Diagnostics.Process]::GetCurrentProcess()
                     $isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
                     if ($isExecutable) {
                         $appRoot = Split-Path -Parent $currentProcess.Path
@@ -1228,7 +1230,7 @@ class AppManager {
                             if ($this.Logger) { $this.Logger.Info("Background job '$jobKey' in state: $($job.State)", "APP") }
                         }
                     }
-                    
+
                     # Remove the job
                     Remove-Job -Job $job -Force -ErrorAction SilentlyContinue
                 }
