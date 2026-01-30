@@ -1162,6 +1162,45 @@ class ConfigEditorEvents {
                     if ($getExitHotkeyButton) { $getExitHotkeyButton.IsEnabled = $isEnabled }
                 }
 
+                $useVoiceMeeterCheck = $script:Window.FindName("UseVoiceMeeterIntegrationCheckBox")
+                if ($useVoiceMeeterCheck) {
+                    $useVoiceMeeterCheck.IsChecked = ($gameData.integrations -and $gameData.integrations.useVoiceMeeter)
+
+                    # Load VoiceMeeter game-specific settings
+                    $vmSettings = if ($gameData.integrations -and $gameData.integrations.voiceMeeterSettings) { $gameData.integrations.voiceMeeterSettings } else { $null }
+
+                    # Load action type
+                    $actionCombo = $script:Window.FindName("VoiceMeeterActionCombo")
+                    if ($actionCombo) {
+                        $action = if ($vmSettings -and $vmSettings.action) { $vmSettings.action } else { "load-profile" }
+                        # Find ComboBoxItem by Tag
+                        $matchingItem = $actionCombo.Items | Where-Object { $_.Tag -eq $action }
+                        if ($matchingItem) {
+                            $actionCombo.SelectedItem = $matchingItem
+                        } else {
+                            # Default to load-profile
+                            $matchingItem = $actionCombo.Items | Where-Object { $_.Tag -eq "load-profile" }
+                            if ($matchingItem) {
+                                $actionCombo.SelectedItem = $matchingItem
+                            }
+                        }
+                    }
+
+                    # Load profile path
+                    $profilePathTextBox = $script:Window.FindName("VoiceMeeterProfilePathTextBox")
+                    if ($profilePathTextBox) {
+                        $profilePathTextBox.Text = if ($vmSettings -and $vmSettings.profilePath) { $vmSettings.profilePath } else { "" }
+                    }
+
+                    # Enable/disable controls based on checkbox state
+                    $isEnabled = [bool]$useVoiceMeeterCheck.IsChecked
+                    if ($actionCombo) { $actionCombo.IsEnabled = $isEnabled }
+                    if ($profilePathTextBox) { $profilePathTextBox.IsEnabled = $isEnabled }
+
+                    $browseProfileButton = $script:Window.FindName("BrowseVoiceMeeterProfileButton")
+                    if ($browseProfileButton) { $browseProfileButton.IsEnabled = $isEnabled }
+                }
+
                 # Update move button states (removed - using drag and drop)
                 # Update-MoveButtonStates
 
@@ -2493,6 +2532,19 @@ class ConfigEditorEvents {
                         }
                     }
                 }
+                "VoiceMeeter" {
+                    $commonPaths = @(
+                        "${env:ProgramFiles(x86)}/VB/Voicemeeter/VoicemeeterRemote64.dll",
+                        "${env:ProgramFiles}/VB/Voicemeeter/VoicemeeterRemote64.dll",
+                        "C:/Program Files (x86)/VB/Voicemeeter/VoicemeeterRemote64.dll",
+                        "C:/Program Files/VB/Voicemeeter/VoicemeeterRemote64.dll"
+                    )
+                    foreach ($path in $commonPaths) {
+                        if (Test-Path $path) {
+                            $detectedPaths += $path
+                        }
+                    }
+                }
             }
 
             if ($detectedPaths.Count -eq 0) {
@@ -2518,6 +2570,7 @@ class ConfigEditorEvents {
                     "OBS" { $script:Window.FindName("OBSPathTextBox").Text = $selectedPath }
                     "Discord" { $script:Window.FindName("DiscordPathTextBox").Text = $selectedPath }
                     "VTubeStudio" { $script:Window.FindName("VTubePathTextBox").Text = $selectedPath }
+                    "VoiceMeeter" { $script:Window.FindName("VoiceMeeterDllPathTextBox").Text = $selectedPath }
                 }
 
                 Write-Verbose "Auto-detected $Platform path: $selectedPath"
@@ -3058,6 +3111,63 @@ class ConfigEditorEvents {
         }
     }
 
+    # Handle save VoiceMeeter settings
+    [void] HandleSaveVoiceMeeterSettings() {
+        try {
+            # Save VoiceMeeter settings data
+            Save-VoiceMeeterSettingsData
+
+            # Write to file with 4-space indentation
+            Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
+
+            # Update original config and clear modified flag
+            Save-OriginalConfig
+            $this.stateManager.ClearModified()
+
+            $message = $this.uiManager.GetLocalizedMessage("voicemeeterSettingsSaved")
+            $this.uiManager.ShowNotification($message, "Success")
+            Write-Verbose "VoiceMeeter settings saved"
+
+        } catch {
+            Write-Error "Failed to save VoiceMeeter settings: $_"
+            Show-SafeMessage -Key "voicemeeterSettingsSaveFailed" -MessageType "Error"
+        }
+    }
+
+    # Handle browse VoiceMeeter DLL path
+    [void] HandleBrowseVoiceMeeterDllPath() {
+        $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $openFileDialog.Filter = "DLL Files (*.dll)|*.dll|All Files (*.*)|*.*"
+        $openFileDialog.Title = "Select VoiceMeeter Remote DLL"
+        if ($openFileDialog.ShowDialog()) {
+            $script:Window.FindName("VoiceMeeterDllPathTextBox").Text = $openFileDialog.FileName
+            Write-Verbose "Selected VoiceMeeter DLL path: $($openFileDialog.FileName)"
+        }
+    }
+
+    # Handle browse VoiceMeeter default profile
+    # Handle browse VoiceMeeter game start profile
+    [void] HandleBrowseVoiceMeeterGameStartProfile() {
+        $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $openFileDialog.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*"
+        $openFileDialog.Title = "Select VoiceMeeter Game Start Profile"
+        if ($openFileDialog.ShowDialog()) {
+            $script:Window.FindName("VoiceMeeterGameStartProfileTextBox").Text = $openFileDialog.FileName
+            Write-Verbose "Selected VoiceMeeter game start profile: $($openFileDialog.FileName)"
+        }
+    }
+
+    # Handle browse VoiceMeeter game end profile
+    [void] HandleBrowseVoiceMeeterGameEndProfile() {
+        $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $openFileDialog.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*"
+        $openFileDialog.Title = "Select VoiceMeeter Game End Profile"
+        if ($openFileDialog.ShowDialog()) {
+            $script:Window.FindName("VoiceMeeterGameEndProfileTextBox").Text = $openFileDialog.FileName
+            Write-Verbose "Selected VoiceMeeter game end profile: $($openFileDialog.FileName)"
+        }
+    }
+
     # Handle opening integration tab from game settings
     [void] HandleOpenIntegrationTab([string]$TabName) {
         try {
@@ -3450,6 +3560,7 @@ class ConfigEditorEvents {
             $this.uiManager.Window.FindName("OpenOBSTabButton").add_Click({ $self.HandleOpenIntegrationTab("OBS") }.GetNewClosure())
             $this.uiManager.Window.FindName("OpenDiscordTabButton").add_Click({ $self.HandleOpenIntegrationTab("Discord") }.GetNewClosure())
             $this.uiManager.Window.FindName("OpenVTubeStudioTabButton").add_Click({ $self.HandleOpenIntegrationTab("VTubeStudio") }.GetNewClosure())
+            $this.uiManager.Window.FindName("OpenVoiceMeeterTabButton").add_Click({ $self.HandleOpenIntegrationTab("VoiceMeeter") }.GetNewClosure())
 
             # VTube Studio game-specific settings buttons
             $getModelListBtn = $this.uiManager.Window.FindName("GetModelListButton")
@@ -3462,6 +3573,10 @@ class ConfigEditorEvents {
             # VTube Studio integration checkbox change
             $useVTubeCheckBox = $this.uiManager.Window.FindName("UseVTubeStudioIntegrationCheckBox")
             if ($useVTubeCheckBox) { $useVTubeCheckBox.add_Checked({ $self.HandleVTubeIntegrationCheckChanged() }.GetNewClosure()); $useVTubeCheckBox.add_Unchecked({ $self.HandleVTubeIntegrationCheckChanged() }.GetNewClosure()) }
+
+            # VoiceMeeter game-specific settings button
+            $browseVoiceMeeterProfileBtn = $this.uiManager.Window.FindName("BrowseVoiceMeeterProfileButton")
+            if ($browseVoiceMeeterProfileBtn) { $browseVoiceMeeterProfileBtn.add_Click({ $self.HandleBrowseVoiceMeeterGameProfile() }.GetNewClosure()) }
 
             # --- Managed Apps Tab ---
             $managedAppsListCtrl = $this.uiManager.Window.FindName("ManagedAppsList")
@@ -3515,6 +3630,13 @@ class ConfigEditorEvents {
             $this.uiManager.Window.FindName("AutoDetectVTubeButton").add_Click({ $self.HandleAutoDetectPath("VTubeStudio") }.GetNewClosure())
             $this.uiManager.Window.FindName("StartVTubeStudioButton").add_Click({ $self.HandleStartVTubeStudio() }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveVTubeStudioSettingsButton").add_Click({ $self.HandleSaveVTubeStudioSettings() }.GetNewClosure())
+
+            # --- VoiceMeeter Tab ---
+            $this.uiManager.Window.FindName("BrowseVoiceMeeterDllPathButton").add_Click({ $self.HandleBrowseVoiceMeeterDllPath() }.GetNewClosure())
+            $this.uiManager.Window.FindName("BrowseVoiceMeeterGameStartProfileButton").add_Click({ $self.HandleBrowseVoiceMeeterGameStartProfile() }.GetNewClosure())
+            $this.uiManager.Window.FindName("BrowseVoiceMeeterGameEndProfileButton").add_Click({ $self.HandleBrowseVoiceMeeterGameEndProfile() }.GetNewClosure())
+            $this.uiManager.Window.FindName("AutoDetectVoiceMeeterButton").add_Click({ $self.HandleAutoDetectPath("VoiceMeeter") }.GetNewClosure())
+            $this.uiManager.Window.FindName("SaveVoiceMeeterSettingsButton").add_Click({ $self.HandleSaveVoiceMeeterSettings() }.GetNewClosure())
 
             # --- Global Settings Tab ---
             $this.uiManager.Window.FindName("LanguageCombo").add_SelectionChanged({ $self.HandleLanguageSelectionChanged() }.GetNewClosure())

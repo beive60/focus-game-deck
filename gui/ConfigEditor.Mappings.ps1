@@ -28,6 +28,7 @@ $script:BrowserButtonMappings = @{
     "BrowseOBSPathButton" = "browseButton"
     "BrowseDiscordPathButton" = "browseButton"
     "BrowseVTubePathButton" = "browseButton"
+    "BrowseVoiceMeeterDllPathButton" = "browseButton"
 }
 
 # Auto-detection buttons
@@ -38,6 +39,7 @@ $script:AutoDetectButtonMappings = @{
     "AutoDetectOBSButton" = "autoDetectButton"
     "AutoDetectDiscordButton" = "autoDetectButton"
     "AutoDetectVTubeButton" = "autoDetectButton"
+    "AutoDetectVoiceMeeterButton" = "autoDetectButton"
 }
 
 # Save and action buttons
@@ -56,6 +58,10 @@ $script:ActionButtonMappings = @{
     "OpenOBSTabButton" = "openIntegrationSettings"
     "OpenDiscordTabButton" = "openIntegrationSettings"
     "OpenVTubeStudioTabButton" = "openIntegrationSettings"
+    "SaveVoiceMeeterSettingsButton" = "saveButton"
+    "OpenVoiceMeeterTabButton" = "openIntegrationSettings"
+    "BrowseVoiceMeeterGameStartProfileButton" = "browseButton"
+    "BrowseVoiceMeeterGameEndProfileButton" = "browseButton"
 }
 
 # List movement buttons
@@ -146,6 +152,15 @@ $script:LabelMappings = @{
     "VTubeModelIdLabel" = "vtubeModelIdLabel"
     "VTubeOnLaunchHotkeysLabel" = "vtubeOnLaunchHotkeysLabel"
     "VTubeOnExitHotkeysLabel" = "vtubeOnExitHotkeysLabel"
+    "VoiceMeeterBasicSettingsGroup" = "generalSettingsGroup"
+    "VoiceMeeterGameIntegrationGroup" = "gameIntegrationGroup"
+    "VoiceMeeterTypeLabel" = "voicemeeterTypeLabel"
+    "VoiceMeeterGameStartProfileLabel" = "voicemeeterGameStartProfileLabel"
+    "VoiceMeeterGameEndProfileLabel" = "voicemeeterGameEndProfileLabel"
+    "VoiceMeeterDllPathLabel" = "voicemeeterDllPathLabel"
+    "VoiceMeeterGameSpecificSettingsGroup" = "voicemeeterGameSpecificSettingsGroup"
+    "VoiceMeeterActionLabel" = "voicemeeterActionLabel"
+    "VoiceMeeterProfilePathLabel" = "voicemeeterProfilePathLabel"
 }
 
 # Tab header mappings
@@ -156,6 +171,7 @@ $script:TabMappings = @{
     "OBSTab" = "obsTabHeader"
     "DiscordTab" = "discordTabHeader"
     "VTubeStudioTab" = "vtubestudioTabHeader"
+    "VoiceMeeterTab" = "voicemeeterTabHeader"
     "GlobalSettingsTab" = "globalSettingsTabHeader"
 }
 
@@ -172,6 +188,7 @@ $script:TextMappings = @{
     "ObsIntegrationTitle" = "integrationTitleObs"
     "DiscordIntegrationTitle" = "integrationTitleDiscord"
     "VTubeStudioIntegrationTitle" = "integrationTitleVtube"
+    "VoiceMeeterIntegrationTitle" = "voicemeeterIntegrationTitle"
     "GamesDragDropHint" = "dragDropReorderHint"
     "AppsDragDropHint" = "dragDropReorderHint"
 }
@@ -192,6 +209,9 @@ $script:CheckBoxMappings = @{
     "VTubeWebSocketEnableCheckBox" = "vtubeEnableWebsocket"
     "UseDiscordIntegrationCheckBox" = "useDiscordIntegrationCheckBox"
     "UseVTubeStudioIntegrationCheckBox" = "useVTubeStudioIntegrationCheckBox"
+    "UseVoiceMeeterIntegrationCheckBox" = "useVoiceMeeterIntegrationCheckBox"
+    "VoiceMeeterLaunchOnGameStartCheckBox" = "voicemeeterLaunchOnGameStartCheckBox"
+    "VoiceMeeterExitOnGameEndCheckBox" = "voicemeeterExitOnGameEndCheckBox"
 }
 
 # RadioButton content mappings
@@ -234,6 +254,7 @@ $script:TooltipMappings = @{
     "AutoDetectObsTooltip" = "autoDetectObsTooltip"
     "AutoDetectDiscordTooltip" = "autoDetectDiscordTooltip"
     "AutoDetectVTubeStudioTooltip" = "autoDetectVTubeStudioTooltip"
+    "AutoDetectVoiceMeeterTooltip" = "autoDetectVoiceMeeterTooltip"
 
     # Game configuration tooltip TextBlocks (? icons)
     "GameIdTooltip" = "tooltipGameId"
@@ -306,6 +327,11 @@ $script:ComboBoxItemMappings = @{
     "OBSReplayBufferGlobalItem" = "obsReplayBufferGlobal"
     "OBSReplayBufferEnableItem" = "obsReplayBufferEnable"
     "OBSReplayBufferDisableItem" = "obsReplayBufferDisable"
+    "VoiceMeeterTypeStandardItem" = "voicemeeterTypeStandard"
+    "VoiceMeeterTypeBananaItem" = "voicemeeterTypeBanana"
+    "VoiceMeeterTypePotatoItem" = "voicemeeterTypePotato"
+    "VoiceMeeterActionLoadProfileItem" = "voicemeeterActionLoadProfile"
+    "VoiceMeeterActionApplyParamsItem" = "voicemeeterActionApplyParams"
 }
 
 # Game action message key mappings (used for dynamic ComboBoxItem creation)

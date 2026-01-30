@@ -134,6 +134,17 @@ class AppManager {
                 $this.Logger.Info("VTube Studio manager initialized", "APP")
             }
         }
+
+        # VoiceMeeter Manager
+        if ($this.GameConfig.integrations.useVoiceMeeter -and $this.Config.integrations.voiceMeeter) {
+            $this.IntegrationManagers['voiceMeeter'] = New-VoiceMeeterManager `
+                -VoiceMeeterConfig $this.Config.integrations.voiceMeeter `
+                -Messages $this.Messages `
+                -Logger $this.Logger
+            if ($this.Logger) {
+                $this.Logger.Info("VoiceMeeter manager initialized", "APP")
+            }
+        }
     }
 
     <#
@@ -271,6 +282,9 @@ class AppManager {
             }
             "vtubeStudio" {
                 return $this.HandleVTubeStudioAction($manager, $integrationConfig, $action)
+            }
+            "voiceMeeter" {
+                return $this.HandleVoiceMeeterAction($manager, $integrationConfig, $action)
             }
             default {
                 Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_integration" -Args @($integrationId) -Default ("Unknown integration: {0}" -f $integrationId) -Level "WARNING" -Component "AppManager"
@@ -684,6 +698,89 @@ class AppManager {
             }
             default {
                 Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_vtube_action" -Args @($action) -Default ("Unknown action: {0}" -f $action) -Level "WARNING" -Component "VTubeStudioManager"
+                return $false
+            }
+        }
+
+        return $false
+    }
+
+    <#
+    .SYNOPSIS
+        Handles VoiceMeeter-specific actions.
+
+    .DESCRIPTION
+        Manages VoiceMeeter startup and shutdown including profile loading and parameter control.
+
+    .PARAMETER manager
+        The VoiceMeeter manager instance
+
+    .PARAMETER config
+        The VoiceMeeter configuration object
+
+    .PARAMETER action
+        The action to execute
+
+    .OUTPUTS
+        Boolean indicating whether the action was successful
+
+    .EXAMPLE
+        $success = $appManager.HandleVoiceMeeterAction($voiceMeeterManager, $config, "enter-game-mode")
+    #>
+    [bool] HandleVoiceMeeterAction([object] $manager, [object] $config, [string] $action) {
+        switch ($action) {
+            "enter-game-mode" {
+                if ($this.Logger) { $this.Logger.Info("Starting VoiceMeeter integration", "VOICEMEETER") }
+
+                # Connect to VoiceMeeter
+                $success = $manager.Connect()
+                if (-not $success) {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_voicemeeter_connect_failed" -Default "Failed to connect to VoiceMeeter" -Level "WARNING" -Component "VoiceMeeterManager"
+                    if ($this.Logger) { $this.Logger.Warning("Failed to connect to VoiceMeeter", "VOICEMEETER") }
+                    return $false
+                }
+
+                # Get game-specific VoiceMeeter settings
+                $voiceMeeterSettings = $null
+                if ($this.GameConfig -and $this.GameConfig.integrations -and $this.GameConfig.integrations.voiceMeeterSettings) {
+                    $voiceMeeterSettings = $this.GameConfig.integrations.voiceMeeterSettings
+                }
+
+                # Apply game settings or use default
+                $applySuccess = $manager.ApplyGameSettings($voiceMeeterSettings)
+                if ($applySuccess) {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_voicemeeter_settings_applied" -Default "VoiceMeeter settings applied successfully" -Level "OK" -Component "VoiceMeeterManager"
+                    if ($this.Logger) { $this.Logger.Info("VoiceMeeter settings applied successfully", "VOICEMEETER") }
+                } else {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_voicemeeter_settings_failed" -Default "Failed to apply VoiceMeeter settings" -Level "WARNING" -Component "VoiceMeeterManager"
+                    if ($this.Logger) { $this.Logger.Warning("Failed to apply VoiceMeeter settings", "VOICEMEETER") }
+                }
+
+                return $applySuccess
+            }
+            "exit-game-mode" {
+                if ($this.Logger) { $this.Logger.Info("Stopping VoiceMeeter integration", "VOICEMEETER") }
+
+                # Restore default settings
+                $success = $manager.RestoreDefaultSettings()
+                if ($success) {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_voicemeeter_restored" -Default "VoiceMeeter settings restored" -Level "OK" -Component "VoiceMeeterManager"
+                    if ($this.Logger) { $this.Logger.Info("VoiceMeeter settings restored", "VOICEMEETER") }
+                } else {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_voicemeeter_restore_failed" -Default "Failed to restore VoiceMeeter settings" -Level "WARNING" -Component "VoiceMeeterManager"
+                    if ($this.Logger) { $this.Logger.Warning("Failed to restore VoiceMeeter settings", "VOICEMEETER") }
+                }
+
+                # Disconnect from VoiceMeeter
+                $manager.Disconnect()
+
+                return $success
+            }
+            "none" {
+                return $true
+            }
+            default {
+                Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_voicemeeter_action" -Args @($action) -Default ("Unknown action: {0}" -f $action) -Level "WARNING" -Component "VoiceMeeterManager"
                 return $false
             }
         }

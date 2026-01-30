@@ -16,6 +16,7 @@
     - Save-OBSSettingsData: Saves OBS integration settings
     - Save-DiscordSettingsData: Saves Discord integration settings
     - Save-VTubeStudioSettingsData: Saves VTube Studio integration settings
+    - Save-VoiceMeeterSettingsData: Saves VoiceMeeter integration settings
     - Save-OriginalConfig: Saves original configuration state
 
 .NOTES
@@ -415,6 +416,53 @@ function Save-CurrentGameData {
             # Remove vtubeStudioSettings if VTube Studio integration is disabled
             if ($gameData.integrations.PSObject.Properties["vtubeStudioSettings"]) {
                 $gameData.integrations.PSObject.Properties.Remove("vtubeStudioSettings")
+            }
+        }
+    }
+
+    # Save VoiceMeeter setting
+    $useVoiceMeeterCheck = $script:Window.FindName("UseVoiceMeeterIntegrationCheckBox")
+    if ($useVoiceMeeterCheck) {
+        if (-not $gameData.integrations.PSObject.Properties["useVoiceMeeter"]) {
+            $gameData.integrations | Add-Member -NotePropertyName "useVoiceMeeter" -NotePropertyValue ([bool]$useVoiceMeeterCheck.IsChecked) -Force
+        } else {
+            $gameData.integrations.useVoiceMeeter = [bool]$useVoiceMeeterCheck.IsChecked
+        }
+
+        # Save VoiceMeeter game-specific settings if enabled
+        if ($useVoiceMeeterCheck.IsChecked) {
+            if (-not $gameData.integrations.PSObject.Properties["voiceMeeterSettings"]) {
+                $gameData.integrations | Add-Member -NotePropertyName "voiceMeeterSettings" -NotePropertyValue ([PSCustomObject]@{}) -Force
+            }
+
+            # Save action type (load-profile or apply-params)
+            $actionCombo = $script:Window.FindName("VoiceMeeterActionCombo")
+            if ($actionCombo -and $actionCombo.SelectedItem) {
+                $action = $actionCombo.SelectedItem.Tag
+                if ([string]::IsNullOrWhiteSpace($action)) {
+                    $action = "load-profile"  # Default
+                }
+                Set-PropertyValue -Object $gameData.integrations.voiceMeeterSettings -PropertyName "action" -Value $action
+            }
+
+            # Save profile path
+            $profilePathTextBox = $script:Window.FindName("VoiceMeeterProfilePathTextBox")
+            if ($profilePathTextBox) {
+                $profilePath = $profilePathTextBox.Text.Trim()
+                if ($profilePath) {
+                    $normalizedPath = $profilePath -replace '\\', '/'
+                    Set-PropertyValue -Object $gameData.integrations.voiceMeeterSettings -PropertyName "profilePath" -Value $normalizedPath
+                } else {
+                    # Remove profilePath if empty
+                    if ($gameData.integrations.voiceMeeterSettings.PSObject.Properties["profilePath"]) {
+                        $gameData.integrations.voiceMeeterSettings.PSObject.Properties.Remove("profilePath")
+                    }
+                }
+            }
+        } else {
+            # Remove voiceMeeterSettings if VoiceMeeter integration is disabled
+            if ($gameData.integrations.PSObject.Properties["voiceMeeterSettings"]) {
+                $gameData.integrations.PSObject.Properties.Remove("voiceMeeterSettings")
             }
         }
     }
@@ -1297,6 +1345,85 @@ function Save-VTubeStudioSettingsData {
 
     } catch {
         Write-Error "Failed to save VTube Studio settings data: $($_.Exception.Message)"
+        throw
+    }
+}
+
+function Save-VoiceMeeterSettingsData {
+    Write-Verbose "Save-VoiceMeeterSettingsData: Starting to save VoiceMeeter settings"
+
+    try {
+        # Get references to UI controls from VoiceMeeter tab
+        $voiceMeeterTypeCombo = $script:Window.FindName("VoiceMeeterTypeCombo")
+        $voiceMeeterDllPathTextBox = $script:Window.FindName("VoiceMeeterDllPathTextBox")
+        $voiceMeeterLaunchOnGameStartCheckBox = $script:Window.FindName("VoiceMeeterLaunchOnGameStartCheckBox")
+        $voiceMeeterExitOnGameEndCheckBox = $script:Window.FindName("VoiceMeeterExitOnGameEndCheckBox")
+        $voiceMeeterGameStartProfileTextBox = $script:Window.FindName("VoiceMeeterGameStartProfileTextBox")
+        $voiceMeeterGameEndProfileTextBox = $script:Window.FindName("VoiceMeeterGameEndProfileTextBox")
+
+        # Ensure integrations section exists
+        if (-not $script:StateManager.ConfigData.integrations) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "integrations" -NotePropertyValue ([PSCustomObject]@{}) -Force
+        }
+
+        # Ensure integrations.voiceMeeter section exists
+        if (-not $script:StateManager.ConfigData.integrations.voiceMeeter) {
+            $script:StateManager.ConfigData.integrations | Add-Member -NotePropertyName "voiceMeeter" -NotePropertyValue ([PSCustomObject]@{}) -Force
+        }
+
+        # Auto-enable VoiceMeeter integration if either checkbox is checked
+        $shouldLaunch = if ($voiceMeeterLaunchOnGameStartCheckBox) { [bool]$voiceMeeterLaunchOnGameStartCheckBox.IsChecked } else { $false }
+        $shouldExit = if ($voiceMeeterExitOnGameEndCheckBox) { [bool]$voiceMeeterExitOnGameEndCheckBox.IsChecked } else { $false }
+        $enabled = $shouldLaunch -or $shouldExit
+        Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "enabled" -Value $enabled
+        Write-Verbose "Auto-enabled VoiceMeeter integration: $enabled (launch: $shouldLaunch, exit: $shouldExit)"
+
+        # Save VoiceMeeter type
+        if ($voiceMeeterTypeCombo -and $voiceMeeterTypeCombo.SelectedItem) {
+            $vmType = $voiceMeeterTypeCombo.SelectedItem.Tag
+            if ([string]::IsNullOrWhiteSpace($vmType)) {
+                $vmType = "banana"  # Default to banana
+            }
+            Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "type" -Value $vmType
+            Write-Verbose "Saved VoiceMeeter type: $vmType"
+        }
+
+        # Save VoiceMeeter DLL path
+        if ($voiceMeeterDllPathTextBox) {
+            $normalizedPath = $voiceMeeterDllPathTextBox.Text -replace '\\', '/'
+            Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "dllPath" -Value $normalizedPath
+            Write-Verbose "Saved VoiceMeeter DLL path: $normalizedPath"
+        }
+
+        # Save launch on game start checkbox
+        Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "launchOnGameStart" -Value $shouldLaunch
+        Write-Verbose "Saved VoiceMeeter launch on game start: $shouldLaunch"
+
+        # Save exit on game end checkbox
+        Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "exitOnGameEnd" -Value $shouldExit
+        Write-Verbose "Saved VoiceMeeter exit on game end: $shouldExit"
+
+        # Save game start profile path
+        if ($voiceMeeterGameStartProfileTextBox) {
+            $normalizedPath = $voiceMeeterGameStartProfileTextBox.Text -replace '\\', '/'
+            Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "gameStartProfile" -Value $normalizedPath
+            Write-Verbose "Saved VoiceMeeter game start profile: $normalizedPath"
+        }
+
+        # Save game end profile path
+        if ($voiceMeeterGameEndProfileTextBox) {
+            $normalizedPath = $voiceMeeterGameEndProfileTextBox.Text -replace '\\', '/'
+            Set-PropertyValue -Object $script:StateManager.ConfigData.integrations.voiceMeeter -PropertyName "gameEndProfile" -Value $normalizedPath
+            Write-Verbose "Saved VoiceMeeter game end profile: $normalizedPath"
+        }
+
+        # Mark configuration as modified
+        $script:StateManager.SetModified()
+
+        Write-Verbose "Save-VoiceMeeterSettingsData: VoiceMeeter settings saved successfully"
+
+    } catch {
+        Write-Error "Failed to save VoiceMeeter settings data: $($_.Exception.Message)"
         throw
     }
 }

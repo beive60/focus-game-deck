@@ -1465,6 +1465,70 @@ class ConfigEditorUI {
                     }
                 }
 
+                # Load VoiceMeeter settings
+                if ($ConfigData.integrations.voiceMeeter) {
+                    # Load VoiceMeeter type
+                    $voiceMeeterTypeCombo = $self.Window.FindName("VoiceMeeterTypeCombo")
+                    if ($voiceMeeterTypeCombo -and $ConfigData.integrations.voiceMeeter.type) {
+                        $vmType = $ConfigData.integrations.voiceMeeter.type
+                        # Find ComboBoxItem by Tag
+                        $matchingItem = $voiceMeeterTypeCombo.Items | Where-Object { $_.Tag -eq $vmType }
+                        if ($matchingItem) {
+                            $voiceMeeterTypeCombo.SelectedItem = $matchingItem
+                            Write-Verbose "Loaded VoiceMeeter type: $vmType"
+                        } else {
+                            # Default to banana if not found
+                            $matchingItem = $voiceMeeterTypeCombo.Items | Where-Object { $_.Tag -eq "banana" }
+                            if ($matchingItem) {
+                                $voiceMeeterTypeCombo.SelectedItem = $matchingItem
+                            }
+                        }
+                    }
+
+                    # Load VoiceMeeter DLL path
+                    $voiceMeeterDllPathTextBox = $self.Window.FindName("VoiceMeeterDllPathTextBox")
+                    if ($voiceMeeterDllPathTextBox -and $ConfigData.integrations.voiceMeeter.dllPath) {
+                        $voiceMeeterDllPathTextBox.Text = $ConfigData.integrations.voiceMeeter.dllPath
+                        Write-Verbose "Loaded VoiceMeeter DLL path: $($ConfigData.integrations.voiceMeeter.dllPath)"
+                    }
+
+                    # Load VoiceMeeter launch on game start checkbox
+                    $vmLaunchOnStartCheckBox = $self.Window.FindName("VoiceMeeterLaunchOnGameStartCheckBox")
+                    if ($vmLaunchOnStartCheckBox) {
+                        $shouldLaunch = $false
+                        if ($ConfigData.integrations.voiceMeeter.PSObject.Properties["launchOnGameStart"]) {
+                            $shouldLaunch = [bool]$ConfigData.integrations.voiceMeeter.launchOnGameStart
+                        }
+                        $vmLaunchOnStartCheckBox.IsChecked = $shouldLaunch
+                        Write-Verbose "Loaded VoiceMeeter launch on game start: $shouldLaunch"
+                    }
+
+                    # Load VoiceMeeter exit on game end checkbox
+                    $vmExitOnEndCheckBox = $self.Window.FindName("VoiceMeeterExitOnGameEndCheckBox")
+                    if ($vmExitOnEndCheckBox) {
+                        $shouldExit = $false
+                        if ($ConfigData.integrations.voiceMeeter.PSObject.Properties["exitOnGameEnd"]) {
+                            $shouldExit = [bool]$ConfigData.integrations.voiceMeeter.exitOnGameEnd
+                        }
+                        $vmExitOnEndCheckBox.IsChecked = $shouldExit
+                        Write-Verbose "Loaded VoiceMeeter exit on game end: $shouldExit"
+                    }
+
+                    # Load VoiceMeeter game start profile path
+                    $vmGameStartProfileTextBox = $self.Window.FindName("VoiceMeeterGameStartProfileTextBox")
+                    if ($vmGameStartProfileTextBox -and $ConfigData.integrations.voiceMeeter.gameStartProfile) {
+                        $vmGameStartProfileTextBox.Text = $ConfigData.integrations.voiceMeeter.gameStartProfile
+                        Write-Verbose "Loaded VoiceMeeter game start profile: $($ConfigData.integrations.voiceMeeter.gameStartProfile)"
+                    }
+
+                    # Load VoiceMeeter game end profile path
+                    $vmGameEndProfileTextBox = $self.Window.FindName("VoiceMeeterGameEndProfileTextBox")
+                    if ($vmGameEndProfileTextBox -and $ConfigData.integrations.voiceMeeter.gameEndProfile) {
+                        $vmGameEndProfileTextBox.Text = $ConfigData.integrations.voiceMeeter.gameEndProfile
+                        Write-Verbose "Loaded VoiceMeeter game end profile: $($ConfigData.integrations.voiceMeeter.gameEndProfile)"
+                    }
+                }
+
                 $langCombo = $self.Window.FindName("LanguageCombo")
                 if ($langCombo) {
                     # Disconnect SelectionChanged event during initialization
@@ -1664,6 +1728,17 @@ class ConfigEditorUI {
             Write-Warning "Stack trace: $($_.Exception.StackTrace)"
         }
     }
+
+    <#
+    .SYNOPSIS
+    Initializes the VoiceMeeter action combo boxes with available integration actions.
+    .DESCRIPTION
+    Populates the VoiceMeeterGameStartActionCombo and VoiceMeeterGameEndActionCombo 
+    with integration action options (enter-game-mode, exit-game-mode, none).
+    .OUTPUTS
+    None
+    .EXAMPLE
+    $this.InitializeVoiceMeeterActionCombos()
 
     <#
     .SYNOPSIS

@@ -722,9 +722,78 @@
                                                         Margin="0,0,5,0"
                                                         ToolTip="[vtubeHotkeysTooltip]"/>
                                                     <Button
-                                                        x:Name="GetExitHotkeyListButton"
+                                                         x:Name="GetExitHotkeyListButton"
                                                         Content="[GET_HOTKEY_LIST_BUTTON]"
                                                         Grid.Column="1"
+                                                        Height="25"/>
+                                                </Grid>
+                                            </StackPanel>
+                                        </GroupBox>
+
+                                        <StackPanel Orientation="Horizontal"
+                                                    Margin="0,5">
+                                            <CheckBox
+                                                x:Name="UseVoiceMeeterIntegrationCheckBox"
+                                                Content="[useVoiceMeeterIntegrationCheckBox]"
+                                                Width="150"
+                                                VerticalAlignment="Center"/>
+                                            <Button
+                                                x:Name="OpenVoiceMeeterTabButton"
+                                                Content="[OPEN_INTEGRATION_SETTINGS]"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                Foreground="#0078D4"
+                                                Cursor="Hand"
+                                                Padding="5,0"
+                                                VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <!-- VoiceMeeter Game-Specific Settings -->
+                                        <GroupBox
+                                            x:Name="VoiceMeeterGameSpecificSettingsGroup"
+                                            Header="[voicemeeterGameSpecificSettingsGroup]"
+                                            Margin="20,10,0,10">
+                                            <StackPanel Margin="10">
+                                                <!-- Action Type -->
+                                                <Label
+                                                    x:Name="VoiceMeeterActionLabel"
+                                                    Content="[voicemeeterActionLabel]"
+                                                    Margin="0,5,0,2"/>
+                                                <ComboBox
+                                                    x:Name="VoiceMeeterActionCombo"
+                                                    Margin="0,0,0,10">
+                                                    <ComboBoxItem
+                                                        x:Name="VoiceMeeterActionLoadProfileItem"
+                                                        Content="[voicemeeterActionLoadProfile]"
+                                                        Tag="load-profile"
+                                                        IsSelected="True"/>
+                                                    <ComboBoxItem
+                                                        x:Name="VoiceMeeterActionApplyParamsItem"
+                                                        Content="[voicemeeterActionApplyParams]"
+                                                        Tag="apply-params"/>
+                                                </ComboBox>
+
+                                                <!-- Profile Path -->
+                                                <Label
+                                                    x:Name="VoiceMeeterProfilePathLabel"
+                                                    Content="[voicemeeterProfilePathLabel]"
+                                                    Margin="0,5,0,2"/>
+                                                <Grid Margin="0,0,0,10">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="80"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox
+                                                        x:Name="VoiceMeeterProfilePathTextBox"
+                                                        Grid.Column="0"
+                                                        VerticalContentAlignment="Center"
+                                                        Margin="0,0,5,0"
+                                                        ToolTip="[voicemeeterProfilePathTooltip]"/>
+                                                    <Button
+                                                        x:Name="BrowseVoiceMeeterProfileButton"
+                                                        Content="[BROWSE_BUTTON]"
+                                                        Grid.Column="1"
+                                                        Width="70"
                                                         Height="25"/>
                                                 </Grid>
                                             </StackPanel>
@@ -1805,6 +1874,198 @@
                                 x:Name="SaveVTubeStudioSettingsButton"
                                 Content="[SAVE_BUTTON]"
                                 Grid.Column="1"
+                                Width="100"
+                                Height="30"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Margin="0,0,20,0"
+                                Background="#0078D4"
+                                Foreground="White"
+                                BorderThickness="0"/>
+                        </Grid>
+                    </Grid>
+                </TabItem>
+
+                <!-- =============================================== -->
+                <!-- VoiceMeeter Tab -->
+                <!-- =============================================== -->
+                <TabItem
+                    x:Name="VoiceMeeterTab"
+                    Header="[VOICEMEETER_TAB_HEADER]">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="50"/>
+                        </Grid.RowDefinitions>
+
+                        <ScrollViewer
+                            Grid.Row="0"
+                            VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="20">
+                                <TextBlock
+                                    x:Name="VoiceMeeterIntegrationTitle"
+                                    Text="[voicemeeterIntegrationTitle]"
+                                    FontSize="16"
+                                    FontWeight="Bold"
+                                    Margin="0,0,0,15"/>
+
+                                <!-- ゲーム連動動作 -->
+                                <GroupBox
+                                    x:Name="VoiceMeeterGameIntegrationGroup"
+                                    Header="[gameIntegrationGroup]"
+                                    Margin="0,0,0,15">
+                                    <StackPanel Margin="10">
+                                        <!-- ゲーム開始時にVoiceMeeterを起動 -->
+                                        <CheckBox
+                                            x:Name="VoiceMeeterLaunchOnGameStartCheckBox"
+                                            Content="[voicemeeterLaunchOnGameStartCheckBox]"
+                                            Margin="0,5"/>
+
+                                        <!-- ゲーム開始時に適用するプロファイル -->
+                                        <StackPanel Margin="0,5,0,10">
+                                            <Label 
+                                                x:Name="VoiceMeeterGameStartProfileLabel"
+                                                Content="[voicemeeterGameStartProfileLabel]" 
+                                                Margin="0,0,0,5"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="80"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBox
+                                                    x:Name="VoiceMeeterGameStartProfileTextBox"
+                                                    Grid.Column="0"
+                                                    VerticalContentAlignment="Center"
+                                                    Margin="0,0,5,0"/>
+                                                <Button
+                                                    x:Name="BrowseVoiceMeeterGameStartProfileButton"
+                                                    Content="[BROWSE_BUTTON]"
+                                                    Grid.Column="1"
+                                                    Width="70"
+                                                    Height="25"/>
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <!-- ゲーム終了時にVoiceMeeterを終了 -->
+                                        <CheckBox
+                                            x:Name="VoiceMeeterExitOnGameEndCheckBox"
+                                            Content="[voicemeeterExitOnGameEndCheckBox]"
+                                            Margin="0,5"/>
+
+                                        <!-- ゲーム終了時に適用するプロファイル -->
+                                        <StackPanel Margin="0,5,0,10">
+                                            <Label 
+                                                x:Name="VoiceMeeterGameEndProfileLabel"
+                                                Content="[voicemeeterGameEndProfileLabel]" 
+                                                Margin="0,0,0,5"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="80"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBox
+                                                    x:Name="VoiceMeeterGameEndProfileTextBox"
+                                                    Grid.Column="0"
+                                                    VerticalContentAlignment="Center"
+                                                    Margin="0,0,5,0"/>
+                                                <Button
+                                                    x:Name="BrowseVoiceMeeterGameEndProfileButton"
+                                                    Content="[BROWSE_BUTTON]"
+                                                    Grid.Column="1"
+                                                    Width="70"
+                                                    Height="25"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+
+                                <!-- 全体設定 -->
+                                <GroupBox
+                                    x:Name="VoiceMeeterBasicSettingsGroup"
+                                    Header="[generalSettingsGroup]"
+                                    Margin="0,0,0,15">
+                                    <StackPanel Margin="10">
+                                        <!-- VoiceMeeterタイプ -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,5,0,10">
+                                            <Label 
+                                                x:Name="VoiceMeeterTypeLabel"
+                                                Content="[voicemeeterTypeLabel]" 
+                                                Width="120"/>
+                                            <ComboBox 
+                                                x:Name="VoiceMeeterTypeCombo" 
+                                                Width="200">
+                                                <ComboBoxItem 
+                                                    x:Name="VoiceMeeterTypeStandardItem" 
+                                                    Content="[voicemeeterTypeStandard]" 
+                                                    Tag="standard"/>
+                                                <ComboBoxItem 
+                                                    x:Name="VoiceMeeterTypeBananaItem" 
+                                                    Content="[voicemeeterTypeBanana]" 
+                                                    Tag="banana" 
+                                                    IsSelected="True"/>
+                                                <ComboBoxItem 
+                                                    x:Name="VoiceMeeterTypePotatoItem" 
+                                                    Content="[voicemeeterTypePotato]" 
+                                                    Tag="potato"/>
+                                            </ComboBox>
+                                        </StackPanel>
+
+                                        <!-- DLLパス -->
+                                        <StackPanel Margin="0,5,0,5">
+                                            <TextBlock
+                                                x:Name="VoiceMeeterDllPathLabel"
+                                                Text="[voicemeeterDllPathLabel]"
+                                                Margin="0,0,0,5"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="80"/>
+                                                    <ColumnDefinition Width="90"/>
+                                                    <ColumnDefinition Width="25"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBox
+                                                    x:Name="VoiceMeeterDllPathTextBox"
+                                                    Grid.Column="0"
+                                                    VerticalContentAlignment="Center"
+                                                    Margin="0,0,5,0"/>
+                                                <Button
+                                                    x:Name="BrowseVoiceMeeterDllPathButton"
+                                                    Content="[BROWSE_BUTTON]"
+                                                    Grid.Column="1"
+                                                    Width="70"
+                                                    Height="25"
+                                                    Margin="0,0,5,0"/>
+                                                <Button
+                                                    x:Name="AutoDetectVoiceMeeterButton"
+                                                    Content="[AUTO_DETECT_BUTTON]"
+                                                    Grid.Column="2"
+                                                    Width="85"
+                                                    Height="25"/>
+                                                <TextBlock
+                                                    x:Name="AutoDetectVoiceMeeterTooltip"
+                                                    Text="?"
+                                                    Grid.Column="3"
+                                                    FontWeight="Bold"
+                                                    Foreground="#0078D4"
+                                                    Margin="3,0,0,0"
+                                                    VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <Grid
+                            Grid.Row="1"
+                            Background="#F8F8F8"
+                            Margin="0,5,0,0">
+                            <Button
+                                x:Name="SaveVoiceMeeterSettingsButton"
+                                Content="[SAVE_BUTTON]"
                                 Width="100"
                                 Height="30"
                                 HorizontalAlignment="Right"
