@@ -72,6 +72,55 @@ class Logger {
     hidden [string] $AppVersion
     hidden [string] $ExecutablePath
 
+    # Static list of sensitive field patterns for sanitization
+    hidden static [string[]] $SensitivePatterns = @(
+        '(?i)(password|passwd|pwd)\s*[=:]\s*[^\s,;]+',
+        '(?i)(token|auth_token|authtoken|api_?key|apikey|secret)\s*[=:]\s*[^\s,;]+',
+        '(?i)(bearer\s+)[A-Za-z0-9\-_\.]+',
+        '(?i)(authorization\s*[=:]\s*)[^\s,;]+',
+        '(?i)(credentials?)\s*[=:]\s*[^\s,;]+'
+    )
+
+    <#
+    .SYNOPSIS
+        Sanitizes sensitive data from log messages.
+
+    .DESCRIPTION
+        Removes or masks sensitive information such as passwords, tokens, and API keys
+        from log messages before they are written to the log file.
+
+    .PARAMETER message
+        The log message to sanitize
+
+    .OUTPUTS
+        The sanitized message with sensitive data masked
+
+    .EXAMPLE
+        $sanitized = $logger.SanitizeSensitiveData("password=secret123")
+        # Returns: "password=****REDACTED****"
+    #>
+    hidden [string] SanitizeSensitiveData([string] $message) {
+        if ([string]::IsNullOrEmpty($message)) {
+            return $message
+        }
+
+        $sanitized = $message
+
+        foreach ($pattern in [Logger]::SensitivePatterns) {
+            # Replace sensitive values with redacted placeholder while keeping the key
+            $sanitized = [regex]::Replace($sanitized, $pattern, {
+                param($match)
+                $parts = $match.Value -split '[=:\s]+'
+                if ($parts.Count -ge 2) {
+                    return "$($parts[0])=****REDACTED****"
+                }
+                return "****REDACTED****"
+            })
+        }
+
+        return $sanitized
+    }
+
     <#
     .SYNOPSIS
         Initializes a new Logger instance.
@@ -215,9 +264,12 @@ class Logger {
             return
         }
 
+        # Security: Sanitize message to remove sensitive data before logging
+        $sanitizedMessage = $this.SanitizeSensitiveData($message)
+
         $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
         $levelStr = $level.ToString().ToUpper().PadRight(8)
-        $logEntry = "[$timestamp] [$levelStr] [$component] $message"
+        $logEntry = "[$timestamp] [$levelStr] [$component] $sanitizedMessage"
 
         # File logging only - console output is handled by application code with localization
         if ($this.EnableFileLogging) {

@@ -3217,6 +3217,16 @@ class ConfigEditorEvents {
                 $statusText.Foreground = "#0066CC"
             }
 
+            # Security: Validate GameId format to prevent injection attacks
+            if ($GameId -notmatch '^[\w\-]+$' -or $GameId.Length -gt 64) {
+                Write-Warning "[SECURITY] ConfigEditorEvents: Invalid GameId format detected - $GameId"
+                if ($statusText) {
+                    $statusText.Text = $this.uiManager.GetLocalizedMessage("launchError")
+                    $statusText.Foreground = "#CC0000"
+                }
+                return
+            }
+
             # Validate game exists in configuration
             if (-not $this.stateManager.ConfigData.games -or -not $this.stateManager.ConfigData.games.PSObject.Properties[$GameId]) {
                 Show-SafeMessage -Key "gameNotFound" -MessageType "Error" -FormatArgs @($GameId)

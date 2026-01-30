@@ -992,8 +992,25 @@ class AppManager {
                 try {
                     Write-LocalizedHost -Messages $this.Messages -Key "console_elevating_termination" -Args @($processName) -Default ("Access denied. Attempting to terminate with admin privileges: {0}" -f $processName) -Level "WARNING" -Component "AppManager"
 
-                    # Start PowerShell with admin privileges to terminate the process
-                    Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile", "-Command", "Stop-Process -Name '$processName' -Force" -WindowStyle Hidden -Wait
+                    # Security: Validate process name to prevent command injection
+                    # Process names should only contain alphanumeric characters, hyphens, underscores, and dots
+                    if ($processName -notmatch '^[\w\-\.]+$') {
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_invalid_process_name" -Args @($processName) -Default ("Invalid process name format: {0}" -f $processName) -Level "ERROR" -Component "AppManager"
+                        return $false
+                    }
+
+                    # Get process by name first to ensure it exists and get its PID for safer termination
+                    $targetProcess = Get-Process -Name $processName -ErrorAction SilentlyContinue | Select-Object -First 1
+                    if (-not $targetProcess) {
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_process_not_found_for_elevation" -Args @($processName) -Default ("Process not found for elevated termination: {0}" -f $processName) -Level "WARNING" -Component "AppManager"
+                        return $false
+                    }
+
+                    # Start PowerShell with admin privileges to terminate the process using PID (safer than name)
+                    # Using -EncodedCommand with base64 encoding to prevent injection attacks
+                    $command = "Stop-Process -Id $($targetProcess.Id) -Force -ErrorAction Stop"
+                    $encodedCommand = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($command))
+                    Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile", "-EncodedCommand", $encodedCommand -WindowStyle Hidden -Wait
 
                     # Verify process has been terminated
                     if (-not (Get-Process -Name $processName -ErrorAction SilentlyContinue)) {
