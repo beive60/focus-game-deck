@@ -149,11 +149,11 @@ Describe "OBSManager - Process Crash Simulation" -Tag "Unit", "Core", "OBS", "Er
 
     Context "Process Disappears During Operation" {
         It "Should handle process crash gracefully" {
-            # First call returns process, second call returns null (simulating crash)
-            $callCount = 0
+            # Create a stateful mock that simulates process crash
+            $script:mockCallCount = 0
             Mock Get-Process {
-                $script:callCount++
-                if ($script:callCount -eq 1) {
+                $script:mockCallCount++
+                if ($script:mockCallCount -eq 1) {
                     return [PSCustomObject]@{
                         Id = 1234
                         ProcessName = 'obs64'
@@ -164,13 +164,13 @@ Describe "OBSManager - Process Crash Simulation" -Tag "Unit", "Core", "OBS", "Er
 
             $obsManager = New-OBSManager -OBSConfig $script:OBSConfig -Messages $script:MockMessages
 
-            # First check should show running
+            # First check should show running (mockCallCount becomes 1)
             $firstCheck = $obsManager.IsOBSRunning()
 
-            # After "crash", check should show not running
-            $callCount = 1  # Reset for next call
+            # Second check should show not running (mockCallCount becomes 2, returns null)
             $secondCheck = $obsManager.IsOBSRunning()
 
+            # After "crash", process should not be detected
             $secondCheck | Should -Be $false
         }
     }

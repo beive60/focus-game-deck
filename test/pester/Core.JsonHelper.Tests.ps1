@@ -233,10 +233,18 @@ Describe "Save-ConfigJson - File Operations" -Tag "Unit", "Core", "JsonHelper", 
         It "Should throw on empty configuration" {
             $filePath = Join-Path $script:TestDir "empty-config.json"
 
-            # Empty hashtable should work, but null-like should fail
-            # Note: Empty string "" might not throw in all PowerShell versions
-            # so we test with $null which always throws
+            # Empty hashtable produces valid JSON, so test null instead
             { Save-ConfigJson -ConfigData $null -ConfigPath $filePath } | Should -Throw
+        }
+
+        It "Should accept empty hashtable as valid configuration" {
+            $filePath = Join-Path $script:TestDir "empty-hashtable-config.json"
+
+            # Empty hashtable is valid JSON object {}
+            { Save-ConfigJson -ConfigData @{} -ConfigPath $filePath } | Should -Not -Throw
+
+            # Verify the file was created
+            Test-Path $filePath | Should -Be $true
         }
     }
 
