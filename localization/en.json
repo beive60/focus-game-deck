@@ -298,7 +298,7 @@
     "vtubeStudioSettingsSaved": "VTube Studio settings have been saved",
     "vtubeStudioSettingsSaveFailed": "Failed to save VTube Studio settings",
     "fileMenuHeader": "_File",
-    "openConfigFolderMenuItem": "Open Config _Folder Location",
+    "openConfigFolderMenuItem": "_Open Config Folder Location",
     "newGameMenuItem": "New _Game...",
     "newAppMenuItem": "New _App...",
     "exitMenuItem": "E_xit",

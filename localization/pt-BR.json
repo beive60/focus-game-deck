@@ -301,7 +301,7 @@
     "vtubeStudioSettingsSaved": "Configurações do VTube Studio foram salvas",
     "vtubeStudioSettingsSaveFailed": "Falha ao salvar configurações do VTube Studio",
     "fileMenuHeader": "_Arquivo",
-    "openConfigFolderMenuItem": "Abrir Local da Pasta de Configuração(_F)",
+    "openConfigFolderMenuItem": "_Abrir Local da Pasta de Configuração",
     "newGameMenuItem": "Novo _Jogo...",
     "newAppMenuItem": "Novo _Aplicativo...",
     "exitMenuItem": "Sai_r",

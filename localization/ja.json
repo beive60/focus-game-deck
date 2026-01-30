@@ -300,7 +300,7 @@
     "vtubeStudioSettingsSaved": "VTube Studio設定が保存されました",
     "vtubeStudioSettingsSaveFailed": "VTube Studio設定の保存に失敗しました",
     "fileMenuHeader": "ファイル(_F)",
-    "openConfigFolderMenuItem": "設定フォルダを開く(_F)",
+    "openConfigFolderMenuItem": "設定フォルダを開く(_O)",
     "newGameMenuItem": "新規ゲーム(_G)...",
     "newAppMenuItem": "新規アプリ(_A)...",
     "exitMenuItem": "終了(_X)",

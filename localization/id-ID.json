@@ -301,7 +301,7 @@
     "vtubeStudioSettingsSaved": "Pengaturan VTube Studio telah disimpan",
     "vtubeStudioSettingsSaveFailed": "Gagal menyimpan pengaturan VTube Studio",
     "fileMenuHeader": "_Berkas",
-    "openConfigFolderMenuItem": "Buka Lokasi Folder Konfigurasi(_F)",
+    "openConfigFolderMenuItem": "Buka _Lokasi Folder Konfigurasi",
     "newGameMenuItem": "Game Baru(_G)...",
     "newAppMenuItem": "Aplikasi Baru(_A)...",
     "exitMenuItem": "Ke_luar",

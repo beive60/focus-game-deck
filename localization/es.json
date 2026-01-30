@@ -301,7 +301,7 @@
     "vtubeStudioSettingsSaved": "Configuración de VTube Studio guardada.",
     "vtubeStudioSettingsSaveFailed": "Error al guardar la configuración de VTube Studio",
     "fileMenuHeader": "_Archivo",
-    "openConfigFolderMenuItem": "Abrir ubicación de la carpeta de configuración(_F)",
+    "openConfigFolderMenuItem": "_Abrir ubicación de la carpeta de configuración",
     "newGameMenuItem": "Nuevo juego(_G)...",
     "newAppMenuItem": "Nueva aplicación(_A)...",
     "exitMenuItem": "_Salir",

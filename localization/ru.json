@@ -301,7 +301,7 @@
     "vtubeStudioSettingsSaved": "Настройки VTube Studio сохранены.",
     "vtubeStudioSettingsSaveFailed": "Не удалось сохранить настройки VTube Studio",
     "fileMenuHeader": "_Файл",
-    "openConfigFolderMenuItem": "Открыть расположение папки конфигурации(_F)",
+    "openConfigFolderMenuItem": "_Открыть расположение папки конфигурации",
     "newGameMenuItem": "Новая _игра...",
     "newAppMenuItem": "Новое _приложение...",
     "exitMenuItem": "В_ыход",

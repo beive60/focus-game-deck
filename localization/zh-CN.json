@@ -301,7 +301,7 @@
     "vtubeStudioSettingsSaved": "VTube Studio设置已保存",
     "vtubeStudioSettingsSaveFailed": "保存VTube Studio设置失败",
     "fileMenuHeader": "文件(_F)",
-    "openConfigFolderMenuItem": "打开配置文件夹位置(_F)",
+    "openConfigFolderMenuItem": "打开配置文件夹位置(_O)",
     "newGameMenuItem": "新建游戏(_G)...",
     "newAppMenuItem": "新建应用(_A)...",
     "exitMenuItem": "退出(_X)",
