@@ -232,11 +232,33 @@ function Invoke-GameCleanup {
 }
 
 # Handle Ctrl+C press
-trap [System.Management.Automation.PipelineStoppedException] {
+# Note: 'trap [PipelineStoppedException]' does not work reliably in ps2exe-compiled executables.
+# Use .NET Console.CancelKeyPress event handler which works in both script and executable modes.
+$script:ctrlCPressed = $false
+
+$ctrlCHandler = [System.ConsoleCancelEventHandler] {
+    param($sender, $eventArgs)
+
+    # Prevent immediate process termination
+    $eventArgs.Cancel = $true
+
+    # Avoid duplicate cleanup calls
+    if ($script:ctrlCPressed) {
+        return
+    }
+    $script:ctrlCPressed = $true
+
+    # Perform cleanup
     Invoke-GameCleanup -IsInterrupted $true
     if ($logger) { $logger.Info("Application terminated by user", "MAIN") }
-    exit
+
+    # Exit the application
+    [Environment]::Exit(0)
 }
+
+# Register the Ctrl+C handler using .NET event subscription
+[Console]::TreatControlCAsInput = $false
+[Console]::add_CancelKeyPress($ctrlCHandler)
 
 # Main execution flow
 try {
