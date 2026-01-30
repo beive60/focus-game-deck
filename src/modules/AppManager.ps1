@@ -1033,7 +1033,7 @@ class AppManager {
             if (Test-Path $modulePath) {
                 . $modulePath
             } else {
-                Write-Host "[ERROR] VTubeStudioManager: Module not found at - $modulePath"
+                Write-Host "[ERROR] VTubeStudioManager: Module not found at path: $modulePath"
                 return $false
             }
 
@@ -1059,7 +1059,7 @@ class AppManager {
                 if (Test-Path $modulePath) {
                     . $modulePath
                 } else {
-                    Write-Host "[ERROR] DiscordManager: Module not found at - $modulePath"
+                    Write-Host "[ERROR] DiscordManager: Module not found at path: $modulePath"
                     return $false
                 }
 
@@ -1088,7 +1088,7 @@ class AppManager {
                 if (Test-Path $modulePath) {
                     . $modulePath
                 } else {
-                    Write-Host "[ERROR] DiscordManager: Module not found at - $modulePath"
+                    Write-Host "[ERROR] DiscordManager: Module not found at path: $modulePath"
                     return $false
                 }
 
