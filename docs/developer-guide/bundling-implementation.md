@@ -435,7 +435,7 @@ Focus-Game-Deck.exe --config
    - Must run on Windows with ps2exe
 
 3. **Development**:
-   - Original scripts (Main-Router.ps1, Invoke-FocusGameDeck.ps1, ConfigEditor.ps1) still work for development
+   - Original scripts (Main.PS1, Invoke-FocusGameDeck.ps1, ConfigEditor.ps1) still work for development
    - Bundled versions only used for compilation
 
 ## ps2exe Coding Guidelines
