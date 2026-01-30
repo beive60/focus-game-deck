@@ -47,3 +47,4 @@ test/test-result-localization-diagnostic.json
 test/history/*.xml
 test/test-results/*
 gui/localization-diagnostic-*.json
+testResults.xml

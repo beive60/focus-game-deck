@@ -3044,6 +3044,12 @@ class ConfigEditorEvents {
 
     # Handle tab visibility checkbox changes
     [void] HandleTabVisibilityChanged([string]$TabName, [bool]$IsVisible) {
+        # Skip if still initializing to avoid marking as modified during startup
+        if (-not $script:IsInitializationComplete) {
+            Write-Verbose "Skipping tab visibility change handler - initialization not complete"
+            return
+        }
+
         try {
             $tabElement = switch ($TabName) {
                 "OBS" { $script:Window.FindName("OBSTab") }
