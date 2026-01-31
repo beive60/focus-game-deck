@@ -232,11 +232,39 @@ function Invoke-GameCleanup {
 }
 
 # Handle Ctrl+C press
-trap [System.Management.Automation.PipelineStoppedException] {
-    Invoke-GameCleanup -IsInterrupted $true
-    if ($logger) { $logger.Info("Application terminated by user", "MAIN") }
-    exit
-}
+# Note: 'trap [PipelineStoppedException]' does not work reliably in ps2exe-compiled executables.
+# Use .NET Console.CancelKeyPress event handler which works in both script and executable modes.
+$script:ctrlCPressed = $false
+
+# Use GetNewClosure() to capture the current scope (logger, appManager, msg, and functions)
+# This ensures the event handler has access to all required variables and functions
+$script:ctrlCHandler = [System.ConsoleCancelEventHandler]({
+    param($sender, $eventArgs)
+
+    # Prevent immediate process termination
+    $eventArgs.Cancel = $true
+
+    # Avoid duplicate cleanup calls
+    if ($script:ctrlCPressed) {
+        return
+    }
+    $script:ctrlCPressed = $true
+
+    # Perform cleanup with error handling to ensure graceful exit
+    try {
+        Invoke-GameCleanup -IsInterrupted $true
+        if ($logger) { $logger.Info("Application terminated by user", "MAIN") }
+    } catch {
+        Write-Warning "Error during Ctrl+C cleanup: $_"
+    }
+
+    # Exit the application
+    [Environment]::Exit(0)
+}.GetNewClosure())
+
+# Register the Ctrl+C handler using .NET event subscription
+[Console]::TreatControlCAsInput = $false
+[Console]::add_CancelKeyPress($script:ctrlCHandler)
 
 # Main execution flow
 try {
@@ -331,6 +359,15 @@ try {
 
     exit 1
 } finally {
+    # Unregister the Ctrl+C handler to follow resource cleanup best practices
+    if ($script:ctrlCHandler) {
+        try {
+            [Console]::remove_CancelKeyPress($script:ctrlCHandler)
+        } catch {
+            # Silently ignore errors during handler cleanup
+        }
+    }
+
     # Finalize and notarize log file if logging is enabled
     if ($logger) {
         Write-Host "[INFO] Logger: " -NoNewline
