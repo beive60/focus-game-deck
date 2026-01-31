@@ -395,7 +395,9 @@ class AppManager {
                     if ($this.Logger) { $this.Logger.Info("Starting OBS replay buffer in background job", "OBS") }
 
                     # Determine application root
-                    $currentProcess = Get-Process -Id $PID
+                    # Note: Using [System.Diagnostics.Process]::GetCurrentProcess() instead of Get-Process -Id $PID
+                    # because $PID automatic variable is not accessible inside PowerShell class methods
+                    $currentProcess = [System.Diagnostics.Process]::GetCurrentProcess()
                     $isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
                     if ($isExecutable) {
                         $appRoot = Split-Path -Parent $currentProcess.Path
@@ -1049,7 +1051,7 @@ class AppManager {
             # Start VTube Studio
             return $vtubeManager.StartVTubeStudio()
         } catch {
-            Write-Host "Failed to start VTube Studio: $_"
+            Write-Host "[ERROR] VTubeStudioManager: Failed to start VTube Studio - $_"
             return $false
         }
     }
@@ -1062,7 +1064,7 @@ class AppManager {
             if (Test-Path $modulePath) {
                 . $modulePath
             } else {
-                Write-Host "VTubeStudioManager module not found at: $modulePath"
+                Write-Host "[ERROR] VTubeStudioManager: Module not found at path: $modulePath"
                 return $false
             }
 
@@ -1072,7 +1074,7 @@ class AppManager {
             # Stop VTube Studio
             return $vtubeManager.StopVTubeStudio()
         } catch {
-            Write-Host "Failed to stop VTube Studio: $_"
+            Write-Host "[ERROR] VTubeStudioManager: Failed to stop VTube Studio - $_"
             return $false
         }
     }
@@ -1088,7 +1090,7 @@ class AppManager {
                 if (Test-Path $modulePath) {
                     . $modulePath
                 } else {
-                    Write-Host "DiscordManager module not found at: $modulePath"
+                    Write-Host "[ERROR] DiscordManager: Module not found at path: $modulePath"
                     return $false
                 }
 
@@ -1098,7 +1100,7 @@ class AppManager {
                 # Set Gaming Mode
                 return $discordManager.SetGamingMode($this.GameConfig.name)
             } catch {
-                Write-Host "Failed to set Discord Gaming Mode: $_"
+                Write-Host "[ERROR] DiscordManager: Failed to set Discord Gaming Mode - $_"
                 return $false
             }
         }
@@ -1117,7 +1119,7 @@ class AppManager {
                 if (Test-Path $modulePath) {
                     . $modulePath
                 } else {
-                    Write-Host "DiscordManager module not found at: $modulePath"
+                    Write-Host "[ERROR] DiscordManager: Module not found at path: $modulePath"
                     return $false
                 }
 
@@ -1127,7 +1129,7 @@ class AppManager {
                 # Restore Normal Mode
                 return $discordManager.RestoreNormalMode()
             } catch {
-                Write-Host "Failed to restore Discord Normal Mode: $_"
+                Write-Host "[ERROR] DiscordManager: Failed to restore Discord Normal Mode - $_"
                 return $false
             }
         }
@@ -1257,7 +1259,7 @@ class AppManager {
                             if ($this.Logger) { $this.Logger.Info("Background job '$jobKey' in state: $($job.State)", "APP") }
                         }
                     }
-                    
+
                     # Remove the job
                     Remove-Job -Job $job -Force -ErrorAction SilentlyContinue
                 }

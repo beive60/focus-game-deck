@@ -1598,6 +1598,65 @@ class ConfigEditorUI {
                     $enableLogNotarizationCheckBox.IsChecked = [bool]$ConfigData.logging.enableNotarization
                 }
 
+                # Load tab visibility settings
+                $showOBSTabCheckBox = $self.Window.FindName("ShowOBSTabCheckBox")
+                $showDiscordTabCheckBox = $self.Window.FindName("ShowDiscordTabCheckBox")
+                $showVTubeStudioTabCheckBox = $self.Window.FindName("ShowVTubeStudioTabCheckBox")
+                $showVoiceMeeterTabCheckBox = $self.Window.FindName("ShowVoiceMeeterTabCheckBox")
+                $obsTab = $self.Window.FindName("OBSTab")
+                $discordTab = $self.Window.FindName("DiscordTab")
+                $vtubeStudioTab = $self.Window.FindName("VTubeStudioTab")
+                $voiceMeeterTab = $self.Window.FindName("VoiceMeeterTab")
+
+                # Default all tabs to visible if tabVisibility is not set
+                $showOBS = $true
+                $showDiscord = $true
+                $showVTubeStudio = $true
+                $showVoiceMeeter = $true
+
+                if ($ConfigData.tabVisibility) {
+                    if ($ConfigData.tabVisibility.PSObject.Properties["showOBS"]) {
+                        $showOBS = [bool]$ConfigData.tabVisibility.showOBS
+                    }
+                    if ($ConfigData.tabVisibility.PSObject.Properties["showDiscord"]) {
+                        $showDiscord = [bool]$ConfigData.tabVisibility.showDiscord
+                    }
+                    if ($ConfigData.tabVisibility.PSObject.Properties["showVTubeStudio"]) {
+                        $showVTubeStudio = [bool]$ConfigData.tabVisibility.showVTubeStudio
+                    }
+                    if ($ConfigData.tabVisibility.PSObject.Properties["showVoiceMeeter"]) {
+                        $showVoiceMeeter = [bool]$ConfigData.tabVisibility.showVoiceMeeter
+                    }
+                }
+
+                # Set checkbox states
+                if ($showOBSTabCheckBox) {
+                    $showOBSTabCheckBox.IsChecked = $showOBS
+                }
+                if ($showDiscordTabCheckBox) {
+                    $showDiscordTabCheckBox.IsChecked = $showDiscord
+                }
+                if ($showVTubeStudioTabCheckBox) {
+                    $showVTubeStudioTabCheckBox.IsChecked = $showVTubeStudio
+                }
+                if ($showVoiceMeeterTabCheckBox) {
+                    $showVoiceMeeterTabCheckBox.IsChecked = $showVoiceMeeter
+                }
+
+                # Set tab visibility
+                if ($obsTab) {
+                    $obsTab.Visibility = if ($showOBS) { "Visible" } else { "Collapsed" }
+                }
+                if ($discordTab) {
+                    $discordTab.Visibility = if ($showDiscord) { "Visible" } else { "Collapsed" }
+                }
+                if ($vtubeStudioTab) {
+                    $vtubeStudioTab.Visibility = if ($showVTubeStudio) { "Visible" } else { "Collapsed" }
+                }
+                if ($voiceMeeterTab) {
+                    $voiceMeeterTab.Visibility = if ($showVoiceMeeter) { "Visible" } else { "Collapsed" }
+                }
+
                 Write-Verbose "Global settings loaded successfully"
             } catch {
                 Write-Warning "Failed to load global settings: $($_.Exception.Message)"
@@ -1733,7 +1792,7 @@ class ConfigEditorUI {
     .SYNOPSIS
     Initializes the VoiceMeeter action combo boxes with available integration actions.
     .DESCRIPTION
-    Populates the VoiceMeeterGameStartActionCombo and VoiceMeeterGameEndActionCombo 
+    Populates the VoiceMeeterGameStartActionCombo and VoiceMeeterGameEndActionCombo
     with integration action options (enter-game-mode, exit-game-mode, none).
     .OUTPUTS
     None

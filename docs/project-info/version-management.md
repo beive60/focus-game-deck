@@ -4,6 +4,17 @@
 
 The Focus Game Deck project adopts **Semantic Versioning (SemVer 2.0.0)** to implement consistent version management.
 
+## Important: Product Version vs Architecture Version
+
+This project uses two distinct versioning concepts that should not be confused:
+
+| Concept | Purpose | Example | Location |
+|---------|---------|---------|----------|
+| **Product Version** | SemVer for feature releases | 1.0.0, 1.1.0, 2.0.0 | Version.ps1 |
+| **Architecture Version** | Internal architecture revision | v2.x, v3.0+ | Documentation only |
+
+**Note**: The architecture version (v3.0) mentioned in documentation refers to the multi-executable bundle architecture, not the product version. The current product version is defined in `build-tools/Version.ps1`.
+
 ## Versioning System
 
 ### Basic Format
@@ -45,21 +56,21 @@ MAJOR.MINOR.PATCH[-PRERELEASE][+BUILD]
 - **Purpose**: Final confirmation version before release
 - **Stability**: Release quality, only critical issues fixed
 
-## Release Cycle
+## Release Cycle Example
 
-### Alpha Testing Period (October 2025)
+### Alpha Testing Period
 
 ```text
 1.0.0-alpha.1 → 1.0.0-alpha.2 → ... → 1.0.0-beta.1
 ```
 
-### Beta Testing Period (Late October - Early November 2025)
+### Beta Testing Period
 
 ```text
 1.0.0-beta.1 → 1.0.0-beta.2 → ... → 1.0.0-rc.1
 ```
 
-### Official Release (Late November - December 2025)
+### Official Release
 
 ```text
 1.0.0-rc.1 → 1.0.0-rc.2 → ... → 1.0.0
@@ -137,60 +148,42 @@ Examples: focus-game-deck-1.0.0.tar.gz
 
 ## Implementation in Version.ps1
 
-### Current Version Settings
+The version is centrally managed in `build-tools/Version.ps1`. All scripts should use this single source of truth.
+
+### Version Settings Structure
 
 ```powershell
 $script:ProjectVersion = @{
     Major = 1
     Minor = 0
-    Patch = 1
-    PreRelease = "alpha"  # "", "alpha", "beta", "rc.1", etc.
-    Build = ""           # Build metadata (usually empty)
+    Patch = 0
+    PreRelease = ""  # Can be "", "alpha", "beta", "rc.1", etc.
+    Build = ""       # Build metadata (usually empty)
 }
 ```
 
 ### Version String Retrieval
 
 ```powershell
-Get-ProjectVersion                    # "1.0.1"
-Get-ProjectVersion -IncludePreRelease # "1.0.1-alpha"
-Get-ProjectVersion -IncludePreRelease -IncludeBuild # "1.0.1-alpha+20251024"
+# Import the version module
+. ./build-tools/Version.ps1
+
+# Get basic version
+Get-ProjectVersion                    # "1.0.0"
+
+# Include pre-release identifier
+Get-ProjectVersion -IncludePreRelease # "1.0.0" or "1.0.0-alpha"
+
+# Include all metadata
+Get-ProjectVersion -IncludePreRelease -IncludeBuild # "1.0.0-alpha+20251024"
 ```
-
-## Version History
-
-### v1.0.1-alpha (Current)
-
-- GUI configuration editor completed
-- Japanese character encoding issues resolved
-- Basic version management system implemented
-
-### Planned Releases
-
-#### v1.0.0-alpha.1 (Early October 2025)
-
-- Alpha testing start version
-- Digitally signed build
-- Basic functionality completed
-
-#### v1.0.0-beta.1 (Late October 2025)
-
-- Public beta start
-- Landing page publication
-- Alpha testing feedback incorporated
-
-#### v1.0.0 (Late November - December 2025)
-
-- Official release
-- Support for platforms other than Steam
-- Setup wizard implementation
 
 ## Operation Guidelines
 
 ### Developer Guidelines
 
 1. **Version Update Timing**
-   - Update `Version.ps1` before committing feature additions/changes
+   - Update `build-tools/Version.ps1` before committing feature additions/changes
    - Include version information in pull request titles
 
 2. **Commit Message Conventions**
@@ -215,12 +208,12 @@ Get-ProjectVersion -IncludePreRelease -IncludeBuild # "1.0.1-alpha+20251024"
 
 ## Related Documentation
 
-- [roadmap.md](/docs/project-info\roadmap.md) - Project roadmap
-- [architecture.md](/docs/project-info/architecture.md) - Technical architecture
-- [developer-release-guide.md](/docs/developer-guide\release-process.md) - Detailed release procedures
+- [Project Roadmap](roadmap.md) - Project roadmap
+- [Architecture Guide](../developer-guide/architecture.md) - Technical architecture
+- [Developer Release Guide](../developer-guide/release-process.md) - Detailed release procedures
 
 ---
 
-Last Updated: October 1, 2025
-Version: 1.0.0
+Last Updated: January 2026
+Version: 2.0.0 - Clarified product vs architecture versioning
 Created by: GitHub Copilot Assistant
