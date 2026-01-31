@@ -227,10 +227,11 @@ $script:RadioButtonMappings = @{
 
 # MenuItem mappings
 $script:MenuItemMappings = @{
-    "RefreshMenu" = "refreshMenuHeader"
-    "RefreshGameListMenuItem" = "refreshGameListMenuItem"
-    "RefreshManagedAppsListMenuItem" = "refreshManagedAppsListMenuItem"
-    "RefreshAllMenuItem" = "refreshAllMenuItem"
+    "FileMenu" = "fileMenuHeader"
+    "OpenConfigFolderMenuItem" = "openConfigFolderMenuItem"
+    "NewGameMenuItem" = "newGameMenuItem"
+    "NewAppMenuItem" = "newAppMenuItem"
+    "ExitMenuItem" = "exitMenuItem"
     "ToolsMenu" = "toolsMenuHeader"
     "CreateAllShortcutsMenuItem" = "createAllShortcuts"
     "HelpMenu" = "helpMenuHeader"
