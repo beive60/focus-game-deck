@@ -596,6 +596,101 @@ Focus Game Deck v3.0 Multi-Executable Architecture
 
 This architectural change directly addresses the security vulnerability identified in the original issue, demonstrating the project's commitment to "Security First" principles. The implementation provides a scalable foundation for future enhancements while maintaining the lightweight, user-friendly nature of the application.
 
+## Security Guidelines
+
+### 1. Command Injection Prevention
+
+**All user input must be validated before being passed to external processes:**
+
+```powershell
+# Security: Validate input format to prevent injection attacks
+# Input should only contain alphanumeric characters, hyphens, and underscores
+if ($UserInput -notmatch '^[\w\-]+$') {
+    Write-Host "[ERROR] Invalid input format"
+    exit 1
+}
+
+# Security: Limit input length to prevent buffer overflow attacks
+if ($UserInput.Length -gt 64) {
+    Write-Host "[ERROR] Input too long - Maximum length is 64 characters"
+    exit 1
+}
+```
+
+**Never embed user input directly in command strings:**
+
+```powershell
+# DANGEROUS - Command injection vulnerable
+Start-Process powershell.exe -ArgumentList "-Command", "Stop-Process -Name '$processName' -Force"
+
+# SAFE - Use EncodedCommand with base64 encoding and validate PID is numeric
+$targetProcess = Get-Process -Name $processName -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($targetProcess -and $targetProcess.Id -is [int] -and $targetProcess.Id -gt 0) {
+    $command = "Stop-Process -Id $($targetProcess.Id) -Force"
+    $encodedCommand = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($command))
+    Start-Process powershell.exe -ArgumentList "-EncodedCommand", $encodedCommand
+}
+```
+
+### 2. Process Exit Code Handling
+
+**Always capture and propagate exit codes from child processes:**
+
+```powershell
+# Using Start-Process with -Wait -PassThru for proper exit code handling
+$process = Start-Process -FilePath $ExecutablePath -ArgumentList $Args -Wait -PassThru
+if ($process.ExitCode -ne 0) {
+    Write-Host "[ERROR] Child process exited with error code $($process.ExitCode)"
+    exit $process.ExitCode
+}
+
+# When using call operator (&), check $LASTEXITCODE
+& $ScriptPath -Parameter $Value
+if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] Script exited with error code $LASTEXITCODE"
+    exit $LASTEXITCODE
+}
+```
+
+### 3. Sensitive Data Protection in Logs
+
+**The Logger module automatically sanitizes sensitive data:**
+
+- Passwords (password, passwd, pwd)
+- Tokens (token, auth_token, api_key, secret)
+- Authorization headers
+- Credentials
+
+**Example of sanitization:**
+
+```powershell
+# Input: "Connecting with password=secret123 to server"
+# Output in log: "Connecting with password=****REDACTED**** to server"
+```
+
+**Best practices for sensitive data:**
+
+```powershell
+# Use SecureString for password handling
+$securePassword = ConvertTo-SecureString -String $plainText -AsPlainText -Force
+
+# Never log raw passwords or tokens
+$logger.Info("Authentication successful for user: $username", "AUTH")  # OK
+$logger.Info("Using password: $password", "AUTH")  # NEVER DO THIS
+```
+
+### 4. Process Name Validation
+
+**Validate process names before using them in termination commands:**
+
+```powershell
+# Process names should only contain alphanumeric characters, hyphens, underscores, and dots
+if ($processName -notmatch '^[\w\-\.]+$') {
+    Write-Host "[ERROR] Invalid process name format"
+    return $false
+}
+```
+
 ## Implementation Guidelines
 
 ### Coding Standards
