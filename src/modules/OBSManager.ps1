@@ -314,8 +314,92 @@ class OBSManager {
         return $null -ne (Get-Process -Name $procName -ErrorAction SilentlyContinue)
     }
 
+    # Stop OBS application gracefully via WebSocket API
+    [bool] StopOBS() {
+        if (-not $this.IsOBSRunning()) {
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_not_running" -Default "OBS is not running" -Level "INFO" -Component "OBSManager"
+            return $true
+        }
+
+        # Try graceful shutdown via WebSocket first
+        $gracefulShutdown = $false
+        try {
+            # Connect if not already connected
+            $wasConnected = $this.WebSocket -and $this.WebSocket.State -eq [System.Net.WebSockets.WebSocketState]::Open
+            if (-not $wasConnected) {
+                $connected = $this.Connect()
+                if (-not $connected) {
+                    Write-LocalizedHost -Messages $this.Messages -Key "obs_websocket_connect_failed_for_exit" -Default "Could not connect to OBS WebSocket for graceful exit, will attempt window close" -Level "WARNING" -Component "OBSManager"
+                }
+            }
+
+            if ($this.WebSocket -and $this.WebSocket.State -eq [System.Net.WebSockets.WebSocketState]::Open) {
+                Write-LocalizedHost -Messages $this.Messages -Key "sending_obs_exit_command" -Default "Sending ExitOBS command via WebSocket..." -Level "INFO" -Component "OBSManager"
+
+                $requestId = [System.Guid]::NewGuid().ToString()
+                $command = @{
+                    op = 6
+                    d = @{
+                        requestType = "ExitOBS"
+                        requestId = $requestId
+                    }
+                }
+
+                $this.SendMessage($command)
+
+                # Brief wait for OBS to process the exit command
+                Start-Sleep -Milliseconds 500
+
+                $gracefulShutdown = $true
+                Write-LocalizedHost -Messages $this.Messages -Key "obs_exit_command_sent" -Default "OBS exit command sent successfully" -Level "OK" -Component "OBSManager"
+            }
+        } catch {
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_websocket_exit_error" -Args @($_) -Default "WebSocket exit command error: {0}" -Level "WARNING" -Component "OBSManager"
+        }
+
+        # If WebSocket exit failed, try closing the window gracefully
+        if (-not $gracefulShutdown) {
+            try {
+                Write-LocalizedHost -Messages $this.Messages -Key "obs_attempting_window_close" -Default "Attempting to close OBS window gracefully..." -Level "INFO" -Component "OBSManager"
+
+                $procName = if ($this.Config.processName) { $this.Config.processName } else { "obs64" }
+                $obsProcess = Get-Process -Name $procName -ErrorAction SilentlyContinue
+
+                if ($obsProcess) {
+                    # CloseMainWindow sends WM_CLOSE which allows graceful shutdown
+                    $closed = $obsProcess.CloseMainWindow()
+                    if ($closed) {
+                        Write-LocalizedHost -Messages $this.Messages -Key "obs_window_close_requested" -Default "OBS window close requested" -Level "INFO" -Component "OBSManager"
+                    }
+                }
+            } catch {
+                Write-LocalizedHost -Messages $this.Messages -Key "obs_window_close_error" -Args @($_) -Default "Window close error: {0}" -Level "WARNING" -Component "OBSManager"
+            }
+        }
+
+        # Wait for OBS to exit gracefully
+        $retryCount = 0
+        $maxRetries = 15
+        $waitInterval = 1
+
+        Write-LocalizedHost -Messages $this.Messages -Key "waiting_obs_exit" -Default "Waiting for OBS to exit..." -Level "INFO" -Component "OBSManager"
+
+        while ($this.IsOBSRunning() -and ($retryCount -lt $maxRetries)) {
+            Start-Sleep -Seconds $waitInterval
+            $retryCount++
+        }
+
+        if (-not $this.IsOBSRunning()) {
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_stopped_gracefully" -Default "OBS stopped gracefully" -Level "OK" -Component "OBSManager"
+            return $true
+        } else {
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_graceful_exit_timeout" -Args @(($maxRetries * $waitInterval)) -Default "OBS graceful exit timeout after {0} seconds" -Level "WARNING" -Component "OBSManager"
+            return $false
+        }
+    }
+
     # Start OBS application
-    [bool] StartOBS( ) {
+    [bool] StartOBS() {
 
         if ($this.IsOBSRunning()) {
             Write-LocalizedHost -Messages $this.Messages -Key "obs_already_running" -Default "OBS is already running" -Level "INFO" -Component "OBSManager"
