@@ -23,7 +23,7 @@ Based on comprehensive analysis of user feedback, code quality, and market oppor
 
 | Language | Priority | Status | Notes |
 | :---- | :---- | :---- | :---- |
-| **Korean** | **High** | Pending | Large gaming market; mentioned in Phase 1 but not yet implemented |
+| **Korean** | **Low** | Deferred | Korean gamers generally have high English proficiency. Will implement on community request or contribution. |
 | **German** | **Medium** | Pending | Significant European gaming market |
 | **Italian** | **Low** | Pending | Growing gaming community |
 
@@ -143,9 +143,9 @@ Based on this vision, this roadmap defines the path to evolve Focus Game Deck fr
 
 | Major Feature | Priority | Notes |
 | :---- | :---- | :---- |
-| **Landing Page Creation** | **Critical** | Clear introduction site with tool value, setup instructions, and download links. Serves as base for promotional activities. |
-| **GUI for config.json Creation** | **Critical** | Enable users to configure settings intuitively without fear of syntax errors. Without this, widespread adoption among general users is difficult. |
-| **Invoke-FocusGameDeck.ps1 Refactoring** | **High** | Transition to config.json data-driven architecture. Resolve technical debt for future feature extensibility. |
+| **Landing Page Creation** | [COMPLETED] | Clear introduction site with tool value, setup instructions, and download links. Serves as base for promotional activities. |
+| **GUI for config.json Creation** | [COMPLETED] | Enable users to configure settings intuitively without fear of syntax errors. Without this, widespread adoption among general users is difficult. |
+| **Invoke-FocusGameDeck.ps1 Refactoring** | [COMPLETED] | Transition to config.json data-driven architecture. Resolve technical debt for future feature extensibility. |
 
 ### **Phase 1: Foundation Stabilization & v1.0 Official Release**
 
@@ -155,9 +155,9 @@ Based on this vision, this roadmap defines the path to evolve Focus Game Deck fr
 
 | Major Feature | Priority | Status | Notes |
 | :---- | :---- | :---- | :---- |
-| **Non-Steam Platform Support** | **Critical** | [IN PROGRESS] | Support for Epic Games, EA App, Riot Client, etc. Standalone platform testing implemented. Essential feature for significantly expanding user base. |
-| **Setup Wizard** | **High** | [PENDING] | Complete basic configuration (Steam path, etc.) through interactive dialog on first startup. Minimize setup barriers to the extreme. |
-| **Korean Language Support** | **High** | [PENDING] | Expand reach to huge Asian gamer markets. Korean gaming community is highly active. |
+| **Non-Steam Platform Support** | **Critical** | [COMPLETED] | Steam, Epic Games, Riot Client, Standalone/Direct platforms fully supported. EA App games can use standalone mode. |
+| **Setup Wizard** | **High** | [COMPLETED] | Complete basic configuration (Steam path, etc.) through interactive dialog on first startup. Minimize setup barriers to the extreme. |
+| **Korean Language Support** | **Low** | [DEFERRED] | Deferred due to high English proficiency in Korean gaming community. Will implement on community request or contribution. |
 | **Chinese Language Enhancement** | **Medium** | [COMPLETED] | Chinese Simplified (zh-CN) already supported in localization. |
 | **Demo Video/GIF Creation** | **Medium** | [PENDING] | Visual demonstration of tool value proposition. README currently lacks demo content. |
 | **Documentation Completion** | **Medium** | [IN PROGRESS] | Ensure all user-facing documentation is accurate and comprehensive. |
@@ -172,7 +172,6 @@ Based on this vision, this roadmap defines the path to evolve Focus Game Deck fr
 | :---- | :---- | :---- |
 | **Dark Mode Theme** | **Critical** | Most requested feature (#41). Essential for modern application appearance and reduced eye strain during gaming sessions. Implementation should support both system-following and manual toggle options. |
 | **Profile Functionality** | **High** | Enable switching settings for the same game between "Ranked" and "Casual" modes. Powerful feature for heavy users. |
-| **Setup Wizard** | **High** | Interactive first-run experience to configure Steam path, language, and basic settings. Minimize setup barriers for new users. |
 | **Theme and Customization Features** | **High** | Beyond dark mode, enable custom color schemes and font preferences. Modernize GUI, eliminate cheap image, and create an application that many users want to use. |
 | **StreamDeck Configuration Support Tool** | **Medium** | Enable easy generation and export of configurations for launching each profile directly from StreamDeck through GUI. |
 | **Improved Error Handling** | **Medium** | User-friendly error messages with actionable suggestions. Replace technical jargon with plain language explanations. |
