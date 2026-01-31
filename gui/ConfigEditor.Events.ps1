@@ -3056,6 +3056,35 @@ class ConfigEditorEvents {
         }
     }
 
+    # Handle tab visibility checkbox changes
+    [void] HandleTabVisibilityChanged([string]$TabName, [bool]$IsVisible) {
+        # Skip if still initializing to avoid marking as modified during startup
+        if (-not $script:IsInitializationComplete) {
+            Write-Verbose "Skipping tab visibility change handler - initialization not complete"
+            return
+        }
+
+        try {
+            $tabElement = switch ($TabName) {
+                "OBS" { $script:Window.FindName("OBSTab") }
+                "Discord" { $script:Window.FindName("DiscordTab") }
+                "VTubeStudio" { $script:Window.FindName("VTubeStudioTab") }
+                "VoiceMeeter" { $script:Window.FindName("VoiceMeeterTab") }
+                default { $null }
+            }
+
+            if ($tabElement) {
+                $tabElement.Visibility = if ($IsVisible) { "Visible" } else { "Collapsed" }
+                Write-Verbose "Tab visibility changed: $TabName = $IsVisible"
+
+                # Mark configuration as modified
+                $this.stateManager.SetModified()
+            }
+        } catch {
+            Write-Error "Failed to change tab visibility: $_"
+        }
+    }
+
     # Handle save OBS settings
     [void] HandleSaveOBSSettings() {
         try {
@@ -3691,6 +3720,30 @@ class ConfigEditorEvents {
             $this.uiManager.Window.FindName("AutoDetectSteamButton").add_Click({ $self.HandleAutoDetectPath("Steam") }.GetNewClosure())
             $this.uiManager.Window.FindName("AutoDetectEpicButton").add_Click({ $self.HandleAutoDetectPath("Epic") }.GetNewClosure())
             $this.uiManager.Window.FindName("AutoDetectRiotButton").add_Click({ $self.HandleAutoDetectPath("Riot") }.GetNewClosure())
+
+            # Tab visibility checkboxes
+            $showOBSTabCheckBox = $this.uiManager.Window.FindName("ShowOBSTabCheckBox")
+            $showDiscordTabCheckBox = $this.uiManager.Window.FindName("ShowDiscordTabCheckBox")
+            $showVTubeStudioTabCheckBox = $this.uiManager.Window.FindName("ShowVTubeStudioTabCheckBox")
+
+            if ($showOBSTabCheckBox) {
+                $showOBSTabCheckBox.add_Checked({ $self.HandleTabVisibilityChanged("OBS", $true) }.GetNewClosure())
+                $showOBSTabCheckBox.add_Unchecked({ $self.HandleTabVisibilityChanged("OBS", $false) }.GetNewClosure())
+            }
+            if ($showDiscordTabCheckBox) {
+                $showDiscordTabCheckBox.add_Checked({ $self.HandleTabVisibilityChanged("Discord", $true) }.GetNewClosure())
+                $showDiscordTabCheckBox.add_Unchecked({ $self.HandleTabVisibilityChanged("Discord", $false) }.GetNewClosure())
+            }
+            if ($showVTubeStudioTabCheckBox) {
+                $showVTubeStudioTabCheckBox.add_Checked({ $self.HandleTabVisibilityChanged("VTubeStudio", $true) }.GetNewClosure())
+                $showVTubeStudioTabCheckBox.add_Unchecked({ $self.HandleTabVisibilityChanged("VTubeStudio", $false) }.GetNewClosure())
+            }
+
+            $showVoiceMeeterTabCheckBox = $this.uiManager.Window.FindName("ShowVoiceMeeterTabCheckBox")
+            if ($showVoiceMeeterTabCheckBox) {
+                $showVoiceMeeterTabCheckBox.add_Checked({ $self.HandleTabVisibilityChanged("VoiceMeeter", $true) }.GetNewClosure())
+                $showVoiceMeeterTabCheckBox.add_Unchecked({ $self.HandleTabVisibilityChanged("VoiceMeeter", $false) }.GetNewClosure())
+            }
 
             # --- Menu Items ---
             # File menu

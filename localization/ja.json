@@ -696,5 +696,10 @@
     "voicemeeterLaunchOnGameStartCheckBox": "ゲーム開始時にVoiceMeeterを起動する",
     "voicemeeterGameStartProfileLabel": "ゲーム起動時に適用するプロファイル (XML):",
     "voicemeeterExitOnGameEndCheckBox": "ゲーム終了時にVoiceMeeterを終了する",
-    "voicemeeterGameEndProfileLabel": "ゲーム終了時に適用するプロファイル (XML):"
+    "voicemeeterGameEndProfileLabel": "ゲーム終了時に適用するプロファイル (XML):",
+    "tabVisibilityGroup": "タブ表示設定",
+    "showOBSTabCheckBox": "OBSのタブを表示",
+    "showDiscordTabCheckBox": "Discordのタブを表示",
+    "showVTubeStudioTabCheckBox": "VTube Studioのタブを表示",
+    "showVoiceMeeterTabCheckBox": "VoiceMeeterのタブを表示"
 }
