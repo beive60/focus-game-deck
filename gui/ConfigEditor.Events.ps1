@@ -1446,6 +1446,13 @@ class ConfigEditorEvents {
 
     # Handle add game
     [void] HandleAddGame() {
+        # Switch to Games tab if not already there
+        $mainTabControl = $script:Window.FindName("MainTabControl")
+        $gamesTab = $script:Window.FindName("GamesTab")
+        if ($mainTabControl -and $gamesTab) {
+            $mainTabControl.SelectedItem = $gamesTab
+        }
+
         $newGameId = New-UniqueConfigId -Prefix "game-" -Collection $this.stateManager.ConfigData.games
 
         # Create new game with default values
@@ -1469,7 +1476,7 @@ class ConfigEditorEvents {
         # Initialize/update games order
         $this.stateManager.InitializeGameOrder()
 
-        # Refresh games list
+        # Refresh games list (needed even if tab is already active)
         $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
 
         # Select the new game
@@ -1636,6 +1643,13 @@ class ConfigEditorEvents {
 
     # Handle add app
     [void] HandleAddApp() {
+        # Switch to Managed Apps tab if not already there
+        $mainTabControl = $script:Window.FindName("MainTabControl")
+        $managedAppsTab = $script:Window.FindName("ManagedAppsTab")
+        if ($mainTabControl -and $managedAppsTab) {
+            $mainTabControl.SelectedItem = $managedAppsTab
+        }
+
         $newAppId = New-UniqueConfigId -Prefix "app-" -Collection $this.stateManager.ConfigData.managedApps
 
         # Create new app with default values
@@ -1659,7 +1673,7 @@ class ConfigEditorEvents {
         # Initialize/update apps order
         $this.stateManager.InitializeAppOrder()
 
-        # Refresh managed apps list and apps to manage panel
+        # Refresh managed apps list and apps to manage panel (needed even if tab is already active)
         $this.uiManager.UpdateManagedAppsList($this.stateManager.ConfigData)
         Update-AppsToManagePanel
 
@@ -3490,7 +3504,12 @@ class ConfigEditorEvents {
             $mainTabControl = $this.uiManager.Window.FindName("MainTabControl")
             if ($mainTabControl) {
                 $mainTabControl.add_SelectionChanged({
+                        param($sender, $eventArgs)
                         try {
+                            # Only handle events originating from the MainTabControl itself, not bubbled from child controls
+                            if ($eventArgs.OriginalSource -ne $sender) {
+                                return
+                            }
                             $selectedTab = $this.SelectedItem
                             if ($selectedTab -and $selectedTab.Name -eq "GameLauncherTab") {
                                 $self.HandleRefreshGameList()
