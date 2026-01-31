@@ -161,6 +161,7 @@ $script:LabelMappings = @{
     "VoiceMeeterGameSpecificSettingsGroup" = "voicemeeterGameSpecificSettingsGroup"
     "VoiceMeeterActionLabel" = "voicemeeterActionLabel"
     "VoiceMeeterProfilePathLabel" = "voicemeeterProfilePathLabel"
+    "TabVisibilityGroup" = "tabVisibilityGroup"
 }
 
 # Tab header mappings
@@ -212,6 +213,10 @@ $script:CheckBoxMappings = @{
     "UseVoiceMeeterIntegrationCheckBox" = "useVoiceMeeterIntegrationCheckBox"
     "VoiceMeeterLaunchOnGameStartCheckBox" = "voicemeeterLaunchOnGameStartCheckBox"
     "VoiceMeeterExitOnGameEndCheckBox" = "voicemeeterExitOnGameEndCheckBox"
+    "ShowOBSTabCheckBox" = "showOBSTabCheckBox"
+    "ShowDiscordTabCheckBox" = "showDiscordTabCheckBox"
+    "ShowVTubeStudioTabCheckBox" = "showVTubeStudioTabCheckBox"
+    "ShowVoiceMeeterTabCheckBox" = "showVoiceMeeterTabCheckBox"
 }
 
 # RadioButton content mappings
@@ -222,10 +227,11 @@ $script:RadioButtonMappings = @{
 
 # MenuItem mappings
 $script:MenuItemMappings = @{
-    "RefreshMenu" = "refreshMenuHeader"
-    "RefreshGameListMenuItem" = "refreshGameListMenuItem"
-    "RefreshManagedAppsListMenuItem" = "refreshManagedAppsListMenuItem"
-    "RefreshAllMenuItem" = "refreshAllMenuItem"
+    "FileMenu" = "fileMenuHeader"
+    "OpenConfigFolderMenuItem" = "openConfigFolderMenuItem"
+    "NewGameMenuItem" = "newGameMenuItem"
+    "NewAppMenuItem" = "newAppMenuItem"
+    "ExitMenuItem" = "exitMenuItem"
     "ToolsMenu" = "toolsMenuHeader"
     "CreateAllShortcutsMenuItem" = "createAllShortcuts"
     "HelpMenu" = "helpMenuHeader"

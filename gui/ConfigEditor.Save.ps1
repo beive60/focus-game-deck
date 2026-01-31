@@ -892,6 +892,53 @@ function Save-GlobalSettingsData {
             Write-Verbose "Saved log notarization: $($enableLogNotarizationCheckBox.IsChecked)"
         }
 
+        # Save tab visibility settings
+        $showOBSTabCheckBox = $script:Window.FindName("ShowOBSTabCheckBox")
+        $showDiscordTabCheckBox = $script:Window.FindName("ShowDiscordTabCheckBox")
+        $showVTubeStudioTabCheckBox = $script:Window.FindName("ShowVTubeStudioTabCheckBox")
+
+        # Ensure tabVisibility section exists
+        if (-not $script:StateManager.ConfigData.PSObject.Properties["tabVisibility"]) {
+            $script:StateManager.ConfigData | Add-Member -NotePropertyName "tabVisibility" -NotePropertyValue ([PSCustomObject]@{}) -Force
+        }
+
+        if ($showOBSTabCheckBox) {
+            if (-not $script:StateManager.ConfigData.tabVisibility.PSObject.Properties["showOBS"]) {
+                $script:StateManager.ConfigData.tabVisibility | Add-Member -NotePropertyName "showOBS" -NotePropertyValue ([bool]$showOBSTabCheckBox.IsChecked) -Force
+            } else {
+                $script:StateManager.ConfigData.tabVisibility.showOBS = [bool]$showOBSTabCheckBox.IsChecked
+            }
+            Write-Verbose "Saved showOBS: $($showOBSTabCheckBox.IsChecked)"
+        }
+
+        if ($showDiscordTabCheckBox) {
+            if (-not $script:StateManager.ConfigData.tabVisibility.PSObject.Properties["showDiscord"]) {
+                $script:StateManager.ConfigData.tabVisibility | Add-Member -NotePropertyName "showDiscord" -NotePropertyValue ([bool]$showDiscordTabCheckBox.IsChecked) -Force
+            } else {
+                $script:StateManager.ConfigData.tabVisibility.showDiscord = [bool]$showDiscordTabCheckBox.IsChecked
+            }
+            Write-Verbose "Saved showDiscord: $($showDiscordTabCheckBox.IsChecked)"
+        }
+
+        if ($showVTubeStudioTabCheckBox) {
+            if (-not $script:StateManager.ConfigData.tabVisibility.PSObject.Properties["showVTubeStudio"]) {
+                $script:StateManager.ConfigData.tabVisibility | Add-Member -NotePropertyName "showVTubeStudio" -NotePropertyValue ([bool]$showVTubeStudioTabCheckBox.IsChecked) -Force
+            } else {
+                $script:StateManager.ConfigData.tabVisibility.showVTubeStudio = [bool]$showVTubeStudioTabCheckBox.IsChecked
+            }
+            Write-Verbose "Saved showVTubeStudio: $($showVTubeStudioTabCheckBox.IsChecked)"
+        }
+
+        $showVoiceMeeterTabCheckBox = $script:Window.FindName("ShowVoiceMeeterTabCheckBox")
+        if ($showVoiceMeeterTabCheckBox) {
+            if (-not $script:StateManager.ConfigData.tabVisibility.PSObject.Properties["showVoiceMeeter"]) {
+                $script:StateManager.ConfigData.tabVisibility | Add-Member -NotePropertyName "showVoiceMeeter" -NotePropertyValue ([bool]$showVoiceMeeterTabCheckBox.IsChecked) -Force
+            } else {
+                $script:StateManager.ConfigData.tabVisibility.showVoiceMeeter = [bool]$showVoiceMeeterTabCheckBox.IsChecked
+            }
+            Write-Verbose "Saved showVoiceMeeter: $($showVoiceMeeterTabCheckBox.IsChecked)"
+        }
+
         # Mark configuration as modified
         $script:StateManager.SetModified()
 

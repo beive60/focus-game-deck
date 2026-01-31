@@ -290,6 +290,12 @@ class ConfigEditorState {
                     databaseURL = ""
                 }
             }
+            tabVisibility = [PSCustomObject]@{
+                showOBS = $true
+                showDiscord = $true
+                showVTubeStudio = $true
+                showVoiceMeeter = $true
+            }
             language = ""
         }
 

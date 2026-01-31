@@ -14,18 +14,22 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem
-                x:Name="RefreshMenu"
-                Header="[REFRESH_MENU_HEADER]">
+                x:Name="FileMenu"
+                Header="[FILE_MENU_HEADER]">
                 <MenuItem
-                    x:Name="RefreshGameListMenuItem"
-                    Header="[REFRESH_GAME_LIST]"/>
-                <MenuItem
-                    x:Name="RefreshManagedAppsListMenuItem"
-                    Header="[REFRESH_MANAGED_APPS_LIST]"/>
+                    x:Name="OpenConfigFolderMenuItem"
+                    Header="[OPEN_CONFIG_FOLDER]"/>
                 <Separator/>
                 <MenuItem
-                    x:Name="RefreshAllMenuItem"
-                    Header="[REFRESH_ALL]"/>
+                    x:Name="NewGameMenuItem"
+                    Header="[NEW_GAME_MENU_ITEM]"/>
+                <MenuItem
+                    x:Name="NewAppMenuItem"
+                    Header="[NEW_APP_MENU_ITEM]"/>
+                <Separator/>
+                <MenuItem
+                    x:Name="ExitMenuItem"
+                    Header="[EXIT_MENU_ITEM]"/>
             </MenuItem>
             <MenuItem
                 x:Name="ToolsMenu"
@@ -722,7 +726,7 @@
                                                         Margin="0,0,5,0"
                                                         ToolTip="[vtubeHotkeysTooltip]"/>
                                                     <Button
-                                                         x:Name="GetExitHotkeyListButton"
+                                                        x:Name="GetExitHotkeyListButton"
                                                         Content="[GET_HOTKEY_LIST_BUTTON]"
                                                         Grid.Column="1"
                                                         Height="25"/>
@@ -1923,9 +1927,9 @@
 
                                         <!-- ゲーム開始時に適用するプロファイル -->
                                         <StackPanel Margin="0,5,0,10">
-                                            <Label 
+                                            <Label
                                                 x:Name="VoiceMeeterGameStartProfileLabel"
-                                                Content="[voicemeeterGameStartProfileLabel]" 
+                                                Content="[voicemeeterGameStartProfileLabel]"
                                                 Margin="0,0,0,5"/>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
@@ -1955,9 +1959,9 @@
 
                                         <!-- ゲーム終了時に適用するプロファイル -->
                                         <StackPanel Margin="0,5,0,10">
-                                            <Label 
+                                            <Label
                                                 x:Name="VoiceMeeterGameEndProfileLabel"
-                                                Content="[voicemeeterGameEndProfileLabel]" 
+                                                Content="[voicemeeterGameEndProfileLabel]"
                                                 Margin="0,0,0,5"/>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
@@ -1988,26 +1992,27 @@
                                     Margin="0,0,0,15">
                                     <StackPanel Margin="10">
                                         <!-- VoiceMeeterタイプ -->
-                                        <StackPanel Orientation="Horizontal" Margin="0,5,0,10">
-                                            <Label 
+                                        <StackPanel Orientation="Horizontal"
+                                                Margin="0,5,0,10">
+                                            <Label
                                                 x:Name="VoiceMeeterTypeLabel"
-                                                Content="[voicemeeterTypeLabel]" 
+                                                Content="[voicemeeterTypeLabel]"
                                                 Width="120"/>
-                                            <ComboBox 
-                                                x:Name="VoiceMeeterTypeCombo" 
+                                            <ComboBox
+                                                x:Name="VoiceMeeterTypeCombo"
                                                 Width="200">
-                                                <ComboBoxItem 
-                                                    x:Name="VoiceMeeterTypeStandardItem" 
-                                                    Content="[voicemeeterTypeStandard]" 
+                                                <ComboBoxItem
+                                                    x:Name="VoiceMeeterTypeStandardItem"
+                                                    Content="[voicemeeterTypeStandard]"
                                                     Tag="standard"/>
-                                                <ComboBoxItem 
-                                                    x:Name="VoiceMeeterTypeBananaItem" 
-                                                    Content="[voicemeeterTypeBanana]" 
-                                                    Tag="banana" 
+                                                <ComboBoxItem
+                                                    x:Name="VoiceMeeterTypeBananaItem"
+                                                    Content="[voicemeeterTypeBanana]"
+                                                    Tag="banana"
                                                     IsSelected="True"/>
-                                                <ComboBoxItem 
-                                                    x:Name="VoiceMeeterTypePotatoItem" 
-                                                    Content="[voicemeeterTypePotato]" 
+                                                <ComboBoxItem
+                                                    x:Name="VoiceMeeterTypePotatoItem"
+                                                    Content="[voicemeeterTypePotato]"
                                                     Tag="potato"/>
                                             </ComboBox>
                                         </StackPanel>
@@ -2339,6 +2344,34 @@
                                             VerticalAlignment="Center"
                                             ToolTip="[AUTO_DETECT_RIOT_TOOLTIP]"/>
                                     </Grid>
+                                </GroupBox>
+
+                                <GroupBox
+                                    x:Name="TabVisibilityGroup"
+                                    Header="[TAB_VISIBILITY_GROUP]"
+                                    Margin="0,20,0,0">
+                                    <StackPanel Margin="10">
+                                        <CheckBox
+                                            x:Name="ShowOBSTabCheckBox"
+                                            Content="[SHOW_OBS_TAB_CHECKBOX]"
+                                            Margin="5"
+                                            IsChecked="True"/>
+                                        <CheckBox
+                                            x:Name="ShowDiscordTabCheckBox"
+                                            Content="[SHOW_DISCORD_TAB_CHECKBOX]"
+                                            Margin="5"
+                                            IsChecked="True"/>
+                                        <CheckBox
+                                            x:Name="ShowVTubeStudioTabCheckBox"
+                                            Content="[SHOW_VTUBE_STUDIO_TAB_CHECKBOX]"
+                                            Margin="5"
+                                            IsChecked="True"/>
+                                        <CheckBox
+                                            x:Name="ShowVoiceMeeterTabCheckBox"
+                                            Content="[SHOW_VOICEMEETER_TAB_CHECKBOX]"
+                                            Margin="5"
+                                            IsChecked="True"/>
+                                    </StackPanel>
                                 </GroupBox>
                             </StackPanel>
                         </ScrollViewer>
