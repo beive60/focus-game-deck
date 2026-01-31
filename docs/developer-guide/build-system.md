@@ -398,7 +398,7 @@ To add a new entry point that requires build-time patching:
 - `Focus-Game-Deck.exe` - Main router executable (console-based, ~30-40KB)
   - Lightweight entry point that delegates to specialized executables
   - Handles argument parsing and process routing
-  - Sources from `src/Main-Router.ps1`
+  - Sources from `src/Main.PS1`
 
 - `ConfigEditor.exe` - GUI configuration editor (no console, ~75-100KB)
   - Fully bundled WPF application for configuration management

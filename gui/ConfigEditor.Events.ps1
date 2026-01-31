@@ -1162,6 +1162,45 @@ class ConfigEditorEvents {
                     if ($getExitHotkeyButton) { $getExitHotkeyButton.IsEnabled = $isEnabled }
                 }
 
+                $useVoiceMeeterCheck = $script:Window.FindName("UseVoiceMeeterIntegrationCheckBox")
+                if ($useVoiceMeeterCheck) {
+                    $useVoiceMeeterCheck.IsChecked = ($gameData.integrations -and $gameData.integrations.useVoiceMeeter)
+
+                    # Load VoiceMeeter game-specific settings
+                    $vmSettings = if ($gameData.integrations -and $gameData.integrations.voiceMeeterSettings) { $gameData.integrations.voiceMeeterSettings } else { $null }
+
+                    # Load action type
+                    $actionCombo = $script:Window.FindName("VoiceMeeterActionCombo")
+                    if ($actionCombo) {
+                        $action = if ($vmSettings -and $vmSettings.action) { $vmSettings.action } else { "load-profile" }
+                        # Find ComboBoxItem by Tag
+                        $matchingItem = $actionCombo.Items | Where-Object { $_.Tag -eq $action }
+                        if ($matchingItem) {
+                            $actionCombo.SelectedItem = $matchingItem
+                        } else {
+                            # Default to load-profile
+                            $matchingItem = $actionCombo.Items | Where-Object { $_.Tag -eq "load-profile" }
+                            if ($matchingItem) {
+                                $actionCombo.SelectedItem = $matchingItem
+                            }
+                        }
+                    }
+
+                    # Load profile path
+                    $profilePathTextBox = $script:Window.FindName("VoiceMeeterProfilePathTextBox")
+                    if ($profilePathTextBox) {
+                        $profilePathTextBox.Text = if ($vmSettings -and $vmSettings.profilePath) { $vmSettings.profilePath } else { "" }
+                    }
+
+                    # Enable/disable controls based on checkbox state
+                    $isEnabled = [bool]$useVoiceMeeterCheck.IsChecked
+                    if ($actionCombo) { $actionCombo.IsEnabled = $isEnabled }
+                    if ($profilePathTextBox) { $profilePathTextBox.IsEnabled = $isEnabled }
+
+                    $browseProfileButton = $script:Window.FindName("BrowseVoiceMeeterProfileButton")
+                    if ($browseProfileButton) { $browseProfileButton.IsEnabled = $isEnabled }
+                }
+
                 # Update move button states (removed - using drag and drop)
                 # Update-MoveButtonStates
 
@@ -1407,6 +1446,13 @@ class ConfigEditorEvents {
 
     # Handle add game
     [void] HandleAddGame() {
+        # Switch to Games tab if not already there
+        $mainTabControl = $script:Window.FindName("MainTabControl")
+        $gamesTab = $script:Window.FindName("GamesTab")
+        if ($mainTabControl -and $gamesTab) {
+            $mainTabControl.SelectedItem = $gamesTab
+        }
+
         $newGameId = New-UniqueConfigId -Prefix "game-" -Collection $this.stateManager.ConfigData.games
 
         # Create new game with default values
@@ -1430,7 +1476,7 @@ class ConfigEditorEvents {
         # Initialize/update games order
         $this.stateManager.InitializeGameOrder()
 
-        # Refresh games list
+        # Refresh games list (needed even if tab is already active)
         $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
 
         # Select the new game
@@ -1597,6 +1643,13 @@ class ConfigEditorEvents {
 
     # Handle add app
     [void] HandleAddApp() {
+        # Switch to Managed Apps tab if not already there
+        $mainTabControl = $script:Window.FindName("MainTabControl")
+        $managedAppsTab = $script:Window.FindName("ManagedAppsTab")
+        if ($mainTabControl -and $managedAppsTab) {
+            $mainTabControl.SelectedItem = $managedAppsTab
+        }
+
         $newAppId = New-UniqueConfigId -Prefix "app-" -Collection $this.stateManager.ConfigData.managedApps
 
         # Create new app with default values
@@ -1620,7 +1673,7 @@ class ConfigEditorEvents {
         # Initialize/update apps order
         $this.stateManager.InitializeAppOrder()
 
-        # Refresh managed apps list and apps to manage panel
+        # Refresh managed apps list and apps to manage panel (needed even if tab is already active)
         $this.uiManager.UpdateManagedAppsList($this.stateManager.ConfigData)
         Update-AppsToManagePanel
 
@@ -2493,6 +2546,19 @@ class ConfigEditorEvents {
                         }
                     }
                 }
+                "VoiceMeeter" {
+                    $commonPaths = @(
+                        "${env:ProgramFiles(x86)}/VB/Voicemeeter/VoicemeeterRemote64.dll",
+                        "${env:ProgramFiles}/VB/Voicemeeter/VoicemeeterRemote64.dll",
+                        "C:/Program Files (x86)/VB/Voicemeeter/VoicemeeterRemote64.dll",
+                        "C:/Program Files/VB/Voicemeeter/VoicemeeterRemote64.dll"
+                    )
+                    foreach ($path in $commonPaths) {
+                        if (Test-Path $path) {
+                            $detectedPaths += $path
+                        }
+                    }
+                }
             }
 
             if ($detectedPaths.Count -eq 0) {
@@ -2518,6 +2584,7 @@ class ConfigEditorEvents {
                     "OBS" { $script:Window.FindName("OBSPathTextBox").Text = $selectedPath }
                     "Discord" { $script:Window.FindName("DiscordPathTextBox").Text = $selectedPath }
                     "VTubeStudio" { $script:Window.FindName("VTubePathTextBox").Text = $selectedPath }
+                    "VoiceMeeter" { $script:Window.FindName("VoiceMeeterDllPathTextBox").Text = $selectedPath }
                 }
 
                 Write-Verbose "Auto-detected $Platform path: $selectedPath"
@@ -2989,6 +3056,35 @@ class ConfigEditorEvents {
         }
     }
 
+    # Handle tab visibility checkbox changes
+    [void] HandleTabVisibilityChanged([string]$TabName, [bool]$IsVisible) {
+        # Skip if still initializing to avoid marking as modified during startup
+        if (-not $script:IsInitializationComplete) {
+            Write-Verbose "Skipping tab visibility change handler - initialization not complete"
+            return
+        }
+
+        try {
+            $tabElement = switch ($TabName) {
+                "OBS" { $script:Window.FindName("OBSTab") }
+                "Discord" { $script:Window.FindName("DiscordTab") }
+                "VTubeStudio" { $script:Window.FindName("VTubeStudioTab") }
+                "VoiceMeeter" { $script:Window.FindName("VoiceMeeterTab") }
+                default { $null }
+            }
+
+            if ($tabElement) {
+                $tabElement.Visibility = if ($IsVisible) { "Visible" } else { "Collapsed" }
+                Write-Verbose "Tab visibility changed: $TabName = $IsVisible"
+
+                # Mark configuration as modified
+                $this.stateManager.SetModified()
+            }
+        } catch {
+            Write-Error "Failed to change tab visibility: $_"
+        }
+    }
+
     # Handle save OBS settings
     [void] HandleSaveOBSSettings() {
         try {
@@ -3058,6 +3154,63 @@ class ConfigEditorEvents {
         }
     }
 
+    # Handle save VoiceMeeter settings
+    [void] HandleSaveVoiceMeeterSettings() {
+        try {
+            # Save VoiceMeeter settings data
+            Save-VoiceMeeterSettingsData
+
+            # Write to file with 4-space indentation
+            Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
+
+            # Update original config and clear modified flag
+            Save-OriginalConfig
+            $this.stateManager.ClearModified()
+
+            $message = $this.uiManager.GetLocalizedMessage("voicemeeterSettingsSaved")
+            $this.uiManager.ShowNotification($message, "Success")
+            Write-Verbose "VoiceMeeter settings saved"
+
+        } catch {
+            Write-Error "Failed to save VoiceMeeter settings: $_"
+            Show-SafeMessage -Key "voicemeeterSettingsSaveFailed" -MessageType "Error"
+        }
+    }
+
+    # Handle browse VoiceMeeter DLL path
+    [void] HandleBrowseVoiceMeeterDllPath() {
+        $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $openFileDialog.Filter = "DLL Files (*.dll)|*.dll|All Files (*.*)|*.*"
+        $openFileDialog.Title = "Select VoiceMeeter Remote DLL"
+        if ($openFileDialog.ShowDialog()) {
+            $script:Window.FindName("VoiceMeeterDllPathTextBox").Text = $openFileDialog.FileName
+            Write-Verbose "Selected VoiceMeeter DLL path: $($openFileDialog.FileName)"
+        }
+    }
+
+    # Handle browse VoiceMeeter default profile
+    # Handle browse VoiceMeeter game start profile
+    [void] HandleBrowseVoiceMeeterGameStartProfile() {
+        $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $openFileDialog.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*"
+        $openFileDialog.Title = "Select VoiceMeeter Game Start Profile"
+        if ($openFileDialog.ShowDialog()) {
+            $script:Window.FindName("VoiceMeeterGameStartProfileTextBox").Text = $openFileDialog.FileName
+            Write-Verbose "Selected VoiceMeeter game start profile: $($openFileDialog.FileName)"
+        }
+    }
+
+    # Handle browse VoiceMeeter game end profile
+    [void] HandleBrowseVoiceMeeterGameEndProfile() {
+        $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $openFileDialog.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*"
+        $openFileDialog.Title = "Select VoiceMeeter Game End Profile"
+        if ($openFileDialog.ShowDialog()) {
+            $script:Window.FindName("VoiceMeeterGameEndProfileTextBox").Text = $openFileDialog.FileName
+            Write-Verbose "Selected VoiceMeeter game end profile: $($openFileDialog.FileName)"
+        }
+    }
+
     # Handle opening integration tab from game settings
     [void] HandleOpenIntegrationTab([string]$TabName) {
         try {
@@ -3083,6 +3236,32 @@ class ConfigEditorEvents {
 
         } catch {
             Write-Error "Failed to open $TabName tab: $_"
+        }
+    }
+
+    # Handle open config folder menu item
+    [void] HandleOpenConfigFolder() {
+        try {
+            $configPath = Join-Path -Path $this.appRoot -ChildPath "config"
+            if (Test-Path $configPath) {
+                Start-Process explorer.exe -ArgumentList $configPath
+                Write-Verbose "Opened config folder: $configPath"
+            } else {
+                Write-Warning "Config folder not found: $configPath"
+                Show-SafeMessage -Key "configFolderNotFound" -MessageType "Warning"
+            }
+        } catch {
+            Write-Warning "Failed to open config folder: $($_.Exception.Message)"
+        }
+    }
+
+    # Handle exit menu item
+    [void] HandleExit() {
+        try {
+            Write-Verbose "Exit menu item clicked"
+            $this.uiManager.Window.Close()
+        } catch {
+            Write-Warning "Failed to close window: $($_.Exception.Message)"
         }
     }
 
@@ -3354,18 +3533,25 @@ class ConfigEditorEvents {
             $mainTabControl = $this.uiManager.Window.FindName("MainTabControl")
             if ($mainTabControl) {
                 $mainTabControl.add_SelectionChanged({
+                        param($sender, $eventArgs)
                         try {
+                            # Only handle events originating from the MainTabControl itself, not bubbled from child controls
+                            if ($eventArgs.OriginalSource -ne $sender) {
+                                return
+                            }
                             $selectedTab = $this.SelectedItem
                             if ($selectedTab -and $selectedTab.Name -eq "GameLauncherTab") {
                                 $self.HandleRefreshGameList()
                             } elseif ($selectedTab -and $selectedTab.Name -eq "GamesTab") {
-                                # Ensure first game is selected when switching to Games tab
+                                # Refresh games list and ensure first game is selected when switching to Games tab
+                                $self.uiManager.UpdateGamesList($self.stateManager.ConfigData)
                                 $gamesList = $self.uiManager.Window.FindName("GamesList")
                                 if ($gamesList -and $gamesList.Items.Count -gt 0 -and $gamesList.SelectedIndex -lt 0) {
                                     $gamesList.SelectedIndex = 0
                                 }
                             } elseif ($selectedTab -and $selectedTab.Name -eq "ManagedAppsTab") {
-                                # Ensure first app is selected when switching to Managed Apps tab
+                                # Refresh managed apps list and ensure first app is selected when switching to Managed Apps tab
+                                $self.uiManager.UpdateManagedAppsList($self.stateManager.ConfigData)
                                 $managedAppsList = $self.uiManager.Window.FindName("ManagedAppsList")
                                 if ($managedAppsList -and $managedAppsList.Items.Count -gt 0 -and $managedAppsList.SelectedIndex -lt 0) {
                                     $managedAppsList.SelectedIndex = 0
@@ -3450,6 +3636,7 @@ class ConfigEditorEvents {
             $this.uiManager.Window.FindName("OpenOBSTabButton").add_Click({ $self.HandleOpenIntegrationTab("OBS") }.GetNewClosure())
             $this.uiManager.Window.FindName("OpenDiscordTabButton").add_Click({ $self.HandleOpenIntegrationTab("Discord") }.GetNewClosure())
             $this.uiManager.Window.FindName("OpenVTubeStudioTabButton").add_Click({ $self.HandleOpenIntegrationTab("VTubeStudio") }.GetNewClosure())
+            $this.uiManager.Window.FindName("OpenVoiceMeeterTabButton").add_Click({ $self.HandleOpenIntegrationTab("VoiceMeeter") }.GetNewClosure())
 
             # VTube Studio game-specific settings buttons
             $getModelListBtn = $this.uiManager.Window.FindName("GetModelListButton")
@@ -3462,6 +3649,10 @@ class ConfigEditorEvents {
             # VTube Studio integration checkbox change
             $useVTubeCheckBox = $this.uiManager.Window.FindName("UseVTubeStudioIntegrationCheckBox")
             if ($useVTubeCheckBox) { $useVTubeCheckBox.add_Checked({ $self.HandleVTubeIntegrationCheckChanged() }.GetNewClosure()); $useVTubeCheckBox.add_Unchecked({ $self.HandleVTubeIntegrationCheckChanged() }.GetNewClosure()) }
+
+            # VoiceMeeter game-specific settings button
+            $browseVoiceMeeterProfileBtn = $this.uiManager.Window.FindName("BrowseVoiceMeeterProfileButton")
+            if ($browseVoiceMeeterProfileBtn) { $browseVoiceMeeterProfileBtn.add_Click({ $self.HandleBrowseVoiceMeeterGameProfile() }.GetNewClosure()) }
 
             # --- Managed Apps Tab ---
             $managedAppsListCtrl = $this.uiManager.Window.FindName("ManagedAppsList")
@@ -3516,6 +3707,13 @@ class ConfigEditorEvents {
             $this.uiManager.Window.FindName("StartVTubeStudioButton").add_Click({ $self.HandleStartVTubeStudio() }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveVTubeStudioSettingsButton").add_Click({ $self.HandleSaveVTubeStudioSettings() }.GetNewClosure())
 
+            # --- VoiceMeeter Tab ---
+            $this.uiManager.Window.FindName("BrowseVoiceMeeterDllPathButton").add_Click({ $self.HandleBrowseVoiceMeeterDllPath() }.GetNewClosure())
+            $this.uiManager.Window.FindName("BrowseVoiceMeeterGameStartProfileButton").add_Click({ $self.HandleBrowseVoiceMeeterGameStartProfile() }.GetNewClosure())
+            $this.uiManager.Window.FindName("BrowseVoiceMeeterGameEndProfileButton").add_Click({ $self.HandleBrowseVoiceMeeterGameEndProfile() }.GetNewClosure())
+            $this.uiManager.Window.FindName("AutoDetectVoiceMeeterButton").add_Click({ $self.HandleAutoDetectPath("VoiceMeeter") }.GetNewClosure())
+            $this.uiManager.Window.FindName("SaveVoiceMeeterSettingsButton").add_Click({ $self.HandleSaveVoiceMeeterSettings() }.GetNewClosure())
+
             # --- Global Settings Tab ---
             $this.uiManager.Window.FindName("LanguageCombo").add_SelectionChanged({ $self.HandleLanguageSelectionChanged() }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveGlobalSettingsButton").add_Click({ $self.HandleSaveGlobalSettings() }.GetNewClosure())
@@ -3523,11 +3721,59 @@ class ConfigEditorEvents {
             $this.uiManager.Window.FindName("AutoDetectEpicButton").add_Click({ $self.HandleAutoDetectPath("Epic") }.GetNewClosure())
             $this.uiManager.Window.FindName("AutoDetectRiotButton").add_Click({ $self.HandleAutoDetectPath("Riot") }.GetNewClosure())
 
+            # Tab visibility checkboxes
+            $showOBSTabCheckBox = $this.uiManager.Window.FindName("ShowOBSTabCheckBox")
+            $showDiscordTabCheckBox = $this.uiManager.Window.FindName("ShowDiscordTabCheckBox")
+            $showVTubeStudioTabCheckBox = $this.uiManager.Window.FindName("ShowVTubeStudioTabCheckBox")
+
+            if ($showOBSTabCheckBox) {
+                $showOBSTabCheckBox.add_Checked({ $self.HandleTabVisibilityChanged("OBS", $true) }.GetNewClosure())
+                $showOBSTabCheckBox.add_Unchecked({ $self.HandleTabVisibilityChanged("OBS", $false) }.GetNewClosure())
+            }
+            if ($showDiscordTabCheckBox) {
+                $showDiscordTabCheckBox.add_Checked({ $self.HandleTabVisibilityChanged("Discord", $true) }.GetNewClosure())
+                $showDiscordTabCheckBox.add_Unchecked({ $self.HandleTabVisibilityChanged("Discord", $false) }.GetNewClosure())
+            }
+            if ($showVTubeStudioTabCheckBox) {
+                $showVTubeStudioTabCheckBox.add_Checked({ $self.HandleTabVisibilityChanged("VTubeStudio", $true) }.GetNewClosure())
+                $showVTubeStudioTabCheckBox.add_Unchecked({ $self.HandleTabVisibilityChanged("VTubeStudio", $false) }.GetNewClosure())
+            }
+
+            $showVoiceMeeterTabCheckBox = $this.uiManager.Window.FindName("ShowVoiceMeeterTabCheckBox")
+            if ($showVoiceMeeterTabCheckBox) {
+                $showVoiceMeeterTabCheckBox.add_Checked({ $self.HandleTabVisibilityChanged("VoiceMeeter", $true) }.GetNewClosure())
+                $showVoiceMeeterTabCheckBox.add_Unchecked({ $self.HandleTabVisibilityChanged("VoiceMeeter", $false) }.GetNewClosure())
+            }
+
             # --- Menu Items ---
-            $this.uiManager.Window.FindName("RefreshGameListMenuItem").add_Click({ $self.HandleRefreshGameList() }.GetNewClosure())
-            $this.uiManager.Window.FindName("RefreshManagedAppsListMenuItem").add_Click({ $self.HandleRefreshManagedAppsList() }.GetNewClosure())
-            $this.uiManager.Window.FindName("RefreshAllMenuItem").add_Click({ $self.HandleRefreshAll() }.GetNewClosure())
+            # File menu
+            $openConfigFolderMenuItem = $this.uiManager.Window.FindName("OpenConfigFolderMenuItem")
+            if ($openConfigFolderMenuItem) {
+                $openConfigFolderMenuItem.add_Click({ $self.HandleOpenConfigFolder() }.GetNewClosure())
+            } else {
+                Write-Verbose "OpenConfigFolderMenuItem not found"
+            }
+            $newGameMenuItem = $this.uiManager.Window.FindName("NewGameMenuItem")
+            if ($newGameMenuItem) {
+                $newGameMenuItem.add_Click({ $self.HandleAddGame() }.GetNewClosure())
+            } else {
+                Write-Verbose "NewGameMenuItem not found"
+            }
+            $newAppMenuItem = $this.uiManager.Window.FindName("NewAppMenuItem")
+            if ($newAppMenuItem) {
+                $newAppMenuItem.add_Click({ $self.HandleAddApp() }.GetNewClosure())
+            } else {
+                Write-Verbose "NewAppMenuItem not found"
+            }
+            $exitMenuItem = $this.uiManager.Window.FindName("ExitMenuItem")
+            if ($exitMenuItem) {
+                $exitMenuItem.add_Click({ $self.HandleExit() }.GetNewClosure())
+            } else {
+                Write-Verbose "ExitMenuItem not found"
+            }
+            # Tools menu
             $this.uiManager.Window.FindName("CreateAllShortcutsMenuItem").add_Click({ $self.HandleCreateAllShortcuts() }.GetNewClosure())
+            # Help menu
             $this.uiManager.Window.FindName("CheckUpdateMenuItem").add_Click({ $self.HandleCheckUpdate() }.GetNewClosure())
             $feedbackMenuItem = $this.uiManager.Window.FindName("FeedbackMenuItem")
             if ($feedbackMenuItem) {

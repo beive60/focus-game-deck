@@ -134,6 +134,17 @@ class AppManager {
                 $this.Logger.Info("VTube Studio manager initialized", "APP")
             }
         }
+
+        # VoiceMeeter Manager
+        if ($this.GameConfig.integrations.useVoiceMeeter -and $this.Config.integrations.voiceMeeter) {
+            $this.IntegrationManagers['voiceMeeter'] = New-VoiceMeeterManager `
+                -VoiceMeeterConfig $this.Config.integrations.voiceMeeter `
+                -Messages $this.Messages `
+                -Logger $this.Logger
+            if ($this.Logger) {
+                $this.Logger.Info("VoiceMeeter manager initialized", "APP")
+            }
+        }
     }
 
     <#
@@ -272,6 +283,9 @@ class AppManager {
             "vtubeStudio" {
                 return $this.HandleVTubeStudioAction($manager, $integrationConfig, $action)
             }
+            "voiceMeeter" {
+                return $this.HandleVoiceMeeterAction($manager, $integrationConfig, $action)
+            }
             default {
                 Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_integration" -Args @($integrationId) -Default ("Unknown integration: {0}" -f $integrationId) -Level "WARNING" -Component "AppManager"
                 return $false
@@ -381,7 +395,9 @@ class AppManager {
                     if ($this.Logger) { $this.Logger.Info("Starting OBS replay buffer in background job", "OBS") }
 
                     # Determine application root
-                    $currentProcess = Get-Process -Id $PID
+                    # Note: Using [System.Diagnostics.Process]::GetCurrentProcess() instead of Get-Process -Id $PID
+                    # because $PID automatic variable is not accessible inside PowerShell class methods
+                    $currentProcess = [System.Diagnostics.Process]::GetCurrentProcess()
                     $isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
                     if ($isExecutable) {
                         $appRoot = Split-Path -Parent $currentProcess.Path
@@ -693,6 +709,89 @@ class AppManager {
 
     <#
     .SYNOPSIS
+        Handles VoiceMeeter-specific actions.
+
+    .DESCRIPTION
+        Manages VoiceMeeter startup and shutdown including profile loading and parameter control.
+
+    .PARAMETER manager
+        The VoiceMeeter manager instance
+
+    .PARAMETER config
+        The VoiceMeeter configuration object
+
+    .PARAMETER action
+        The action to execute
+
+    .OUTPUTS
+        Boolean indicating whether the action was successful
+
+    .EXAMPLE
+        $success = $appManager.HandleVoiceMeeterAction($voiceMeeterManager, $config, "enter-game-mode")
+    #>
+    [bool] HandleVoiceMeeterAction([object] $manager, [object] $config, [string] $action) {
+        switch ($action) {
+            "enter-game-mode" {
+                if ($this.Logger) { $this.Logger.Info("Starting VoiceMeeter integration", "VOICEMEETER") }
+
+                # Connect to VoiceMeeter
+                $success = $manager.Connect()
+                if (-not $success) {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_voicemeeter_connect_failed" -Default "Failed to connect to VoiceMeeter" -Level "WARNING" -Component "VoiceMeeterManager"
+                    if ($this.Logger) { $this.Logger.Warning("Failed to connect to VoiceMeeter", "VOICEMEETER") }
+                    return $false
+                }
+
+                # Get game-specific VoiceMeeter settings
+                $voiceMeeterSettings = $null
+                if ($this.GameConfig -and $this.GameConfig.integrations -and $this.GameConfig.integrations.voiceMeeterSettings) {
+                    $voiceMeeterSettings = $this.GameConfig.integrations.voiceMeeterSettings
+                }
+
+                # Apply game settings or use default
+                $applySuccess = $manager.ApplyGameSettings($voiceMeeterSettings)
+                if ($applySuccess) {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_voicemeeter_settings_applied" -Default "VoiceMeeter settings applied successfully" -Level "OK" -Component "VoiceMeeterManager"
+                    if ($this.Logger) { $this.Logger.Info("VoiceMeeter settings applied successfully", "VOICEMEETER") }
+                } else {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_voicemeeter_settings_failed" -Default "Failed to apply VoiceMeeter settings" -Level "WARNING" -Component "VoiceMeeterManager"
+                    if ($this.Logger) { $this.Logger.Warning("Failed to apply VoiceMeeter settings", "VOICEMEETER") }
+                }
+
+                return $applySuccess
+            }
+            "exit-game-mode" {
+                if ($this.Logger) { $this.Logger.Info("Stopping VoiceMeeter integration", "VOICEMEETER") }
+
+                # Restore default settings
+                $success = $manager.RestoreDefaultSettings()
+                if ($success) {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_voicemeeter_restored" -Default "VoiceMeeter settings restored" -Level "OK" -Component "VoiceMeeterManager"
+                    if ($this.Logger) { $this.Logger.Info("VoiceMeeter settings restored", "VOICEMEETER") }
+                } else {
+                    Write-LocalizedHost -Messages $this.Messages -Key "console_voicemeeter_restore_failed" -Default "Failed to restore VoiceMeeter settings" -Level "WARNING" -Component "VoiceMeeterManager"
+                    if ($this.Logger) { $this.Logger.Warning("Failed to restore VoiceMeeter settings", "VOICEMEETER") }
+                }
+
+                # Disconnect from VoiceMeeter
+                $manager.Disconnect()
+
+                return $success
+            }
+            "none" {
+                return $true
+            }
+            default {
+                Write-LocalizedHost -Messages $this.Messages -Key "console_unknown_voicemeeter_action" -Args @($action) -Default ("Unknown action: {0}" -f $action) -Level "WARNING" -Component "VoiceMeeterManager"
+                return $false
+            }
+        }
+
+        return $false
+    }
+
+    <#
+    .SYNOPSIS
         Starts an application process.
 
     .DESCRIPTION
@@ -923,7 +1022,7 @@ class AppManager {
             # Start VTube Studio
             return $vtubeManager.StartVTubeStudio()
         } catch {
-            Write-Host "Failed to start VTube Studio: $_"
+            Write-Host "[ERROR] VTubeStudioManager: Failed to start VTube Studio - $_"
             return $false
         }
     }
@@ -936,7 +1035,7 @@ class AppManager {
             if (Test-Path $modulePath) {
                 . $modulePath
             } else {
-                Write-Host "VTubeStudioManager module not found at: $modulePath"
+                Write-Host "[ERROR] VTubeStudioManager: Module not found at path: $modulePath"
                 return $false
             }
 
@@ -946,7 +1045,7 @@ class AppManager {
             # Stop VTube Studio
             return $vtubeManager.StopVTubeStudio()
         } catch {
-            Write-Host "Failed to stop VTube Studio: $_"
+            Write-Host "[ERROR] VTubeStudioManager: Failed to stop VTube Studio - $_"
             return $false
         }
     }
@@ -962,7 +1061,7 @@ class AppManager {
                 if (Test-Path $modulePath) {
                     . $modulePath
                 } else {
-                    Write-Host "DiscordManager module not found at: $modulePath"
+                    Write-Host "[ERROR] DiscordManager: Module not found at path: $modulePath"
                     return $false
                 }
 
@@ -972,7 +1071,7 @@ class AppManager {
                 # Set Gaming Mode
                 return $discordManager.SetGamingMode($this.GameConfig.name)
             } catch {
-                Write-Host "Failed to set Discord Gaming Mode: $_"
+                Write-Host "[ERROR] DiscordManager: Failed to set Discord Gaming Mode - $_"
                 return $false
             }
         }
@@ -991,7 +1090,7 @@ class AppManager {
                 if (Test-Path $modulePath) {
                     . $modulePath
                 } else {
-                    Write-Host "DiscordManager module not found at: $modulePath"
+                    Write-Host "[ERROR] DiscordManager: Module not found at path: $modulePath"
                     return $false
                 }
 
@@ -1001,7 +1100,7 @@ class AppManager {
                 # Restore Normal Mode
                 return $discordManager.RestoreNormalMode()
             } catch {
-                Write-Host "Failed to restore Discord Normal Mode: $_"
+                Write-Host "[ERROR] DiscordManager: Failed to restore Discord Normal Mode - $_"
                 return $false
             }
         }
@@ -1131,7 +1230,7 @@ class AppManager {
                             if ($this.Logger) { $this.Logger.Info("Background job '$jobKey' in state: $($job.State)", "APP") }
                         }
                     }
-                    
+
                     # Remove the job
                     Remove-Job -Job $job -Force -ErrorAction SilentlyContinue
                 }

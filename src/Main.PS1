@@ -231,6 +231,8 @@ function Show-Help {
         Write-Host "Usage: $executionCommand [GameId|--config|--list|--help|--version]"
         Write-Host "Run without arguments to open the configuration editor."
     }
+    # Exit with success code for CI/CD testing
+    exit 0
 }
 
 <#
@@ -256,6 +258,9 @@ function Show-Version {
     } catch {
         Write-Host "Version information not available."
     }
+
+    # Exit with success code for CI/CD testing
+    exit 0
 }
 
 <#
@@ -274,7 +279,7 @@ function Show-GameList {
         if (-not (Test-Path $configPath)) {
             Write-Host "Configuration file not found: $configPath"
             Write-Host "Please run the configuration editor to set up your games."
-            return
+            exit 1
         }
 
         $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -289,7 +294,7 @@ function Show-GameList {
             } else {
                 Write-Host "No games are configured. Use --config to set up your games."
             }
-            return
+            exit 1
         }
 
         Write-Host ""
@@ -333,7 +338,11 @@ function Show-GameList {
 
     } catch {
         Write-Host "[ERROR] GameList: Failed to load game list - $_"
+        exit 1
     }
+
+    # Exit with success code for CI/CD testing
+    exit 0
 }
 
 <#
@@ -458,17 +467,17 @@ function Main {
         # Handle help and version first (these don't require config)
         if ($Help) {
             Show-Help
-            return
+            # Exit handled by Show-Help function
         }
 
         if ($Version) {
             Show-Version
-            return
+            # Exit handled by Show-Version function
         }
 
         if ($List) {
             Show-GameList
-            return
+            # Exit handled by Show-GameList function
         }
 
         # Handle game launch (GameId provided) - Check this first

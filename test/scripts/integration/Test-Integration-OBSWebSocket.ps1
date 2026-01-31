@@ -71,6 +71,27 @@ try {
     exit 1
 }
 
+# Load LanguageHelper for localization support
+try {
+    $languageHelperPath = Join-Path -Path $projectRoot -ChildPath "scripts/LanguageHelper.ps1"
+    . $languageHelperPath
+    Write-BuildLog "[OK] LanguageHelper loaded successfully"
+} catch {
+    Write-BuildLog "[ERROR] Failed to load LanguageHelper: $_"
+    exit 1
+}
+
+# Load messages for localization
+try {
+    $language = if ($config.language) { $config.language } else { "en" }
+    $messagesPath = Join-Path -Path $projectRoot -ChildPath "localization/$language.json"
+    $messages = Get-Content $messagesPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    Write-BuildLog "[OK] Messages loaded successfully for language: $language"
+} catch {
+    Write-BuildLog "[WARNING] Failed to load messages, using empty hashtable: $_"
+    $messages = @{}
+}
+
 # Run the test
 Write-BuildLog "--- Starting OBS WebSocket Connection Test ---"
 Write-BuildLog "Testing OBSManager module functionality"
@@ -80,14 +101,13 @@ Write-BuildLog "  Port: $($config.integrations.obs.websocket.port)"
 Write-BuildLog "  Password: $(if ($config.integrations.obs.websocket.password) { '***' } else { '(not set)' })"
 
 if (Get-Process -Name "obs64", "obs32" -ErrorAction SilentlyContinue) {
-    Write-BuildLog "[INFO] OBS process detected running"
-    Write-BuildLog "[INFO] terminate OBS with 'Stop-Process -Name obs64,obs32' if you want to test starting OBS from this script."
-    Write-BuildLog "[INFO] OBS is not available"
+    Write-BuildLog "[ERROR] OBS process is already running"
+    Write-BuildLog "[ERROR] This test requires OBS to be closed before execution"
+    Write-BuildLog "[ERROR] Please terminate OBS with 'Stop-Process -Name obs64,obs32' and run the test again"
     exit 1
 }
 
-# Create DiscordManager instance
-$messages = @{}  # Mock messages object for testing
+# Create OBSManager instance
 try {
     Write-BuildLog "[INFO] Creating OBSManager instance..."
     $obsManager = New-OBSManager -OBSConfig $config.integrations.obs -Messages $messages
@@ -102,22 +122,24 @@ try {
     $obsManager.StartOBS()
     Write-BuildLog "[INFO] OBS Studio process started."
 
-} catch {
-    Write-BuildLog "[ERROR] Failed to start OBS: $_"
-    exit 1
-}
+    Write-BuildLog "[INFO] Waiting for OBS to initialize..."
+    $maxWaitSeconds = 20
+    $checkIntervalSeconds = 1
+    $elapsedSeconds = 0
 
-Write-BuildLog "[INFO] Waiting for OBS to initialize..."
-Start-Sleep 5  # Wait for OBS to start
+    while ($elapsedSeconds -lt $maxWaitSeconds) {
+        if ($obsManager.IsOBSRunning()) {
+            Write-BuildLog "[INFO] OBS process is running (waited ${elapsedSeconds}s)"
+            break
+        }
+        Start-Sleep -Seconds $checkIntervalSeconds
+        $elapsedSeconds += $checkIntervalSeconds
+    }
 
-try {
-    try {
-        Write-BuildLog "[INFO] Checking if OBS process is running with IsOBSRunning()..."
-        $obsManager.IsOBSRunning()
-        Write-BuildLog "[INFO] OBS process is running and IsOBSRunning() is true."
-    } catch {
-        Write-BuildLog "[ERROR] IsOBSRunning() failed: $_"
-        exit 1
+    if (-not $obsManager.IsOBSRunning()) {
+        Write-BuildLog "[ERROR] OBS failed to start within ${maxWaitSeconds} seconds"
+        $testSuccessful = $false
+        return
     }
 
     $testSuccessful = $true
@@ -126,13 +148,15 @@ try {
         $connected = $obsManager.Connect()
         if (-not $connected) {
             Write-BuildLog "[ERROR] Failed to connect or authenticate to OBS WebSocket"
-            exit 1
+            $testSuccessful = $false
+            return
         }
         Write-BuildLog "[OK] OBS WebSocket connection successful!"
 
     } catch {
         Write-BuildLog "[ERROR] Connect() failed: $_"
-        exit 1
+        $testSuccessful = $false
+        return
     }
 
     try {
