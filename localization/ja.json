@@ -698,5 +698,6 @@
     "tabVisibilityGroup": "タブ表示設定",
     "showOBSTabCheckBox": "OBSのタブを表示",
     "showDiscordTabCheckBox": "Discordのタブを表示",
-    "showVTubeStudioTabCheckBox": "VTube Studioのタブを表示"
+    "showVTubeStudioTabCheckBox": "VTube Studioのタブを表示",
+    "showVoiceMeeterTabCheckBox": "VoiceMeeterのタブを表示"
 }

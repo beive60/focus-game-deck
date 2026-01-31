@@ -698,5 +698,6 @@
     "tabVisibilityGroup": "选项卡显示设置",
     "showOBSTabCheckBox": "显示OBS选项卡",
     "showDiscordTabCheckBox": "显示Discord选项卡",
-    "showVTubeStudioTabCheckBox": "显示VTube Studio选项卡"
+    "showVTubeStudioTabCheckBox": "显示VTube Studio选项卡",
+    "showVoiceMeeterTabCheckBox": "显示VoiceMeeter选项卡"
 }

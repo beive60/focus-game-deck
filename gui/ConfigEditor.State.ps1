@@ -294,6 +294,7 @@ class ConfigEditorState {
                 showOBS = $true
                 showDiscord = $true
                 showVTubeStudio = $true
+                showVoiceMeeter = $true
             }
             language = ""
         }

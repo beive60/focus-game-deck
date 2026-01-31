@@ -698,5 +698,6 @@
     "tabVisibilityGroup": "Visibilidade das Abas",
     "showOBSTabCheckBox": "Mostrar aba OBS",
     "showDiscordTabCheckBox": "Mostrar aba Discord",
-    "showVTubeStudioTabCheckBox": "Mostrar aba VTube Studio"
+    "showVTubeStudioTabCheckBox": "Mostrar aba VTube Studio",
+    "showVoiceMeeterTabCheckBox": "Mostrar aba VoiceMeeter"
 }

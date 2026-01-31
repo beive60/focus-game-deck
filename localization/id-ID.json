@@ -698,5 +698,6 @@
     "tabVisibilityGroup": "Visibilitas Tab",
     "showOBSTabCheckBox": "Tampilkan tab OBS",
     "showDiscordTabCheckBox": "Tampilkan tab Discord",
-    "showVTubeStudioTabCheckBox": "Tampilkan tab VTube Studio"
+    "showVTubeStudioTabCheckBox": "Tampilkan tab VTube Studio",
+    "showVoiceMeeterTabCheckBox": "Tampilkan tab VoiceMeeter"
 }

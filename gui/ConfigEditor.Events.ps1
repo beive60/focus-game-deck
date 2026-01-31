@@ -3055,6 +3055,7 @@ class ConfigEditorEvents {
                 "OBS" { $script:Window.FindName("OBSTab") }
                 "Discord" { $script:Window.FindName("DiscordTab") }
                 "VTubeStudio" { $script:Window.FindName("VTubeStudioTab") }
+                "VoiceMeeter" { $script:Window.FindName("VoiceMeeterTab") }
                 default { $null }
             }
 
@@ -3689,6 +3690,12 @@ class ConfigEditorEvents {
             if ($showVTubeStudioTabCheckBox) {
                 $showVTubeStudioTabCheckBox.add_Checked({ $self.HandleTabVisibilityChanged("VTubeStudio", $true) }.GetNewClosure())
                 $showVTubeStudioTabCheckBox.add_Unchecked({ $self.HandleTabVisibilityChanged("VTubeStudio", $false) }.GetNewClosure())
+            }
+
+            $showVoiceMeeterTabCheckBox = $this.uiManager.Window.FindName("ShowVoiceMeeterTabCheckBox")
+            if ($showVoiceMeeterTabCheckBox) {
+                $showVoiceMeeterTabCheckBox.add_Checked({ $self.HandleTabVisibilityChanged("VoiceMeeter", $true) }.GetNewClosure())
+                $showVoiceMeeterTabCheckBox.add_Unchecked({ $self.HandleTabVisibilityChanged("VoiceMeeter", $false) }.GetNewClosure())
             }
 
             # --- Menu Items ---

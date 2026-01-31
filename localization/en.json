@@ -707,5 +707,6 @@
     "tabVisibilityGroup": "Tab Visibility",
     "showOBSTabCheckBox": "Show OBS tab",
     "showDiscordTabCheckBox": "Show Discord tab",
-    "showVTubeStudioTabCheckBox": "Show VTube Studio tab"
+    "showVTubeStudioTabCheckBox": "Show VTube Studio tab",
+    "showVoiceMeeterTabCheckBox": "Show VoiceMeeter tab"
 }

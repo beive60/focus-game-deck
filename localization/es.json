@@ -698,5 +698,6 @@
     "tabVisibilityGroup": "Visibilidad de pestañas",
     "showOBSTabCheckBox": "Mostrar pestaña OBS",
     "showDiscordTabCheckBox": "Mostrar pestaña Discord",
-    "showVTubeStudioTabCheckBox": "Mostrar pestaña VTube Studio"
+    "showVTubeStudioTabCheckBox": "Mostrar pestaña VTube Studio",
+    "showVoiceMeeterTabCheckBox": "Mostrar pestaña VoiceMeeter"
 }

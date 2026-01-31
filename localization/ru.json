@@ -698,5 +698,6 @@
     "tabVisibilityGroup": "Видимость вкладок",
     "showOBSTabCheckBox": "Показать вкладку OBS",
     "showDiscordTabCheckBox": "Показать вкладку Discord",
-    "showVTubeStudioTabCheckBox": "Показать вкладку VTube Studio"
+    "showVTubeStudioTabCheckBox": "Показать вкладку VTube Studio",
+    "showVoiceMeeterTabCheckBox": "Показать вкладку VoiceMeeter"
 }

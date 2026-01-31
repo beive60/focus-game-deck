@@ -216,6 +216,7 @@ $script:CheckBoxMappings = @{
     "ShowOBSTabCheckBox" = "showOBSTabCheckBox"
     "ShowDiscordTabCheckBox" = "showDiscordTabCheckBox"
     "ShowVTubeStudioTabCheckBox" = "showVTubeStudioTabCheckBox"
+    "ShowVoiceMeeterTabCheckBox" = "showVoiceMeeterTabCheckBox"
 }
 
 # RadioButton content mappings

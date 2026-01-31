@@ -698,5 +698,6 @@
     "tabVisibilityGroup": "Visibilité des onglets",
     "showOBSTabCheckBox": "Afficher l'onglet OBS",
     "showDiscordTabCheckBox": "Afficher l'onglet Discord",
-    "showVTubeStudioTabCheckBox": "Afficher l'onglet VTube Studio"
+    "showVTubeStudioTabCheckBox": "Afficher l'onglet VTube Studio",
+    "showVoiceMeeterTabCheckBox": "Afficher l'onglet VoiceMeeter"
 }

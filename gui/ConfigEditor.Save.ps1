@@ -929,6 +929,16 @@ function Save-GlobalSettingsData {
             Write-Verbose "Saved showVTubeStudio: $($showVTubeStudioTabCheckBox.IsChecked)"
         }
 
+        $showVoiceMeeterTabCheckBox = $script:Window.FindName("ShowVoiceMeeterTabCheckBox")
+        if ($showVoiceMeeterTabCheckBox) {
+            if (-not $script:StateManager.ConfigData.tabVisibility.PSObject.Properties["showVoiceMeeter"]) {
+                $script:StateManager.ConfigData.tabVisibility | Add-Member -NotePropertyName "showVoiceMeeter" -NotePropertyValue ([bool]$showVoiceMeeterTabCheckBox.IsChecked) -Force
+            } else {
+                $script:StateManager.ConfigData.tabVisibility.showVoiceMeeter = [bool]$showVoiceMeeterTabCheckBox.IsChecked
+            }
+            Write-Verbose "Saved showVoiceMeeter: $($showVoiceMeeterTabCheckBox.IsChecked)"
+        }
+
         # Mark configuration as modified
         $script:StateManager.SetModified()
 
