@@ -6,6 +6,22 @@ This comprehensive guide covers the complete release workflow for Focus Game Dec
 
 This guide provides practical procedures for developers to execute version management and release processes. It covers all steps from daily development work to production release distribution.
 
+## Quick Reference: Release Workflow
+
+For experienced developers, here's the simplified workflow:
+
+```powershell
+# 1. Update version in build-tools/Version.ps1 (edit manually)
+# 2. Create version tag and release notes
+./scripts/Release-Manager.ps1 -UpdateType patch -CreateTag -GenerateReleaseNotes
+
+# 3. Build release (choose one)
+./build-tools/Release-Manager.ps1 -Development  # For testing
+./build-tools/Release-Manager.ps1 -Production   # For official release (with signing)
+
+# 4. Upload to GitHub Releases
+```
+
 ## Prerequisites
 
 ### Required Tools
@@ -13,11 +29,16 @@ This guide provides practical procedures for developers to execute version manag
 - **Git**: Version control and tag creation
 - **PowerShell 5.1+**: Release management script execution
 - **Visual Studio Code**: Recommended editor (optional)
-- **Code Signing Certificate**: For digital signatures (release only)
+- **Code Signing Certificate**: For digital signatures (production releases only)
 
-### Configuration File Security
+### Two Release Manager Scripts
 
-**SECURITY REMINDER**: Before building releases, ensure:
+**Important**: This project has two different Release-Manager.ps1 scripts with distinct purposes:
+
+| Script | Category | Purpose |
+|--------|----------|---------|
+| `scripts/Release-Manager.ps1` | Version management | Updates version, creates git tags, generates release notes |
+| `build-tools/Release-Manager.ps1` | Build orchestration | Compiles executables, signs code, creates release packages |
 
 ## Daily Development Workflow
 
@@ -34,7 +55,7 @@ git pull origin main
 git checkout -b feature/new-feature
 ```
 
-### 2. Commit Conventions During Development
+### 2. Commit Conventions
 
 #### Commit Message Format
 
@@ -59,31 +80,6 @@ git checkout -b feature/new-feature
 | `chore` | Build/configuration changes | None |
 | `BREAKING CHANGE` | Breaking changes | MAJOR++ |
 
-#### Commit Examples
-
-```bash
-# New feature addition
-git commit -m "feat: add Discord integration for game status updates
-
-- Implement Discord Rich Presence API integration
-- Add configuration options for Discord features
-- Update GUI to include Discord settings tab"
-
-# Bug fix
-git commit -m "fix: resolve config file encoding issue on Japanese Windows
-
-- Fix UTF-8 BOM handling in config parser
-- Add fallback encoding detection
-- Update error messages for better user experience"
-
-# Breaking change
-git commit -m "feat: redesign configuration file structure
-
-BREAKING CHANGE: Configuration file format has changed from JSON to YAML.
-Users need to migrate their existing config.json files using the provided
-migration tool."
-```
-
 ## Release Process
 
 ### Phase 1: Release Preparation
@@ -98,7 +94,7 @@ migration tool."
 # [OK] Git repository is clean (no uncommitted changes)
 # [OK] All tests passing
 # [OK] Documentation is up to date
-# [OK] Version.ps1 contains correct current version
+# [OK] build-tools/Version.ps1 contains correct current version
 ```
 
 #### 2. Determine Next Version
@@ -108,114 +104,180 @@ migration tool."
 ./scripts/Version-Helper.ps1 next
 
 # Sample output:
-# Current version: 1.0.1-alpha
+# Current version: 1.0.0
 #
 # Release options:
 #   Major:  2.0.0
-#   Minor:  2.1.0
-#   Patch:  2.0.2
+#   Minor:  1.1.0
+#   Patch:  1.0.1
 #
 # Pre-release options:
-#   Alpha:  2.0.2-alpha
-#   Beta:   2.0.2-beta
-#   RC:     2.0.2-rc
+#   Alpha:  1.0.1-alpha
+#   Beta:   1.0.1-beta
+#   RC:     1.0.1-rc
 ```
 
 ### Phase 2: Version Update and Tag Creation
 
-#### Alpha Release Example
+#### Using the Version Release Manager (scripts/Release-Manager.ps1)
 
 ```powershell
-# Check with DRY RUN (no actual changes)
-./scripts\Release-Manager.ps1 -UpdateType prerelease -PreReleaseType alpha -DryRun
+# Check with DRY RUN first (no actual changes)
+./scripts/Release-Manager.ps1 -UpdateType patch -DryRun
 
-# Create actual release (generate tag and release notes)
-./scripts\Release-Manager.ps1 -UpdateType prerelease -PreReleaseType alpha -CreateTag -GenerateReleaseNotes -ReleaseMessage "Alpha release for testing core functionality"
+# Create actual release (updates version, creates tag, generates release notes)
+./scripts/Release-Manager.ps1 -UpdateType patch -CreateTag -GenerateReleaseNotes -ReleaseMessage "Patch release with bug fixes"
 ```
 
-#### Patch Release Example
+#### Release Type Examples
 
 ```powershell
-# Bug fix release
-./scripts\Release-Manager.ps1 -UpdateType patch -CreateTag -GenerateReleaseNotes -ReleaseMessage "Patch release with critical bug fixes"
+# Alpha pre-release
+./scripts/Release-Manager.ps1 -UpdateType prerelease -PreReleaseType alpha -CreateTag -GenerateReleaseNotes
+
+# Beta pre-release
+./scripts/Release-Manager.ps1 -UpdateType prerelease -PreReleaseType beta -CreateTag -GenerateReleaseNotes
+
+# Patch release (bug fixes)
+./scripts/Release-Manager.ps1 -UpdateType patch -CreateTag -GenerateReleaseNotes
+
+# Minor release (new features)
+./scripts/Release-Manager.ps1 -UpdateType minor -CreateTag -GenerateReleaseNotes
+
+# Major release (breaking changes)
+./scripts/Release-Manager.ps1 -UpdateType major -CreateTag -GenerateReleaseNotes
 ```
 
-#### Major Release Example
+### Phase 3: Build Release Package
+
+#### Using the Build Release Manager (build-tools/Release-Manager.ps1)
+
+The build system uses specialized tool scripts orchestrated by Release-Manager.ps1:
+
+```text
+Release-Manager.ps1 (Orchestrator)
+├── Install-BuildDependencies.ps1  (Tool: Dependency installation)
+├── Embed-XamlResources.ps1        (Tool: XAML embedding)
+├── Invoke-PsScriptBundler.ps1     (Tool: Script bundling)
+├── Build-Executables.ps1          (Tool: Executable compilation)
+├── Copy-Resources.ps1             (Tool: Resource copying)
+├── Sign-Executables.ps1           (Tool: Code signing)
+└── Create-Package.ps1             (Tool: Package creation)
+```
+
+#### Build Commands
 
 ```powershell
-# Official release
-./scripts\Release-Manager.ps1 -UpdateType minor -CreateTag -GenerateReleaseNotes -ReleaseMessage "Official v1.1.0 release with new platform support"
+# Development build (no signing) - For testing
+./build-tools/Release-Manager.ps1 -Development
+
+# Production build (with signing) - For official releases
+./build-tools/Release-Manager.ps1 -Production
+
+# Setup only (install dependencies)
+./build-tools/Release-Manager.ps1 -SetupOnly
+
+# Clean all build artifacts
+./build-tools/Release-Manager.ps1 -Clean
+
+# Verbose logging for troubleshooting
+./build-tools/Release-Manager.ps1 -Development -Verbose
 ```
 
-### Phase 3: GitHub Release Creation
+#### Individual Tool Scripts (Advanced)
+
+For fine-grained control, you can use individual tool scripts:
+
+```powershell
+# Install build dependencies (ps2exe module)
+./build-tools/Install-BuildDependencies.ps1
+
+# Embed XAML resources into PowerShell
+./build-tools/Embed-XamlResources.ps1
+
+# Bundle PowerShell scripts
+./build-tools/Invoke-PsScriptBundler.ps1 -EntryPoint "gui/ConfigEditor.ps1" -OutputPath "build/ConfigEditor-bundled.ps1"
+
+# Build executables
+./build-tools/Build-Executables.ps1
+
+# Copy runtime resources
+./build-tools/Copy-Resources.ps1
+
+# Sign executables (requires certificate)
+./build-tools/Sign-Executables.ps1 -SignAll
+
+# Create final package
+./build-tools/Create-Package.ps1 -IsSigned
+```
+
+#### Build Output Structure
+
+After a successful build:
+
+```text
+release/
+├── Focus-Game-Deck.exe          # Main router executable
+├── ConfigEditor.exe             # GUI configuration editor
+├── Invoke-FocusGameDeck.exe     # Game launcher engine
+├── config/                      # Configuration files
+├── localization/                # Language files
+├── README.txt                   # Release documentation
+└── version-info.json            # Build metadata
+```
+
+### Phase 4: GitHub Release Creation
 
 #### 1. Edit Release Notes
 
 ```powershell
 # Edit the generated release notes file
-# Example: release-notes-1.0.2-alpha.md
-code release-notes-1.0.2-alpha.md
+code release-notes-1.0.1.md
 ```
 
-#### 2. Build and Asset Preparation
+#### 2. Create GitHub Release
 
-##### Generate Executables and Digital Signing
-
-```powershell
-# Development build (unsigned)
-./build-tools/Release-Manager.ps1 -Development
-
-# Production build (signed) *Requires certificate setup
-./build-tools/Release-Manager.ps1 -Production
-
-# Individual build operations
-./build-tools/Build-FocusGameDeck.ps1 -Install    # Install ps2exe module
-./build-tools/Build-FocusGameDeck.ps1 -Build      # Generate executables
-./build-tools/Build-FocusGameDeck.ps1 -Sign       # Apply signatures to existing builds
-./build-tools/Build-FocusGameDeck.ps1 -Clean      # Clean up build artifacts
-
-# Individual digital signing operations
-./Sign-Executables.ps1 -ListCertificates    # List available certificates
-./Sign-Executables.ps1 -TestCertificate     # Test configured certificate
-./Sign-Executables.ps1 -SignAll             # Sign all executables
-```
-
-**Generated Executables**:
-
-- `Focus-Game-Deck.exe` - Application
-
-**Signing Configuration** (`config/signing-config.json`):
-
-```json
-{
-  "codeSigningSettings": {
-    "enabled": true,
-    "certificateThumbprint": "YOUR_CERTIFICATE_THUMBPRINT",
-    "timestampServer": "http://timestamp.digicert.com"
-  }
-}
-```
-
-#### 3. GitHub Release Creation Steps
-
-1. Access GitHub Releases page
-   - <https://github.com/beive60/focus-game-deck/releases>
+1. Access GitHub Releases page: <https://github.com/beive60/focus-game-deck/releases>
 2. Click "Create a new release"
-3. Enter Release Information
+3. Enter Release Information:
 
    ```text
-   Tag: v1.0.2-alpha.1
-   Release title: Focus Game Deck v1.0.2-alpha.1 - Alpha Test Release
+   Tag: v1.0.1
+   Release title: Focus Game Deck v1.0.1
    Description: [Copy content from generated release notes]
    ```
 
-4. Upload Assets
-   - `FocusGameDeck-v1.0.2-alpha.1-Setup.exe`
-   - `FocusGameDeck-v1.0.2-alpha.1-Portable.zip`
-   - `SHA256SUMS.txt`
-5. Release Settings
-   - Pre-release: [OK] (for alpha/beta/RC versions)
-   - Set as latest release: (official versions only)
+4. Upload Assets from `release/` directory:
+   - `FocusGameDeck-v1.0.1-Portable.zip` (create from release folder)
+   - `SHA256SUMS.txt` (generate checksums)
+
+5. Release Settings:
+   - Pre-release: Check for alpha/beta/RC versions
+   - Set as latest release: Only for stable releases
+
+## Complete Release Workflow Summary
+
+Here's the complete workflow in order:
+
+```powershell
+# Step 1: Ensure clean working directory
+git status
+git pull origin main
+
+# Step 2: Run validation
+./scripts/Version-Helper.ps1 validate
+
+# Step 3: Update version and create tag
+./scripts/Release-Manager.ps1 -UpdateType patch -CreateTag -GenerateReleaseNotes -ReleaseMessage "Release description"
+
+# Step 4: Build release package
+./build-tools/Release-Manager.ps1 -Production
+
+# Step 5: Verify build
+Get-AuthenticodeSignature release/*.exe | Format-Table Path, Status
+
+# Step 6: Create GitHub Release and upload assets
+```
 
 ## Emergency Response
 
@@ -223,19 +285,17 @@ code release-notes-1.0.2-alpha.md
 
 ```powershell
 # Emergency bug fix release
-./scripts\Release-Manager.ps1 -UpdateType patch -CreateTag -GenerateReleaseNotes -ReleaseMessage "Hotfix for critical security vulnerability"
+./scripts/Release-Manager.ps1 -UpdateType patch -CreateTag -GenerateReleaseNotes -ReleaseMessage "Hotfix for critical issue"
+./build-tools/Release-Manager.ps1 -Production
 
 # Immediately create GitHub Release and notify users
 ```
 
 ### Release Rollback
 
-```powershell
-# Withdraw problematic release
-# 1. Change GitHub Release to "Draft"
-# 2. Remove problematic assets
-# 3. Publish downgrade instructions to previous version
-```
+1. Change GitHub Release to "Draft"
+2. Remove problematic assets
+3. Publish downgrade instructions to previous version
 
 ## Troubleshooting
 
@@ -249,28 +309,27 @@ code release-notes-1.0.2-alpha.md
 
 # Error: Version file validation failed
 # Solution: Check syntax errors in Version.ps1
-PowerShell -File Version.ps1  # Syntax check
+pwsh -File build-tools/Version.ps1  # Syntax check
 ```
 
 #### 2. Git Tag Creation Fails
 
 ```powershell
 # Error: 'tag already exists'
-# Solution: Delete existing tag or use different name
-git tag -d v1.0.2-alpha.1        # Delete local tag
-git push origin :v1.0.2-alpha.1  # Delete remote tag
+# Solution: Delete existing tag
+git tag -d v1.0.1        # Delete local tag
+git push origin :v1.0.1  # Delete remote tag
 
 # Error: 'not a git repository'
 # Solution: Execute in project root directory
-cd C:/path\to/focus-game-deck
 ```
 
-#### 3. Release Notes Generation Fails
+#### 3. Build Fails
 
 ```powershell
-# Manually create release notes
-$template = Get-Content "docs\RELEASE-NOTES-TEMPLATE.md"
-$template -replace "{VERSION}", "1.0.2-alpha.1" | Out-File "release-notes-1.0.2-alpha.1.md"
+# Clean and rebuild
+./build-tools/Release-Manager.ps1 -Clean
+./build-tools/Release-Manager.ps1 -Development -Verbose
 ```
 
 ## Best Practices
@@ -281,69 +340,30 @@ $template -replace "{VERSION}", "1.0.2-alpha.1" | Out-File "release-notes-1.0.2-
 - [ ] Execute manual test cases
 - [ ] Verify documentation updates
 - [ ] Run security scans
-- [ ] Execute performance tests
 
 ### 2. Staged Release Strategy
 
 ```text
 Development → Alpha → Beta → RC → Official
      ↓         ↓      ↓     ↓      ↓
-   Internal  Limited Public Final General
-   Testing   Testers Beta  Check Release
+  Internal  Limited Public Final General
+  Testing   Testers Beta  Check Release
 ```
 
-### 3. Communication
+### 3. Security Focus
 
-- **Alpha**: Tester-limited private channels
-- **Beta**: GitHub Issues + landing page
-- **Official**: Official announcements + social media
-
-### 4. Security Focus
-
-- Digital signatures mandatory for all releases
+- Digital signatures mandatory for production releases
 - SHA256 checksums publication mandatory
 - Rapid response system for vulnerability reports
 
-## Future Automation Plans
+## Related Documentation
 
-### GitHub Actions Integration (Future)
-
-```yaml
-# .github/workflows/release.yml (example)
-name: Release
-on:
-  push:
-    tags:
-      - 'v*'
-jobs:
-  build-and-release:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Build Assets
-        run: ./build/Create-All-Assets.ps1
-      - name: Create Release
-        uses: actions/create-release@v1
-        # ... omitted
-```
-
-## References
-
-### Related Documentation
-
-- [VERSION-MANAGEMENT.md](/docs/project-info/version-management.md) - Semantic versioning specification
-- [release-process.md)](/docs/developer-guide/release-process.md) - GitHub Releases operation rules
-- [architecture.md](/docs/developer-guide/architecture.md) - Technical architecture
-- [roadmap.md](/docs/project-info/roadmap.md) - Project roadmap
-
-### External Resources
-
-- [Semantic Versioning 2.0.0](https://semver.org/)
-- [Conventional Commits](https://www.conventionalcommits.org/)
-- [GitHub Releases Documentation](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)
+- [Version Management](../project-info/version-management.md) - Semantic versioning specification
+- [Build System](build-system.md) - Build infrastructure details
+- [Architecture Guide](architecture.md) - Technical architecture
 
 ---
 
-**Last Updated**: September 28, 2025
-**Version**: 1.1.0
+**Last Updated**: January 2026
+**Version**: 2.0.0 - Simplified workflow documentation
 **Created by**: GitHub Copilot Assistant

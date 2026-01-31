@@ -46,7 +46,7 @@ if (Test-Path $VersionModulePath) {
 $script:Config = @{
     VersionFile = $VersionModulePath
     GitRepoPath = $PSScriptRoot
-    ReleaseNotesTemplate = Join-Path $PSScriptRoot "docs\RELEASE-NOTES-TEMPLATE.md"
+    ReleaseNotesTemplate = Join-Path $PSScriptRoot "docs/RELEASE-NOTES-TEMPLATE.md"
     ChangelogFile = Join-Path $PSScriptRoot "CHANGELOG.md"
 }
 

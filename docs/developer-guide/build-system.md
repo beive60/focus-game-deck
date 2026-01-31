@@ -427,16 +427,16 @@ To add a new entry point that requires build-time patching:
 
 ```powershell
 # List available code signing certificates
-./Sign-Executables.ps1 -ListCertificates
+./build-tools/Sign-Executables.ps1 -ListCertificates
 
 # Test configured certificate
-./Sign-Executables.ps1 -TestCertificate
+./build-tools/Sign-Executables.ps1 -TestCertificate
 
 # Sign all executables in build directory
-./Sign-Executables.ps1 -SignAll
+./build-tools/Sign-Executables.ps1 -SignAll
 
 # Sign specific file
-./Sign-Executables.ps1 -SignFile "path\to/executable.exe"
+./build-tools/Sign-Executables.ps1 -SignFile "path/to/executable.exe"
 ```
 
 **Configuration** (`config/signing-config.json`):
@@ -605,8 +605,8 @@ After each build, verify the generated executables:
 Get-AuthenticodeSignature "release/*.exe" | Format-Table Path, Status
 
 # Test executable functionality
-.\release/Focus-Game-Deck.exe --help
-.\release/Focus-Game-Deck-Config-Editor.exe
+./release/Focus-Game-Deck.exe --help
+./release/ConfigEditor.exe
 ```
 
 ## Troubleshooting
@@ -707,12 +707,12 @@ This provides:
 
 ## Related Documentation
 
-- [DEVELOPER-RELEASE-GUIDE.md](./DEVELOPER-RELEASE-GUIDE.md) - Complete release process
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture overview
-- [GITHUB-RELEASES-GUIDE.md](./GITHUB-RELEASES-GUIDE.md) - GitHub release management
+- [Release Process Guide](release-process.md) - Complete release process
+- [Architecture Guide](architecture.md) - System architecture overview
+- [Version Management](../project-info/version-management.md) - Version management specification
 
 ---
 
-**Last Updated**: November 16, 2025
-**Version**: 3.0.0 - SRP Architecture Refactoring
+**Last Updated**: January 2026
+**Version**: 3.1.0 - Documentation cross-reference fixes
 **Maintainer**: Focus Game Deck Development Team
