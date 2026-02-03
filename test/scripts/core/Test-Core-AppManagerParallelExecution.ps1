@@ -2,22 +2,25 @@
 
 <#
 .SYNOPSIS
-    Unit test for AppManager parallel execution functionality.
+    Unit test for AppManager background job implementation.
 
 .DESCRIPTION
     This script tests the AppManager's background job implementation for OBS replay buffer
     parallel processing. It validates that:
-    - Background jobs are created correctly
-    - Path resolution works in both script and executable modes
+    - Background jobs use inline ScriptBlock (not external file) for ps2exe compatibility
+    - Password decryption is performed in main process before job starts
     - Job cleanup handles all states properly
+    - WebSocket operations are properly encapsulated in try-finally blocks
     - Error handling returns correct values
-    
-    This is a unit test that uses mocking to avoid requiring actual OBS Studio.
+
+    This is a unit test that validates the implementation structure and patterns.
+    Integration tests with actual OBS Studio are separate.
 
 .NOTES
     Author: Focus Game Deck Team
-    Version: 1.0.0
+    Version: 2.0.0
     Created: 2026-01-28
+    Updated: 2026-02-04 - Updated for inline ScriptBlock implementation
 #>
 
 param(
@@ -65,11 +68,11 @@ Write-BuildLog "Test 1: Verifying AppManager.ps1 structure..."
 try {
     $appManagerPath = Join-Path -Path $projectRoot -ChildPath "src/modules/AppManager.ps1"
     $appManagerContent = Get-Content -Path $appManagerPath -Raw
-    
+
     $hasHandleOBSAction = $appManagerContent -match '\[bool\]\s+HandleOBSAction'
     $hasProcessShutdownSequence = $appManagerContent -match '\[bool\]\s+ProcessShutdownSequence'
     $hasBackgroundJobCode = $appManagerContent -match 'Start-Job.*-ScriptBlock'
-    
+
     Test-Result "AppManager.ps1 exists" $true
     Test-Result "HandleOBSAction method exists" $hasHandleOBSAction
     Test-Result "ProcessShutdownSequence method exists" $hasProcessShutdownSequence
@@ -78,44 +81,53 @@ try {
     Test-Result "AppManager.ps1 verification" $false $_
 }
 
-# Test 2: Verify OBSReplayBufferBackground.ps1 exists
+# Test 2: Verify background job ScriptBlock exists in AppManager
 Write-Host ""
-Write-BuildLog "Test 2: Verifying background worker script..."
+Write-BuildLog "Test 2: Verifying background job ScriptBlock in AppManager..."
 try {
-    $backgroundScriptPath = Join-Path -Path $projectRoot -ChildPath "src/modules/OBSReplayBufferBackground.ps1"
-    $backgroundExists = Test-Path $backgroundScriptPath
-    Test-Result "OBSReplayBufferBackground.ps1 exists" $backgroundExists
-    
-    if ($backgroundExists) {
-        $backgroundContent = Get-Content -Path $backgroundScriptPath -Raw
-        $hasAppRootParam = $backgroundContent -match 'param\s*\([\s\S]*?\[string\]\s+\$AppRoot'
-        $hasOBSConfigParam = $backgroundContent -match '\[object\]\s+\$OBSConfig'
-        $hasTryFinally = $backgroundContent -match 'try\s*\{[\s\S]*?\}\s*finally'
-        
-        Test-Result "Has AppRoot parameter" $hasAppRootParam
-        Test-Result "Has OBSConfig parameter" $hasOBSConfigParam
-        Test-Result "Has try-finally for cleanup" $hasTryFinally
-    }
+    $appManagerPath = Join-Path -Path $projectRoot -ChildPath "src/modules/AppManager.ps1"
+    $appManagerContent = Get-Content -Path $appManagerPath -Raw
+
+    # Check for inline ScriptBlock (not external file)
+    $hasScriptBlock = $appManagerContent -match 'Start-Job\s+-ScriptBlock\s+\{'
+    Test-Result "Background job uses inline ScriptBlock" $hasScriptBlock "Embedded in AppManager for ps2exe compatibility"
+
+    # Check for parameters passed to background job
+    $hasOBSHostnameParam = $appManagerContent -match 'param\(\$OBSHostname'
+    $hasOBSPortParam = $appManagerContent -match '\$OBSPort'
+    $hasPlainPasswordParam = $appManagerContent -match '\$PlainPassword'
+
+    Test-Result "Background job receives OBS hostname parameter" $hasOBSHostnameParam
+    Test-Result "Background job receives OBS port parameter" $hasOBSPortParam
+    Test-Result "Background job receives pre-decrypted password" $hasPlainPasswordParam "Main process decrypts, passes plaintext to job"
+
+    # Check for try-finally cleanup
+    $hasTryFinally = $appManagerContent -match 'ScriptBlock\s+\{[\s\S]*?try\s+\{[\s\S]*?\}\s+catch[\s\S]*?\}\s+finally'
+    Test-Result "Background job has try-catch-finally structure" $hasTryFinally
 } catch {
-    Test-Result "Background script verification" $false $_
+    Test-Result "Background job ScriptBlock verification" $false $_
 }
 
-# Test 3: Verify path resolution logic
+# Test 3: Verify password decryption in main process
 Write-Host ""
-Write-BuildLog "Test 3: Testing path resolution logic..."
+Write-BuildLog "Test 3: Testing password decryption in main process..."
 try {
     $appManagerContent = Get-Content -Path (Join-Path -Path $projectRoot -ChildPath "src/modules/AppManager.ps1") -Raw
-    
-    # Check for correct path resolution (two Split-Path calls for script mode)
-    $hasCorrectPathResolution = $appManagerContent -match 'Split-Path\s+-Parent\s+\(Split-Path\s+-Parent\s+\$PSScriptRoot\)'
-    Test-Result "Path resolution uses two Split-Path operations" $hasCorrectPathResolution "Required to go from src/modules/ to project root"
-    
-    # Check for executable mode path resolution
-    $hasExecutablePathResolution = $appManagerContent -match 'Split-Path\s+-Parent\s+\$currentProcess\.Path'
-    Test-Result "Path resolution handles executable mode" $hasExecutablePathResolution
-    
+
+    # Check for password decryption before job starts
+    $hasPasswordDecryption = $appManagerContent -match 'ConvertTo-SecureString\s+-String\s+\$config\.websocket\.password'
+    Test-Result "Decrypts password in main process" $hasPasswordDecryption "Required for ps2exe background job compatibility"
+
+    # Check for BSTR conversion
+    $hasBSTRConversion = $appManagerContent -match 'SecureStringToBSTR'
+    Test-Result "Converts SecureString to plaintext via BSTR" $hasBSTRConversion
+
+    # Check for ZeroFreeBSTR cleanup
+    $hasZeroFreeBSTR = $appManagerContent -match 'ZeroFreeBSTR'
+    Test-Result "Cleans up BSTR memory securely" $hasZeroFreeBSTR
+
 } catch {
-    Test-Result "Path resolution verification" $false $_
+    Test-Result "Password decryption verification" $false $_
 }
 
 # Test 4: Verify background job creation logic
@@ -123,19 +135,23 @@ Write-Host ""
 Write-BuildLog "Test 4: Testing background job creation logic..."
 try {
     $appManagerContent = Get-Content -Path (Join-Path -Path $projectRoot -ChildPath "src/modules/AppManager.ps1") -Raw
-    
-    # Check for job started tracking
-    $hasJobStartedTracking = $appManagerContent -match '\$jobStarted\s*=\s*\$false' -and $appManagerContent -match '\$jobStarted\s*=\s*\$true'
-    Test-Result "Job creation success tracking" $hasJobStartedTracking "Uses \$jobStarted variable to track success"
-    
-    # Check for proper error handling
-    $hasErrorReturn = $appManagerContent -match 'catch\s*\{[\s\S]*?return\s+\$false'
-    Test-Result "Returns false on job creation failure" $hasErrorReturn
-    
-    # Check for job storage
-    $hasJobStorage = $appManagerContent -match 'BackgroundJobs\[.*?\]\s*=\s*\$job'
-    Test-Result "Stores job reference for cleanup" $hasJobStorage
-    
+
+    # Check for BackgroundJobs property
+    $hasBackgroundJobsProperty = $appManagerContent -match '\[System\.Collections\.ArrayList\]\s+\$BackgroundJobs'
+    Test-Result "Has BackgroundJobs ArrayList property" $hasBackgroundJobsProperty
+
+    # Check for BackgroundJobs initialization in constructor
+    $hasBackgroundJobsInit = $appManagerContent -match '\$this\.BackgroundJobs\s*=\s*New-Object\s+System\.Collections\.ArrayList'
+    Test-Result "Initializes BackgroundJobs in constructor" $hasBackgroundJobsInit
+
+    # Check for job storage using ArrayList Add method
+    $hasJobStorage = $appManagerContent -match '\$this\.BackgroundJobs\.Add\('
+    Test-Result "Stores job reference using ArrayList.Add()" $hasJobStorage
+
+    # Check for ArgumentList with decrypted password
+    $hasArgumentList = $appManagerContent -match '-ArgumentList.*\$plainPassword'
+    Test-Result "Passes decrypted password in ArgumentList" $hasArgumentList
+
 } catch {
     Test-Result "Background job creation logic" $false $_
 }
@@ -145,79 +161,87 @@ Write-Host ""
 Write-BuildLog "Test 5: Testing cleanup logic..."
 try {
     $appManagerContent = Get-Content -Path (Join-Path -Path $projectRoot -ChildPath "src/modules/AppManager.ps1") -Raw
-    
-    # Check for array copy to avoid collection modification
-    $hasArrayCopy = $appManagerContent -match '@\(\$this\.Config\.BackgroundJobs\.Keys\)'
-    Test-Result "Creates array copy of keys before iteration" $hasArrayCopy "Prevents collection modification errors"
-    
-    # Check for switch statement handling all job states
-    $hasSwitch = $appManagerContent -match 'switch\s*\(\$job\.State\)'
-    Test-Result "Uses switch statement for job state handling" $hasSwitch
-    
-    # Check for handling of different states
-    $hasRunningState = $appManagerContent -match "'Running'\s*\{"
-    $hasCompletedState = $appManagerContent -match "'Completed'\s*\{"
-    $hasFailedState = $appManagerContent -match "'Failed'\s*\{"
-    $hasNotStartedState = $appManagerContent -match "'NotStarted'\s*\{"
-    
-    Test-Result "Handles 'Running' job state" $hasRunningState
-    Test-Result "Handles 'Completed' job state" $hasCompletedState
-    Test-Result "Handles 'Failed' job state" $hasFailedState
-    Test-Result "Handles 'NotStarted' job state" $hasNotStartedState
-    
+
+    # Check for BackgroundJobs.Count check
+    $hasCountCheck = $appManagerContent -match 'if\s+\(\$this\.BackgroundJobs\.Count\s+-gt\s+0\)'
+    Test-Result "Checks BackgroundJobs count before cleanup" $hasCountCheck
+
+    # Check for foreach loop over jobs
+    $hasForeachLoop = $appManagerContent -match 'foreach\s+\(\$job\s+in\s+\$this\.BackgroundJobs\)'
+    Test-Result "Iterates over BackgroundJobs collection" $hasForeachLoop
+
     # Check for Wait-Job with timeout
-    $hasWaitWithTimeout = $appManagerContent -match 'Wait-Job.*-Timeout'
+    $hasWaitWithTimeout = $appManagerContent -match 'Wait-Job\s+-Timeout\s+\d+'
     Test-Result "Waits for jobs with timeout" $hasWaitWithTimeout
-    
+
+    # Check for Receive-Job to get results
+    $hasReceiveJob = $appManagerContent -match 'Receive-Job\s+-Job'
+    Test-Result "Receives job results before cleanup" $hasReceiveJob
+
     # Check for Remove-Job
-    $hasRemoveJob = $appManagerContent -match 'Remove-Job\s+-Job\s+\$job'
+    $hasRemoveJob = $appManagerContent -match 'Remove-Job\s+-Job\s+\$job\s+-Force'
     Test-Result "Removes jobs after handling" $hasRemoveJob
-    
+
+    # Check for BackgroundJobs.Clear()
+    $hasClear = $appManagerContent -match '\$this\.BackgroundJobs\.Clear\(\)'
+    Test-Result "Clears BackgroundJobs collection" $hasClear
+
 } catch {
     Test-Result "Cleanup logic verification" $false $_
 }
 
-# Test 6: Test background script parameters
+# Test 6: Test background job ScriptBlock parameters
 Write-Host ""
-Write-BuildLog "Test 6: Testing background script parameter handling..."
+Write-BuildLog "Test 6: Testing background job ScriptBlock parameters..."
 try {
-    $backgroundScriptPath = Join-Path -Path $projectRoot -ChildPath "src/modules/OBSReplayBufferBackground.ps1"
-    $backgroundContent = Get-Content -Path $backgroundScriptPath -Raw
-    
-    # Check for required parameters
-    $hasWaitBeforeConnect = $backgroundContent -match '\[int\]\s+\$WaitBeforeConnect\s*=\s*3000'
-    Test-Result "Has WaitBeforeConnect parameter with default" $hasWaitBeforeConnect
-    
-    # Check for module imports
-    $importsLanguageHelper = $backgroundContent -match 'LanguageHelper\.ps1'
-    $importsOBSManager = $backgroundContent -match 'OBSManager\.ps1'
-    $importsWebSocketBase = $backgroundContent -match 'WebSocketAppManagerBase\.ps1'
-    
-    Test-Result "Imports LanguageHelper module" $importsLanguageHelper
-    Test-Result "Imports OBSManager module" $importsOBSManager
-    Test-Result "Imports WebSocketAppManagerBase module" $importsWebSocketBase
-    
+    $appManagerContent = Get-Content -Path (Join-Path -Path $projectRoot -ChildPath "src/modules/AppManager.ps1") -Raw
+
+    # Extract ScriptBlock to check parameters
+    $scriptBlockMatch = $appManagerContent -match 'Start-Job\s+-ScriptBlock\s+\{[\s\S]*?param\(([^\)]+)\)'
+    $hasOBSHostnameParam = $appManagerContent -match 'param\(\$OBSHostname'
+    $hasOBSPortParam = $appManagerContent -match '\$OBSPort'
+    $hasPlainPasswordParam = $appManagerContent -match '\$PlainPassword'
+    $hasMessagesDataParam = $appManagerContent -match '\$MessagesData'
+    $hasWaitBeforeConnect = $appManagerContent -match '\$WaitBeforeConnect'
+
+    Test-Result "Has OBSHostname parameter" $hasOBSHostnameParam
+    Test-Result "Has OBSPort parameter" $hasOBSPortParam
+    Test-Result "Has PlainPassword parameter" $hasPlainPasswordParam
+    Test-Result "Has MessagesData parameter" $hasMessagesDataParam
+    Test-Result "Has WaitBeforeConnect parameter" $hasWaitBeforeConnect
+
+    # Check for ArgumentList passing these values
+    $hasArgumentListValues = $appManagerContent -match '-ArgumentList.*\$config\.websocket\.host.*\$config\.websocket\.port'
+    Test-Result "ArgumentList passes all required values" $hasArgumentListValues
+
 } catch {
-    Test-Result "Background script parameters" $false $_
+    Test-Result "Background job ScriptBlock parameters" $false $_
 }
 
-# Test 7: Verify WebSocket disconnect handling
+# Test 7: Verify WebSocket handling in background job
 Write-Host ""
-Write-BuildLog "Test 7: Testing WebSocket disconnect handling..."
+Write-BuildLog "Test 7: Testing WebSocket handling in background job..."
 try {
-    $backgroundScriptPath = Join-Path -Path $projectRoot -ChildPath "src/modules/OBSReplayBufferBackground.ps1"
-    $backgroundContent = Get-Content -Path $backgroundScriptPath -Raw
-    
-    # Check for connected tracking variable
-    $hasConnectedTracking = $backgroundContent -match '\$connected\s*=\s*\$false' -and $backgroundContent -match '\$connected\s*=\s*\$obsManager\.Connect\(\)'
-    Test-Result "Tracks connection state" $hasConnectedTracking
-    
-    # Check for conditional disconnect in finally block
-    $hasConditionalDisconnect = $backgroundContent -match 'if\s*\(\$connected\)\s*\{[\s\S]*?\$obsManager\.Disconnect\(\)'
-    Test-Result "Disconnects only if connected" $hasConditionalDisconnect "Prevents errors when connection failed"
-    
+    $appManagerContent = Get-Content -Path (Join-Path -Path $projectRoot -ChildPath "src/modules/AppManager.ps1") -Raw
+
+    # Check for WebSocket creation
+    $hasWebSocketCreation = $appManagerContent -match 'New-Object\s+System\.Net\.WebSockets\.ClientWebSocket'
+    Test-Result "Creates WebSocket client in background job" $hasWebSocketCreation
+
+    # Check for WebSocket connection
+    $hasConnectAsync = $appManagerContent -match '\.ConnectAsync\('
+    Test-Result "Connects to WebSocket asynchronously" $hasConnectAsync
+
+    # Check for WebSocket cleanup in finally block
+    $hasFinallyCleanup = $appManagerContent -match 'finally\s*\{[\s\S]*?if\s*\(\$webSocket\)'
+    Test-Result "Cleans up WebSocket in finally block" $hasFinallyCleanup "Ensures proper resource disposal"
+
+    # Check for CloseAsync
+    $hasCloseAsync = $appManagerContent -match '\.CloseAsync\('
+    Test-Result "Closes WebSocket gracefully" $hasCloseAsync
+
 } catch {
-    Test-Result "WebSocket disconnect handling" $false $_
+    Test-Result "WebSocket handling verification" $false $_
 }
 
 # Test 8: Verify localization messages
@@ -226,31 +250,32 @@ Write-BuildLog "Test 8: Testing localization messages..."
 try {
     $enPath = Join-Path -Path $projectRoot -ChildPath "localization/en.json"
     $jaPath = Join-Path -Path $projectRoot -ChildPath "localization/ja.json"
-    
+
     $enJson = Get-Content -Path $enPath -Raw | ConvertFrom-Json
     $jaJson = Get-Content -Path $jaPath -Raw | ConvertFrom-Json
-    
+
     $requiredKeys = @(
         'console_obs_replay_buffer_starting_async',
-        'console_obs_replay_buffer_async_started',
-        'console_obs_replay_buffer_job_failed'
+        'console_obs_replay_buffer_starting_background',
+        'console_obs_replay_buffer_job_failed',
+        'console_obs_replay_buffer_job_error'
     )
-    
+
     $allKeysPresent = $true
     foreach ($key in $requiredKeys) {
         $inEn = $null -ne $enJson.PSObject.Properties[$key]
         $inJa = $null -ne $jaJson.PSObject.Properties[$key]
-        
+
         if (-not $inEn -or -not $inJa) {
             $allKeysPresent = $false
             Test-Result "Localization key '$key'" $false "Missing in $(if (-not $inEn) { 'EN' } if (-not $inJa) { 'JA' })"
         }
     }
-    
+
     if ($allKeysPresent) {
         Test-Result "All required localization keys present" $true "EN and JA"
     }
-    
+
 } catch {
     Test-Result "Localization messages verification" $false $_
 }
@@ -264,47 +289,65 @@ try {
         Start-Sleep -Milliseconds 100
         return $true
     }
-    
+
     Test-Result "Background job created successfully" ($null -ne $testJob) "Job ID: $($testJob.Id)"
-    
+
     # Wait for job completion
     $null = Wait-Job -Job $testJob -Timeout 5
     $jobResult = Receive-Job -Job $testJob
     Remove-Job -Job $testJob -Force
-    
+
     Test-Result "Background job completed and returned result" ($jobResult -eq $true)
-    
+
 } catch {
     Test-Result "Background job execution test" $false $_
 }
 
-# Test 10: Verify integration test exists
+# Test 10: Verify OBS authentication in background job
 Write-Host ""
-Write-BuildLog "Test 10: Verifying integration test..."
+Write-BuildLog "Test 10: Testing OBS authentication in background job..."
 try {
-    $integrationTestPath = Join-Path -Path $projectRoot -ChildPath "test/scripts/integration/Test-Integration-OBSBackgroundJob.ps1"
-    $integrationTestExists = Test-Path $integrationTestPath
-    Test-Result "Integration test exists" $integrationTestExists "Test-Integration-OBSBackgroundJob.ps1"
-    
+    $appManagerContent = Get-Content -Path (Join-Path -Path $projectRoot -ChildPath "src/modules/AppManager.ps1") -Raw
+
+    # Check for Hello message handling (Op 0)
+    $hasHelloHandling = $appManagerContent -match 'Receive-WebSocketResponse' -and $appManagerContent -match 'hello\.op'
+    Test-Result "Handles OBS Hello message" $hasHelloHandling
+
+    # Check for authentication challenge handling
+    $hasAuthChallenge = $appManagerContent -match 'hello\.d\.authentication' -and $appManagerContent -match 'challenge'
+    Test-Result "Handles authentication challenge" $hasAuthChallenge
+
+    # Check for SHA256 hash computation
+    $hasSHA256 = $appManagerContent -match 'System\.Security\.Cryptography\.SHA256'
+    Test-Result "Computes SHA256 hashes for authentication" $hasSHA256
+
+    # Check for Identify message (Op 1)
+    $hasIdentify = $appManagerContent -match 'op\s*=\s*1'
+    Test-Result "Sends Identify message to OBS" $hasIdentify
+
+    # Check for StartReplayBuffer request (Op 6)
+    $hasStartReplayBuffer = $appManagerContent -match 'StartReplayBuffer'
+    Test-Result "Sends StartReplayBuffer request" $hasStartReplayBuffer
+
 } catch {
-    Test-Result "Integration test verification" $false $_
+    Test-Result "OBS authentication verification" $false $_
 }
 
 # Display summary
-Write-Host ""
-Write-BuildLog "========================================="
-Write-BuildLog "Test Summary"
-Write-BuildLog "========================================="
-Write-BuildLog "Total:   $($results.Total)"
-Write-BuildLog "Passed:  $($results.Passed)"
-Write-BuildLog "Failed:  $($results.Failed)"
-Write-BuildLog "Skipped: $($results.Skipped)"
-Write-BuildLog "========================================="
+    Write-Host ""
+    Write-BuildLog "========================================="
+    Write-BuildLog "Test Summary"
+    Write-BuildLog "========================================="
+    Write-BuildLog "Total: $($results.Total)"
+    Write-BuildLog "Passed: $($results.Passed)"
+    Write-BuildLog "Failed: $($results.Failed)"
+    Write-BuildLog "Skipped: $($results.Skipped)"
+    Write-BuildLog "========================================="
 
-if ($results.Failed -eq 0) {
-    Write-BuildLog "[SUCCESS] All tests passed!"
-    exit 0
-} else {
-    Write-BuildLog "[FAILURE] $($results.Failed) test(s) failed"
-    exit 1
-}
+    if ($results.Failed -eq 0) {
+        Write-BuildLog "[SUCCESS] All tests passed!"
+        exit 0
+    } else {
+        Write-BuildLog "[FAILURE] $($results.Failed) test(s) failed"
+        exit 1
+    }
