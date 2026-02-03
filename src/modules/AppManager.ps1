@@ -37,6 +37,7 @@ class AppManager {
     [object] $ManagedApps
     [hashtable] $IntegrationManagers
     [string] $PreviousOBSScene
+    [System.Collections.ArrayList] $BackgroundJobs
 
     <#
     .SYNOPSIS
@@ -61,6 +62,7 @@ class AppManager {
         $this.Logger = $logger
         $this.ManagedApps = $config.managedApps
         $this.IntegrationManagers = @{}
+        $this.BackgroundJobs = New-Object System.Collections.ArrayList
     }
 
     <#
@@ -390,54 +392,272 @@ class AppManager {
 
                 # Handle replay buffer if needed
                 if ($shouldStartReplayBuffer) {
-                    # Start replay buffer in background job to avoid blocking game launch
                     Write-LocalizedHost -Messages $this.Messages -Key "console_obs_replay_buffer_starting_async" -Default "Starting OBS replay buffer asynchronously..." -Level "INFO" -Component "OBSManager"
-                    if ($this.Logger) { $this.Logger.Info("Starting OBS replay buffer in background job", "OBS") }
+                    if ($this.Logger) { $this.Logger.Info("Starting OBS replay buffer asynchronously", "OBS") }
 
-                    # Determine application root
-                    # Note: Using [System.Diagnostics.Process]::GetCurrentProcess() instead of Get-Process -Id $PID
-                    # because $PID automatic variable is not accessible inside PowerShell class methods
-                    $currentProcess = [System.Diagnostics.Process]::GetCurrentProcess()
-                    $isExecutable = $currentProcess.ProcessName -ne 'pwsh' -and $currentProcess.ProcessName -ne 'powershell'
-                    if ($isExecutable) {
-                        $appRoot = Split-Path -Parent $currentProcess.Path
-                    } else {
-                        # For script mode: AppManager.ps1 is in src/modules, need to go up two levels
-                        $appRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-                    }
-
-                    # Prepare parameters for background script
-                    $backgroundScriptPath = Join-Path -Path $appRoot -ChildPath "src/modules/OBSReplayBufferBackground.ps1"
-                    $logFilePath = if ($this.Logger -and $this.Logger.FilePath) { $this.Logger.FilePath } else { $null }
-
-                    # Start background job
-                    $jobStarted = $false
                     try {
-                        $job = Start-Job -ScriptBlock {
-                            param($scriptPath, $obsConfig, $messages, $logPath, $appRootPath)
-                            & $scriptPath -OBSConfig $obsConfig -Messages $messages -LogFilePath $logPath -WaitBeforeConnect 3000 -AppRoot $appRootPath
-                        } -ArgumentList $backgroundScriptPath, $config, $this.Messages, $logFilePath, $appRoot
-
-                        $jobStarted = $true
-                        if ($this.Logger) {
-                            $this.Logger.Info("Background job started for OBS replay buffer (Job ID: $($job.Id))", "OBS")
+                        # Decrypt password in main process before passing to background job
+                        $plainPassword = $null
+                        if ($config.websocket.password) {
+                            try {
+                                # Try to decrypt DPAPI-encrypted password
+                                $securePassword = ConvertTo-SecureString -String $config.websocket.password
+                                $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword)
+                                $plainPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+                                [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+                                if ($this.Logger) { $this.Logger.Debug("Password decrypted in main process", "OBS") }
+                            } catch {
+                                # Fall back to plain text (old format)
+                                $plainPassword = $config.websocket.password
+                                if ($this.Logger) { $this.Logger.Warning("Using password as plain text", "OBS") }
+                            }
                         }
 
-                        # Store job reference for potential cleanup
-                        if (-not $this.Config.PSObject.Properties['BackgroundJobs']) {
-                            $this.Config | Add-Member -NotePropertyName 'BackgroundJobs' -NotePropertyValue @{} -Force
-                        }
-                        $this.Config.BackgroundJobs['OBSReplayBuffer'] = $job
+                        # Start replay buffer in background job (non-blocking)
+                        # Use ScriptBlock instead of FilePath for ps2exe compatibility
+                        $backgroundJob = Start-Job -ScriptBlock {
+                            param($OBSHostname, $OBSPort, $PlainPassword, $MessagesData, $LogFilePath, $WaitBeforeConnect)
 
-                        Write-LocalizedHost -Messages $this.Messages -Key "console_obs_replay_buffer_async_started" -Default "OBS replay buffer starting in background (non-blocking)" -Level "OK" -Component "OBSManager"
+                            # Import required modules for background job
+                            if (-not (Get-Module -Name Microsoft.PowerShell.Security)) {
+                                try {
+                                    Import-Module Microsoft.PowerShell.Security -ErrorAction Stop
+                                } catch {
+                                    # Fallback: try to load as snap-in for Windows PowerShell
+                                    if ($PSVersionTable.PSVersion.Major -lt 6) {
+                                        try {
+                                            Add-PSSnapin Microsoft.PowerShell.Security -ErrorAction SilentlyContinue
+                                        } catch {
+                                            # Module loading failed, will handle password differently
+                                        }
+                                    }
+                                }
+                            }
+
+                            # Helper function to log to file if path provided
+                            function Write-BackgroundLog {
+                                param(
+                                    [string] $Message,
+                                    [string] $Level = "INFO"
+                                )
+
+                                $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+                                $logMessage = "[$timestamp] [$Level] [OBSBackground] $Message"
+
+                                if ($LogFilePath) {
+                                    try {
+                                        Add-Content -Path $LogFilePath -Value $logMessage -Encoding UTF8
+                                    } catch {
+                                        Write-Warning "Failed to write to log file: $_"
+                                    }
+                                }
+
+                                Write-Host $logMessage
+                            }
+
+                            try {
+                                Write-BackgroundLog "OBS Replay Buffer background worker started"
+
+                                # Wait before attempting connection to allow OBS to fully start
+                                if ($WaitBeforeConnect -gt 0) {
+                                    Write-BackgroundLog "Waiting $($WaitBeforeConnect)ms before connecting to OBS WebSocket"
+                                    Start-Sleep -Milliseconds $WaitBeforeConnect
+                                }
+
+                                # Create WebSocket client
+                                $webSocket = New-Object System.Net.WebSockets.ClientWebSocket
+                                $uri = "ws://$($OBSHostname):$($OBSPort)"
+                                $cts = New-Object System.Threading.CancellationTokenSource
+                                $cts.CancelAfter(5000)
+
+                                Write-BackgroundLog "Attempting to connect to OBS WebSocket: $uri"
+                                $webSocket.ConnectAsync($uri, $cts.Token).Wait()
+
+                                if ($webSocket.State -ne [System.Net.WebSockets.WebSocketState]::Open) {
+                                    Write-BackgroundLog "Failed to connect to OBS WebSocket" "WARNING"
+                                    return $false
+                                }
+
+                                Write-BackgroundLog "Connected to OBS WebSocket" "OK"
+
+                                # Helper function to receive WebSocket response
+                                function Receive-WebSocketResponse {
+                                    param([int] $TimeoutSeconds = 5)
+
+                                    $cts = New-Object System.Threading.CancellationTokenSource
+                                    $cts.CancelAfter($TimeoutSeconds * 1000)
+                                    $buffer = New-Object byte[] 8192
+                                    $segment = New-Object ArraySegment[byte](, $buffer)
+                                    $resultText = ""
+
+                                    try {
+                                        while ($webSocket.State -eq "Open") {
+                                            $receiveTask = $webSocket.ReceiveAsync($segment, $cts.Token)
+                                            $receiveTask.Wait()
+                                            $result = $receiveTask.Result
+                                            $resultText += [System.Text.Encoding]::UTF8.GetString($buffer, 0, $result.Count)
+                                            if ($result.EndOfMessage) { break }
+                                        }
+                                        return $resultText | ConvertFrom-Json
+                                    } catch {
+                                        Write-BackgroundLog "WebSocket receive error: $_" "WARNING"
+                                        return $null
+                                    }
+                                }
+
+                                # Helper function to send WebSocket message
+                                function Send-WebSocketMessage {
+                                    param([object] $message)
+
+                                    try {
+                                        $json = $message | ConvertTo-Json -Depth 5
+                                        $buffer = [System.Text.Encoding]::UTF8.GetBytes($json)
+                                        $sendSegment = New-Object ArraySegment[byte](, $buffer)
+                                        $webSocket.SendAsync($sendSegment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [System.Threading.CancellationToken]::None).Wait()
+                                    } catch {
+                                        Write-BackgroundLog "WebSocket send error: $_" "WARNING"
+                                    }
+                                }
+
+                                # Wait for Hello message (Op 0)
+                                Write-BackgroundLog "Waiting for Hello message from OBS"
+                                $hello = Receive-WebSocketResponse -TimeoutSeconds 5
+                                if (-not $hello) {
+                                    Write-BackgroundLog "Did not receive any response from OBS (Hello timeout)" "WARNING"
+                                    return $false
+                                }
+                                Write-BackgroundLog "Received message from OBS: Op=$($hello.op), HasAuth=$($null -ne $hello.d.authentication)"
+                                if ($hello.op -ne 0) {
+                                    Write-BackgroundLog "Expected Hello message (Op 0), but received Op $($hello.op)" "WARNING"
+                                    return $false
+                                }
+                                Write-BackgroundLog "Hello message received successfully" "OK"
+
+                                # Send Identify message (Op 1)
+                                Write-BackgroundLog "Preparing Identify message"
+                                $identifyPayload = @{
+                                    op = 1
+                                    d = @{
+                                        rpcVersion = 1
+                                        eventSubscriptions = 0
+                                    }
+                                }
+
+                                # Handle authentication if required
+                                if ($hello.d.authentication) {
+                                    Write-BackgroundLog "Authentication required"
+                                    $challenge = $hello.d.authentication.challenge
+                                    $salt = $hello.d.authentication.salt
+                                    Write-BackgroundLog "Challenge length: $($challenge.Length), Salt length: $($salt.Length)"
+
+                                    # Use the pre-decrypted password passed from main process
+                                    if ($PlainPassword) {
+                                        Write-BackgroundLog "Using pre-decrypted password (length: $($PlainPassword.Length))"
+
+                                        $secretBytes = [System.Text.Encoding]::UTF8.GetBytes($PlainPassword + $salt)
+                                        $secretHash = [System.Security.Cryptography.SHA256]::Create().ComputeHash($secretBytes)
+                                        $secretBase64 = [System.Convert]::ToBase64String($secretHash)
+
+                                        $authBytes = [System.Text.Encoding]::UTF8.GetBytes($secretBase64 + $challenge)
+                                        $authHash = [System.Security.Cryptography.SHA256]::Create().ComputeHash($authBytes)
+                                        $authResponse = [System.Convert]::ToBase64String($authHash)
+
+                                        $identifyPayload.d.authentication = $authResponse
+                                        Write-BackgroundLog "Authentication response generated successfully"
+                                    } else {
+                                        Write-BackgroundLog "No password provided" "WARNING"
+                                    }
+                                } else {
+                                    Write-BackgroundLog "No authentication required"
+                                }
+
+                                # Send identify message
+                                Write-BackgroundLog "Sending Identify message to OBS"
+                                Send-WebSocketMessage -message $identifyPayload
+
+                                # Wait for Identified message (Op 2)
+                                Write-BackgroundLog "Waiting for Identified message from OBS"
+                                $identified = Receive-WebSocketResponse -TimeoutSeconds 10
+                                if (-not $identified) {
+                                    Write-BackgroundLog "Did not receive any response after Identify (timeout)" "WARNING"
+                                    return $false
+                                }
+                                Write-BackgroundLog "Received response from OBS: Op=$($identified.op)"
+                                if ($identified.op -ne 2) {
+                                    Write-BackgroundLog "Expected Identified message (Op 2), but received Op $($identified.op)" "WARNING"
+                                    if ($identified.op -eq 9) {
+                                        Write-BackgroundLog "Received error from OBS: $($identified.d.requestStatus.comment)" "ERROR"
+                                    }
+                                    return $false
+                                }
+
+                                Write-BackgroundLog "OBS authentication successful" "OK"
+
+                                # Send StartReplayBuffer request
+                                Write-BackgroundLog "Sending StartReplayBuffer request"
+                                $requestId = [guid]::NewGuid().ToString()
+                                $startReplayBufferRequest = @{
+                                    op = 6
+                                    d = @{
+                                        requestType = "StartReplayBuffer"
+                                        requestId = $requestId
+                                    }
+                                }
+
+                                Send-WebSocketMessage -message $startReplayBufferRequest
+
+                                # Wait for response
+                                $response = Receive-WebSocketResponse -TimeoutSeconds 10
+                                if ($response -and $response.op -eq 7 -and $response.d.requestId -eq $requestId) {
+                                    if ($response.d.requestStatus.result) {
+                                        Write-BackgroundLog "OBS Replay Buffer started successfully" "OK"
+                                        return $true
+                                    } else {
+                                        Write-BackgroundLog "Failed to start OBS Replay Buffer: $($response.d.requestStatus.comment)" "WARNING"
+                                        return $false
+                                    }
+                                } else {
+                                    Write-BackgroundLog "Invalid response from OBS for StartReplayBuffer request" "WARNING"
+                                    return $false
+                                }
+
+                            } catch {
+                                Write-BackgroundLog "Exception in background worker: $_" "ERROR"
+                                return $false
+                            } finally {
+                                # Cleanup WebSocket
+                                if ($webSocket) {
+                                    try {
+                                        if ($webSocket.State -eq [System.Net.WebSockets.WebSocketState]::Open) {
+                                            $webSocket.CloseAsync([System.Net.WebSockets.WebSocketCloseStatus]::NormalClosure, "Disconnecting", [System.Threading.CancellationToken]::None).Wait()
+                                        }
+                                        $webSocket.Dispose()
+                                        Write-BackgroundLog "Disconnected from OBS WebSocket"
+                                    } catch {
+                                        Write-BackgroundLog "Error during WebSocket cleanup: $_" "WARNING"
+                                    }
+                                }
+                                Write-BackgroundLog "OBS Replay Buffer background worker completed"
+                            }
+                        } -ArgumentList $config.websocket.host, $config.websocket.port, $plainPassword, $this.Messages, $(if ($this.Logger) { $this.Logger.LogFilePath } else { $null }), 3000
+
+                        # Store job reference for later cleanup
+                        [void] $this.BackgroundJobs.Add($backgroundJob)
+
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_obs_replay_buffer_starting_background" -Default "OBS replay buffer starting in background (non-blocking)" -Level "OK" -Component "OBSManager"
+                        if ($this.Logger) { $this.Logger.Info("OBS replay buffer job started (ID: $($backgroundJob.Id), State: $($backgroundJob.State))", "OBS") }
+
+                        # Check job state after a short delay
+                        Start-Sleep -Milliseconds 500
+                        if ($backgroundJob.State -eq "Failed") {
+                            $jobError = Receive-Job -Job $backgroundJob -ErrorAction SilentlyContinue
+                            if ($this.Logger) { $this.Logger.Warning("Background job failed immediately. Error: $jobError", "OBS") }
+                            Write-LocalizedHost -Messages $this.Messages -Key "console_obs_replay_buffer_job_failed" -Default "OBS replay buffer background job failed" -Level "WARNING" -Component "OBSManager"
+                        }
                     } catch {
-                        Write-LocalizedHost -Messages $this.Messages -Key "console_obs_replay_buffer_job_failed" -Default "Failed to start background job for replay buffer" -Level "WARNING" -Component "OBSManager"
-                        if ($this.Logger) { $this.Logger.Warning("Failed to start background job for OBS replay buffer: $_", "OBS") }
-                        return $false
+                        if ($this.Logger) { $this.Logger.Error("Failed to start OBS replay buffer background job: $_", "OBS") }
+                        Write-LocalizedHost -Messages $this.Messages -Key "console_obs_replay_buffer_job_error" -Args @($_) -Default "Failed to start OBS replay buffer job: {0}" -Level "WARNING" -Component "OBSManager"
                     }
-
-                    # Return success only if job was started
-                    return $jobStarted
                 }
 
                 return $true
@@ -1224,47 +1444,38 @@ class AppManager {
             }
         }
 
-        # Clean up any background jobs
-        if ($this.Config.PSObject.Properties['BackgroundJobs'] -and $this.Config.BackgroundJobs) {
-            # Create a copy of keys to avoid collection modification during iteration
-            $jobKeys = @($this.Config.BackgroundJobs.Keys)
-            foreach ($jobKey in $jobKeys) {
-                $job = $this.Config.BackgroundJobs[$jobKey]
-                if ($job) {
-                    switch ($job.State) {
-                        'Running' {
-                            if ($this.Logger) { $this.Logger.Info("Waiting for background job '$jobKey' to complete (Job ID: $($job.Id))...", "APP") }
-                            # Wait for up to 10 seconds for the job to complete
-                            $null = Wait-Job -Job $job -Timeout 10
+        # Clean up background jobs
+        if ($this.BackgroundJobs.Count -gt 0) {
+            if ($this.Logger) { $this.Logger.Info("Cleaning up $($this.BackgroundJobs.Count) background job(s)", "APP") }
+            foreach ($job in $this.BackgroundJobs) {
+                try {
+                    if ($this.Logger) { $this.Logger.Debug("Background job $($job.Id) state: $($job.State)", "APP") }
 
-                            if ($job.State -eq 'Completed') {
-                                $jobResult = Receive-Job -Job $job -ErrorAction SilentlyContinue
-                                if ($this.Logger) { $this.Logger.Info("Background job '$jobKey' completed successfully. Result: $jobResult", "APP") }
-                            } else {
-                                if ($this.Logger) { $this.Logger.Warning("Background job '$jobKey' did not complete within timeout, stopping job", "APP") }
-                                Stop-Job -Job $job -ErrorAction SilentlyContinue
-                            }
+                    # Wait for job to complete with timeout (max 5 seconds)
+                    $job | Wait-Job -Timeout 5 | Out-Null
+
+                    # Get job results for logging
+                    $jobResult = Receive-Job -Job $job -ErrorAction SilentlyContinue
+                    $jobErrors = $job.ChildJobs[0].Error
+
+                    if ($this.Logger) {
+                        if ($jobResult) {
+                            $this.Logger.Debug("Background job $($job.Id) result: $jobResult", "APP")
                         }
-                        'NotStarted' {
-                            if ($this.Logger) { $this.Logger.Info("Background job '$jobKey' never started, removing", "APP") }
+                        if ($jobErrors) {
+                            $this.Logger.Warning("Background job $($job.Id) had errors: $($jobErrors -join '; ')", "APP")
                         }
-                        'Completed' {
-                            $jobResult = Receive-Job -Job $job -ErrorAction SilentlyContinue
-                            if ($this.Logger) { $this.Logger.Info("Background job '$jobKey' was already completed. Result: $jobResult", "APP") }
-                        }
-                        'Failed' {
-                            if ($this.Logger) { $this.Logger.Warning("Background job '$jobKey' had failed", "APP") }
-                        }
-                        default {
-                            if ($this.Logger) { $this.Logger.Info("Background job '$jobKey' in state: $($job.State)", "APP") }
-                        }
+                        $this.Logger.Debug("Background job $($job.Id) final state: $($job.State)", "APP")
                     }
 
-                    # Remove the job
+                    # Remove job
                     Remove-Job -Job $job -Force -ErrorAction SilentlyContinue
+                    if ($this.Logger) { $this.Logger.Debug("Background job $($job.Id) cleaned up", "APP") }
+                } catch {
+                    if ($this.Logger) { $this.Logger.Warning("Failed to clean up background job $($job.Id): $_", "APP") }
                 }
             }
-            $this.Config.BackgroundJobs.Clear()
+            $this.BackgroundJobs.Clear()
         }
 
         return $allSuccess
