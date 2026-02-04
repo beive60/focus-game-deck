@@ -180,6 +180,20 @@ class OBSManager {
     [bool] StartReplayBuffer() {
         try {
             Write-LocalizedHost -Messages $this.Messages -Key "sending_replay_buffer_start" -Default "Sending StartReplayBuffer command to OBS..." -Level "INFO" -Component "OBSManager"
+
+            # Check WebSocket connection state
+            if (-not $this.WebSocket) {
+                Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_no_websocket" -Default "WebSocket is not initialized" -Level "WARNING" -Component "OBSManager"
+                return $false
+            }
+
+            if ($this.WebSocket.State -ne [System.Net.WebSockets.WebSocketState]::Open) {
+                Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_websocket_not_open" -Args @($this.WebSocket.State) -Default "WebSocket is not open (State: {0})" -Level "WARNING" -Component "OBSManager"
+                return $false
+            }
+
+            Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_websocket_connected" -Default "WebSocket connection verified" -Level "INFO" -Component "OBSManager"
+
             $requestId = [System.Guid]::NewGuid().ToString()
             $command = @{
                 op = 6
@@ -189,11 +203,21 @@ class OBSManager {
                 }
             }
 
+            Write-LocalizedHost -Messages $this.Messages -Key "sending_replay_buffer_command" -Args @($requestId) -Default "Sending StartReplayBuffer command (Request ID: {0})" -Level "INFO" -Component "OBSManager"
             $this.SendMessage($command)
 
             # Wait for response to verify success
+            Write-LocalizedHost -Messages $this.Messages -Key "waiting_replay_buffer_response" -Default "Waiting for OBS response..." -Level "INFO" -Component "OBSManager"
             $response = $this.ReceiveWebSocketResponse(5)
-            if ($response -and $response.op -eq 7) {
+
+            if (-not $response) {
+                Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_no_response" -Default "No response received for replay buffer start command" -Level "WARNING" -Component "OBSManager"
+                return $false
+            }
+
+            Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_response_received" -Args @($response.op) -Default "Response received (Op code: {0})" -Level "INFO" -Component "OBSManager"
+
+            if ($response.op -eq 7) {
                 if ($response.d.requestStatus.result) {
                     Write-LocalizedHost -Messages $this.Messages -Key "obs_replay_buffer_started" -Default "OBS replay buffer started" -Level "OK" -Component "OBSManager"
                     return $true
@@ -204,7 +228,7 @@ class OBSManager {
                     return $false
                 }
             } else {
-                Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_no_response" -Default "No response received for replay buffer start command" -Level "WARNING" -Component "OBSManager"
+                Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_unexpected_opcode" -Args @($response.op) -Default "Unexpected response op code: {0}" -Level "WARNING" -Component "OBSManager"
                 return $false
             }
         } catch {
@@ -216,6 +240,19 @@ class OBSManager {
     # Stop OBS Replay Buffer
     [bool] StopReplayBuffer() {
         try {
+            Write-LocalizedHost -Messages $this.Messages -Key "sending_replay_buffer_stop" -Default "Sending StopReplayBuffer command to OBS..." -Level "INFO" -Component "OBSManager"
+
+            # Check WebSocket connection state
+            if (-not $this.WebSocket) {
+                Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_stop_no_websocket" -Default "WebSocket is not initialized for stop command" -Level "WARNING" -Component "OBSManager"
+                return $false
+            }
+
+            if ($this.WebSocket.State -ne [System.Net.WebSockets.WebSocketState]::Open) {
+                Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_stop_websocket_not_open" -Args @($this.WebSocket.State) -Default "WebSocket is not open for stop command (State: {0})" -Level "WARNING" -Component "OBSManager"
+                return $false
+            }
+
             $requestId = [System.Guid]::NewGuid().ToString()
             $command = @{
                 op = 6
@@ -225,9 +262,27 @@ class OBSManager {
                 }
             }
 
+            Write-LocalizedHost -Messages $this.Messages -Key "sending_replay_buffer_stop_command" -Args @($requestId) -Default "Sending StopReplayBuffer command (Request ID: {0})" -Level "INFO" -Component "OBSManager"
             $this.SendMessage($command)
-            Write-LocalizedHost -Messages $this.Messages -Key "obs_replay_buffer_stopped" -Default "OBS replay buffer stopped" -Level "OK" -Component "OBSManager"
-            return $true
+
+            # Wait for response to verify success
+            Write-LocalizedHost -Messages $this.Messages -Key "waiting_replay_buffer_stop_response" -Default "Waiting for stop response..." -Level "INFO" -Component "OBSManager"
+            $response = $this.ReceiveWebSocketResponse(5)
+
+            if ($response -and $response.op -eq 7) {
+                if ($response.d.requestStatus.result) {
+                    Write-LocalizedHost -Messages $this.Messages -Key "obs_replay_buffer_stopped" -Default "OBS replay buffer stopped" -Level "OK" -Component "OBSManager"
+                    return $true
+                } else {
+                    $errorCode = if ($response.d.requestStatus.code) { $response.d.requestStatus.code } else { "Unknown" }
+                    $errorComment = if ($response.d.requestStatus.comment) { $response.d.requestStatus.comment } else { "No details" }
+                    Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_stop_failed_response" -Args @($errorCode, $errorComment) -Default "Replay buffer stop failed - Code: {0}, Details: {1}" -Level "WARNING" -Component "OBSManager"
+                    return $false
+                }
+            } else {
+                Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_stop_no_response" -Default "No response received for replay buffer stop command" -Level "WARNING" -Component "OBSManager"
+                return $false
+            }
         } catch {
             Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_stop_error" -Args @($_) -Default "Replay buffer stop error: {0}" -Level "WARNING" -Component "OBSManager"
             return $false

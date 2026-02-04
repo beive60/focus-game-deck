@@ -1,0 +1,7 @@
+﻿2026-02-04T04:12:11.1015090Z ##[group]Run Write-Host "Installing Pester module..."
+2026-02-04T04:12:11.1015561Z [36;1mWrite-Host "Installing Pester module..."[0m
+2026-02-04T04:12:11.1015987Z [36;1mSet-PSRepository -Name PSGallery -InstallationPolicy Trusted[0m
+2026-02-04T04:12:11.1016508Z [36;1mInstall-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser[0m
+2026-02-04T04:12:11.1451503Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+2026-02-04T04:12:11.1451990Z ##[endgroup]
+2026-02-04T04:12:11.4792692Z Installing Pester module...

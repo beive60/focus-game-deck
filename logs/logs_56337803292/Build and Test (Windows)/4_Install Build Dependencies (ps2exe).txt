@@ -1,0 +1,50 @@
+﻿2026-02-04T04:13:40.2737760Z ##[group]Run # Use the dependency installation script within the project
+2026-02-04T04:13:40.2738358Z [36;1m# Use the dependency installation script within the project[0m
+2026-02-04T04:13:40.2738800Z [36;1m.\build-tools\Install-BuildDependencies.ps1 -Force -Verbose[0m
+2026-02-04T04:13:40.2814527Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+2026-02-04T04:13:40.2814958Z ##[endgroup]
+2026-02-04T04:13:40.6336367Z [INFO] Focus Game Deck - Build Dependencies Installer
+2026-02-04T04:13:40.6402204Z [INFO] Checking ps2exe module...
+2026-02-04T04:13:40.6953383Z [INFO] Force reinstalling ps2exe module...
+2026-02-04T04:13:40.8106399Z VERBOSE: Populating RepositorySourceLocation property for module PackageManagement.
+2026-02-04T04:13:40.8132475Z VERBOSE: Loading module from path 'C:\Program 
+2026-02-04T04:13:40.8134395Z Files\WindowsPowerShell\Modules\PackageManagement\1.4.8.1\PackageManagement.psm1'.
+2026-02-04T04:13:40.8436330Z VERBOSE: Loading module from path 'C:\Program 
+2026-02-04T04:13:40.8437507Z Files\WindowsPowerShell\Modules\PackageManagement\1.4.8.1\PackageManagement.psd1'.
+2026-02-04T04:13:40.8451540Z VERBOSE: Loading 'FormatsToProcess' from path 'C:\Program 
+2026-02-04T04:13:40.8453235Z Files\WindowsPowerShell\Modules\PackageManagement\1.4.8.1\PackageManagement.format.ps1xml'.
+2026-02-04T04:13:40.8899287Z VERBOSE: Populating RepositorySourceLocation property for module PackageManagement.
+2026-02-04T04:13:40.8913538Z VERBOSE: Loading module from path 'C:\Program 
+2026-02-04T04:13:40.8915377Z Files\WindowsPowerShell\Modules\PackageManagement\1.4.8.1\PackageManagement.psm1'.
+2026-02-04T04:13:41.0308037Z VERBOSE: Exporting cmdlet 'Find-Package'.
+2026-02-04T04:13:41.0314632Z VERBOSE: Exporting cmdlet 'Find-PackageProvider'.
+2026-02-04T04:13:41.0321851Z VERBOSE: Exporting cmdlet 'Get-Package'.
+2026-02-04T04:13:41.0328802Z VERBOSE: Exporting cmdlet 'Get-PackageProvider'.
+2026-02-04T04:13:41.0336867Z VERBOSE: Exporting cmdlet 'Get-PackageSource'.
+2026-02-04T04:13:41.0343642Z VERBOSE: Exporting cmdlet 'Import-PackageProvider'.
+2026-02-04T04:13:41.0350257Z VERBOSE: Exporting cmdlet 'Install-Package'.
+2026-02-04T04:13:41.0357503Z VERBOSE: Exporting cmdlet 'Install-PackageProvider'.
+2026-02-04T04:13:41.0363622Z VERBOSE: Exporting cmdlet 'Register-PackageSource'.
+2026-02-04T04:13:41.0370149Z VERBOSE: Exporting cmdlet 'Save-Package'.
+2026-02-04T04:13:41.0378855Z VERBOSE: Exporting cmdlet 'Set-PackageSource'.
+2026-02-04T04:13:41.0385698Z VERBOSE: Exporting cmdlet 'Uninstall-Package'.
+2026-02-04T04:13:41.0392587Z VERBOSE: Exporting cmdlet 'Unregister-PackageSource'.
+2026-02-04T04:13:41.0402173Z VERBOSE: Importing cmdlet 'Find-Package'.
+2026-02-04T04:13:41.0408684Z VERBOSE: Importing cmdlet 'Find-PackageProvider'.
+2026-02-04T04:13:41.0415884Z VERBOSE: Importing cmdlet 'Get-Package'.
+2026-02-04T04:13:41.0424105Z VERBOSE: Importing cmdlet 'Get-PackageProvider'.
+2026-02-04T04:13:41.0430568Z VERBOSE: Importing cmdlet 'Get-PackageSource'.
+2026-02-04T04:13:41.0438208Z VERBOSE: Importing cmdlet 'Import-PackageProvider'.
+2026-02-04T04:13:41.0445509Z VERBOSE: Importing cmdlet 'Install-Package'.
+2026-02-04T04:13:41.0452143Z VERBOSE: Importing cmdlet 'Install-PackageProvider'.
+2026-02-04T04:13:41.0459240Z VERBOSE: Importing cmdlet 'Register-PackageSource'.
+2026-02-04T04:13:41.0465771Z VERBOSE: Importing cmdlet 'Save-Package'.
+2026-02-04T04:13:41.0472696Z VERBOSE: Importing cmdlet 'Set-PackageSource'.
+2026-02-04T04:13:41.0480070Z VERBOSE: Importing cmdlet 'Uninstall-Package'.
+2026-02-04T04:13:41.0486421Z VERBOSE: Importing cmdlet 'Unregister-PackageSource'.
+2026-02-04T04:15:06.3058036Z [DONE] ps2exe module installed successfully
+2026-02-04T04:15:06.3096600Z VERBOSE: Populating RepositorySourceLocation property for module ps2exe.
+2026-02-04T04:15:06.3110164Z VERBOSE: Loading module from path 'C:\Users\runneradmin\Documents\WindowsPowerShell\Modules\ps2exe\1.0.17\ps2exe.psm1'.
+2026-02-04T04:15:06.3122316Z VERBOSE: Loading module from path 'C:\Users\runneradmin\Documents\WindowsPowerShell\Modules\ps2exe\1.0.17\ps2exe.ps1'.
+2026-02-04T04:15:06.3691363Z VERBOSE: [DBUG] Installed version: 1.0.17
+2026-02-04T04:15:06.3701863Z [DONE] Build environment setup completed successfully
