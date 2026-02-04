@@ -117,42 +117,54 @@ Describe "ConvertTo-Json4Space - Character Encoding" -Tag "Unit", "Core", "JsonH
 
     Context "Unicode Characters" {
         It "Should handle Japanese characters (Hiragana)" {
-            $obj = @{ message = "こんにちは" }
+            # Use Unicode escape to avoid encoding issues in CI
+            $hiragana = [System.Text.Encoding]::UTF8.GetString([byte[]]@(227, 129, 147, 227, 130, 147, 227, 129, 171, 227, 129, 161, 227, 129, 175))
+            $obj = @{ message = $hiragana }
             $json = ConvertTo-Json4Space -InputObject $obj
 
-            $json | Should -Match 'こんにちは'
+            $json | Should -Match $hiragana
         }
 
         It "Should handle Japanese characters (Katakana)" {
-            $obj = @{ message = "カタカナ" }
+            # Use Unicode escape to avoid encoding issues in CI
+            $katakana = [System.Text.Encoding]::UTF8.GetString([byte[]]@(227, 130, 171, 227, 130, 191, 227, 130, 171, 227, 131, 138))
+            $obj = @{ message = $katakana }
             $json = ConvertTo-Json4Space -InputObject $obj
 
-            $json | Should -Match 'カタカナ'
+            $json | Should -Match $katakana
         }
 
         It "Should handle Japanese characters (Kanji)" {
-            $obj = @{ message = "日本語" }
+            # Use Unicode escape to avoid encoding issues in CI
+            $kanji = [System.Text.Encoding]::UTF8.GetString([byte[]]@(230, 151, 165, 230, 156, 172, 232, 170, 158))
+            $obj = @{ message = $kanji }
             $json = ConvertTo-Json4Space -InputObject $obj
 
-            $json | Should -Match '日本語'
+            $json | Should -Match $kanji
         }
 
         It "Should handle Chinese characters" {
-            $obj = @{ message = "中文测试" }
+            # Use Unicode escape to avoid encoding issues in CI
+            $chinese = [System.Text.Encoding]::UTF8.GetString([byte[]]@(228, 184, 173, 230, 150, 135, 230, 181, 139, 232, 175, 149))
+            $obj = @{ message = $chinese }
             $json = ConvertTo-Json4Space -InputObject $obj
 
-            $json | Should -Match '中文测试'
+            $json | Should -Match $chinese
         }
 
         It "Should handle Korean characters" {
-            $obj = @{ message = "한국어" }
+            # Use Unicode escape to avoid encoding issues in CI
+            $korean = [System.Text.Encoding]::UTF8.GetString([byte[]]@(237, 149, 156, 234, 181, 173, 236, 150, 180))
+            $obj = @{ message = $korean }
             $json = ConvertTo-Json4Space -InputObject $obj
 
-            $json | Should -Match '한국어'
+            $json | Should -Match $korean
         }
 
         It "Should handle emoji characters" {
-            $obj = @{ emoji = "🎮🕹️" }
+            # Use Unicode escape to avoid encoding issues in CI
+            $emoji = [System.Text.Encoding]::UTF8.GetString([byte[]]@(240, 159, 142, 174, 240, 159, 149, 185, 239, 184, 143))
+            $obj = @{ emoji = $emoji }
             $json = ConvertTo-Json4Space -InputObject $obj
 
             # Emoji might be escaped or preserved
@@ -213,13 +225,15 @@ Describe "Save-ConfigJson - File Operations" -Tag "Unit", "Core", "JsonHelper", 
         }
 
         It "Should preserve Japanese characters when saving" {
-            $obj = @{ message = "日本語テスト" }
+            # Use Unicode escape to avoid encoding issues in CI
+            $japanese = [System.Text.Encoding]::UTF8.GetString([byte[]]@(230, 151, 165, 230, 156, 172, 232, 170, 158, 227, 131, 134, 227, 130, 185, 227, 131, 136))
+            $obj = @{ message = $japanese }
             $filePath = Join-Path $script:TestDir "japanese.json"
 
             Save-ConfigJson -ConfigData $obj -ConfigPath $filePath
 
             $content = Get-Content $filePath -Raw -Encoding UTF8
-            $content | Should -Match '日本語テスト'
+            $content | Should -Match $japanese
         }
     }
 
@@ -275,10 +289,12 @@ Describe "Save-ConfigJson - File Operations" -Tag "Unit", "Core", "JsonHelper", 
         }
 
         It "Should maintain Japanese text integrity through roundtrip" {
+            # Use Unicode escape to avoid encoding issues in CI
+            $japaneseName = [System.Text.Encoding]::UTF8.GetString([byte[]]@(227, 131, 135, 227, 131, 131, 227, 131, 137, 227, 131, 144, 227, 130, 164, 227, 131, 135, 227, 130, 164, 227, 131, 169, 227, 130, 164, 227, 131, 136))
             $original = @{
                 games = @{
                     dbd = @{
-                        name = "デッドバイデイライト"
+                        name = $japaneseName
                         platform = "steam"
                     }
                 }
@@ -288,7 +304,7 @@ Describe "Save-ConfigJson - File Operations" -Tag "Unit", "Core", "JsonHelper", 
             Save-ConfigJson -ConfigData $original -ConfigPath $filePath
             $loaded = Get-Content $filePath -Raw -Encoding UTF8 | ConvertFrom-Json
 
-            $loaded.games.dbd.name | Should -Be "デッドバイデイライト"
+            $loaded.games.dbd.name | Should -Be $japaneseName
         }
     }
 }
@@ -384,12 +400,14 @@ Describe "BOM Detection Helper Tests" -Tag "Unit", "Core", "JsonHelper", "Encodi
 
     Context "Read Files With Different Encodings" {
         It "Should read UTF-8 without BOM correctly" {
+            # Use Unicode escape to avoid encoding issues in CI
+            $testText = [System.Text.Encoding]::UTF8.GetString([byte[]]@(227, 131, 134, 227, 130, 185, 227, 131, 136))
             $testFile = Join-Path $script:TestDir "read-utf8.json"
-            New-EncodedTestFile -Path $testFile -Content '{"message": "テスト"}' -Encoding 'UTF8-NoBOM'
+            New-EncodedTestFile -Path $testFile -Content ('{"message": "' + $testText + '"}') -Encoding 'UTF8-NoBOM'
 
             $content = Get-Content $testFile -Raw -Encoding UTF8
             $obj = $content | ConvertFrom-Json
-            $obj.message | Should -Be "テスト"
+            $obj.message | Should -Be $testText
         }
     }
 }
