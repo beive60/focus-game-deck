@@ -21,12 +21,31 @@ jobs:
               with:
                   fetch-depth: 0 # Fetch full history in case version information retrieval requires it
 
+            - name: Cache PowerShell Modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~\Documents\PowerShell\Modules
+                      C:\Program Files\PowerShell\Modules
+                  key: ${{ runner.os }}-psmodules-${{ hashFiles('**/Install-BuildDependencies.ps1') }}
+                  restore-keys: |
+                      ${{ runner.os }}-psmodules-
+
             - name: Install Pester (Test Dependency)
               shell: powershell
               run: |
                   Write-Host "Installing Pester module..."
                   Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
                   Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser
+
+            - name: Cache Build Dependencies
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~\.local\share\powershell\Modules\ps2exe
+                  key: ${{ runner.os }}-buildtools-${{ hashFiles('build-tools/Install-BuildDependencies.ps1') }}
+                  restore-keys: |
+                      ${{ runner.os }}-buildtools-
 
             - name: Install Build Dependencies (ps2exe)
               shell: powershell
@@ -39,20 +58,54 @@ jobs:
               env:
                   CI: true
               run: |
-                  # Exit immediately if an error occurs
-
                   $ErrorActionPreference = "Stop"
-                  # Exclude Integration and Local tests in CI environment
-                  # Integration: requires external services
-                  # Local: requires desktop environment (e.g., GUI tests)
-                  .\test\runners\Invoke-PesterTests.ps1 -ExcludeTag "Integration", "Local"
+                  
+                  # Pester configuration
+                  $config = [PesterConfiguration]::Default
+                  $config.Run.Path = ".\test\pester"
+                  $config.Filter.ExcludeTag = @("Integration", "Local")
+                  $config.Run.Exit = $false
+                  $config.Run.PassThru = $true
+                  $config.CodeCoverage.Enabled = $false
+                  $config.TestResult.Enabled = $true
+                  $config.TestResult.OutputFormat = "NUnitXml"
+                  $config.TestResult.OutputPath = "test-results.xml"
+                  
+                  # Test execution
+                  try {
+                      $result = Invoke-Pester -Configuration $config
+                      
+                      # Check results
+                      if ($result.FailedCount -gt 0) {
+                          throw "Tests failed: $($result.FailedCount) test(s) failed"
+                      }
+                      
+                      Write-Host "All tests passed successfully!"
+                  } catch {
+                      Write-Error "Test execution failed: $_"
+                      exit 1
+                  }
+
+            - name: Publish Test Results
+              uses: EnricoMi/publish-unit-test-result-action/composite@v2
+              if: always()
+              with:
+                  files: test-results.xml
+                  check_name: "Test Results"
+                  comment_title: "Test Results"
 
             - name: Build Application (Development Mode)
               shell: powershell
               run: |
-                  # Execute build in Development mode without cloud signing
-
+                  $ErrorActionPreference = "Stop"
+                  Write-Host "Building application in Development mode..."
                   .\build-tools\Release-Manager.ps1 -Development -Verbose
+                  
+                  # Verify build artifacts
+                  if (-not (Test-Path ".\release\Focus-Game-Deck.exe")) {
+                      throw "Build failed: Focus-Game-Deck.exe not found"
+                  }
+                  Write-Host "Build completed successfully"
 
             - name: Smoke Test - Bundled Executables
               shell: powershell
@@ -116,3 +169,37 @@ jobs:
                   generate_release_notes: true
                   draft: false
                   prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+
+# Future Enhancement: Parallel Job Execution
+# To further improve CI/CD performance, consider splitting into parallel jobs:
+#
+# jobs:
+#     test:
+#         name: Run Tests
+#         runs-on: windows-latest
+#         steps:
+#             - name: Checkout Repository
+#               uses: actions/checkout@v4
+#             - name: Install Pester
+#               # ... test execution steps
+#
+#     lint:
+#         name: Code Quality Check
+#         runs-on: windows-latest
+#         steps:
+#             - name: Checkout Repository
+#               uses: actions/checkout@v4
+#             - name: Run PSScriptAnalyzer
+#               # ... linter steps
+#
+#     build:
+#         name: Build Application
+#         needs: [test, lint]
+#         runs-on: windows-latest
+#         steps:
+#             # ... build steps
+#
+# This would enable:
+# - Parallel test and lint execution
+# - Faster feedback on code quality issues
+# - Build only after all checks pass
