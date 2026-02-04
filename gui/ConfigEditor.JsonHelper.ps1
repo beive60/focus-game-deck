@@ -178,8 +178,16 @@ function Save-ConfigJson {
             throw "Configuration data is empty or null"
         }
 
-        # Save to file with UTF-8 encoding
-        Set-Content -Path $ConfigPath -Value $configJson -Encoding UTF8
+        # Ensure parent directory exists
+        $parentPath = Split-Path -Parent $ConfigPath
+        if ($parentPath -and (-not (Test-Path $parentPath))) {
+            New-Item -ItemType Directory -Path $parentPath -Force | Out-Null
+        }
+
+        # Save to file with UTF-8 encoding without BOM for cross-platform compatibility
+        # Use .NET method to ensure UTF-8 without BOM in both PowerShell 5.1 and 7+
+        $utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $false
+        [System.IO.File]::WriteAllText($ConfigPath, $configJson, $utf8NoBomEncoding)
 
         Write-Verbose "Configuration saved to: $ConfigPath with 4-space indentation"
 

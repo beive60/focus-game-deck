@@ -1,0 +1,85 @@
+﻿2026-02-04T04:12:05.8402115Z ##[group]Run actions/checkout@v4
+2026-02-04T04:12:05.8403598Z with:
+2026-02-04T04:12:05.8404108Z   fetch-depth: 0
+2026-02-04T04:12:05.8404669Z   repository: beive60/focus-game-deck
+2026-02-04T04:12:05.8405572Z   token: ***
+2026-02-04T04:12:05.8406060Z   ssh-strict: true
+2026-02-04T04:12:05.8406553Z   ssh-user: git
+2026-02-04T04:12:05.8407054Z   persist-credentials: true
+2026-02-04T04:12:05.8407614Z   clean: true
+2026-02-04T04:12:05.8408109Z   sparse-checkout-cone-mode: true
+2026-02-04T04:12:05.8408715Z   fetch-tags: false
+2026-02-04T04:12:05.8409216Z   show-progress: true
+2026-02-04T04:12:05.8409731Z   lfs: false
+2026-02-04T04:12:05.8410168Z   submodules: false
+2026-02-04T04:12:05.8410598Z   set-safe-directory: true
+2026-02-04T04:12:05.8411250Z ##[endgroup]
+2026-02-04T04:12:06.0344827Z Syncing repository: beive60/focus-game-deck
+2026-02-04T04:12:06.0347692Z ##[group]Getting Git version info
+2026-02-04T04:12:06.0348935Z Working directory is 'D:\a\focus-game-deck\focus-game-deck'
+2026-02-04T04:12:06.1637511Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-02-04T04:12:06.5101201Z git version 2.52.0.windows.1
+2026-02-04T04:12:06.5162364Z ##[endgroup]
+2026-02-04T04:12:06.5186315Z Temporarily overriding HOME='D:\a\_temp\73341653-b014-41ab-ac24-815cc7263fa8' before making global git config changes
+2026-02-04T04:12:06.5188638Z Adding repository directory to the temporary git global config as a safe directory
+2026-02-04T04:12:06.5199716Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\focus-game-deck\focus-game-deck
+2026-02-04T04:12:06.5771134Z Deleting the contents of 'D:\a\focus-game-deck\focus-game-deck'
+2026-02-04T04:12:06.5778563Z ##[group]Initializing the repository
+2026-02-04T04:12:06.5791733Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\focus-game-deck\focus-game-deck
+2026-02-04T04:12:06.6618202Z Initialized empty Git repository in D:/a/focus-game-deck/focus-game-deck/.git/
+2026-02-04T04:12:06.6675465Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/beive60/focus-game-deck
+2026-02-04T04:12:06.7229495Z ##[endgroup]
+2026-02-04T04:12:06.7230811Z ##[group]Disabling automatic garbage collection
+2026-02-04T04:12:06.7241412Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-02-04T04:12:06.7560420Z ##[endgroup]
+2026-02-04T04:12:06.7561548Z ##[group]Setting up auth
+2026-02-04T04:12:06.7580480Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-02-04T04:12:06.7907450Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-02-04T04:12:08.2070962Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-02-04T04:12:08.2378189Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-02-04T04:12:08.7886304Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-02-04T04:12:08.8198245Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-02-04T04:12:09.3700198Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-02-04T04:12:09.4011143Z ##[endgroup]
+2026-02-04T04:12:09.4011662Z ##[group]Fetching the repository
+2026-02-04T04:12:09.4026754Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +2cb7105313a8329d330d3c8e336f940fb1fef053:refs/remotes/pull/107/merge
+2026-02-04T04:12:10.7495060Z From https://github.com/beive60/focus-game-deck
+2026-02-04T04:12:10.7496359Z  * [new branch]      copilot/add-console-game-support         -> origin/copilot/add-console-game-support
+2026-02-04T04:12:10.7498246Z  * [new branch]      copilot/add-tutorial-on-first-launch     -> origin/copilot/add-tutorial-on-first-launch
+2026-02-04T04:12:10.7499763Z  * [new branch]      copilot/improve-ci-cd-workflow           -> origin/copilot/improve-ci-cd-workflow
+2026-02-04T04:12:10.7501059Z  * [new branch]      fix/obs-manager                          -> origin/fix/obs-manager
+2026-02-04T04:12:10.7502132Z  * [new branch]      main                                     -> origin/main
+2026-02-04T04:12:10.7502939Z  * [new tag]         v1.0.0                                   -> v1.0.0
+2026-02-04T04:12:10.7503695Z  * [new tag]         v1.0.1-alpha.tes                         -> v1.0.1-alpha.tes
+2026-02-04T04:12:10.7504512Z  * [new tag]         v1.0.1-beta                              -> v1.0.1-beta
+2026-02-04T04:12:10.7505290Z  * [new tag]         v1.0.2-alpha.tes                         -> v1.0.2-alpha.tes
+2026-02-04T04:12:10.7772244Z  * [new tag]         v1.1.0                                   -> v1.1.0
+2026-02-04T04:12:10.7772843Z  * [new ref]         2cb7105313a8329d330d3c8e336f940fb1fef053 -> pull/107/merge
+2026-02-04T04:12:10.7776150Z ##[endgroup]
+2026-02-04T04:12:10.7777287Z ##[group]Determining the checkout info
+2026-02-04T04:12:10.7778400Z ##[endgroup]
+2026-02-04T04:12:10.7788803Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-02-04T04:12:10.8232520Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-02-04T04:12:10.8550662Z ##[group]Checking out the ref
+2026-02-04T04:12:10.8551269Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force refs/remotes/pull/107/merge
+2026-02-04T04:12:10.9900805Z Note: switching to 'refs/remotes/pull/107/merge'.
+2026-02-04T04:12:10.9901305Z 
+2026-02-04T04:12:10.9902122Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-02-04T04:12:10.9902976Z changes and commit them, and you can discard any commits you make in this
+2026-02-04T04:12:10.9903782Z state without impacting any branches by switching back to a branch.
+2026-02-04T04:12:10.9904558Z 
+2026-02-04T04:12:10.9904860Z If you want to create a new branch to retain commits you create, you may
+2026-02-04T04:12:10.9905579Z do so (now or later) by using -c with the switch command. Example:
+2026-02-04T04:12:10.9906926Z 
+2026-02-04T04:12:10.9907166Z   git switch -c <new-branch-name>
+2026-02-04T04:12:10.9907368Z 
+2026-02-04T04:12:10.9907460Z Or undo this operation with:
+2026-02-04T04:12:10.9907668Z 
+2026-02-04T04:12:10.9907742Z   git switch -
+2026-02-04T04:12:10.9907854Z 
+2026-02-04T04:12:10.9908088Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-02-04T04:12:10.9908568Z 
+2026-02-04T04:12:10.9908913Z HEAD is now at 2cb7105 Merge 3134864d9445effbae579668bf8a4e05192992df into 7bfd581a36eb701ea747c8dd3cf3f584560ffdc4
+2026-02-04T04:12:10.9965951Z ##[endgroup]
+2026-02-04T04:12:11.0353683Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-02-04T04:12:11.0626566Z 2cb7105313a8329d330d3c8e336f940fb1fef053
