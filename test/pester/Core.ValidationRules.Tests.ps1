@@ -74,7 +74,9 @@ Describe "Test-GameIdFormat" -Tag "Unit", "Core", "ValidationRules" {
         }
 
         It "Should reject Japanese characters" {
-            Test-GameIdFormat -GameId "エーペックス" | Should -BeFalse
+            # Use Unicode escape to avoid encoding issues in CI
+            $japaneseText = [System.Text.Encoding]::UTF8.GetString([byte[]]@(227, 130, 168, 227, 131, 188, 227, 131, 154, 227, 131, 131, 227, 130, 175, 227, 130, 185))
+            Test-GameIdFormat -GameId $japaneseText | Should -BeFalse
         }
 
         It "Should reject symbols" {

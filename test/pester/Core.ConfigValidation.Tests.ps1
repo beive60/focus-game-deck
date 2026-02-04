@@ -67,7 +67,9 @@ Describe "Invoke-ConfigurationValidation" -Tag "Unit", "Core", "Validation" {
         }
 
         It "Should reject Game ID with Japanese characters" {
-            $errors = Invoke-ConfigurationValidation -GameId "エーペックス"
+            # Use Unicode escape to avoid encoding issues in CI
+            $japaneseText = [System.Text.Encoding]::UTF8.GetString([byte[]]@(227, 130, 168, 227, 131, 188, 227, 131, 154, 227, 131, 131, 227, 130, 175, 227, 130, 185))
+            $errors = Invoke-ConfigurationValidation -GameId $japaneseText
             $errors | Should -HaveCount 1
             $errors[0].Control | Should -Be "GameIdTextBox"
             $errors[0].Key | Should -Be "gameIdInvalidCharacters"
