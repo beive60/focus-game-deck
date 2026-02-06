@@ -1917,6 +1917,9 @@ class ConfigEditorEvents {
             Save-OriginalConfig
             $this.stateManager.ClearModified()
 
+            # Phase 3: Update last save time
+            $this.stateManager.UpdateLastSaveTime()
+
             $message = $this.uiManager.GetLocalizedMessage("configSaved")
             $this.uiManager.ShowNotification($message, "Success")
             Write-Verbose "Configuration saved to: $script:ConfigPath"
@@ -2678,6 +2681,9 @@ class ConfigEditorEvents {
 
                     # Clear modified flag
                     $this.stateManager.ClearModified()
+
+                    # Phase 3: Update last save time
+                    $this.stateManager.UpdateLastSaveTime()
                 } catch {
                     Write-Error "[ERROR] ConfigEditorEvents: Failed to save changes on window close - $($_.Exception.Message)"
                     # Show error and cancel closing
@@ -3429,6 +3435,23 @@ class ConfigEditorEvents {
             Write-Verbose "[INFO] ConfigEditorEvents: Registering all UI event handlers"
 
             $self = $this
+
+            # --- Phase 3: Keyboard Shortcuts ---
+            # Register Ctrl+S for save
+            $this.uiManager.Window.add_KeyDown({
+                param($eventSender, $e)
+                try {
+                    # Check for Ctrl+S (Control key + S key)
+                    if ($e.Key -eq [System.Windows.Input.Key]::S -and
+                        ([System.Windows.Input.Keyboard]::Modifiers -band [System.Windows.Input.ModifierKeys]::Control)) {
+                        Write-Verbose "[INFO] Ctrl+S keyboard shortcut detected"
+                        $e.Handled = $true  # Prevent default behavior
+                        $self.HandleSaveConfig()
+                    }
+                } catch {
+                    Write-Warning "[WARNING] Error handling keyboard shortcut: $($_.Exception.Message)"
+                }
+            }.GetNewClosure())
 
             # --- Window Events ---
             $this.uiManager.Window.add_Closing({

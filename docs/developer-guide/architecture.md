@@ -234,9 +234,11 @@ The ConfigEditor implements an auto-save + manual save hybrid model:
 - **Clean Exit**: Deletes `.autosave` and `.lock` files on normal window close
 - **Timer Management**: Automatically stops backup timer and cleans up event subscriptions on exit
 
-**Future Enhancements (Phase 3)**:
+**Phase 3 Features (Completed)**:
 
-- Phase 3: Title bar unsaved changes indicator, Ctrl+S keyboard shortcut, status bar with last-save timestamp
+- **Title Bar Indicator**: Displays `(*)` prefix when unsaved changes exist
+- **Keyboard Shortcut**: Ctrl+S triggers manual save with validation
+- **Last Save Time Tracking**: Records timestamp with human-readable formatting ("Just now", "X minutes ago", or full datetime)
 
 #### 5. Build & Distribution System
 
@@ -1359,6 +1361,7 @@ To maintain this design philosophy, please prioritize the following:
 | 3.0.2 | 2025-12-07 | Documentation Consolidation: Merged JSON formatting standards from json-formatting-fix.md into architecture.md Implementation Guidelines section for centralized technical documentation |
 | 3.1.0 | 2026-02-07 | ConfigEditor Save Behavior Enhancement (Phase 1): Implemented auto-save + manual save hybrid model with immediate in-memory ConfigData updates, auto-save on window close, removal of delete confirmation dialogs, and PowerShell closure pattern for event handlers with explicit variable capture |
 | 3.1.1 | 2026-02-07 | ConfigEditor Save Behavior Enhancement (Phase 2): Implemented auto-backup timer (60-second interval to .autosave file), startup recovery with user prompt, lock file management for multiple instance prevention with PID validation, and clean exit cleanup of temporary files |
+| 3.1.2 | 2026-02-07 | ConfigEditor Save Behavior Enhancement (Phase 3): Implemented UX enhancements including title bar unsaved changes indicator with (*) prefix, Ctrl+S keyboard shortcut for manual save, and last save time tracking with human-readable formatting |
 
 ---
 

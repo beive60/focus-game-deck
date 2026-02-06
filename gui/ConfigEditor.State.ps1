@@ -17,6 +17,10 @@ class ConfigEditorState {
     [string]$AutoSavePath
     [string]$LockFilePath
 
+    # Phase 3: Title bar and status tracking
+    [DateTime]$LastSaveTime
+    [string]$BaseWindowTitle
+
     # Constructor
     ConfigEditorState([string]$configPath) {
         Write-Verbose "[INFO] ConfigEditorState constructor called with configPath: '$configPath'"
@@ -41,6 +45,10 @@ class ConfigEditorState {
         $this.AutoBackupTimer = $null
         $this.AutoSavePath = "$configPath.autosave"
         $this.LockFilePath = "$configPath.lock"
+
+        # Phase 3: Initialize title bar tracking
+        $this.LastSaveTime = [DateTime]::MinValue
+        $this.BaseWindowTitle = "Focus Game Deck - Configuration Editor"
 
         Write-Verbose "[INFO] ConfigEditorState constructor completed successfully"
     }
@@ -116,6 +124,8 @@ class ConfigEditorState {
 
     [void] SetModified() {
         $this.HasUnsavedChanges = $true
+        # Phase 3: Update title bar when modified state changes
+        $this.UpdateWindowTitle()
     }
 
     <#
@@ -129,6 +139,8 @@ class ConfigEditorState {
     [void] ClearModified() {
         $this.HasUnsavedChanges = $false
         Write-Verbose "[INFO] Configuration marked as not modified"
+        # Phase 3: Update title bar when modified state changes
+        $this.UpdateWindowTitle()
     }
 
     [bool] TestHasUnsavedChanges() {
@@ -527,6 +539,52 @@ class ConfigEditorState {
             }
         } catch {
             Write-Warning "[WARNING] Failed to delete auto-save file: $($_.Exception.Message)"
+        }
+    }
+
+    # Phase 3: Update window title with unsaved changes indicator
+    [void] UpdateWindowTitle() {
+        try {
+            if ($this.Window) {
+                $title = $this.BaseWindowTitle
+                if ($this.HasUnsavedChanges) {
+                    $title = "(*) $title"
+                }
+                $this.Window.Title = $title
+                Write-Verbose "[INFO] Window title updated: $title"
+            }
+        } catch {
+            Write-Warning "[WARNING] Failed to update window title: $($_.Exception.Message)"
+        }
+    }
+
+    # Phase 3: Update last save time and window title
+    [void] UpdateLastSaveTime() {
+        try {
+            $this.LastSaveTime = [DateTime]::Now
+            Write-Verbose "[INFO] Last save time updated: $($this.LastSaveTime)"
+        } catch {
+            Write-Warning "[WARNING] Failed to update last save time: $($_.Exception.Message)"
+        }
+    }
+
+    # Phase 3: Get formatted last save time string
+    [string] GetFormattedLastSaveTime() {
+        if ($this.LastSaveTime -eq [DateTime]::MinValue) {
+            return "Never"
+        }
+
+        $timeSpan = [DateTime]::Now - $this.LastSaveTime
+        if ($timeSpan.TotalMinutes -lt 1) {
+            return "Just now"
+        } elseif ($timeSpan.TotalMinutes -lt 60) {
+            $minutes = [Math]::Floor($timeSpan.TotalMinutes)
+            return "$minutes minute(s) ago"
+        } elseif ($timeSpan.TotalHours -lt 24) {
+            $hours = [Math]::Floor($timeSpan.TotalHours)
+            return "$hours hour(s) ago"
+        } else {
+            return $this.LastSaveTime.ToString("yyyy-MM-dd HH:mm:ss")
         }
     }
 }

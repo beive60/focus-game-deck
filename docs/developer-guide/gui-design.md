@@ -187,10 +187,11 @@ The configuration editor implements a hybrid save model that combines immediate 
   * Clean Exit Cleanup: Stops timer, deletes `.autosave` and `.lock` files on normal window close
   * Technical: Uses System.Timers.Timer with 60-second interval and proper event subscription cleanup
 
-* **Future Enhancements (Phase 3)**:
-  * Title bar indicator: Show "(*)" when HasUnsavedChanges is true
-  * Ctrl+S keyboard shortcut: Trigger manual save operation
-  * Status bar: Display last-save timestamp and auto-backup status
+* **Phase 3 Features (Implemented)**:
+  * Title Bar Indicator: Displays `(*)` prefix in window title when HasUnsavedChanges is true
+  * Keyboard Shortcut: Ctrl+S triggers manual save operation with validation
+  * Last Save Time Tracking: Records DateTime on each save with GetFormattedLastSaveTime() method
+  * Time Formatting: Human-readable display ("Just now", "X minutes ago", or full datetime stamp)
 
 #### **2.9. Security and Risk Management Requirements**
 
