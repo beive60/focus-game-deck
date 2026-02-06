@@ -963,7 +963,7 @@ class ConfigEditorEvents {
                     $gameNameTextBox.remove_TextChanged($textChangedHandler)
                     Write-Verbose "[DEBUG] Temporarily removed TextChanged handler during game data load"
                 }
-                
+
                 try {
                     Write-Verbose "HandleGameSelectionChanged: Game data found for $selectedGame"
                     Write-Verbose "  - name: $($gameData.name)"
@@ -1293,7 +1293,7 @@ class ConfigEditorEvents {
                     $appDisplayNameTextBox.remove_TextChanged($textChangedHandler)
                     Write-Verbose "[DEBUG] Temporarily removed TextChanged handler during app data load"
                 }
-                
+
                 try {
                     Write-Verbose "HandleAppSelectionChanged: App data found for $selectedApp"
                     Write-Verbose "  - displayName: $($appData.displayName)"
@@ -2678,12 +2678,6 @@ class ConfigEditorEvents {
 
                     # Clear modified flag
                     $this.stateManager.ClearModified()
-
-                    # TODO Phase 2: Delete autosave backup file if exists
-                    # $autosavePath = "$script:ConfigPath.autosave"
-                    # if (Test-Path $autosavePath) {
-                    #     Remove-Item $autosavePath -Force
-                    # }
                 } catch {
                     Write-Error "[ERROR] ConfigEditorEvents: Failed to save changes on window close - $($_.Exception.Message)"
                     # Show error and cancel closing
@@ -2693,6 +2687,26 @@ class ConfigEditorEvents {
                 }
             } else {
                 Write-Verbose "[DEBUG] ConfigEditorEvents: No unsaved changes, closing directly"
+            }
+
+            # Phase 2: Clean up on normal close
+            try {
+                # Stop auto-backup timer
+                if ($this.stateManager) {
+                    Write-Verbose "[INFO] Stopping auto-backup timer"
+                    $this.stateManager.StopAutoBackupTimer()
+
+                    # Delete auto-save file (clean exit)
+                    Write-Verbose "[INFO] Deleting auto-save file on clean exit"
+                    $this.stateManager.DeleteAutoSaveFile()
+
+                    # Remove lock file
+                    Write-Verbose "[INFO] Removing lock file"
+                    $this.stateManager.RemoveLockFile()
+                }
+            } catch {
+                Write-Warning "[WARNING] Error during cleanup: $($_.Exception.Message)"
+                # Continue with window close even if cleanup fails
             }
 
             Write-Verbose "[DEBUG] ConfigEditorEvents: Window closing approved"
@@ -3569,14 +3583,14 @@ class ConfigEditorEvents {
             } else {
                 Write-Verbose "GamesList not found"
             }
-            
+
             # Game Settings tab - immediate ConfigData updates on text changes
             $gameNameTextBox = $this.uiManager.Window.FindName("GameNameTextBox")
             if ($gameNameTextBox) {
                 # Capture references that will be needed in the closure
                 $capturedWindow = $this.uiManager.Window
                 $capturedStateManager = $this.stateManager
-                
+
                 # Create a script block that captures necessary references
                 $textChangedHandler = {
                     param($s, $e)
@@ -3584,15 +3598,15 @@ class ConfigEditorEvents {
                         # Get current selected game
                         $gamesList = $capturedWindow.FindName("GamesList")
                         if (-not $gamesList) { return }
-                        
+
                         $selectedGameId = $gamesList.SelectedValue
                         if (-not $selectedGameId) { return }
-                        
+
                         # Access ConfigData and update game name
                         if (-not $capturedStateManager) { return }
                         $configData = $capturedStateManager.ConfigData
                         if (-not $configData -or -not $configData.games) { return }
-                        
+
                         # Check if the selected game exists in config
                         $gamesObj = $configData.games
                         if ($gamesObj.PSObject.Properties[$selectedGameId]) {
@@ -3605,14 +3619,14 @@ class ConfigEditorEvents {
                         Write-Warning "Failed to update game name in ConfigData: $($_.Exception.Message)"
                     }
                 }.GetNewClosure()
-                
+
                 $gameNameTextBox.add_TextChanged($textChangedHandler)
-                
+
                 # Store reference to handler and textbox for enable/disable during load
                 $script:GameNameTextBox = $gameNameTextBox
                 $script:GameNameTextChangedHandler = $textChangedHandler
             }
-            
+
             $platformCombo = $this.uiManager.Window.FindName("PlatformComboBox"); if ($platformCombo) { $platformCombo.add_SelectionChanged({ $self.HandlePlatformSelectionChanged() }.GetNewClosure()) } else { Write-Verbose "PlatformComboBox not found" }
 
             # Validation event handlers for Game ID
@@ -3706,7 +3720,7 @@ class ConfigEditorEvents {
                 # Capture references that will be needed in the closure
                 $capturedWindow = $this.uiManager.Window
                 $capturedStateManager = $this.stateManager
-                
+
                 # Create a script block that captures necessary references
                 $textChangedHandler = {
                     param($s, $e)
@@ -3714,15 +3728,15 @@ class ConfigEditorEvents {
                         # Get current selected app
                         $managedAppsList = $capturedWindow.FindName("ManagedAppsList")
                         if (-not $managedAppsList) { return }
-                        
+
                         $selectedAppId = $managedAppsList.SelectedValue
                         if (-not $selectedAppId) { return }
-                        
+
                         # Access ConfigData and update displayName
                         if (-not $capturedStateManager) { return }
                         $configData = $capturedStateManager.ConfigData
                         if (-not $configData -or -not $configData.managedApps) { return }
-                        
+
                         # Check if the selected app exists in config
                         $managedAppsObj = $configData.managedApps
                         if ($managedAppsObj.PSObject.Properties[$selectedAppId]) {
@@ -3735,9 +3749,9 @@ class ConfigEditorEvents {
                         Write-Warning "Failed to update app displayName in ConfigData: $($_.Exception.Message)"
                     }
                 }.GetNewClosure()
-                
+
                 $appDisplayNameTextBox.add_TextChanged($textChangedHandler)
-                
+
                 # Store reference to handler and textbox for enable/disable during load
                 $script:AppDisplayNameTextBox = $appDisplayNameTextBox
                 $script:AppDisplayNameTextChangedHandler = $textChangedHandler

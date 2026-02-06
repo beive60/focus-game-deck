@@ -148,6 +148,7 @@ The Focus Game Deck architecture consists of five main layers, each serving dist
 The ConfigEditor follows a modular design pattern with separation of concerns:
 
 **Module Loading Order**:
+
 1. `ConfigEditor.JsonHelper.ps1` - Utility functions for JSON operations
 2. `ConfigEditor.Mappings.ps1` - Data transformation and UI mappings
 3. `ConfigEditor.State.ps1` - State management with `HasUnsavedChanges` tracking
@@ -194,10 +195,10 @@ try {
     if ($textBox -and $textChangedHandler) {
         $textBox.remove_TextChanged($textChangedHandler)
     }
-    
+
     # Load data into UI controls
     $textBox.Text = $newValue
-    
+
 } finally {
     # Re-register handler after data load completes
     if ($textBox -and $textChangedHandler) {
@@ -213,9 +214,11 @@ try {
 - `finally` blocks ensure handlers are always re-registered, even if errors occur during data loading
 - Captured references provide proper scope access within closures
 
-**Save Behavior (Hybrid Model - Phase 1 Implemented)**:
+**Save Behavior (Hybrid Model - Phase 1 & 2 Implemented)**:
 
 The ConfigEditor implements an auto-save + manual save hybrid model:
+
+**Phase 1 Features (Completed)**:
 
 - **Immediate ConfigData Updates**: Game display names and managed app display names update ConfigData synchronously on TextChanged events
 - **UI Synchronization**: Tab switches trigger UI updates (e.g., AppsToManagePanel) with latest ConfigData values
@@ -223,9 +226,17 @@ The ConfigEditor implements an auto-save + manual save hybrid model:
 - **Delete Operations**: Game/app deletion marks changes as modified without confirmation dialogs
 - **Manual Save Button**: Explicit save with validation and user feedback, clears modified flag
 
-**Future Enhancements (Phase 2-3)**:
-- Phase 2: Auto-backup timer (1-minute interval to `.autosave` file), startup recovery
-- Phase 3: Title bar unsaved changes indicator, Ctrl+S keyboard shortcut
+**Phase 2 Features (Completed)**:
+
+- **Auto-Backup Timer**: Saves to `.autosave` file every 60 seconds when changes exist
+- **Startup Recovery**: Detects `.autosave` file on startup, prompts user to restore (with timestamp)
+- **Lock File**: Prevents multiple instances via `.lock` file with PID tracking
+- **Clean Exit**: Deletes `.autosave` and `.lock` files on normal window close
+- **Timer Management**: Automatically stops backup timer and cleans up event subscriptions on exit
+
+**Future Enhancements (Phase 3)**:
+
+- Phase 3: Title bar unsaved changes indicator, Ctrl+S keyboard shortcut, status bar with last-save timestamp
 
 #### 5. Build & Distribution System
 
@@ -1206,6 +1217,7 @@ PowerShell's built-in `ConvertTo-Json` cmdlet has inconsistent indentation behav
 ```
 
 Issues with PowerShell's output:
+
 - Double space after colon
 - Indentation not a multiple of 4 spaces
 - Inconsistent nesting levels
@@ -1346,6 +1358,7 @@ To maintain this design philosophy, please prioritize the following:
 | 3.0.1 | 2025-11-15 | Build-Time Patching Unification: Refactored build system to use unified build-time patching approach for both ConfigEditor and Invoke-FocusGameDeck, eliminating duplicate -Bundled.ps1 files and improving maintainability through single-source architecture |
 | 3.0.2 | 2025-12-07 | Documentation Consolidation: Merged JSON formatting standards from json-formatting-fix.md into architecture.md Implementation Guidelines section for centralized technical documentation |
 | 3.1.0 | 2026-02-07 | ConfigEditor Save Behavior Enhancement (Phase 1): Implemented auto-save + manual save hybrid model with immediate in-memory ConfigData updates, auto-save on window close, removal of delete confirmation dialogs, and PowerShell closure pattern for event handlers with explicit variable capture |
+| 3.1.1 | 2026-02-07 | ConfigEditor Save Behavior Enhancement (Phase 2): Implemented auto-backup timer (60-second interval to .autosave file), startup recovery with user prompt, lock file management for multiple instance prevention with PID validation, and clean exit cleanup of temporary files |
 
 ---
 

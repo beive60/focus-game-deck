@@ -179,11 +179,18 @@ The configuration editor implements a hybrid save model that combines immediate 
   6. Display "Saved" confirmation message.
   7. Clear modified flag in state manager.
 
-* **Future Enhancements (Phase 2-3)**:
-  * Phase 2: Auto-backup timer (1-minute interval to `.autosave` file)
-  * Phase 2: Startup recovery from `.autosave` with user prompt
-  * Phase 3: Title bar indicator for unsaved changes
-  * Phase 3: Ctrl+S keyboard shortcut for manual save
+* **Phase 2 Features (Implemented)**:
+  * Auto-Backup Timer: Automatically saves to `.autosave` file every 60 seconds when HasUnsavedChanges is true
+  * Startup Recovery: On application startup, checks for `.autosave` file and prompts user with timestamp
+  * Lock File Management: Creates `.lock` file with current PID to prevent multiple instances
+  * PID Validation: Checks if lock file PID still exists, removes stale lock files automatically
+  * Clean Exit Cleanup: Stops timer, deletes `.autosave` and `.lock` files on normal window close
+  * Technical: Uses System.Timers.Timer with 60-second interval and proper event subscription cleanup
+
+* **Future Enhancements (Phase 3)**:
+  * Title bar indicator: Show "(*)" when HasUnsavedChanges is true
+  * Ctrl+S keyboard shortcut: Trigger manual save operation
+  * Status bar: Display last-save timestamp and auto-backup status
 
 #### **2.9. Security and Risk Management Requirements**
 

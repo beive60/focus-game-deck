@@ -12,6 +12,11 @@ class ConfigEditorState {
     [string]$CurrentLanguage
     [bool]$HasUnsavedChanges
 
+    # Phase 2: Auto-backup timer properties
+    [System.Timers.Timer]$AutoBackupTimer
+    [string]$AutoSavePath
+    [string]$LockFilePath
+
     # Constructor
     ConfigEditorState([string]$configPath) {
         Write-Verbose "[INFO] ConfigEditorState constructor called with configPath: '$configPath'"
@@ -31,6 +36,11 @@ class ConfigEditorState {
         $this.Messages = $null
         $this.CurrentLanguage = "en"  # Default language
         $this.HasUnsavedChanges = $false
+
+        # Phase 2: Initialize auto-backup properties
+        $this.AutoBackupTimer = $null
+        $this.AutoSavePath = "$configPath.autosave"
+        $this.LockFilePath = "$configPath.lock"
 
         Write-Verbose "[INFO] ConfigEditorState constructor completed successfully"
     }
@@ -357,6 +367,166 @@ class ConfigEditorState {
             Write-Error "[ERROR] SaveOriginalConfig exception details: $($_.Exception.ToString())"
             $this.OriginalConfigData = $null
             # Don't throw - this should not cause initialization to fail
+        }
+    }
+
+    # Phase 2: Start auto-backup timer (1-minute interval)
+    [void] StartAutoBackupTimer() {
+        try {
+            if ($this.AutoBackupTimer) {
+                Write-Verbose "[INFO] Auto-backup timer already running"
+                return
+            }
+
+            Write-Verbose "[INFO] Starting auto-backup timer (60-second interval)"
+
+            # Create timer with 60-second interval (1 minute)
+            $this.AutoBackupTimer = New-Object System.Timers.Timer
+            $this.AutoBackupTimer.Interval = 60000  # 60 seconds in milliseconds
+            $this.AutoBackupTimer.AutoReset = $true
+
+            # Capture this object for the timer callback
+            $stateManager = $this
+
+            # Register elapsed event handler
+            $timerAction = {
+                try {
+                    $stateManager = $Event.MessageData
+                    if ($stateManager.HasUnsavedChanges) {
+                        Write-Verbose "[AUTO-BACKUP] Changes detected, creating auto-backup"
+
+                        # Save to .autosave file
+                        Save-ConfigJson -ConfigData $stateManager.ConfigData -ConfigPath $stateManager.AutoSavePath -Depth 10
+
+                        Write-Verbose "[AUTO-BACKUP] Auto-backup saved to: $($stateManager.AutoSavePath)"
+                    } else {
+                        Write-Verbose "[AUTO-BACKUP] No unsaved changes, skipping backup"
+                    }
+                } catch {
+                    Write-Warning "[AUTO-BACKUP] Failed to create auto-backup: $($_.Exception.Message)"
+                }
+            }
+
+            Register-ObjectEvent -InputObject $this.AutoBackupTimer -EventName Elapsed -Action $timerAction -MessageData $stateManager | Out-Null
+
+            # Start the timer
+            $this.AutoBackupTimer.Start()
+
+            Write-Verbose "[INFO] Auto-backup timer started successfully"
+        } catch {
+            Write-Warning "[WARNING] Failed to start auto-backup timer: $($_.Exception.Message)"
+            $this.AutoBackupTimer = $null
+        }
+    }
+
+    # Phase 2: Stop auto-backup timer
+    [void] StopAutoBackupTimer() {
+        try {
+            if ($this.AutoBackupTimer) {
+                Write-Verbose "[INFO] Stopping auto-backup timer"
+                $this.AutoBackupTimer.Stop()
+                $this.AutoBackupTimer.Dispose()
+                $this.AutoBackupTimer = $null
+
+                # Unregister event
+                Get-EventSubscriber | Where-Object { $_.SourceObject -is [System.Timers.Timer] } | Unregister-Event
+
+                Write-Verbose "[INFO] Auto-backup timer stopped"
+            }
+        } catch {
+            Write-Warning "[WARNING] Error stopping auto-backup timer: $($_.Exception.Message)"
+        }
+    }
+
+    # Phase 2: Create lock file to prevent multiple instances
+    [bool] CreateLockFile() {
+        try {
+            if (Test-Path $this.LockFilePath) {
+                # Check if the lock file is stale (process no longer exists)
+                try {
+                    $lockContent = Get-Content $this.LockFilePath -Raw
+                    $lockPid = [int]$lockContent
+
+                    # Check if process with this PID exists
+                    $process = Get-Process -Id $lockPid -ErrorAction SilentlyContinue
+                    if ($process) {
+                        Write-Warning "[WARNING] Another instance is already running (PID: $lockPid)"
+                        return $false
+                    } else {
+                        Write-Verbose "[INFO] Stale lock file found (PID $lockPid no longer exists), removing"
+                        Remove-Item $this.LockFilePath -Force
+                    }
+                } catch {
+                    Write-Verbose "[INFO] Invalid lock file format, removing"
+                    Remove-Item $this.LockFilePath -Force -ErrorAction SilentlyContinue
+                }
+            }
+
+            # Create new lock file with current PID
+            $PID | Out-File -FilePath $this.LockFilePath -Encoding ASCII -Force
+            Write-Verbose "[INFO] Lock file created: $($this.LockFilePath) (PID: $PID)"
+            return $true
+        } catch {
+            Write-Warning "[WARNING] Failed to create lock file: $($_.Exception.Message)"
+            return $true  # Don't block startup if lock file creation fails
+        }
+    }
+
+    # Phase 2: Remove lock file on clean exit
+    [void] RemoveLockFile() {
+        try {
+            if (Test-Path $this.LockFilePath) {
+                Remove-Item $this.LockFilePath -Force
+                Write-Verbose "[INFO] Lock file removed: $($this.LockFilePath)"
+            }
+        } catch {
+            Write-Warning "[WARNING] Failed to remove lock file: $($_.Exception.Message)"
+        }
+    }
+
+    # Phase 2: Check if auto-save file exists
+    [bool] HasAutoSaveFile() {
+        return (Test-Path $this.AutoSavePath)
+    }
+
+    # Phase 2: Get auto-save file timestamp
+    [DateTime] GetAutoSaveFileTime() {
+        if ($this.HasAutoSaveFile()) {
+            return (Get-Item $this.AutoSavePath).LastWriteTime
+        }
+        return [DateTime]::MinValue
+    }
+
+    # Phase 2: Load configuration from auto-save file
+    [void] LoadFromAutoSave() {
+        try {
+            if ($this.HasAutoSaveFile()) {
+                Write-Verbose "[INFO] Loading configuration from auto-save file"
+                $jsonContent = Get-Content $this.AutoSavePath -Raw -Encoding UTF8
+                $this.ConfigData = $jsonContent | ConvertFrom-Json
+
+                # Initialize order arrays
+                $this.InitializeGameOrder()
+                $this.InitializeAppOrder()
+
+                Write-Verbose "[INFO] Configuration loaded from auto-save successfully"
+                $this.SetModified()  # Mark as modified since it's from autosave
+            }
+        } catch {
+            Write-Error "[ERROR] Failed to load from auto-save: $($_.Exception.Message)"
+            throw
+        }
+    }
+
+    # Phase 2: Delete auto-save file
+    [void] DeleteAutoSaveFile() {
+        try {
+            if (Test-Path $this.AutoSavePath) {
+                Remove-Item $this.AutoSavePath -Force
+                Write-Verbose "[INFO] Auto-save file deleted: $($this.AutoSavePath)"
+            }
+        } catch {
+            Write-Warning "[WARNING] Failed to delete auto-save file: $($_.Exception.Message)"
         }
     }
 }

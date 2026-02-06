@@ -545,7 +545,46 @@ function Initialize-ConfigEditor {
         Write-Verbose "[INFO] ConfigEditor: Initializing state manager"
         try {
             $stateManager = [ConfigEditorState]::new($script:ConfigPath)
-            $stateManager.LoadConfiguration()
+
+            # Phase 2: Check for lock file (prevent multiple instances)
+            if (-not $stateManager.CreateLockFile()) {
+                $message = "Another instance of the configuration editor is already running. Please close the other instance before starting a new one."
+                if (-not $script:Headless) {
+                    [System.Windows.MessageBox]::Show($message, "Instance Already Running", "OK", "Warning")
+                }
+                Write-Warning $message
+                throw "Multiple instances not allowed"
+            }
+
+            # Phase 2: Check for auto-save file (recovery)
+            if ($stateManager.HasAutoSaveFile()) {
+                $autoSaveTime = $stateManager.GetAutoSaveFileTime()
+                Write-Verbose "[INFO] Auto-save file found (Last modified: $autoSaveTime)"
+
+                if (-not $script:Headless) {
+                    # Show recovery prompt to user
+                    $message = "An auto-saved configuration was found from $autoSaveTime.`n`nWould you like to restore it?"
+                    $title = "Configuration Recovery"
+                    $result = [System.Windows.MessageBox]::Show($message, $title, "YesNo", "Question")
+
+                    if ($result -eq "Yes") {
+                        Write-Verbose "[INFO] User chose to restore from auto-save"
+                        $stateManager.LoadFromAutoSave()
+                    } else {
+                        Write-Verbose "[INFO] User chose to ignore auto-save, loading normal config"
+                        $stateManager.LoadConfiguration()
+                        # Delete the auto-save file since user declined recovery
+                        $stateManager.DeleteAutoSaveFile()
+                    }
+                } else {
+                    # In headless mode, auto-load from autosave without prompting
+                    Write-Verbose "[INFO] Headless mode: Auto-loading from auto-save"
+                    $stateManager.LoadFromAutoSave()
+                }
+            } else {
+                # No auto-save file, load normal configuration
+                $stateManager.LoadConfiguration()
+            }
 
             # Validate configuration data
             if ($null -eq $stateManager.ConfigData) {
@@ -554,6 +593,10 @@ function Initialize-ConfigEditor {
             Write-Verbose "[INFO] ConfigEditor: Configuration data structure - $($stateManager.ConfigData.GetType().Name)"
 
             $stateManager.SaveOriginalConfig()
+
+            # Phase 2: Start auto-backup timer after configuration is loaded
+            $stateManager.StartAutoBackupTimer()
+
             Write-Verbose "[OK] ConfigEditor: State manager initialized successfully"
 
             # Store state manager in script scope for access from functions
