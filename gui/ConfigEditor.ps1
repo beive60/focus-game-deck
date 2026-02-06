@@ -518,17 +518,17 @@ function Initialize-ConfigEditor {
         Write-Verbose "[OK] ConfigEditor: Script modules loaded successfully"
         Write-Verbose "[TRACE] Initialize-ConfigEditor: Reached Step 3"
 
-        # Step 3: Prepare configuration path
-        # Note: Actual config loading and generation happens in ConfigEditorState.LoadConfiguration()
-        Write-Verbose "[INFO] ConfigEditor: Preparing configuration path"
-        $script:ConfigPath = Join-Path -Path $script:appRoot -ChildPath "config/config.json"
-        Write-Verbose "[INFO] ConfigEditor: Config path set to: $($script:ConfigPath)"
-
-        # Step 4: Validate UI mappings
-        Write-Verbose "[TRACE] Initialize-ConfigEditor: Reached Step 4"
+        # Step 3: Validate UI mappings (immediately after module loading)
         if (-not (Test-UIMappings)) {
             Write-Verbose "[WARNING] ConfigEditor: UI mappings validation failed - Some features may not work properly"
         }
+
+        # Step 4: Prepare configuration path
+        # Note: Actual config loading and generation happens in ConfigEditorState.LoadConfiguration()
+        Write-Verbose "[TRACE] Initialize-ConfigEditor: Reached Step 4"
+        Write-Verbose "[INFO] ConfigEditor: Preparing configuration path"
+        $script:ConfigPath = Join-Path -Path $script:appRoot -ChildPath "config/config.json"
+        Write-Verbose "[INFO] ConfigEditor: Config path set to: $($script:ConfigPath)"
 
         # Step 5: Initialize state manager with config path
         # This will load existing config.json or generate a new one with defaults
