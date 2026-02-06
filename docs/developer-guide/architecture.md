@@ -133,8 +133,99 @@ The Focus Game Deck architecture consists of five main layers, each serving dist
 - **Technology Stack**: PowerShell + WPF (XAML)
 - **Key Components**:
   - `ConfigEditor.ps1` - GUI logic with integrated game launcher
+  - `ConfigEditor.Events.ps1` - Event handlers and user interaction
+  - `ConfigEditor.State.ps1` - State management and change tracking
+  - `ConfigEditor.UI.ps1` - UI component management
+  - `ConfigEditor.Save.ps1` - Save operations for all configuration types
+  - `ConfigEditor.Localization.ps1` - Message handling and language support
+  - `ConfigEditor.JsonHelper.ps1` - JSON serialization/deserialization
+  - `ConfigEditor.Mappings.ps1` - UI element to message key mappings
   - `MainWindow.xaml` - UI layout definition
 - **Responsibility**: User configuration, game launcher interface, settings management
+
+##### ConfigEditor Module Architecture
+
+The ConfigEditor follows a modular design pattern with separation of concerns:
+
+**Module Loading Order**:
+1. `ConfigEditor.JsonHelper.ps1` - Utility functions for JSON operations
+2. `ConfigEditor.Mappings.ps1` - Data transformation and UI mappings
+3. `ConfigEditor.State.ps1` - State management with `HasUnsavedChanges` tracking
+4. `ConfigEditor.Localization.ps1` - Message handling and language detection
+5. `ConfigEditor.UI.ps1` - UI component initialization and rendering
+6. `ConfigEditor.Events.ps1` - Event handlers and user interaction logic
+7. `ConfigEditor.Save.ps1` - Aggregated save operations for all configuration types
+
+**Event Handler Pattern for Immediate Updates**:
+
+The ConfigEditor implements immediate in-memory updates for certain fields using PowerShell closures with explicit variable capture:
+
+```powershell
+# Capture references before creating closure
+$capturedWindow = $this.uiManager.Window
+$capturedStateManager = $this.stateManager
+
+# Create closure with GetNewClosure() to capture scope
+$textChangedHandler = {
+    # Access captured references
+    $selectedId = $capturedWindow.FindName("SomeList").SelectedValue
+    if ($selectedId) {
+        $configData.someField.$selectedId.property = $this.Text
+        $capturedStateManager.SetModified()
+    }
+}.GetNewClosure()
+
+# Register handler
+$textBox.add_TextChanged($textChangedHandler)
+
+# Store references for removal/re-registration
+$script:TextBoxReference = $textBox
+$script:TextChangedHandlerReference = $textChangedHandler
+```
+
+**Event Handler Timing Management**:
+
+To prevent null reference errors during programmatic data loading:
+
+```powershell
+# In HandleSelectionChanged methods:
+try {
+    # Temporarily remove handler during data load
+    if ($textBox -and $textChangedHandler) {
+        $textBox.remove_TextChanged($textChangedHandler)
+    }
+    
+    # Load data into UI controls
+    $textBox.Text = $newValue
+    
+} finally {
+    # Re-register handler after data load completes
+    if ($textBox -and $textChangedHandler) {
+        $textBox.add_TextChanged($textChangedHandler)
+    }
+}
+```
+
+**Key Technical Considerations**:
+
+- `GetNewClosure()` requires explicit local variable capture; `$script:` and `$this` references inside closures don't automatically capture outer scope
+- Event handlers must be removed before programmatic UI updates to prevent premature firing
+- `finally` blocks ensure handlers are always re-registered, even if errors occur during data loading
+- Captured references provide proper scope access within closures
+
+**Save Behavior (Hybrid Model - Phase 1 Implemented)**:
+
+The ConfigEditor implements an auto-save + manual save hybrid model:
+
+- **Immediate ConfigData Updates**: Game display names and managed app display names update ConfigData synchronously on TextChanged events
+- **UI Synchronization**: Tab switches trigger UI updates (e.g., AppsToManagePanel) with latest ConfigData values
+- **Auto-save on Close**: Window close automatically persists all changes to `config.json` without confirmation dialogs
+- **Delete Operations**: Game/app deletion marks changes as modified without confirmation dialogs
+- **Manual Save Button**: Explicit save with validation and user feedback, clears modified flag
+
+**Future Enhancements (Phase 2-3)**:
+- Phase 2: Auto-backup timer (1-minute interval to `.autosave` file), startup recovery
+- Phase 3: Title bar unsaved changes indicator, Ctrl+S keyboard shortcut
 
 #### 5. Build & Distribution System
 
@@ -1254,6 +1345,7 @@ To maintain this design philosophy, please prioritize the following:
 | 3.0.0 | 2025-11-13 | Multi-Executable Bundle Architecture: Security-first redesign with three separate signed executables (Main Router, ConfigEditor, Game Launcher) eliminating external unsigned script vulnerability, improving efficiency through process isolation, and establishing foundation for future extensibility |
 | 3.0.1 | 2025-11-15 | Build-Time Patching Unification: Refactored build system to use unified build-time patching approach for both ConfigEditor and Invoke-FocusGameDeck, eliminating duplicate -Bundled.ps1 files and improving maintainability through single-source architecture |
 | 3.0.2 | 2025-12-07 | Documentation Consolidation: Merged JSON formatting standards from json-formatting-fix.md into architecture.md Implementation Guidelines section for centralized technical documentation |
+| 3.1.0 | 2026-02-07 | ConfigEditor Save Behavior Enhancement (Phase 1): Implemented auto-save + manual save hybrid model with immediate in-memory ConfigData updates, auto-save on window close, removal of delete confirmation dialogs, and PowerShell closure pattern for event handlers with explicit variable capture |
 
 ---
 

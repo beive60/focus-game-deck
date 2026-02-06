@@ -956,20 +956,29 @@ class ConfigEditorEvents {
             Write-Verbose "HandleGameSelectionChanged: Selected game = $selectedGame"
 
             if ($gameData) {
-                Write-Verbose "HandleGameSelectionChanged: Game data found for $selectedGame"
-                Write-Verbose "  - name: $($gameData.name)"
-                Write-Verbose "  - platform: $($gameData.platform)"
-                Write-Verbose "  - steamAppId: $($gameData.steamAppId)"
-                Write-Verbose "  - executablePath: $($gameData.executablePath)"
-
-                # Load game details into form
-                $gameNameTextBox = $script:Window.FindName("GameNameTextBox")
-                if ($gameNameTextBox) {
-                    # Check for both 'name' and 'displayName' for compatibility
-                    $displayName = if ($gameData.name) { $gameData.name } elseif ($gameData.displayName) { $gameData.displayName } else { "" }
-                    $gameNameTextBox.Text = $displayName
-                    Write-Verbose "  Set GameNameTextBox: $displayName"
+                # Temporarily remove TextChanged event handler to prevent updates during load
+                $gameNameTextBox = $script:GameNameTextBox
+                $textChangedHandler = $script:GameNameTextChangedHandler
+                if ($gameNameTextBox -and $textChangedHandler) {
+                    $gameNameTextBox.remove_TextChanged($textChangedHandler)
+                    Write-Verbose "[DEBUG] Temporarily removed TextChanged handler during game data load"
                 }
+                
+                try {
+                    Write-Verbose "HandleGameSelectionChanged: Game data found for $selectedGame"
+                    Write-Verbose "  - name: $($gameData.name)"
+                    Write-Verbose "  - platform: $($gameData.platform)"
+                    Write-Verbose "  - steamAppId: $($gameData.steamAppId)"
+                    Write-Verbose "  - executablePath: $($gameData.executablePath)"
+
+                    # Load game details into form
+                    $gameNameTextBox = $script:Window.FindName("GameNameTextBox")
+                    if ($gameNameTextBox) {
+                        # Check for both 'name' and 'displayName' for compatibility
+                        $displayName = if ($gameData.name) { $gameData.name } elseif ($gameData.displayName) { $gameData.displayName } else { "" }
+                        $gameNameTextBox.Text = $displayName
+                        Write-Verbose "  Set GameNameTextBox: $displayName"
+                    }
 
                 $gameIdTextBox = $script:Window.FindName("GameIdTextBox")
                 if ($gameIdTextBox) {
@@ -1205,6 +1214,13 @@ class ConfigEditorEvents {
                 # Update-MoveButtonStates
 
                 Write-Verbose "Loaded game data for: $selectedGame"
+                } finally {
+                    # Re-register TextChanged event handler after data load
+                    if ($gameNameTextBox -and $textChangedHandler) {
+                        $gameNameTextBox.add_TextChanged($textChangedHandler)
+                        Write-Verbose "[DEBUG] Re-registered TextChanged handler after game data load"
+                    }
+                }
             }
         } else {
             # No game selected, clear the form
@@ -1270,35 +1286,44 @@ class ConfigEditorEvents {
             Write-Verbose "HandleAppSelectionChanged: Selected app = $selectedApp"
 
             if ($appData) {
-                Write-Verbose "HandleAppSelectionChanged: App data found for $selectedApp"
-                Write-Verbose "  - displayName: $($appData.displayName)"
-                Write-Verbose "  - processName: $($appData.processName)"
-                Write-Verbose "  - path: $($appData.path)"
-                Write-Verbose "  - gameStartAction: $($appData.gameStartAction)"
-                Write-Verbose "  - gameEndAction: $($appData.gameEndAction)"
-                Write-Verbose "  - terminationMethod: $($appData.terminationMethod)"
-                Write-Verbose "  - gracefulTimeoutMs: $($appData.gracefulTimeoutMs)"
-
-                # Load app details into form
-                $appIdTextBox = $script:Window.FindName("AppIdTextBox")
-                if ($appIdTextBox) {
-                    # Display the actual app ID (config key), not the display name
-                    $appIdTextBox.Text = $selectedApp
+                # Temporarily remove TextChanged event handler to prevent updates during load
+                $appDisplayNameTextBox = $script:AppDisplayNameTextBox
+                $textChangedHandler = $script:AppDisplayNameTextChangedHandler
+                if ($appDisplayNameTextBox -and $textChangedHandler) {
+                    $appDisplayNameTextBox.remove_TextChanged($textChangedHandler)
+                    Write-Verbose "[DEBUG] Temporarily removed TextChanged handler during app data load"
                 }
+                
+                try {
+                    Write-Verbose "HandleAppSelectionChanged: App data found for $selectedApp"
+                    Write-Verbose "  - displayName: $($appData.displayName)"
+                    Write-Verbose "  - processName: $($appData.processName)"
+                    Write-Verbose "  - path: $($appData.path)"
+                    Write-Verbose "  - gameStartAction: $($appData.gameStartAction)"
+                    Write-Verbose "  - gameEndAction: $($appData.gameEndAction)"
+                    Write-Verbose "  - terminationMethod: $($appData.terminationMethod)"
+                    Write-Verbose "  - gracefulTimeoutMs: $($appData.gracefulTimeoutMs)"
 
-                # Load display name
-                $appDisplayNameTextBox = $script:Window.FindName("AppDisplayNameTextBox")
-                if ($appDisplayNameTextBox) {
-                    $appDisplayNameTextBox.Text = if ($appData.displayName) { $appData.displayName } else { "" }
-                    Write-Verbose "  Set AppDisplayNameTextBox: $($appData.displayName)"
-                }
+                    # Load app details into form
+                    $appIdTextBox = $script:Window.FindName("AppIdTextBox")
+                    if ($appIdTextBox) {
+                        # Display the actual app ID (config key), not the display name
+                        $appIdTextBox.Text = $selectedApp
+                    }
 
-                # Load comment
-                $appCommentTextBox = $script:Window.FindName("AppCommentTextBox")
-                if ($appCommentTextBox) {
-                    $appCommentTextBox.Text = if ($appData._comment) { $appData._comment } else { "" }
-                    Write-Verbose "  Set AppCommentTextBox: $($appData._comment)"
-                }
+                    # Load display name
+                    $appDisplayNameTextBox = $script:Window.FindName("AppDisplayNameTextBox")
+                    if ($appDisplayNameTextBox) {
+                        $appDisplayNameTextBox.Text = if ($appData.displayName) { $appData.displayName } else { "" }
+                        Write-Verbose "  Set AppDisplayNameTextBox: $($appData.displayName)"
+                    }
+
+                    # Load comment
+                    $appCommentTextBox = $script:Window.FindName("AppCommentTextBox")
+                    if ($appCommentTextBox) {
+                        $appCommentTextBox.Text = if ($appData._comment) { $appData._comment } else { "" }
+                        Write-Verbose "  Set AppCommentTextBox: $($appData._comment)"
+                    }
 
                 $appProcessNameTextBox = $script:Window.FindName("AppProcessNameTextBox")
                 if ($appProcessNameTextBox) {
@@ -1410,10 +1435,17 @@ class ConfigEditorEvents {
 
                 # Buttons removed - using drag and drop and context menus
 
-                # Update termination method enabled state based on selected actions
-                $this.UpdateTerminationMethodState()
+                    # Update termination method enabled state based on selected actions
+                    $this.UpdateTerminationMethodState()
 
-                Write-Verbose "Loaded app data for: $selectedApp"
+                    Write-Verbose "Loaded app data for: $selectedApp"
+                } finally {
+                    # Re-register TextChanged event handler after data load
+                    if ($appDisplayNameTextBox -and $textChangedHandler) {
+                        $appDisplayNameTextBox.add_TextChanged($textChangedHandler)
+                        Write-Verbose "[DEBUG] Re-registered TextChanged handler after app data load"
+                    }
+                }
             }
         } else {
             # No app selected, clear the form
@@ -1558,29 +1590,24 @@ class ConfigEditorEvents {
             return
         }
 
-        $gameDisplayName = if ($this.stateManager.ConfigData.games.$selectedGame.displayName) {
-            $this.stateManager.ConfigData.games.$selectedGame.displayName
-        } else {
-            $selectedGame
+        # Remove from configuration (no confirmation dialog - matches OBS Studio behavior)
+        $this.stateManager.ConfigData.games.PSObject.Properties.Remove($selectedGame)
+
+        # Update games order
+        if ($this.stateManager.ConfigData.games._order -and $selectedGame -in $this.stateManager.ConfigData.games._order) {
+            $this.stateManager.ConfigData.games._order = $this.stateManager.ConfigData.games._order | Where-Object { $_ -ne $selectedGame }
         }
 
-        $result = Show-SafeMessage -Key "confirmDeleteGame" -MessageType "Question" -Button "YesNo" -DefaultResult "No" -FormatArgs @($gameDisplayName)
+        # Mark as modified (file save will happen on manual save or window close)
+        $this.stateManager.SetModified()
 
-        if ($result -eq "Yes") {
-            # Remove from configuration
-            $this.stateManager.ConfigData.games.PSObject.Properties.Remove($selectedGame)
+        # Refresh games list and apps to manage panel
+        $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
+        Update-AppsToManagePanel
 
-            # Update games order
-            if ($this.stateManager.ConfigData.games._order -and $selectedGame -in $this.stateManager.ConfigData.games._order) {
-                $this.stateManager.ConfigData.games._order = $this.stateManager.ConfigData.games._order | Where-Object { $_ -ne $selectedGame }
-            }
-
-            # Refresh games list and apps to manage panel
-            $this.uiManager.UpdateGamesList($this.stateManager.ConfigData)
-            Update-AppsToManagePanel
-
-            Write-Verbose "Deleted game: $selectedGame"
-        }
+        $message = $this.uiManager.GetLocalizedMessage("gameDeleted")
+        $this.uiManager.ShowNotification($message, "Success")
+        Write-Verbose "Deleted game: $selectedGame"
     }
 
     # Handle move game
@@ -1754,33 +1781,24 @@ class ConfigEditorEvents {
             return
         }
 
-        $appDisplayName = if ($this.stateManager.ConfigData.managedApps.$selectedApp.displayName) {
-            $this.stateManager.ConfigData.managedApps.$selectedApp.displayName
-        } else {
-            $selectedApp
+        # Remove from configuration (no confirmation dialog - matches OBS Studio behavior)
+        $this.stateManager.ConfigData.managedApps.PSObject.Properties.Remove($selectedApp)
+
+        # Update apps order
+        if ($this.stateManager.ConfigData.managedApps._order -and $selectedApp -in $this.stateManager.ConfigData.managedApps._order) {
+            $this.stateManager.ConfigData.managedApps._order = $this.stateManager.ConfigData.managedApps._order | Where-Object { $_ -ne $selectedApp }
         }
 
-        $result = Show-SafeMessage -Key "confirmDeleteApp" -MessageType "Question" -Button "YesNo" -DefaultResult "No" -FormatArgs @($appDisplayName)
+        # Mark as modified (file save will happen on manual save or window close)
+        $this.stateManager.SetModified()
 
-        if ($result -eq "Yes") {
-            # Remove from configuration
-            $this.stateManager.ConfigData.managedApps.PSObject.Properties.Remove($selectedApp)
+        # Refresh managed apps list and apps to manage panel
+        $this.uiManager.UpdateManagedAppsList($this.stateManager.ConfigData)
+        Update-AppsToManagePanel
 
-            # Update apps order
-            if ($this.stateManager.ConfigData.managedApps._order -and $selectedApp -in $this.stateManager.ConfigData.managedApps._order) {
-                $this.stateManager.ConfigData.managedApps._order = $this.stateManager.ConfigData.managedApps._order | Where-Object { $_ -ne $selectedApp }
-            }
-
-            # Refresh managed apps list and apps to manage panel
-            $this.uiManager.UpdateManagedAppsList($this.stateManager.ConfigData)
-            Update-AppsToManagePanel
-
-
-
-            $message = $this.uiManager.GetLocalizedMessage("appDeleted")
-            $this.uiManager.ShowNotification($message, "Success")
-            Write-Verbose "Deleted app: $selectedApp"
-        }
+        $message = $this.uiManager.GetLocalizedMessage("appDeleted")
+        $this.uiManager.ShowNotification($message, "Success")
+        Write-Verbose "Deleted app: $selectedApp"
     }
 
     # Handle move app
@@ -2649,141 +2667,29 @@ class ConfigEditorEvents {
         try {
             Write-Verbose "[DEBUG] ConfigEditorEvents: HandleWindowClosing called"
 
-            # Check if there are unsaved changes
-            if ($this.stateManager.TestHasUnsavedChanges()) {
-                Write-Verbose "[DEBUG] ConfigEditorEvents: Unsaved changes detected"
+            # Auto-save on window close (Option C++ model)
+            # Save changes automatically without prompting user
+            if ($this.stateManager.HasUnsavedChanges) {
+                Write-Verbose "[DEBUG] ConfigEditorEvents: Auto-saving changes on window close"
+                try {
+                    # Save configuration to file
+                    Save-ConfigJson -ConfigData $this.stateManager.ConfigData -ConfigPath $script:ConfigPath -Depth 10
+                    Write-Verbose "[DEBUG] ConfigEditorEvents: Changes saved successfully on window close"
 
-                # Get localized messages
-                $message = $this.uiManager.GetLocalizedMessage("saveBeforeClosePrompt")
-                $title = $this.uiManager.GetLocalizedMessage("unsavedChangesTitle")
-                $saveAndClose = $this.uiManager.GetLocalizedMessage("saveAndClose")
-                $discardAndClose = $this.uiManager.GetLocalizedMessage("discardAndClose")
-                $cancel = $this.uiManager.GetLocalizedMessage("cancelButton")
+                    # Clear modified flag
+                    $this.stateManager.ClearModified()
 
-                Write-Verbose "[DEBUG] Dialog localization values:"
-                Write-Verbose "  title: '$title'"
-                Write-Verbose "  message: '$message'"
-                Write-Verbose "  saveAndClose: '$saveAndClose'"
-                Write-Verbose "  discardAndClose: '$discardAndClose'"
-                Write-Verbose "  cancel: '$cancel'"
-
-                # Create custom dialog window
-                Add-Type -AssemblyName PresentationFramework
-
-                # Try to load XAML fragment from embedded variable or project GUI files
-                $dialogXaml = $null
-
-                # Check if embedded XAML variable exists (production/bundled mode)
-                if ($Global:Xaml_ConfirmSaveChangesDialog_fragment) {
-                    Write-Verbose "Using embedded dialog XAML from `$Global:Xaml_ConfirmSaveChangesDialog_fragment"
-                    $dialogXaml = $Global:Xaml_ConfirmSaveChangesDialog_fragment
-                } else {
-                    # Fallback to file-based loading (development mode)
-                    $dialogXamlPath = Join-Path -Path $this.appRoot -ChildPath "gui/ConfirmSaveChangesDialog.fragment.xaml"
-                    if (Test-Path $dialogXamlPath) {
-                        try {
-                            $dialogXaml = Get-Content -Path $dialogXamlPath -Raw
-                            Write-Verbose "Loaded dialog fragment from: $dialogXamlPath"
-                        } catch {
-                            Write-Warning "Failed to read dialog XAML fragment at {$dialogXamlPath}: $($_.Exception.Message)"
-                            $dialogXaml = $null
-                        }
-                    } else {
-                        Write-Verbose "Dialog fragment not found at: $dialogXamlPath"
-                    }
-                }
-
-                if ([string]::IsNullOrWhiteSpace($dialogXaml)) {
-                    Write-Warning "No dialog XAML available (neither embedded nor file-based)"
-                    # Continue with fallback logic below
-                }
-
-                # Expand placeholders in dialog XAML
-                if (-not [string]::IsNullOrWhiteSpace($dialogXaml)) {
-                    try {
-                        Write-Verbose "[DEBUG] Original XAML length: $($dialogXaml.Length)"
-                        Write-Verbose "[DEBUG] First 300 chars of original XAML: $($dialogXaml.Substring(0, [Math]::Min(300, $dialogXaml.Length)))"
-
-                        # Replace literal tokens like $title in the fragment with the runtime values
-                        # Use simple string replace instead of regex for better reliability
-                        $dialogXaml = $dialogXaml.Replace('$title', $title)
-                        $dialogXaml = $dialogXaml.Replace('$message', $message)
-                        $dialogXaml = $dialogXaml.Replace('$saveAndClose', $saveAndClose)
-                        $dialogXaml = $dialogXaml.Replace('$discardAndClose', $discardAndClose)
-                        $dialogXaml = $dialogXaml.Replace('$cancel', $cancel)
-
-                        Write-Verbose "[DEBUG] Replaced XAML length: $($dialogXaml.Length)"
-                        Write-Verbose "[DEBUG] First 300 chars of replaced XAML: $($dialogXaml.Substring(0, [Math]::Min(300, $dialogXaml.Length)))"
-                    } catch {
-                        Write-Warning "Failed to expand placeholders in dialog XAML: $($_.Exception.Message)"
-                        $dialogXaml = $null
-                    }
-                }
-
-
-
-                $reader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($dialogXaml))
-                $dialogWindow = ("System.Windows.Markup.XamlReader" -as [type])::Load($reader)
-                $reader.Close()
-
-                # Set owner for modal behavior
-                $dialogWindow.Owner = $this.Window
-
-                # Get buttons
-                $saveButton = $dialogWindow.FindName("SaveButton")
-                $discardButton = $dialogWindow.FindName("DiscardButton")
-                $cancelButton = $dialogWindow.FindName("CancelButton")
-
-                # Add event handlers
-                $saveButton.Add_Click({
-                        $dialogWindow.Tag = "Save"
-                        $dialogWindow.DialogResult = $true
-                        $dialogWindow.Close()
-                    })
-
-                $discardButton.Add_Click({
-                        $dialogWindow.Tag = "Discard"
-                        $dialogWindow.DialogResult = $true
-                        $dialogWindow.Close()
-                    })
-
-                $cancelButton.Add_Click({
-                        $dialogWindow.Tag = "Cancel"
-                        $dialogWindow.DialogResult = $false
-                        $dialogWindow.Close()
-                    })
-
-                # Show dialog
-                [void]$dialogWindow.ShowDialog()
-                $userChoice = $dialogWindow.Tag
-
-                Write-Verbose "[DEBUG] ConfigEditorEvents: User choice - $userChoice"
-
-                switch ($userChoice) {
-                    "Save" {
-                        # Save and close
-                        Write-Verbose "[DEBUG] ConfigEditorEvents: Saving changes before closing"
-                        try {
-                            $this.HandleSaveConfig()
-                            Write-Verbose "[DEBUG] ConfigEditorEvents: Changes saved successfully"
-                        } catch {
-                            Write-Verbose "[ERROR] ConfigEditorEvents: Failed to save changes - $($_.Exception.Message)"
-                            # Show error and cancel closing
-                            Show-SafeMessage -Key "configSaveFailed" -MessageType "Error"
-                            $e.Cancel = $true
-                            return
-                        }
-                    }
-                    "Discard" {
-                        # Discard and close
-                        Write-Verbose "[DEBUG] ConfigEditorEvents: Discarding changes and closing"
-                    }
-                    default {
-                        # Cancel closing (includes "Cancel" and null)
-                        Write-Verbose "[DEBUG] ConfigEditorEvents: User cancelled window closing"
-                        $e.Cancel = $true
-                        return
-                    }
+                    # TODO Phase 2: Delete autosave backup file if exists
+                    # $autosavePath = "$script:ConfigPath.autosave"
+                    # if (Test-Path $autosavePath) {
+                    #     Remove-Item $autosavePath -Force
+                    # }
+                } catch {
+                    Write-Error "[ERROR] ConfigEditorEvents: Failed to save changes on window close - $($_.Exception.Message)"
+                    # Show error and cancel closing
+                    Show-SafeMessage -Key "configSaveFailed" -MessageType "Error"
+                    $e.Cancel = $true
+                    return
                 }
             } else {
                 Write-Verbose "[DEBUG] ConfigEditorEvents: No unsaved changes, closing directly"
@@ -2791,7 +2697,7 @@ class ConfigEditorEvents {
 
             Write-Verbose "[DEBUG] ConfigEditorEvents: Window closing approved"
         } catch {
-            Write-Verbose "[WARNING] ConfigEditorEvents: Error in HandleWindowClosing - $($_.Exception.Message)"
+            Write-Warning "[WARNING] ConfigEditorEvents: Error in HandleWindowClosing - $($_.Exception.Message)"
             # Don't cancel on error - allow window to close
         }
     }
@@ -3559,6 +3465,59 @@ class ConfigEditorEvents {
                                 if ($gamesList -and $gamesList.Items.Count -gt 0 -and $gamesList.SelectedIndex -lt 0) {
                                     $gamesList.SelectedIndex = 0
                                 }
+
+                                # Update AppsToManagePanel to reflect latest managed apps with updated displayNames
+                                try {
+                                    $appsToManagePanel = $self.uiManager.Window.FindName("AppsToManagePanel")
+                                    if ($appsToManagePanel) {
+                                        # Get current game's appsToManage list
+                                        $currentGameId = $self.uiManager.Window.FindName("GamesList").SelectedValue
+                                        if ($currentGameId) {
+                                            $gameData = $self.stateManager.ConfigData.games.$currentGameId
+                                            $appsToManage = if ($gameData -and $gameData.appsToManage) { $gameData.appsToManage } else { @() }
+
+                                            # Rebuild checkboxes with latest data
+                                            $appsToManagePanel.Children.Clear()
+                                            $managedApps = $self.stateManager.ConfigData.managedApps
+                                            if ($managedApps) {
+                                                $appOrder = if ($managedApps._order) { $managedApps._order } else { @() }
+                                                $appsToDisplay = if ($appOrder.Count -gt 0) {
+                                                    $appOrder | Where-Object { $_ -ne "_order" -and $managedApps.PSObject.Properties[$_] }
+                                                } else {
+                                                    $managedApps.PSObject.Properties.Name | Where-Object { $_ -ne "_order" }
+                                                }
+
+                                                foreach ($appId in $appsToDisplay) {
+                                                    $appData = $managedApps.$appId
+                                                    if (-not $appData) { continue }
+
+                                                    $displayName = if ($appData.displayName) { $appData.displayName } else { $appId }
+                                                    $checkbox = New-Object System.Windows.Controls.CheckBox
+                                                    $checkbox.Content = $displayName
+                                                    $checkbox.Tag = $appId
+                                                    $checkbox.IsChecked = $appsToManage -contains $appId
+                                                    $checkbox.Margin = "0,2"
+
+                                                    # Capture necessary references for event handlers
+                                                    $stateManager = $self.stateManager
+                                                    $checkbox.add_Checked({
+                                                        param($s, $e)
+                                                        $stateManager.SetModified()
+                                                    }.GetNewClosure())
+
+                                                    $checkbox.add_Unchecked({
+                                                        param($s, $e)
+                                                        $stateManager.SetModified()
+                                                    }.GetNewClosure())
+
+                                                    $appsToManagePanel.Children.Add($checkbox) | Out-Null
+                                                }
+                                            }
+                                        }
+                                    }
+                                } catch {
+                                    Write-Warning "Failed to update AppsToManagePanel on tab switch: $($_.Exception.Message)"
+                                }
                             } elseif ($selectedTab -and $selectedTab.Name -eq "ManagedAppsTab") {
                                 # Refresh managed apps list and ensure first app is selected when switching to Managed Apps tab
                                 $self.uiManager.UpdateManagedAppsList($self.stateManager.ConfigData)
@@ -3610,6 +3569,50 @@ class ConfigEditorEvents {
             } else {
                 Write-Verbose "GamesList not found"
             }
+            
+            # Game Settings tab - immediate ConfigData updates on text changes
+            $gameNameTextBox = $this.uiManager.Window.FindName("GameNameTextBox")
+            if ($gameNameTextBox) {
+                # Capture references that will be needed in the closure
+                $capturedWindow = $this.uiManager.Window
+                $capturedStateManager = $this.stateManager
+                
+                # Create a script block that captures necessary references
+                $textChangedHandler = {
+                    param($s, $e)
+                    try {
+                        # Get current selected game
+                        $gamesList = $capturedWindow.FindName("GamesList")
+                        if (-not $gamesList) { return }
+                        
+                        $selectedGameId = $gamesList.SelectedValue
+                        if (-not $selectedGameId) { return }
+                        
+                        # Access ConfigData and update game name
+                        if (-not $capturedStateManager) { return }
+                        $configData = $capturedStateManager.ConfigData
+                        if (-not $configData -or -not $configData.games) { return }
+                        
+                        # Check if the selected game exists in config
+                        $gamesObj = $configData.games
+                        if ($gamesObj.PSObject.Properties[$selectedGameId]) {
+                            $newName = $s.Text
+                            $gamesObj.$selectedGameId.name = $newName
+                            Write-Verbose "Updated ConfigData for game $selectedGameId`: name = '$newName'"
+                            $capturedStateManager.SetModified()
+                        }
+                    } catch {
+                        Write-Warning "Failed to update game name in ConfigData: $($_.Exception.Message)"
+                    }
+                }.GetNewClosure()
+                
+                $gameNameTextBox.add_TextChanged($textChangedHandler)
+                
+                # Store reference to handler and textbox for enable/disable during load
+                $script:GameNameTextBox = $gameNameTextBox
+                $script:GameNameTextChangedHandler = $textChangedHandler
+            }
+            
             $platformCombo = $this.uiManager.Window.FindName("PlatformComboBox"); if ($platformCombo) { $platformCombo.add_SelectionChanged({ $self.HandlePlatformSelectionChanged() }.GetNewClosure()) } else { Write-Verbose "PlatformComboBox not found" }
 
             # Validation event handlers for Game ID
@@ -3697,6 +3700,51 @@ class ConfigEditorEvents {
             } else {
                 Write-Verbose "ManagedAppsList not found"
             }
+            # Managed Apps tab - immediate ConfigData updates on text changes
+            $appDisplayNameTextBox = $this.uiManager.Window.FindName("AppDisplayNameTextBox")
+            if ($appDisplayNameTextBox) {
+                # Capture references that will be needed in the closure
+                $capturedWindow = $this.uiManager.Window
+                $capturedStateManager = $this.stateManager
+                
+                # Create a script block that captures necessary references
+                $textChangedHandler = {
+                    param($s, $e)
+                    try {
+                        # Get current selected app
+                        $managedAppsList = $capturedWindow.FindName("ManagedAppsList")
+                        if (-not $managedAppsList) { return }
+                        
+                        $selectedAppId = $managedAppsList.SelectedValue
+                        if (-not $selectedAppId) { return }
+                        
+                        # Access ConfigData and update displayName
+                        if (-not $capturedStateManager) { return }
+                        $configData = $capturedStateManager.ConfigData
+                        if (-not $configData -or -not $configData.managedApps) { return }
+                        
+                        # Check if the selected app exists in config
+                        $managedAppsObj = $configData.managedApps
+                        if ($managedAppsObj.PSObject.Properties[$selectedAppId]) {
+                            $newDisplayName = $s.Text
+                            $managedAppsObj.$selectedAppId.displayName = $newDisplayName
+                            Write-Verbose "Updated ConfigData for app $selectedAppId`: displayName = '$newDisplayName'"
+                            $capturedStateManager.SetModified()
+                        }
+                    } catch {
+                        Write-Warning "Failed to update app displayName in ConfigData: $($_.Exception.Message)"
+                    }
+                }.GetNewClosure()
+                
+                $appDisplayNameTextBox.add_TextChanged($textChangedHandler)
+                
+                # Store reference to handler and textbox for enable/disable during load
+                $script:AppDisplayNameTextBox = $appDisplayNameTextBox
+                $script:AppDisplayNameTextChangedHandler = $textChangedHandler
+            } else {
+                Write-Verbose "[DEBUG] AppDisplayNameTextBox not found"
+            }
+
             $this.uiManager.Window.FindName("BrowseAppPathButton").add_Click({ $self.HandleBrowseAppPath() }.GetNewClosure())
             $this.uiManager.Window.FindName("BrowseWorkingDirectoryButton").add_Click({ $self.HandleBrowseWorkingDirectory() }.GetNewClosure())
             $this.uiManager.Window.FindName("SaveManagedAppsButton").add_Click({ $self.HandleSaveManagedApps() }.GetNewClosure())
