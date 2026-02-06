@@ -130,102 +130,31 @@ class ConfigEditorState {
         Returns the default configuration structure.
 
     .DESCRIPTION
-        Provides a programmatically-defined default configuration as a PSCustomObject.
-        This eliminates the need for an external config.json.sample file.
+        Provides a minimal default configuration as a PSCustomObject.
+        Users should add games and managed apps through the GUI after initial setup.
+        Eliminates the need for an external config.json.sample file.
 
     .OUTPUTS
-        PSCustomObject - Complete default configuration structure
+        PSCustomObject - Minimal default configuration structure with empty collections
     #>
     hidden [PSCustomObject] GetDefaultConfig() {
-        Write-Verbose "[INFO] Creating default configuration structure"
+        Write-Verbose "[INFO] Creating minimal default configuration structure"
 
         $defaultConfig = [PSCustomObject]@{
             managedApps = [PSCustomObject]@{
-                _order = @("noWinKey")
-                noWinKey = [PSCustomObject]@{
-                    path = "C:/Apps/NoWinKey/NoWinKey.exe"
-                    processName = "NoWinKey"
-                    arguments = ""
-                    gameStartAction = "start-process"
-                    gameEndAction = "stop-process"
-                    terminationMethod = "force"
-                    gracefulTimeoutMs = 5000
-                    displayName = "noWinKey"
-                    _comment = ""
-                }
+                _order = @()
             }
             games = [PSCustomObject]@{
-                _order = @("mock-calc", "apex", "valorant", "fallguys")
-                "mock-calc" = [PSCustomObject]@{
-                    _comment = "A lightweight mock game for development and testing. Uses the calculator instead of a real game"
-                    name = "Test Game (Calculator)"
-                    platform = "direct"
-                    executablePath = "C:/Windows/System32/calc.exe"
-                    processName = "CalculatorApp*"
-                    appsToManage = @()
-                    steamAppId = ""
-                    epicGameId = ""
-                    riotGameId = ""
-                    integrations = [PSCustomObject]@{
-                        useOBS = $true
-                        useDiscord = $false
-                        useVTubeStudio = $false
-                    }
-                }
-                valorant = [PSCustomObject]@{
-                    name = "VALORANT"
-                    platform = "riot"
-                    riotGameId = "valorant"
-                    processName = "VALORANT-Win64-Shipping*"
-                    appsToManage = @()
-                    integrations = [PSCustomObject]@{
-                        useOBS = $true
-                        useDiscord = $false
-                        useVTubeStudio = $true
-                    }
-                    steamAppId = ""
-                    epicGameId = ""
-                    executablePath = ""
-                }
-                apex = [PSCustomObject]@{
-                    name = "Apex Legends"
-                    platform = "steam"
-                    steamAppId = "1172470"
-                    processName = "r5apex*"
-                    appsToManage = @()
-                    epicGameId = ""
-                    riotGameId = ""
-                    executablePath = ""
-                    integrations = [PSCustomObject]@{
-                        useOBS = $true
-                        useDiscord = $false
-                        useVTubeStudio = $false
-                    }
-                }
-                "fall-guys" = [PSCustomObject]@{
-                    name = "Fall Guys"
-                    platform = "epic"
-                    steamAppId = ""
-                    epicGameId = "apps/50118b7f954e450f8823df1614b24e80%3A38ec4849ea4f4de6aa7b6fb0f2d278e1%3A0a2d9f6403244d12969e11da6713137b?action=launch&silent=true"
-                    riotGameId = ""
-                    processName = "FallGuys*"
-                    appsToManage = @()
-                    executablePath = ""
-                    integrations = [PSCustomObject]@{
-                        useOBS = $false
-                        useDiscord = $false
-                        useVTubeStudio = $false
-                    }
-                }
+                _order = @()
             }
             paths = [PSCustomObject]@{
-                steam = "C:/Program Files (x86)/Steam/steam.exe"
-                epic = "C:/Program Files (x86)/Epic Games/Launcher/Engine/Binaries/Win64/EpicGamesLauncher.exe"
-                riot = "C:/Riot Games/Riot Client/RiotClientElectron/Riot Client.exe"
+                steam = ""
+                epic = ""
+                riot = ""
             }
             integrations = [PSCustomObject]@{
                 obs = [PSCustomObject]@{
-                    path = "C:/Program Files/obs-studio/bin/64bit/obs64.exe"
+                    path = ""
                     processName = "obs64"
                     gameStartAction = "enter-game-mode"
                     gameEndAction = "exit-game-mode"
@@ -240,7 +169,7 @@ class ConfigEditorState {
                     replayBuffer = $true
                 }
                 discord = [PSCustomObject]@{
-                    path = "%LOCALAPPDATA%/Discord/app-*/Discord.exe"
+                    path = ""
                     processName = "Discord"
                     gameStartAction = "enter-game-mode"
                     gameEndAction = "stop-process"
@@ -263,7 +192,7 @@ class ConfigEditorState {
                     }
                 }
                 vtubeStudio = [PSCustomObject]@{
-                    path = "C:/Program Files (x86)/Steam/steam.exe"
+                    path = ""
                     processName = "VTube Studio"
                     gameStartAction = "enter-game-mode"
                     gameEndAction = "exit-game-mode"
