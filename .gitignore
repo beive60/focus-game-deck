@@ -8,6 +8,8 @@ src/generated/*.ps1
 
 # User-specific configuration files
 config/config.json
+config/config.json.autosave
+config/config.json.lock
 
 # PowerShell history file
 *.history

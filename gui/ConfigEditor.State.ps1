@@ -12,6 +12,16 @@ class ConfigEditorState {
     [string]$CurrentLanguage
     [bool]$HasUnsavedChanges
 
+    # Phase 2: Auto-backup timer properties
+    [object]$AutoBackupTimer  # DispatcherTimer - using [object] for PowerShell 5.x compatibility
+    [string]$AutoSavePath
+    [string]$LockFilePath
+    [bool]$IsBackupInProgress
+
+    # Phase 3: Title bar and status tracking
+    [DateTime]$LastSaveTime
+    [string]$BaseWindowTitle
+
     # Constructor
     ConfigEditorState([string]$configPath) {
         Write-Verbose "[INFO] ConfigEditorState constructor called with configPath: '$configPath'"
@@ -31,6 +41,16 @@ class ConfigEditorState {
         $this.Messages = $null
         $this.CurrentLanguage = "en"  # Default language
         $this.HasUnsavedChanges = $false
+
+        # Phase 2: Initialize auto-backup properties
+        $this.AutoBackupTimer = $null
+        $this.AutoSavePath = "$configPath.autosave"
+        $this.LockFilePath = "$configPath.lock"
+        $this.IsBackupInProgress = $false
+
+        # Phase 3: Initialize title bar tracking
+        $this.LastSaveTime = [DateTime]::MinValue
+        $this.BaseWindowTitle = "Focus Game Deck - Configuration Editor"
 
         Write-Verbose "[INFO] ConfigEditorState constructor completed successfully"
     }
@@ -106,6 +126,8 @@ class ConfigEditorState {
 
     [void] SetModified() {
         $this.HasUnsavedChanges = $true
+        # Phase 3: Update title bar when modified state changes
+        $this.UpdateWindowTitle()
     }
 
     <#
@@ -119,6 +141,8 @@ class ConfigEditorState {
     [void] ClearModified() {
         $this.HasUnsavedChanges = $false
         Write-Verbose "[INFO] Configuration marked as not modified"
+        # Phase 3: Update title bar when modified state changes
+        $this.UpdateWindowTitle()
     }
 
     [bool] TestHasUnsavedChanges() {
@@ -130,102 +154,31 @@ class ConfigEditorState {
         Returns the default configuration structure.
 
     .DESCRIPTION
-        Provides a programmatically-defined default configuration as a PSCustomObject.
-        This eliminates the need for an external config.json.sample file.
+        Provides a minimal default configuration as a PSCustomObject.
+        Users should add games and managed apps through the GUI after initial setup.
+        Eliminates the need for an external config.json.sample file.
 
     .OUTPUTS
-        PSCustomObject - Complete default configuration structure
+        PSCustomObject - Minimal default configuration structure with empty collections
     #>
     hidden [PSCustomObject] GetDefaultConfig() {
-        Write-Verbose "[INFO] Creating default configuration structure"
+        Write-Verbose "[INFO] Creating minimal default configuration structure"
 
         $defaultConfig = [PSCustomObject]@{
             managedApps = [PSCustomObject]@{
-                _order = @("noWinKey")
-                noWinKey = [PSCustomObject]@{
-                    path = "C:/Apps/NoWinKey/NoWinKey.exe"
-                    processName = "NoWinKey"
-                    arguments = ""
-                    gameStartAction = "start-process"
-                    gameEndAction = "stop-process"
-                    terminationMethod = "force"
-                    gracefulTimeoutMs = 5000
-                    displayName = "noWinKey"
-                    _comment = ""
-                }
+                _order = @()
             }
             games = [PSCustomObject]@{
-                _order = @("mock-calc", "apex", "valorant", "fallguys")
-                "mock-calc" = [PSCustomObject]@{
-                    _comment = "A lightweight mock game for development and testing. Uses the calculator instead of a real game"
-                    name = "Test Game (Calculator)"
-                    platform = "direct"
-                    executablePath = "C:/Windows/System32/calc.exe"
-                    processName = "CalculatorApp*"
-                    appsToManage = @()
-                    steamAppId = ""
-                    epicGameId = ""
-                    riotGameId = ""
-                    integrations = [PSCustomObject]@{
-                        useOBS = $true
-                        useDiscord = $false
-                        useVTubeStudio = $false
-                    }
-                }
-                valorant = [PSCustomObject]@{
-                    name = "VALORANT"
-                    platform = "riot"
-                    riotGameId = "valorant"
-                    processName = "VALORANT-Win64-Shipping*"
-                    appsToManage = @()
-                    integrations = [PSCustomObject]@{
-                        useOBS = $true
-                        useDiscord = $false
-                        useVTubeStudio = $true
-                    }
-                    steamAppId = ""
-                    epicGameId = ""
-                    executablePath = ""
-                }
-                apex = [PSCustomObject]@{
-                    name = "Apex Legends"
-                    platform = "steam"
-                    steamAppId = "1172470"
-                    processName = "r5apex*"
-                    appsToManage = @()
-                    epicGameId = ""
-                    riotGameId = ""
-                    executablePath = ""
-                    integrations = [PSCustomObject]@{
-                        useOBS = $true
-                        useDiscord = $false
-                        useVTubeStudio = $false
-                    }
-                }
-                "fall-guys" = [PSCustomObject]@{
-                    name = "Fall Guys"
-                    platform = "epic"
-                    steamAppId = ""
-                    epicGameId = "apps/50118b7f954e450f8823df1614b24e80%3A38ec4849ea4f4de6aa7b6fb0f2d278e1%3A0a2d9f6403244d12969e11da6713137b?action=launch&silent=true"
-                    riotGameId = ""
-                    processName = "FallGuys*"
-                    appsToManage = @()
-                    executablePath = ""
-                    integrations = [PSCustomObject]@{
-                        useOBS = $false
-                        useDiscord = $false
-                        useVTubeStudio = $false
-                    }
-                }
+                _order = @()
             }
             paths = [PSCustomObject]@{
-                steam = "C:/Program Files (x86)/Steam/steam.exe"
-                epic = "C:/Program Files (x86)/Epic Games/Launcher/Engine/Binaries/Win64/EpicGamesLauncher.exe"
-                riot = "C:/Riot Games/Riot Client/RiotClientElectron/Riot Client.exe"
+                steam = ""
+                epic = ""
+                riot = ""
             }
             integrations = [PSCustomObject]@{
                 obs = [PSCustomObject]@{
-                    path = "C:/Program Files/obs-studio/bin/64bit/obs64.exe"
+                    path = ""
                     processName = "obs64"
                     gameStartAction = "enter-game-mode"
                     gameEndAction = "exit-game-mode"
@@ -240,7 +193,7 @@ class ConfigEditorState {
                     replayBuffer = $true
                 }
                 discord = [PSCustomObject]@{
-                    path = "%LOCALAPPDATA%/Discord/app-*/Discord.exe"
+                    path = ""
                     processName = "Discord"
                     gameStartAction = "enter-game-mode"
                     gameEndAction = "stop-process"
@@ -263,7 +216,7 @@ class ConfigEditorState {
                     }
                 }
                 vtubeStudio = [PSCustomObject]@{
-                    path = "C:/Program Files (x86)/Steam/steam.exe"
+                    path = ""
                     processName = "VTube Studio"
                     gameStartAction = "enter-game-mode"
                     gameEndAction = "exit-game-mode"
@@ -428,6 +381,214 @@ class ConfigEditorState {
             Write-Error "[ERROR] SaveOriginalConfig exception details: $($_.Exception.ToString())"
             $this.OriginalConfigData = $null
             # Don't throw - this should not cause initialization to fail
+        }
+    }
+
+    # Phase 2: Start auto-backup timer (1-minute interval)
+    [void] StartAutoBackupTimer() {
+        try {
+            if ($this.AutoBackupTimer) {
+                Write-Verbose "[INFO] Auto-backup timer already running"
+                return
+            }
+
+            Write-Verbose "[INFO] Starting auto-backup timer (60-second interval)"
+
+            # Create DispatcherTimer with 60-second interval (1 minute)
+            $this.AutoBackupTimer = New-Object System.Windows.Threading.DispatcherTimer
+            $this.AutoBackupTimer.Interval = [TimeSpan]::FromSeconds(60)
+
+            # Capture this object for the timer callback
+            $stateManager = $this
+
+            # Add Tick event handler
+            $timerAction = {
+                try {
+                    # Prevent re-entry if backup is already in progress
+                    if ($stateManager.IsBackupInProgress) {
+                        return
+                    }
+
+                    if ($stateManager.HasUnsavedChanges) {
+                        # Set flag to prevent re-entry
+                        $stateManager.IsBackupInProgress = $true
+
+                        # Save to .autosave file
+                        $jsonContent = $stateManager.ConfigData | ConvertTo-Json -Depth 10 -Compress:$false
+                        [System.IO.File]::WriteAllText($stateManager.AutoSavePath, $jsonContent, [System.Text.Encoding]::UTF8)
+
+                        # Clear flag
+                        $stateManager.IsBackupInProgress = $false
+                    }
+                } catch {
+                    # Clear flag on error
+                    $stateManager.IsBackupInProgress = $false
+                }
+            }
+
+            $this.AutoBackupTimer.Add_Tick($timerAction)
+
+            # Start the timer
+            $this.AutoBackupTimer.Start()
+
+            Write-Verbose "[INFO] Auto-backup timer started successfully"
+        } catch {
+            Write-Warning "[WARNING] Failed to start auto-backup timer: $($_.Exception.Message)"
+            $this.AutoBackupTimer = $null
+        }
+    }
+
+    # Phase 2: Stop auto-backup timer
+    [void] StopAutoBackupTimer() {
+        try {
+            if ($this.AutoBackupTimer) {
+                Write-Verbose "[INFO] Stopping auto-backup timer"
+                $this.AutoBackupTimer.Stop()
+                $this.AutoBackupTimer = $null
+
+                Write-Verbose "[INFO] Auto-backup timer stopped"
+            }
+        } catch {
+            Write-Warning "[WARNING] Error stopping auto-backup timer: $($_.Exception.Message)"
+        }
+    }
+
+    # Phase 2: Create lock file to prevent multiple instances
+    [bool] CreateLockFile() {
+        try {
+            if (Test-Path $this.LockFilePath) {
+                # Check if the lock file is stale (process no longer exists)
+                try {
+                    $lockContent = Get-Content $this.LockFilePath -Raw
+                    $lockPid = [int]$lockContent
+
+                    # Check if process with this PID exists
+                    $process = Get-Process -Id $lockPid -ErrorAction SilentlyContinue
+                    if ($process) {
+                        Write-Warning "[WARNING] Another instance is already running (PID: $lockPid)"
+                        return $false
+                    } else {
+                        Write-Verbose "[INFO] Stale lock file found (PID $lockPid no longer exists), removing"
+                        Remove-Item $this.LockFilePath -Force
+                    }
+                } catch {
+                    Write-Verbose "[INFO] Invalid lock file format, removing"
+                    Remove-Item $this.LockFilePath -Force -ErrorAction SilentlyContinue
+                }
+            }
+
+            # Create new lock file with current PID
+            $currentPid = [System.Diagnostics.Process]::GetCurrentProcess().Id
+            $currentPid | Out-File -FilePath $this.LockFilePath -Encoding ASCII -Force
+            Write-Verbose "[INFO] Lock file created: $($this.LockFilePath) (PID: $currentPid)"
+            return $true
+        } catch {
+            Write-Warning "[WARNING] Failed to create lock file: $($_.Exception.Message)"
+            return $true  # Don't block startup if lock file creation fails
+        }
+    }
+
+    # Phase 2: Remove lock file on clean exit
+    [void] RemoveLockFile() {
+        try {
+            if (Test-Path $this.LockFilePath) {
+                Remove-Item $this.LockFilePath -Force
+                Write-Verbose "[INFO] Lock file removed: $($this.LockFilePath)"
+            }
+        } catch {
+            Write-Warning "[WARNING] Failed to remove lock file: $($_.Exception.Message)"
+        }
+    }
+
+    # Phase 2: Check if auto-save file exists
+    [bool] HasAutoSaveFile() {
+        return (Test-Path $this.AutoSavePath)
+    }
+
+    # Phase 2: Get auto-save file timestamp
+    [DateTime] GetAutoSaveFileTime() {
+        if ($this.HasAutoSaveFile()) {
+            return (Get-Item $this.AutoSavePath).LastWriteTime
+        }
+        return [DateTime]::MinValue
+    }
+
+    # Phase 2: Load configuration from auto-save file
+    [void] LoadFromAutoSave() {
+        try {
+            if ($this.HasAutoSaveFile()) {
+                Write-Verbose "[INFO] Loading configuration from auto-save file"
+                $jsonContent = Get-Content $this.AutoSavePath -Raw -Encoding UTF8
+                $this.ConfigData = $jsonContent | ConvertFrom-Json
+
+                # Initialize order arrays
+                $this.InitializeGameOrder()
+                $this.InitializeAppOrder()
+
+                Write-Verbose "[INFO] Configuration loaded from auto-save successfully"
+                $this.SetModified()  # Mark as modified since it's from autosave
+            }
+        } catch {
+            Write-Error "[ERROR] Failed to load from auto-save: $($_.Exception.Message)"
+            throw
+        }
+    }
+
+    # Phase 2: Delete auto-save file
+    [void] DeleteAutoSaveFile() {
+        try {
+            if (Test-Path $this.AutoSavePath) {
+                Remove-Item $this.AutoSavePath -Force
+                Write-Verbose "[INFO] Auto-save file deleted: $($this.AutoSavePath)"
+            }
+        } catch {
+            Write-Warning "[WARNING] Failed to delete auto-save file: $($_.Exception.Message)"
+        }
+    }
+
+    # Phase 3: Update window title with unsaved changes indicator
+    [void] UpdateWindowTitle() {
+        try {
+            if ($this.Window) {
+                $title = $this.BaseWindowTitle
+                if ($this.HasUnsavedChanges) {
+                    $title = "(*) $title"
+                }
+                $this.Window.Title = $title
+                Write-Verbose "[INFO] Window title updated: $title"
+            }
+        } catch {
+            Write-Warning "[WARNING] Failed to update window title: $($_.Exception.Message)"
+        }
+    }
+
+    # Phase 3: Update last save time and window title
+    [void] UpdateLastSaveTime() {
+        try {
+            $this.LastSaveTime = [DateTime]::Now
+            Write-Verbose "[INFO] Last save time updated: $($this.LastSaveTime)"
+        } catch {
+            Write-Warning "[WARNING] Failed to update last save time: $($_.Exception.Message)"
+        }
+    }
+
+    # Phase 3: Get formatted last save time string
+    [string] GetFormattedLastSaveTime() {
+        if ($this.LastSaveTime -eq [DateTime]::MinValue) {
+            return "Never"
+        }
+
+        $timeSpan = [DateTime]::Now - $this.LastSaveTime
+        if ($timeSpan.TotalMinutes -lt 1) {
+            return "Just now"
+        } elseif ($timeSpan.TotalMinutes -lt 60) {
+            $minutes = [Math]::Floor($timeSpan.TotalMinutes)
+            return "$minutes minute(s) ago"
+        } elseif ($timeSpan.TotalHours -lt 24) {
+            $hours = [Math]::Floor($timeSpan.TotalHours)
+            return "$hours hour(s) ago"
+        } else {
+            return $this.LastSaveTime.ToString("yyyy-MM-dd HH:mm:ss")
         }
     }
 }
