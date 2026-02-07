@@ -214,6 +214,42 @@ try {
 - `finally` blocks ensure handlers are always re-registered, even if errors occur during data loading
 - Captured references provide proper scope access within closures
 
+**WPF Timer Implementation**:
+
+When implementing timers in WPF applications with PowerShell, standard `System.Timers.Timer` with `Register-ObjectEvent` may not work reliably due to insufficient UI thread integration. Always use `System.Windows.Threading.DispatcherTimer`:
+
+```powershell
+# Not Recommended - May not execute in WPF context
+$timer = New-Object System.Timers.Timer
+$timer.Interval = 60000
+$timer.AutoReset = $true
+Register-ObjectEvent -InputObject $timer -EventName Elapsed -Action { ... }
+$timer.Start()
+
+# Recommended - Executes reliably on UI thread
+$timer = New-Object System.Windows.Threading.DispatcherTimer
+$timer.Interval = [TimeSpan]::FromSeconds(60)
+$capturedState = $this.stateManager  # Capture references
+$timer.Add_Tick({
+    param($sender, $e)
+    # Timer logic with captured references
+    if ($capturedState.HasUnsavedChanges) {
+        # Perform auto-save
+    }
+}.GetNewClosure())
+$timer.Start()
+
+# Cleanup
+$timer.Stop()  # No need for Unregister-Event
+```
+
+**DispatcherTimer Benefits**:
+
+- Automatically executes on UI thread (safe for UI updates)
+- Reliable event firing in WPF application context
+- Simple cleanup with `Stop()` method, no event subscription cleanup required
+- Better integration with WPF's threading model
+
 **Save Behavior (Hybrid Model - Phase 1 & 2 Implemented)**:
 
 The ConfigEditor implements an auto-save + manual save hybrid model:
