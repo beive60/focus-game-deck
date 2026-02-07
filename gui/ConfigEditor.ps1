@@ -471,48 +471,39 @@ function Initialize-ConfigEditor {
 
             try {
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.JsonHelper.ps1"
-                $moduleContent = Get-Content -Path (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.JsonHelper.ps1") -Raw -Encoding UTF8
-                Invoke-Expression $moduleContent
+                . (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.JsonHelper.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.JsonHelper.ps1"
 
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Mappings.ps1"
-                $moduleContent = Get-Content -Path (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.Mappings.ps1") -Raw -Encoding UTF8
-                Invoke-Expression $moduleContent
+                . (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.Mappings.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Mappings.ps1"
 
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.State.ps1"
-                $moduleContent = Get-Content -Path (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.State.ps1") -Raw -Encoding UTF8
-                Invoke-Expression $moduleContent
+                . (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.State.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.State.ps1"
 
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Localization.ps1"
-                $moduleContent = Get-Content -Path (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.Localization.ps1") -Raw -Encoding UTF8
-                Invoke-Expression $moduleContent
+                . (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.Localization.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Localization.ps1"
 
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.UI.ps1"
-                $moduleContent = Get-Content -Path (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.UI.ps1") -Raw -Encoding UTF8
-                Invoke-Expression $moduleContent
+                . (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.UI.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.UI.ps1"
 
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Events.ps1"
-                $moduleContent = Get-Content -Path (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.Events.ps1") -Raw -Encoding UTF8
-                Invoke-Expression $moduleContent
+                . (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.Events.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Events.ps1"
 
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - src/modules/ValidationRules.ps1"
-                $moduleContent = Get-Content -Path (Join-Path -Path $appRoot -ChildPath "src/modules/ValidationRules.ps1") -Raw -Encoding UTF8
-                Invoke-Expression $moduleContent
+                . (Join-Path -Path $appRoot -ChildPath "src/modules/ValidationRules.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ValidationRules.ps1"
 
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - scripts/Invoke-ConfigurationValidation.ps1"
-                $moduleContent = Get-Content -Path (Join-Path -Path $script:appRoot -ChildPath "scripts/Invoke-ConfigurationValidation.ps1") -Raw -Encoding UTF8
-                Invoke-Expression $moduleContent
+                . (Join-Path -Path $script:appRoot -ChildPath "scripts/Invoke-ConfigurationValidation.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: Invoke-ConfigurationValidation.ps1"
 
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Save.ps1"
-                $moduleContent = Get-Content -Path (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.Save.ps1") -Raw -Encoding UTF8
-                Invoke-Expression $moduleContent
+                . (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.Save.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Save.ps1"
             } catch {
                 # The error record ($_) from a dot-sourcing failure contains details
@@ -695,6 +686,16 @@ function Initialize-ConfigEditor {
 
             # Store UI manager in script scope for access from functions
             $script:UIManager = $uiManager
+
+            # Phase 3: Set Window reference in state manager for title bar updates
+            $stateManager.Window = $uiManager.Window
+
+            # Phase 3: Set localized base window title
+            $windowTitleKey = "windowTitle"
+            $localizedTitle = $localization.GetMessage($windowTitleKey, @())
+            if ($localizedTitle) {
+                $stateManager.BaseWindowTitle = $localizedTitle
+            }
 
             Write-Verbose "[OK] ConfigEditor: UI manager initialized successfully"
         } catch {

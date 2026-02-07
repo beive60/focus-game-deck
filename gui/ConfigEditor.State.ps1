@@ -13,9 +13,10 @@ class ConfigEditorState {
     [bool]$HasUnsavedChanges
 
     # Phase 2: Auto-backup timer properties
-    [System.Timers.Timer]$AutoBackupTimer
+    [System.Windows.Threading.DispatcherTimer]$AutoBackupTimer
     [string]$AutoSavePath
     [string]$LockFilePath
+    [bool]$IsBackupInProgress
 
     # Phase 3: Title bar and status tracking
     [DateTime]$LastSaveTime
@@ -45,6 +46,7 @@ class ConfigEditorState {
         $this.AutoBackupTimer = $null
         $this.AutoSavePath = "$configPath.autosave"
         $this.LockFilePath = "$configPath.lock"
+        $this.IsBackupInProgress = $false
 
         # Phase 3: Initialize title bar tracking
         $this.LastSaveTime = [DateTime]::MinValue
@@ -392,34 +394,39 @@ class ConfigEditorState {
 
             Write-Verbose "[INFO] Starting auto-backup timer (60-second interval)"
 
-            # Create timer with 60-second interval (1 minute)
-            $this.AutoBackupTimer = New-Object System.Timers.Timer
-            $this.AutoBackupTimer.Interval = 60000  # 60 seconds in milliseconds
-            $this.AutoBackupTimer.AutoReset = $true
+            # Create DispatcherTimer with 60-second interval (1 minute)
+            $this.AutoBackupTimer = New-Object System.Windows.Threading.DispatcherTimer
+            $this.AutoBackupTimer.Interval = [TimeSpan]::FromSeconds(60)
 
             # Capture this object for the timer callback
             $stateManager = $this
 
-            # Register elapsed event handler
+            # Add Tick event handler
             $timerAction = {
                 try {
-                    $stateManager = $Event.MessageData
+                    # Prevent re-entry if backup is already in progress
+                    if ($stateManager.IsBackupInProgress) {
+                        return
+                    }
+
                     if ($stateManager.HasUnsavedChanges) {
-                        Write-Verbose "[AUTO-BACKUP] Changes detected, creating auto-backup"
+                        # Set flag to prevent re-entry
+                        $stateManager.IsBackupInProgress = $true
 
                         # Save to .autosave file
-                        Save-ConfigJson -ConfigData $stateManager.ConfigData -ConfigPath $stateManager.AutoSavePath -Depth 10
+                        $jsonContent = $stateManager.ConfigData | ConvertTo-Json -Depth 10 -Compress:$false
+                        [System.IO.File]::WriteAllText($stateManager.AutoSavePath, $jsonContent, [System.Text.Encoding]::UTF8)
 
-                        Write-Verbose "[AUTO-BACKUP] Auto-backup saved to: $($stateManager.AutoSavePath)"
-                    } else {
-                        Write-Verbose "[AUTO-BACKUP] No unsaved changes, skipping backup"
+                        # Clear flag
+                        $stateManager.IsBackupInProgress = $false
                     }
                 } catch {
-                    Write-Warning "[AUTO-BACKUP] Failed to create auto-backup: $($_.Exception.Message)"
+                    # Clear flag on error
+                    $stateManager.IsBackupInProgress = $false
                 }
             }
 
-            Register-ObjectEvent -InputObject $this.AutoBackupTimer -EventName Elapsed -Action $timerAction -MessageData $stateManager | Out-Null
+            $this.AutoBackupTimer.Add_Tick($timerAction)
 
             # Start the timer
             $this.AutoBackupTimer.Start()
@@ -437,11 +444,7 @@ class ConfigEditorState {
             if ($this.AutoBackupTimer) {
                 Write-Verbose "[INFO] Stopping auto-backup timer"
                 $this.AutoBackupTimer.Stop()
-                $this.AutoBackupTimer.Dispose()
                 $this.AutoBackupTimer = $null
-
-                # Unregister event
-                Get-EventSubscriber | Where-Object { $_.SourceObject -is [System.Timers.Timer] } | Unregister-Event
 
                 Write-Verbose "[INFO] Auto-backup timer stopped"
             }
@@ -475,8 +478,9 @@ class ConfigEditorState {
             }
 
             # Create new lock file with current PID
-            $PID | Out-File -FilePath $this.LockFilePath -Encoding ASCII -Force
-            Write-Verbose "[INFO] Lock file created: $($this.LockFilePath) (PID: $PID)"
+            $currentPid = [System.Diagnostics.Process]::GetCurrentProcess().Id
+            $currentPid | Out-File -FilePath $this.LockFilePath -Encoding ASCII -Force
+            Write-Verbose "[INFO] Lock file created: $($this.LockFilePath) (PID: $currentPid)"
             return $true
         } catch {
             Write-Warning "[WARNING] Failed to create lock file: $($_.Exception.Message)"
