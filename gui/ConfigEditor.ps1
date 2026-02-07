@@ -768,7 +768,7 @@ function Initialize-ConfigEditor {
                 Write-Verbose "[DEBUG] ConfigEditor: Window will auto-close in $AutoCloseSeconds seconds"
 
                 # Create a timer to auto-close the window
-                $timer = New-Object System.Windows.Threading.DispatcherTimer
+                $timer = New-Object ("System.Windows.Threading.DispatcherTimer" -as [type])
                 $timer.Interval = [TimeSpan]::FromSeconds($AutoCloseSeconds)
                 $timer.Add_Tick({
                         Write-Verbose "[DEBUG] ConfigEditor: Auto-closing window"

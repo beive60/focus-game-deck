@@ -13,7 +13,7 @@ class ConfigEditorState {
     [bool]$HasUnsavedChanges
 
     # Phase 2: Auto-backup timer properties
-    [System.Windows.Threading.DispatcherTimer]$AutoBackupTimer
+    [object]$AutoBackupTimer  # DispatcherTimer - using [object] for PowerShell 5.x compatibility
     [string]$AutoSavePath
     [string]$LockFilePath
     [bool]$IsBackupInProgress

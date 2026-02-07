@@ -3407,7 +3407,7 @@ class ConfigEditorEvents {
 
             # Reset status after delay without interrupting user workflow
             $uiManagerRef = $this.uiManager
-            $timer = New-Object System.Windows.Threading.DispatcherTimer
+            $timer = New-Object ("System.Windows.Threading.DispatcherTimer" -as [type])
             $timer.Interval = [TimeSpan]::FromSeconds(5)
             $timer.add_Tick({
                     param($eventSender, $e)
@@ -3563,8 +3563,11 @@ class ConfigEditorEvents {
                     param($eventSender, $e)
                     try {
                         # Check for Ctrl+S (Control key + S key)
-                        if ($e.Key -eq [System.Windows.Input.Key]::S -and
-                            ([System.Windows.Input.Keyboard]::Modifiers -band [System.Windows.Input.ModifierKeys]::Control)) {
+                        $KeyType = "System.Windows.Input.Key" -as [type]
+                        $KeyboardType = "System.Windows.Input.Keyboard" -as [type]
+                        $ModifierKeysType = "System.Windows.Input.ModifierKeys" -as [type]
+                        if ($e.Key -eq $KeyType::S -and
+                            ($KeyboardType::Modifiers -band $ModifierKeysType::Control)) {
                             Write-Verbose "[INFO] Ctrl+S keyboard shortcut detected"
                             $e.Handled = $true  # Prevent default behavior
                             $self.HandleSaveConfig()
