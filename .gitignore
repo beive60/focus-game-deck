@@ -8,6 +8,8 @@ src/generated/*.ps1
 
 # User-specific configuration files
 config/config.json
+config/config.json.autosave
+config/config.json.lock
 
 # PowerShell history file
 *.history
@@ -47,3 +49,4 @@ test/test-result-localization-diagnostic.json
 test/history/*.xml
 test/test-results/*
 gui/localization-diagnostic-*.json
+testResults.xml

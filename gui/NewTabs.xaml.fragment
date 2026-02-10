@@ -427,3 +427,166 @@
         </Grid>
     </Grid>
 </TabItem>
+
+<!-- =============================================== -->
+<!-- VoiceMeeter Tab -->
+<!-- =============================================== -->
+<TabItem
+    x:Name="VoiceMeeterTab"
+    Header="[VOICEMEETER_TAB_HEADER]">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="50"/>
+        </Grid.RowDefinitions>
+
+        <ScrollViewer
+            Grid.Row="0"
+            VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="20">
+                <TextBlock
+                    x:Name="VoiceMeeterIntegrationTitle"
+                    Text="[voicemeeterIntegrationTitle]"
+                    FontSize="16"
+                    FontWeight="Bold"
+                    Margin="0,0,0,15"/>
+
+                <!-- 基本設定 -->
+                <GroupBox
+                    x:Name="VoiceMeeterBasicSettingsGroup"
+                    Header="[generalSettingsGroup]"
+                    Margin="0,0,0,15">
+                    <StackPanel Margin="10">
+                        <CheckBox
+                            x:Name="VoiceMeeterEnabledCheckBox"
+                            Content="[voicemeeterEnabledCheckBox]"
+                            Margin="0,5"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,5">
+                            <Label 
+                                x:Name="VoiceMeeterTypeLabel"
+                                Content="[voicemeeterTypeLabel]" 
+                                Width="120"/>
+                            <ComboBox 
+                                x:Name="VoiceMeeterTypeCombo" 
+                                Width="200">
+                                <ComboBoxItem 
+                                    x:Name="VoiceMeeterTypeStandardItem" 
+                                    Content="[voicemeeterTypeStandard]" 
+                                    Tag="standard"/>
+                                <ComboBoxItem 
+                                    x:Name="VoiceMeeterTypeBananaItem" 
+                                    Content="[voicemeeterTypeBanana]" 
+                                    Tag="banana" 
+                                    IsSelected="True"/>
+                                <ComboBoxItem 
+                                    x:Name="VoiceMeeterTypePotatoItem" 
+                                    Content="[voicemeeterTypePotato]" 
+                                    Tag="potato"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
+                <!-- DLLパス設定 -->
+                <GroupBox
+                    x:Name="VoiceMeeterDllPathGroup"
+                    Header="[pathSettingsGroup]"
+                    Margin="0,0,0,15">
+                    <StackPanel Margin="10">
+                        <TextBlock
+                            x:Name="VoiceMeeterDllPathLabel"
+                            Text="[voicemeeterDllPathLabel]"
+                            Margin="0,0,0,5"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="25"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox
+                                x:Name="VoiceMeeterDllPathTextBox"
+                                Grid.Column="0"
+                                VerticalContentAlignment="Center"
+                                Margin="0,0,5,0"/>
+                            <Button
+                                x:Name="BrowseVoiceMeeterDllPathButton"
+                                Content="[BROWSE_BUTTON]"
+                                Grid.Column="1"
+                                Width="70"
+                                Height="25"
+                                Margin="0,0,5,0"/>
+                            <Button
+                                x:Name="AutoDetectVoiceMeeterButton"
+                                Content="[AUTO_DETECT_BUTTON]"
+                                Grid.Column="2"
+                                Width="85"
+                                Height="25"/>
+                            <TextBlock
+                                x:Name="AutoDetectVoiceMeeterTooltip"
+                                Text="?"
+                                Grid.Column="3"
+                                FontWeight="Bold"
+                                Foreground="#0078D4"
+                                Margin="3,0,0,0"
+                                VerticalAlignment="Center"/>
+                        </Grid>
+                    </StackPanel>
+                </GroupBox>
+
+                <!-- デフォルトプロファイル -->
+                <GroupBox
+                    x:Name="VoiceMeeterProfileGroup"
+                    Header="[voicemeeterDefaultProfileLabel]"
+                    Margin="0,0,0,15">
+                    <StackPanel Margin="10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="80"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox
+                                x:Name="VoiceMeeterDefaultProfileTextBox"
+                                Grid.Column="0"
+                                VerticalContentAlignment="Center"
+                                Margin="0,0,5,0"/>
+                            <Button
+                                x:Name="BrowseVoiceMeeterDefaultProfileButton"
+                                Content="[BROWSE_BUTTON]"
+                                Grid.Column="1"
+                                Width="70"
+                                Height="25"/>
+                        </Grid>
+                        <TextBlock
+                            x:Name="VoiceMeeterDefaultProfileTooltipText"
+                            Text="[voicemeeterDefaultProfileTooltip]"
+                            Foreground="#666"
+                            FontSize="11"
+                            TextWrapping="Wrap"
+                            Margin="0,5,0,0"/>
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid
+            Grid.Row="1"
+            Background="#F8F8F8"
+            Margin="0,5,0,0">
+            <Button
+                x:Name="SaveVoiceMeeterSettingsButton"
+                Content="[SAVE_BUTTON]"
+                Width="100"
+                Height="30"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Margin="0,0,20,0"
+                Background="#0078D4"
+                Foreground="White"
+                BorderThickness="0"/>
+        </Grid>
+    </Grid>
+</TabItem>

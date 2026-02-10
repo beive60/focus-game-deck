@@ -1,0 +1,1262 @@
+﻿2026-02-04T04:15:06.4152934Z ##[group]Run # Exit immediately if an error occurs
+2026-02-04T04:15:06.4153464Z [36;1m# Exit immediately if an error occurs[0m
+2026-02-04T04:15:06.4153766Z [36;1m[0m
+2026-02-04T04:15:06.4153963Z [36;1m$ErrorActionPreference = "Stop"[0m
+2026-02-04T04:15:06.4154351Z [36;1m# Exclude Integration and Local tests in CI environment[0m
+2026-02-04T04:15:06.4154724Z [36;1m# Integration: requires external services[0m
+2026-02-04T04:15:06.4155105Z [36;1m# Local: requires desktop environment (e.g., GUI tests)[0m
+2026-02-04T04:15:06.4155566Z [36;1m.\test\runners\Invoke-PesterTests.ps1 -ExcludeTag "Integration", "Local"[0m
+2026-02-04T04:15:06.4222729Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+2026-02-04T04:15:06.4223202Z env:
+2026-02-04T04:15:06.4223425Z   CI: true
+2026-02-04T04:15:06.4223799Z ##[endgroup]
+2026-02-04T04:15:07.7321491Z [INFO] [INFO] PesterRunner: Pester module loaded successfully
+2026-02-04T04:15:07.7594890Z 
+2026-02-04T04:15:07.7603694Z [INFO] ========================================
+2026-02-04T04:15:07.7613657Z [INFO] Running Pester Tests
+2026-02-04T04:15:07.7622136Z [INFO] ========================================
+2026-02-04T04:15:07.7625740Z 
+2026-02-04T04:15:07.7634953Z [INFO] Excluding: Integration, Local
+2026-02-04T04:15:08.0294292Z [95mPester v5.7.1[0m
+2026-02-04T04:15:08.0476837Z [95m
+2026-02-04T04:15:08.0478882Z [95mStarting discovery in 15 files.[0m
+2026-02-04T04:15:09.2481842Z [95mDiscovery found 291 tests in 963ms.[0m
+2026-02-04T04:15:09.3532335Z [95mFilter 'ExcludeTag' set to ('Integration', 'Local').[0m
+2026-02-04T04:15:09.3565304Z [95mFilters selected 277 tests to run.[0m
+2026-02-04T04:15:09.3689329Z [95mRunning tests.[0m
+2026-02-04T04:15:09.3932975Z [95m
+2026-02-04T04:15:09.3934517Z [95mRunning tests from 'Core.AppManager.Tests.ps1'[0m
+2026-02-04T04:15:09.5433703Z [INFO] [INFO] AppManager Tests: Loading AppManager module
+2026-02-04T04:15:09.6074955Z [92mDescribing AppManager - File Existence[0m
+2026-02-04T04:15:09.6093515Z [96m Context Module File[0m
+2026-02-04T04:15:09.7403103Z [32m   [+] Should have AppManager.ps1 module file[0m[90m 144ms (82ms|62ms)[0m
+2026-02-04T04:15:09.7706475Z [32m   [+] Should have valid PowerShell syntax[0m[90m 24ms (22ms|1ms)[0m
+2026-02-04T04:15:09.8280802Z [0m
+2026-02-04T04:15:09.8281953Z [92mDescribing AppManager - Class Definition[0m
+2026-02-04T04:15:09.8283065Z [96m Context Class Structure[0m
+2026-02-04T04:15:09.8350355Z [32m   [+] Should define AppManager class[0m[90m 13ms (7ms|6ms)[0m
+2026-02-04T04:15:09.8415543Z [32m   [+] Should have constructor with config, messages, and logger parameters[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:09.8502206Z [32m   [+] Should have Config property[0m[90m 4ms (3ms|1ms)[0m
+2026-02-04T04:15:09.8575960Z [32m   [+] Should have Messages property[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:09.8646251Z [32m   [+] Should have IntegrationManagers property[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:09.8746939Z [96m Context Methods[0m
+2026-02-04T04:15:09.8834419Z [32m   [+] Should have SetGameContext method[0m[90m 7ms (3ms|4ms)[0m
+2026-02-04T04:15:10.0642830Z [32m   [+] Should have InitializeIntegrationManagers method[0m[90m 5ms (3ms|2ms)[0m
+2026-02-04T04:15:10.1079039Z [32m   [+] Should have GetManagedApplications method[0m[90m 4ms (3ms|2ms)[0m
+2026-02-04T04:15:10.1102408Z [32m   [+] Should have InvokeAction method[0m[90m 4ms (3ms|2ms)[0m
+2026-02-04T04:15:10.1203489Z [32m   [+] Should have StartProcess method[0m[90m 4ms (2ms|1ms)[0m
+2026-02-04T04:15:10.1219677Z [32m   [+] Should have StopProcess method[0m[90m 4ms (3ms|1ms)[0m
+2026-02-04T04:15:10.1334345Z [32m   [+] Should have ProcessStartupSequence method[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:10.1375530Z [32m   [+] Should have ProcessShutdownSequence method[0m[90m 4ms (3ms|1ms)[0m
+2026-02-04T04:15:10.1458769Z [32m   [+] Should have IsProcessRunning method[0m[90m 4ms (2ms|1ms)[0m
+2026-02-04T04:15:10.1658697Z [0m
+2026-02-04T04:15:10.1670350Z [92mDescribing AppManager - Integration Manager Support[0m
+2026-02-04T04:15:10.1682330Z [96m Context OBS Integration[0m
+2026-02-04T04:15:10.1743079Z [32m   [+] Should check useOBS in game config[0m[90m 8ms (2ms|6ms)[0m
+2026-02-04T04:15:10.1837246Z [32m   [+] Should initialize OBS manager when enabled[0m[90m 4ms (3ms|2ms)[0m
+2026-02-04T04:15:10.1963797Z [96m Context VTube Studio Integration[0m
+2026-02-04T04:15:10.2021998Z [32m   [+] Should check useVTubeStudio in game config[0m[90m 5ms (2ms|3ms)[0m
+2026-02-04T04:15:10.2087952Z [32m   [+] Should initialize VTube Studio manager when enabled[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:10.2211724Z [96m Context VoiceMeeter Integration[0m
+2026-02-04T04:15:10.2332669Z [32m   [+] Should check useVoiceMeeter in game config[0m[90m 7ms (3ms|4ms)[0m
+2026-02-04T04:15:10.2407021Z [32m   [+] Should initialize VoiceMeeter manager when enabled[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:10.2552060Z [0m
+2026-02-04T04:15:10.2564083Z [92mDescribing AppManager - Action Types[0m
+2026-02-04T04:15:10.2576345Z [96m Context Supported Actions[0m
+2026-02-04T04:15:10.2648276Z [32m   [+] Should support 'start-process' action[0m[90m 7ms (2ms|5ms)[0m
+2026-02-04T04:15:10.2750435Z [32m   [+] Should support 'stop-process' action[0m[90m 4ms (2ms|2ms)[0m
+2026-02-04T04:15:10.2819322Z [32m   [+] Should support 'none' action[0m[90m 5ms (2ms|2ms)[0m
+2026-02-04T04:15:10.3090264Z [32m   [+] Should document toggle-hotkeys action[0m[90m 22ms (20ms|2ms)[0m
+2026-02-04T04:15:10.3274178Z [0m
+2026-02-04T04:15:10.3287580Z [92mDescribing AppManager - Error Handling[0m
+2026-02-04T04:15:10.3300901Z [96m Context Validation[0m
+2026-02-04T04:15:10.3371884Z [32m   [+] Should validate app exists in managedApps[0m[90m 8ms (2ms|6ms)[0m
+2026-02-04T04:15:10.3448320Z [32m   [+] Should handle null GameConfig[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:10.3550788Z [96m Context Process Management[0m
+2026-02-04T04:15:10.3615700Z [32m   [+] Should handle process not found during stop[0m[90m 5ms (2ms|3ms)[0m
+2026-02-04T04:15:10.3683684Z [32m   [+] Should handle file not found during start[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:10.3836613Z [0m
+2026-02-04T04:15:10.3847214Z [92mDescribing AppManager - Parallel Execution[0m
+2026-02-04T04:15:10.3857379Z [96m Context Parallel Processing[0m
+2026-02-04T04:15:10.3916925Z [32m   [+] Should have startup sequence method for managing apps[0m[90m 7ms (3ms|4ms)[0m
+2026-02-04T04:15:10.4062949Z [0m
+2026-02-04T04:15:10.4073215Z [92mDescribing AppManager - Factory Function[0m
+2026-02-04T04:15:10.4083679Z [96m Context New-AppManager Function[0m
+2026-02-04T04:15:10.4468261Z [32m   [+] Should define New-AppManager factory function[0m[90m 7ms (2ms|4ms)[0m
+2026-02-04T04:15:10.4469369Z [32m   [+] Should accept Config parameter[0m[90m 4ms (2ms|1ms)[0m
+2026-02-04T04:15:10.4470263Z [32m   [+] Should accept Messages parameter[0m[90m 4ms (2ms|2ms)[0m
+2026-02-04T04:15:10.6810937Z [32m   [+] Should return AppManager instance[0m[90m 4ms (3ms|1ms)[0m
+2026-02-04T04:15:10.8998323Z [95m
+2026-02-04T04:15:10.9000620Z [95mRunning tests from 'Core.Build.Tests.ps1'[0m
+2026-02-04T04:15:10.9263939Z [INFO] [INFO] Build Tests: Starting build system validation
+2026-02-04T04:15:10.9352583Z [92mDescribing ps2exe Module Availability[0m
+2026-02-04T04:15:10.9365090Z [96m Context Module Installation[0m
+2026-02-04T04:15:11.0170243Z [INFO] [OK] ps2exe module is available (Version: 1.0.17)
+2026-02-04T04:15:11.0206270Z [32m   [+] Should have ps2exe module available or provide clear installation guidance[0m[90m 84ms (80ms|4ms)[0m
+2026-02-04T04:15:11.1163957Z [INFO] [OK] ps2exe module imported successfully
+2026-02-04T04:15:11.1200475Z [32m   [+] Should be able to import ps2exe module[0m[90m 96ms (95ms|1ms)[0m
+2026-02-04T04:15:11.1319990Z [0m
+2026-02-04T04:15:11.1332314Z [92mDescribing Script Bundling Process[0m
+2026-02-04T04:15:11.1343993Z [96m Context Bundler Script Availability[0m
+2026-02-04T04:15:11.1399385Z [32m   [+] Should have Invoke-PsScriptBundler.ps1 script[0m[90m 7ms (2ms|5ms)[0m
+2026-02-04T04:15:11.1458388Z [32m   [+] Should have Build-Executables.ps1 script[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:11.1524668Z [96m Context Entry Point Scripts[0m
+2026-02-04T04:15:11.1577868Z [32m   [+] Should have ConfigEditor.ps1 entry point[0m[90m 4ms (2ms|2ms)[0m
+2026-02-04T04:15:11.1635843Z [32m   [+] Should have Main.PS1 entry point[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:11.1693733Z [32m   [+] Should have Invoke-FocusGameDeck.ps1 entry point[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:11.1817058Z [96m Context ConfigEditor Bundling[0m
+2026-02-04T04:15:11.1973268Z [INFO] Focus Game Deck - Script Bundler
+2026-02-04T04:15:11.2070042Z [INFO] [INFO] Resolving dependencies for: ConfigEditor.ps1
+2026-02-04T04:15:11.7571575Z [INFO] [WARNING] Script not found: D:\a\focus-game-deck\focus-game-deck\gui\$websocketBasePath
+2026-02-04T04:15:11.7597353Z [INFO] [WARNING] Script not found: D:\a\focus-game-deck\focus-game-deck\gui\$vtubeManagerPath
+2026-02-04T04:15:11.8002495Z [INFO] [INFO] Found 11 dependencies
+2026-02-04T04:15:12.0606744Z [INFO] [SUCCESS] Bundled script created: D:\a\focus-game-deck\focus-game-deck\test\temp\build-test\ConfigEditor-bundled-test.ps1
+2026-02-04T04:15:12.0683210Z 
+2026-02-04T04:15:12.0693042Z [INFO] [SUCCESS] Script bundling completed successfully
+2026-02-04T04:15:12.0781706Z [INFO] [OK] ConfigEditor bundled successfully
+2026-02-04T04:15:12.0815214Z [32m   [+] Should bundle ConfigEditor.ps1 without errors[0m[90m 904ms (896ms|8ms)[0m
+2026-02-04T04:15:12.0890128Z [INFO] [OK] All required dependencies are included in bundled ConfigEditor
+2026-02-04T04:15:12.0920970Z [32m   [+] Should include all required dependencies in bundled ConfigEditor[0m[90m 8ms (7ms|1ms)[0m
+2026-02-04T04:15:12.0992849Z [96m Context Game Launcher Bundling[0m
+2026-02-04T04:15:12.1125135Z [INFO] Focus Game Deck - Script Bundler
+2026-02-04T04:15:12.1141385Z [INFO] [INFO] Resolving dependencies for: Invoke-FocusGameDeck.ps1
+2026-02-04T04:15:12.2154806Z [INFO] [WARNING] Script not found: D:\a\focus-game-deck\focus-game-deck\src\modules\$modulePath
+2026-02-04T04:15:12.2889944Z [INFO] [WARNING] Script not found: D:\a\focus-game-deck\focus-game-deck\src\modules\$rpcModulePath
+2026-02-04T04:15:12.3422629Z [INFO] [WARNING] Script not found: D:\a\focus-game-deck\focus-game-deck\src\modules\$versionScriptPath
+2026-02-04T04:15:12.4495613Z [INFO] [INFO] Found 17 dependencies
+2026-02-04T04:15:12.5675415Z [INFO] [SUCCESS] Bundled script created: D:\a\focus-game-deck\focus-game-deck\test\temp\build-test\Invoke-FocusGameDeck-bundled-test.ps1
+2026-02-04T04:15:12.5685356Z 
+2026-02-04T04:15:12.5697350Z [INFO] [SUCCESS] Script bundling completed successfully
+2026-02-04T04:15:12.5726814Z [INFO] [OK] Invoke-FocusGameDeck bundled successfully
+2026-02-04T04:15:12.5768118Z [32m   [+] Should bundle Invoke-FocusGameDeck.ps1 without errors[0m[90m 475ms (473ms|2ms)[0m
+2026-02-04T04:15:12.5961635Z [0m
+2026-02-04T04:15:12.5973492Z [92mDescribing Bundled Script Syntax Validation[0m
+2026-02-04T04:15:12.5985794Z [96m Context PowerShell Syntax Check[0m
+2026-02-04T04:15:12.6803506Z [INFO] [OK] ConfigEditor bundled script has valid syntax
+2026-02-04T04:15:12.6835519Z [32m   [+] Should validate ConfigEditor bundled script syntax[0m[90m 92ms (81ms|10ms)[0m
+2026-02-04T04:15:12.7216247Z [INFO] [OK] Invoke-FocusGameDeck bundled script syntax check completed with 0 acceptable parser warnings
+2026-02-04T04:15:12.7250273Z [32m   [+] Should validate Invoke-FocusGameDeck bundled script syntax[0m[90m 38ms (37ms|1ms)[0m
+2026-02-04T04:15:12.7331141Z [96m Context Class Definition Check[0m
+2026-02-04T04:15:12.7770229Z [INFO] [INFO] Found 4 class definitions in bundled ConfigEditor:
+2026-02-04T04:15:12.7784851Z [INFO] [INFO]   - ConfigEditorState
+2026-02-04T04:15:12.7794274Z [INFO] [INFO]   - ConfigEditorLocalization
+2026-02-04T04:15:12.7805013Z [INFO] [INFO]   - ConfigEditorUI
+2026-02-04T04:15:12.7816008Z [INFO] [INFO]   - ConfigEditorEvents
+2026-02-04T04:15:12.7851063Z [INFO] [OK] Class definitions detected and logged
+2026-02-04T04:15:12.7888514Z [32m   [+] Should detect PowerShell class definitions in ConfigEditor[0m[90m 54ms (52ms|2ms)[0m
+2026-02-04T04:15:12.7974730Z [96m Context Class Instantiation Check[0m
+2026-02-04T04:15:12.8110022Z [INFO] [INFO] Found 6 class instantiation calls:
+2026-02-04T04:15:12.8150204Z [INFO] [INFO]   - ConfigEditorUI
+2026-02-04T04:15:12.8161001Z [INFO] [INFO]   - ConfigEditorState
+2026-02-04T04:15:12.8172104Z [INFO] [INFO]   - ConfigEditorLocalization
+2026-02-04T04:15:12.8182470Z [INFO] [INFO]   - ConfigEditorEvents
+2026-02-04T04:15:12.8202251Z [INFO] [OK] Class instantiation patterns verified
+2026-02-04T04:15:12.8239904Z [32m   [+] Should verify class instantiation patterns are preserved[0m[90m 26ms (22ms|3ms)[0m
+2026-02-04T04:15:12.8574740Z [0m
+2026-02-04T04:15:12.8623805Z [92mDescribing Build Script Execution[0m
+2026-02-04T04:15:12.8663669Z [96m Context Build Dependencies Installation[0m
+2026-02-04T04:15:12.8665218Z [32m   [+] Should have Install-BuildDependencies.ps1 script[0m[90m 17ms (4ms|12ms)[0m
+2026-02-04T04:15:12.8699634Z [96m Context Build Executables Script[0m
+2026-02-04T04:15:12.8747085Z [INFO] [OK] Build-Executables.ps1 has valid syntax
+2026-02-04T04:15:12.8782845Z [32m   [+] Should be able to parse Build-Executables.ps1 without errors[0m[90m 7ms (5ms|3ms)[0m
+2026-02-04T04:15:12.8926086Z [96m Context Release Manager Script[0m
+2026-02-04T04:15:12.8983200Z [INFO] [OK] Release-Manager.ps1 has valid syntax
+2026-02-04T04:15:12.9020112Z [32m   [+] Should be able to parse Release-Manager.ps1 without errors[0m[90m 14ms (7ms|6ms)[0m
+2026-02-04T04:15:12.9989807Z [95m
+2026-02-04T04:15:13.0013579Z [95mRunning tests from 'Core.CharacterEncoding.Tests.ps1'[0m
+2026-02-04T04:15:13.0387033Z [92mDescribing Character Encoding Tests[0m
+2026-02-04T04:15:13.0399202Z [96m Context JSON File Encoding[0m
+2026-02-04T04:15:13.1283630Z [93m   [!] config.json should be UTF-8 without BOM is skipped, because config.json not found at D:\a\focus-game-deck\focus-game-deck\config\config.json[0m[90m 51ms (44ms|7ms)[0m
+2026-02-04T04:15:13.1361581Z [93m   [!] config.json should be valid UTF-8 is skipped, because config.json not found at D:\a\focus-game-deck\focus-game-deck\config\config.json[0m[90m 3ms (3ms|1ms)[0m
+2026-02-04T04:15:13.1476226Z [32m   [+] en.json should be UTF-8 without BOM[0m[90m 8ms (7ms|1ms)[0m
+2026-02-04T04:15:13.1752408Z [32m   [+] en.json should be valid UTF-8[0m[90m 23ms (21ms|2ms)[0m
+2026-02-04T04:15:13.1829294Z [96m Context Japanese Character Integrity[0m
+2026-02-04T04:15:13.2008405Z [32m   [+] should correctly read Japanese characters from ja.json[0m[90m 16ms (14ms|2ms)[0m
+2026-02-04T04:15:13.2084757Z [96m Context Console Output Safety[0m
+2026-02-04T04:15:13.3194041Z [INFO] Checked 95 files, skipped 0 file(s)
+2026-02-04T04:15:13.3251455Z [32m   [+] should use ASCII-safe markers instead of UTF-8 symbols[0m[90m 115ms (113ms|2ms)[0m
+2026-02-04T04:15:13.3476527Z [95m
+2026-02-04T04:15:13.3478432Z [95mRunning tests from 'Core.ConfigValidation.Tests.ps1'[0m
+2026-02-04T04:15:13.3758291Z [INFO] [INFO] ConfigValidation Tests: Loaded validation module
+2026-02-04T04:15:13.3813553Z [92mDescribing Invoke-ConfigurationValidation[0m
+2026-02-04T04:15:13.3824469Z [96m Context Game ID Validation[0m
+2026-02-04T04:15:13.4007329Z [32m   [+] Should accept valid Game ID with alphanumeric characters[0m[90m 18ms (15ms|3ms)[0m
+2026-02-04T04:15:13.4060550Z [32m   [+] Should accept Game ID with underscores[0m[90m 2ms (2ms|1ms)[0m
+2026-02-04T04:15:13.4113250Z [32m   [+] Should accept Game ID with hyphens[0m[90m 2ms (2ms|1ms)[0m
+2026-02-04T04:15:13.4256698Z [32m   [+] Should reject empty Game ID[0m[90m 11ms (11ms|1ms)[0m
+2026-02-04T04:15:13.4352812Z [32m   [+] Should reject Game ID with spaces[0m[90m 6ms (5ms|1ms)[0m
+2026-02-04T04:15:13.4428961Z [32m   [+] Should reject Game ID with special characters[0m[90m 4ms (4ms|1ms)[0m
+2026-02-04T04:15:13.4533198Z [32m   [+] Should reject Game ID with Japanese characters[0m[90m 7ms (7ms|1ms)[0m
+2026-02-04T04:15:13.4599478Z [96m Context Steam Platform Validation[0m
+2026-02-04T04:15:13.4647098Z [32m   [+] Should accept valid 7-digit Steam AppID[0m[90m 4ms (2ms|2ms)[0m
+2026-02-04T04:15:13.4724181Z [32m   [+] Should reject empty Steam AppID[0m[90m 4ms (4ms|1ms)[0m
+2026-02-04T04:15:13.4781620Z [32m   [+] Should accept Steam AppID with less than 7 digits[0m[90m 2ms (2ms|1ms)[0m
+2026-02-04T04:15:13.4838564Z [32m   [+] Should accept Steam AppID with more than 7 digits[0m[90m 2ms (2ms|1ms)[0m
+2026-02-04T04:15:13.4918224Z [32m   [+] Should reject Steam AppID with non-numeric characters[0m[90m 5ms (4ms|1ms)[0m
+2026-02-04T04:15:13.4984195Z [96m Context Epic Platform Validation[0m
+2026-02-04T04:15:13.5036803Z [32m   [+] Should accept valid Epic Game ID with 'apps/' prefix[0m[90m 4ms (2ms|2ms)[0m
+2026-02-04T04:15:13.5090688Z [32m   [+] Should accept valid Epic Game ID with full launcher URL[0m[90m 2ms (2ms|1ms)[0m
+2026-02-04T04:15:13.5163128Z [32m   [+] Should reject empty Epic Game ID[0m[90m 4ms (4ms|1ms)[0m
+2026-02-04T04:15:13.5236288Z [32m   [+] Should reject Epic Game ID without proper prefix[0m[90m 4ms (4ms|1ms)[0m
+2026-02-04T04:15:13.5308559Z [32m   [+] Should reject Epic Game ID with invalid prefix[0m[90m 4ms (4ms|1ms)[0m
+2026-02-04T04:15:13.5373983Z [96m Context Riot Platform Validation[0m
+2026-02-04T04:15:13.5421593Z [32m   [+] Should accept valid Riot Game ID[0m[90m 4ms (2ms|2ms)[0m
+2026-02-04T04:15:13.5473600Z [32m   [+] Should accept Riot Game ID 'bacon' (LoR)[0m[90m 2ms (2ms|1ms)[0m
+2026-02-04T04:15:13.5526535Z [32m   [+] Should accept Riot Game ID 'league_of_legends'[0m[90m 2ms (2ms|1ms)[0m
+2026-02-04T04:15:13.5621246Z [32m   [+] Should reject empty Riot Game ID[0m[90m 6ms (5ms|1ms)[0m
+2026-02-04T04:15:13.5738018Z [32m   [+] Should reject whitespace-only Riot Game ID[0m[90m 7ms (6ms|1ms)[0m
+2026-02-04T04:15:13.5853167Z [96m Context Standalone Platform Validation[0m
+2026-02-04T04:15:13.5942593Z [32m   [+] Should accept valid executable path for standalone platform[0m[90m 4ms (2ms|2ms)[0m
+2026-02-04T04:15:13.6009676Z [32m   [+] Should reject empty executable path for standalone platform[0m[90m 7ms (5ms|1ms)[0m
+2026-02-04T04:15:13.6087443Z [32m   [+] Should reject non-existent executable path for standalone platform[0m[90m 5ms (4ms|1ms)[0m
+2026-02-04T04:15:13.6206601Z [96m Context Direct Platform Validation[0m
+2026-02-04T04:15:13.6263402Z [32m   [+] Should accept valid executable path for direct platform[0m[90m 5ms (2ms|2ms)[0m
+2026-02-04T04:15:13.6336493Z [32m   [+] Should reject empty executable path for direct platform[0m[90m 4ms (4ms|1ms)[0m
+2026-02-04T04:15:13.6409603Z [32m   [+] Should reject non-existent executable path for direct platform[0m[90m 4ms (4ms|1ms)[0m
+2026-02-04T04:15:13.6481027Z [96m Context Multiple Validation Errors[0m
+2026-02-04T04:15:13.6568008Z [32m   [+] Should return multiple errors when both Game ID and Steam AppID are invalid[0m[90m 7ms (5ms|2ms)[0m
+2026-02-04T04:15:13.6659023Z [32m   [+] Should return multiple errors for invalid Game ID and empty Epic Game ID[0m[90m 6ms (5ms|1ms)[0m
+2026-02-04T04:15:13.6722879Z [96m Context No Platform Specified[0m
+2026-02-04T04:15:13.6770134Z [32m   [+] Should only validate Game ID when no platform is specified[0m[90m 4ms (2ms|2ms)[0m
+2026-02-04T04:15:13.6840404Z [32m   [+] Should return error for invalid Game ID when no platform is specified[0m[90m 4ms (3ms|1ms)[0m
+2026-02-04T04:15:13.6902934Z [96m Context Edge Cases[0m
+2026-02-04T04:15:13.7000974Z [32m   [+] Should handle null Game ID parameter[0m[90m 7ms (5ms|2ms)[0m
+2026-02-04T04:15:13.7073496Z [32m   [+] Should accept minimum valid Game ID (single character)[0m[90m 4ms (2ms|1ms)[0m
+2026-02-04T04:15:13.7164630Z [32m   [+] Should accept very long valid Game ID[0m[90m 5ms (4ms|1ms)[0m
+2026-02-04T04:15:13.7248981Z [32m   [+] Should handle Steam platform with empty string[0m[90m 4ms (2ms|1ms)[0m
+2026-02-04T04:15:13.7333041Z [96m Context Return Value Structure[0m
+2026-02-04T04:15:13.7451508Z [32m   [+] Should return array type for valid input[0m[90m 10ms (8ms|3ms)[0m
+2026-02-04T04:15:13.7518730Z [32m   [+] Should return array type for error input[0m[90m 3ms (3ms|1ms)[0m
+2026-02-04T04:15:13.7769145Z [32m   [+] Should return hashtable objects with Control and Key properties[0m[90m 21ms (21ms|1ms)[0m
+2026-02-04T04:15:13.7996093Z [95m
+2026-02-04T04:15:13.7998411Z [95mRunning tests from 'Core.ExternalProcessErrorHandling.Tests.ps1'[0m
+2026-02-04T04:15:13.8239924Z [INFO] [INFO] ExternalProcess Tests: Loading modules for error handling tests
+2026-02-04T04:15:13.8740852Z [92mDescribing OBSManager - Connection Error Handling[0m
+2026-02-04T04:15:13.8751969Z [96m Context OBS Not Running[0m
+2026-02-04T04:15:14.0549415Z [32m   [+] Should create OBSManager instance even when OBS is not running[0m[90m 165ms (161ms|3ms)[0m
+2026-02-04T04:15:14.1967318Z [32m   [+] Should report OBS as not running via IsOBSRunning[0m[90m 138ms (135ms|3ms)[0m
+2026-02-04T04:15:14.2055016Z [96m Context WebSocket Connection Failure[0m
+2026-02-04T04:15:14.2335601Z [INFO] OBSManager: Attempting OBS WebSocket connection to localhost:4455...
+2026-02-04T04:15:18.3638852Z WARNING: [WARNING] OBSManager: OBS connection error: Exception calling "Wait" with "0" argument(s): "One or more errors
+2026-02-04T04:15:18.3639787Z  occurred."
+2026-02-04T04:15:18.3701081Z [32m   [+] Should handle connection timeout gracefully[0m[90m 4.16s (4.16s|2ms)[0m
+2026-02-04T04:15:18.4340865Z [32m   [+] Should not throw on disconnect when not connected[0m[90m 10ms (10ms|1ms)[0m
+2026-02-04T04:15:18.4408592Z [96m Context Invalid Configuration[0m
+2026-02-04T04:15:18.4521091Z [32m   [+] Should handle null websocket config[0m[90m 10ms (8ms|2ms)[0m
+2026-02-04T04:15:18.4611187Z [INFO] OBSManager: Attempting OBS WebSocket connection to localhost:0...
+2026-02-04T04:15:18.4656980Z WARNING: [WARNING] OBSManager: OBS connection error: Exception calling "Wait" with "0" argument(s): "One or more errors
+2026-02-04T04:15:18.4658444Z  occurred."
+2026-02-04T04:15:18.4707712Z [32m   [+] Should handle missing port in websocket config[0m[90m 15ms (14ms|1ms)[0m
+2026-02-04T04:15:18.4821968Z [0m
+2026-02-04T04:15:18.4834061Z [92mDescribing OBSManager - Replay Buffer Error Handling[0m
+2026-02-04T04:15:18.4845945Z [96m Context Replay Buffer Operations When Not Connected[0m
+2026-02-04T04:15:18.4958531Z [INFO] OBSManager: Sending StartReplayBuffer command to OBS...
+2026-02-04T04:15:18.4969554Z WARNING: [WARNING] OBSManager: WebSocket is not initialized
+2026-02-04T04:15:18.5014982Z [32m   [+] Should return false when starting replay buffer without connection[0m[90m 18ms (13ms|5ms)[0m
+2026-02-04T04:15:18.5104425Z [INFO] OBSManager: Sending StopReplayBuffer command to OBS...
+2026-02-04T04:15:18.5117261Z WARNING: [WARNING] OBSManager: WebSocket is not initialized for stop command
+2026-02-04T04:15:18.5161195Z [32m   [+] Should return false when stopping replay buffer without connection[0m[90m 11ms (11ms|1ms)[0m
+2026-02-04T04:15:18.5270404Z [0m
+2026-02-04T04:15:18.5280041Z [92mDescribing OBSManager - Process Crash Simulation[0m
+2026-02-04T04:15:18.5290526Z [96m Context Process Disappears During Operation[0m
+2026-02-04T04:15:18.5530191Z [32m   [+] Should handle process crash gracefully[0m[90m 23ms (19ms|4ms)[0m
+2026-02-04T04:15:18.5648278Z [0m
+2026-02-04T04:15:18.5660558Z [92mDescribing VTubeStudioManager - Connection Error Handling[0m
+2026-02-04T04:15:18.5672603Z [96m Context VTube Studio Not Running[0m
+2026-02-04T04:15:18.5899557Z [32m   [+] Should create VTubeStudioManager instance even when not running[0m[90m 24ms (19ms|5ms)[0m
+2026-02-04T04:15:18.6081826Z [32m   [+] Should report VTube Studio as not running[0m[90m 15ms (14ms|1ms)[0m
+2026-02-04T04:15:18.6146306Z [96m Context WebSocket Connection Failure[0m
+2026-02-04T04:15:18.6245295Z [32m   [+] Should not throw when VTube Studio is not running[0m[90m 8ms (6ms|2ms)[0m
+2026-02-04T04:15:18.6309490Z [96m Context Invalid Configuration[0m
+2026-02-04T04:15:18.6411732Z [32m   [+] Should handle null websocket config[0m[90m 9ms (7ms|2ms)[0m
+2026-02-04T04:15:18.6528043Z [0m
+2026-02-04T04:15:18.6538381Z [92mDescribing VTubeStudioManager - State Management[0m
+2026-02-04T04:15:18.6548385Z [96m Context Manager State[0m
+2026-02-04T04:15:18.6696498Z [32m   [+] Should track running state correctly[0m[90m 15ms (11ms|4ms)[0m
+2026-02-04T04:15:18.6807977Z [0m
+2026-02-04T04:15:18.6819758Z [92mDescribing Timeout Handling[0m
+2026-02-04T04:15:18.6831332Z [96m Context Process Start Timeout[0m
+2026-02-04T04:15:19.7401929Z [32m   [+] Should detect when process does not start within timeout[0m[90m 1.06s (1.05s|5ms)[0m
+2026-02-04T04:15:19.7529407Z [0m
+2026-02-04T04:15:19.7539893Z [92mDescribing Process Termination Error Handling[0m
+2026-02-04T04:15:19.7550424Z [96m Context Stopping Process That Doesn't Exist[0m
+2026-02-04T04:15:19.7856215Z [32m   [+] Should handle stopping non-existent process[0m[90m 30ms (26ms|4ms)[0m
+2026-02-04T04:15:19.7957739Z [96m Context Stopping Process That Won't Die[0m
+2026-02-04T04:15:19.8527972Z [32m   [+] Should handle stubborn process scenario[0m[90m 58ms (53ms|5ms)[0m
+2026-02-04T04:15:19.8636543Z [0m
+2026-02-04T04:15:19.8647043Z [92mDescribing Network Error Simulation[0m
+2026-02-04T04:15:19.8657430Z [96m Context WebSocket Host Unreachable[0m
+2026-02-04T04:15:19.8682038Z [INFO] OBSManager: Attempting OBS WebSocket connection to 192.168.255.255:4455...
+2026-02-04T04:15:24.8861764Z WARNING: [WARNING] OBSManager: OBS connection error: Exception calling "Wait" with "0" argument(s): "One or more errors
+2026-02-04T04:15:24.8862528Z  occurred."
+2026-02-04T04:15:24.8909664Z [32m   [+] Should handle unreachable host[0m[90m 5.03s (5.02s|4ms)[0m
+2026-02-04T04:15:24.8939788Z [INFO] OBSManager: Attempting OBS WebSocket connection to localhost:99999...
+2026-02-04T04:15:24.9012750Z WARNING: [WARNING] OBSManager: OBS connection error: Cannot convert argument "uri", with value: "ws://localhost:99999",
+2026-02-04T04:15:24.9013589Z  for "ConnectAsync" to type "System.Uri": "Cannot convert value "ws://localhost:99999" to type "System.Uri". Error: 
+2026-02-04T04:15:24.9014148Z "Invalid URI: Invalid port specified.""
+2026-02-04T04:15:24.9057690Z [32m   [+] Should handle invalid port[0m[90m 12ms (11ms|1ms)[0m
+2026-02-04T04:15:24.9369709Z [95m
+2026-02-04T04:15:24.9371078Z [95mRunning tests from 'Core.JsonHelper.Tests.ps1'[0m
+2026-02-04T04:15:24.9687755Z [INFO] [INFO] JsonHelper Tests: Loading JsonHelper module
+2026-02-04T04:15:24.9751972Z [92mDescribing ConvertTo-Json4Space - Basic Formatting[0m
+2026-02-04T04:15:24.9762146Z [96m Context Simple Objects[0m
+2026-02-04T04:15:25.0039661Z [32m   [+] Should convert simple object with 4-space indentation[0m[90m 27ms (24ms|3ms)[0m
+2026-02-04T04:15:25.0120414Z [32m   [+] Should preserve string values[0m[90m 3ms (3ms|1ms)[0m
+2026-02-04T04:15:25.0278541Z [32m   [+] Should handle numeric values[0m[90m 6ms (4ms|1ms)[0m
+2026-02-04T04:15:25.0378278Z [32m   [+] Should handle boolean values[0m[90m 5ms (4ms|1ms)[0m
+2026-02-04T04:15:25.0466653Z [32m   [+] Should handle null values[0m[90m 4ms (3ms|1ms)[0m
+2026-02-04T04:15:25.0597894Z [96m Context Nested Objects[0m
+2026-02-04T04:15:25.0658856Z [32m   [+] Should properly indent nested objects[0m[90m 5ms (2ms|3ms)[0m
+2026-02-04T04:15:25.0730622Z [96m Context Arrays[0m
+2026-02-04T04:15:25.0816628Z [32m   [+] Should format arrays with proper indentation[0m[90m 7ms (5ms|2ms)[0m
+2026-02-04T04:15:25.0880438Z [32m   [+] Should handle empty arrays[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:25.1015728Z [0m
+2026-02-04T04:15:25.1026645Z [92mDescribing ConvertTo-Json4Space - Character Encoding[0m
+2026-02-04T04:15:25.1037626Z [96m Context Unicode Characters[0m
+2026-02-04T04:15:25.1095259Z [32m   [+] Should handle Japanese characters (Hiragana)[0m[90m 7ms (2ms|4ms)[0m
+2026-02-04T04:15:25.1157165Z [32m   [+] Should handle Japanese characters (Katakana)[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:25.1221616Z [32m   [+] Should handle Japanese characters (Kanji)[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:25.1283946Z [32m   [+] Should handle Chinese characters[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:25.1345928Z [32m   [+] Should handle Korean characters[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:25.1408448Z [32m   [+] Should handle emoji characters[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:25.1487465Z [96m Context Special Characters in Strings[0m
+2026-02-04T04:15:25.1543126Z [32m   [+] Should escape backslashes[0m[90m 4ms (2ms|2ms)[0m
+2026-02-04T04:15:25.1604910Z [32m   [+] Should escape quotes[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:25.1666430Z [32m   [+] Should handle newlines in strings[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:25.1729400Z [32m   [+] Should handle tabs in strings[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:25.1883623Z [0m
+2026-02-04T04:15:25.1894386Z [92mDescribing Save-ConfigJson - File Operations[0m
+2026-02-04T04:15:25.1904471Z [96m Context UTF-8 Without BOM[0m
+2026-02-04T04:15:25.2571887Z ##[error][-] Should save file as UTF-8 without BOM 31ms (27ms|4ms)[0m
+2026-02-04T04:15:25.2579368Z ##[group]Message[0m
+2026-02-04T04:15:25.2579856Z Expected $false, because UTF-8 files should not have BOM, but got $true.[0m
+2026-02-04T04:15:25.2589423Z at $hasBOM | Should -Be $false -Because "UTF-8 files should not have BOM", D:\a\focus-game-deck\focus-game-deck\test\pester\Core.JsonHelper.Tests.ps1:223[0m
+2026-02-04T04:15:25.2600991Z at <ScriptBlock>, D:\a\focus-game-deck\focus-game-deck\test\pester\Core.JsonHelper.Tests.ps1:223[0m
+2026-02-04T04:15:25.2611061Z ##[endgroup]
+2026-02-04T04:15:25.2698505Z [32m   [+] Should preserve Japanese characters when saving[0m[90m 6ms (5ms|1ms)[0m
+2026-02-04T04:15:25.2784401Z [96m Context Error Handling[0m
+2026-02-04T04:15:25.2906154Z [32m   [+] Should throw on null configuration[0m[90m 11ms (9ms|2ms)[0m
+2026-02-04T04:15:25.2973688Z [32m   [+] Should throw on empty configuration[0m[90m 4ms (3ms|1ms)[0m
+2026-02-04T04:15:25.3126683Z [32m   [+] Should accept empty hashtable as valid configuration[0m[90m 12ms (11ms|1ms)[0m
+2026-02-04T04:15:25.3204937Z [96m Context Roundtrip Integrity[0m
+2026-02-04T04:15:25.3346573Z [32m   [+] Should maintain data integrity through save/load cycle[0m[90m 13ms (11ms|2ms)[0m
+2026-02-04T04:15:25.3437903Z [32m   [+] Should maintain Japanese text integrity through roundtrip[0m[90m 6ms (5ms|1ms)[0m
+2026-02-04T04:15:25.3569752Z [0m
+2026-02-04T04:15:25.3580579Z [92mDescribing Edge Cases - Malformed Input[0m
+2026-02-04T04:15:25.3590703Z [96m Context Depth Limits[0m
+2026-02-04T04:15:25.3650237Z [32m   [+] Should handle deeply nested objects up to specified depth[0m[90m 7ms (3ms|4ms)[0m
+2026-02-04T04:15:25.3717719Z [96m Context Large Strings[0m
+2026-02-04T04:15:25.3810771Z [32m   [+] Should handle large string values[0m[90m 8ms (6ms|2ms)[0m
+2026-02-04T04:15:25.3879278Z [96m Context Empty/Whitespace Values[0m
+2026-02-04T04:15:25.3928511Z [32m   [+] Should handle empty string values[0m[90m 4ms (2ms|2ms)[0m
+2026-02-04T04:15:25.3985030Z [32m   [+] Should handle whitespace-only string values[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:25.4104985Z [0m
+2026-02-04T04:15:25.4115397Z [92mDescribing BOM Detection Helper Tests[0m
+2026-02-04T04:15:25.4125641Z [96m Context Detect UTF-8 BOM[0m
+2026-02-04T04:15:25.4235444Z [32m   [+] Should detect UTF-8 with BOM[0m[90m 12ms (8ms|4ms)[0m
+2026-02-04T04:15:25.4298285Z [32m   [+] Should detect UTF-8 without BOM[0m[90m 3ms (3ms|1ms)[0m
+2026-02-04T04:15:25.4383642Z [96m Context Read Files With Different Encodings[0m
+2026-02-04T04:15:25.4458831Z [32m   [+] Should read UTF-8 without BOM correctly[0m[90m 6ms (4ms|2ms)[0m
+2026-02-04T04:15:25.4585797Z [0m
+2026-02-04T04:15:25.4598041Z [92mDescribing Invalid Configuration Handling[0m
+2026-02-04T04:15:25.4610566Z [96m Context Empty Configuration File[0m
+2026-02-04T04:15:25.4775247Z [32m   [+] Should create empty file correctly[0m[90m 17ms (13ms|4ms)[0m
+2026-02-04T04:15:25.4842125Z [32m   [+] Should parse empty JSON object to PSCustomObject[0m[90m 3ms (3ms|1ms)[0m
+2026-02-04T04:15:25.4921177Z [96m Context Malformed JSON[0m
+2026-02-04T04:15:25.5403667Z [32m   [+] Should fail on missing closing brace[0m[90m 47ms (45ms|2ms)[0m
+2026-02-04T04:15:25.5498555Z [32m   [+] Should handle trailing comma based on PS version[0m[90m 6ms (6ms|1ms)[0m
+2026-02-04T04:15:25.5556833Z [32m   [+] Should handle single quotes based on PS version[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:25.5627928Z [96m Context JSON Structure[0m
+2026-02-04T04:15:25.5713919Z [32m   [+] Should parse JSON with empty games object[0m[90m 7ms (5ms|2ms)[0m
+2026-02-04T04:15:25.6108658Z [95m
+2026-02-04T04:15:25.6110762Z [95mRunning tests from 'Core.LogRotation.Tests.ps1'[0m
+2026-02-04T04:15:25.6350076Z [92mDescribing Log Rotation Tests[0m
+2026-02-04T04:15:25.6362223Z [96m Context Log Retention Policies[0m
+2026-02-04T04:15:25.6691200Z [32m   [+] should delete logs older than 30 days with 30-day retention[0m[90m 32ms (29ms|4ms)[0m
+2026-02-04T04:15:25.6893030Z [32m   [+] should preserve recent logs with 30-day retention[0m[90m 17ms (16ms|1ms)[0m
+2026-02-04T04:15:25.7159646Z [32m   [+] should delete logs older than 90 days with 90-day retention[0m[90m 23ms (22ms|1ms)[0m
+2026-02-04T04:15:25.7330374Z [32m   [+] should handle unlimited retention (no deletion)[0m[90m 14ms (13ms|1ms)[0m
+2026-02-04T04:15:25.7397413Z [96m Context Configuration Validation[0m
+2026-02-04T04:15:25.7514035Z [32m   [+] should default to 90 days when invalid retention value is provided[0m[90m 8ms (6ms|2ms)[0m
+2026-02-04T04:15:25.7611047Z [32m   [+] should accept valid retention values[0m[90m 7ms (6ms|1ms)[0m
+2026-02-04T04:15:25.7824709Z [95m
+2026-02-04T04:15:25.7826442Z [95mRunning tests from 'Core.MainRouter.Tests.ps1'[0m
+2026-02-04T04:15:25.8055662Z [INFO] [INFO] MainRouter Tests: Starting Main Router validation
+2026-02-04T04:15:25.8111605Z [92mDescribing Main Router - File Existence[0m
+2026-02-04T04:15:25.8122343Z [96m Context Entry Point Scripts[0m
+2026-02-04T04:15:25.8175249Z [32m   [+] Should have Main.PS1 entry point[0m[90m 5ms (2ms|3ms)[0m
+2026-02-04T04:15:25.8246528Z [32m   [+] Should have valid PowerShell syntax in Main.PS1[0m[90m 4ms (3ms|1ms)[0m
+2026-02-04T04:15:25.8362220Z [0m
+2026-02-04T04:15:25.8373284Z [92mDescribing Main Router - Argument Parsing[0m
+2026-02-04T04:15:25.8383681Z [96m Context Parameter Definition[0m
+2026-02-04T04:15:25.8480885Z [32m   [+] Should define GameId parameter[0m[90m 11ms (7ms|4ms)[0m
+2026-02-04T04:15:25.8532339Z [32m   [+] Should define Config switch[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:25.8582520Z [32m   [+] Should define List switch[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:25.8633080Z [32m   [+] Should define Help switch[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:25.8685143Z [32m   [+] Should define Version switch[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:25.8747946Z [96m Context Routing Functions[0m
+2026-02-04T04:15:25.8795175Z [32m   [+] Should define Show-Help function[0m[90m 4ms (2ms|2ms)[0m
+2026-02-04T04:15:25.8845781Z [32m   [+] Should define Show-Version function[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:25.8895744Z [32m   [+] Should define Show-GameList function[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:25.8946212Z [32m   [+] Should define Start-ConfigEditor function[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:25.8997773Z [32m   [+] Should define Start-Game function[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:25.9049677Z [32m   [+] Should define Main function[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:25.9112415Z [96m Context Executable Mode Detection[0m
+2026-02-04T04:15:25.9158039Z [32m   [+] Should detect executable vs script mode[0m[90m 3ms (1ms|2ms)[0m
+2026-02-04T04:15:25.9209880Z [32m   [+] Should define path to ConfigEditor executable[0m[90m 2ms (2ms|1ms)[0m
+2026-02-04T04:15:25.9260072Z [32m   [+] Should define path to GameLauncher executable[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:25.9394026Z [0m
+2026-02-04T04:15:25.9404291Z [92mDescribing Main Router - Help Pattern Matching[0m
+2026-02-04T04:15:25.9414260Z [96m Context Help Argument Variations[0m
+2026-02-04T04:15:25.9459983Z [32m   [+] Should handle help as GameId argument[0m[90m 5ms (1ms|4ms)[0m
+2026-02-04T04:15:25.9510650Z [32m   [+] Should handle version as GameId argument[0m[90m 2ms (2ms|1ms)[0m
+2026-02-04T04:15:25.9562489Z [32m   [+] Should handle list as GameId argument[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:25.9677884Z [0m
+2026-02-04T04:15:25.9687526Z [92mDescribing Main Router - Exit Codes[0m
+2026-02-04T04:15:25.9697764Z [96m Context Success Exit Codes[0m
+2026-02-04T04:15:25.9745232Z [32m   [+] Should exit with 0 for help command[0m[90m 6ms (2ms|4ms)[0m
+2026-02-04T04:15:25.9797106Z [32m   [+] Should exit with 0 for version command[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:25.9848967Z [32m   [+] Should exit with 0 for successful list command[0m[90m 2ms (2ms|1ms)[0m
+2026-02-04T04:15:25.9910611Z [96m Context Error Exit Codes[0m
+2026-02-04T04:15:25.9956798Z [32m   [+] Should exit with 1 for game not found[0m[90m 3ms (1ms|2ms)[0m
+2026-02-04T04:15:26.0072565Z [0m
+2026-02-04T04:15:26.0082288Z [92mDescribing Main Router - Localization Support[0m
+2026-02-04T04:15:26.0092665Z [96m Context Language Detection[0m
+2026-02-04T04:15:26.0137345Z [32m   [+] Should use Get-DetectedLanguage function[0m[90m 5ms (1ms|4ms)[0m
+2026-02-04T04:15:26.0187580Z [32m   [+] Should use Get-LocalizedMessages function[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.0246695Z [32m   [+] Should have fallback for missing localization[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:26.0382044Z [0m
+2026-02-04T04:15:26.0392426Z [92mDescribing Main Router - Security[0m
+2026-02-04T04:15:26.0402379Z [96m Context Input Validation[0m
+2026-02-04T04:15:26.0451137Z [32m   [+] Should validate GameId before processing[0m[90m 5ms (2ms|4ms)[0m
+2026-02-04T04:15:26.0501749Z [32m   [+] Should not execute arbitrary code from GameId[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.0731605Z [95m
+2026-02-04T04:15:26.0733559Z [95mRunning tests from 'Core.ValidationRules.Tests.ps1'[0m
+2026-02-04T04:15:26.1023108Z [INFO] [INFO] ValidationRules Tests: Loaded validation module
+2026-02-04T04:15:26.1078240Z [92mDescribing Test-GameIdFormat[0m
+2026-02-04T04:15:26.1088861Z [96m Context Valid Game IDs[0m
+2026-02-04T04:15:26.1164658Z [32m   [+] Should accept alphanumeric characters[0m[90m 7ms (4ms|3ms)[0m
+2026-02-04T04:15:26.1217807Z [32m   [+] Should accept underscores[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.1319463Z [32m   [+] Should accept hyphens[0m[90m 7ms (6ms|1ms)[0m
+2026-02-04T04:15:26.1370383Z [32m   [+] Should accept mixed format[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.1421053Z [32m   [+] Should accept single character[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.1475898Z [32m   [+] Should accept very long Game ID[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:26.1542040Z [96m Context Invalid Game IDs[0m
+2026-02-04T04:15:26.1604078Z [32m   [+] Should reject empty string[0m[90m 5ms (3ms|2ms)[0m
+2026-02-04T04:15:26.1653393Z [32m   [+] Should reject whitespace[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.1703741Z [32m   [+] Should reject spaces[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.1753491Z [32m   [+] Should reject special characters[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.1804979Z [32m   [+] Should reject Japanese characters[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.1855533Z [32m   [+] Should reject symbols[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.1962608Z [0m
+2026-02-04T04:15:26.1972331Z [92mDescribing Test-SteamAppIdFormat[0m
+2026-02-04T04:15:26.1982489Z [96m Context Valid Steam AppIDs[0m
+2026-02-04T04:15:26.2031627Z [32m   [+] Should accept valid 7-digit Steam AppID[0m[90m 6ms (2ms|4ms)[0m
+2026-02-04T04:15:26.2082483Z [32m   [+] Should accept another valid 7-digit Steam AppID[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.2132551Z [32m   [+] Should accept 6-digit number[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.2197144Z [96m Context Invalid Steam AppIDs[0m
+2026-02-04T04:15:26.2274016Z [32m   [+] Should reject empty string[0m[90m 7ms (5ms|2ms)[0m
+2026-02-04T04:15:26.2323869Z [32m   [+] Should reject mixed alphanumeric[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.2429068Z [0m
+2026-02-04T04:15:26.2439124Z [92mDescribing Test-EpicGameIdFormat[0m
+2026-02-04T04:15:26.2448871Z [96m Context Valid Epic Game IDs[0m
+2026-02-04T04:15:26.2497643Z [32m   [+] Should accept 'apps/' prefix[0m[90m 6ms (2ms|4ms)[0m
+2026-02-04T04:15:26.2547187Z [32m   [+] Should accept full launcher URL[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.2597758Z [32m   [+] Should accept 'apps/' with complex game ID[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.2661667Z [96m Context Invalid Epic Game IDs[0m
+2026-02-04T04:15:26.2707376Z [32m   [+] Should reject empty string[0m[90m 3ms (1ms|2ms)[0m
+2026-02-04T04:15:26.2756709Z [32m   [+] Should reject without proper prefix[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.2806258Z [32m   [+] Should reject invalid prefix[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.2857552Z [32m   [+] Should reject partial URL[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.2962529Z [0m
+2026-02-04T04:15:26.2972704Z [92mDescribing Test-RiotGameIdFormat[0m
+2026-02-04T04:15:26.2982490Z [96m Context Valid Riot Game IDs[0m
+2026-02-04T04:15:26.3030821Z [32m   [+] Should accept 'valorant'[0m[90m 6ms (2ms|4ms)[0m
+2026-02-04T04:15:26.3081608Z [32m   [+] Should accept 'bacon'[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.3133326Z [32m   [+] Should accept 'league_of_legends'[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.3214756Z [32m   [+] Should accept any non-empty string[0m[90m 5ms (4ms|1ms)[0m
+2026-02-04T04:15:26.3278058Z [96m Context Invalid Riot Game IDs[0m
+2026-02-04T04:15:26.3326783Z [32m   [+] Should reject empty string[0m[90m 3ms (1ms|2ms)[0m
+2026-02-04T04:15:26.3382680Z [32m   [+] Should reject whitespace[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.3509583Z [0m
+2026-02-04T04:15:26.3519487Z [92mDescribing Test-ConfigPathExists[0m
+2026-02-04T04:15:26.3550453Z [96m Context Valid Paths[0m
+2026-02-04T04:15:26.3588536Z [32m   [+] Should accept existing file path[0m[90m 7ms (2ms|4ms)[0m
+2026-02-04T04:15:26.3658434Z [96m Context Invalid Paths[0m
+2026-02-04T04:15:26.3704466Z [32m   [+] Should reject empty path[0m[90m 3ms (1ms|2ms)[0m
+2026-02-04T04:15:26.3754613Z [32m   [+] Should reject whitespace path[0m[90m 2ms (1ms|1ms)[0m
+2026-02-04T04:15:26.3807080Z [32m   [+] Should reject non-existent file[0m[90m 2ms (2ms|1ms)[0m
+2026-02-04T04:15:26.3860273Z [32m   [+] Should reject directory path (not a file)[0m[90m 2ms (2ms|1ms)[0m
+2026-02-04T04:15:26.4000557Z [0m
+2026-02-04T04:15:26.4010372Z [92mDescribing Test-GameConfiguration[0m
+2026-02-04T04:15:26.4021110Z [96m Context Steam Platform[0m
+2026-02-04T04:15:26.4157211Z [32m   [+] Should return valid for correct Steam configuration[0m[90m 11ms (7ms|4ms)[0m
+2026-02-04T04:15:26.4228624Z [32m   [+] Should return error for empty Steam AppID[0m[90m 4ms (3ms|1ms)[0m
+2026-02-04T04:15:26.4294173Z [32m   [+] Should return error for invalid Steam AppID format[0m[90m 4ms (3ms|1ms)[0m
+2026-02-04T04:15:26.4359263Z [96m Context Epic Platform[0m
+2026-02-04T04:15:26.4419322Z [32m   [+] Should return valid for correct Epic configuration[0m[90m 5ms (3ms|2ms)[0m
+2026-02-04T04:15:26.4482473Z [32m   [+] Should return error for empty Epic Game ID[0m[90m 3ms (3ms|1ms)[0m
+2026-02-04T04:15:26.4545481Z [32m   [+] Should return error for invalid Epic Game ID format[0m[90m 3ms (3ms|1ms)[0m
+2026-02-04T04:15:26.4610934Z [96m Context Riot Platform[0m
+2026-02-04T04:15:26.4668072Z [32m   [+] Should return valid for correct Riot configuration[0m[90m 5ms (3ms|2ms)[0m
+2026-02-04T04:15:26.4733151Z [32m   [+] Should return error for empty Riot Game ID[0m[90m 4ms (3ms|1ms)[0m
+2026-02-04T04:15:26.4797256Z [96m Context Standalone Platform[0m
+2026-02-04T04:15:26.4862517Z [32m   [+] Should return valid for correct standalone configuration[0m[90m 5ms (3ms|2ms)[0m
+2026-02-04T04:15:26.4983656Z [32m   [+] Should return error for empty executable path[0m[90m 8ms (7ms|1ms)[0m
+2026-02-04T04:15:26.5058067Z [32m   [+] Should return error for non-existent executable path[0m[90m 4ms (3ms|1ms)[0m
+2026-02-04T04:15:26.5126252Z [96m Context Direct Platform[0m
+2026-02-04T04:15:26.5193289Z [32m   [+] Should return valid for correct direct configuration[0m[90m 5ms (3ms|2ms)[0m
+2026-02-04T04:15:26.5261939Z [32m   [+] Should return error for empty executable path[0m[90m 4ms (3ms|1ms)[0m
+2026-02-04T04:15:26.5333350Z [96m Context Multiple Validation Errors[0m
+2026-02-04T04:15:26.5392649Z [32m   [+] Should return multiple errors for multiple invalid fields[0m[90m 5ms (3ms|2ms)[0m
+2026-02-04T04:15:26.5456664Z [96m Context Game ID Validation[0m
+2026-02-04T04:15:26.5516573Z [32m   [+] Should return error for invalid Game ID[0m[90m 5ms (3ms|2ms)[0m
+2026-02-04T04:15:26.5579592Z [32m   [+] Should return error for empty Game ID[0m[90m 3ms (3ms|1ms)[0m
+2026-02-04T04:15:26.5859653Z [95m
+2026-02-04T04:15:26.5862511Z [95mRunning tests from 'Core.Wrapper.Tests.ps1'[0m
+2026-02-04T04:15:26.6098854Z [92mDescribing Core Functionality Tests[0m
+2026-02-04T04:15:26.6110732Z [96m Context Character Encoding[0m
+2026-02-04T04:15:26.7613690Z ##[error][-] should pass character encoding validation 149ms (146ms|3ms)[0m
+2026-02-04T04:15:26.7623996Z ##[group]Message[0m
+2026-02-04T04:15:26.7636362Z Expected 0, because Character encoding test should pass (exit code: 1), but got 1.[0m
+2026-02-04T04:15:26.7649617Z at $exitCode | Should -Be 0 -Because "Character encoding test should pass (exit code: $exitCode)", D:\a\focus-game-deck\focus-game-deck\test\pester\Core.Wrapper.Tests.ps1:27[0m
+2026-02-04T04:15:26.7658961Z at <ScriptBlock>, D:\a\focus-game-deck\focus-game-deck\test\pester\Core.Wrapper.Tests.ps1:27[0m
+2026-02-04T04:15:26.7669055Z ##[endgroup]
+2026-02-04T04:15:26.7734748Z [96m Context Log Rotation[0m
+2026-02-04T04:15:27.8685971Z [32m   [+] should pass log rotation tests[0m[90m 1.09s (1.09s|2ms)[0m
+2026-02-04T04:15:27.8752516Z [96m Context Multi-Platform Support[0m
+2026-02-04T04:15:28.2718450Z [32m   [+] should pass multi-platform support tests[0m[90m 395ms (393ms|2ms)[0m
+2026-02-04T04:15:28.2793018Z [96m Context Configuration Validation[0m
+2026-02-04T04:15:28.3610219Z [32m   [+] should pass configuration validation tests[0m[90m 80ms (77ms|2ms)[0m
+2026-02-04T04:15:28.3692170Z [96m Context AppManager Parallel Execution[0m
+2026-02-04T04:15:29.9642827Z [32m   [+] should pass AppManager parallel execution unit tests[0m[90m 1.59s (1.59s|2ms)[0m
+2026-02-04T04:15:29.9875415Z [95m
+2026-02-04T04:15:29.9877547Z [95mRunning tests from 'GUI.ComboBoxLocalization.Tests.ps1'[0m
+2026-02-04T04:15:30.0387109Z [92mDescribing GUI ComboBox Localization Tests[0m
+2026-02-04T04:15:30.0398535Z [96m Context ComboBox Item Mappings[0m
+2026-02-04T04:15:30.0472801Z [32m   [+] should have ComboBoxItemMappings defined[0m[90m 7ms (3ms|4ms)[0m
+2026-02-04T04:15:30.0596422Z [32m   [+] should have mappings for all expected ComboBox items[0m[90m 9ms (8ms|1ms)[0m
+2026-02-04T04:15:30.0661413Z [96m Context Localization Application[0m
+2026-02-04T04:15:32.0998043Z [32m   [+] should successfully localize ComboBox items to Japanese[0m[90m 2.03s (2.03s|2ms)[0m
+2026-02-04T04:15:32.3083918Z [32m   [+] should have message keys for all ComboBox mappings[0m[90m 205ms (204ms|1ms)[0m
+2026-02-04T04:15:32.3181420Z [96m Context Platform ComboBox Items[0m
+2026-02-04T04:15:32.3282391Z [32m   [+] should have all platform types localized[0m[90m 9ms (7ms|3ms)[0m
+2026-02-04T04:15:32.3497510Z [95m
+2026-02-04T04:15:32.3499609Z [95mRunning tests from 'GUI.LocalizationIntegrity.Tests.ps1'[0m
+2026-02-04T04:15:32.3738780Z [92mDescribing GUI Localization Integrity Diagnostics[0m
+2026-02-04T04:15:32.3749083Z [96m Context Localization Control Flow Analysis[0m
+2026-02-04T04:15:33.4489219Z [32m   [+] Should execute localization diagnostic without errors[0m[90m 1.07s (1.07s|6ms)[0m
+2026-02-04T04:15:33.4774890Z [INFO] Starting localization diagnostic...
+2026-02-04T04:15:33.4795479Z [INFO] === Testing Mapping Table Integrity ===
+2026-02-04T04:15:33.4965276Z [INFO] === Validating JSON Key Structure ===
+2026-02-04T04:15:34.1374915Z [INFO] === Testing XAML Element Access ===
+2026-02-04T04:15:34.1718871Z [INFO] === Analyzing String Replacement Flow ===
+2026-02-04T04:15:34.3741286Z [INFO] === Assessing Modularization Impact ===
+2026-02-04T04:15:34.3879656Z [INFO] LOCALIZATION DIAGNOSTIC REPORT
+2026-02-04T04:15:34.3888771Z [INFO] SUMMARY:
+2026-02-04T04:15:34.3897845Z [INFO] Total Issues Found: 0
+2026-02-04T04:15:34.3906784Z [INFO] MODULARIZATIONIMPACT:
+2026-02-04T04:15:34.3915748Z [INFO]   No issues found
+2026-02-04T04:15:34.3924547Z [INFO] ModuleFiles :
+2026-02-04T04:15:34.3933732Z [INFO]   - ConfigEditor.Events.ps1
+2026-02-04T04:15:34.3942676Z [INFO]   - ConfigEditor.JsonHelper.ps1
+2026-02-04T04:15:34.3951241Z [INFO]   - ConfigEditor.Localization.ps1
+2026-02-04T04:15:34.3960330Z [INFO]   - ConfigEditor.Mappings.ps1
+2026-02-04T04:15:34.3968772Z [INFO]   - ConfigEditor.Save.ps1
+2026-02-04T04:15:34.3977736Z [INFO]   - ConfigEditor.State.ps1
+2026-02-04T04:15:34.3986227Z [INFO]   - ConfigEditor.UI.ps1
+2026-02-04T04:15:34.3995232Z [INFO] Integration :
+2026-02-04T04:15:34.4003965Z [INFO]   HasMappingsModule: True
+2026-02-04T04:15:34.4013252Z [INFO]   HasLocalizationModule: True
+2026-02-04T04:15:34.4021525Z [INFO] DependencyChain :
+2026-02-04T04:15:34.4030394Z [INFO]   ConfigEditor.UI.ps1: System.Collections.Hashtable
+2026-02-04T04:15:34.4039638Z [INFO]   ConfigEditor.Events.ps1: System.Collections.Hashtable
+2026-02-04T04:15:34.4048292Z [INFO]   ConfigEditor.JsonHelper.ps1: System.Collections.Hashtable
+2026-02-04T04:15:34.4057357Z [INFO]   ConfigEditor.Localization.ps1: System.Collections.Hashtable
+2026-02-04T04:15:34.4066074Z [INFO]   ConfigEditor.Mappings.ps1: System.Collections.Hashtable
+2026-02-04T04:15:34.4074910Z [INFO]   ConfigEditor.State.ps1: System.Collections.Hashtable
+2026-02-04T04:15:34.4083887Z [INFO]   ConfigEditor.Save.ps1: System.Collections.Hashtable
+2026-02-04T04:15:34.4092640Z [INFO] MAPPINGINTEGRITY:
+2026-02-04T04:15:34.4101476Z [INFO]   No issues found
+2026-02-04T04:15:34.4110092Z [INFO] Statistics :
+2026-02-04T04:15:34.4119438Z [INFO]   ButtonMappings: 49
+2026-02-04T04:15:34.4128045Z [INFO]   MenuItemMappings: 11
+2026-02-04T04:15:34.4137034Z [INFO]   TextMappings: 14
+2026-02-04T04:15:34.4145693Z [INFO]   BrowserButtonMappings: 10
+2026-02-04T04:15:34.4154988Z [INFO]   MovementButtonMappings: 8
+2026-02-04T04:15:34.4165681Z [INFO]   CrudButtonMappings: 6
+2026-02-04T04:15:34.4176288Z [INFO]   AutoDetectButtonMappings: 7
+2026-02-04T04:15:34.4186665Z [INFO]   LabelMappings: 76
+2026-02-04T04:15:34.4197194Z [INFO]   ActionButtonMappings: 18
+2026-02-04T04:15:34.4207529Z [INFO]   TooltipMappings: 50
+2026-02-04T04:15:34.4218424Z [INFO]   TabMappings: 8
+2026-02-04T04:15:34.4228823Z [INFO]   CheckBoxMappings: 21
+2026-02-04T04:15:34.4239507Z [INFO] Duplicates :
+2026-02-04T04:15:34.4248645Z [INFO]   OBSEnableRollbackCheckBox: CheckBoxMappings TooltipMappings
+2026-02-04T04:15:34.4257900Z [INFO] STRINGREPLACEMENTFLOW:
+2026-02-04T04:15:34.4266488Z [INFO]   No issues found
+2026-02-04T04:15:34.4275657Z [INFO] FunctionAvailability :
+2026-02-04T04:15:34.4284299Z [INFO]   Get-ButtonMappingsByCategory: True
+2026-02-04T04:15:34.4293863Z [INFO]   Get-LocalizationKey: True
+2026-02-04T04:15:34.4302643Z [INFO]   Get-ElementsForKey: True
+2026-02-04T04:15:34.4311435Z [INFO] ControlMechanisms :
+2026-02-04T04:15:34.4320508Z [INFO]   LocalizationCall: Found
+2026-02-04T04:15:34.4328855Z [INFO]   JsonLoading: Found
+2026-02-04T04:15:34.4337729Z [INFO]   Get-LocalizationKey: Working correctly
+2026-02-04T04:15:34.4346990Z [INFO]   DotSourceMappings: Missing
+2026-02-04T04:15:34.4355549Z [INFO]   ElementPropertySetting: Found
+2026-02-04T04:15:34.4364083Z [INFO] XAMLELEMENTACCESS:
+2026-02-04T04:15:34.4372439Z [INFO]   No issues found
+2026-02-04T04:15:34.4381283Z [INFO] ElementAnalysis :
+2026-02-04T04:15:34.4389747Z [INFO]   MainWindow.xaml: System.Collections.Hashtable
+2026-02-04T04:15:34.4398395Z [INFO]   ConfirmSaveChangesDialog.fragment.xaml: System.Collections.Hashtable
+2026-02-04T04:15:34.4406608Z [INFO] XamlFiles :
+2026-02-04T04:15:34.4416211Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\gui\ConfirmSaveChangesDialog.fragment.xaml
+2026-02-04T04:15:34.4424351Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\gui\MainWindow.xaml
+2026-02-04T04:15:34.4435998Z [INFO] JSONKEYVALIDATION:
+2026-02-04T04:15:34.4446690Z [INFO]   No issues found
+2026-02-04T04:15:34.4457568Z [INFO] FoundFiles :
+2026-02-04T04:15:34.4468216Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\localization
+2026-02-04T04:15:34.4478735Z [INFO] KeyCoverage :
+2026-02-04T04:15:34.4489579Z [INFO]   zh-CN.json: System.Collections.Hashtable
+2026-02-04T04:15:34.4499967Z [INFO]   es.json: System.Collections.Hashtable
+2026-02-04T04:15:34.4509649Z [INFO]   fr.json: System.Collections.Hashtable
+2026-02-04T04:15:34.4520750Z [INFO]   id-ID.json: System.Collections.Hashtable
+2026-02-04T04:15:34.4528774Z [INFO]   pt-BR.json: System.Collections.Hashtable
+2026-02-04T04:15:34.4539897Z [INFO]   ja.json: System.Collections.Hashtable
+2026-02-04T04:15:34.4550520Z [INFO]   ru.json: System.Collections.Hashtable
+2026-02-04T04:15:34.4560712Z [INFO]   en.json: System.Collections.Hashtable
+2026-02-04T04:15:34.4681565Z [INFO] Detailed analysis saved to: D:\a\focus-game-deck\focus-game-deck\test\test-result-localization-diagnostic.json
+2026-02-04T04:15:34.4692203Z [INFO] [TEST RESULT] Total Issues: 0
+2026-02-04T04:15:34.4702533Z [INFO] [PASS] Localization integrity test passed with no issues
+2026-02-04T04:15:34.4715643Z [INFO] === Testing Mapping Table Integrity ===
+2026-02-04T04:15:34.4962297Z [INFO] === Validating JSON Key Structure ===
+2026-02-04T04:15:35.1407955Z [INFO] === Testing XAML Element Access ===
+2026-02-04T04:15:35.1659586Z [INFO] === Analyzing String Replacement Flow ===
+2026-02-04T04:15:35.3692037Z [INFO] === Assessing Modularization Impact ===
+2026-02-04T04:15:35.4612600Z [32m   [+] Should generate diagnostic analysis results[0m[90m 2.01s (2.01s|1ms)[0m
+2026-02-04T04:15:35.4851681Z [INFO] Starting localization diagnostic...
+2026-02-04T04:15:35.4862506Z [INFO] === Testing Mapping Table Integrity ===
+2026-02-04T04:15:35.4995239Z [INFO] === Validating JSON Key Structure ===
+2026-02-04T04:15:36.1333285Z [INFO] === Testing XAML Element Access ===
+2026-02-04T04:15:36.1569952Z [INFO] === Analyzing String Replacement Flow ===
+2026-02-04T04:15:36.3579884Z [INFO] === Assessing Modularization Impact ===
+2026-02-04T04:15:36.3782841Z [INFO] LOCALIZATION DIAGNOSTIC REPORT
+2026-02-04T04:15:36.3784412Z [INFO] SUMMARY:
+2026-02-04T04:15:36.3785343Z [INFO] Total Issues Found: 0
+2026-02-04T04:15:36.3785764Z [INFO] MODULARIZATIONIMPACT:
+2026-02-04T04:15:36.3786444Z [INFO]   No issues found
+2026-02-04T04:15:36.3786975Z [INFO] ModuleFiles :
+2026-02-04T04:15:36.3787516Z [INFO]   - ConfigEditor.Events.ps1
+2026-02-04T04:15:36.3788162Z [INFO]   - ConfigEditor.JsonHelper.ps1
+2026-02-04T04:15:36.3788652Z [INFO]   - ConfigEditor.Localization.ps1
+2026-02-04T04:15:36.3790072Z [INFO]   - ConfigEditor.Mappings.ps1
+2026-02-04T04:15:36.3790742Z [INFO]   - ConfigEditor.Save.ps1
+2026-02-04T04:15:36.3791361Z [INFO]   - ConfigEditor.State.ps1
+2026-02-04T04:15:36.3792046Z [INFO]   - ConfigEditor.UI.ps1
+2026-02-04T04:15:36.3798304Z [INFO] Integration :
+2026-02-04T04:15:36.3809056Z [INFO]   HasMappingsModule: True
+2026-02-04T04:15:36.3819312Z [INFO]   HasLocalizationModule: True
+2026-02-04T04:15:36.3829249Z [INFO] DependencyChain :
+2026-02-04T04:15:36.3839683Z [INFO]   ConfigEditor.UI.ps1: System.Collections.Hashtable
+2026-02-04T04:15:36.3850984Z [INFO]   ConfigEditor.Events.ps1: System.Collections.Hashtable
+2026-02-04T04:15:36.3860715Z [INFO]   ConfigEditor.JsonHelper.ps1: System.Collections.Hashtable
+2026-02-04T04:15:36.3871216Z [INFO]   ConfigEditor.Localization.ps1: System.Collections.Hashtable
+2026-02-04T04:15:36.3880900Z [INFO]   ConfigEditor.Mappings.ps1: System.Collections.Hashtable
+2026-02-04T04:15:36.3891112Z [INFO]   ConfigEditor.State.ps1: System.Collections.Hashtable
+2026-02-04T04:15:36.3900829Z [INFO]   ConfigEditor.Save.ps1: System.Collections.Hashtable
+2026-02-04T04:15:36.3911255Z [INFO] MAPPINGINTEGRITY:
+2026-02-04T04:15:36.3921185Z [INFO]   No issues found
+2026-02-04T04:15:36.3932677Z [INFO] Statistics :
+2026-02-04T04:15:36.3943280Z [INFO]   ButtonMappings: 49
+2026-02-04T04:15:36.3954686Z [INFO]   MenuItemMappings: 11
+2026-02-04T04:15:36.3965741Z [INFO]   TextMappings: 14
+2026-02-04T04:15:36.3976045Z [INFO]   BrowserButtonMappings: 10
+2026-02-04T04:15:36.3987140Z [INFO]   MovementButtonMappings: 8
+2026-02-04T04:15:36.3997335Z [INFO]   CrudButtonMappings: 6
+2026-02-04T04:15:36.4008080Z [INFO]   AutoDetectButtonMappings: 7
+2026-02-04T04:15:36.4018251Z [INFO]   LabelMappings: 76
+2026-02-04T04:15:36.4029442Z [INFO]   ActionButtonMappings: 18
+2026-02-04T04:15:36.4039277Z [INFO]   TooltipMappings: 50
+2026-02-04T04:15:36.4048477Z [INFO]   TabMappings: 8
+2026-02-04T04:15:36.4056925Z [INFO]   CheckBoxMappings: 21
+2026-02-04T04:15:36.4065701Z [INFO] Duplicates :
+2026-02-04T04:15:36.4074971Z [INFO]   OBSEnableRollbackCheckBox: CheckBoxMappings TooltipMappings
+2026-02-04T04:15:36.4083512Z [INFO] STRINGREPLACEMENTFLOW:
+2026-02-04T04:15:36.4092350Z [INFO]   No issues found
+2026-02-04T04:15:36.4100779Z [INFO] FunctionAvailability :
+2026-02-04T04:15:36.4109735Z [INFO]   Get-ButtonMappingsByCategory: True
+2026-02-04T04:15:36.4117997Z [INFO]   Get-LocalizationKey: True
+2026-02-04T04:15:36.4126629Z [INFO]   Get-ElementsForKey: True
+2026-02-04T04:15:36.4134813Z [INFO] ControlMechanisms :
+2026-02-04T04:15:36.4143614Z [INFO]   LocalizationCall: Found
+2026-02-04T04:15:36.4151872Z [INFO]   JsonLoading: Found
+2026-02-04T04:15:36.4160076Z [INFO]   Get-LocalizationKey: Working correctly
+2026-02-04T04:15:36.4168828Z [INFO]   DotSourceMappings: Missing
+2026-02-04T04:15:36.4177028Z [INFO]   ElementPropertySetting: Found
+2026-02-04T04:15:36.4185880Z [INFO] XAMLELEMENTACCESS:
+2026-02-04T04:15:36.4194157Z [INFO]   No issues found
+2026-02-04T04:15:36.4202611Z [INFO] ElementAnalysis :
+2026-02-04T04:15:36.4211065Z [INFO]   MainWindow.xaml: System.Collections.Hashtable
+2026-02-04T04:15:36.4219273Z [INFO]   ConfirmSaveChangesDialog.fragment.xaml: System.Collections.Hashtable
+2026-02-04T04:15:36.4227727Z [INFO] XamlFiles :
+2026-02-04T04:15:36.4235972Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\gui\ConfirmSaveChangesDialog.fragment.xaml
+2026-02-04T04:15:36.4244437Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\gui\MainWindow.xaml
+2026-02-04T04:15:36.4252731Z [INFO] JSONKEYVALIDATION:
+2026-02-04T04:15:36.4261255Z [INFO]   No issues found
+2026-02-04T04:15:36.4269780Z [INFO] FoundFiles :
+2026-02-04T04:15:36.4278157Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\localization
+2026-02-04T04:15:36.4287000Z [INFO] KeyCoverage :
+2026-02-04T04:15:36.4295252Z [INFO]   zh-CN.json: System.Collections.Hashtable
+2026-02-04T04:15:36.4303996Z [INFO]   es.json: System.Collections.Hashtable
+2026-02-04T04:15:36.4312113Z [INFO]   fr.json: System.Collections.Hashtable
+2026-02-04T04:15:36.4320347Z [INFO]   id-ID.json: System.Collections.Hashtable
+2026-02-04T04:15:36.4328986Z [INFO]   pt-BR.json: System.Collections.Hashtable
+2026-02-04T04:15:36.4337057Z [INFO]   ja.json: System.Collections.Hashtable
+2026-02-04T04:15:36.4345927Z [INFO]   ru.json: System.Collections.Hashtable
+2026-02-04T04:15:36.4354284Z [INFO]   en.json: System.Collections.Hashtable
+2026-02-04T04:15:36.4440018Z [INFO] Detailed analysis saved to: D:\a\focus-game-deck\focus-game-deck\test\test-result-localization-diagnostic.json
+2026-02-04T04:15:36.4449748Z [INFO] [TEST RESULT] Total Issues: 0
+2026-02-04T04:15:36.4458101Z [INFO] [PASS] Localization integrity test passed with no issues
+2026-02-04T04:15:36.4469856Z [INFO] === Testing Mapping Table Integrity ===
+2026-02-04T04:15:36.4600909Z [INFO] === Validating JSON Key Structure ===
+2026-02-04T04:15:37.0886994Z [INFO] === Testing XAML Element Access ===
+2026-02-04T04:15:37.1108525Z [INFO] === Analyzing String Replacement Flow ===
+2026-02-04T04:15:37.3124547Z [INFO] === Assessing Modularization Impact ===
+2026-02-04T04:15:37.3261560Z [96m Context Mapping Table Integrity[0m
+2026-02-04T04:15:37.3339367Z [32m   [+] Should validate mapping table structure[0m[90m 7ms (4ms|2ms)[0m
+2026-02-04T04:15:37.3405052Z [32m   [+] Should detect mapping variables[0m[90m 4ms (3ms|1ms)[0m
+2026-02-04T04:15:37.3505593Z [32m   [+] Should identify duplicate mapping keys if present[0m[90m 7ms (6ms|1ms)[0m
+2026-02-04T04:15:37.3757115Z [INFO] Starting localization diagnostic...
+2026-02-04T04:15:37.3770814Z [INFO] === Testing Mapping Table Integrity ===
+2026-02-04T04:15:37.3939314Z [INFO] === Validating JSON Key Structure ===
+2026-02-04T04:15:38.0130648Z [INFO] === Testing XAML Element Access ===
+2026-02-04T04:15:38.0353039Z [INFO] === Analyzing String Replacement Flow ===
+2026-02-04T04:15:38.2379363Z [INFO] === Assessing Modularization Impact ===
+2026-02-04T04:15:38.2505557Z [INFO] LOCALIZATION DIAGNOSTIC REPORT
+2026-02-04T04:15:38.2518047Z [INFO] SUMMARY:
+2026-02-04T04:15:38.2528657Z [INFO] Total Issues Found: 0
+2026-02-04T04:15:38.2539014Z [INFO] MODULARIZATIONIMPACT:
+2026-02-04T04:15:38.2549482Z [INFO]   No issues found
+2026-02-04T04:15:38.2559691Z [INFO] ModuleFiles :
+2026-02-04T04:15:38.2569979Z [INFO]   - ConfigEditor.Events.ps1
+2026-02-04T04:15:38.2578316Z [INFO]   - ConfigEditor.JsonHelper.ps1
+2026-02-04T04:15:38.2587361Z [INFO]   - ConfigEditor.Localization.ps1
+2026-02-04T04:15:38.2595709Z [INFO]   - ConfigEditor.Mappings.ps1
+2026-02-04T04:15:38.2604378Z [INFO]   - ConfigEditor.Save.ps1
+2026-02-04T04:15:38.2613251Z [INFO]   - ConfigEditor.State.ps1
+2026-02-04T04:15:38.2621839Z [INFO]   - ConfigEditor.UI.ps1
+2026-02-04T04:15:38.2630969Z [INFO] Integration :
+2026-02-04T04:15:38.2639903Z [INFO]   HasMappingsModule: True
+2026-02-04T04:15:38.2649750Z [INFO]   HasLocalizationModule: True
+2026-02-04T04:15:38.2658507Z [INFO] DependencyChain :
+2026-02-04T04:15:38.2667445Z [INFO]   ConfigEditor.UI.ps1: System.Collections.Hashtable
+2026-02-04T04:15:38.2676105Z [INFO]   ConfigEditor.Events.ps1: System.Collections.Hashtable
+2026-02-04T04:15:38.2685359Z [INFO]   ConfigEditor.JsonHelper.ps1: System.Collections.Hashtable
+2026-02-04T04:15:38.2693966Z [INFO]   ConfigEditor.Localization.ps1: System.Collections.Hashtable
+2026-02-04T04:15:38.2702379Z [INFO]   ConfigEditor.Mappings.ps1: System.Collections.Hashtable
+2026-02-04T04:15:38.2711256Z [INFO]   ConfigEditor.State.ps1: System.Collections.Hashtable
+2026-02-04T04:15:38.2719669Z [INFO]   ConfigEditor.Save.ps1: System.Collections.Hashtable
+2026-02-04T04:15:38.2728650Z [INFO] MAPPINGINTEGRITY:
+2026-02-04T04:15:38.2737072Z [INFO]   No issues found
+2026-02-04T04:15:38.2745794Z [INFO] Statistics :
+2026-02-04T04:15:38.2754211Z [INFO]   ButtonMappings: 49
+2026-02-04T04:15:38.2762642Z [INFO]   MenuItemMappings: 11
+2026-02-04T04:15:38.2771552Z [INFO]   TextMappings: 14
+2026-02-04T04:15:38.2780043Z [INFO]   BrowserButtonMappings: 10
+2026-02-04T04:15:38.2789038Z [INFO]   MovementButtonMappings: 8
+2026-02-04T04:15:38.2797501Z [INFO]   CrudButtonMappings: 6
+2026-02-04T04:15:38.2806931Z [INFO]   AutoDetectButtonMappings: 7
+2026-02-04T04:15:38.2815392Z [INFO]   LabelMappings: 76
+2026-02-04T04:15:38.2824156Z [INFO]   ActionButtonMappings: 18
+2026-02-04T04:15:38.2832630Z [INFO]   TooltipMappings: 50
+2026-02-04T04:15:38.2840949Z [INFO]   TabMappings: 8
+2026-02-04T04:15:38.2849697Z [INFO]   CheckBoxMappings: 21
+2026-02-04T04:15:38.2858084Z [INFO] Duplicates :
+2026-02-04T04:15:38.2869428Z [INFO]   OBSEnableRollbackCheckBox: CheckBoxMappings TooltipMappings
+2026-02-04T04:15:38.2877996Z [INFO] STRINGREPLACEMENTFLOW:
+2026-02-04T04:15:38.2889213Z [INFO]   No issues found
+2026-02-04T04:15:38.2899208Z [INFO] FunctionAvailability :
+2026-02-04T04:15:38.2908939Z [INFO]   Get-ButtonMappingsByCategory: True
+2026-02-04T04:15:38.2918080Z [INFO]   Get-LocalizationKey: True
+2026-02-04T04:15:38.2927689Z [INFO]   Get-ElementsForKey: True
+2026-02-04T04:15:38.2936669Z [INFO] ControlMechanisms :
+2026-02-04T04:15:38.2945376Z [INFO]   LocalizationCall: Found
+2026-02-04T04:15:38.2954018Z [INFO]   JsonLoading: Found
+2026-02-04T04:15:38.2963210Z [INFO]   Get-LocalizationKey: Working correctly
+2026-02-04T04:15:38.2971663Z [INFO]   DotSourceMappings: Missing
+2026-02-04T04:15:38.2980025Z [INFO]   ElementPropertySetting: Found
+2026-02-04T04:15:38.2988985Z [INFO] XAMLELEMENTACCESS:
+2026-02-04T04:15:38.2997487Z [INFO]   No issues found
+2026-02-04T04:15:38.3006391Z [INFO] ElementAnalysis :
+2026-02-04T04:15:38.3014923Z [INFO]   MainWindow.xaml: System.Collections.Hashtable
+2026-02-04T04:15:38.3023978Z [INFO]   ConfirmSaveChangesDialog.fragment.xaml: System.Collections.Hashtable
+2026-02-04T04:15:38.3032172Z [INFO] XamlFiles :
+2026-02-04T04:15:38.3040864Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\gui\ConfirmSaveChangesDialog.fragment.xaml
+2026-02-04T04:15:38.3049654Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\gui\MainWindow.xaml
+2026-02-04T04:15:38.3060528Z [INFO] JSONKEYVALIDATION:
+2026-02-04T04:15:38.3071419Z [INFO]   No issues found
+2026-02-04T04:15:38.3081985Z [INFO] FoundFiles :
+2026-02-04T04:15:38.3093134Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\localization
+2026-02-04T04:15:38.3103938Z [INFO] KeyCoverage :
+2026-02-04T04:15:38.3114457Z [INFO]   zh-CN.json: System.Collections.Hashtable
+2026-02-04T04:15:38.3124670Z [INFO]   es.json: System.Collections.Hashtable
+2026-02-04T04:15:38.3135470Z [INFO]   fr.json: System.Collections.Hashtable
+2026-02-04T04:15:38.3146309Z [INFO]   id-ID.json: System.Collections.Hashtable
+2026-02-04T04:15:38.3156703Z [INFO]   pt-BR.json: System.Collections.Hashtable
+2026-02-04T04:15:38.3167444Z [INFO]   ja.json: System.Collections.Hashtable
+2026-02-04T04:15:38.3177718Z [INFO]   ru.json: System.Collections.Hashtable
+2026-02-04T04:15:38.3188489Z [INFO]   en.json: System.Collections.Hashtable
+2026-02-04T04:15:38.3830799Z [INFO] Detailed analysis saved to: D:\a\focus-game-deck\focus-game-deck\test\test-result-localization-diagnostic.json
+2026-02-04T04:15:38.3841499Z [INFO] [TEST RESULT] Total Issues: 0
+2026-02-04T04:15:38.3852070Z [INFO] [PASS] Localization integrity test passed with no issues
+2026-02-04T04:15:38.3866368Z [INFO] === Testing Mapping Table Integrity ===
+2026-02-04T04:15:38.4004620Z [INFO] === Validating JSON Key Structure ===
+2026-02-04T04:15:39.0238617Z [INFO] === Testing XAML Element Access ===
+2026-02-04T04:15:39.0459165Z [INFO] === Analyzing String Replacement Flow ===
+2026-02-04T04:15:39.2541004Z [INFO] === Assessing Modularization Impact ===
+2026-02-04T04:15:39.2653264Z [96m Context JSON Key Validation[0m
+2026-02-04T04:15:39.2724264Z [32m   [+] Should locate JSON localization files[0m[90m 6ms (4ms|2ms)[0m
+2026-02-04T04:15:39.2762994Z   zh-CN.json : 98 mapped keys out of 703 total
+2026-02-04T04:15:39.2771081Z   es.json : 98 mapped keys out of 703 total
+2026-02-04T04:15:39.2779687Z   fr.json : 98 mapped keys out of 703 total
+2026-02-04T04:15:39.2787857Z   id-ID.json : 98 mapped keys out of 703 total
+2026-02-04T04:15:39.2795797Z   pt-BR.json : 98 mapped keys out of 703 total
+2026-02-04T04:15:39.2803826Z   ja.json : 98 mapped keys out of 704 total
+2026-02-04T04:15:39.2811792Z   ru.json : 98 mapped keys out of 703 total
+2026-02-04T04:15:39.2820164Z   en.json : 98 mapped keys out of 704 total
+2026-02-04T04:15:39.2861550Z [32m   [+] Should validate JSON key coverage[0m[90m 11ms (10ms|1ms)[0m
+2026-02-04T04:15:39.2929237Z [32m   [+] Should report missing JSON keys if any[0m[90m 4ms (3ms|1ms)[0m
+2026-02-04T04:15:39.3171218Z [INFO] Starting localization diagnostic...
+2026-02-04T04:15:39.3182290Z [INFO] === Testing Mapping Table Integrity ===
+2026-02-04T04:15:39.3368913Z [INFO] === Validating JSON Key Structure ===
+2026-02-04T04:15:39.9524203Z [INFO] === Testing XAML Element Access ===
+2026-02-04T04:15:39.9760931Z [INFO] === Analyzing String Replacement Flow ===
+2026-02-04T04:15:40.1763576Z [INFO] === Assessing Modularization Impact ===
+2026-02-04T04:15:40.1859906Z [INFO] LOCALIZATION DIAGNOSTIC REPORT
+2026-02-04T04:15:40.1869474Z [INFO] SUMMARY:
+2026-02-04T04:15:40.1878308Z [INFO] Total Issues Found: 0
+2026-02-04T04:15:40.1887424Z [INFO] MODULARIZATIONIMPACT:
+2026-02-04T04:15:40.1896027Z [INFO]   No issues found
+2026-02-04T04:15:40.1905085Z [INFO] ModuleFiles :
+2026-02-04T04:15:40.1913772Z [INFO]   - ConfigEditor.Events.ps1
+2026-02-04T04:15:40.1922445Z [INFO]   - ConfigEditor.JsonHelper.ps1
+2026-02-04T04:15:40.1931317Z [INFO]   - ConfigEditor.Localization.ps1
+2026-02-04T04:15:40.1939665Z [INFO]   - ConfigEditor.Mappings.ps1
+2026-02-04T04:15:40.1948711Z [INFO]   - ConfigEditor.Save.ps1
+2026-02-04T04:15:40.1957079Z [INFO]   - ConfigEditor.State.ps1
+2026-02-04T04:15:40.1966425Z [INFO]   - ConfigEditor.UI.ps1
+2026-02-04T04:15:40.1974957Z [INFO] Integration :
+2026-02-04T04:15:40.1984532Z [INFO]   HasMappingsModule: True
+2026-02-04T04:15:40.1993026Z [INFO]   HasLocalizationModule: True
+2026-02-04T04:15:40.2001587Z [INFO] DependencyChain :
+2026-02-04T04:15:40.2010601Z [INFO]   ConfigEditor.UI.ps1: System.Collections.Hashtable
+2026-02-04T04:15:40.2019098Z [INFO]   ConfigEditor.Events.ps1: System.Collections.Hashtable
+2026-02-04T04:15:40.2028075Z [INFO]   ConfigEditor.JsonHelper.ps1: System.Collections.Hashtable
+2026-02-04T04:15:40.2036447Z [INFO]   ConfigEditor.Localization.ps1: System.Collections.Hashtable
+2026-02-04T04:15:40.2045375Z [INFO]   ConfigEditor.Mappings.ps1: System.Collections.Hashtable
+2026-02-04T04:15:40.2053707Z [INFO]   ConfigEditor.State.ps1: System.Collections.Hashtable
+2026-02-04T04:15:40.2062909Z [INFO]   ConfigEditor.Save.ps1: System.Collections.Hashtable
+2026-02-04T04:15:40.2071396Z [INFO] MAPPINGINTEGRITY:
+2026-02-04T04:15:40.2079943Z [INFO]   No issues found
+2026-02-04T04:15:40.2088925Z [INFO] Statistics :
+2026-02-04T04:15:40.2097488Z [INFO]   ButtonMappings: 49
+2026-02-04T04:15:40.2106361Z [INFO]   MenuItemMappings: 11
+2026-02-04T04:15:40.2114800Z [INFO]   TextMappings: 14
+2026-02-04T04:15:40.2123920Z [INFO]   BrowserButtonMappings: 10
+2026-02-04T04:15:40.2132364Z [INFO]   MovementButtonMappings: 8
+2026-02-04T04:15:40.2141181Z [INFO]   CrudButtonMappings: 6
+2026-02-04T04:15:40.2149628Z [INFO]   AutoDetectButtonMappings: 7
+2026-02-04T04:15:40.2158256Z [INFO]   LabelMappings: 76
+2026-02-04T04:15:40.2166423Z [INFO]   ActionButtonMappings: 18
+2026-02-04T04:15:40.2174631Z [INFO]   TooltipMappings: 50
+2026-02-04T04:15:40.2183248Z [INFO]   TabMappings: 8
+2026-02-04T04:15:40.2191439Z [INFO]   CheckBoxMappings: 21
+2026-02-04T04:15:40.2199808Z [INFO] Duplicates :
+2026-02-04T04:15:40.2208842Z [INFO]   OBSEnableRollbackCheckBox: CheckBoxMappings TooltipMappings
+2026-02-04T04:15:40.2216974Z [INFO] STRINGREPLACEMENTFLOW:
+2026-02-04T04:15:40.2225680Z [INFO]   No issues found
+2026-02-04T04:15:40.2233921Z [INFO] FunctionAvailability :
+2026-02-04T04:15:40.2242594Z [INFO]   Get-ButtonMappingsByCategory: True
+2026-02-04T04:15:40.2250838Z [INFO]   Get-LocalizationKey: True
+2026-02-04T04:15:40.2259592Z [INFO]   Get-ElementsForKey: True
+2026-02-04T04:15:40.2268179Z [INFO] ControlMechanisms :
+2026-02-04T04:15:40.2277089Z [INFO]   LocalizationCall: Found
+2026-02-04T04:15:40.2285552Z [INFO]   JsonLoading: Found
+2026-02-04T04:15:40.2293870Z [INFO]   Get-LocalizationKey: Working correctly
+2026-02-04T04:15:40.2302475Z [INFO]   DotSourceMappings: Missing
+2026-02-04T04:15:40.2310842Z [INFO]   ElementPropertySetting: Found
+2026-02-04T04:15:40.2319415Z [INFO] XAMLELEMENTACCESS:
+2026-02-04T04:15:40.2327743Z [INFO]   No issues found
+2026-02-04T04:15:40.2336004Z [INFO] ElementAnalysis :
+2026-02-04T04:15:40.2345001Z [INFO]   MainWindow.xaml: System.Collections.Hashtable
+2026-02-04T04:15:40.2353307Z [INFO]   ConfirmSaveChangesDialog.fragment.xaml: System.Collections.Hashtable
+2026-02-04T04:15:40.2362266Z [INFO] XamlFiles :
+2026-02-04T04:15:40.2370669Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\gui\ConfirmSaveChangesDialog.fragment.xaml
+2026-02-04T04:15:40.2379010Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\gui\MainWindow.xaml
+2026-02-04T04:15:40.2387560Z [INFO] JSONKEYVALIDATION:
+2026-02-04T04:15:40.2395801Z [INFO]   No issues found
+2026-02-04T04:15:40.2404782Z [INFO] FoundFiles :
+2026-02-04T04:15:40.2413078Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\localization
+2026-02-04T04:15:40.2421845Z [INFO] KeyCoverage :
+2026-02-04T04:15:40.2430206Z [INFO]   zh-CN.json: System.Collections.Hashtable
+2026-02-04T04:15:40.2439533Z [INFO]   es.json: System.Collections.Hashtable
+2026-02-04T04:15:40.2447712Z [INFO]   fr.json: System.Collections.Hashtable
+2026-02-04T04:15:40.2456217Z [INFO]   id-ID.json: System.Collections.Hashtable
+2026-02-04T04:15:40.2464608Z [INFO]   pt-BR.json: System.Collections.Hashtable
+2026-02-04T04:15:40.2472905Z [INFO]   ja.json: System.Collections.Hashtable
+2026-02-04T04:15:40.2481773Z [INFO]   ru.json: System.Collections.Hashtable
+2026-02-04T04:15:40.2490037Z [INFO]   en.json: System.Collections.Hashtable
+2026-02-04T04:15:40.2547092Z [INFO] Detailed analysis saved to: D:\a\focus-game-deck\focus-game-deck\test\test-result-localization-diagnostic.json
+2026-02-04T04:15:40.2555932Z [INFO] [TEST RESULT] Total Issues: 0
+2026-02-04T04:15:40.2564763Z [INFO] [PASS] Localization integrity test passed with no issues
+2026-02-04T04:15:40.2575884Z [INFO] === Testing Mapping Table Integrity ===
+2026-02-04T04:15:40.2732514Z [INFO] === Validating JSON Key Structure ===
+2026-02-04T04:15:40.8901109Z [INFO] === Testing XAML Element Access ===
+2026-02-04T04:15:40.9138818Z [INFO] === Analyzing String Replacement Flow ===
+2026-02-04T04:15:41.1152952Z [INFO] === Assessing Modularization Impact ===
+2026-02-04T04:15:41.1272654Z [96m Context XAML Element Access[0m
+2026-02-04T04:15:41.1344317Z [32m   [+] Should detect XAML files in project[0m[90m 7ms (4ms|3ms)[0m
+2026-02-04T04:15:41.1383316Z   MainWindow.xaml : 203/307 elements mapped
+2026-02-04T04:15:41.1391729Z   ConfirmSaveChangesDialog.fragment.xaml : 0/3 elements mapped
+2026-02-04T04:15:41.1432492Z [32m   [+] Should analyze XAML element mappings[0m[90m 6ms (5ms|1ms)[0m
+2026-02-04T04:15:41.1563973Z [32m   [+] Should report unmapped XAML elements if any[0m[90m 10ms (6ms|4ms)[0m
+2026-02-04T04:15:41.1802461Z [INFO] Starting localization diagnostic...
+2026-02-04T04:15:41.1812065Z [INFO] === Testing Mapping Table Integrity ===
+2026-02-04T04:15:41.1942159Z [INFO] === Validating JSON Key Structure ===
+2026-02-04T04:15:41.8665273Z [INFO] === Testing XAML Element Access ===
+2026-02-04T04:15:41.8882717Z [INFO] === Analyzing String Replacement Flow ===
+2026-02-04T04:15:42.0886716Z [INFO] === Assessing Modularization Impact ===
+2026-02-04T04:15:42.0999737Z [INFO] LOCALIZATION DIAGNOSTIC REPORT
+2026-02-04T04:15:42.1008789Z [INFO] SUMMARY:
+2026-02-04T04:15:42.1017505Z [INFO] Total Issues Found: 0
+2026-02-04T04:15:42.1026831Z [INFO] MODULARIZATIONIMPACT:
+2026-02-04T04:15:42.1035488Z [INFO]   No issues found
+2026-02-04T04:15:42.1044565Z [INFO] ModuleFiles :
+2026-02-04T04:15:42.1053209Z [INFO]   - ConfigEditor.Events.ps1
+2026-02-04T04:15:42.1061995Z [INFO]   - ConfigEditor.JsonHelper.ps1
+2026-02-04T04:15:42.1070594Z [INFO]   - ConfigEditor.Localization.ps1
+2026-02-04T04:15:42.1079218Z [INFO]   - ConfigEditor.Mappings.ps1
+2026-02-04T04:15:42.1087990Z [INFO]   - ConfigEditor.Save.ps1
+2026-02-04T04:15:42.1096454Z [INFO]   - ConfigEditor.State.ps1
+2026-02-04T04:15:42.1105658Z [INFO]   - ConfigEditor.UI.ps1
+2026-02-04T04:15:42.1114132Z [INFO] Integration :
+2026-02-04T04:15:42.1123075Z [INFO]   HasMappingsModule: True
+2026-02-04T04:15:42.1131544Z [INFO]   HasLocalizationModule: True
+2026-02-04T04:15:42.1141163Z [INFO] DependencyChain :
+2026-02-04T04:15:42.1149758Z [INFO]   ConfigEditor.UI.ps1: System.Collections.Hashtable
+2026-02-04T04:15:42.1158519Z [INFO]   ConfigEditor.Events.ps1: System.Collections.Hashtable
+2026-02-04T04:15:42.1167284Z [INFO]   ConfigEditor.JsonHelper.ps1: System.Collections.Hashtable
+2026-02-04T04:15:42.1175831Z [INFO]   ConfigEditor.Localization.ps1: System.Collections.Hashtable
+2026-02-04T04:15:42.1184910Z [INFO]   ConfigEditor.Mappings.ps1: System.Collections.Hashtable
+2026-02-04T04:15:42.1193389Z [INFO]   ConfigEditor.State.ps1: System.Collections.Hashtable
+2026-02-04T04:15:42.1202530Z [INFO]   ConfigEditor.Save.ps1: System.Collections.Hashtable
+2026-02-04T04:15:42.1210958Z [INFO] MAPPINGINTEGRITY:
+2026-02-04T04:15:42.1219572Z [INFO]   No issues found
+2026-02-04T04:15:42.1228216Z [INFO] Statistics :
+2026-02-04T04:15:42.1236638Z [INFO]   ButtonMappings: 49
+2026-02-04T04:15:42.1245400Z [INFO]   MenuItemMappings: 11
+2026-02-04T04:15:42.1253848Z [INFO]   TextMappings: 14
+2026-02-04T04:15:42.1262943Z [INFO]   BrowserButtonMappings: 10
+2026-02-04T04:15:42.1271290Z [INFO]   MovementButtonMappings: 8
+2026-02-04T04:15:42.1280341Z [INFO]   CrudButtonMappings: 6
+2026-02-04T04:15:42.1288772Z [INFO]   AutoDetectButtonMappings: 7
+2026-02-04T04:15:42.1297388Z [INFO]   LabelMappings: 76
+2026-02-04T04:15:42.1306102Z [INFO]   ActionButtonMappings: 18
+2026-02-04T04:15:42.1314474Z [INFO]   TooltipMappings: 50
+2026-02-04T04:15:42.1323155Z [INFO]   TabMappings: 8
+2026-02-04T04:15:42.1331515Z [INFO]   CheckBoxMappings: 21
+2026-02-04T04:15:42.1340543Z [INFO] Duplicates :
+2026-02-04T04:15:42.1349302Z [INFO]   OBSEnableRollbackCheckBox: CheckBoxMappings TooltipMappings
+2026-02-04T04:15:42.1357706Z [INFO] STRINGREPLACEMENTFLOW:
+2026-02-04T04:15:42.1366316Z [INFO]   No issues found
+2026-02-04T04:15:42.1374681Z [INFO] FunctionAvailability :
+2026-02-04T04:15:42.1383719Z [INFO]   Get-ButtonMappingsByCategory: True
+2026-02-04T04:15:42.1392159Z [INFO]   Get-LocalizationKey: True
+2026-02-04T04:15:42.1401109Z [INFO]   Get-ElementsForKey: True
+2026-02-04T04:15:42.1409546Z [INFO] ControlMechanisms :
+2026-02-04T04:15:42.1418376Z [INFO]   LocalizationCall: Found
+2026-02-04T04:15:42.1427019Z [INFO]   JsonLoading: Found
+2026-02-04T04:15:42.1435570Z [INFO]   Get-LocalizationKey: Working correctly
+2026-02-04T04:15:42.1444278Z [INFO]   DotSourceMappings: Missing
+2026-02-04T04:15:42.1452597Z [INFO]   ElementPropertySetting: Found
+2026-02-04T04:15:42.1461580Z [INFO] XAMLELEMENTACCESS:
+2026-02-04T04:15:42.1469973Z [INFO]   No issues found
+2026-02-04T04:15:42.1479022Z [INFO] ElementAnalysis :
+2026-02-04T04:15:42.1487565Z [INFO]   MainWindow.xaml: System.Collections.Hashtable
+2026-02-04T04:15:42.1496444Z [INFO]   ConfirmSaveChangesDialog.fragment.xaml: System.Collections.Hashtable
+2026-02-04T04:15:42.1505054Z [INFO] XamlFiles :
+2026-02-04T04:15:42.1513791Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\gui\ConfirmSaveChangesDialog.fragment.xaml
+2026-02-04T04:15:42.1522735Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\gui\MainWindow.xaml
+2026-02-04T04:15:42.1531022Z [INFO] JSONKEYVALIDATION:
+2026-02-04T04:15:42.1540934Z [INFO]   No issues found
+2026-02-04T04:15:42.1549722Z [INFO] FoundFiles :
+2026-02-04T04:15:42.1558954Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\localization
+2026-02-04T04:15:42.1567243Z [INFO] KeyCoverage :
+2026-02-04T04:15:42.1576047Z [INFO]   zh-CN.json: System.Collections.Hashtable
+2026-02-04T04:15:42.1584451Z [INFO]   es.json: System.Collections.Hashtable
+2026-02-04T04:15:42.1593009Z [INFO]   fr.json: System.Collections.Hashtable
+2026-02-04T04:15:42.1601771Z [INFO]   id-ID.json: System.Collections.Hashtable
+2026-02-04T04:15:42.1610211Z [INFO]   pt-BR.json: System.Collections.Hashtable
+2026-02-04T04:15:42.1619130Z [INFO]   ja.json: System.Collections.Hashtable
+2026-02-04T04:15:42.1627566Z [INFO]   ru.json: System.Collections.Hashtable
+2026-02-04T04:15:42.1637220Z [INFO]   en.json: System.Collections.Hashtable
+2026-02-04T04:15:42.1692809Z [INFO] Detailed analysis saved to: D:\a\focus-game-deck\focus-game-deck\test\test-result-localization-diagnostic.json
+2026-02-04T04:15:42.1701878Z [INFO] [TEST RESULT] Total Issues: 0
+2026-02-04T04:15:42.1710585Z [INFO] [PASS] Localization integrity test passed with no issues
+2026-02-04T04:15:42.1722299Z [INFO] === Testing Mapping Table Integrity ===
+2026-02-04T04:15:42.1853180Z [INFO] === Validating JSON Key Structure ===
+2026-02-04T04:15:42.8130575Z [INFO] === Testing XAML Element Access ===
+2026-02-04T04:15:42.8366236Z [INFO] === Analyzing String Replacement Flow ===
+2026-02-04T04:15:43.0363508Z [INFO] === Assessing Modularization Impact ===
+2026-02-04T04:15:43.0475703Z [96m Context String Replacement Flow[0m
+2026-02-04T04:15:43.0547910Z [32m   [+] Should detect localization control functions[0m[90m 6ms (4ms|2ms)[0m
+2026-02-04T04:15:43.0572921Z   LocalizationCall : Found
+2026-02-04T04:15:43.0580998Z   JsonLoading : Found
+2026-02-04T04:15:43.0589331Z   Get-LocalizationKey : Working correctly
+2026-02-04T04:15:43.0596959Z   DotSourceMappings : Missing
+2026-02-04T04:15:43.0604726Z   ElementPropertySetting : Found
+2026-02-04T04:15:43.0645863Z [32m   [+] Should validate control mechanisms in ConfigEditor[0m[90m 7ms (6ms|1ms)[0m
+2026-02-04T04:15:43.0708607Z [32m   [+] Should report string replacement issues if any[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:43.1023217Z [INFO] Starting localization diagnostic...
+2026-02-04T04:15:43.1032953Z [INFO] === Testing Mapping Table Integrity ===
+2026-02-04T04:15:43.1165159Z [INFO] === Validating JSON Key Structure ===
+2026-02-04T04:15:43.7321011Z [INFO] === Testing XAML Element Access ===
+2026-02-04T04:15:43.7555538Z [INFO] === Analyzing String Replacement Flow ===
+2026-02-04T04:15:43.9582378Z [INFO] === Assessing Modularization Impact ===
+2026-02-04T04:15:43.9680671Z [INFO] LOCALIZATION DIAGNOSTIC REPORT
+2026-02-04T04:15:43.9689309Z [INFO] SUMMARY:
+2026-02-04T04:15:43.9698221Z [INFO] Total Issues Found: 0
+2026-02-04T04:15:43.9707094Z [INFO] MODULARIZATIONIMPACT:
+2026-02-04T04:15:43.9716138Z [INFO]   No issues found
+2026-02-04T04:15:43.9724773Z [INFO] ModuleFiles :
+2026-02-04T04:15:43.9733838Z [INFO]   - ConfigEditor.Events.ps1
+2026-02-04T04:15:43.9742257Z [INFO]   - ConfigEditor.JsonHelper.ps1
+2026-02-04T04:15:43.9751059Z [INFO]   - ConfigEditor.Localization.ps1
+2026-02-04T04:15:43.9759819Z [INFO]   - ConfigEditor.Mappings.ps1
+2026-02-04T04:15:43.9768545Z [INFO]   - ConfigEditor.Save.ps1
+2026-02-04T04:15:43.9777373Z [INFO]   - ConfigEditor.State.ps1
+2026-02-04T04:15:43.9786146Z [INFO]   - ConfigEditor.UI.ps1
+2026-02-04T04:15:43.9794864Z [INFO] Integration :
+2026-02-04T04:15:43.9803822Z [INFO]   HasMappingsModule: True
+2026-02-04T04:15:43.9813239Z [INFO]   HasLocalizationModule: True
+2026-02-04T04:15:43.9821794Z [INFO] DependencyChain :
+2026-02-04T04:15:43.9830439Z [INFO]   ConfigEditor.UI.ps1: System.Collections.Hashtable
+2026-02-04T04:15:43.9839400Z [INFO]   ConfigEditor.Events.ps1: System.Collections.Hashtable
+2026-02-04T04:15:43.9847832Z [INFO]   ConfigEditor.JsonHelper.ps1: System.Collections.Hashtable
+2026-02-04T04:15:43.9857195Z [INFO]   ConfigEditor.Localization.ps1: System.Collections.Hashtable
+2026-02-04T04:15:43.9865661Z [INFO]   ConfigEditor.Mappings.ps1: System.Collections.Hashtable
+2026-02-04T04:15:43.9874829Z [INFO]   ConfigEditor.State.ps1: System.Collections.Hashtable
+2026-02-04T04:15:43.9883392Z [INFO]   ConfigEditor.Save.ps1: System.Collections.Hashtable
+2026-02-04T04:15:43.9892202Z [INFO] MAPPINGINTEGRITY:
+2026-02-04T04:15:43.9900547Z [INFO]   No issues found
+2026-02-04T04:15:43.9909059Z [INFO] Statistics :
+2026-02-04T04:15:43.9918146Z [INFO]   ButtonMappings: 49
+2026-02-04T04:15:43.9926556Z [INFO]   MenuItemMappings: 11
+2026-02-04T04:15:43.9935572Z [INFO]   TextMappings: 14
+2026-02-04T04:15:43.9944003Z [INFO]   BrowserButtonMappings: 10
+2026-02-04T04:15:43.9952878Z [INFO]   MovementButtonMappings: 8
+2026-02-04T04:15:43.9961310Z [INFO]   CrudButtonMappings: 6
+2026-02-04T04:15:43.9970396Z [INFO]   AutoDetectButtonMappings: 7
+2026-02-04T04:15:43.9978742Z [INFO]   LabelMappings: 76
+2026-02-04T04:15:43.9987345Z [INFO]   ActionButtonMappings: 18
+2026-02-04T04:15:43.9996002Z [INFO]   TooltipMappings: 50
+2026-02-04T04:15:44.0004443Z [INFO]   TabMappings: 8
+2026-02-04T04:15:44.0013124Z [INFO]   CheckBoxMappings: 21
+2026-02-04T04:15:44.0021555Z [INFO] Duplicates :
+2026-02-04T04:15:44.0030501Z [INFO]   OBSEnableRollbackCheckBox: CheckBoxMappings TooltipMappings
+2026-02-04T04:15:44.0039198Z [INFO] STRINGREPLACEMENTFLOW:
+2026-02-04T04:15:44.0047577Z [INFO]   No issues found
+2026-02-04T04:15:44.0056626Z [INFO] FunctionAvailability :
+2026-02-04T04:15:44.0065260Z [INFO]   Get-ButtonMappingsByCategory: True
+2026-02-04T04:15:44.0074440Z [INFO]   Get-LocalizationKey: True
+2026-02-04T04:15:44.0082882Z [INFO]   Get-ElementsForKey: True
+2026-02-04T04:15:44.0091672Z [INFO] ControlMechanisms :
+2026-02-04T04:15:44.0100262Z [INFO]   LocalizationCall: Found
+2026-02-04T04:15:44.0108674Z [INFO]   JsonLoading: Found
+2026-02-04T04:15:44.0117566Z [INFO]   Get-LocalizationKey: Working correctly
+2026-02-04T04:15:44.0125851Z [INFO]   DotSourceMappings: Missing
+2026-02-04T04:15:44.0135165Z [INFO]   ElementPropertySetting: Found
+2026-02-04T04:15:44.0143605Z [INFO] XAMLELEMENTACCESS:
+2026-02-04T04:15:44.0152706Z [INFO]   No issues found
+2026-02-04T04:15:44.0161191Z [INFO] ElementAnalysis :
+2026-02-04T04:15:44.0170082Z [INFO]   MainWindow.xaml: System.Collections.Hashtable
+2026-02-04T04:15:44.0178849Z [INFO]   ConfirmSaveChangesDialog.fragment.xaml: System.Collections.Hashtable
+2026-02-04T04:15:44.0187276Z [INFO] XamlFiles :
+2026-02-04T04:15:44.0196513Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\gui\ConfirmSaveChangesDialog.fragment.xaml
+2026-02-04T04:15:44.0204822Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\gui\MainWindow.xaml
+2026-02-04T04:15:44.0213536Z [INFO] JSONKEYVALIDATION:
+2026-02-04T04:15:44.0221977Z [INFO]   No issues found
+2026-02-04T04:15:44.0230915Z [INFO] FoundFiles :
+2026-02-04T04:15:44.0239261Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\localization
+2026-02-04T04:15:44.0247669Z [INFO] KeyCoverage :
+2026-02-04T04:15:44.0256956Z [INFO]   zh-CN.json: System.Collections.Hashtable
+2026-02-04T04:15:44.0265453Z [INFO]   es.json: System.Collections.Hashtable
+2026-02-04T04:15:44.0274726Z [INFO]   fr.json: System.Collections.Hashtable
+2026-02-04T04:15:44.0283027Z [INFO]   id-ID.json: System.Collections.Hashtable
+2026-02-04T04:15:44.0292126Z [INFO]   pt-BR.json: System.Collections.Hashtable
+2026-02-04T04:15:44.0300441Z [INFO]   ja.json: System.Collections.Hashtable
+2026-02-04T04:15:44.0309194Z [INFO]   ru.json: System.Collections.Hashtable
+2026-02-04T04:15:44.0317570Z [INFO]   en.json: System.Collections.Hashtable
+2026-02-04T04:15:44.0394907Z [INFO] Detailed analysis saved to: D:\a\focus-game-deck\focus-game-deck\test\test-result-localization-diagnostic.json
+2026-02-04T04:15:44.0404885Z [INFO] [TEST RESULT] Total Issues: 0
+2026-02-04T04:15:44.0413659Z [INFO] [PASS] Localization integrity test passed with no issues
+2026-02-04T04:15:44.0424746Z [INFO] === Testing Mapping Table Integrity ===
+2026-02-04T04:15:44.0557775Z [INFO] === Validating JSON Key Structure ===
+2026-02-04T04:15:44.7339633Z [INFO] === Testing XAML Element Access ===
+2026-02-04T04:15:44.7557477Z [INFO] === Analyzing String Replacement Flow ===
+2026-02-04T04:15:44.9568309Z [INFO] === Assessing Modularization Impact ===
+2026-02-04T04:15:44.9706458Z [96m Context Modularization Impact[0m
+2026-02-04T04:15:44.9777748Z [32m   [+] Should detect ConfigEditor module files[0m[90m 6ms (4ms|2ms)[0m
+2026-02-04T04:15:44.9848534Z [32m   [+] Should verify required modules exist[0m[90m 4ms (3ms|1ms)[0m
+2026-02-04T04:15:44.9874058Z Module dependency chain:
+2026-02-04T04:15:44.9894847Z   ConfigEditor.UI.ps1 : 7 functions, 0 dependencies
+2026-02-04T04:15:44.9902675Z   ConfigEditor.Events.ps1 : 14 functions, 0 dependencies
+2026-02-04T04:15:44.9910160Z   ConfigEditor.JsonHelper.ps1 : 3 functions, 0 dependencies
+2026-02-04T04:15:44.9917887Z   ConfigEditor.Localization.ps1 : 0 functions, 0 dependencies
+2026-02-04T04:15:44.9925560Z   ConfigEditor.Mappings.ps1 : 9 functions, 0 dependencies
+2026-02-04T04:15:44.9933453Z   ConfigEditor.State.ps1 : 0 functions, 0 dependencies
+2026-02-04T04:15:44.9941118Z   ConfigEditor.Save.ps1 : 12 functions, 0 dependencies
+2026-02-04T04:15:44.9981770Z [32m   [+] Should analyze module dependencies[0m[90m 10ms (10ms|1ms)[0m
+2026-02-04T04:15:45.0038356Z [32m   [+] Should detect circular dependencies[0m[90m 3ms (2ms|1ms)[0m
+2026-02-04T04:15:45.0274396Z [INFO] Starting localization diagnostic...
+2026-02-04T04:15:45.0284016Z [INFO] === Testing Mapping Table Integrity ===
+2026-02-04T04:15:45.0413613Z [INFO] === Validating JSON Key Structure ===
+2026-02-04T04:15:45.6677100Z [INFO] === Testing XAML Element Access ===
+2026-02-04T04:15:45.6903819Z [INFO] === Analyzing String Replacement Flow ===
+2026-02-04T04:15:45.8928187Z [INFO] === Assessing Modularization Impact ===
+2026-02-04T04:15:45.9028148Z [INFO] LOCALIZATION DIAGNOSTIC REPORT
+2026-02-04T04:15:45.9037272Z [INFO] SUMMARY:
+2026-02-04T04:15:45.9045696Z [INFO] Total Issues Found: 0
+2026-02-04T04:15:45.9054099Z [INFO] MODULARIZATIONIMPACT:
+2026-02-04T04:15:45.9062930Z [INFO]   No issues found
+2026-02-04T04:15:45.9071409Z [INFO] ModuleFiles :
+2026-02-04T04:15:45.9080071Z [INFO]   - ConfigEditor.Events.ps1
+2026-02-04T04:15:45.9088281Z [INFO]   - ConfigEditor.JsonHelper.ps1
+2026-02-04T04:15:45.9096605Z [INFO]   - ConfigEditor.Localization.ps1
+2026-02-04T04:15:45.9105335Z [INFO]   - ConfigEditor.Mappings.ps1
+2026-02-04T04:15:45.9113448Z [INFO]   - ConfigEditor.Save.ps1
+2026-02-04T04:15:45.9122254Z [INFO]   - ConfigEditor.State.ps1
+2026-02-04T04:15:45.9130309Z [INFO]   - ConfigEditor.UI.ps1
+2026-02-04T04:15:45.9139026Z [INFO] Integration :
+2026-02-04T04:15:45.9147361Z [INFO]   HasMappingsModule: True
+2026-02-04T04:15:45.9155768Z [INFO]   HasLocalizationModule: True
+2026-02-04T04:15:45.9163981Z [INFO] DependencyChain :
+2026-02-04T04:15:45.9172449Z [INFO]   ConfigEditor.UI.ps1: System.Collections.Hashtable
+2026-02-04T04:15:45.9180993Z [INFO]   ConfigEditor.Events.ps1: System.Collections.Hashtable
+2026-02-04T04:15:45.9189544Z [INFO]   ConfigEditor.JsonHelper.ps1: System.Collections.Hashtable
+2026-02-04T04:15:45.9198678Z [INFO]   ConfigEditor.Localization.ps1: System.Collections.Hashtable
+2026-02-04T04:15:45.9207220Z [INFO]   ConfigEditor.Mappings.ps1: System.Collections.Hashtable
+2026-02-04T04:15:45.9215673Z [INFO]   ConfigEditor.State.ps1: System.Collections.Hashtable
+2026-02-04T04:15:45.9224489Z [INFO]   ConfigEditor.Save.ps1: System.Collections.Hashtable
+2026-02-04T04:15:45.9232778Z [INFO] MAPPINGINTEGRITY:
+2026-02-04T04:15:45.9242001Z [INFO]   No issues found
+2026-02-04T04:15:45.9250442Z [INFO] Statistics :
+2026-02-04T04:15:45.9259527Z [INFO]   ButtonMappings: 49
+2026-02-04T04:15:45.9267839Z [INFO]   MenuItemMappings: 11
+2026-02-04T04:15:45.9276954Z [INFO]   TextMappings: 14
+2026-02-04T04:15:45.9285337Z [INFO]   BrowserButtonMappings: 10
+2026-02-04T04:15:45.9294642Z [INFO]   MovementButtonMappings: 8
+2026-02-04T04:15:45.9303098Z [INFO]   CrudButtonMappings: 6
+2026-02-04T04:15:45.9311453Z [INFO]   AutoDetectButtonMappings: 7
+2026-02-04T04:15:45.9320206Z [INFO]   LabelMappings: 76
+2026-02-04T04:15:45.9328671Z [INFO]   ActionButtonMappings: 18
+2026-02-04T04:15:45.9337541Z [INFO]   TooltipMappings: 50
+2026-02-04T04:15:45.9345828Z [INFO]   TabMappings: 8
+2026-02-04T04:15:45.9354777Z [INFO]   CheckBoxMappings: 21
+2026-02-04T04:15:45.9362957Z [INFO] Duplicates :
+2026-02-04T04:15:45.9371805Z [INFO]   OBSEnableRollbackCheckBox: CheckBoxMappings TooltipMappings
+2026-02-04T04:15:45.9380458Z [INFO] STRINGREPLACEMENTFLOW:
+2026-02-04T04:15:45.9388874Z [INFO]   No issues found
+2026-02-04T04:15:45.9397734Z [INFO] FunctionAvailability :
+2026-02-04T04:15:45.9406400Z [INFO]   Get-ButtonMappingsByCategory: True
+2026-02-04T04:15:45.9415081Z [INFO]   Get-LocalizationKey: True
+2026-02-04T04:15:45.9423791Z [INFO]   Get-ElementsForKey: True
+2026-02-04T04:15:45.9432333Z [INFO] ControlMechanisms :
+2026-02-04T04:15:45.9441193Z [INFO]   LocalizationCall: Found
+2026-02-04T04:15:45.9449561Z [INFO]   JsonLoading: Found
+2026-02-04T04:15:45.9458682Z [INFO]   Get-LocalizationKey: Working correctly
+2026-02-04T04:15:45.9467062Z [INFO]   DotSourceMappings: Missing
+2026-02-04T04:15:45.9476038Z [INFO]   ElementPropertySetting: Found
+2026-02-04T04:15:45.9484513Z [INFO] XAMLELEMENTACCESS:
+2026-02-04T04:15:45.9493177Z [INFO]   No issues found
+2026-02-04T04:15:45.9501894Z [INFO] ElementAnalysis :
+2026-02-04T04:15:45.9510381Z [INFO]   MainWindow.xaml: System.Collections.Hashtable
+2026-02-04T04:15:45.9519333Z [INFO]   ConfirmSaveChangesDialog.fragment.xaml: System.Collections.Hashtable
+2026-02-04T04:15:45.9527498Z [INFO] XamlFiles :
+2026-02-04T04:15:45.9536614Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\gui\ConfirmSaveChangesDialog.fragment.xaml
+2026-02-04T04:15:45.9545044Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\gui\MainWindow.xaml
+2026-02-04T04:15:45.9553393Z [INFO] JSONKEYVALIDATION:
+2026-02-04T04:15:45.9562221Z [INFO]   No issues found
+2026-02-04T04:15:45.9570702Z [INFO] FoundFiles :
+2026-02-04T04:15:45.9579595Z [INFO]   - D:\a\focus-game-deck\focus-game-deck\localization
+2026-02-04T04:15:45.9587923Z [INFO] KeyCoverage :
+2026-02-04T04:15:45.9596931Z [INFO]   zh-CN.json: System.Collections.Hashtable
+2026-02-04T04:15:45.9605294Z [INFO]   es.json: System.Collections.Hashtable
+2026-02-04T04:15:45.9614675Z [INFO]   fr.json: System.Collections.Hashtable
+2026-02-04T04:15:45.9623244Z [INFO]   id-ID.json: System.Collections.Hashtable
+2026-02-04T04:15:45.9631800Z [INFO]   pt-BR.json: System.Collections.Hashtable
+2026-02-04T04:15:45.9640581Z [INFO]   ja.json: System.Collections.Hashtable
+2026-02-04T04:15:45.9649074Z [INFO]   ru.json: System.Collections.Hashtable
+2026-02-04T04:15:45.9657843Z [INFO]   en.json: System.Collections.Hashtable
+2026-02-04T04:15:45.9712749Z [INFO] Detailed analysis saved to: D:\a\focus-game-deck\focus-game-deck\test\test-result-localization-diagnostic.json
+2026-02-04T04:15:45.9722380Z [INFO] [TEST RESULT] Total Issues: 0
+2026-02-04T04:15:45.9731117Z [INFO] [PASS] Localization integrity test passed with no issues
+2026-02-04T04:15:45.9742496Z [INFO] === Testing Mapping Table Integrity ===
+2026-02-04T04:15:45.9892959Z [INFO] === Validating JSON Key Structure ===
+2026-02-04T04:15:46.6157287Z [INFO] === Testing XAML Element Access ===
+2026-02-04T04:15:46.6394120Z [INFO] === Analyzing String Replacement Flow ===
+2026-02-04T04:15:46.8394786Z [INFO] === Assessing Modularization Impact ===
+2026-02-04T04:15:46.8507870Z [96m Context Overall Diagnostic Report[0m
+2026-02-04T04:15:46.8529054Z Total localization issues detected: 0
+2026-02-04T04:15:46.8572265Z [32m   [+] Should count total issues across all categories[0m[90m 5ms (3ms|2ms)[0m
+2026-02-04T04:15:46.8792458Z [95m
+2026-02-04T04:15:46.8851129Z [95mRunning tests from 'GUI.Wrapper.Tests.ps1'[0m
+2026-02-04T04:15:46.9053716Z [92mDescribing GUI Tests[0m
+2026-02-04T04:15:46.9064217Z [96m Context ConfigEditor Consistency[0m
+2026-02-04T04:15:46.9382776Z [32m   [+] should have all required UI element mappings[0m[90m 32ms (28ms|3ms)[0m
+2026-02-04T04:15:46.9447566Z [96m Context Element Mapping Completeness[0m
+2026-02-04T04:15:47.2159962Z [32m   [+] should have complete UI element mappings[0m[90m 270ms (268ms|2ms)[0m
+2026-02-04T04:15:47.2226776Z [96m Context ComboBox Localization[0m
+2026-02-04T04:15:47.3876857Z [32m   [+] should localize all ComboBox items correctly[0m[90m 163ms (161ms|2ms)[0m
+2026-02-04T04:15:47.3953285Z [96m Context Game Launcher Tab[0m
+2026-02-04T04:15:47.8104947Z [32m   [+] should pass game launcher tab functionality tests[0m[90m 414ms (412ms|2ms)[0m
+2026-02-04T04:15:47.8172461Z [96m Context Localization Integrity[0m
+2026-02-04T04:15:48.8153406Z Localization diagnostic found 0 issues
+2026-02-04T04:15:48.8193536Z [32m   [+] should pass localization diagnostic analysis[0m[90m 1s (999ms|2ms)[0m
+2026-02-04T04:15:48.8260531Z [96m Context ConfigEditor Debug Mode[0m
+2026-02-04T04:15:49.4330062Z [32m   [+] should initialize ConfigEditor without errors[0m[90m 606ms (603ms|2ms)[0m
+2026-02-04T04:15:49.4397537Z [96m Context JSON Formatting[0m
+2026-02-04T04:15:49.5003020Z [32m   [+] should maintain 4-space indentation in JSON files[0m[90m 59ms (57ms|2ms)[0m
+2026-02-04T04:15:49.5077321Z [96m Context Create Launchers Enhanced[0m
+2026-02-04T04:15:49.6202181Z [32m   [+] should pass launcher creation script tests[0m[90m 111ms (109ms|2ms)[0m
+2026-02-04T04:15:49.6444998Z [95m
+2026-02-04T04:15:49.6446948Z [95mRunning tests from 'Localization.Tests.ps1'[0m
+2026-02-04T04:15:49.6660768Z [92mDescribing Localization Functionality Tests[0m
+2026-02-04T04:15:49.6671448Z [96m Context File Structure[0m
+2026-02-04T04:15:49.7957563Z ##[error][-] should pass localization file structure validation 127ms (124ms|3ms)[0m
+2026-02-04T04:15:49.7968101Z ##[group]Message[0m
+2026-02-04T04:15:49.7982622Z Expected 0, because Localization file structure test should pass (exit code: 1), but got 1.[0m
+2026-02-04T04:15:49.7996866Z at $exitCode | Should -Be 0 -Because "Localization file structure test should pass (exit code: $exitCode)", D:\a\focus-game-deck\focus-game-deck\test\pester\Localization.Tests.ps1:38[0m
+2026-02-04T04:15:49.8009106Z at <ScriptBlock>, D:\a\focus-game-deck\focus-game-deck\test\pester\Localization.Tests.ps1:38[0m
+2026-02-04T04:15:49.8020889Z ##[endgroup]
+2026-02-04T04:15:50.0242313Z [97mTests completed in 41.39s[0m
+2026-02-04T04:15:50.0462490Z [97mTests Passed: 272, [0m[91mFailed: 3, [0m[93mSkipped: 2, [0m[90mInconclusive: 0, [0m[37m[0m[37mNotRun: 14[0m
+2026-02-04T04:15:50.5618980Z 
+2026-02-04T04:15:50.5628145Z [INFO] ========================================
+2026-02-04T04:15:50.5636710Z [INFO] Test Summary
+2026-02-04T04:15:50.5645291Z [INFO] ========================================
+2026-02-04T04:15:50.5662807Z [INFO] Total:   291
+2026-02-04T04:15:50.5679912Z [INFO] Passed:  272
+2026-02-04T04:15:50.5688550Z [INFO] Failed:  3
+2026-02-04T04:15:50.5705352Z [INFO] Skipped: 2
+2026-02-04T04:15:50.5714477Z [INFO] Duration: 41.3882579s
+2026-02-04T04:15:50.5718207Z 
+2026-02-04T04:15:50.5726885Z [INFO] Failed Tests:
+2026-02-04T04:15:50.5751524Z [INFO]   - Save-ConfigJson - File Operations.UTF-8 Without BOM.Should save file as UTF-8 without BOM
+2026-02-04T04:15:50.5760243Z [INFO]   - Core Functionality Tests.Character Encoding.should pass character encoding validation
+2026-02-04T04:15:50.5769094Z [INFO]   - Localization Functionality Tests.File Structure.should pass localization file structure validation
+2026-02-04T04:15:50.5777037Z [INFO] Test results: test/test-results.xml
+2026-02-04T04:15:50.5785338Z [INFO] ========================================
+2026-02-04T04:15:50.5789664Z 
+2026-02-04T04:15:50.9298418Z ##[error]Process completed with exit code 1.

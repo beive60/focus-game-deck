@@ -231,6 +231,8 @@ function Show-Help {
         Write-Host "Usage: $executionCommand [GameId|--config|--list|--help|--version]"
         Write-Host "Run without arguments to open the configuration editor."
     }
+    # Exit with success code for CI/CD testing
+    exit 0
 }
 
 <#
@@ -256,6 +258,9 @@ function Show-Version {
     } catch {
         Write-Host "Version information not available."
     }
+
+    # Exit with success code for CI/CD testing
+    exit 0
 }
 
 <#
@@ -274,7 +279,7 @@ function Show-GameList {
         if (-not (Test-Path $configPath)) {
             Write-Host "Configuration file not found: $configPath"
             Write-Host "Please run the configuration editor to set up your games."
-            return
+            exit 1
         }
 
         $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -289,7 +294,7 @@ function Show-GameList {
             } else {
                 Write-Host "No games are configured. Use --config to set up your games."
             }
-            return
+            exit 1
         }
 
         Write-Host ""
@@ -333,7 +338,11 @@ function Show-GameList {
 
     } catch {
         Write-Host "[ERROR] GameList: Failed to load game list - $_"
+        exit 1
     }
+
+    # Exit with success code for CI/CD testing
+    exit 0
 }
 
 <#
@@ -345,16 +354,19 @@ function Show-GameList {
     In development mode, launches the PowerShell script.
 #>
 function Start-ConfigEditor {
-    param(
-        [switch]$WithGameLauncher
-    )
-
     try {
         if ($isExecutable) {
             # Running as bundled executable - launch ConfigEditor.exe
             if (Test-Path $configEditorExe) {
                 Write-Host "[INFO] Starting Configuration Editor..."
-                & $configEditorExe
+                # Security: Use Start-Process for better process isolation and exit code handling
+                $process = Start-Process -FilePath $configEditorExe -Wait -PassThru
+                # Note: ConfigEditor is a GUI app - exit code handling is for logging purposes
+                # GUI apps typically close with exit code 0 on normal user close
+                if ($process.ExitCode -ne 0) {
+                    Write-Host "[WARNING] ConfigEditor: Process exited with code $($process.ExitCode)"
+                    # Don't propagate exit code for GUI app since user closed normally
+                }
             } else {
                 Write-Host "[ERROR] ConfigEditor.exe not found: $configEditorExe"
                 Write-Host "[INFO] Please ensure all executable files are in the same directory."
@@ -363,17 +375,19 @@ function Start-ConfigEditor {
         } else {
             # Running as script - launch ConfigEditor.ps1
             if (-not (Test-Path $configEditorPath)) {
-                Write-Host "Configuration editor not found: $configEditorPath"
-                return
+                Write-Host "[ERROR] ConfigEditor: Configuration editor not found: $configEditorPath"
+                exit 1
             }
 
-            Write-Host "Starting Focus Game Deck Configuration Editor..."
+            Write-Host "[INFO] Starting Focus Game Deck Configuration Editor..."
 
-            if ($WithGameLauncher) {
-                # Future: Pass parameter to enable game launcher tab by default
-                & powershell.exe -ExecutionPolicy Bypass -File $configEditorPath
-            } else {
-                & powershell.exe -ExecutionPolicy Bypass -File $configEditorPath
+            # Security: Use Start-Process for process isolation
+            $arguments = @("-ExecutionPolicy", "Bypass", "-File", $configEditorPath)
+            $process = Start-Process -FilePath "powershell.exe" -ArgumentList $arguments -Wait -PassThru
+
+            # Note: ConfigEditor is a GUI app - exit code handling is for logging purposes
+            if ($process.ExitCode -ne 0) {
+                Write-Host "[WARNING] ConfigEditor: Process exited with code $($process.ExitCode)"
             }
         }
 
@@ -398,6 +412,19 @@ function Start-Game {
     )
 
     try {
+        # Security: Validate GameId format to prevent injection attacks
+        # GameId should only contain alphanumeric characters, hyphens, and underscores
+        if ($GameId -notmatch '^[\w\-]+$') {
+            Write-Host "[ERROR] GameLauncher: Invalid GameId format - GameId can only contain letters, numbers, hyphens, and underscores"
+            exit 1
+        }
+
+        # Security: Limit GameId length to prevent buffer overflow attacks
+        if ($GameId.Length -gt 64) {
+            Write-Host "[ERROR] GameLauncher: GameId too long - Maximum length is 64 characters"
+            exit 1
+        }
+
         # Validate GameId exists in configuration
         $platformName = "platform"
         if (Test-Path $configPath) {
@@ -408,7 +435,7 @@ function Start-Game {
                 Write-LocalizedHost -Messages $msg -Key "cli_game_not_found" -Args @($GameId) -Default "Game ID '$GameId' not found in configuration." -Level "WARNING" -Component "GameLauncher"
                 $availableIds = ($config.games.PSObject.Properties.Name -join ', ')
                 Write-LocalizedHost -Messages $msg -Key "cli_available_games" -Args @($availableIds) -Default ("Available game IDs: {0}" -f $availableIds) -Level "INFO" -Component "GameLauncher"
-                return
+                exit 1
             }
             $platformName = if ($config.games.$GameId.platform) { $config.games.$GameId.platform } else { "standalone" }
         }
@@ -417,7 +444,12 @@ function Start-Game {
             # Running as bundled executable - launch Invoke-FocusGameDeck.exe
             if (Test-Path $gameLauncherExe) {
                 Write-LocalizedHost -Messages $msg -Key "cli_launching_game" -Args @($platformName) -Default ("Launching game via {0}" -f $platformName) -Level "INFO" -Component "GameLauncher"
-                & $gameLauncherExe -GameId $GameId
+                # Security: Use Start-Process for better process isolation and exit code handling
+                $process = Start-Process -FilePath $gameLauncherExe -ArgumentList "-GameId", $GameId -Wait -PassThru -NoNewWindow
+                if ($process.ExitCode -ne 0) {
+                    Write-Host "[ERROR] GameLauncher: Child process exited with error code $($process.ExitCode)"
+                    exit $process.ExitCode
+                }
             } else {
                 Write-LocalizedHost -Messages $msg -Key "missing_game_launcher_exe" -Args @($gameLauncherExe) -Default "Invoke-FocusGameDeck.exe not found: $gameLauncherExe" -Level "WARNING" -Component "GameLauncher"
                 Write-LocalizedHost -Messages $msg -Key "missing_game_launcher_hint" -Default "Please ensure all executable files are in the same directory." -Level "INFO" -Component "GameLauncher"
@@ -427,13 +459,17 @@ function Start-Game {
             # Running as script - launch Invoke-FocusGameDeck.ps1
             if (-not (Test-Path $gameLauncherPath)) {
                 Write-LocalizedHost -Messages $msg -Key "missing_game_launcher_script" -Args @($gameLauncherPath) -Default "Game launcher not found: $gameLauncherPath" -Level "WARNING" -Component "GameLauncher"
-                return
+                exit 1
             }
 
             Write-LocalizedHost -Messages $msg -Key "cli_launching_game" -Args @($platformName) -Default ("Launching game via {0}" -f $platformName) -Level "INFO" -Component "GameLauncher"
 
-            # Delegate to existing game launcher
+            # Security: Delegate to existing game launcher and capture exit code
             & $gameLauncherPath -GameId $GameId
+            if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+                Write-Host "[ERROR] GameLauncher: Child process exited with error code $LASTEXITCODE"
+                exit $LASTEXITCODE
+            }
         }
 
     } catch {
@@ -458,17 +494,17 @@ function Main {
         # Handle help and version first (these don't require config)
         if ($Help) {
             Show-Help
-            return
+            # Exit handled by Show-Help function
         }
 
         if ($Version) {
             Show-Version
-            return
+            # Exit handled by Show-Version function
         }
 
         if ($List) {
             Show-GameList
-            return
+            # Exit handled by Show-GameList function
         }
 
         # Handle game launch (GameId provided) - Check this first
@@ -497,7 +533,7 @@ function Main {
 
         # Handle config editor launch (explicit or no arguments)
         if ($Config -or [string]::IsNullOrWhiteSpace($GameId)) {
-            Start-ConfigEditor -WithGameLauncher
+            Start-ConfigEditor
             return
         }
 

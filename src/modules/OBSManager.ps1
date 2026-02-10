@@ -180,6 +180,20 @@ class OBSManager {
     [bool] StartReplayBuffer() {
         try {
             Write-LocalizedHost -Messages $this.Messages -Key "sending_replay_buffer_start" -Default "Sending StartReplayBuffer command to OBS..." -Level "INFO" -Component "OBSManager"
+
+            # Check WebSocket connection state
+            if (-not $this.WebSocket) {
+                Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_no_websocket" -Default "WebSocket is not initialized" -Level "WARNING" -Component "OBSManager"
+                return $false
+            }
+
+            if ($this.WebSocket.State -ne [System.Net.WebSockets.WebSocketState]::Open) {
+                Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_websocket_not_open" -Args @($this.WebSocket.State) -Default "WebSocket is not open (State: {0})" -Level "WARNING" -Component "OBSManager"
+                return $false
+            }
+
+            Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_websocket_connected" -Default "WebSocket connection verified" -Level "INFO" -Component "OBSManager"
+
             $requestId = [System.Guid]::NewGuid().ToString()
             $command = @{
                 op = 6
@@ -189,11 +203,21 @@ class OBSManager {
                 }
             }
 
+            Write-LocalizedHost -Messages $this.Messages -Key "sending_replay_buffer_command" -Args @($requestId) -Default "Sending StartReplayBuffer command (Request ID: {0})" -Level "INFO" -Component "OBSManager"
             $this.SendMessage($command)
 
             # Wait for response to verify success
+            Write-LocalizedHost -Messages $this.Messages -Key "waiting_replay_buffer_response" -Default "Waiting for OBS response..." -Level "INFO" -Component "OBSManager"
             $response = $this.ReceiveWebSocketResponse(5)
-            if ($response -and $response.op -eq 7) {
+
+            if (-not $response) {
+                Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_no_response" -Default "No response received for replay buffer start command" -Level "WARNING" -Component "OBSManager"
+                return $false
+            }
+
+            Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_response_received" -Args @($response.op) -Default "Response received (Op code: {0})" -Level "INFO" -Component "OBSManager"
+
+            if ($response.op -eq 7) {
                 if ($response.d.requestStatus.result) {
                     Write-LocalizedHost -Messages $this.Messages -Key "obs_replay_buffer_started" -Default "OBS replay buffer started" -Level "OK" -Component "OBSManager"
                     return $true
@@ -204,7 +228,7 @@ class OBSManager {
                     return $false
                 }
             } else {
-                Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_no_response" -Default "No response received for replay buffer start command" -Level "WARNING" -Component "OBSManager"
+                Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_unexpected_opcode" -Args @($response.op) -Default "Unexpected response op code: {0}" -Level "WARNING" -Component "OBSManager"
                 return $false
             }
         } catch {
@@ -216,6 +240,19 @@ class OBSManager {
     # Stop OBS Replay Buffer
     [bool] StopReplayBuffer() {
         try {
+            Write-LocalizedHost -Messages $this.Messages -Key "sending_replay_buffer_stop" -Default "Sending StopReplayBuffer command to OBS..." -Level "INFO" -Component "OBSManager"
+
+            # Check WebSocket connection state
+            if (-not $this.WebSocket) {
+                Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_stop_no_websocket" -Default "WebSocket is not initialized for stop command" -Level "WARNING" -Component "OBSManager"
+                return $false
+            }
+
+            if ($this.WebSocket.State -ne [System.Net.WebSockets.WebSocketState]::Open) {
+                Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_stop_websocket_not_open" -Args @($this.WebSocket.State) -Default "WebSocket is not open for stop command (State: {0})" -Level "WARNING" -Component "OBSManager"
+                return $false
+            }
+
             $requestId = [System.Guid]::NewGuid().ToString()
             $command = @{
                 op = 6
@@ -225,9 +262,27 @@ class OBSManager {
                 }
             }
 
+            Write-LocalizedHost -Messages $this.Messages -Key "sending_replay_buffer_stop_command" -Args @($requestId) -Default "Sending StopReplayBuffer command (Request ID: {0})" -Level "INFO" -Component "OBSManager"
             $this.SendMessage($command)
-            Write-LocalizedHost -Messages $this.Messages -Key "obs_replay_buffer_stopped" -Default "OBS replay buffer stopped" -Level "OK" -Component "OBSManager"
-            return $true
+
+            # Wait for response to verify success
+            Write-LocalizedHost -Messages $this.Messages -Key "waiting_replay_buffer_stop_response" -Default "Waiting for stop response..." -Level "INFO" -Component "OBSManager"
+            $response = $this.ReceiveWebSocketResponse(5)
+
+            if ($response -and $response.op -eq 7) {
+                if ($response.d.requestStatus.result) {
+                    Write-LocalizedHost -Messages $this.Messages -Key "obs_replay_buffer_stopped" -Default "OBS replay buffer stopped" -Level "OK" -Component "OBSManager"
+                    return $true
+                } else {
+                    $errorCode = if ($response.d.requestStatus.code) { $response.d.requestStatus.code } else { "Unknown" }
+                    $errorComment = if ($response.d.requestStatus.comment) { $response.d.requestStatus.comment } else { "No details" }
+                    Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_stop_failed_response" -Args @($errorCode, $errorComment) -Default "Replay buffer stop failed - Code: {0}, Details: {1}" -Level "WARNING" -Component "OBSManager"
+                    return $false
+                }
+            } else {
+                Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_stop_no_response" -Default "No response received for replay buffer stop command" -Level "WARNING" -Component "OBSManager"
+                return $false
+            }
         } catch {
             Write-LocalizedHost -Messages $this.Messages -Key "replay_buffer_stop_error" -Args @($_) -Default "Replay buffer stop error: {0}" -Level "WARNING" -Component "OBSManager"
             return $false
@@ -314,8 +369,92 @@ class OBSManager {
         return $null -ne (Get-Process -Name $procName -ErrorAction SilentlyContinue)
     }
 
+    # Stop OBS application gracefully via WebSocket API
+    [bool] StopOBS() {
+        if (-not $this.IsOBSRunning()) {
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_not_running" -Default "OBS is not running" -Level "INFO" -Component "OBSManager"
+            return $true
+        }
+
+        # Try graceful shutdown via WebSocket first
+        $gracefulShutdown = $false
+        try {
+            # Connect if not already connected
+            $wasConnected = $this.WebSocket -and $this.WebSocket.State -eq [System.Net.WebSockets.WebSocketState]::Open
+            if (-not $wasConnected) {
+                $connected = $this.Connect()
+                if (-not $connected) {
+                    Write-LocalizedHost -Messages $this.Messages -Key "obs_websocket_connect_failed_for_exit" -Default "Could not connect to OBS WebSocket for graceful exit, will attempt window close" -Level "WARNING" -Component "OBSManager"
+                }
+            }
+
+            if ($this.WebSocket -and $this.WebSocket.State -eq [System.Net.WebSockets.WebSocketState]::Open) {
+                Write-LocalizedHost -Messages $this.Messages -Key "sending_obs_exit_command" -Default "Sending ExitOBS command via WebSocket..." -Level "INFO" -Component "OBSManager"
+
+                $requestId = [System.Guid]::NewGuid().ToString()
+                $command = @{
+                    op = 6
+                    d = @{
+                        requestType = "ExitOBS"
+                        requestId = $requestId
+                    }
+                }
+
+                $this.SendMessage($command)
+
+                # Brief wait for OBS to process the exit command
+                Start-Sleep -Milliseconds 500
+
+                $gracefulShutdown = $true
+                Write-LocalizedHost -Messages $this.Messages -Key "obs_exit_command_sent" -Default "OBS exit command sent successfully" -Level "OK" -Component "OBSManager"
+            }
+        } catch {
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_websocket_exit_error" -Args @($_) -Default "WebSocket exit command error: {0}" -Level "WARNING" -Component "OBSManager"
+        }
+
+        # If WebSocket exit failed, try closing the window gracefully
+        if (-not $gracefulShutdown) {
+            try {
+                Write-LocalizedHost -Messages $this.Messages -Key "obs_attempting_window_close" -Default "Attempting to close OBS window gracefully..." -Level "INFO" -Component "OBSManager"
+
+                $procName = if ($this.Config.processName) { $this.Config.processName } else { "obs64" }
+                $obsProcess = Get-Process -Name $procName -ErrorAction SilentlyContinue
+
+                if ($obsProcess) {
+                    # CloseMainWindow sends WM_CLOSE which allows graceful shutdown
+                    $closed = $obsProcess.CloseMainWindow()
+                    if ($closed) {
+                        Write-LocalizedHost -Messages $this.Messages -Key "obs_window_close_requested" -Default "OBS window close requested" -Level "INFO" -Component "OBSManager"
+                    }
+                }
+            } catch {
+                Write-LocalizedHost -Messages $this.Messages -Key "obs_window_close_error" -Args @($_) -Default "Window close error: {0}" -Level "WARNING" -Component "OBSManager"
+            }
+        }
+
+        # Wait for OBS to exit gracefully
+        $retryCount = 0
+        $maxRetries = 15
+        $waitInterval = 1
+
+        Write-LocalizedHost -Messages $this.Messages -Key "waiting_obs_exit" -Default "Waiting for OBS to exit..." -Level "INFO" -Component "OBSManager"
+
+        while ($this.IsOBSRunning() -and ($retryCount -lt $maxRetries)) {
+            Start-Sleep -Seconds $waitInterval
+            $retryCount++
+        }
+
+        if (-not $this.IsOBSRunning()) {
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_stopped_gracefully" -Default "OBS stopped gracefully" -Level "OK" -Component "OBSManager"
+            return $true
+        } else {
+            Write-LocalizedHost -Messages $this.Messages -Key "obs_graceful_exit_timeout" -Args @(($maxRetries * $waitInterval)) -Default "OBS graceful exit timeout after {0} seconds" -Level "WARNING" -Component "OBSManager"
+            return $false
+        }
+    }
+
     # Start OBS application
-    [bool] StartOBS( ) {
+    [bool] StartOBS() {
 
         if ($this.IsOBSRunning()) {
             Write-LocalizedHost -Messages $this.Messages -Key "obs_already_running" -Default "OBS is already running" -Level "INFO" -Component "OBSManager"

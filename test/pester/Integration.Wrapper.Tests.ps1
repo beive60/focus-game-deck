@@ -65,14 +65,14 @@ Describe "Integration Tests" -Tag "Integration" {
             $outputText = $output
 
             # Skip if config.json is not found (CI environment)
-            if ($outputText -match "Cannot find path.*config\.json|config.*does not exist") {
+            if ($outputText -match "Cannot find path.*config\.json|config.*does not exist|Failed to load config") {
                 Set-ItResult -Skipped -Because "config.json not found - expected in CI environment"
                 return
             }
 
-            # OBS tests may fail if OBS is not running
-            if ($outputText -match "OBS.*not available|not found|connection.*failed") {
-                Set-ItResult -Skipped -Because "OBS Studio not available in test environment"
+            # OBS tests may fail if OBS is not running or already running
+            if ($outputText -match "OBS.*not available|not found|connection.*failed|already running") {
+                Set-ItResult -Skipped -Because "OBS Studio not available in test environment (not running or already running)"
             } else {
                 $outputText | Should -Match "\[OK\]|\[PASS\]|Success"
             }

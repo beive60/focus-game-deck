@@ -34,6 +34,7 @@ Tests are organized using a hierarchical tag system:
 
 | Tag | Description | Associated Domain |
 |-----|-------------|-------------------|
+| `Build` | Build system and ps2exe bundling tests | Core |
 | `Validation` | Configuration validation rules | Core |
 | `ValidationRules` | Specific validation rule functions | Core |
 | `Encoding` | Character encoding tests | Core |
@@ -64,6 +65,7 @@ Examples:
 
 | Test File | Tags | Executed in CI |
 |-----------|------|----------------|
+| Core.Build.Tests.ps1 | `Unit`, `Core`, `Build` | ✅ |
 | Core.CharacterEncoding.Tests.ps1 | `Unit`, `Core`, `Encoding` | ✅ |
 | Core.ConfigValidation.Tests.ps1 | `Unit`, `Core`, `Validation` | ✅ |
 | Core.LogRotation.Tests.ps1 | `Unit`, `Core`, `Logging` | ✅ |

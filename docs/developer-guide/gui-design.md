@@ -143,18 +143,55 @@ This application consists of a single window, with main functions switched throu
 * **Data Flow**:
   1. At startup, display values from `integrations.vtubeStudio` in `config.json` to corresponding controls.
 
-#### **2.8. Footer**
+#### **2.8. Footer and Save Behavior**
 
-* **`Save` Button**:
+##### **Auto-save + Manual Save Hybrid Model (Phase 1 - Implemented)**
+
+The configuration editor implements a hybrid save model that combines immediate in-memory updates with automatic file persistence:
+
+* **Immediate ConfigData Updates**:
+  * Game display name and managed app display name changes are immediately reflected in the in-memory ConfigData object
+  * TextChanged event handlers update ConfigData synchronously without file I/O
+  * UI synchronization occurs on tab switches (e.g., AppsToManagePanel updates with latest display names)
+  * Technical implementation uses PowerShell closures with explicit variable capture (`GetNewClosure()`)
+
+* **Automatic Save on Window Close**:
+  * When the window is closed, any pending changes are automatically saved to `config.json`
+  * No confirmation dialog is displayed during auto-save
+  * Validation is performed before saving; errors prevent window close and display user feedback
+
+* **Delete Operations**:
+  * Game and managed app deletion no longer requires confirmation dialogs
+  * Changes are immediately marked as modified in ConfigData
+  * Actual file persistence occurs on window close
+
+* **Event Handler Pattern**:
+  * TextChanged handlers are temporarily removed during programmatic data loading
+  * Re-registered in finally blocks to prevent null reference errors
+  * Captured window and state manager references before creating closures to ensure proper scope access
+
+* **`Save` Button (Manual Save)**:
   1. `Click` event fires.
   2. Retrieve current values from UI controls of all tabs.
   3. Create new PowerShell object with same hierarchical structure as `config.json` and store retrieved values.
   4. Convert created object to JSON string using `ConvertTo-Json`.
   5. According to `FR-05`, overwrite save to `../config/config.json` as a file.
   6. Display "Saved" confirmation message.
-* **`Close` Button**:
-  1. `Click` event fires.
-  2. Close window. Warning for unsaved changes is not implemented in v1.0 (future improvement item).
+  7. Clear modified flag in state manager.
+
+* **Phase 2 Features (Implemented)**:
+  * Auto-Backup Timer: Automatically saves to `.autosave` file every 60 seconds when HasUnsavedChanges is true
+  * Startup Recovery: On application startup, checks for `.autosave` file and prompts user with timestamp
+  * Lock File Management: Creates `.lock` file with current PID to prevent multiple instances
+  * PID Validation: Checks if lock file PID still exists, removes stale lock files automatically
+  * Clean Exit Cleanup: Stops timer, deletes `.autosave` and `.lock` files on normal window close
+  * Technical: Uses System.Timers.Timer with 60-second interval and proper event subscription cleanup
+
+* **Phase 3 Features (Implemented)**:
+  * Title Bar Indicator: Displays `(*)` prefix in window title when HasUnsavedChanges is true
+  * Keyboard Shortcut: Ctrl+S triggers manual save operation with validation
+  * Last Save Time Tracking: Records DateTime on each save with GetFormattedLastSaveTime() method
+  * Time Formatting: Human-readable display ("Just now", "X minutes ago", or full datetime stamp)
 
 #### **2.9. Security and Risk Management Requirements**
 

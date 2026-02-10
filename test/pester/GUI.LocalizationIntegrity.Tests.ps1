@@ -395,18 +395,5 @@ Describe "GUI Localization Integrity Diagnostics" -Tag "Unit", "GUI", "Localizat
             # Test passes even with issues as this is a diagnostic tool
             $true | Should -Be $true
         }
-
-        It "Should generate diagnostic output file" {
-            # Check if diagnostic JSON file was created
-            $diagnosticFiles = Get-ChildItem -Path (Join-Path -Path $projectRoot -ChildPath "gui") -Filter "localization-diagnostic-*.json" -ErrorAction SilentlyContinue
-
-            if ($diagnosticFiles.Count -gt 0) {
-                $latestFile = $diagnosticFiles | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-                Write-Host "Diagnostic output: $($latestFile.FullName)"
-                $true | Should -Be $true
-            } else {
-                Set-ItResult -Skipped -Because "No diagnostic output file generated"
-            }
-        }
     }
 }

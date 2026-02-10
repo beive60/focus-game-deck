@@ -435,7 +435,7 @@ Focus-Game-Deck.exe --config
    - Must run on Windows with ps2exe
 
 3. **Development**:
-   - Original scripts (Main-Router.ps1, Invoke-FocusGameDeck.ps1, ConfigEditor.ps1) still work for development
+   - Original scripts (Main.PS1, Invoke-FocusGameDeck.ps1, ConfigEditor.ps1) still work for development
    - Bundled versions only used for compilation
 
 ## ps2exe Coding Guidelines
@@ -559,7 +559,91 @@ $windowType = "System.Windows.Window" -as [type]
 
 **Note**: Even with explicit loading, string-based type resolution is still recommended to avoid parse-time errors.
 
-### 4. Testing for ps2exe Compatibility
+### 4. Background Job Limitations
+
+**Problem**: Background jobs (created with `Start-Job`) in ps2exe executables have **severely limited access** to modules and type resolution compared to the main process.
+
+**Example of the Issue**:
+
+```powershell
+# Main process - works fine
+$securePassword = ConvertTo-SecureString -String $encryptedString -Key $key
+# Successfully loads Microsoft.PowerShell.Security module
+
+# Background job in ps2exe - fails
+$job = Start-Job -ScriptBlock {
+    param($encryptedString, $key)
+    $securePassword = ConvertTo-SecureString -String $encryptedString -Key $key
+    # Error: ConvertTo-SecureString command was found but module could not be loaded
+}
+```
+
+**Attempted Approaches and Results**:
+
+1. **Module Import in Background Job**: Failed
+   ```powershell
+   Import-Module Microsoft.PowerShell.Security
+   $securePassword = ConvertTo-SecureString ...
+   # Error: Module could not be loaded
+   ```
+
+2. **String-Based Cmdlet Invocation**: Failed
+   ```powershell
+   $convertToSecureStringCmd = "ConvertTo-SecureString"
+   $securePassword = & $convertToSecureStringCmd -String $encryptedString -Key $key
+   # Error: Module still could not be loaded
+   ```
+
+3. **DPAPI Direct Decryption with String-Based Types**: Failed
+   ```powershell
+   $protectedDataType = "System.Security.Cryptography.ProtectedData" -as [type]
+   $bytes = $protectedDataType::Unprotect($encryptedBytes, $null, "CurrentUser")
+   # Error: Type resolution failed in background job context
+   ```
+
+4. **Complex Type Operations**: Generally Unreliable
+   - Even types that work in main process may fail in background jobs
+   - Assembly loading behavior differs between main and background contexts
+   - DPAPI operations particularly problematic (Windows-specific APIs)
+
+**Root Cause**:
+
+- ps2exe background jobs run in a **minimal PowerShell runtime environment**
+- Module paths and assembly loading contexts differ from the main process
+- Some cmdlets and .NET types are unavailable or unreliable
+- This is a fundamental limitation of how ps2exe extracts and runs background jobs
+
+**Best Practices**:
+
+1. **Minimize Complexity in Background Jobs**: Keep background job logic simple and avoid complex type operations
+2. **Pre-Process in Main Process**: Perform complex operations (encryption, type conversion, module-dependent operations) in the main process before starting the job
+3. **Pass Processed Data**: Pass simple data types (strings, numbers, basic objects) to background jobs
+4. **Avoid Module Dependencies**: Design background jobs to work without external modules when possible
+5. **Test in Executable Form**: Always test background job functionality in the compiled ps2exe executable, not just in script form
+
+**Pattern for Complex Operations**:
+
+```powershell
+# DON'T: Complex operation in background job
+$job = Start-Job -ScriptBlock {
+    param($encryptedData)
+    # Decrypt, transform, process - likely to fail in ps2exe
+    $decrypted = ComplexDecryption $encryptedData
+    ProcessData $decrypted
+}
+
+# DO: Pre-process in main process, pass simple data to job
+$decryptedData = ComplexDecryption $encryptedData  # Main process
+$job = Start-Job -ScriptBlock {
+    param($simpleData)
+    # Simple processing only - works reliably
+    ProcessData $simpleData
+} -ArgumentList $decryptedData
+```
+
+**Real-World Example**: The OBS replay buffer integration originally attempted DPAPI password decryption within a background job, which failed in ps2exe executables. The solution was to decrypt the password in the main process and pass the decrypted value to the background job.
+
+### 5. Testing for ps2exe Compatibility
 
 Always test code in both modes:
 
@@ -577,6 +661,7 @@ If code works in development but fails in the executable, check for:
 1. Double-quoted here-strings with runtime variables
 2. Direct type references to external assemblies
 3. Path assumptions (ps2exe extracts to flat temp directory)
+4. Complex operations in background jobs (module loading, type resolution)
 
 ## Compliance with Architecture Specification
 

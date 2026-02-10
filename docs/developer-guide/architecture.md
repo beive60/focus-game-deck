@@ -50,7 +50,7 @@ The new architecture bundles all code into three separate, signed executables us
 
 1. **Focus-Game-Deck.exe (Main Router)**
    - **Purpose**: Lightweight router that launches the correct sub-process based on user arguments
-   - **Source**: `src/Main-Router.ps1`
+   - **Source**: `src/Main.PS1`
    - **Responsibility**: Argument parsing, process delegation, user interface routing
    - **Size**: ~30-40 KB
    - **Console**: Visible console window for status messages
@@ -108,7 +108,7 @@ The Focus Game Deck architecture consists of five main layers, each serving dist
 
 #### 1. Multi-Executable Entry Points
 
-- **`src/Main-Router.ps1`** - Lightweight router compiled to Focus-Game-Deck.exe
+- **`src/Main.PS1`** - Lightweight router compiled to Focus-Game-Deck.exe
 - **`gui/ConfigEditor.ps1`** - GUI application compiled to ConfigEditor.exe
 - **`src/Invoke-FocusGameDeck.ps1`** - Game launcher compiled to Invoke-FocusGameDeck.exe
 - **Routing Logic**: Main router handles argument parsing and delegates to specialized executables
@@ -133,8 +133,148 @@ The Focus Game Deck architecture consists of five main layers, each serving dist
 - **Technology Stack**: PowerShell + WPF (XAML)
 - **Key Components**:
   - `ConfigEditor.ps1` - GUI logic with integrated game launcher
+  - `ConfigEditor.Events.ps1` - Event handlers and user interaction
+  - `ConfigEditor.State.ps1` - State management and change tracking
+  - `ConfigEditor.UI.ps1` - UI component management
+  - `ConfigEditor.Save.ps1` - Save operations for all configuration types
+  - `ConfigEditor.Localization.ps1` - Message handling and language support
+  - `ConfigEditor.JsonHelper.ps1` - JSON serialization/deserialization
+  - `ConfigEditor.Mappings.ps1` - UI element to message key mappings
   - `MainWindow.xaml` - UI layout definition
 - **Responsibility**: User configuration, game launcher interface, settings management
+
+##### ConfigEditor Module Architecture
+
+The ConfigEditor follows a modular design pattern with separation of concerns:
+
+**Module Loading Order**:
+
+1. `ConfigEditor.JsonHelper.ps1` - Utility functions for JSON operations
+2. `ConfigEditor.Mappings.ps1` - Data transformation and UI mappings
+3. `ConfigEditor.State.ps1` - State management with `HasUnsavedChanges` tracking
+4. `ConfigEditor.Localization.ps1` - Message handling and language detection
+5. `ConfigEditor.UI.ps1` - UI component initialization and rendering
+6. `ConfigEditor.Events.ps1` - Event handlers and user interaction logic
+7. `ConfigEditor.Save.ps1` - Aggregated save operations for all configuration types
+
+**Event Handler Pattern for Immediate Updates**:
+
+The ConfigEditor implements immediate in-memory updates for certain fields using PowerShell closures with explicit variable capture:
+
+```powershell
+# Capture references before creating closure
+$capturedWindow = $this.uiManager.Window
+$capturedStateManager = $this.stateManager
+
+# Create closure with GetNewClosure() to capture scope
+$textChangedHandler = {
+    # Access captured references
+    $selectedId = $capturedWindow.FindName("SomeList").SelectedValue
+    if ($selectedId) {
+        $configData.someField.$selectedId.property = $this.Text
+        $capturedStateManager.SetModified()
+    }
+}.GetNewClosure()
+
+# Register handler
+$textBox.add_TextChanged($textChangedHandler)
+
+# Store references for removal/re-registration
+$script:TextBoxReference = $textBox
+$script:TextChangedHandlerReference = $textChangedHandler
+```
+
+**Event Handler Timing Management**:
+
+To prevent null reference errors during programmatic data loading:
+
+```powershell
+# In HandleSelectionChanged methods:
+try {
+    # Temporarily remove handler during data load
+    if ($textBox -and $textChangedHandler) {
+        $textBox.remove_TextChanged($textChangedHandler)
+    }
+
+    # Load data into UI controls
+    $textBox.Text = $newValue
+
+} finally {
+    # Re-register handler after data load completes
+    if ($textBox -and $textChangedHandler) {
+        $textBox.add_TextChanged($textChangedHandler)
+    }
+}
+```
+
+**Key Technical Considerations**:
+
+- `GetNewClosure()` requires explicit local variable capture; `$script:` and `$this` references inside closures don't automatically capture outer scope
+- Event handlers must be removed before programmatic UI updates to prevent premature firing
+- `finally` blocks ensure handlers are always re-registered, even if errors occur during data loading
+- Captured references provide proper scope access within closures
+
+**WPF Timer Implementation**:
+
+When implementing timers in WPF applications with PowerShell, standard `System.Timers.Timer` with `Register-ObjectEvent` may not work reliably due to insufficient UI thread integration. Always use `System.Windows.Threading.DispatcherTimer`:
+
+```powershell
+# Not Recommended - May not execute in WPF context
+$timer = New-Object System.Timers.Timer
+$timer.Interval = 60000
+$timer.AutoReset = $true
+Register-ObjectEvent -InputObject $timer -EventName Elapsed -Action { ... }
+$timer.Start()
+
+# Recommended - Executes reliably on UI thread
+$timer = New-Object System.Windows.Threading.DispatcherTimer
+$timer.Interval = [TimeSpan]::FromSeconds(60)
+$capturedState = $this.stateManager  # Capture references
+$timer.Add_Tick({
+    param($sender, $e)
+    # Timer logic with captured references
+    if ($capturedState.HasUnsavedChanges) {
+        # Perform auto-save
+    }
+}.GetNewClosure())
+$timer.Start()
+
+# Cleanup
+$timer.Stop()  # No need for Unregister-Event
+```
+
+**DispatcherTimer Benefits**:
+
+- Automatically executes on UI thread (safe for UI updates)
+- Reliable event firing in WPF application context
+- Simple cleanup with `Stop()` method, no event subscription cleanup required
+- Better integration with WPF's threading model
+
+**Save Behavior (Hybrid Model - Phase 1 & 2 Implemented)**:
+
+The ConfigEditor implements an auto-save + manual save hybrid model:
+
+**Phase 1 Features (Completed)**:
+
+- **Immediate ConfigData Updates**: Game display names and managed app display names update ConfigData synchronously on TextChanged events
+- **UI Synchronization**: Tab switches trigger UI updates (e.g., AppsToManagePanel) with latest ConfigData values
+- **Auto-save on Close**: Window close automatically persists all changes to `config.json` without confirmation dialogs
+- **Delete Operations**: Game/app deletion marks changes as modified without confirmation dialogs
+- **Manual Save Button**: Explicit save with validation and user feedback, clears modified flag
+
+**Phase 2 Features (Completed)**:
+
+- **Auto-Backup Timer**: Saves to `.autosave` file every 60 seconds when changes exist
+- **Startup Recovery**: Detects `.autosave` file on startup, prompts user to restore (with timestamp)
+- **Lock File**: Prevents multiple instances via `.lock` file with PID tracking
+- **Clean Exit**: Deletes `.autosave` and `.lock` files on normal window close
+- **Timer Management**: Automatically stops backup timer and cleans up event subscriptions on exit
+
+**Phase 3 Features (Completed)**:
+
+- **Title Bar Indicator**: Displays `(*)` prefix when unsaved changes exist
+- **Keyboard Shortcut**: Ctrl+S triggers manual save with validation
+- **Last Save Time Tracking**: Records timestamp with human-readable formatting ("Just now", "X minutes ago", or full datetime)
 
 #### 5. Build & Distribution System
 
@@ -149,7 +289,7 @@ The Focus Game Deck architecture consists of five main layers, each serving dist
 
 | Component Type | Key Files | Primary Responsibility | Dependencies |
 |---------------|-----------|----------------------|--------------|
-| **Main Router** | `src/Main-Router.ps1` → `Focus-Game-Deck.exe` | Entry point routing and process delegation | ConfigEditor.exe, Invoke-FocusGameDeck.exe |
+| **Main Router** | `src/Main.PS1` → `Focus-Game-Deck.exe` | Entry point routing and process delegation | ConfigEditor.exe, Invoke-FocusGameDeck.exe |
 | **GUI Application** | `gui/ConfigEditor.ps1` → `ConfigEditor.exe` | Configuration editor, game management UI | XAML files, localization, configuration |
 | **Game Launcher** | `src/Invoke-FocusGameDeck.ps1` → `Invoke-FocusGameDeck.exe` | Game session automation | Configuration, modules |
 | **Module System** | `src/modules/*.ps1` | Specialized service management | External APIs (OBS, VTube Studio) |
@@ -291,10 +431,10 @@ For detailed build system information, see [Build System Documentation](build-sy
 
 **Technical Implementation:**
 
-- **Main Application**: `Focus-Game-Deck.exe` (console-based launcher)
-- **Multi-platform Version**: `Focus-Game-Deck-MultiPlatform.exe` (extended platform support)
-- **GUI Configuration**: `Focus-Game-Deck-Config-Editor.exe` (WPF-based, no console window)
-- **Automated Build Pipeline**: Three-tier build system (individual → integrated → master orchestration)
+- **Main Router**: `Focus-Game-Deck.exe` (lightweight entry point)
+- **Game Launcher**: `Invoke-FocusGameDeck.exe` (console-based game automation)
+- **GUI Configuration**: `ConfigEditor.exe` (WPF-based, no console window)
+- **Automated Build Pipeline**: SRP-based tool scripts orchestrated by Release-Manager.ps1
 
 #### 4. Digital Signature Strategy: Extended Validation Certificate
 
@@ -535,7 +675,7 @@ Focus Game Deck v3.0 Multi-Executable Architecture
                  ▼
      ┌───────────────────────────┐
      │  Focus-Game-Deck.exe      │ ← Main Router (30-40 KB)
-     │  (Main-Router.ps1)        │   - Argument parsing
+     │  (Main.PS1)               │   - Argument parsing
      │  - Digitally Signed       │   - Process delegation
      └─────────┬─────────────────┘   - User interface
                │
@@ -556,9 +696,9 @@ Focus Game Deck v3.0 Multi-Executable Architecture
 
 **Build Process Changes:**
 
-1. **New Entry Point**: Created `src/Main-Router.ps1` - lightweight router (replaces Main.PS1 as main executable)
+1. **Entry Point**: `src/Main.PS1` - lightweight router serving as the main entry point
 2. **Updated Build Script**: Modified `Build-FocusGameDeck.ps1` to build three executables:
-   - `Focus-Game-Deck.exe` from `Main-Router.ps1`
+   - `Focus-Game-Deck.exe` from `Main.PS1`
    - `ConfigEditor.exe` from `gui/ConfigEditor.ps1`
    - `Invoke-FocusGameDeck.exe` from `src/Invoke-FocusGameDeck.ps1`
 3. **Supporting Files**: All three executables share supporting files (config/, localization/, gui/, src/modules/)
@@ -595,6 +735,101 @@ Focus Game Deck v3.0 Multi-Executable Architecture
 **Design Decision Impact:**
 
 This architectural change directly addresses the security vulnerability identified in the original issue, demonstrating the project's commitment to "Security First" principles. The implementation provides a scalable foundation for future enhancements while maintaining the lightweight, user-friendly nature of the application.
+
+## Security Guidelines
+
+### 1. Command Injection Prevention
+
+**All user input must be validated before being passed to external processes:**
+
+```powershell
+# Security: Validate input format to prevent injection attacks
+# Input should only contain alphanumeric characters, hyphens, and underscores
+if ($UserInput -notmatch '^[\w\-]+$') {
+    Write-Host "[ERROR] Invalid input format"
+    exit 1
+}
+
+# Security: Limit input length to prevent buffer overflow attacks
+if ($UserInput.Length -gt 64) {
+    Write-Host "[ERROR] Input too long - Maximum length is 64 characters"
+    exit 1
+}
+```
+
+**Never embed user input directly in command strings:**
+
+```powershell
+# DANGEROUS - Command injection vulnerable
+Start-Process powershell.exe -ArgumentList "-Command", "Stop-Process -Name '$processName' -Force"
+
+# SAFE - Use EncodedCommand with base64 encoding and validate PID is numeric
+$targetProcess = Get-Process -Name $processName -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($targetProcess -and $targetProcess.Id -is [int] -and $targetProcess.Id -gt 0) {
+    $command = "Stop-Process -Id $($targetProcess.Id) -Force"
+    $encodedCommand = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($command))
+    Start-Process powershell.exe -ArgumentList "-EncodedCommand", $encodedCommand
+}
+```
+
+### 2. Process Exit Code Handling
+
+**Always capture and propagate exit codes from child processes:**
+
+```powershell
+# Using Start-Process with -Wait -PassThru for proper exit code handling
+$process = Start-Process -FilePath $ExecutablePath -ArgumentList $Args -Wait -PassThru
+if ($process.ExitCode -ne 0) {
+    Write-Host "[ERROR] Child process exited with error code $($process.ExitCode)"
+    exit $process.ExitCode
+}
+
+# When using call operator (&), check $LASTEXITCODE
+& $ScriptPath -Parameter $Value
+if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] Script exited with error code $LASTEXITCODE"
+    exit $LASTEXITCODE
+}
+```
+
+### 3. Sensitive Data Protection in Logs
+
+**The Logger module automatically sanitizes sensitive data:**
+
+- Passwords (password, passwd, pwd)
+- Tokens (token, auth_token, api_key, secret)
+- Authorization headers
+- Credentials
+
+**Example of sanitization:**
+
+```powershell
+# Input: "Connecting with password=secret123 to server"
+# Output in log: "Connecting with password=****REDACTED**** to server"
+```
+
+**Best practices for sensitive data:**
+
+```powershell
+# Use SecureString for password handling
+$securePassword = ConvertTo-SecureString -String $plainText -AsPlainText -Force
+
+# Never log raw passwords or tokens
+$logger.Info("Authentication successful for user: $username", "AUTH")  # OK
+$logger.Info("Using password: $password", "AUTH")  # NEVER DO THIS
+```
+
+### 4. Process Name Validation
+
+**Validate process names before using them in termination commands:**
+
+```powershell
+# Process names should only contain alphanumeric characters, hyphens, underscores, and dots
+if ($processName -notmatch '^[\w\-\.]+$') {
+    Write-Host "[ERROR] Invalid process name format"
+    return $false
+}
+```
 
 ## Implementation Guidelines
 
@@ -1020,6 +1255,7 @@ PowerShell's built-in `ConvertTo-Json` cmdlet has inconsistent indentation behav
 ```
 
 Issues with PowerShell's output:
+
 - Double space after colon
 - Indentation not a multiple of 4 spaces
 - Inconsistent nesting levels
@@ -1159,6 +1395,9 @@ To maintain this design philosophy, please prioritize the following:
 | 3.0.0 | 2025-11-13 | Multi-Executable Bundle Architecture: Security-first redesign with three separate signed executables (Main Router, ConfigEditor, Game Launcher) eliminating external unsigned script vulnerability, improving efficiency through process isolation, and establishing foundation for future extensibility |
 | 3.0.1 | 2025-11-15 | Build-Time Patching Unification: Refactored build system to use unified build-time patching approach for both ConfigEditor and Invoke-FocusGameDeck, eliminating duplicate -Bundled.ps1 files and improving maintainability through single-source architecture |
 | 3.0.2 | 2025-12-07 | Documentation Consolidation: Merged JSON formatting standards from json-formatting-fix.md into architecture.md Implementation Guidelines section for centralized technical documentation |
+| 3.1.0 | 2026-02-07 | ConfigEditor Save Behavior Enhancement (Phase 1): Implemented auto-save + manual save hybrid model with immediate in-memory ConfigData updates, auto-save on window close, removal of delete confirmation dialogs, and PowerShell closure pattern for event handlers with explicit variable capture |
+| 3.1.1 | 2026-02-07 | ConfigEditor Save Behavior Enhancement (Phase 2): Implemented auto-backup timer (60-second interval to .autosave file), startup recovery with user prompt, lock file management for multiple instance prevention with PID validation, and clean exit cleanup of temporary files |
+| 3.1.2 | 2026-02-07 | ConfigEditor Save Behavior Enhancement (Phase 3): Implemented UX enhancements including title bar unsaved changes indicator with (*) prefix, Ctrl+S keyboard shortcut for manual save, and last save time tracking with human-readable formatting |
 
 ---
 
