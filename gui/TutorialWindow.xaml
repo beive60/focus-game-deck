@@ -19,18 +19,18 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" 
-                Background="#2196F3" 
+        <Border Grid.Row="0"
+                Background="#2196F3"
                 Padding="20,15">
             <StackPanel>
-                <TextBlock 
+                <TextBlock
                     x:Name="TutorialTitle"
                     Text="[tutorialWelcomeTitle]"
                     FontSize="24"
                     FontWeight="Bold"
                     Foreground="White"
                     TextAlignment="Center"/>
-                <TextBlock 
+                <TextBlock
                     x:Name="TutorialSubtitle"
                     Text="[tutorialWelcomeSubtitle]"
                     FontSize="14"
@@ -42,7 +42,7 @@
         </Border>
 
         <!-- Content Area -->
-        <Border Grid.Row="1" 
+        <Border Grid.Row="1"
                 Padding="30,20"
                 Background="White">
             <Grid>
@@ -53,7 +53,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- Page indicator -->
-                <TextBlock 
+                <TextBlock
                     x:Name="PageIndicator"
                     Grid.Row="0"
                     Text="1 / 5"
@@ -63,12 +63,13 @@
                     Margin="0,0,0,10"/>
 
                 <!-- Image and description container -->
-                <ScrollViewer Grid.Row="1"
-                             VerticalScrollBarVisibility="Auto"
-                             HorizontalScrollBarVisibility="Disabled">
+                <ScrollViewer x:Name="ContentScrollViewer"
+                              Grid.Row="1"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
                     <StackPanel>
                         <!-- Screenshot image -->
-                        <Border 
+                        <Border
                             x:Name="ScreenshotBorder"
                             BorderBrush="#DDD"
                             BorderThickness="1"
@@ -76,14 +77,14 @@
                             Margin="0,0,0,20"
                             HorizontalAlignment="Center"
                             MaxWidth="700">
-                            <Image 
+                            <Image
                                 x:Name="TutorialImage"
                                 Stretch="Uniform"
                                 MaxHeight="350"/>
                         </Border>
 
                         <!-- Description text -->
-                        <TextBlock 
+                        <TextBlock
                             x:Name="TutorialDescription"
                             Text="[tutorialDescriptionPlaceholder]"
                             FontSize="14"
@@ -96,15 +97,15 @@
 
                 <!-- Link to documentation -->
                 <StackPanel Grid.Row="2"
-                           Orientation="Horizontal"
-                           HorizontalAlignment="Center"
-                           Margin="0,15,0,0">
-                    <TextBlock 
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            Margin="0,15,0,0">
+                    <TextBlock
                         Text="[tutorialMoreInfo]"
                         FontSize="12"
                         Foreground="#666"
                         VerticalAlignment="Center"/>
-                    <TextBlock 
+                    <TextBlock
                         x:Name="DocumentationLink"
                         Text="[tutorialDocumentationLink]"
                         FontSize="12"
@@ -118,7 +119,7 @@
         </Border>
 
         <!-- Navigation buttons -->
-        <Border Grid.Row="2" 
+        <Border Grid.Row="2"
                 Background="#F5F5F5"
                 BorderBrush="#DDD"
                 BorderThickness="0,1,0,0"
@@ -131,7 +132,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Skip button (left) -->
-                <Button 
+                <Button
                     x:Name="SkipButton"
                     Content="[tutorialSkipButton]"
                     Width="100"
@@ -141,16 +142,16 @@
 
                 <!-- Back and Next buttons (center) -->
                 <StackPanel Grid.Column="1"
-                           Orientation="Horizontal"
-                           HorizontalAlignment="Center">
-                    <Button 
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center">
+                    <Button
                         x:Name="BackButton"
                         Content="[tutorialBackButton]"
                         Width="100"
                         Height="36"
                         Margin="0,0,10,0"
                         FontSize="13"/>
-                    <Button 
+                    <Button
                         x:Name="NextButton"
                         Content="[tutorialNextButton]"
                         Width="100"

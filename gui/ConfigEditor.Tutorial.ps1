@@ -59,7 +59,7 @@ class TutorialManager {
         try {
             # Load XAML content
             $xamlContent = $null
-            
+
             # Check if embedded XAML variable exists (production/bundled mode)
             if ($Global:Xaml_TutorialWindow) {
                 Write-Verbose "Loading tutorial XAML from embedded resource"
@@ -68,14 +68,14 @@ class TutorialManager {
                 # Fallback to file-based loading (development mode)
                 Write-Verbose "Loading tutorial XAML from file (development mode)"
                 $xamlPath = Join-Path -Path $this.AppRoot -ChildPath "gui/TutorialWindow.xaml"
-                
+
                 if (-not (Test-Path $xamlPath)) {
                     throw "Tutorial XAML file not found: $xamlPath"
                 }
-                
+
                 $xamlContent = Get-Content -Path $xamlPath -Raw -Encoding UTF8
             }
-            
+
             if ([string]::IsNullOrWhiteSpace($xamlContent)) {
                 throw "Tutorial XAML content is empty or null"
             }
@@ -87,7 +87,7 @@ class TutorialManager {
             $xmlReaderType = "System.Xml.XmlReader" -as [type]
             $stringReaderType = "System.IO.StringReader" -as [type]
             $xamlReaderType = "System.Windows.Markup.XamlReader" -as [type]
-            
+
             $stringReader = $stringReaderType::new($xamlContent)
             $reader = $xmlReaderType::Create($stringReader)
             $this.Window = $xamlReaderType::Load($reader)
@@ -99,14 +99,14 @@ class TutorialManager {
             $this.Controls.TutorialDescription = $this.Window.FindName("TutorialDescription")
             $this.Controls.TutorialImage = $this.Window.FindName("TutorialImage")
             $this.Controls.PageIndicator = $this.Window.FindName("PageIndicator")
+            $this.Controls.ContentScrollViewer = $this.Window.FindName("ContentScrollViewer")
             $this.Controls.BackButton = $this.Window.FindName("BackButton")
             $this.Controls.NextButton = $this.Window.FindName("NextButton")
             $this.Controls.SkipButton = $this.Window.FindName("SkipButton")
             $this.Controls.DocumentationLink = $this.Window.FindName("DocumentationLink")
 
             Write-Verbose "Tutorial window loaded successfully"
-        }
-        catch {
+        } catch {
             Write-Error "Failed to load tutorial window: $_"
             throw
         }
@@ -142,8 +142,8 @@ class TutorialManager {
                 return $messages.$key
             }
             return "[$key]"
-        }
-        catch {
+        } catch {
+            Write-Verbose "GetLocalizedMessage error for key '$key': $_"
             return "[$key]"
         }
     }
@@ -153,24 +153,24 @@ class TutorialManager {
 
         # Back button
         $this.Controls.BackButton.add_Click({
-            $self.NavigateBack()
-        }.GetNewClosure())
+                $self.NavigateBack()
+            }.GetNewClosure())
 
         # Next button
         $this.Controls.NextButton.add_Click({
-            $self.NavigateNext()
-        }.GetNewClosure())
+                $self.NavigateNext()
+            }.GetNewClosure())
 
         # Skip button
         $this.Controls.SkipButton.add_Click({
-            $self.SkipTutorial()
-        }.GetNewClosure())
+                $self.SkipTutorial()
+            }.GetNewClosure())
 
         # Documentation link
         if ($this.Controls.DocumentationLink) {
             $this.Controls.DocumentationLink.add_MouseLeftButtonUp({
-                $self.OpenDocumentation()
-            }.GetNewClosure())
+                    $self.OpenDocumentation()
+                }.GetNewClosure())
         }
     }
 
@@ -185,8 +185,7 @@ class TutorialManager {
         if ($this.CurrentPage -lt ($this.TutorialPages.Count - 1)) {
             $this.CurrentPage++
             $this.UpdatePage()
-        }
-        else {
+        } else {
             # Last page - close tutorial
             $this.CompleteTutorial()
         }
@@ -206,6 +205,11 @@ class TutorialManager {
 
     [void]UpdatePage() {
         $currentPageData = $this.TutorialPages[$this.CurrentPage]
+
+        # Reset scroll position to top
+        if ($this.Controls.ContentScrollViewer) {
+            $this.Controls.ContentScrollViewer.ScrollToTop()
+        }
 
         # Update title
         $this.Controls.TutorialTitle.Text = $this.GetLocalizedMessage($currentPageData.TitleKey)
@@ -227,8 +231,7 @@ class TutorialManager {
         # Update Next button text for last page
         if ($this.CurrentPage -eq ($this.TutorialPages.Count - 1)) {
             $this.Controls.NextButton.Content = $this.GetLocalizedMessage("tutorialFinishButton")
-        }
-        else {
+        } else {
             $this.Controls.NextButton.Content = $this.GetLocalizedMessage("tutorialNextButton")
         }
     }
@@ -241,10 +244,10 @@ class TutorialManager {
             $uriKindType = "System.UriKind" -as [type]
             $bitmapCacheOptionType = "System.Windows.Media.Imaging.BitmapCacheOption" -as [type]
             $visibilityType = "System.Windows.Visibility" -as [type]
-            
+
             # Try to load image from assets/tutorial directory
             $imagePath = Join-Path -Path $this.AppRoot -ChildPath "assets/tutorial/$imageName"
-            
+
             if (Test-Path $imagePath) {
                 $bitmap = $bitmapImageType::new()
                 $bitmap.BeginInit()
@@ -252,18 +255,16 @@ class TutorialManager {
                 $bitmap.CacheOption = $bitmapCacheOptionType::OnLoad
                 $bitmap.EndInit()
                 $bitmap.Freeze()
-                
+
                 $this.Controls.TutorialImage.Source = $bitmap
                 $this.Controls.TutorialImage.Visibility = $visibilityType::Visible
                 Write-Verbose "Loaded tutorial image: $imagePath"
-            }
-            else {
+            } else {
                 # Hide image if not found
                 $this.Controls.TutorialImage.Visibility = $visibilityType::Collapsed
                 Write-Verbose "Tutorial image not found: $imagePath"
             }
-        }
-        catch {
+        } catch {
             Write-Warning "Failed to load tutorial image: $_"
             # Use string-based type resolution for error handling
             $visibilityType = "System.Windows.Visibility" -as [type]
@@ -275,8 +276,7 @@ class TutorialManager {
         try {
             $url = "https://github.com/beive60/focus-game-deck/blob/main/README.md"
             Start-Process $url
-        }
-        catch {
+        } catch {
             Write-Warning "Failed to open documentation: $_"
         }
     }
@@ -287,11 +287,10 @@ class TutorialManager {
             $this.RegisterEventHandlers()
             $this.CurrentPage = 0
             $this.UpdatePage()
-            
+
             $result = $this.Window.ShowDialog()
             return [bool]$result
-        }
-        catch {
+        } catch {
             Write-Error "Failed to show tutorial: $_"
             return $false
         }
@@ -307,13 +306,12 @@ function Test-TutorialCompleted {
 
     try {
         # Check if globalSettings exists and has hasCompletedTutorial flag
-        if ($ConfigData.PSObject.Properties['globalSettings'] -and 
+        if ($ConfigData.PSObject.Properties['globalSettings'] -and
             $ConfigData.globalSettings.PSObject.Properties['hasCompletedTutorial']) {
             return [bool]$ConfigData.globalSettings.hasCompletedTutorial
         }
         return $false
-    }
-    catch {
+    } catch {
         Write-Verbose "Error checking tutorial completion status: $_"
         return $false
     }
@@ -335,15 +333,13 @@ function Set-TutorialCompleted {
         # Add or update hasCompletedTutorial flag
         if ($ConfigData.globalSettings.PSObject.Properties['hasCompletedTutorial']) {
             $ConfigData.globalSettings.hasCompletedTutorial = $true
-        }
-        else {
+        } else {
             $ConfigData.globalSettings | Add-Member -MemberType NoteProperty -Name 'hasCompletedTutorial' -Value $true
         }
 
         Write-Verbose "Marked tutorial as completed in configuration"
         return $true
-    }
-    catch {
+    } catch {
         Write-Warning "Failed to mark tutorial as completed: $_"
         return $false
     }
@@ -354,7 +350,7 @@ function Show-Tutorial {
     param(
         [Parameter(Mandatory = $true)]
         [Object]$Localization,
-        
+
         [Parameter(Mandatory = $true)]
         [string]$AppRoot
     )
@@ -365,8 +361,7 @@ function Show-Tutorial {
         $result = $tutorialManager.Show()
         Write-Verbose "Tutorial completed: $result"
         return $result
-    }
-    catch {
+    } catch {
         Write-Error "Failed to show tutorial: $_"
         return $false
     }
