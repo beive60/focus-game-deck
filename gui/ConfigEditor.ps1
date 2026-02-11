@@ -505,6 +505,10 @@ function Initialize-ConfigEditor {
                 Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Save.ps1"
                 . (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.Save.ps1")
                 Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Save.ps1"
+
+                Write-Verbose "[DEBUG] ConfigEditor: Dot-sourcing module - gui/ConfigEditor.Tutorial.ps1"
+                . (Join-Path -Path $script:appRoot -ChildPath "gui/ConfigEditor.Tutorial.ps1")
+                Write-Verbose "[OK] ConfigEditor: Module Loaded: ConfigEditor.Tutorial.ps1"
             } catch {
                 # The error record ($_) from a dot-sourcing failure contains details
                 # about the file that could not be loaded.
@@ -755,6 +759,38 @@ function Initialize-ConfigEditor {
         # Mark initialization as complete - event handlers can now process user changes
         $script:IsInitializationComplete = $true
         Write-Verbose "[OK] ConfigEditor: Initialization completed - UI is ready for user interaction"
+
+        # Step 10.5: Check if tutorial should be shown (first run)
+        if (-not $Headless -and -not (Test-TutorialCompleted -ConfigData $stateManager.ConfigData)) {
+            Write-Verbose "[INFO] ConfigEditor: First run detected - showing tutorial"
+            try {
+                $tutorialCompleted = Show-Tutorial -Localization $script:Localization -AppRoot $script:appRoot
+                
+                if ($tutorialCompleted) {
+                    Write-Verbose "[INFO] ConfigEditor: Tutorial completed - marking as completed"
+                    Set-TutorialCompleted -ConfigData $stateManager.ConfigData
+                    
+                    # Save the updated configuration with tutorial completion flag
+                    try {
+                        $stateManager.SaveConfiguration()
+                        Write-Verbose "[OK] ConfigEditor: Configuration saved with tutorial completion flag"
+                    }
+                    catch {
+                        Write-Warning "Failed to save tutorial completion status: $_"
+                    }
+                }
+                else {
+                    Write-Verbose "[INFO] ConfigEditor: Tutorial was skipped - will show again on next launch"
+                }
+            }
+            catch {
+                Write-Warning "Failed to show tutorial: $_"
+                # Continue to main window even if tutorial fails
+            }
+        }
+        else {
+            Write-Verbose "[INFO] ConfigEditor: Tutorial already completed or headless mode - skipping tutorial"
+        }
 
         # Step 11: Show window
         # Create a local reference to the window object
