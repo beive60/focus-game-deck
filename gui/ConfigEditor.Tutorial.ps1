@@ -117,18 +117,29 @@ class TutorialManager {
         # Pattern matches camelCase keys inside square brackets
         $pattern = '\[([a-zA-Z][a-zA-Z0-9_]*)\]'
         $xaml = [regex]::Replace($xaml, $pattern, {
-            param($match)
-            $key = $match.Groups[1].Value
-            $localizedText = $this.GetLocalizedMessage($key)
-            return $localizedText
-        })
+                param($match)
+                $key = $match.Groups[1].Value
+                $localizedText = $this.GetLocalizedMessage($key)
+                return $localizedText
+            })
         return $xaml
     }
 
     [string]GetLocalizedMessage([string]$key) {
         try {
-            if ($this.Localization -and $this.Localization.PSObject.Properties[$key]) {
-                return $this.Localization.$key
+            # ConfigEditorLocalization has a Messages property
+            $messages = $null
+            if ($this.Localization -is [ConfigEditorLocalization]) {
+                $messages = $this.Localization.Messages
+            } elseif ($this.Localization.PSObject.Properties['Messages']) {
+                $messages = $this.Localization.Messages
+            } else {
+                # Assume it's the messages object directly
+                $messages = $this.Localization
+            }
+
+            if ($messages -and $messages.PSObject.Properties[$key]) {
+                return $messages.$key
             }
             return "[$key]"
         }
