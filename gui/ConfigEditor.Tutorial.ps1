@@ -244,25 +244,55 @@ class TutorialManager {
             $uriKindType = "System.UriKind" -as [type]
             $bitmapCacheOptionType = "System.Windows.Media.Imaging.BitmapCacheOption" -as [type]
             $visibilityType = "System.Windows.Visibility" -as [type]
+            $memoryStreamType = "System.IO.MemoryStream" -as [type]
 
-            # Try to load image from assets/tutorial directory
-            $imagePath = Join-Path -Path $this.AppRoot -ChildPath "assets/tutorial/$imageName"
+            # Try to load from embedded Base64 first (production/bundled mode)
+            $baseName = [System.IO.Path]::GetFileNameWithoutExtension($imageName)
+            $baseName = $baseName -replace '[^a-zA-Z0-9_]', '_'
+            $variableName = "TutorialImage_$baseName"
 
-            if (Test-Path $imagePath) {
+            $base64String = Get-Variable -Name $variableName -Scope Global -ValueOnly -ErrorAction SilentlyContinue
+
+            if (-not [string]::IsNullOrWhiteSpace($base64String)) {
+                # Load from embedded Base64
+                Write-Verbose "Loading tutorial image from embedded Base64: $variableName"
+
+                $imageBytes = [Convert]::FromBase64String($base64String)
+                $memoryStream = $memoryStreamType::new($imageBytes)
+
                 $bitmap = $bitmapImageType::new()
                 $bitmap.BeginInit()
-                $bitmap.UriSource = $uriType::new($imagePath, $uriKindType::Absolute)
                 $bitmap.CacheOption = $bitmapCacheOptionType::OnLoad
+                $bitmap.StreamSource = $memoryStream
                 $bitmap.EndInit()
                 $bitmap.Freeze()
 
+                $memoryStream.Close()
+                $memoryStream.Dispose()
+
                 $this.Controls.TutorialImage.Source = $bitmap
                 $this.Controls.TutorialImage.Visibility = $visibilityType::Visible
-                Write-Verbose "Loaded tutorial image: $imagePath"
+                Write-Verbose "Loaded tutorial image from embedded Base64: $imageName"
             } else {
-                # Hide image if not found
-                $this.Controls.TutorialImage.Visibility = $visibilityType::Collapsed
-                Write-Verbose "Tutorial image not found: $imagePath"
+                # Fallback: Try to load image from assets/tutorial directory (development mode)
+                $imagePath = Join-Path -Path $this.AppRoot -ChildPath "assets/tutorial/$imageName"
+
+                if (Test-Path $imagePath) {
+                    $bitmap = $bitmapImageType::new()
+                    $bitmap.BeginInit()
+                    $bitmap.UriSource = $uriType::new($imagePath, $uriKindType::Absolute)
+                    $bitmap.CacheOption = $bitmapCacheOptionType::OnLoad
+                    $bitmap.EndInit()
+                    $bitmap.Freeze()
+
+                    $this.Controls.TutorialImage.Source = $bitmap
+                    $this.Controls.TutorialImage.Visibility = $visibilityType::Visible
+                    Write-Verbose "Loaded tutorial image from file: $imagePath"
+                } else {
+                    # Hide image if not found
+                    $this.Controls.TutorialImage.Visibility = $visibilityType::Collapsed
+                    Write-Verbose "Tutorial image not found: $imageName (not embedded and file doesn't exist)"
+                }
             }
         } catch {
             Write-Warning "Failed to load tutorial image: $_"

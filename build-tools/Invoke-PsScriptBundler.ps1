@@ -220,6 +220,16 @@ function New-BundledScript {
             # Add at the beginning so XAML variables are available before UI initialization
             $dependencies = @($xamlResourcesPath) + $dependencies
         }
+
+        # Auto-include TutorialImageResources.ps1 for GUI applications with tutorial system
+        $tutorialImageResourcesPath = Join-Path -Path $ProjectRoot -ChildPath "build-tools/build/TutorialImageResources.ps1"
+
+        if ((Test-Path $tutorialImageResourcesPath) -and -not ($dependencies -contains $tutorialImageResourcesPath)) {
+            $relativePath = $tutorialImageResourcesPath.Replace($ProjectRoot + [IO.Path]::DirectorySeparatorChar, "") -replace "\\", "/"
+            Write-BundlerMessage "Auto-including TutorialImageResources.ps1 for GUI application from $relativePath" "INFO"
+            # Add after XamlResources so image variables are available for tutorial
+            $dependencies = @($xamlResourcesPath) + @($tutorialImageResourcesPath) + ($dependencies | Where-Object { $_ -ne $xamlResourcesPath })
+        }
     }
 
     # Note: Launcher scripts are NOT auto-included for ConfigEditor

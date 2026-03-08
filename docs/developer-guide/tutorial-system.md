@@ -29,12 +29,14 @@ The tutorial system consists of the following components:
 
 The main class that manages the tutorial window and navigation.
 
-**Constructor:**
+Constructor:
+
 ```powershell
 TutorialManager([Object]$localization, [string]$appRoot)
 ```
 
-**Key Methods:**
+Key Methods:
+
 - `Show()` - Display the tutorial window and return completion status
 - `NavigateNext()` - Move to the next tutorial page
 - `NavigateBack()` - Move to the previous tutorial page
@@ -43,22 +45,28 @@ TutorialManager([Object]$localization, [string]$appRoot)
 
 #### Helper Functions
 
-**`Test-TutorialCompleted`**
+`Test-TutorialCompleted`
+
 ```powershell
 Test-TutorialCompleted -ConfigData $configData
 ```
+
 Checks if the tutorial has been completed by looking for the `hasCompletedTutorial` flag in `config.json`.
 
-**`Set-TutorialCompleted`**
+`Set-TutorialCompleted`
+
 ```powershell
 Set-TutorialCompleted -ConfigData $configData
 ```
+
 Marks the tutorial as completed in the configuration data.
 
-**`Show-Tutorial`**
+`Show-Tutorial`
+
 ```powershell
 Show-Tutorial -Localization $localization -AppRoot $appRoot
 ```
+
 Shows the tutorial window and returns whether it was completed.
 
 ## Tutorial Pages
@@ -107,12 +115,46 @@ Tutorial screenshots should be placed in `assets/tutorial/` with the following n
 - `tutorial-obs-integration.png` - OBS integration setup
 - `tutorial-game-launching.png` - Game launching demonstration
 
-**Image Requirements:**
-- Format: PNG
-- Recommended size: 1200x800 pixels or similar aspect ratio
-- File size: Keep under 500KB per image
+Image Requirements:
 
-If images are not present, the tutorial will still function but won't display screenshots.
+## Screenshot Images
+
+Tutorial screenshots are stored in `assets/tutorial/` with the following names:
+
+- `tutorial-welcome.png` - Welcome/overview
+- `tutorial-game-registration.png` - Game registration interface
+- `tutorial-app-registration.png` - Managed apps configuration
+- `tutorial-obs-integration.png` - OBS integration setup
+- `tutorial-game-launching.png` - Game launching demonstration
+
+Image Requirements:
+
+- Format: PNG (or JPG/JPEG/GIF)
+- Recommended size: 1200x800 pixels or similar aspect ratio
+- File size: Keep under 500KB per image for optimal bundling
+
+### Image Embedding (Production Builds)
+
+Images are automatically embedded as Base64 strings in production builds to eliminate external file dependencies:
+
+- `Embed-TutorialImages.ps1` converts images to Base64-encoded variables
+- Variables are named `$Global:TutorialImage_<filename>` (e.g., `$Global:TutorialImage_tutorial_welcome`)
+- Embedded images are automatically included in bundled executables
+- The tutorial system prioritizes embedded images over file-based loading
+
+### Development vs. Production
+
+**Development Mode** (running from source):
+- Images loaded directly from `assets/tutorial/*.png` files
+- No embedding required for development/testing
+- Changes to images are immediately visible
+
+**Production Mode** (compiled executable):
+- Images loaded from embedded Base64 strings
+- No external image files needed in distribution
+- Requires rebuild when images are updated
+
+If embedded images are not available, the tutorial will gracefully fall back to file-based loading (if files exist) or hide images if neither source is available.
 
 ## Integration Flow
 
@@ -134,6 +176,7 @@ Run the test suite to verify tutorial functionality:
 ```
 
 This tests:
+
 - Tutorial module loading
 - XAML validation
 - Localization key presence
@@ -142,11 +185,53 @@ This tests:
 
 ## Build System Integration
 
-The tutorial XAML is automatically included in the build process:
+The tutorial system is automatically integrated into the build process:
+
+### XAML Embedding
 
 - `Embed-XamlResources.ps1` automatically embeds `TutorialWindow.xaml` as `$Global:Xaml_TutorialWindow`
-- `Invoke-PsScriptBundler.ps1` bundles the tutorial module with ConfigEditor
-- Tutorial assets directory is included in distribution packages
+- Tutorial XAML is bundled with ConfigEditor for production builds
+- No external XAML file dependency in distribution
+
+### Image Embedding
+
+- `Embed-TutorialImages.ps1` converts all images in `assets/tutorial/` to Base64 strings
+- Images are embedded as `$Global:TutorialImage_<filename>` variables
+- Output written to `build-tools/build/TutorialImageResources.ps1`
+- Automatically included in ConfigEditor bundling via `Invoke-PsScriptBundler.ps1`
+
+### Build Workflow
+
+The build system (`Release-Manager.ps1`) executes the following steps:
+
+1. **Generate XAML Resources**: `Embed-XamlResources.ps1` embeds all XAML files
+2. **Generate Tutorial Images**: `Embed-TutorialImages.ps1` embeds all tutorial images
+3. **Bundle Scripts**: `Invoke-PsScriptBundler.ps1` auto-includes:
+   - `XamlResources.ps1` (XAML variables)
+   - `TutorialImageResources.ps1` (image variables)
+   - `ConfigEditor.Tutorial.ps1` (tutorial logic)
+4. **Compile Executable**: `Build-Executables.ps1` compiles bundled scripts with ps2exe
+
+### Manual Build Commands
+
+```powershell
+# Generate embedded images
+./build-tools/Embed-TutorialImages.ps1
+
+# Complete development build (includes all embedding)
+./build-tools/Release-Manager.ps1 -Development
+
+# Production build (includes signing)
+./build-tools/Release-Manager.ps1 -Production
+```
+
+### Distribution Package
+
+The final distribution includes:
+
+- `ConfigEditor.exe` - Contains all embedded XAML, images, and tutorial code
+- `localization/*.json` - Localized tutorial text
+- No external image files required (embedded in executable)
 
 ## Future Enhancements
 
@@ -175,10 +260,22 @@ Potential improvements for the tutorial system:
 
 ### Images Not Displaying
 
+**In Development Mode:**
 - Verify images exist in `assets/tutorial/` directory
-- Check image file names match exactly (case-sensitive)
-- Ensure images are valid PNG format
-- Tutorial will continue to work without images
+- Check image file names match exactly (case-sensitive: `tutorial-welcome.png`, `tutorial-game-registration.png`, etc.)
+- Ensure images are valid PNG/JPG/GIF format
+- Check verbose output for file loading errors: `.\gui\ConfigEditor.ps1 -Verbose`
+
+**In Production Mode (Compiled Executable):**
+- Ensure `Embed-TutorialImages.ps1` was run during build
+- Verify `build-tools/build/TutorialImageResources.ps1` exists and contains Base64 data
+- Check that `Invoke-PsScriptBundler.ps1` included TutorialImageResources.ps1 in the bundle
+- Rebuild with verbose mode: `.\build-tools\Release-Manager.ps1 -Development -Verbose`
+
+**General:**
+- Tutorial gracefully degrades - it will continue to work without images
+- Check for runtime errors in logs or verbose output
+- If images are too large (>1MB), consider compression
 
 ## See Also
 
