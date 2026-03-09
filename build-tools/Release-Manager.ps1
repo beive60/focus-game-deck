@@ -236,13 +236,26 @@ function Build-AllExecutables {
 function Generate-XamlResources {
     Write-BuildLogWithTimestamp "Generating embedded XAML resources..." "INFO"
 
-    $embedScript = Join-Path $PSScriptRoot "Embed-XamlResources.ps1"
-    $outputPath = Join-Path $PSScriptRoot "build/XamlResources.ps1"
+    $embedScript = Join-Path -Path $PSScriptRoot -ChildPath "Embed-XamlResources.ps1"
+    $outputPath = Join-Path -Path $PSScriptRoot -ChildPath "build/XamlResources.ps1"
 
     $embedArgs = @("-OutputPath", $outputPath)
     if ($Verbose) { $embedArgs += "-Verbose" }
 
     return Invoke-BuildScript -ScriptPath $embedScript -Arguments $embedArgs -Description "Embedding XAML resources"
+}
+
+# Function to generate embedded tutorial images
+function Generate-TutorialImages {
+    Write-BuildLogWithTimestamp "Generating embedded tutorial images..." "INFO"
+
+    $embedScript = Join-Path -Path $PSScriptRoot -ChildPath "Embed-TutorialImages.ps1"
+    $outputPath = Join-Path -Path $PSScriptRoot -ChildPath "build/TutorialImageResources.ps1"
+
+    $embedArgs = @("-OutputPath", $outputPath)
+    if ($Verbose) { $embedArgs += "-Verbose" }
+
+    return Invoke-BuildScript -ScriptPath $embedScript -Arguments $embedArgs -Description "Embedding tutorial images"
 }
 
 # Function to sign all executables
@@ -559,17 +572,42 @@ try {
     # Development build workflow
     if ($Development) {
         Write-BuildLogWithTimestamp "Starting DEVELOPMENT build workflow" "INFO"
+        Write-Host ""
 
         # Step 1: Install dependencies
+        Write-BuildLogWithTimestamp "=== STEP 1/6: Install dependencies ===" "INFO"
         $success = Initialize-BuildEnvironment
+        if (-not $success) {
+            Write-BuildLogWithTimestamp "Build workflow FAILED at STEP 1: Install dependencies" "ERROR"
+            Write-BuildLogWithTimestamp "Remaining steps will be skipped" "WARNING"
+        }
+        Write-Host ""
 
         # Step 2: Generate embedded XAML resources
         if ($success) {
+            Write-BuildLogWithTimestamp "=== STEP 2/6: Generate embedded XAML resources ===" "INFO"
             $success = Generate-XamlResources
+            if (-not $success) {
+                Write-BuildLogWithTimestamp "Build workflow FAILED at STEP 2: Generate embedded XAML resources" "ERROR"
+                Write-BuildLogWithTimestamp "Remaining steps will be skipped" "WARNING"
+            }
+            Write-Host ""
         }
 
-        # Step 3: Bundle entry-point scripts
+        # Step 3: Generate embedded tutorial images
         if ($success) {
+            Write-BuildLogWithTimestamp "=== STEP 3/6: Generate embedded tutorial images ===" "INFO"
+            $success = Generate-TutorialImages
+            if (-not $success) {
+                Write-BuildLogWithTimestamp "Build workflow FAILED at STEP 3: Generate embedded tutorial images" "ERROR"
+                Write-BuildLogWithTimestamp "Remaining steps will be skipped" "WARNING"
+            }
+            Write-Host ""
+        }
+
+        # Step 4: Bundle entry-point scripts
+        if ($success) {
+            Write-BuildLogWithTimestamp "=== STEP 4/6: Bundle entry-point scripts ===" "INFO"
             $bundlerScript = Join-Path $PSScriptRoot "Invoke-PsScriptBundler.ps1"
             $projectRoot = Split-Path $PSScriptRoot -Parent
             $buildDir = Join-Path $PSScriptRoot "build"
@@ -584,38 +622,85 @@ try {
                 $success = Invoke-BuildScript -ScriptPath $bundlerScript -Arguments $bundlerArgs -Description "Bundling $($ep.Entry)"
                 if (-not $success) { break }
             }
+            if (-not $success) {
+                Write-BuildLogWithTimestamp "Build workflow FAILED at STEP 4: Bundle entry-point scripts" "ERROR"
+                Write-BuildLogWithTimestamp "Remaining steps will be skipped" "WARNING"
+            }
+            Write-Host ""
         }
 
-        # Step 4: Build executables
+        # Step 5: Build executables
         if ($success) {
+            Write-BuildLogWithTimestamp "=== STEP 5/6: Build executables ===" "INFO"
             $success = Build-AllExecutables
+            if (-not $success) {
+                Write-BuildLogWithTimestamp "Build workflow FAILED at STEP 5: Build executables" "ERROR"
+                Write-BuildLogWithTimestamp "Remaining steps will be skipped" "WARNING"
+            }
+            Write-Host ""
         }
 
-        # Step 5: Copy resources
+        # Step 6: Copy resources
         if ($success) {
+            Write-BuildLogWithTimestamp "=== STEP 6/6: Copy resources ===" "INFO"
             $success = Copy-BuildResources
+            if (-not $success) {
+                Write-BuildLogWithTimestamp "Build workflow FAILED at STEP 6: Copy resources" "ERROR"
+                Write-BuildLogWithTimestamp "Remaining steps will be skipped" "WARNING"
+            }
+            Write-Host ""
         }
 
-        # Step 6: Create release package
+        # Step 7: Create release package
         if ($success) {
+            Write-BuildLogWithTimestamp "=== STEP 7/7: Create release package ===" "INFO"
             $success = New-ReleasePackage -IsSigned $false
+            if (-not $success) {
+                Write-BuildLogWithTimestamp "Build workflow FAILED at STEP 7: Create release package" "ERROR"
+            }
+            Write-Host ""
         }
     }
 
     # Production build workflow
     elseif ($Production) {
         Write-BuildLogWithTimestamp "Starting PRODUCTION build workflow" "INFO"
+        Write-Host ""
 
         # Step 1: Install dependencies
+        Write-BuildLogWithTimestamp "=== STEP 1/7: Install dependencies ===" "INFO"
         $success = Initialize-BuildEnvironment
+        if (-not $success) {
+            Write-BuildLogWithTimestamp "Build workflow FAILED at STEP 1: Install dependencies" "ERROR"
+            Write-BuildLogWithTimestamp "Remaining steps will be skipped" "WARNING"
+        }
+        Write-Host ""
 
         # Step 2: Generate embedded XAML resources
         if ($success) {
+            Write-BuildLogWithTimestamp "=== STEP 2/7: Generate embedded XAML resources ===" "INFO"
             $success = Generate-XamlResources
+            if (-not $success) {
+                Write-BuildLogWithTimestamp "Build workflow FAILED at STEP 2: Generate embedded XAML resources" "ERROR"
+                Write-BuildLogWithTimestamp "Remaining steps will be skipped" "WARNING"
+            }
+            Write-Host ""
         }
 
-        # Step 3: Bundle entry-point scripts
+        # Step 3: Generate embedded tutorial images
         if ($success) {
+            Write-BuildLogWithTimestamp "=== STEP 3/7: Generate embedded tutorial images ===" "INFO"
+            $success = Generate-TutorialImages
+            if (-not $success) {
+                Write-BuildLogWithTimestamp "Build workflow FAILED at STEP 3: Generate embedded tutorial images" "ERROR"
+                Write-BuildLogWithTimestamp "Remaining steps will be skipped" "WARNING"
+            }
+            Write-Host ""
+        }
+
+        # Step 4: Bundle entry-point scripts
+        if ($success) {
+            Write-BuildLogWithTimestamp "=== STEP 4/7: Bundle entry-point scripts ===" "INFO"
             $bundlerScript = Join-Path $PSScriptRoot "Invoke-PsScriptBundler.ps1"
             $projectRoot = Split-Path $PSScriptRoot -Parent
             $buildDir = Join-Path $PSScriptRoot "build"
@@ -630,20 +715,38 @@ try {
                 $success = Invoke-BuildScript -ScriptPath $bundlerScript -Arguments $bundlerArgs -Description "Bundling $($ep.Entry)"
                 if (-not $success) { break }
             }
+            if (-not $success) {
+                Write-BuildLogWithTimestamp "Build workflow FAILED at STEP 4: Bundle entry-point scripts" "ERROR"
+                Write-BuildLogWithTimestamp "Remaining steps will be skipped" "WARNING"
+            }
+            Write-Host ""
         }
 
-        # Step 4: Build executables
+        # Step 5: Build executables
         if ($success) {
+            Write-BuildLogWithTimestamp "=== STEP 5/7: Build executables ===" "INFO"
             $success = Build-AllExecutables
+            if (-not $success) {
+                Write-BuildLogWithTimestamp "Build workflow FAILED at STEP 5: Build executables" "ERROR"
+                Write-BuildLogWithTimestamp "Remaining steps will be skipped" "WARNING"
+            }
+            Write-Host ""
         }
 
-        # Step 5: Copy resources
+        # Step 6: Copy resources
         if ($success) {
+            Write-BuildLogWithTimestamp "=== STEP 6/7: Copy resources ===" "INFO"
             $success = Copy-BuildResources
+            if (-not $success) {
+                Write-BuildLogWithTimestamp "Build workflow FAILED at STEP 6: Copy resources" "ERROR"
+                Write-BuildLogWithTimestamp "Remaining steps will be skipped" "WARNING"
+            }
+            Write-Host ""
         }
 
-        # Step 6: Sign executables
+        # Step 7: Sign executables
         if ($success) {
+            Write-BuildLogWithTimestamp "=== STEP 7/7: Sign executables ===" "INFO"
             $signingSuccess = Add-CodeSignatures
             if ($signingSuccess) {
                 $isSigned = $true
@@ -651,11 +754,17 @@ try {
             } else {
                 Write-BuildLogWithTimestamp "Code signing failed, continuing with unsigned build" "WARNING"
             }
+            Write-Host ""
         }
 
-        # Step 7: Create release package
+        # Step 8: Create release package
         if ($success) {
+            Write-BuildLogWithTimestamp "=== STEP 8/8: Create release package ===" "INFO"
             $success = New-ReleasePackage -IsSigned $isSigned
+            if (-not $success) {
+                Write-BuildLogWithTimestamp "Build workflow FAILED at STEP 8: Create release package" "ERROR"
+            }
+            Write-Host ""
         }
     }
 

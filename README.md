@@ -44,6 +44,7 @@ Focus-Game-Deck.exe --help
 
 ### 2. Configure & Launch Games
 
+- **First Launch**: On your first run, an interactive tutorial will guide you through the basic setup
 - **Setup**: Configure your games using the GUI configuration editor (ConfigEditor.exe)
 - **Launch**: Use command line or desktop shortcuts for one-click game launching
 - **Alternative**: The main executable automatically routes to the appropriate component

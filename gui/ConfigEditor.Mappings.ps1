@@ -235,6 +235,7 @@ $script:MenuItemMappings = @{
     "ToolsMenu" = "toolsMenuHeader"
     "CreateAllShortcutsMenuItem" = "createAllShortcuts"
     "HelpMenu" = "helpMenuHeader"
+    "ShowTutorialMenuItem" = "showTutorialMenuItem"
     "CheckUpdateMenuItem" = "checkUpdateMenuItem"
     "FeedbackMenuItem" = "feedbackMenuItem"
     "AboutMenuItem" = "aboutMenuItem"

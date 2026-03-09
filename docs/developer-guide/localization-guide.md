@@ -244,12 +244,13 @@ changeLanguage(langCode) {
 
 ### Step 5: Update Website HTML Files
 
+````markdown
+Add the new language option to both website HTML files:
     @{ Code = "fr"; Name = "Français" }
     @{ Code = "es"; Name = "Español" }
     @{ Code = "pt-BR"; Name = "Português (Brasil)" }
     @{ Code = "id-ID"; Name = "Bahasa Indonesia" }
     @{ Code = "your-language-code"; Name = "Your Native Language Name" }
-)
 
 ```
 
