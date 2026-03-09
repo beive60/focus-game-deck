@@ -320,6 +320,7 @@
     "refreshGameListMenuItem": "Liste des jeux(_G)",
     "refreshManagedAppsListMenuItem": "Liste des applications gérées(_M)",
     "refreshAllMenuItem": "Tout(_A)",
+    "showTutorialMenuItem": "Afficher le _Tutoriel",
     "checkUpdateMenuItem": "Vérifier les mises à jour(_C)",
     "aboutMenuItem": "À propos de Focus Game Deck(_A)",
     "feedbackMenuItem": "Envoyer des commentaires...(_F)",

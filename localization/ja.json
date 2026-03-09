@@ -319,6 +319,7 @@
     "refreshGameListMenuItem": "ゲームリスト(_G)",
     "refreshManagedAppsListMenuItem": "管理アプリリスト(_M)",
     "refreshAllMenuItem": "すべて(_A)",
+    "showTutorialMenuItem": "チュートリアルを表示(_T)",
     "checkUpdateMenuItem": "アップデート確認(_C)",
     "aboutMenuItem": "Focus Game Deck について(_A)",
     "feedbackMenuItem": "フィードバックを送る...(_F)",

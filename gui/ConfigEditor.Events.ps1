@@ -3471,6 +3471,30 @@ class ConfigEditorEvents {
         }
     }
 
+    # Handle show tutorial
+    [void] HandleShowTutorial() {
+        try {
+            Write-Verbose "[DEBUG] ConfigEditorEvents: Show tutorial requested"
+
+            # Call Show-Tutorial function from ConfigEditor.Tutorial.ps1
+            $tutorialCompleted = Show-Tutorial -Localization $script:Localization -AppRoot $script:appRoot
+
+            if ($tutorialCompleted) {
+                Write-Verbose "[INFO] ConfigEditorEvents: Tutorial completed by user"
+            } else {
+                Write-Verbose "[INFO] ConfigEditorEvents: Tutorial skipped by user"
+            }
+        } catch {
+            Write-Warning "[ERROR] ConfigEditorEvents: Failed to show tutorial - $($_.Exception.Message)"
+            # Show error message to user
+            $errorMsg = $this.uiManager.GetLocalizedMessage("errorShowTutorialFailed")
+            if ([string]::IsNullOrEmpty($errorMsg)) {
+                $errorMsg = "Failed to show tutorial. Please see logs for details."
+            }
+            ("System.Windows.MessageBox" -as [type])::Show($errorMsg, "Error", "OK", "Error")
+        }
+    }
+
     # Handle about dialog
     [void] HandleAbout() {
         try {
@@ -4368,6 +4392,12 @@ class ConfigEditorEvents {
             # Tools menu
             $this.uiManager.Window.FindName("CreateAllShortcutsMenuItem").add_Click({ $self.HandleCreateAllShortcuts() }.GetNewClosure())
             # Help menu
+            $showTutorialMenuItem = $this.uiManager.Window.FindName("ShowTutorialMenuItem")
+            if ($showTutorialMenuItem) {
+                $showTutorialMenuItem.add_Click({ $self.HandleShowTutorial() }.GetNewClosure())
+            } else {
+                Write-Verbose "ShowTutorialMenuItem not found"
+            }
             $this.uiManager.Window.FindName("CheckUpdateMenuItem").add_Click({ $self.HandleCheckUpdate() }.GetNewClosure())
             $feedbackMenuItem = $this.uiManager.Window.FindName("FeedbackMenuItem")
             if ($feedbackMenuItem) {

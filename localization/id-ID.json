@@ -320,6 +320,7 @@
     "refreshGameListMenuItem": "Daftar Game(_G)",
     "refreshManagedAppsListMenuItem": "Daftar Aplikasi Terkelola(_M)",
     "refreshAllMenuItem": "Semua(_A)",
+    "showTutorialMenuItem": "Tampilkan _Tutorial",
     "checkUpdateMenuItem": "Periksa Pembaruan(_C)",
     "aboutMenuItem": "Tentang Focus Game Deck(_A)",
     "feedbackMenuItem": "Kirim Umpan Balik...(_F)",

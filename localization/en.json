@@ -317,6 +317,7 @@
     "refreshGameListMenuItem": "_Game List",
     "refreshManagedAppsListMenuItem": "_Managed Apps List",
     "refreshAllMenuItem": "_All",
+    "showTutorialMenuItem": "Show _Tutorial",
     "checkUpdateMenuItem": "_Check for Updates",
     "aboutMenuItem": "_About Focus Game Deck",
     "feedbackMenuItem": "Send _Feedback...",

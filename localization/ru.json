@@ -320,6 +320,7 @@
     "refreshGameListMenuItem": "Список игр(_G)",
     "refreshManagedAppsListMenuItem": "Список управляемых приложений(_M)",
     "refreshAllMenuItem": "Все(_A)",
+    "showTutorialMenuItem": "Показать _Учебник",
     "checkUpdateMenuItem": "Проверить обновления(_C)",
     "aboutMenuItem": "О Focus Game Deck(_A)",
     "feedbackMenuItem": "Отправить отзыв...(_F)",

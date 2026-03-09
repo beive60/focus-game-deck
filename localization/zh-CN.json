@@ -320,6 +320,7 @@
     "refreshGameListMenuItem": "游戏列表(_G)",
     "refreshManagedAppsListMenuItem": "管理应用列表(_M)",
     "refreshAllMenuItem": "全部(_A)",
+    "showTutorialMenuItem": "显示教程(_T)",
     "checkUpdateMenuItem": "检查更新(_C)",
     "aboutMenuItem": "关于 Focus Game Deck(_A)",
     "feedbackMenuItem": "发送反馈...(_F)",
