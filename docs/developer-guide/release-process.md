@@ -232,7 +232,7 @@ release/
 
 ```powershell
 # Edit the generated release notes file
-code release-notes-1.0.1.md
+code release-notes-x.y.z.md
 ```
 
 #### 2. Create GitHub Release
@@ -242,13 +242,13 @@ code release-notes-1.0.1.md
 3. Enter Release Information:
 
    ```text
-   Tag: v1.0.1
-   Release title: Focus Game Deck v1.0.1
+   Tag: vx.y.z
+   Release title: Focus Game Deck vx.y.z
    Description: [Copy content from generated release notes]
    ```
 
 4. Upload Assets from `release/` directory:
-   - `FocusGameDeck-v1.0.1-Portable.zip` (create from release folder)
+   - `FocusGameDeck-vx.y.z-Portable.zip` (create from release folder)
    - `SHA256SUMS.txt` (generate checksums)
 
 5. Release Settings:

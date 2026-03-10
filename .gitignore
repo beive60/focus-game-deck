@@ -5,6 +5,7 @@ release/
 *.exe
 build-tools/signing-config/signing-config.json
 src/generated/*.ps1
+scripts/release-notes-*.md
 
 # User-specific configuration files
 config/config.json

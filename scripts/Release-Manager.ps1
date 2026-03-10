@@ -28,7 +28,7 @@ param(
 
     [Parameter(Mandatory = $false)]
     [ValidateSet("ja", "en", "both")]
-    [string]$Language = "ja",
+    [string]$Language = "enw",
 
     [Parameter(Mandatory = $false)]
     [string]$ReleaseMessage = ""
@@ -277,98 +277,102 @@ function New-ReleaseNotes {
     $templates = @{}
 
     # Japanese template (main target)
-    $templates.ja = @"
-## Focus Game Deck $Version - $(Get-ReleaseType "ja" $IsPreRelease)
+    $releaseNoticeJa = if ($IsPreRelease) {
+        "これは$(Get-ReleaseType ""ja"" $IsPreRelease)であり、テスト目的でのみ提供されています。本番環境での使用は推奨されません。"
+    } else {
+        "本番環境での使用を推奨する正式リリース版です。"
+    }
 
-### $(Get-ReleaseType "ja" $IsPreRelease) について
-$(if ($IsPreRelease) {
-"これは$(Get-ReleaseType "ja" $IsPreRelease)であり、テスト目的でのみ提供されています。本番環境での使用は推奨されません。"
-} else {
-"本番環境での使用を推奨する正式リリース版です。"
-})
-
-### 新機能・変更点
-- [新機能や改善点を記載してください]
-- [修正や改善点を記載してください]
-- [修正されたバグを記載してください]
-
-### 既知の問題
-- [既知の問題があれば記載してください]
-
-### 破壊的変更
-- [互換性に影響する変更があれば記載してください]
-
-### システム要件
-- Windows 10/11 (64-bit)
-- .NET Framework 4.8以上
-- PowerShell 5.1以上
-
-### ダウンロード・インストール
-1. `FocusGameDeck-$Version-Setup.exe` をダウンロード
-2. SHA256ハッシュを確認: `[HASH_VALUE_TO_BE_FILLED]`
-3. 管理者権限で実行
-4. インストールウィザードに従ってください
-
-### セキュリティ・信頼性
-- デジタル署名済み実行ファイル
-- マルウェアスキャン済み
-- オープンソース (MIT ライセンス)
-
-### フィードバック・サポート
-問題や要望は [GitHub Issues](https://github.com/beive60/focus-game-deck/issues) にてお報告ください
-
----
-**リリース日**: $(Get-Date -Format "yyyy年MM月dd日")
-**ビルド**: [BUILD_NUMBER_TO_BE_FILLED]
-**コミット**: [COMMIT_HASH_TO_BE_FILLED]
-"@
+    $templates.ja = @(
+        "## Focus Game Deck $($Version) - $(Get-ReleaseType ""ja"" $IsPreRelease)",
+        "",
+        "### $(Get-ReleaseType ""ja"" $IsPreRelease) について",
+        $releaseNoticeJa,
+        "",
+        "### 新機能・変更点",
+        "- [新機能や改善点を記載してください]",
+        "- [修正や改善点を記載してください]",
+        "- [修正されたバグを記載してください]",
+        "",
+        "### 既知の問題",
+        "- [既知の問題があれば記載してください]",
+        "",
+        "### 破壊的変更",
+        "- [互換性に影響する変更があれば記載してください]",
+        "",
+        "### システム要件",
+        "- Windows 10/11 (64-bit)",
+        "- .NET Framework 4.8以上",
+        "- PowerShell 5.1以上",
+        "",
+        "### ダウンロード・インストール",
+        "1. FocusGameDeck-$($Version)-Setup.exe をダウンロード",
+        "2. SHA256ハッシュを確認: [HASH_VALUE_TO_BE_FILLED]",
+        "3. 管理者権限で実行",
+        "4. インストールウィザードに従ってください",
+        "",
+        "### セキュリティ・信頼性",
+        "- デジタル署名済み実行ファイル",
+        "- マルウェアスキャン済み",
+        "- オープンソース (MIT ライセンス)",
+        "",
+        "### フィードバック・サポート",
+        "問題や要望は [GitHub Issues](https://github.com/beive60/focus-game-deck/issues) にてお報告ください",
+        "",
+        "---",
+        "**リリース日**: $(Get-Date -Format ""yyyy年MM月dd日"")",
+        "**ビルド**: [BUILD_NUMBER_TO_BE_FILLED]",
+        "**コミット**: [COMMIT_HASH_TO_BE_FILLED]"
+    ) -join "`n"
 
     # English template (international support)
-    $templates.en = @"
-## Focus Game Deck $Version - $(Get-ReleaseType "en" $IsPreRelease)
+    $releaseNoticeEn = if ($IsPreRelease) {
+        "This is a $(Get-ReleaseType ""en"" $IsPreRelease) version for testing purposes only. Not recommended for production use."
+    } else {
+        "Official release version recommended for production use."
+    }
 
-### $(Get-ReleaseType "en" $IsPreRelease) Notice
-$(if ($IsPreRelease) {
-"This is a $(Get-ReleaseType "en" $IsPreRelease) version for testing purposes only. Not recommended for production use."
-} else {
-"Official release version recommended for production use."
-})
-
-### What's New
-- [Please describe new features and improvements]
-- [Please describe fixes and improvements]
-- [Please describe bugs that were fixed]
-
-### Known Issues
-- [Please describe any known issues]
-
-### Breaking Changes
-- [Please describe any breaking changes]
-
-### System Requirements
-- Windows 10/11 (64-bit)
-- .NET Framework 4.8+
-- PowerShell 5.1+
-
-### Download & Installation
-1. Download `FocusGameDeck-$Version-Setup.exe`
-2. Verify SHA256: `[HASH_VALUE_TO_BE_FILLED]`
-3. Run as Administrator
-4. Follow installation wizard
-
-### Security & Trust
-- Digitally signed executable
-- Scanned for malware
-- Open source (MIT License)
-
-### Feedback & Support
-Please report issues via [GitHub Issues](https://github.com/beive60/focus-game-deck/issues)
-
----
-**Release Date**: $(Get-Date -Format "yyyy-MM-dd")
-**Build**: [BUILD_NUMBER_TO_BE_FILLED]
-**Commit**: [COMMIT_HASH_TO_BE_FILLED]
-"@
+    $templates.en = @(
+        "## Focus Game Deck $($Version) - $(Get-ReleaseType ""en"" $IsPreRelease)",
+        "",
+        "### $(Get-ReleaseType ""en"" $IsPreRelease) Notice",
+        $releaseNoticeEn,
+        "",
+        "### What's New",
+        "- [Please describe new features and improvements]",
+        "- [Please describe fixes and improvements]",
+        "- [Please describe bugs that were fixed]",
+        "",
+        "### Known Issues",
+        "- [Please describe any known issues]",
+        "",
+        "### Breaking Changes",
+        "- [Please describe any breaking changes]",
+        "",
+        "### System Requirements",
+        "- Windows 10/11 (64-bit)",
+        "- .NET Framework 4.8+",
+        "- PowerShell 5.1+",
+        "",
+        "### Download & Installation",
+        "1. Download FocusGameDeck-$($Version)-Setup.exe",
+        "2. Verify SHA256: [HASH_VALUE_TO_BE_FILLED]",
+        "3. Run as Administrator",
+        "4. Follow installation wizard",
+        "",
+        "### Security & Trust",
+        "- Digitally signed executable",
+        "- Scanned for malware",
+        "- Open source (MIT License)",
+        "",
+        "### Feedback & Support",
+        "Please report issues via [GitHub Issues](https://github.com/beive60/focus-game-deck/issues)",
+        "",
+        "---",
+        "**Release Date**: $(Get-Date -Format ""yyyy-MM-dd"")",
+        "**Build**: [BUILD_NUMBER_TO_BE_FILLED]",
+        "**Commit**: [COMMIT_HASH_TO_BE_FILLED]"
+    ) -join "`n"
 
     # Generate files based on language selection
     $generatedFiles = @()
